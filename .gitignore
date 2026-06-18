@@ -5,6 +5,7 @@ build/
 !**/src/**/build/
 
 ### Git worktrees ###
+.worktrees
 .worktrees/
 
 ### IntelliJ IDEA ###
