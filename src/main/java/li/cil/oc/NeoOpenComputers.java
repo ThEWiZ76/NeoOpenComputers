@@ -7,17 +7,17 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import org.slf4j.Logger;
 
-@Mod(OpenComputers.MODID)
-public final class OpenComputers {
-    public static final String MODID = "opencomputers";
+@Mod(NeoOpenComputers.MODID)
+public final class NeoOpenComputers {
+    public static final String MODID = "neoopencomputers";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public OpenComputers(final IEventBus modEventBus, final ModContainer modContainer) {
+    public NeoOpenComputers(final IEventBus modEventBus, final ModContainer modContainer) {
         modEventBus.addListener(this::onCommonSetup);
-        LOGGER.info("Loading OpenComputers NeoForge port {}", modContainer.getModInfo().getVersion());
+        LOGGER.info("Loading NeoOpenComputers {}", modContainer.getModInfo().getVersion());
     }
 
     private void onCommonSetup(final FMLCommonSetupEvent event) {
-        LOGGER.debug("OpenComputers common setup complete.");
+        LOGGER.debug("NeoOpenComputers common setup complete.");
     }
 }

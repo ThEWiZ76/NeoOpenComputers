@@ -1,10 +1,12 @@
-# OpenComputers NeoForge
+# NeoOpenComputers
 
 Java-first community port of [MightyPirates/OpenComputers](https://github.com/MightyPirates/OpenComputers) to Minecraft 1.21.1 on NeoForge.
 
+The project name intentionally differs from the original mod: **NeoOpenComputers** identifies this as a newer NeoForge-focused port.
+
 ## Current State
 
-This repository is a clean NeoForge 1.21.1 scaffold. It intentionally does not compile the old Scala implementation. The old mod is used as a behavioral reference while systems are ported to Java incrementally.
+This repository is a clean NeoForge 1.21.1 scaffold with the first standalone OpenComputers API contracts ported to Java. It intentionally does not compile the old Scala implementation. The old mod is used as a behavioral reference while systems are ported incrementally.
 
 Chosen upstream reference branch:
 
@@ -44,8 +46,9 @@ On first server run, accept the generated EULA in the run directory.
 
 1. Keep NeoForge 1.21.1 project Java-only.
 2. Port OpenComputers systems in small slices from `master-MC1.12`.
-3. Start with stable contracts and internal model code before UI and integrations.
-4. Re-add optional mod integrations only when current 1.21.1 APIs exist.
+3. Keep `li.cil.oc.api` for source compatibility where practical.
+4. Start with stable contracts and internal model code before UI and integrations.
+5. Re-add optional mod integrations only when current 1.21.1 APIs exist.
 
 ## Licensing
 
