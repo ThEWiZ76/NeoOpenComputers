@@ -5,6 +5,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.machine.Signal;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -12,6 +13,8 @@ import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
@@ -143,6 +146,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return globals.get(name).todouble();
     }
 
+    String globalString(final String name) {
+        if (globals == null) {
+            return "";
+        }
+        return globals.get(name).tojstring();
+    }
+
     void configureBootSource(final CompoundTag eepromData) {
         bootSource = bootSourceFrom(eepromData);
     }
@@ -162,6 +172,41 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.valueOf(machine == null ? 0D : machine.upTime());
             }
         });
+        computer.set("pullSignal", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null) {
+                    return LuaValue.NIL;
+                }
+                final Signal signal = machine.popSignal();
+                if (signal == null) {
+                    return LuaValue.NIL;
+                }
+                final Object[] signalArgs = signal.args();
+                final LuaValue[] values = new LuaValue[signalArgs.length + 1];
+                values[0] = LuaValue.valueOf(signal.name());
+                for (int index = 0; index < signalArgs.length; index++) {
+                    values[index + 1] = toLuaValue(signalArgs[index]);
+                }
+                return LuaValue.varargsOf(values);
+            }
+        });
         globals.set("computer", computer);
+    }
+
+    private static LuaValue toLuaValue(final Object value) {
+        if (value == null) {
+            return LuaValue.NIL;
+        }
+        if (value instanceof Boolean booleanValue) {
+            return LuaValue.valueOf(booleanValue);
+        }
+        if (value instanceof Number numberValue) {
+            return LuaValue.valueOf(numberValue.doubleValue());
+        }
+        if (value instanceof byte[] bytes) {
+            return LuaValue.valueOf(new String(bytes, StandardCharsets.UTF_8));
+        }
+        return LuaValue.valueOf(String.valueOf(value));
     }
 }

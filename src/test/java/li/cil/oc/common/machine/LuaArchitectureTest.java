@@ -2,12 +2,16 @@ package li.cil.oc.common.machine;
 
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.machine.Signal;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Queue;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -60,12 +64,33 @@ final class LuaArchitectureTest {
         assertEquals(12.5D, architecture.globalDouble("seconds"), 0.000_001D);
     }
 
+    @Test
+    void exposesComputerPullSignalToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("name, value = computer.pullSignal()");
+        architecture.bind(machineWithSignals(new TestSignal("event", new Object[]{"payload"})));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("event", architecture.globalString("name"));
+        assertEquals("payload", architecture.globalString("value"));
+    }
+
     private static Machine machineWithUptime(final double uptime) {
+        return machine(new ArrayDeque<>(), uptime);
+    }
+
+    private static Machine machineWithSignals(final Signal... signals) {
+        return machine(new ArrayDeque<>(Arrays.asList(signals)), 0D);
+    }
+
+    private static Machine machine(final Queue<Signal> signals, final double uptime) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
             (proxy, method, args) -> switch (method.getName()) {
                 case "upTime" -> uptime;
+                case "popSignal" -> signals.poll();
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
                 case "toString" -> "test-machine";
@@ -87,5 +112,8 @@ final class LuaArchitectureTest {
             return 0D;
         }
         return null;
+    }
+
+    private record TestSignal(String name, Object[] args) implements Signal {
     }
 }
