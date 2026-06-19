@@ -29,7 +29,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.item.ItemStack;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -366,11 +369,13 @@ final class NetworkRegistry implements NetworkAPI {
 
     private class ComponentNode extends BaseNode implements Component {
         private final String name;
+        private final Map<String, Method> callbacks;
         private Visibility visibility;
 
         private ComponentNode(final Environment host, final Visibility reachability, final String name, final Visibility visibility) {
             super(host, reachability);
             this.name = name;
+            this.callbacks = discoverCallbacks(host);
             setVisibility(visibility);
         }
 
@@ -403,17 +408,60 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public Collection<String> methods() {
-            return Collections.emptySet();
+            return Collections.unmodifiableSet(callbacks.keySet());
         }
 
         @Override
         public Callback annotation(final String method) {
-            throw new NoSuchElementException(method);
+            final Method callback = callbacks.get(method);
+            if (callback == null) {
+                throw new NoSuchElementException(method);
+            }
+            return callback.getAnnotation(Callback.class);
         }
 
         @Override
         public Object[] invoke(final String method, final Context context, final Object... arguments) throws Exception {
-            throw new NoSuchMethodException(method);
+            final Method callback = callbacks.get(method);
+            if (callback == null) {
+                throw new NoSuchMethodException(method);
+            }
+            try {
+                final Object result = callback.invoke(host(), context, new RuntimeArguments(arguments));
+                if (result == null) {
+                    return null;
+                }
+                if (result instanceof Object[] values) {
+                    return values;
+                }
+                return new Object[]{result};
+            } catch (InvocationTargetException e) {
+                final Throwable cause = e.getCause();
+                if (cause instanceof Exception exception) {
+                    throw exception;
+                }
+                if (cause instanceof Error error) {
+                    throw error;
+                }
+                throw new RuntimeException(cause);
+            }
+        }
+
+        private Map<String, Method> discoverCallbacks(final Environment host) {
+            final Map<String, Method> discovered = new LinkedHashMap<>();
+            Class<?> type = host.getClass();
+            while (type != null) {
+                for (Method method : type.getDeclaredMethods()) {
+                    final Callback callback = method.getAnnotation(Callback.class);
+                    if (callback != null) {
+                        method.setAccessible(true);
+                        final String name = callback.value().isEmpty() ? method.getName() : callback.value();
+                        discovered.putIfAbsent(name, method);
+                    }
+                }
+                type = type.getSuperclass();
+            }
+            return discovered;
         }
     }
 
@@ -850,6 +898,191 @@ final class NetworkRegistry implements NetworkAPI {
                 };
             }
             return computedSize;
+        }
+    }
+
+    private record RuntimeArguments(Object[] values) implements li.cil.oc.api.machine.Arguments {
+        @Override
+        public int count() {
+            return values.length;
+        }
+
+        @Override
+        public Object checkAny(final int index) {
+            if (index < 0 || index >= values.length) {
+                throw new IllegalArgumentException("missing argument #" + (index + 1));
+            }
+            return values[index];
+        }
+
+        @Override
+        public boolean checkBoolean(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Boolean typedValue) {
+                return typedValue;
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (boolean expected)");
+        }
+
+        @Override
+        public int checkInteger(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Number number) {
+                return number.intValue();
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number expected)");
+        }
+
+        @Override
+        public long checkLong(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Number number) {
+                return number.longValue();
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number expected)");
+        }
+
+        @Override
+        public double checkDouble(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Number number) {
+                return number.doubleValue();
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number expected)");
+        }
+
+        @Override
+        public String checkString(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof String typedValue) {
+                return typedValue;
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (string expected)");
+        }
+
+        @Override
+        public byte[] checkByteArray(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof byte[] typedValue) {
+                return typedValue;
+            }
+            if (value instanceof String typedValue) {
+                return typedValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (byte array expected)");
+        }
+
+        @Override
+        public Map checkTable(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Map typedValue) {
+                return typedValue;
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (table expected)");
+        }
+
+        @Override
+        public ItemStack checkItemStack(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof ItemStack typedValue) {
+                return typedValue;
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (item stack expected)");
+        }
+
+        @Override
+        public Object optAny(final int index, final Object def) {
+            return index >= 0 && index < values.length ? values[index] : def;
+        }
+
+        @Override
+        public boolean optBoolean(final int index, final boolean def) {
+            return index >= 0 && index < values.length ? checkBoolean(index) : def;
+        }
+
+        @Override
+        public int optInteger(final int index, final int def) {
+            return index >= 0 && index < values.length ? checkInteger(index) : def;
+        }
+
+        @Override
+        public long optLong(final int index, final long def) {
+            return index >= 0 && index < values.length ? checkLong(index) : def;
+        }
+
+        @Override
+        public double optDouble(final int index, final double def) {
+            return index >= 0 && index < values.length ? checkDouble(index) : def;
+        }
+
+        @Override
+        public String optString(final int index, final String def) {
+            return index >= 0 && index < values.length ? checkString(index) : def;
+        }
+
+        @Override
+        public byte[] optByteArray(final int index, final byte[] def) {
+            return index >= 0 && index < values.length ? checkByteArray(index) : def;
+        }
+
+        @Override
+        public Map optTable(final int index, final Map def) {
+            return index >= 0 && index < values.length ? checkTable(index) : def;
+        }
+
+        @Override
+        public ItemStack optItemStack(final int index, final ItemStack def) {
+            return index >= 0 && index < values.length ? checkItemStack(index) : def;
+        }
+
+        @Override
+        public boolean isBoolean(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Boolean;
+        }
+
+        @Override
+        public boolean isInteger(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Integer;
+        }
+
+        @Override
+        public boolean isLong(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Long;
+        }
+
+        @Override
+        public boolean isDouble(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Double;
+        }
+
+        @Override
+        public boolean isString(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof String;
+        }
+
+        @Override
+        public boolean isByteArray(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof byte[];
+        }
+
+        @Override
+        public boolean isTable(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Map;
+        }
+
+        @Override
+        public boolean isItemStack(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof ItemStack;
+        }
+
+        @Override
+        public Object[] toArray() {
+            return Arrays.copyOf(values, values.length);
+        }
+
+        @Override
+        public java.util.Iterator<Object> iterator() {
+            return Arrays.asList(values).iterator();
         }
     }
 }

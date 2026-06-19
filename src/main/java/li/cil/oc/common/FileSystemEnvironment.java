@@ -3,6 +3,9 @@ package li.cil.oc.common;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.fs.Label;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -53,6 +56,26 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment {
         return speed;
     }
 
+    @Callback(direct = true, doc = "function():boolean -- Returns whether the file system is read-only.")
+    public Object[] isReadOnly(final Context context, final Arguments arguments) {
+        return new Object[]{fileSystem.isReadOnly()};
+    }
+
+    @Callback(direct = true, doc = "function():number -- The overall capacity of the file system, in bytes.")
+    public Object[] spaceTotal(final Context context, final Arguments arguments) {
+        return new Object[]{fileSystem.spaceTotal()};
+    }
+
+    @Callback(direct = true, doc = "function():number -- The currently used capacity of the file system, in bytes.")
+    public Object[] spaceUsed(final Context context, final Arguments arguments) {
+        return new Object[]{fileSystem.spaceUsed()};
+    }
+
+    @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether an object exists at the specified absolute path.")
+    public Object[] exists(final Context context, final Arguments arguments) {
+        return new Object[]{fileSystem.exists(clean(arguments.checkString(0)))};
+    }
+
     @Override
     public void onDisconnect(final Node node) {
         if (node == node()) {
@@ -87,5 +110,27 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment {
         CompoundTag fileSystemTag = new CompoundTag();
         fileSystem.save(fileSystemTag);
         nbt.put(FILE_SYSTEM_TAG, fileSystemTag);
+    }
+
+    private String clean(final String path) {
+        if (path == null || path.isEmpty() || "/".equals(path) || ".".equals(path)) {
+            return "";
+        }
+        final String[] rawSegments = path.replace('\\', '/').split("/");
+        final java.util.ArrayDeque<String> segments = new java.util.ArrayDeque<>();
+        for (String segment : rawSegments) {
+            if (segment.isEmpty() || ".".equals(segment)) {
+                continue;
+            }
+            if ("..".equals(segment)) {
+                if (segments.isEmpty()) {
+                    throw new IllegalArgumentException("path escapes file system root");
+                }
+                segments.removeLast();
+            } else {
+                segments.addLast(segment);
+            }
+        }
+        return String.join("/", segments);
     }
 }

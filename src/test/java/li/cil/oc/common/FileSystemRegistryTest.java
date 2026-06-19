@@ -91,9 +91,23 @@ final class FileSystemRegistryTest {
         Component component = (Component) environment.node();
         assertEquals("filesystem", component.name());
         assertEquals(Visibility.Neighbors, component.visibility());
+        assertTrue(component.methods().contains("isReadOnly"));
 
         CompoundTag nbt = new CompoundTag();
         environment.save(nbt);
         assertTrue(nbt.contains("node"));
+    }
+
+    @Test
+    void managedFileSystemEnvironmentExposesBasicCallbacks() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        assertTrue(fileSystem.makeDirectory("tmp"));
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+
+        assertArrayEquals(new Object[]{false}, component.invoke("isReadOnly", null));
+        assertArrayEquals(new Object[]{256L}, component.invoke("spaceTotal", null));
+        assertArrayEquals(new Object[]{true}, component.invoke("exists", null, "tmp"));
     }
 }

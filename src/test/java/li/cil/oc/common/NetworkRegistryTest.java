@@ -1,6 +1,9 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
@@ -79,6 +82,17 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void componentsExposeCallbackMethods() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+        TestEnvironment host = new TestEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        assertTrue(component.methods().contains("ping"));
+        assertEquals("function():string -- Test callback.", component.annotation("ping").doc());
+        assertArrayEquals(new Object[]{"pong", "data"}, component.invoke("ping", null, "data"));
+    }
+
+    @Test
     void connectorBuffersClampToLocalSize() {
         NetworkRegistry registry = new NetworkRegistry();
         Connector connector = registry.newNode(new TestEnvironment(), Visibility.Network).withConnector(10).create();
@@ -117,6 +131,11 @@ final class NetworkRegistryTest {
 
         private List<String> messageNames() {
             return messages.stream().map(Message::name).toList();
+        }
+
+        @Callback(doc = "function():string -- Test callback.")
+        public Object[] ping(final Context context, final Arguments arguments) {
+            return new Object[]{"pong", arguments.checkString(0)};
         }
     }
 }
