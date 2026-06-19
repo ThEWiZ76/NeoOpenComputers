@@ -175,6 +175,27 @@ final class GraphicsCardEnvironmentTest {
         assertArrayEquals(new Object[]{"D", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(2, 2)));
     }
 
+    @Test
+    void persistsVideoBuffersAndActiveIndex() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        gpu.allocateBuffer(null, new TestArguments(3, 2));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+        gpu.setForeground(null, new TestArguments(0x112233));
+        gpu.setBackground(null, new TestArguments(0x445566));
+        gpu.set(null, new TestArguments(1, 1, "XY"));
+        CompoundTag tag = new CompoundTag();
+
+        gpu.save(tag);
+        GraphicsCardEnvironment restored = new GraphicsCardEnvironment(0);
+        restored.load(tag);
+
+        assertArrayEquals(new Object[]{1}, restored.getActiveBuffer(null, new TestArguments()));
+        assertArrayEquals(new int[]{1}, (int[]) restored.buffers(null, new TestArguments())[0]);
+        assertArrayEquals(new Object[]{"X", 0x112233, 0x445566, false, false}, restored.get(null, new TestArguments(1, 1)));
+        assertArrayEquals(new Object[]{"Y", 0x112233, 0x445566, false, false}, restored.get(null, new TestArguments(2, 1)));
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = GraphicsCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));

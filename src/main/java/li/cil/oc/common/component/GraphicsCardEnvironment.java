@@ -11,6 +11,9 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.LinkedHashMap;
@@ -19,6 +22,11 @@ import java.util.Map;
 public class GraphicsCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "gpu";
     private static final String SCREEN_TAG = "screen";
+    private static final String ACTIVE_BUFFER_TAG = "bufferIndex";
+    private static final String VIDEO_RAM_TAG = "videoRam";
+    private static final String PAGES_TAG = "pages";
+    private static final String PAGE_INDEX_TAG = "pageIndex";
+    private static final String PAGE_DATA_TAG = "pageData";
     private static final int SCREEN_INDEX = 0;
 
     private final int tier;
@@ -395,6 +403,21 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         super.load(nbt);
         screenAddress = nbt.contains(SCREEN_TAG) ? nbt.getString(SCREEN_TAG) : null;
         screen = null;
+        activeBufferIndex = nbt.contains(ACTIVE_BUFFER_TAG) ? nbt.getInt(ACTIVE_BUFFER_TAG) : SCREEN_INDEX;
+        videoBuffers.clear();
+        if (nbt.contains(VIDEO_RAM_TAG)) {
+            final ListTag pages = nbt.getCompound(VIDEO_RAM_TAG).getList(PAGES_TAG, Tag.TAG_COMPOUND);
+            for (int i = 0; i < pages.size(); i++) {
+                final CompoundTag page = pages.getCompound(i);
+                final int index = page.getInt(PAGE_INDEX_TAG);
+                if (index > SCREEN_INDEX && page.contains(PAGE_DATA_TAG)) {
+                    videoBuffers.put(index, VideoBuffer.load(page.getCompound(PAGE_DATA_TAG), maxDepth));
+                }
+            }
+        }
+        if (activeBufferIndex != SCREEN_INDEX && !videoBuffers.containsKey(activeBufferIndex)) {
+            activeBufferIndex = SCREEN_INDEX;
+        }
     }
 
     @Override
@@ -403,6 +426,19 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         if (screenAddress != null) {
             nbt.putString(SCREEN_TAG, screenAddress);
         }
+        nbt.putInt(ACTIVE_BUFFER_TAG, activeBufferIndex);
+        final CompoundTag videoRam = new CompoundTag();
+        final ListTag pages = new ListTag();
+        for (Map.Entry<Integer, VideoBuffer> entry : videoBuffers.entrySet()) {
+            final CompoundTag page = new CompoundTag();
+            page.putInt(PAGE_INDEX_TAG, entry.getKey());
+            final CompoundTag data = new CompoundTag();
+            entry.getValue().save(data);
+            page.put(PAGE_DATA_TAG, data);
+            pages.add(page);
+        }
+        videoRam.put(PAGES_TAG, pages);
+        nbt.put(VIDEO_RAM_TAG, videoRam);
     }
 
     private void resetScreen(final TextBuffer buffer) {
@@ -523,6 +559,22 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     private static final class VideoBuffer extends AbstractManagedEnvironment implements TextBuffer {
+        private static final String WIDTH_TAG = "width";
+        private static final String HEIGHT_TAG = "height";
+        private static final String MAXIMUM_WIDTH_TAG = "maximumWidth";
+        private static final String MAXIMUM_HEIGHT_TAG = "maximumHeight";
+        private static final String VIEWPORT_WIDTH_TAG = "viewportWidth";
+        private static final String VIEWPORT_HEIGHT_TAG = "viewportHeight";
+        private static final String FOREGROUND_TAG = "foreground";
+        private static final String BACKGROUND_TAG = "background";
+        private static final String FOREGROUND_PALETTE_TAG = "foregroundPalette";
+        private static final String BACKGROUND_PALETTE_TAG = "backgroundPalette";
+        private static final String DEPTH_TAG = "depth";
+        private static final String PALETTE_TAG = "palette";
+        private static final String TEXT_TAG = "text";
+        private static final String CELL_FOREGROUND_TAG = "cellForeground";
+        private static final String CELL_BACKGROUND_TAG = "cellBackground";
+
         private final ColorDepth maximumDepth;
         private final int maximumWidth;
         private final int maximumHeight;
@@ -546,6 +598,14 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             this.maximumDepth = maximumDepth;
             this.colorDepth = maximumDepth == null ? ColorDepth.OneBit : maximumDepth;
             resize(this.maximumWidth, this.maximumHeight);
+        }
+
+        private static VideoBuffer load(final CompoundTag nbt, final ColorDepth maximumDepth) {
+            final int maximumWidth = nbt.contains(MAXIMUM_WIDTH_TAG) ? nbt.getInt(MAXIMUM_WIDTH_TAG) : nbt.getInt(WIDTH_TAG);
+            final int maximumHeight = nbt.contains(MAXIMUM_HEIGHT_TAG) ? nbt.getInt(MAXIMUM_HEIGHT_TAG) : nbt.getInt(HEIGHT_TAG);
+            final VideoBuffer buffer = new VideoBuffer(maximumWidth, maximumHeight, maximumDepth);
+            buffer.load(nbt);
+            return buffer;
         }
 
         private int size() {
@@ -864,10 +924,46 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Override
         public void load(final CompoundTag nbt) {
+            resize(
+                nbt.contains(WIDTH_TAG) ? Math.min(maximumWidth, Math.max(1, nbt.getInt(WIDTH_TAG))) : maximumWidth,
+                nbt.contains(HEIGHT_TAG) ? Math.min(maximumHeight, Math.max(1, nbt.getInt(HEIGHT_TAG))) : maximumHeight
+            );
+            viewportWidth = nbt.contains(VIEWPORT_WIDTH_TAG) ? Math.min(width, Math.max(1, nbt.getInt(VIEWPORT_WIDTH_TAG))) : width;
+            viewportHeight = nbt.contains(VIEWPORT_HEIGHT_TAG) ? Math.min(height, Math.max(1, nbt.getInt(VIEWPORT_HEIGHT_TAG))) : height;
+            foregroundColor = nbt.getInt(FOREGROUND_TAG);
+            backgroundColor = nbt.getInt(BACKGROUND_TAG);
+            foregroundFromPalette = nbt.getBoolean(FOREGROUND_PALETTE_TAG);
+            backgroundFromPalette = nbt.getBoolean(BACKGROUND_PALETTE_TAG);
+            if (nbt.contains(DEPTH_TAG)) {
+                final int depth = nbt.getInt(DEPTH_TAG);
+                if (depth >= 0 && depth < ColorDepth.values().length && depth <= maximumDepth.ordinal()) {
+                    colorDepth = ColorDepth.values()[depth];
+                }
+            }
+            final int[] loadedPalette = nbt.getIntArray(PALETTE_TAG);
+            System.arraycopy(loadedPalette, 0, palette, 0, Math.min(loadedPalette.length, palette.length));
+            loadRows(nbt.getList(TEXT_TAG, Tag.TAG_INT_ARRAY), text);
+            loadRows(nbt.getList(CELL_FOREGROUND_TAG, Tag.TAG_INT_ARRAY), foreground);
+            loadRows(nbt.getList(CELL_BACKGROUND_TAG, Tag.TAG_INT_ARRAY), background);
         }
 
         @Override
         public void save(final CompoundTag nbt) {
+            nbt.putInt(WIDTH_TAG, width);
+            nbt.putInt(HEIGHT_TAG, height);
+            nbt.putInt(MAXIMUM_WIDTH_TAG, maximumWidth);
+            nbt.putInt(MAXIMUM_HEIGHT_TAG, maximumHeight);
+            nbt.putInt(VIEWPORT_WIDTH_TAG, viewportWidth);
+            nbt.putInt(VIEWPORT_HEIGHT_TAG, viewportHeight);
+            nbt.putInt(FOREGROUND_TAG, foregroundColor);
+            nbt.putInt(BACKGROUND_TAG, backgroundColor);
+            nbt.putBoolean(FOREGROUND_PALETTE_TAG, foregroundFromPalette);
+            nbt.putBoolean(BACKGROUND_PALETTE_TAG, backgroundFromPalette);
+            nbt.putInt(DEPTH_TAG, colorDepth.ordinal());
+            nbt.putIntArray(PALETTE_TAG, palette);
+            nbt.put(TEXT_TAG, saveRows(text));
+            nbt.put(CELL_FOREGROUND_TAG, saveRows(foreground));
+            nbt.put(CELL_BACKGROUND_TAG, saveRows(background));
         }
 
         private void resize(final int width, final int height) {
@@ -920,6 +1016,23 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                 }
             }
             return snapshot;
+        }
+
+        private ListTag saveRows(final int[][] source) {
+            final ListTag rows = new ListTag();
+            for (int y = 0; y < height; y++) {
+                rows.add(new IntArrayTag(source[y]));
+            }
+            return rows;
+        }
+
+        private void loadRows(final ListTag rows, final int[][] target) {
+            for (int y = 0; y < Math.min(rows.size(), height); y++) {
+                final int[] row = rows.getIntArray(y);
+                for (int x = 0; x < Math.min(row.length, width); x++) {
+                    target[y][x] = row[x];
+                }
+            }
         }
 
         private boolean isInside(final int column, final int row) {
