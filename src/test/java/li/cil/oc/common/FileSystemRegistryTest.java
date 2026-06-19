@@ -1,9 +1,13 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.network.Component;
+import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.fs.Handle;
 import li.cil.oc.api.fs.Mode;
+import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,8 +16,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,6 +28,7 @@ final class FileSystemRegistryTest {
     @AfterEach
     void resetApi() {
         API.fileSystem = null;
+        API.network = null;
     }
 
     @Test
@@ -69,5 +76,24 @@ final class FileSystemRegistryTest {
         assertNull(registry.fromClass(getClass(), "neoopencomputers", "manual"));
         assertNull(registry.fromSaveDirectory("drive", 1024, true));
         assertNull(registry.asManagedEnvironment(null, "label", null, null, 1));
+    }
+
+    @Test
+    void createsManagedFileSystemEnvironment() {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+
+        assertNotNull(environment);
+        assertNotNull(environment.node());
+        assertInstanceOf(Component.class, environment.node());
+        Component component = (Component) environment.node();
+        assertEquals("filesystem", component.name());
+        assertEquals(Visibility.Neighbors, component.visibility());
+
+        CompoundTag nbt = new CompoundTag();
+        environment.save(nbt);
+        assertTrue(nbt.contains("node"));
     }
 }

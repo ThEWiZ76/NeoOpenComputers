@@ -43,12 +43,46 @@ final class FileSystemRegistry implements FileSystemAPI {
 
     @Override
     public ManagedEnvironment asManagedEnvironment(final FileSystem fileSystem, final Label label, final EnvironmentHost host, final String accessSound, final int speed) {
-        return null;
+        if (fileSystem == null) {
+            return null;
+        }
+        return new FileSystemEnvironment(fileSystem, label, host, accessSound, speed);
     }
 
     @Override
     public ManagedEnvironment asManagedEnvironment(final FileSystem fileSystem, final String label, final EnvironmentHost host, final String accessSound, final int speed) {
-        return null;
+        return asManagedEnvironment(fileSystem, new ReadOnlyLabel(label), host, accessSound, speed);
+    }
+
+    private static final class ReadOnlyLabel implements Label {
+        private static final String LABEL_TAG = "oc:fs.label";
+
+        private final String label;
+
+        private ReadOnlyLabel(final String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String getLabel() {
+            return label;
+        }
+
+        @Override
+        public void setLabel(final String value) {
+            throw new IllegalArgumentException("label is read only");
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+            if (label != null) {
+                nbt.putString(LABEL_TAG, label);
+            }
+        }
     }
 
     private static final class ReadOnlyFileSystem implements FileSystem {
