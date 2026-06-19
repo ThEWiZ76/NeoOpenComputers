@@ -4,11 +4,13 @@ import li.cil.oc.api.API;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.fs.Handle;
 import li.cil.oc.api.fs.Label;
 import li.cil.oc.api.fs.Mode;
+import li.cil.oc.api.machine.Context;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -172,6 +174,25 @@ final class FileSystemRegistryTest {
         component.invoke("close", null, readHandle);
     }
 
+    @Test
+    void managedFileSystemEnvironmentConsumesCallBudgetForIo() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        assertTrue(fileSystem.makeDirectory("tmp"));
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 2);
+        Component component = (Component) environment.node();
+        RecordingContext context = new RecordingContext();
+
+        Object writeHandle = component.invoke("open", context, "tmp/data.txt", "w")[0];
+        component.invoke("write", context, writeHandle, "hello");
+        component.invoke("close", context, writeHandle);
+        Object readHandle = component.invoke("open", context, "tmp/data.txt", "r")[0];
+        component.invoke("read", context, readHandle, 2);
+        component.invoke("seek", context, readHandle, "set", 0);
+
+        assertEquals(1.0D, context.callBudget, 0.000_001D);
+    }
+
     private static final class MutableLabel implements Label {
         private String value;
 
@@ -199,6 +220,55 @@ final class FileSystemRegistryTest {
             if (value != null) {
                 nbt.putString("label", value);
             }
+        }
+    }
+
+    private static final class RecordingContext implements Context {
+        private double callBudget;
+
+        @Override
+        public Node node() {
+            return null;
+        }
+
+        @Override
+        public boolean canInteract(final String player) {
+            return true;
+        }
+
+        @Override
+        public boolean isRunning() {
+            return true;
+        }
+
+        @Override
+        public boolean isPaused() {
+            return false;
+        }
+
+        @Override
+        public boolean start() {
+            return true;
+        }
+
+        @Override
+        public boolean pause(final double seconds) {
+            return true;
+        }
+
+        @Override
+        public boolean stop() {
+            return true;
+        }
+
+        @Override
+        public void consumeCallBudget(final double callCost) {
+            callBudget += callCost;
+        }
+
+        @Override
+        public boolean signal(final String name, final Object... args) {
+            return true;
         }
     }
 }

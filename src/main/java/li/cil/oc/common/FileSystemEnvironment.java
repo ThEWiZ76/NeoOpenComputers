@@ -164,6 +164,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
 
     @Callback(direct = true, doc = "function(handle:userdata,count:number):string -- Reads up to count bytes from a file handle.")
     public Object[] read(final Context context, final Arguments arguments) throws IOException {
+        consumeCallBudget(context, READ_COSTS[speed - 1]);
         final Handle handle = getHandle(checkHandle(arguments, 0));
         final byte[] buffer = new byte[Math.max(0, arguments.checkInteger(1))];
         final int read = handle.read(buffer);
@@ -180,6 +181,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
 
     @Callback(direct = true, doc = "function(handle:userdata,whence:string,offset:number):number -- Seeks in a file handle.")
     public Object[] seek(final Context context, final Arguments arguments) throws IOException {
+        consumeCallBudget(context, SEEK_COSTS[speed - 1]);
         final Handle handle = getHandle(checkHandle(arguments, 0));
         final String whence = arguments.checkString(1);
         final long offset = arguments.checkLong(2);
@@ -194,6 +196,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
 
     @Callback(direct = true, doc = "function(handle:userdata,value:string):boolean -- Writes bytes to a file handle.")
     public Object[] write(final Context context, final Arguments arguments) throws IOException {
+        consumeCallBudget(context, WRITE_COSTS[speed - 1]);
         getHandle(checkHandle(arguments, 0)).write(arguments.checkByteArray(1));
         return new Object[]{true};
     }
@@ -315,6 +318,12 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
 
     private void close(final int handle) throws IOException {
         getHandle(handle).close();
+    }
+
+    private static void consumeCallBudget(final Context context, final double cost) {
+        if (context != null) {
+            context.consumeCallBudget(cost);
+        }
     }
 
     private static String clock(final int costIndex) {
