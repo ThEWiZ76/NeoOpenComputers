@@ -88,6 +88,26 @@ final class LuaArchitectureTest {
         assertEquals("machine-address", architecture.globalString("tmp"));
     }
 
+    @Test
+    void exposesComputerShutdownToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("computer.shutdown()");
+
+        assertTrue(architecture.initialize());
+        ExecutionResult.Shutdown result = assertInstanceOf(ExecutionResult.Shutdown.class, architecture.runThreaded(false));
+
+        assertEquals(false, result.reboot);
+    }
+
+    @Test
+    void exposesComputerRebootToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("computer.shutdown(true)");
+
+        assertTrue(architecture.initialize());
+        ExecutionResult.Shutdown result = assertInstanceOf(ExecutionResult.Shutdown.class, architecture.runThreaded(false));
+
+        assertEquals(true, result.reboot);
+    }
+
     private static Machine machineWithUptime(final double uptime) {
         return machine(new ArrayDeque<>(), uptime);
     }

@@ -33,6 +33,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private Machine machine;
     private Globals globals;
     private LuaValue bootChunk;
+    private ExecutionResult pendingResult;
 
     public LuaArchitecture() {
         this("");
@@ -67,6 +68,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     @Override
     public boolean initialize() {
         globals = JsePlatform.standardGlobals();
+        pendingResult = null;
         installComputerLibrary();
         try {
             bootChunk = globals.load(bootSource, "boot");
@@ -84,6 +86,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         booted = false;
         globals = null;
         bootChunk = null;
+        pendingResult = null;
     }
 
     @Override
@@ -101,6 +104,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 bootChunk.call();
             } catch (LuaError e) {
                 return new ExecutionResult.Error(e.getMessage());
+            }
+            if (pendingResult != null) {
+                return pendingResult;
             }
         }
         return new ExecutionResult.Sleep(1);
@@ -182,6 +188,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public LuaValue call() {
                 return machineAddress();
+            }
+        });
+        computer.set("shutdown", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                pendingResult = new ExecutionResult.Shutdown(args.narg() > 0 && args.arg1().toboolean());
+                return LuaValue.NIL;
             }
         });
         computer.set("pullSignal", new VarArgFunction() {
