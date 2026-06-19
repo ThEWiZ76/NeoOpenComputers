@@ -35,6 +35,7 @@ final class MachineRegistryTest {
     void resetApi() {
         API.machine = null;
         API.network = null;
+        li.cil.oc.api.Machine.LuaArchitecture = null;
     }
 
     @Test
@@ -42,6 +43,15 @@ final class MachineRegistryTest {
         OpenComputersApi.initialize();
 
         assertTrue(API.machine instanceof MachineRegistry);
+    }
+
+    @Test
+    void bootstrapInstallsLuaArchitecture() {
+        OpenComputersApi.initialize();
+
+        assertNotNull(li.cil.oc.api.Machine.LuaArchitecture);
+        assertTrue(li.cil.oc.api.Machine.architectures().contains(li.cil.oc.api.Machine.LuaArchitecture));
+        assertEquals("Lua", li.cil.oc.api.Machine.getArchitectureName(li.cil.oc.api.Machine.LuaArchitecture));
     }
 
     @Test
