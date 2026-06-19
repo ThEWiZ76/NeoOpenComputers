@@ -591,6 +591,39 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void resolvesComponentPrefixesAndPrimaryStatusForLua() {
+        Map<String, String> components = new LinkedHashMap<>();
+        components.put("fs1-address", "filesystem");
+        components.put("fs2-address", "filesystem");
+        components.put("gpu-address", "gpu");
+        LuaArchitecture architecture = new LuaArchitecture("""
+            resolved = component.get('fs2', 'filesystem')
+            missing, missingMessage = component.get('none', 'filesystem')
+            wrongType, wrongTypeMessage = component.get('gpu', 'filesystem')
+            component.setPrimary('filesystem', 'fs2-address')
+            selectedPrimary = component.isPrimary('fs2-address')
+            otherPrimary = component.isPrimary('fs1-address')
+            missingPrimary = component.isPrimary('missing')
+            shorthand = component.filesystem
+            sameShorthand = shorthand == component.getPrimary('filesystem')
+            """);
+        architecture.bind(machineWithComponentsAndInvokeResult(components, new Object[]{"tmp"}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("fs2-address", architecture.globalString("resolved"));
+        assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("no such component", architecture.globalString("missingMessage"));
+        assertEquals("nil", architecture.globalString("wrongType"));
+        assertEquals("no such component", architecture.globalString("wrongTypeMessage"));
+        assertTrue(architecture.globalBoolean("selectedPrimary"));
+        assertEquals(false, architecture.globalBoolean("otherPrimary"));
+        assertEquals(false, architecture.globalBoolean("missingPrimary"));
+        assertTrue(architecture.globalBoolean("sameShorthand"));
+    }
+
+    @Test
     void exposesComponentSlotToLua() {
         LuaArchitecture architecture = new LuaArchitecture("slot = component.slot('fs-address'); missing, missingMessage = component.slot('missing')");
         architecture.bind(machineWithComponentsAndHostSlot(Map.of("fs-address", "filesystem"), "fs-address", 3));

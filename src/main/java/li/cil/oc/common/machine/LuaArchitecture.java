@@ -494,6 +494,22 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return createComponentList(filter, exact);
             }
         });
+        component.set("get", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 1) {
+                    return LuaValue.NIL;
+                }
+                final String prefix = args.arg(1).tojstring();
+                final String type = args.narg() >= 2 && !args.arg(2).isnil() ? args.arg(2).tojstring() : null;
+                for (Map.Entry<String, String> entry : machine.components().entrySet()) {
+                    if (entry.getKey().startsWith(prefix) && (type == null || type.equals(entry.getValue()))) {
+                        return LuaValue.valueOf(entry.getKey());
+                    }
+                }
+                return noSuchComponent();
+            }
+        });
         component.set("type", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
@@ -512,6 +528,17 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 final String type = args.arg1().tojstring();
                 return LuaValue.valueOf(machine.components().containsValue(type));
+            }
+        });
+        component.set("isPrimary", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 1) {
+                    return LuaValue.FALSE;
+                }
+                final String address = args.arg(1).tojstring();
+                final String type = machine.components().get(address);
+                return LuaValue.valueOf(type != null && address.equals(firstComponentAddress(type)));
             }
         });
         component.set("slot", new VarArgFunction() {
@@ -643,6 +670,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return hasComponent(address) ? createComponentProxy(address) : noSuchComponent();
             }
         });
+        final LuaTable metatable = new LuaTable();
+        metatable.set("__index", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null) {
+                    return LuaValue.NIL;
+                }
+                final String address = firstComponentAddress(args.arg(2).tojstring());
+                return address == null ? LuaValue.NIL : createComponentProxy(address);
+            }
+        });
+        component.setmetatable(metatable);
         globals.set("component", component);
     }
 
