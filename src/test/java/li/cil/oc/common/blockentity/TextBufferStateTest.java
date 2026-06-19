@@ -73,4 +73,22 @@ final class TextBufferStateTest {
         assertEquals(0x111111, buffer.getBackgroundColor(0, 1));
         assertEquals(0x222222, buffer.getBackgroundColor(1, 1));
     }
+
+    @Test
+    void saveAndLoadPreservesColors() {
+        TextBufferState saved = new TextBufferState(2, 1);
+        saved.rawSetForeground(0, 0, new int[][]{{0xABCDEF, 0x123456}});
+        saved.rawSetBackground(0, 0, new int[][]{{0x010203, 0x040506}});
+        CompoundTag tag = new CompoundTag();
+
+        saved.save(tag);
+
+        TextBufferState loaded = new TextBufferState(1, 1);
+        loaded.load(tag);
+
+        assertEquals(0xABCDEF, loaded.getForegroundColor(0, 0));
+        assertEquals(0x123456, loaded.getForegroundColor(1, 0));
+        assertEquals(0x010203, loaded.getBackgroundColor(0, 0));
+        assertEquals(0x040506, loaded.getBackgroundColor(1, 0));
+    }
 }

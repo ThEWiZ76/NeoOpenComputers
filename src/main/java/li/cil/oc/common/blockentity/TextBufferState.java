@@ -6,6 +6,8 @@ import net.minecraft.nbt.ListTag;
 
 final class TextBufferState {
     private static final String TAG_HEIGHT = "height";
+    private static final String TAG_BACKGROUND = "background";
+    private static final String TAG_FOREGROUND = "foreground";
     private static final String TAG_ROWS = "rows";
     private static final String TAG_WIDTH = "width";
 
@@ -112,22 +114,17 @@ final class TextBufferState {
         final int loadedHeight = Math.max(1, tag.getInt(TAG_HEIGHT));
         resize(loadedWidth, loadedHeight);
         final ListTag rows = tag.getList(TAG_ROWS, IntArrayTag.TAG_INT_ARRAY);
-        for (int y = 0; y < Math.min(rows.size(), height); y++) {
-            final int[] row = rows.getIntArray(y);
-            for (int x = 0; x < Math.min(row.length, width); x++) {
-                text[y][x] = row[x];
-            }
-        }
+        loadRows(rows, text);
+        loadRows(tag.getList(TAG_FOREGROUND, IntArrayTag.TAG_INT_ARRAY), foreground);
+        loadRows(tag.getList(TAG_BACKGROUND, IntArrayTag.TAG_INT_ARRAY), background);
     }
 
     void save(final CompoundTag tag) {
         tag.putInt(TAG_WIDTH, width);
         tag.putInt(TAG_HEIGHT, height);
-        final ListTag rows = new ListTag();
-        for (int y = 0; y < height; y++) {
-            rows.add(new IntArrayTag(text[y]));
-        }
-        tag.put(TAG_ROWS, rows);
+        tag.put(TAG_ROWS, saveRows(text));
+        tag.put(TAG_FOREGROUND, saveRows(foreground));
+        tag.put(TAG_BACKGROUND, saveRows(background));
     }
 
     private void put(final int column, final int row, final int value) {
@@ -149,6 +146,23 @@ final class TextBufferState {
                 }
             }
         }
+    }
+
+    private void loadRows(final ListTag rows, final int[][] target) {
+        for (int y = 0; y < Math.min(rows.size(), height); y++) {
+            final int[] row = rows.getIntArray(y);
+            for (int x = 0; x < Math.min(row.length, width); x++) {
+                target[y][x] = row[x];
+            }
+        }
+    }
+
+    private ListTag saveRows(final int[][] source) {
+        final ListTag rows = new ListTag();
+        for (int y = 0; y < height; y++) {
+            rows.add(new IntArrayTag(source[y]));
+        }
+        return rows;
     }
 
     private boolean isInside(final int column, final int row) {
