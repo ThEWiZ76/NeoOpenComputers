@@ -46,6 +46,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void graphicsCardTier1ItemIdIsStable() {
+        assertEquals("graphics_card_tier1", ModContentIds.GRAPHICS_CARD_TIER1);
+    }
+
+    @Test
     void computerCaseMenuIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
     }

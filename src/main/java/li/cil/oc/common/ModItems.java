@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.item.CpuItem;
 import li.cil.oc.common.item.EepromItem;
+import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
 import li.cil.oc.common.item.MemoryItem;
 import net.minecraft.world.item.BlockItem;
@@ -25,6 +26,10 @@ public final class ModItems {
     public static final DeferredItem<EepromItem> EEPROM = ITEMS.register(
         ModContentIds.EEPROM,
         () -> new EepromItem(new Item.Properties()));
+
+    public static final DeferredItem<GraphicsCardItem> GRAPHICS_CARD_TIER1 = ITEMS.register(
+        ModContentIds.GRAPHICS_CARD_TIER1,
+        () -> new GraphicsCardItem(new Item.Properties()));
 
     public static final DeferredItem<HardDiskDriveItem> HDD_TIER1 = ITEMS.register(
         ModContentIds.HDD_TIER1,
