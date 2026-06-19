@@ -140,6 +140,27 @@ final class MachineRegistryTest {
         assertFalse(machine.architecture().isInitialized());
     }
 
+    @Test
+    void savesAndLoadsSelectedArchitectureState() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        Machine saved = API.machine.create(new TestHost());
+        saved.onHostChanged();
+        saved.start();
+        CompoundTag tag = new CompoundTag();
+
+        saved.save(tag);
+
+        Machine loaded = API.machine.create(new TestHost());
+        loaded.onHostChanged();
+        loaded.load(tag);
+
+        assertTrue(loaded.isRunning());
+        assertTrue(loaded.architecture().isInitialized());
+    }
+
     private static class TestArchitecture implements Architecture {
         @Override public boolean isInitialized() { return false; }
         @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return false; }

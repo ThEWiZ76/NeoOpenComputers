@@ -29,6 +29,7 @@ import java.util.Set;
 final class SimpleMachine extends AbstractManagedEnvironment implements Machine {
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
+    private static final String ARCHITECTURE_TAG = "architecture";
 
     private final MachineHost host;
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
@@ -282,6 +283,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         super.load(nbt);
         running = nbt.getBoolean(RUNNING_TAG);
         lastError = nbt.contains(LAST_ERROR_TAG) ? nbt.getString(LAST_ERROR_TAG) : null;
+        if (architecture != null && nbt.contains(ARCHITECTURE_TAG)) {
+            architecture.load(nbt.getCompound(ARCHITECTURE_TAG));
+        }
     }
 
     @Override
@@ -290,6 +294,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         nbt.putBoolean(RUNNING_TAG, running);
         if (lastError != null) {
             nbt.putString(LAST_ERROR_TAG, lastError);
+        }
+        if (architecture != null) {
+            final CompoundTag architectureTag = new CompoundTag();
+            architecture.save(architectureTag);
+            nbt.put(ARCHITECTURE_TAG, architectureTag);
         }
     }
 
