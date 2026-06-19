@@ -3,6 +3,7 @@ package li.cil.oc.common.machine;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.machine.Architecture;
+import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.Signal;
@@ -161,6 +162,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return globals.get(name).tojstring();
     }
 
+    boolean globalBoolean(final String name) {
+        return globals != null && globals.get(name).toboolean();
+    }
+
     void configureBootSource(final CompoundTag eepromData) {
         bootSource = bootSourceFrom(eepromData);
     }
@@ -257,6 +262,19 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 final String type = machine.components().get(args.arg(1).tojstring());
                 return type == null ? LuaValue.NIL : LuaValue.valueOf(type);
+            }
+        });
+        component.set("methods", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaTable methods = new LuaTable();
+                if (machine != null && args.narg() >= 1) {
+                    for (Map.Entry<String, Callback> entry : machine.methods(args.arg(1).tojstring()).entrySet()) {
+                        final Callback callback = entry.getValue();
+                        methods.set(entry.getKey(), LuaValue.valueOf(callback != null && callback.direct()));
+                    }
+                }
+                return methods;
             }
         });
         component.set("invoke", new VarArgFunction() {

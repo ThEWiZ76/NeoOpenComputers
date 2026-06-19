@@ -112,6 +112,7 @@ final class MachineRegistryTest {
 
         assertEquals("filesystem", machine.components().get(fileSystemEnvironment.node().address()));
         assertEquals(1, machine.componentCount());
+        assertTrue(machine.methods(fileSystemEnvironment.node().address()).containsKey("isReadOnly"));
         assertArrayEquals(new Object[]{false}, machine.invoke(fileSystemEnvironment.node().address(), "isReadOnly", new Object[0]));
     }
 

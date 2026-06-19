@@ -2,6 +2,7 @@ package li.cil.oc.common.machine;
 
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +12,7 @@ import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Queue;
 
@@ -145,6 +147,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComponentMethodsToLua() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        methods.put("direct", callback("directCallback"));
+        LuaArchitecture architecture = new LuaArchitecture("methods = component.methods('fs-address'); label = methods.label; direct = methods.direct");
+        architecture.bind(machineWithMethods(methods));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("label"));
+        assertEquals(true, architecture.globalBoolean("direct"));
+    }
+
+    @Test
     void exposesComponentInvokeToLua() {
         LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'label', 'arg')");
         architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
@@ -190,6 +207,10 @@ final class LuaArchitectureTest {
         return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), invokeResult);
     }
 
+    private static Machine machineWithMethods(final Map<String, Callback> methods) {
+        return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], methods);
+    }
+
     private static Machine machine(final Queue<Signal> signals, final double uptime) {
         return machine(signals, uptime, null);
     }
@@ -210,6 +231,18 @@ final class LuaArchitectureTest {
         final Map<String, String> components,
         final Object[] invokeResult
     ) {
+        return machine(signals, uptime, address, beepPattern, components, invokeResult, Map.of());
+    }
+
+    private static Machine machine(
+        final Queue<Signal> signals,
+        final double uptime,
+        final String address,
+        final String[] beepPattern,
+        final Map<String, String> components,
+        final Object[] invokeResult,
+        final Map<String, Callback> methods
+    ) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -218,6 +251,7 @@ final class LuaArchitectureTest {
                 case "popSignal" -> signals.poll();
                 case "tmpAddress" -> address;
                 case "components" -> components;
+                case "methods" -> methods;
                 case "invoke" -> invokeResult;
                 case "beep" -> {
                     if (beepPattern != null && args.length == 1) {
@@ -246,6 +280,22 @@ final class LuaArchitectureTest {
             return 0D;
         }
         return null;
+    }
+
+    private static Callback callback(final String name) {
+        try {
+            return LuaArchitectureTest.class.getDeclaredMethod(name).getAnnotation(Callback.class);
+        } catch (NoSuchMethodException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Callback(doc = "function():string -- Regular callback.")
+    private static void labelCallback() {
+    }
+
+    @Callback(direct = true, doc = "function():string -- Direct callback.")
+    private static void directCallback() {
     }
 
     private record TestSignal(String name, Object[] args) implements Signal {

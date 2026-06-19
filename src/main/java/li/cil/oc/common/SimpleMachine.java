@@ -16,6 +16,7 @@ import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.machine.MachineBoundArchitecture;
@@ -232,17 +233,39 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public Map<String, Callback> methods(final Object value) {
-        return Map.of();
+        if (!(value instanceof String address) || node() == null || node().network() == null) {
+            return Map.of();
+        }
+        final Node target = node().network().node(address);
+        if (!(target instanceof Component component) || !component.canBeSeenFrom(node())) {
+            return Map.of();
+        }
+        final Map<String, Callback> methods = new LinkedHashMap<>();
+        for (String method : component.methods()) {
+            methods.put(method, component.annotation(method));
+        }
+        return methods;
+    }
+
+    private Component component(final String address) {
+        if (node() == null || node().network() == null) {
+            return null;
+        }
+        final Node target = node().network().node(address);
+        if (target instanceof Component component && component.canBeSeenFrom(node())) {
+            return component;
+        }
+        return null;
     }
 
     @Override
     public Object[] invoke(final String address, final String method, final Object[] args) throws Exception {
+        final Component component = component(address);
+        if (component != null) {
+            return component.invoke(method, this, args == null ? new Object[0] : args);
+        }
         if (node() == null || node().network() == null) {
             throw new IllegalStateException("machine is not in a network");
-        }
-        final li.cil.oc.api.network.Node target = node().network().node(address);
-        if (target instanceof Component component) {
-            return component.invoke(method, this, args == null ? new Object[0] : args);
         }
         throw new NoSuchMethodException(method);
     }
