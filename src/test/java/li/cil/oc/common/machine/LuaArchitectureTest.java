@@ -57,6 +57,7 @@ final class LuaArchitectureTest {
         API.nanomachines = null;
         API.network = null;
         li.cil.oc.api.Machine.LuaArchitecture = null;
+        ProgramLocations.clear();
     }
 
     @Test
@@ -344,6 +345,42 @@ final class LuaArchitectureTest {
 
         assertEquals(device.node().address(), architecture.globalString("deviceAddress"));
         assertEquals("Test GPU", architecture.globalString("product"));
+    }
+
+    @Test
+    void exposesProgramLocationsToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            locations = computer.getProgramLocations()
+            locationsType = type(locations)
+            first = locations[1]
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("table", architecture.globalString("locationsType"));
+        assertEquals("nil", architecture.globalString("first"));
+    }
+
+    @Test
+    void exposesRegisteredProgramLocationsToLua() {
+        ProgramLocations.addMapping("edit", "OpenOS");
+        ProgramLocations.addMapping("dig", "Network", "Lua");
+        LuaArchitecture architecture = new LuaArchitecture("""
+            locations = computer.getProgramLocations()
+            firstProgram = locations[1][1]
+            firstLabel = locations[1][2]
+            secondProgram = locations[2][1]
+            secondLabel = locations[2][2]
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("dig", architecture.globalString("firstProgram"));
+        assertEquals("Network", architecture.globalString("firstLabel"));
+        assertEquals("edit", architecture.globalString("secondProgram"));
+        assertEquals("OpenOS", architecture.globalString("secondLabel"));
     }
 
     @Test

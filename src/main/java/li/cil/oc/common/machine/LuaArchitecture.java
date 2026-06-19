@@ -291,6 +291,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return deviceInfo();
             }
         });
+        computer.set("getProgramLocations", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return programLocations();
+            }
+        });
         computer.set("tmpAddress", new ZeroArgFunction() {
             @Override
             public LuaValue call() {
@@ -903,6 +909,27 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (address != null && info != null) {
             devices.set(address, toLuaValue(info));
         }
+    }
+
+    private LuaTable programLocations() {
+        final LuaTable locations = new LuaTable();
+        int index = 1;
+        for (ProgramLocations.Mapping mapping : ProgramLocations.mappings(currentArchitectureName())) {
+            final LuaTable entry = new LuaTable();
+            entry.set(1, mapping.program());
+            entry.set(2, mapping.label());
+            locations.set(index++, entry);
+        }
+        return locations;
+    }
+
+    private String currentArchitectureName() {
+        final String registeredName = li.cil.oc.api.Machine.getArchitectureName(getClass());
+        if (registeredName != null) {
+            return registeredName;
+        }
+        final Architecture.Name name = getClass().getAnnotation(Architecture.Name.class);
+        return name == null ? null : name.value();
     }
 
     private Processor processor() {
