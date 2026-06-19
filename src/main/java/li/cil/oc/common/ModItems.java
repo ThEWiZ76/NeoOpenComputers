@@ -1,6 +1,8 @@
 package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.item.CpuItem;
+import li.cil.oc.common.item.MemoryItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
@@ -14,11 +16,15 @@ public final class ModItems {
         ModContentIds.COMPUTER_CASE_TIER1,
         ModBlocks.COMPUTER_CASE_TIER1);
 
-    public static final DeferredItem<Item> CPU_TIER1 = ITEMS.registerSimpleItem(ModContentIds.CPU_TIER1, new Item.Properties());
+    public static final DeferredItem<CpuItem> CPU_TIER1 = ITEMS.register(
+        ModContentIds.CPU_TIER1,
+        () -> new CpuItem(new Item.Properties()));
 
     public static final DeferredItem<Item> MANUAL = ITEMS.registerSimpleItem(ModContentIds.MANUAL, new Item.Properties());
 
-    public static final DeferredItem<Item> MEMORY_TIER1 = ITEMS.registerSimpleItem(ModContentIds.MEMORY_TIER1, new Item.Properties());
+    public static final DeferredItem<MemoryItem> MEMORY_TIER1 = ITEMS.register(
+        ModContentIds.MEMORY_TIER1,
+        () -> new MemoryItem(new Item.Properties()));
 
     public static void register(final IEventBus modEventBus) {
         ITEMS.register(modEventBus);
