@@ -1,17 +1,21 @@
 package li.cil.oc.common.block;
 
 import com.mojang.serialization.MapCodec;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 
-public class ScreenBlock extends HorizontalDirectionalBlock {
+public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlock {
     public static final MapCodec<ScreenBlock> CODEC = simpleCodec(ScreenBlock::new);
 
     public ScreenBlock(final BlockBehaviour.Properties properties) {
@@ -22,6 +26,11 @@ public class ScreenBlock extends HorizontalDirectionalBlock {
     @Override
     protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
         return CODEC;
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(final BlockPos pos, final BlockState state) {
+        return new ScreenBlockEntity(pos, state);
     }
 
     @Override

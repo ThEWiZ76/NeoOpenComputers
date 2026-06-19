@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
@@ -16,6 +17,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.COMPUTER_CASE_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(ComputerCaseBlockEntity::new, ModBlocks.COMPUTER_CASE_TIER1.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ScreenBlockEntity>> SCREEN =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.SCREEN_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(ScreenBlockEntity::new, ModBlocks.SCREEN_TIER1.get()).build(null));
 
     public static void register(final IEventBus modEventBus) {
         BLOCK_ENTITY_TYPES.register(modEventBus);
