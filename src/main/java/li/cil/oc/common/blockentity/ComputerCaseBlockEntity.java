@@ -205,6 +205,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
             && SLOT_TYPE_EEPROM.equals(eepromSlot);
     }
 
+    static void tickHostedMachine(final Machine machine) {
+        if (machine.canUpdate()) {
+            machine.update();
+        }
+    }
+
     @Override
     public int tier() {
         return 0;
@@ -304,6 +310,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     private void tickServer() {
+        tickHostedMachine(machine);
     }
 
     private boolean canStartMachine() {
