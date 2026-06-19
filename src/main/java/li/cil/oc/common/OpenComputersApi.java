@@ -22,6 +22,9 @@ public final class OpenComputersApi {
         if (API.network == null) {
             API.network = new NetworkRegistry();
         }
+        if (API.items == null) {
+            API.items = new ItemRegistry();
+        }
     }
 
     private OpenComputersApi() {
