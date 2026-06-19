@@ -353,13 +353,18 @@ final class LuaArchitectureTest {
 
     @Test
     void filtersComponentListForLua() {
-        LuaArchitecture architecture = new LuaArchitecture("components = component.list('file', false); fs = components['fs-address']; gpu = components['gpu-address']");
-        architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem", "gpu-address", "gpu")));
+        Map<String, String> components = new LinkedHashMap<>();
+        components.put("fs-address", "filesystem");
+        components.put("gpu-address", "gpu");
+        LuaArchitecture architecture = new LuaArchitecture("partial = component.list('system'); fs = partial['fs-address']; exactMiss = component.list('file', true)['fs-address']; exact = component.list('filesystem', true)['fs-address']; gpu = partial['gpu-address']");
+        architecture.bind(machineWithComponents(components));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("filesystem", architecture.globalString("fs"));
+        assertEquals("nil", architecture.globalString("exactMiss"));
+        assertEquals("filesystem", architecture.globalString("exact"));
         assertEquals("nil", architecture.globalString("gpu"));
     }
 
@@ -377,7 +382,7 @@ final class LuaArchitectureTest {
 
     @Test
     void exposesComponentTypeToLua() {
-        LuaArchitecture architecture = new LuaArchitecture("kind = component.type('fs-address'); missing = component.type('missing')");
+        LuaArchitecture architecture = new LuaArchitecture("kind = component.type('fs-address'); missing, missingMessage = component.type('missing')");
         architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));
 
         assertTrue(architecture.initialize());
@@ -385,6 +390,7 @@ final class LuaArchitectureTest {
 
         assertEquals("filesystem", architecture.globalString("kind"));
         assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("no such component", architecture.globalString("missingMessage"));
     }
 
     @Test
@@ -401,14 +407,15 @@ final class LuaArchitectureTest {
 
     @Test
     void exposesComponentSlotToLua() {
-        LuaArchitecture architecture = new LuaArchitecture("slot = component.slot('fs-address'); missing = component.slot('missing')");
-        architecture.bind(machineWithHostSlot("fs-address", 3));
+        LuaArchitecture architecture = new LuaArchitecture("slot = component.slot('fs-address'); missing, missingMessage = component.slot('missing')");
+        architecture.bind(machineWithComponentsAndHostSlot(Map.of("fs-address", "filesystem"), "fs-address", 3));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals(3, architecture.globalInteger("slot"));
         assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("no such component", architecture.globalString("missingMessage"));
     }
 
     @Test
@@ -417,8 +424,8 @@ final class LuaArchitectureTest {
         methods.put("label", callback("labelCallback"));
         methods.put("direct", callback("directCallback"));
         methods.put("accessor", callback("accessorCallback"));
-        LuaArchitecture architecture = new LuaArchitecture("methods = component.methods('fs-address'); labelDirect = methods.label.direct; direct = methods.direct.direct; getter = methods.accessor.getter; setter = methods.accessor.setter");
-        architecture.bind(machineWithMethods(methods));
+        LuaArchitecture architecture = new LuaArchitecture("methods = component.methods('fs-address'); labelDirect = methods.label.direct; direct = methods.direct.direct; getter = methods.accessor.getter; setter = methods.accessor.setter; missing, missingMessage = component.methods('missing')");
+        architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
@@ -427,20 +434,24 @@ final class LuaArchitectureTest {
         assertEquals(true, architecture.globalBoolean("direct"));
         assertEquals(true, architecture.globalBoolean("getter"));
         assertEquals(true, architecture.globalBoolean("setter"));
+        assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("no such component", architecture.globalString("missingMessage"));
     }
 
     @Test
     void exposesComponentDocumentationToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
-        LuaArchitecture architecture = new LuaArchitecture("doc = component.doc('fs-address', 'label'); missing = component.doc('fs-address', 'missing')");
-        architecture.bind(machineWithMethods(methods));
+        LuaArchitecture architecture = new LuaArchitecture("doc = component.doc('fs-address', 'label'); missing = component.doc('fs-address', 'missing'); missingComponent, missingComponentMessage = component.doc('missing', 'label')");
+        architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("function():string -- Regular callback.", architecture.globalString("doc"));
         assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("nil", architecture.globalString("missingComponent"));
+        assertEquals("no such component", architecture.globalString("missingComponentMessage"));
     }
 
     @Test
@@ -733,7 +744,15 @@ final class LuaArchitectureTest {
         return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], methods);
     }
 
+    private static Machine machineWithComponentsAndMethods(final Map<String, String> components, final Map<String, Callback> methods) {
+        return machine(new ArrayDeque<>(), 0D, null, null, components, new Object[0], methods);
+    }
+
     private static Machine machineWithHostSlot(final String address, final int slot) {
+        return machineWithComponentsAndHostSlot(Map.of(), address, slot);
+    }
+
+    private static Machine machineWithComponentsAndHostSlot(final Map<String, String> components, final String address, final int slot) {
         final MachineHost host = (MachineHost) Proxy.newProxyInstance(
             MachineHost.class.getClassLoader(),
             new Class<?>[]{MachineHost.class},
@@ -744,7 +763,7 @@ final class LuaArchitectureTest {
                 case "toString" -> "test-host";
                 default -> defaultValue(method.getReturnType());
             });
-        return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], Map.of(), new String[0], null, null, null, null, host);
+        return machine(new ArrayDeque<>(), 0D, null, null, components, new Object[0], Map.of(), new String[0], null, null, null, null, host);
     }
 
     private static Machine machine(final Queue<Signal> signals, final double uptime) {

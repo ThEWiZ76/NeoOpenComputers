@@ -438,7 +438,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 final String filter = args.narg() >= 1 && !args.arg1().isnil() ? args.arg1().tojstring() : null;
-                final boolean exact = args.narg() < 2 || args.arg(2).toboolean();
+                final boolean exact = args.narg() >= 2 && args.arg(2).toboolean();
                 return createComponentList(filter, exact);
             }
         });
@@ -449,7 +449,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     return LuaValue.NIL;
                 }
                 final String type = machine.components().get(args.arg(1).tojstring());
-                return type == null ? LuaValue.NIL : LuaValue.valueOf(type);
+                return type == null ? noSuchComponent() : LuaValue.valueOf(type);
             }
         });
         component.set("isAvailable", new VarArgFunction() {
@@ -472,8 +472,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (host == null) {
                     return LuaValue.NIL;
                 }
-                final int slot = host.componentSlot(args.arg1().tojstring());
-                return slot < 0 ? LuaValue.NIL : LuaValue.valueOf(slot);
+                final String address = args.arg1().tojstring();
+                if (!hasComponent(address)) {
+                    return noSuchComponent();
+                }
+                return LuaValue.valueOf(host.componentSlot(address));
             }
         });
         component.set("getPrimary", new VarArgFunction() {
@@ -500,7 +503,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             public Varargs invoke(final Varargs args) {
                 final LuaTable methods = new LuaTable();
                 if (machine != null && args.narg() >= 1) {
-                    for (Map.Entry<String, Callback> entry : machine.methods(args.arg(1).tojstring()).entrySet()) {
+                    final String address = args.arg(1).tojstring();
+                    if (!hasComponent(address)) {
+                        return noSuchComponent();
+                    }
+                    for (Map.Entry<String, Callback> entry : machine.methods(address).entrySet()) {
                         final Callback callback = entry.getValue();
                         final LuaTable metadata = new LuaTable();
                         metadata.set("direct", LuaValue.valueOf(callback != null && callback.direct()));
@@ -518,7 +525,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (machine == null || args.narg() < 2) {
                     return LuaValue.NIL;
                 }
-                final Callback callback = machine.methods(args.arg(1).tojstring()).get(args.arg(2).tojstring());
+                final String address = args.arg(1).tojstring();
+                if (!hasComponent(address)) {
+                    return noSuchComponent();
+                }
+                final Callback callback = machine.methods(address).get(args.arg(2).tojstring());
                 if (callback == null || callback.doc().isEmpty()) {
                     return LuaValue.NIL;
                 }
@@ -674,7 +685,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (type == null) {
             return false;
         }
-        return exact ? type.equals(filter) : type.startsWith(filter);
+        return exact ? type.equals(filter) : type.contains(filter);
     }
 
     private LuaTable createComponentProxy(final String address) {
@@ -710,6 +721,14 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.NIL;
         }
         return LuaValue.valueOf(machine.tmpAddress());
+    }
+
+    private boolean hasComponent(final String address) {
+        return machine != null && machine.components().containsKey(address);
+    }
+
+    private static Varargs noSuchComponent() {
+        return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such component"));
     }
 
     private Connector machineConnector() {
