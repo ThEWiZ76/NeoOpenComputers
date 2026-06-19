@@ -1,0 +1,48 @@
+package li.cil.oc.common.component;
+
+import li.cil.oc.api.network.Node;
+import net.minecraft.world.entity.player.Player;
+
+public final class ScreenInputDispatcher {
+    private static final String SIGNAL_MESSAGE = "computer.checked_signal";
+
+    public void keyDown(final Node node, final char character, final int code, final Player player) {
+        sendToKeyboard(node, "keyboard.keyDown", player, character, code);
+    }
+
+    public void keyUp(final Node node, final char character, final int code, final Player player) {
+        sendToKeyboard(node, "keyboard.keyUp", player, character, code);
+    }
+
+    public void clipboard(final Node node, final String value, final Player player) {
+        sendToKeyboard(node, "keyboard.clipboard", player, value);
+    }
+
+    public void mouseDown(final Node node, final double x, final double y, final int button, final Player player) {
+        sendMouseEvent(node, player, "touch", x, y, button);
+    }
+
+    public void mouseDrag(final Node node, final double x, final double y, final int button, final Player player) {
+        sendMouseEvent(node, player, "drag", x, y, button);
+    }
+
+    public void mouseUp(final Node node, final double x, final double y, final int button, final Player player) {
+        sendMouseEvent(node, player, "drop", x, y, button);
+    }
+
+    public void mouseScroll(final Node node, final double x, final double y, final int delta, final Player player) {
+        sendMouseEvent(node, player, "scroll", x, y, delta);
+    }
+
+    private static void sendToKeyboard(final Node node, final String name, final Object... data) {
+        if (node != null) {
+            node.sendToNeighbors(name, data);
+        }
+    }
+
+    private static void sendMouseEvent(final Node node, final Player player, final String name, final double x, final double y, final int data) {
+        if (node != null) {
+            node.sendToReachable(SIGNAL_MESSAGE, player, name, (int) x + 1, (int) y + 1, data);
+        }
+    }
+}

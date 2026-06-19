@@ -6,6 +6,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.component.ScreenEnvironment;
+import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
@@ -39,6 +40,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
     private boolean renderingEnabled = true;
     private final int[] palette = new int[16];
     private final TextBufferState buffer = new TextBufferState(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    private final ScreenInputDispatcher inputDispatcher = new ScreenInputDispatcher();
     private Node node;
 
     public ScreenBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -331,30 +333,37 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public void keyDown(final char character, final int code, final Player player) {
+        inputDispatcher.keyDown(node(), character, code, player);
     }
 
     @Override
     public void keyUp(final char character, final int code, final Player player) {
+        inputDispatcher.keyUp(node(), character, code, player);
     }
 
     @Override
     public void clipboard(final String value, final Player player) {
+        inputDispatcher.clipboard(node(), value, player);
     }
 
     @Override
     public void mouseDown(final double x, final double y, final int button, final Player player) {
+        inputDispatcher.mouseDown(node(), x, y, button, player);
     }
 
     @Override
     public void mouseDrag(final double x, final double y, final int button, final Player player) {
+        inputDispatcher.mouseDrag(node(), x, y, button, player);
     }
 
     @Override
     public void mouseUp(final double x, final double y, final int button, final Player player) {
+        inputDispatcher.mouseUp(node(), x, y, button, player);
     }
 
     @Override
     public void mouseScroll(final double x, final double y, final int delta, final Player player) {
+        inputDispatcher.mouseScroll(node(), x, y, delta, player);
     }
 
     @Override
