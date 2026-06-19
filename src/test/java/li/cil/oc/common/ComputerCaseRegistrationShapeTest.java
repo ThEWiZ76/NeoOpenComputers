@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Constructor;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ComputerCaseRegistrationShapeTest {
@@ -37,5 +38,13 @@ final class ComputerCaseRegistrationShapeTest {
         assertTrue(Container.class.isAssignableFrom(ComputerCaseBlockEntity.class));
         assertTrue(MachineHost.class.isAssignableFrom(ComputerCaseBlockEntity.class));
         assertArrayEquals(new Class<?>[]{BlockPos.class, BlockState.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void tierOneComputerCaseHasInitialComponentSlots() {
+        assertEquals(3, ComputerCaseBlockEntity.CONTAINER_SIZE);
+        assertEquals(0, ComputerCaseBlockEntity.SLOT_CPU);
+        assertEquals(1, ComputerCaseBlockEntity.SLOT_MEMORY_0);
+        assertEquals(2, ComputerCaseBlockEntity.SLOT_MEMORY_1);
     }
 }
