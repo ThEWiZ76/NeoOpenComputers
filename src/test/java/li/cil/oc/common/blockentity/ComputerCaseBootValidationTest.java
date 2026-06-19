@@ -5,6 +5,8 @@ import li.cil.oc.api.machine.Machine;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -61,6 +63,16 @@ final class ComputerCaseBootValidationTest {
         ComputerCaseBlockEntity.notifyHardwareChanged(machine(true, new int[1], refreshes));
 
         assertEquals(1, refreshes[0]);
+    }
+
+    @Test
+    void clearingInventorySlotsKeepsFixedContainerSize() {
+        final List<String> items = new ArrayList<>(List.of("cpu", "memory", "disk"));
+
+        ComputerCaseBlockEntity.fillExistingSlots(items, "empty");
+
+        assertEquals(List.of("empty", "empty", "empty"), items);
+        assertEquals(3, items.size());
     }
 
     private static Machine machine(final boolean canUpdate, final int[] updates) {

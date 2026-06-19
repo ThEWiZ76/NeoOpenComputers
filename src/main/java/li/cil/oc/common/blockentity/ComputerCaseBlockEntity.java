@@ -27,6 +27,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 
+import java.util.List;
+
 public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider {
     public static final int SLOT_CARD_0 = 0;
     public static final int SLOT_CARD_1 = 1;
@@ -215,6 +217,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         machine.onHostChanged();
     }
 
+    static <T> void fillExistingSlots(final List<T> items, final T value) {
+        for (int slot = 0; slot < items.size(); slot++) {
+            items.set(slot, value);
+        }
+    }
+
     @Override
     public int tier() {
         return 0;
@@ -285,7 +293,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public void clearContent() {
-        items.clear();
+        fillExistingSlots(items, ItemStack.EMPTY);
         setChanged();
         notifyHardwareChanged(machine);
     }
