@@ -1,9 +1,15 @@
 package li.cil.oc.common;
 
 import li.cil.oc.common.block.KeyboardBlock;
+import li.cil.oc.common.blockentity.KeyboardBlockEntity;
+import li.cil.oc.api.internal.Keyboard;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
@@ -18,6 +24,16 @@ final class KeyboardRegistrationShapeTest {
 
         assertTrue(Block.class.isAssignableFrom(KeyboardBlock.class));
         assertTrue(HorizontalDirectionalBlock.class.isAssignableFrom(KeyboardBlock.class));
+        assertTrue(EntityBlock.class.isAssignableFrom(KeyboardBlock.class));
         assertArrayEquals(new Class<?>[]{BlockBehaviour.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void keyboardBlockEntityIsKeyboardEnvironment() throws NoSuchMethodException {
+        final Constructor<KeyboardBlockEntity> constructor = KeyboardBlockEntity.class.getConstructor(BlockPos.class, BlockState.class);
+
+        assertTrue(BlockEntity.class.isAssignableFrom(KeyboardBlockEntity.class));
+        assertTrue(Keyboard.class.isAssignableFrom(KeyboardBlockEntity.class));
+        assertArrayEquals(new Class<?>[]{BlockPos.class, BlockState.class}, constructor.getParameterTypes());
     }
 }

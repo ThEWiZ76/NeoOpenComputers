@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
+import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -22,6 +23,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.SCREEN_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(ScreenBlockEntity::new, ModBlocks.SCREEN_TIER1.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<KeyboardBlockEntity>> KEYBOARD =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.KEYBOARD_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(KeyboardBlockEntity::new, ModBlocks.KEYBOARD.get()).build(null));
 
     public static void register(final IEventBus modEventBus) {
         BLOCK_ENTITY_TYPES.register(modEventBus);
