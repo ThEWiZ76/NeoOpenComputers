@@ -5,6 +5,7 @@ import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.fs.Handle;
 import li.cil.oc.api.fs.Label;
 import li.cil.oc.api.fs.Mode;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -17,10 +18,14 @@ import li.cil.oc.api.prefab.AbstractValue;
 import net.minecraft.nbt.CompoundTag;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
-final class FileSystemEnvironment extends AbstractManagedEnvironment {
+final class FileSystemEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String FILE_SYSTEM_TAG = "fs";
+    private static final double[] READ_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
+    private static final double[] SEEK_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
+    private static final double[] WRITE_COSTS = {1.0D / 1.0D, 1.0D / 2.0D, 1.0D / 3.0D, 1.0D / 4.0D, 1.0D / 5.0D, 1.0D / 6.0D};
 
     private final FileSystem fileSystem;
     private final Label label;
@@ -58,6 +63,21 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment {
 
     int speed() {
         return speed;
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        final long spaceTotal = fileSystem.spaceTotal();
+        final int costIndex = speed - 1;
+        return Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Volume,
+            DeviceInfo.DeviceAttribute.Description, "Filesystem",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Product, "MPFS.21.6",
+            DeviceInfo.DeviceAttribute.Capacity, Long.toString((long) (spaceTotal * 1.024D)),
+            DeviceInfo.DeviceAttribute.Size, Long.toString(spaceTotal),
+            DeviceInfo.DeviceAttribute.Clock, clock(costIndex)
+        );
     }
 
     @Callback(direct = true, doc = "function():boolean -- Returns whether the file system is read-only.")
@@ -280,6 +300,14 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment {
 
     private void close(final int handle) throws IOException {
         getHandle(handle).close();
+    }
+
+    private static String clock(final int costIndex) {
+        return clock(READ_COSTS[costIndex]) + "/" + clock(SEEK_COSTS[costIndex]) + "/" + clock(WRITE_COSTS[costIndex]);
+    }
+
+    private static int clock(final double cost) {
+        return (int) (2000.0D / cost) / 100;
     }
 
     private static final class FileHandleValue extends AbstractValue {

@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Visibility;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -96,6 +98,23 @@ final class FileSystemRegistryTest {
         CompoundTag nbt = new CompoundTag();
         environment.save(nbt);
         assertTrue(nbt.contains("node"));
+    }
+
+    @Test
+    void managedFileSystemEnvironmentExposesDeviceInfo() {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+
+        DeviceInfo info = assertInstanceOf(DeviceInfo.class, environment);
+        Map<String, String> metadata = info.getDeviceInfo();
+        assertEquals(DeviceInfo.DeviceClass.Volume, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Filesystem", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MPFS.21.6", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("262", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("256", metadata.get(DeviceInfo.DeviceAttribute.Size));
+        assertEquals("20/20/20", metadata.get(DeviceInfo.DeviceAttribute.Clock));
     }
 
     @Test
