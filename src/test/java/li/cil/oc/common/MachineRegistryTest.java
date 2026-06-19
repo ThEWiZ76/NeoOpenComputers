@@ -117,6 +117,36 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void queuesComponentAddedSignalWhenVisibleComponentConnects() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        TestEnvironment environment = new TestEnvironment();
+        Network.joinNewNetwork(machine.node());
+
+        machine.node().connect(environment.node());
+
+        Signal signal = machine.popSignal();
+        assertEquals("component_added", signal.name());
+        assertArrayEquals(new Object[]{environment.node().address(), "test_component"}, signal.args());
+    }
+
+    @Test
+    void queuesComponentRemovedSignalWhenVisibleComponentDisconnects() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        TestEnvironment environment = new TestEnvironment();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+        machine.popSignal();
+
+        machine.node().disconnect(environment.node());
+
+        Signal signal = machine.popSignal();
+        assertEquals("component_removed", signal.name());
+        assertArrayEquals(new Object[]{environment.node().address(), "test_component"}, signal.args());
+    }
+
+    @Test
     void hostChangedConnectsInternalComponentEnvironments() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();

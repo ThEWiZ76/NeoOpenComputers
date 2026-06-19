@@ -218,6 +218,16 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     }
 
     @Override
+    public void onConnect(final Node node) {
+        queueComponentChangeSignal("component_added", node);
+    }
+
+    @Override
+    public void onDisconnect(final Node node) {
+        queueComponentChangeSignal("component_removed", node);
+    }
+
+    @Override
     public boolean crash(final String message) {
         final boolean wasRunning = running || paused;
         lastError = message;
@@ -399,7 +409,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     public boolean signal(final String name, final Object... args) {
         signals.addLast(new SimpleSignal(name, args == null ? new Object[0] : Arrays.copyOf(args, args.length)));
         sleepUntilNanos = -1L;
-        if (architecture != null) {
+        if (running && architecture != null) {
             architecture.onSignal();
         }
         return true;
@@ -451,6 +461,15 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private void sendLifecycleMessage(final String name) {
         if (node() != null) {
             node().sendToReachable(name);
+        }
+    }
+
+    private void queueComponentChangeSignal(final String name, final Node changedNode) {
+        if (changedNode == node()) {
+            return;
+        }
+        if (changedNode instanceof Component component && component.canBeSeenFrom(node())) {
+            signal(name, component.address(), component.name());
         }
     }
 
