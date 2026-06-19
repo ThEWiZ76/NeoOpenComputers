@@ -299,16 +299,20 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         return withActiveBuffer(buffer -> new Object[]{bits(minDepth(maxDepth, buffer.getMaximumColorDepth()))});
     }
 
-    @Callback(direct = true, doc = "function(x:number, y:number):string, number, number, boolean, boolean -- Gets a screen cell.")
+    @Callback(direct = true, doc = "function(x:number, y:number):string, number, number, number or nil, number or nil -- Gets a screen cell.")
     public Object[] get(final Context context, final Arguments args) {
         final int x = args.checkInteger(0) - 1;
         final int y = args.checkInteger(1) - 1;
-        return withActiveBuffer(buffer -> new Object[]{
-            new String(Character.toChars(buffer.getCodePoint(x, y))),
-            buffer.getForegroundColor(x, y),
-            buffer.getBackgroundColor(x, y),
-            buffer.isForegroundFromPalette(x, y),
-            buffer.isBackgroundFromPalette(x, y)
+        return withActiveBuffer(buffer -> {
+            final Object[] foreground = previousColorResult(buffer, buffer.getForegroundColor(x, y), buffer.isForegroundFromPalette(x, y));
+            final Object[] background = previousColorResult(buffer, buffer.getBackgroundColor(x, y), buffer.isBackgroundFromPalette(x, y));
+            return new Object[]{
+                new String(Character.toChars(buffer.getCodePoint(x, y))),
+                foreground[0],
+                background[0],
+                foreground[1],
+                background[1]
+            };
         });
     }
 

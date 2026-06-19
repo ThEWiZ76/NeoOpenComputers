@@ -141,6 +141,27 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void getReturnsResolvedPaletteColorsAndIndices() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        gpu.allocateBuffer(null, new TestArguments(2, 1));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+        gpu.setPaletteColor(null, new TestArguments(3, 0x112233));
+        gpu.setPaletteColor(null, new TestArguments(4, 0x445566));
+        gpu.setForeground(null, new TestArguments(3, true));
+        gpu.setBackground(null, new TestArguments(4, true));
+        gpu.set(null, new TestArguments(1, 1, "A"));
+
+        assertArrayEquals(new Object[]{"A", 0x112233, 0x445566, 3, 4}, gpu.get(null, new TestArguments(1, 1)));
+
+        gpu.setForeground(null, new TestArguments(0xABCDEF));
+        gpu.setBackground(null, new TestArguments(0x123456));
+        gpu.set(null, new TestArguments(2, 1, "B"));
+
+        assertArrayEquals(new Object[]{"B", 0xABCDEF, 0x123456, null, null}, gpu.get(null, new TestArguments(2, 1)));
+    }
+
+    @Test
     void managesVideoBuffersWithoutBoundScreen() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
@@ -156,7 +177,7 @@ final class GraphicsCardEnvironmentTest {
         assertArrayEquals(new Object[]{0}, gpu.setActiveBuffer(null, new TestArguments(1)));
         assertArrayEquals(new Object[]{1}, gpu.getActiveBuffer(null, new TestArguments()));
         assertArrayEquals(new Object[]{true}, gpu.set(null, new TestArguments(1, 1, "A")));
-        assertArrayEquals(new Object[]{"A", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(1, 1)));
+        assertArrayEquals(new Object[]{"A", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(1, 1)));
         assertArrayEquals(new Object[]{false}, gpu.setResolution(null, new TestArguments(5, 2)));
         assertArrayEquals(new Object[]{4, 2}, gpu.getBufferSize(null, new TestArguments(1)));
 
@@ -188,10 +209,10 @@ final class GraphicsCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, gpu.bitblt(null, new TestArguments(2, 1, 1, 2, 2, 1, 1, 1)));
 
         gpu.setActiveBuffer(null, new TestArguments(2));
-        assertArrayEquals(new Object[]{"A", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(1, 1)));
-        assertArrayEquals(new Object[]{"B", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(2, 1)));
-        assertArrayEquals(new Object[]{"C", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(1, 2)));
-        assertArrayEquals(new Object[]{"D", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(2, 2)));
+        assertArrayEquals(new Object[]{"A", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(1, 1)));
+        assertArrayEquals(new Object[]{"B", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(2, 1)));
+        assertArrayEquals(new Object[]{"C", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(1, 2)));
+        assertArrayEquals(new Object[]{"D", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(2, 2)));
     }
 
     @Test
@@ -211,8 +232,8 @@ final class GraphicsCardEnvironmentTest {
 
         assertArrayEquals(new Object[]{1}, restored.getActiveBuffer(null, new TestArguments()));
         assertArrayEquals(new int[]{1}, (int[]) restored.buffers(null, new TestArguments())[0]);
-        assertArrayEquals(new Object[]{"X", 0x112233, 0x445566, false, false}, restored.get(null, new TestArguments(1, 1)));
-        assertArrayEquals(new Object[]{"Y", 0x112233, 0x445566, false, false}, restored.get(null, new TestArguments(2, 1)));
+        assertArrayEquals(new Object[]{"X", 0x112233, 0x445566, null, null}, restored.get(null, new TestArguments(1, 1)));
+        assertArrayEquals(new Object[]{"Y", 0x112233, 0x445566, null, null}, restored.get(null, new TestArguments(2, 1)));
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
