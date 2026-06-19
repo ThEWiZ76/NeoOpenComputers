@@ -4,18 +4,21 @@ import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
+import li.cil.oc.api.machine.Machine;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaError;
+import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.ZeroArgFunction;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.nio.charset.StandardCharsets;
 
 @Architecture.Name("Lua")
-public final class LuaArchitecture implements Architecture {
+public final class LuaArchitecture implements Architecture, MachineBoundArchitecture {
     private static final String EEPROM_SLOT = "eeprom";
     private static final String INITIALIZED_TAG = "initialized";
     private static final String BOOTED_TAG = "booted";
@@ -24,6 +27,7 @@ public final class LuaArchitecture implements Architecture {
     private boolean initialized;
     private boolean booted;
     private String bootSource;
+    private Machine machine;
     private Globals globals;
     private LuaValue bootChunk;
 
@@ -33,6 +37,11 @@ public final class LuaArchitecture implements Architecture {
 
     LuaArchitecture(final String bootSource) {
         this.bootSource = bootSource == null ? "" : bootSource;
+    }
+
+    @Override
+    public void bind(final Machine machine) {
+        this.machine = machine;
     }
 
     @Override
@@ -55,6 +64,7 @@ public final class LuaArchitecture implements Architecture {
     @Override
     public boolean initialize() {
         globals = JsePlatform.standardGlobals();
+        installComputerLibrary();
         try {
             bootChunk = globals.load(bootSource, "boot");
         } catch (LuaError e) {
@@ -126,6 +136,13 @@ public final class LuaArchitecture implements Architecture {
         return globals.get(name).toint();
     }
 
+    double globalDouble(final String name) {
+        if (globals == null) {
+            return 0D;
+        }
+        return globals.get(name).todouble();
+    }
+
     void configureBootSource(final CompoundTag eepromData) {
         bootSource = bootSourceFrom(eepromData);
     }
@@ -135,5 +152,16 @@ public final class LuaArchitecture implements Architecture {
             return "";
         }
         return new String(eepromData.getByteArray(ItemRegistry.EEPROM_CODE_TAG), StandardCharsets.UTF_8);
+    }
+
+    private void installComputerLibrary() {
+        final LuaTable computer = new LuaTable();
+        computer.set("uptime", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(machine == null ? 0D : machine.upTime());
+            }
+        });
+        globals.set("computer", computer);
     }
 }

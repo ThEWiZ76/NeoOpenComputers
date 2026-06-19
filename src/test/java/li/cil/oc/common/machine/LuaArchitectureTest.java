@@ -1,10 +1,12 @@
 package li.cil.oc.common.machine;
 
 import li.cil.oc.api.machine.ExecutionResult;
+import li.cil.oc.api.machine.Machine;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,5 +47,45 @@ final class LuaArchitectureTest {
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals(7, architecture.globalInteger("counter"));
+    }
+
+    @Test
+    void exposesComputerUptimeToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("seconds = computer.uptime()");
+        architecture.bind(machineWithUptime(12.5D));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(12.5D, architecture.globalDouble("seconds"), 0.000_001D);
+    }
+
+    private static Machine machineWithUptime(final double uptime) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "upTime" -> uptime;
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Object defaultValue(final Class<?> type) {
+        if (type == boolean.class) {
+            return false;
+        }
+        if (type == int.class) {
+            return 0;
+        }
+        if (type == long.class) {
+            return 0L;
+        }
+        if (type == double.class) {
+            return 0D;
+        }
+        return null;
     }
 }

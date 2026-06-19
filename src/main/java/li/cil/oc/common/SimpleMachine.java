@@ -18,6 +18,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.machine.MachineBoundArchitecture;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
@@ -110,6 +111,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             if (driver instanceof Processor processor && architecture == null) {
                 architecture = instantiate(processor.architecture(stack));
                 if (architecture != null) {
+                    bindArchitecture(architecture);
                     architecture.recomputeMemory(host.internalComponents());
                 }
             }
@@ -419,6 +421,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             return;
         }
         signal(signalName, Arrays.copyOfRange(data, nameIndex + 1, data.length));
+    }
+
+    private void bindArchitecture(final Architecture architecture) {
+        if (architecture instanceof MachineBoundArchitecture boundArchitecture) {
+            boundArchitecture.bind(this);
+        }
     }
 
     private record MachineArguments(Object[] values) implements Arguments {

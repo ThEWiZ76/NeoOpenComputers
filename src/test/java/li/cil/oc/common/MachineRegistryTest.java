@@ -17,6 +17,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.machine.MachineBoundArchitecture;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class MachineRegistryTest {
@@ -143,6 +145,20 @@ final class MachineRegistryTest {
         assertTrue(machine.architecture().isInitialized());
         assertTrue(machine.stop());
         assertFalse(machine.architecture().isInitialized());
+    }
+
+    @Test
+    void hostChangedBindsMachineAwareArchitecture() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new BoundProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+
+        machine.onHostChanged();
+
+        BoundArchitecture architecture = (BoundArchitecture) machine.architecture();
+        assertSame(machine, architecture.boundMachine);
     }
 
     @Test
@@ -411,7 +427,33 @@ final class MachineRegistryTest {
         }
     }
 
-    public static final class TrackingArchitecture implements Architecture {
+    private static final class BoundProcessorDriver extends TestDriver implements Processor {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return BoundArchitecture.class;
+        }
+    }
+
+    public static final class BoundArchitecture extends TrackingArchitecture implements MachineBoundArchitecture {
+        private Machine boundMachine;
+
+        @Override
+        public void bind(final Machine machine) {
+            boundMachine = machine;
+        }
+    }
+
+    public static class TrackingArchitecture implements Architecture {
         private boolean initialized;
         private int signalCount;
         private int synchronizedRuns;
