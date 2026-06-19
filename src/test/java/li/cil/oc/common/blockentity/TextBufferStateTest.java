@@ -1,5 +1,6 @@
 package li.cil.oc.common.blockentity;
 
+import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,5 +41,23 @@ final class TextBufferStateTest {
         assertEquals('b', buffer.getCodePoint(2, 0));
         assertEquals('c', buffer.getCodePoint(3, 0));
         assertEquals('d', buffer.getCodePoint(4, 0));
+    }
+
+    @Test
+    void saveAndLoadPreservesText() {
+        TextBufferState saved = new TextBufferState(3, 2);
+        saved.set(0, 0, "abc", false);
+        saved.set(0, 1, "xy", false);
+        CompoundTag tag = new CompoundTag();
+
+        saved.save(tag);
+
+        TextBufferState loaded = new TextBufferState(1, 1);
+        loaded.load(tag);
+
+        assertEquals('a', loaded.getCodePoint(0, 0));
+        assertEquals('c', loaded.getCodePoint(2, 0));
+        assertEquals('x', loaded.getCodePoint(0, 1));
+        assertEquals('y', loaded.getCodePoint(1, 1));
     }
 }

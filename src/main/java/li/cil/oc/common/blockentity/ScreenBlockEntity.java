@@ -15,6 +15,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
     private static final int DEFAULT_HEIGHT = 16;
     private static final int DEFAULT_FOREGROUND = 0xFFFFFF;
     private static final int DEFAULT_BACKGROUND = 0x000000;
+    private static final String TAG_BUFFER = "buffer";
 
     private double energyCostPerTick;
     private boolean powered = true;
@@ -381,6 +382,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
         foregroundColor = nbt.getInt("foreground");
         backgroundColor = nbt.getInt("background");
         renderingEnabled = !nbt.contains("renderingEnabled") || nbt.getBoolean("renderingEnabled");
+        if (nbt.contains(TAG_BUFFER)) {
+            buffer.load(nbt.getCompound(TAG_BUFFER));
+        }
     }
 
     @Override
@@ -393,5 +397,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
         nbt.putInt("foreground", foregroundColor);
         nbt.putInt("background", backgroundColor);
         nbt.putBoolean("renderingEnabled", renderingEnabled);
+        final CompoundTag bufferTag = new CompoundTag();
+        buffer.save(bufferTag);
+        nbt.put(TAG_BUFFER, bufferTag);
     }
 }

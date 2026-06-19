@@ -1,6 +1,14 @@
 package li.cil.oc.common.blockentity;
 
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.nbt.ListTag;
+
 final class TextBufferState {
+    private static final String TAG_HEIGHT = "height";
+    private static final String TAG_ROWS = "rows";
+    private static final String TAG_WIDTH = "width";
+
     private int width;
     private int height;
     private int[][] text;
@@ -77,6 +85,29 @@ final class TextBufferState {
                 put(column + x, row + y, text[y][x]);
             }
         }
+    }
+
+    void load(final CompoundTag tag) {
+        final int loadedWidth = Math.max(1, tag.getInt(TAG_WIDTH));
+        final int loadedHeight = Math.max(1, tag.getInt(TAG_HEIGHT));
+        resize(loadedWidth, loadedHeight);
+        final ListTag rows = tag.getList(TAG_ROWS, IntArrayTag.TAG_INT_ARRAY);
+        for (int y = 0; y < Math.min(rows.size(), height); y++) {
+            final int[] row = rows.getIntArray(y);
+            for (int x = 0; x < Math.min(row.length, width); x++) {
+                text[y][x] = row[x];
+            }
+        }
+    }
+
+    void save(final CompoundTag tag) {
+        tag.putInt(TAG_WIDTH, width);
+        tag.putInt(TAG_HEIGHT, height);
+        final ListTag rows = new ListTag();
+        for (int y = 0; y < height; y++) {
+            rows.add(new IntArrayTag(text[y]));
+        }
+        tag.put(TAG_ROWS, rows);
     }
 
     private void put(final int column, final int row, final int value) {
