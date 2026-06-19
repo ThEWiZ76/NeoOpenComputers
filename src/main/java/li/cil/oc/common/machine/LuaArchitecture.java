@@ -867,6 +867,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 final String method = args.arg(2).tojstring();
+                final Callback callback = componentCallback(address, method);
+                if (callback != null && callback.getter()) {
+                    return invokeComponent(address, method, new Object[0]);
+                }
+                if (callback != null && callback.setter()) {
+                    return LuaValue.NIL;
+                }
                 return new VarArgFunction() {
                     @Override
                     public Varargs invoke(final Varargs callbackArgs) {
@@ -878,6 +885,21 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                         return invokeComponent(address, method, javaArgs);
                     }
                 };
+            }
+        });
+        metatable.set("__newindex", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaValue key = args.arg(2);
+                final Callback callback = componentCallback(address, key.tojstring());
+                if (callback != null && callback.setter()) {
+                    return invokeComponent(address, key.tojstring(), new Object[]{toJavaValue(args.arg(3))});
+                }
+                if (callback != null && callback.getter()) {
+                    throw new LuaError("field is read-only");
+                }
+                proxy.rawset(key, args.arg(3));
+                return LuaValue.NIL;
             }
         });
         proxy.setmetatable(metatable);
@@ -893,6 +915,14 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private boolean hasComponent(final String address) {
         return machine != null && machine.components().containsKey(address);
+    }
+
+    private Callback componentCallback(final String address, final String method) {
+        if (machine == null) {
+            return null;
+        }
+        final Map<String, Callback> methods = machine.methods(address);
+        return methods == null ? null : methods.get(method);
     }
 
     private static Varargs noSuchComponent() {

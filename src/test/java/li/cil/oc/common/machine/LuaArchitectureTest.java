@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -750,6 +751,31 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComponentProxyFieldsToLua() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        methods.put("accessor", callback("accessorCallback"));
+        List<String> invokedMethods = new ArrayList<>();
+        List<Object[]> invokedArguments = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.proxy('fs-address')
+            value = fs.accessor
+            fs.accessor = 'next'
+            labelType = type(fs.label)
+            """);
+        architecture.bind(machineWithMethodsAndInvokeCapture(Map.of("fs-address", "filesystem"), methods, invokedMethods, invokedArguments));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("current", architecture.globalString("value"));
+        assertEquals("function", architecture.globalString("labelType"));
+        assertEquals(List.of("accessor", "accessor"), invokedMethods);
+        assertEquals(0, invokedArguments.get(0).length);
+        assertArrayEquals(new Object[]{"next"}, invokedArguments.get(1));
+    }
+
+    @Test
     void exposesPrimaryComponentProxyToLua() {
         LuaArchitecture architecture = new LuaArchitecture("fs = component.getPrimary('filesystem'); result = fs.label(); missing = component.getPrimary('gpu')");
         architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{"tmp"}));
@@ -1016,6 +1042,25 @@ final class LuaArchitectureTest {
 
     private static Machine machineWithComponentsAndMethods(final Map<String, String> components, final Map<String, Callback> methods) {
         return machine(new ArrayDeque<>(), 0D, null, null, components, new Object[0], methods);
+    }
+
+    private static Machine machineWithMethodsAndInvokeCapture(final Map<String, String> components, final Map<String, Callback> methods, final List<String> invokedMethods, final List<Object[]> invokedArguments) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> components;
+                case "methods" -> methods;
+                case "invoke" -> {
+                    invokedMethods.add((String) args[1]);
+                    invokedArguments.add((Object[]) args[2]);
+                    yield new Object[]{"accessor".equals(args[1]) && ((Object[]) args[2]).length == 0 ? "current" : true};
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
     }
 
     private static Machine machineWithHostSlot(final String address, final int slot) {
