@@ -39,6 +39,8 @@ final class GraphicsCardEnvironmentTest {
         assertCallback("setBackground");
         assertCallback("getForeground");
         assertCallback("setForeground");
+        assertCallback("getPaletteColor");
+        assertCallback("setPaletteColor");
         assertCallback("getDepth");
         assertCallback("setDepth");
         assertCallback("maxDepth");
@@ -94,6 +96,21 @@ final class GraphicsCardEnvironmentTest {
         assertArrayEquals(new Object[]{50, 16}, gpu.getResolution(null, new TestArguments()));
     }
 
+    @Test
+    void delegatesPaletteColorCallbacksToScreen() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        FakeTextBuffer screen = new FakeTextBuffer();
+        Network.joinNewNetwork(gpu.node());
+        gpu.node().connect(screen.node());
+        gpu.bind(null, new TestArguments(screen.node().address(), true));
+        screen.setPaletteColor(2, 0x112233);
+
+        assertArrayEquals(new Object[]{0x112233}, gpu.getPaletteColor(null, new TestArguments(2)));
+        assertArrayEquals(new Object[]{0x112233}, gpu.setPaletteColor(null, new TestArguments(2, 0x445566)));
+        assertArrayEquals(new Object[]{0x445566}, gpu.getPaletteColor(null, new TestArguments(2)));
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = GraphicsCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
@@ -107,6 +124,7 @@ final class GraphicsCardEnvironmentTest {
         private int foreground = 0xFFFFFF;
         private int background = 0x000000;
         private ColorDepth depth = ColorDepth.OneBit;
+        private final int[] palette = new int[16];
 
         private FakeTextBuffer() {
             setNode(ScreenEnvironment.createNode(this));
@@ -211,11 +229,14 @@ final class GraphicsCardEnvironmentTest {
 
         @Override
         public void setPaletteColor(final int index, final int color) {
+            if (index >= 0 && index < palette.length) {
+                palette[index] = color;
+            }
         }
 
         @Override
         public int getPaletteColor(final int index) {
-            return 0;
+            return index >= 0 && index < palette.length ? palette[index] : 0;
         }
 
         @Override

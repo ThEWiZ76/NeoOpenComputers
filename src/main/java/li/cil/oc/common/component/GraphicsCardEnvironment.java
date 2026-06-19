@@ -167,6 +167,23 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         });
     }
 
+    @Callback(direct = true, doc = "function(index:number):number -- Gets a palette color.")
+    public Object[] getPaletteColor(final Context context, final Arguments args) {
+        final int index = args.checkInteger(0);
+        return withScreen(buffer -> new Object[]{buffer.getPaletteColor(index)});
+    }
+
+    @Callback(direct = true, doc = "function(index:number, color:number):number -- Sets a palette color and returns the previous value.")
+    public Object[] setPaletteColor(final Context context, final Arguments args) {
+        final int index = args.checkInteger(0);
+        final int color = args.checkInteger(1);
+        return withScreen(buffer -> {
+            final int previous = buffer.getPaletteColor(index);
+            buffer.setPaletteColor(index, color);
+            return new Object[]{previous};
+        });
+    }
+
     @Callback(direct = true, doc = "function():number -- Returns the current color depth.")
     public Object[] getDepth(final Context context, final Arguments args) {
         return withScreen(buffer -> new Object[]{bits(buffer.getColorDepth())});
