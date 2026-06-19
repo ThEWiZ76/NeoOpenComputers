@@ -13,6 +13,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
@@ -121,6 +122,24 @@ final class MachineRegistryTest {
         assertEquals(1, machine.componentCount());
     }
 
+    @Test
+    void hostChangedSelectsProcessorArchitectureAndStartInitializesIt() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+
+        machine.onHostChanged();
+
+        assertTrue(machine.architecture() instanceof TrackingArchitecture);
+        assertFalse(machine.architecture().isInitialized());
+        assertTrue(machine.start());
+        assertTrue(machine.architecture().isInitialized());
+        assertTrue(machine.stop());
+        assertFalse(machine.architecture().isInitialized());
+    }
+
     private static class TestArchitecture implements Architecture {
         @Override public boolean isInitialized() { return false; }
         @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return false; }
@@ -138,7 +157,7 @@ final class MachineRegistryTest {
     private static final class NamedArchitecture extends TestArchitecture {
     }
 
-    private static final class TestDriver implements DriverItem {
+    private static class TestDriver implements DriverItem {
         @Override
         public boolean worksWith(final ItemStack stack) {
             return true;
@@ -162,6 +181,75 @@ final class MachineRegistryTest {
         @Override
         public CompoundTag dataTag(final ItemStack stack) {
             return new CompoundTag();
+        }
+    }
+
+    private static final class TestProcessorDriver extends TestDriver implements Processor {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return TrackingArchitecture.class;
+        }
+    }
+
+    public static final class TrackingArchitecture implements Architecture {
+        private boolean initialized;
+
+        @Override
+        public boolean isInitialized() {
+            return initialized;
+        }
+
+        @Override
+        public boolean recomputeMemory(final Iterable<ItemStack> components) {
+            return true;
+        }
+
+        @Override
+        public boolean initialize() {
+            initialized = true;
+            return true;
+        }
+
+        @Override
+        public void close() {
+            initialized = false;
+        }
+
+        @Override
+        public void runSynchronized() {
+        }
+
+        @Override
+        public ExecutionResult runThreaded(final boolean isSynchronizedReturn) {
+            return new ExecutionResult.Sleep(1);
+        }
+
+        @Override
+        public void onSignal() {
+        }
+
+        @Override
+        public void onConnect() {
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+            initialized = nbt.getBoolean("initialized");
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+            nbt.putBoolean("initialized", initialized);
         }
     }
 

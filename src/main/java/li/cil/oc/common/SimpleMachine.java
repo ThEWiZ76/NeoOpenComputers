@@ -4,6 +4,7 @@ import li.cil.oc.api.API;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -33,6 +34,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
     private final Set<String> users = new LinkedHashSet<>();
     private final Set<ManagedEnvironment> componentEnvironments = new LinkedHashSet<>();
+    private Architecture architecture;
     private boolean running;
     private boolean paused;
     private String lastError;
@@ -77,6 +79,13 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
                 continue;
             }
 
+            if (driver instanceof Processor processor && architecture == null) {
+                architecture = instantiate(processor.architecture(stack));
+                if (architecture != null) {
+                    architecture.recomputeMemory(host.internalComponents());
+                }
+            }
+
             final ManagedEnvironment environment = driver.createEnvironment(stack, host);
             if (environment == null || environment.node() == null) {
                 continue;
@@ -90,7 +99,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public Architecture architecture() {
-        return null;
+        return architecture;
     }
 
     @Override
@@ -165,6 +174,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         lastError = message;
         running = false;
         paused = false;
+        if (architecture != null) {
+            architecture.close();
+        }
         return true;
     }
 
@@ -227,6 +239,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public boolean start() {
+        if (architecture != null && !architecture.isInitialized() && !architecture.initialize()) {
+            return false;
+        }
         running = true;
         paused = false;
         return true;
@@ -246,6 +261,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         final boolean wasRunning = running || paused;
         running = false;
         paused = false;
+        if (architecture != null) {
+            architecture.close();
+        }
         return wasRunning;
     }
 
@@ -276,6 +294,19 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     }
 
     private record SimpleSignal(String name, Object[] args) implements Signal {
+    }
+
+    private static Architecture instantiate(final Class<? extends Architecture> type) {
+        if (type == null) {
+            return null;
+        }
+        try {
+            final var constructor = type.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("failed to instantiate architecture " + type.getName(), e);
+        }
     }
 
     private record MachineArguments(Object[] values) implements Arguments {
