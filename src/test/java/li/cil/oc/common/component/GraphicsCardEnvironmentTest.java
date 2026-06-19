@@ -1,6 +1,7 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -19,6 +20,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -54,6 +56,21 @@ final class GraphicsCardEnvironmentTest {
 
         assertNotNull(gpu.node());
         assertInstanceOf(ComponentConnector.class, gpu.node());
+    }
+
+    @Test
+    void exposesDeviceInfoMetadata() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+
+        DeviceInfo info = assertInstanceOf(DeviceInfo.class, gpu);
+        Map<String, String> metadata = info.getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Display, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Graphics controller", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MPG1000 GTZ", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("800", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("1", metadata.get(DeviceInfo.DeviceAttribute.Width));
     }
 
     @Test

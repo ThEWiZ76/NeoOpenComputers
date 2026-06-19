@@ -1,6 +1,7 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -11,10 +12,13 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
 
-public class GraphicsCardEnvironment extends AbstractManagedEnvironment {
+import java.util.Map;
+
+public class GraphicsCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "gpu";
     private static final String SCREEN_TAG = "screen";
 
+    private final int tier;
     private final int maxWidth;
     private final int maxHeight;
     private final TextBuffer.ColorDepth maxDepth;
@@ -23,6 +27,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment {
 
     public GraphicsCardEnvironment(final int tier) {
         final int clampedTier = Math.max(0, Math.min(2, tier));
+        this.tier = clampedTier;
         maxWidth = switch (clampedTier) {
             case 0 -> 50;
             case 1 -> 80;
@@ -43,6 +48,19 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment {
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
         }
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Display,
+            DeviceInfo.DeviceAttribute.Description, "Graphics controller",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Product, "MPG" + ((tier + 1) * 1000) + " GTZ",
+            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(maxWidth * maxHeight),
+            DeviceInfo.DeviceAttribute.Width, Integer.toString(bits(maxDepth)),
+            DeviceInfo.DeviceAttribute.Clock, clockInfo(tier)
+        );
     }
 
     @Callback(doc = "function(address:string[, reset:boolean=true]):boolean -- Binds this GPU to a screen.")
@@ -308,6 +326,14 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment {
             case OneBit -> 1;
             case FourBit -> 4;
             case EightBit -> 8;
+        };
+    }
+
+    private static String clockInfo(final int tier) {
+        return switch (tier) {
+            case 0 -> "640/640/40/1280/320/640";
+            case 1 -> "1280/1280/160/2560/640/1280";
+            default -> "2560/2560/320/5120/1280/2560";
         };
     }
 
