@@ -9,10 +9,13 @@ import li.cil.oc.common.ModDriverCatalog;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.machine.ProgramLocationImc;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.InterModComms;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.InterModProcessEvent;
 import org.slf4j.Logger;
 
 @Mod(NeoOpenComputers.MODID)
@@ -28,6 +31,7 @@ public final class NeoOpenComputers {
         ModMenus.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
         modEventBus.addListener(this::onCommonSetup);
+        modEventBus.addListener(this::onInterModProcess);
         LOGGER.info("Loading NeoOpenComputers {}", modContainer.getModInfo().getVersion());
     }
 
@@ -38,5 +42,9 @@ public final class NeoOpenComputers {
             ModDriverCatalog.registerDefaults();
         });
         LOGGER.debug("NeoOpenComputers common setup complete.");
+    }
+
+    private void onInterModProcess(final InterModProcessEvent event) {
+        event.enqueueWork(() -> ProgramLocationImc.process(InterModComms.getMessages(MODID)));
     }
 }
