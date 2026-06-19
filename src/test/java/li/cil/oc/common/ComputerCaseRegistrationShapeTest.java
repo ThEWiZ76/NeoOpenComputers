@@ -1,9 +1,11 @@
 package li.cil.oc.common;
 
+import li.cil.oc.api.internal.Case;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.Container;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -29,6 +31,8 @@ final class ComputerCaseRegistrationShapeTest {
             BlockState.class);
 
         assertTrue(BlockEntity.class.isAssignableFrom(ComputerCaseBlockEntity.class));
+        assertTrue(Case.class.isAssignableFrom(ComputerCaseBlockEntity.class));
+        assertTrue(Container.class.isAssignableFrom(ComputerCaseBlockEntity.class));
         assertTrue(MachineHost.class.isAssignableFrom(ComputerCaseBlockEntity.class));
         assertArrayEquals(new Class<?>[]{BlockPos.class, BlockState.class}, constructor.getParameterTypes());
     }

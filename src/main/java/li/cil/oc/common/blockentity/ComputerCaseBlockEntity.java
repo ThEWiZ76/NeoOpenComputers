@@ -1,13 +1,16 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.api.internal.Case;
 import li.cil.oc.api.machine.Machine;
-import li.cil.oc.api.machine.MachineHost;
+import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -15,10 +18,12 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 
-public class ComputerCaseBlockEntity extends BlockEntity implements MachineHost {
+public class ComputerCaseBlockEntity extends BlockEntity implements Case {
+    private static final String TAG_COLOR = "oc:color";
     private static final String TAG_MACHINE = "oc:machine";
 
     private final Machine machine;
+    private int color;
 
     public ComputerCaseBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.COMPUTER_CASE.get(), pos, blockState);
@@ -33,6 +38,23 @@ public class ComputerCaseBlockEntity extends BlockEntity implements MachineHost 
     @Override
     public Machine machine() {
         return machine;
+    }
+
+    @Override
+    public Node node() {
+        return machine.node();
+    }
+
+    @Override
+    public void onConnect(final Node node) {
+    }
+
+    @Override
+    public void onDisconnect(final Node node) {
+    }
+
+    @Override
+    public void onMessage(final Message message) {
     }
 
     @Override
@@ -79,6 +101,80 @@ public class ComputerCaseBlockEntity extends BlockEntity implements MachineHost 
     }
 
     @Override
+    public int getColor() {
+        return color;
+    }
+
+    @Override
+    public void setColor(final int value) {
+        color = value;
+        setChanged();
+    }
+
+    @Override
+    public boolean controlsConnectivity() {
+        return false;
+    }
+
+    @Override
+    public Direction facing() {
+        return Direction.NORTH;
+    }
+
+    @Override
+    public Direction toGlobal(final Direction value) {
+        return value;
+    }
+
+    @Override
+    public Direction toLocal(final Direction value) {
+        return value;
+    }
+
+    @Override
+    public int tier() {
+        return 0;
+    }
+
+    @Override
+    public int getContainerSize() {
+        return 0;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return true;
+    }
+
+    @Override
+    public ItemStack getItem(final int slot) {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public ItemStack removeItem(final int slot, final int amount) {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(final int slot) {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public void setItem(final int slot, final ItemStack stack) {
+    }
+
+    @Override
+    public boolean stillValid(final Player player) {
+        return !isRemoved();
+    }
+
+    @Override
+    public void clearContent() {
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeMachineNode();
@@ -93,12 +189,14 @@ public class ComputerCaseBlockEntity extends BlockEntity implements MachineHost 
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        color = tag.getInt(TAG_COLOR);
         machine.load(tag.getCompound(TAG_MACHINE));
     }
 
     @Override
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
+        tag.putInt(TAG_COLOR, color);
         final CompoundTag machineTag = new CompoundTag();
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
