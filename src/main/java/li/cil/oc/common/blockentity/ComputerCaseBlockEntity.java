@@ -45,6 +45,13 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case {
         blockEntity.tickServer();
     }
 
+    public boolean toggleMachine() {
+        if (machine.isRunning() || machine.isPaused()) {
+            return machine.stop();
+        }
+        return machine.start();
+    }
+
     @Override
     public Machine machine() {
         return machine;

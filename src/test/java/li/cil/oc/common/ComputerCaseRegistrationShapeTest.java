@@ -6,14 +6,19 @@ import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,6 +30,19 @@ final class ComputerCaseRegistrationShapeTest {
         assertTrue(Block.class.isAssignableFrom(ComputerCaseBlock.class));
         assertTrue(HorizontalDirectionalBlock.class.isAssignableFrom(ComputerCaseBlock.class));
         assertTrue(EntityBlock.class.isAssignableFrom(ComputerCaseBlock.class));
+    }
+
+    @Test
+    void computerCaseBlockHandlesEmptyHandInteraction() throws NoSuchMethodException {
+        final Method useWithoutItem = ComputerCaseBlock.class.getDeclaredMethod(
+            "useWithoutItem",
+            BlockState.class,
+            Level.class,
+            BlockPos.class,
+            Player.class,
+            BlockHitResult.class);
+
+        assertEquals(InteractionResult.class, useWithoutItem.getReturnType());
     }
 
     @Test

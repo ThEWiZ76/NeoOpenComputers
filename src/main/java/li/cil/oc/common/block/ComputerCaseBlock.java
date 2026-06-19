@@ -5,6 +5,8 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -18,6 +20,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.phys.BlockHitResult;
 
 @SuppressWarnings("deprecation")
 public class ComputerCaseBlock extends HorizontalDirectionalBlock implements EntityBlock {
@@ -45,6 +48,23 @@ public class ComputerCaseBlock extends HorizontalDirectionalBlock implements Ent
         }
         return (tickerLevel, pos, blockState, blockEntity) ->
             ComputerCaseBlockEntity.serverTick(tickerLevel, pos, blockState, (ComputerCaseBlockEntity) blockEntity);
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final BlockHitResult hitResult) {
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        if (level.getBlockEntity(pos) instanceof ComputerCaseBlockEntity computerCase) {
+            computerCase.toggleMachine();
+            return InteractionResult.CONSUME;
+        }
+        return InteractionResult.PASS;
     }
 
     @Override
