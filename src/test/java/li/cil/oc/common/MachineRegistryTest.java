@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class MachineRegistryTest {
@@ -161,6 +162,24 @@ final class MachineRegistryTest {
         assertTrue(loaded.architecture().isInitialized());
     }
 
+    @Test
+    void hostChangedDropsArchitectureWhenProcessorRemoved() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        TestHost host = new TestHost();
+        Machine machine = API.machine.create(host);
+        machine.onHostChanged();
+        machine.start();
+
+        host.components = Collections.emptyList();
+        machine.onHostChanged();
+
+        assertFalse(machine.isRunning());
+        assertNull(machine.architecture());
+    }
+
     private static class TestArchitecture implements Architecture {
         @Override public boolean isInitialized() { return false; }
         @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return false; }
@@ -283,6 +302,8 @@ final class MachineRegistryTest {
     }
 
     private static final class TestHost implements MachineHost {
+        private Iterable<ItemStack> components = Collections.singletonList(null);
+
         @Override
         public Machine machine() {
             return null;
@@ -290,7 +311,7 @@ final class MachineRegistryTest {
 
         @Override
         public Iterable<ItemStack> internalComponents() {
-            return Collections.singletonList(null);
+            return components;
         }
 
         @Override

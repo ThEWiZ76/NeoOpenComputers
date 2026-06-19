@@ -65,6 +65,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             }
         }
         componentEnvironments.clear();
+        if (architecture != null) {
+            architecture.close();
+            architecture = null;
+        }
+        running = false;
+        paused = false;
 
         if (host == null || node() == null) {
             return;
