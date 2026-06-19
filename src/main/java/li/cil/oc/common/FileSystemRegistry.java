@@ -348,8 +348,6 @@ final class FileSystemRegistry implements FileSystemAPI {
                 handle.close();
             }
             handles.clear();
-            root.children.clear();
-            root.touch();
         }
 
         @Override

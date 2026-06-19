@@ -62,6 +62,22 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void memoryFileSystemClosePreservesStoredFiles() throws IOException {
+        FileSystem fileSystem = new FileSystemRegistry().fromMemory(256);
+        assertTrue(fileSystem.makeDirectory("tmp"));
+        int outputHandle = fileSystem.open("tmp/data.txt", Mode.Write);
+        fileSystem.getHandle(outputHandle).write("hello".getBytes(StandardCharsets.UTF_8));
+
+        fileSystem.close();
+
+        assertTrue(fileSystem.exists("tmp/data.txt"));
+        int inputHandle = fileSystem.open("tmp/data.txt", Mode.Read);
+        byte[] buffer = new byte[5];
+        assertEquals(5, fileSystem.getHandle(inputHandle).read(buffer));
+        assertArrayEquals("hello".getBytes(StandardCharsets.UTF_8), buffer);
+    }
+
+    @Test
     void readOnlyWrapperRejectsWrites() throws IOException {
         FileSystemRegistry registry = new FileSystemRegistry();
         FileSystem fileSystem = registry.fromMemory(256);
