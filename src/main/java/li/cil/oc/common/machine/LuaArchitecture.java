@@ -9,6 +9,7 @@ import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -217,6 +218,20 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public LuaValue call() {
                 return LuaValue.valueOf(memoryBytes);
+            }
+        });
+        computer.set("energy", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                final Connector connector = machineConnector();
+                return LuaValue.valueOf(connector == null ? 0D : connector.globalBuffer());
+            }
+        });
+        computer.set("maxEnergy", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                final Connector connector = machineConnector();
+                return LuaValue.valueOf(connector == null ? 0D : connector.globalBufferSize());
             }
         });
         computer.set("tmpAddress", new ZeroArgFunction() {
@@ -539,6 +554,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.NIL;
         }
         return LuaValue.valueOf(machine.tmpAddress());
+    }
+
+    private Connector machineConnector() {
+        if (machine == null || !(machine.node() instanceof Connector connector)) {
+            return null;
+        }
+        return connector;
     }
 
     private static LuaValue toLuaValue(final Object value) {

@@ -10,6 +10,7 @@ import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.DriverRegistry;
@@ -146,6 +147,23 @@ final class LuaArchitectureTest {
 
         assertEquals(98_304D, architecture.globalDouble("free"), 0.000_001D);
         assertEquals(196_608D, architecture.globalDouble("total"), 0.000_001D);
+    }
+
+    @Test
+    void exposesComputerEnergyToLua() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        Connector connector = (Connector) machine.node();
+        connector.setLocalBufferSize(20D);
+        connector.changeBuffer(7D);
+        LuaArchitecture architecture = new LuaArchitecture("energy = computer.energy(); maxEnergy = computer.maxEnergy()");
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(7D, architecture.globalDouble("energy"), 0.000_001D);
+        assertEquals(20D, architecture.globalDouble("maxEnergy"), 0.000_001D);
     }
 
     @Test

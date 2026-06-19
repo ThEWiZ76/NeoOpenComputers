@@ -66,6 +66,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         }
         setNode(Network.newNode(this, Visibility.Network)
             .withComponent("computer", Visibility.Network)
+            .withConnector()
             .create());
     }
 
