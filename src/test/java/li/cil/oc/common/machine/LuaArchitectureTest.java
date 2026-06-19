@@ -101,6 +101,43 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesUnicodeLibraryToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            wide = unicode.char(0x6c34)
+            text = 'a' .. wide .. 'b'
+            length = unicode.len(text)
+            first = unicode.sub(text, 1, 1)
+            middle = unicode.sub(text, 2, 2)
+            tail = unicode.sub(text, -2, -1)
+            reversed = unicode.reverse(text)
+            lower = unicode.lower('ABC')
+            upper = unicode.upper('abc')
+            wideWidth = unicode.charWidth(wide)
+            asciiWidth = unicode.charWidth('a')
+            wideFlag = unicode.isWide(wide)
+            displayWidth = unicode.wlen('ab' .. wide)
+            truncated = unicode.wtrunc('ab' .. wide .. 'c', 4)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        String wide = new String(Character.toChars(0x6c34));
+        assertEquals(3, architecture.globalInteger("length"));
+        assertEquals("a", architecture.globalString("first"));
+        assertEquals(wide, architecture.globalString("middle"));
+        assertEquals(wide + "b", architecture.globalString("tail"));
+        assertEquals("b" + wide + "a", architecture.globalString("reversed"));
+        assertEquals("abc", architecture.globalString("lower"));
+        assertEquals("ABC", architecture.globalString("upper"));
+        assertEquals(2, architecture.globalInteger("wideWidth"));
+        assertEquals(1, architecture.globalInteger("asciiWidth"));
+        assertEquals(true, architecture.globalBoolean("wideFlag"));
+        assertEquals(4, architecture.globalInteger("displayWidth"));
+        assertEquals("ab", architecture.globalString("truncated"));
+    }
+
+    @Test
     void hidesHostAccessLuaLibraries() {
         LuaArchitecture architecture = new LuaArchitecture("""
             ioType = type(io)

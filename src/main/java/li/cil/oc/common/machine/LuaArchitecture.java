@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.LongSupplier;
 
@@ -107,6 +108,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         installComputerLibrary();
         installComponentLibrary();
         installOsLibrary();
+        installUnicodeLibrary();
         try {
             bootChunk = globals.load(bootSource, "boot");
         } catch (LuaError e) {
@@ -625,6 +627,79 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.set("os", os);
     }
 
+    private void installUnicodeLibrary() {
+        final LuaTable unicode = new LuaTable();
+        unicode.set("lower", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return LuaValue.valueOf(args.checkjstring(1).toLowerCase(Locale.ROOT));
+            }
+        });
+        unicode.set("upper", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return LuaValue.valueOf(args.checkjstring(1).toUpperCase(Locale.ROOT));
+            }
+        });
+        unicode.set("char", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final StringBuilder builder = new StringBuilder();
+                for (int index = 1; index <= args.narg(); index++) {
+                    builder.appendCodePoint(args.checkint(index));
+                }
+                return LuaValue.valueOf(builder.toString());
+            }
+        });
+        unicode.set("len", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final String value = args.checkjstring(1);
+                return LuaValue.valueOf(value.codePointCount(0, value.length()));
+            }
+        });
+        unicode.set("reverse", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return LuaValue.valueOf(reverseUnicode(args.checkjstring(1)));
+            }
+        });
+        unicode.set("sub", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final String value = args.checkjstring(1);
+                final int start = args.checkint(2);
+                final int end = args.narg() > 2 ? args.checkint(3) : Integer.MAX_VALUE;
+                return LuaValue.valueOf(subUnicode(value, start, end));
+            }
+        });
+        unicode.set("isWide", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return LuaValue.valueOf(charWidth(args.checkjstring(1)) > 1);
+            }
+        });
+        unicode.set("charWidth", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return LuaValue.valueOf(charWidth(args.checkjstring(1)));
+            }
+        });
+        unicode.set("wlen", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return LuaValue.valueOf(displayWidth(args.checkjstring(1)));
+            }
+        });
+        unicode.set("wtrunc", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return LuaValue.valueOf(truncateDisplayWidth(args.checkjstring(1), args.checkint(2)));
+            }
+        });
+        globals.set("unicode", unicode);
+    }
+
     private LuaTable createComponentList(final String filter, final boolean exact) {
         final LuaTable components = new LuaTable();
         final List<String> addresses = new ArrayList<>();
@@ -881,6 +956,77 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return value.touserdata();
         }
         return value.tojstring();
+    }
+
+    private static String reverseUnicode(final String value) {
+        final StringBuilder builder = new StringBuilder(value.length());
+        for (int offset = value.length(); offset > 0; ) {
+            final int codePoint = value.codePointBefore(offset);
+            offset -= Character.charCount(codePoint);
+            builder.appendCodePoint(codePoint);
+        }
+        return builder.toString();
+    }
+
+    private static String subUnicode(final String value, final int startIndex, final int endIndex) {
+        final int codePointLength = value.codePointCount(0, value.length());
+        final int start = startIndex < 0
+            ? value.offsetByCodePoints(value.length(), Math.max(startIndex, -codePointLength))
+            : startIndex == 0 ? 0 : value.offsetByCodePoints(0, Math.min(startIndex - 1, codePointLength));
+        final int end = endIndex == Integer.MAX_VALUE
+            ? value.length()
+            : endIndex < 0
+                ? value.offsetByCodePoints(value.length(), Math.max(endIndex + 1, -codePointLength))
+                : value.offsetByCodePoints(0, Math.min(endIndex, codePointLength));
+        return end <= start ? "" : value.substring(start, end);
+    }
+
+    private static int displayWidth(final String value) {
+        int width = 0;
+        for (int offset = 0; offset < value.length(); ) {
+            final int codePoint = value.codePointAt(offset);
+            width += Math.max(1, wcwidth(codePoint));
+            offset += Character.charCount(codePoint);
+        }
+        return width;
+    }
+
+    private static String truncateDisplayWidth(final String value, final int count) {
+        int width = 0;
+        int previous = 0;
+        int end = 0;
+        while (width < count && end < value.length()) {
+            previous = end;
+            final int codePoint = value.codePointAt(end);
+            width += Math.max(1, wcwidth(codePoint));
+            end += Character.charCount(codePoint);
+        }
+        return previous > 0 ? value.substring(0, previous) : "";
+    }
+
+    private static int charWidth(final String value) {
+        if (value.isEmpty()) {
+            return 0;
+        }
+        return wcwidth(value.codePointAt(0));
+    }
+
+    private static int wcwidth(final int codePoint) {
+        return isWideCodePoint(codePoint) ? 2 : 1;
+    }
+
+    private static boolean isWideCodePoint(final int codePoint) {
+        return (codePoint >= 0x1100 && codePoint <= 0x115F)
+            || (codePoint >= 0x2329 && codePoint <= 0x232A)
+            || (codePoint >= 0x2E80 && codePoint <= 0xA4CF)
+            || (codePoint >= 0xAC00 && codePoint <= 0xD7A3)
+            || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
+            || (codePoint >= 0xFE10 && codePoint <= 0xFE19)
+            || (codePoint >= 0xFE30 && codePoint <= 0xFE6F)
+            || (codePoint >= 0xFF00 && codePoint <= 0xFF60)
+            || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6)
+            || (codePoint >= 0x1F300 && codePoint <= 0x1FAFF)
+            || (codePoint >= 0x20000 && codePoint <= 0x3FFFD);
     }
 
     private record ProcessorCandidate(ItemStack stack, Processor processor) {
