@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.LongSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +41,7 @@ final class MachineRegistryTest {
         API.machine = null;
         API.network = null;
         li.cil.oc.api.Machine.LuaArchitecture = null;
+        TimedArchitecture.clock = null;
     }
 
     @Test
@@ -216,6 +218,37 @@ final class MachineRegistryTest {
         assertEquals(List.of("computer.started", "computer.stopped"), environment.messages);
     }
 
+    @Test
+    void uptimeUsesElapsedSecondsSinceStart() {
+        MutableClock clock = new MutableClock();
+        SimpleMachine machine = new SimpleMachine(null, clock);
+
+        clock.nanos = 1_000_000_000L;
+        assertTrue(machine.start());
+        clock.nanos = 3_500_000_000L;
+
+        assertEquals(2.5D, machine.upTime(), 0.000_001D);
+        assertTrue(machine.stop());
+        assertEquals(0D, machine.upTime(), 0.000_001D);
+    }
+
+    @Test
+    void cpuTimeAccumulatesArchitectureUpdateDuration() {
+        OpenComputersApi.initialize();
+        MutableClock clock = new MutableClock();
+        TimedArchitecture.clock = clock;
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TimedProcessorDriver());
+        API.driver = driverRegistry;
+        SimpleMachine machine = new SimpleMachine(new TestHost(), clock);
+
+        machine.onHostChanged();
+        assertTrue(machine.start());
+        machine.update();
+
+        assertEquals(0.003D, machine.cpuTime(), 0.000_001D);
+    }
+
     private static class TestArchitecture implements Architecture {
         @Override public boolean isInitialized() { return false; }
         @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return false; }
@@ -274,6 +307,78 @@ final class MachineRegistryTest {
         @Override
         public Class<? extends Architecture> architecture(final ItemStack stack) {
             return TrackingArchitecture.class;
+        }
+    }
+
+    private static final class TimedProcessorDriver extends TestDriver implements Processor {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return TimedArchitecture.class;
+        }
+    }
+
+    private static final class TimedArchitecture implements Architecture {
+        private static MutableClock clock;
+        private boolean initialized;
+
+        @Override
+        public boolean isInitialized() {
+            return initialized;
+        }
+
+        @Override
+        public boolean recomputeMemory(final Iterable<ItemStack> components) {
+            return true;
+        }
+
+        @Override
+        public boolean initialize() {
+            initialized = true;
+            return true;
+        }
+
+        @Override
+        public void close() {
+            initialized = false;
+        }
+
+        @Override
+        public void runSynchronized() {
+            clock.nanos += 1_000_000L;
+        }
+
+        @Override
+        public ExecutionResult runThreaded(final boolean isSynchronizedReturn) {
+            clock.nanos += 2_000_000L;
+            return new ExecutionResult.Sleep(1);
+        }
+
+        @Override
+        public void onSignal() {
+        }
+
+        @Override
+        public void onConnect() {
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+            initialized = nbt.getBoolean("initialized");
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+            nbt.putBoolean("initialized", initialized);
         }
     }
 
@@ -398,6 +503,15 @@ final class MachineRegistryTest {
 
         @Override
         public void markChanged() {
+        }
+    }
+
+    private static final class MutableClock implements LongSupplier {
+        private long nanos;
+
+        @Override
+        public long getAsLong() {
+            return nanos;
         }
     }
 }

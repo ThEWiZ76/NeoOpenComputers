@@ -26,15 +26,19 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.LongSupplier;
 
 final class SimpleMachine extends AbstractManagedEnvironment implements Machine {
+    private static final double NANOS_PER_SECOND = 1_000_000_000D;
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
     private static final String ARCHITECTURE_TAG = "architecture";
+    private static final String CPU_TIME_NANOS_TAG = "cpuTimeNanos";
     private static final String COMPUTER_STARTED_MESSAGE = "computer.started";
     private static final String COMPUTER_STOPPED_MESSAGE = "computer.stopped";
 
     private final MachineHost host;
+    private final LongSupplier nanoTime;
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
     private final Set<String> users = new LinkedHashSet<>();
     private final Set<ManagedEnvironment> componentEnvironments = new LinkedHashSet<>();
@@ -43,9 +47,16 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private boolean paused;
     private String lastError;
     private double costPerTick;
+    private long startedAtNanos = -1L;
+    private long cpuTimeNanos;
 
     SimpleMachine(final MachineHost host) {
+        this(host, System::nanoTime);
+    }
+
+    SimpleMachine(final MachineHost host, final LongSupplier nanoTime) {
         this.host = host;
+        this.nanoTime = nanoTime;
         if (API.network == null) {
             API.network = new NetworkRegistry();
         }
@@ -74,6 +85,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         }
         running = false;
         paused = false;
+        startedAtNanos = -1L;
 
         if (host == null || node() == null) {
             return;
@@ -158,17 +170,20 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public long worldTime() {
-        return 0;
+        return host != null && host.world() != null ? host.world().getGameTime() : 0;
     }
 
     @Override
     public double upTime() {
-        return 0;
+        if ((!running && !paused) || startedAtNanos < 0) {
+            return 0;
+        }
+        return Math.max(0, nanoTime.getAsLong() - startedAtNanos) / NANOS_PER_SECOND;
     }
 
     @Override
     public double cpuTime() {
-        return 0;
+        return Math.max(0, cpuTimeNanos) / NANOS_PER_SECOND;
     }
 
     @Override
@@ -188,6 +203,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         if (architecture != null) {
             architecture.close();
         }
+        startedAtNanos = -1L;
         if (wasRunning) {
             sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }
@@ -261,6 +277,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         if (!running || paused || architecture == null) {
             return;
         }
+        final long updateStartedAt = nanoTime.getAsLong();
         try {
             architecture.runSynchronized();
             final ExecutionResult result = architecture.runThreaded(false);
@@ -274,6 +291,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             }
         } catch (RuntimeException e) {
             crash(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+        } finally {
+            cpuTimeNanos += Math.max(0, nanoTime.getAsLong() - updateStartedAt);
         }
     }
 
@@ -286,6 +305,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         running = true;
         paused = false;
         if (!wasRunning) {
+            startedAtNanos = nanoTime.getAsLong();
             sendLifecycleMessage(COMPUTER_STARTED_MESSAGE);
         }
         return true;
@@ -308,6 +328,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         if (architecture != null) {
             architecture.close();
         }
+        startedAtNanos = -1L;
         if (wasRunning) {
             sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }
@@ -331,6 +352,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     public void load(final CompoundTag nbt) {
         super.load(nbt);
         running = nbt.getBoolean(RUNNING_TAG);
+        startedAtNanos = running ? nanoTime.getAsLong() : -1L;
+        cpuTimeNanos = nbt.getLong(CPU_TIME_NANOS_TAG);
         lastError = nbt.contains(LAST_ERROR_TAG) ? nbt.getString(LAST_ERROR_TAG) : null;
         if (architecture != null && nbt.contains(ARCHITECTURE_TAG)) {
             architecture.load(nbt.getCompound(ARCHITECTURE_TAG));
@@ -341,6 +364,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     public void save(final CompoundTag nbt) {
         super.save(nbt);
         nbt.putBoolean(RUNNING_TAG, running);
+        nbt.putLong(CPU_TIME_NANOS_TAG, cpuTimeNanos);
         if (lastError != null) {
             nbt.putString(LAST_ERROR_TAG, lastError);
         }
