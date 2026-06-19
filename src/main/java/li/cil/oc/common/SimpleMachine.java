@@ -33,6 +33,7 @@ import java.util.function.LongSupplier;
 
 final class SimpleMachine extends AbstractManagedEnvironment implements Machine {
     private static final double NANOS_PER_SECOND = 1_000_000_000D;
+    private static final long NANOS_PER_TICK = 50_000_000L;
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
     private static final String ARCHITECTURE_TAG = "architecture";
@@ -52,6 +53,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private String lastError;
     private double costPerTick;
     private long startedAtNanos = -1L;
+    private long sleepUntilNanos = -1L;
     private long cpuTimeNanos;
 
     SimpleMachine(final MachineHost host) {
@@ -95,6 +97,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         running = false;
         paused = false;
         startedAtNanos = -1L;
+        sleepUntilNanos = -1L;
 
         if (host == null || node() == null) {
             return;
@@ -224,6 +227,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             architecture.close();
         }
         startedAtNanos = -1L;
+        sleepUntilNanos = -1L;
         if (wasRunning) {
             sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }
@@ -320,6 +324,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             return;
         }
         final long updateStartedAt = nanoTime.getAsLong();
+        if (sleepUntilNanos > updateStartedAt) {
+            return;
+        }
         try {
             architecture.runSynchronized();
             final ExecutionResult result = architecture.runThreaded(false);
@@ -330,6 +337,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
                 }
             } else if (result instanceof ExecutionResult.Error error) {
                 crash(error.message);
+            } else if (result instanceof ExecutionResult.Sleep sleep) {
+                sleepUntilNanos = sleep.ticks <= 0 ? -1L : nanoTime.getAsLong() + sleep.ticks * NANOS_PER_TICK;
             }
         } catch (RuntimeException e) {
             crash(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
@@ -349,6 +358,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         }
         running = true;
         paused = false;
+        sleepUntilNanos = -1L;
         if (!wasRunning) {
             startedAtNanos = nanoTime.getAsLong();
             sendLifecycleMessage(COMPUTER_STARTED_MESSAGE);
@@ -374,6 +384,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             architecture.close();
         }
         startedAtNanos = -1L;
+        sleepUntilNanos = -1L;
         if (wasRunning) {
             sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }
@@ -387,6 +398,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     @Override
     public boolean signal(final String name, final Object... args) {
         signals.addLast(new SimpleSignal(name, args == null ? new Object[0] : Arrays.copyOf(args, args.length)));
+        sleepUntilNanos = -1L;
         if (architecture != null) {
             architecture.onSignal();
         }

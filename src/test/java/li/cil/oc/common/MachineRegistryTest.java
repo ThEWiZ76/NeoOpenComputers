@@ -236,6 +236,33 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void runningMachineHonorsArchitectureSleepTicks() {
+        OpenComputersApi.initialize();
+        MutableClock clock = new MutableClock();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new SleepyProcessorDriver());
+        API.driver = driverRegistry;
+        SimpleMachine machine = new SimpleMachine(new TestHost(), clock);
+        machine.onHostChanged();
+        SleepyArchitecture architecture = (SleepyArchitecture) machine.architecture();
+        assertTrue(machine.start());
+
+        clock.nanos = 1_000_000_000L;
+        machine.update();
+        clock.nanos += 99_000_000L;
+        machine.update();
+
+        assertEquals(1, architecture.synchronizedRuns);
+        assertEquals(1, architecture.threadedRuns);
+
+        clock.nanos += 1_000_000L;
+        machine.update();
+
+        assertEquals(2, architecture.synchronizedRuns);
+        assertEquals(2, architecture.threadedRuns);
+    }
+
+    @Test
     void startAndStopNotifyReachableComponents() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -387,6 +414,23 @@ final class MachineRegistryTest {
         }
     }
 
+    private static final class SleepyProcessorDriver extends TestDriver implements Processor {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return SleepyArchitecture.class;
+        }
+    }
+
     private static final class RejectingProcessorDriver extends TestDriver implements Processor {
         @Override
         public String slot(final ItemStack stack) {
@@ -488,8 +532,8 @@ final class MachineRegistryTest {
     public static class TrackingArchitecture implements Architecture {
         private boolean initialized;
         private int signalCount;
-        private int synchronizedRuns;
-        private int threadedRuns;
+        protected int synchronizedRuns;
+        protected int threadedRuns;
 
         @Override
         public boolean isInitialized() {
@@ -540,6 +584,14 @@ final class MachineRegistryTest {
         @Override
         public void save(final CompoundTag nbt) {
             nbt.putBoolean("initialized", initialized);
+        }
+    }
+
+    public static final class SleepyArchitecture extends TrackingArchitecture {
+        @Override
+        public ExecutionResult runThreaded(final boolean isSynchronizedReturn) {
+            threadedRuns++;
+            return new ExecutionResult.Sleep(2);
         }
     }
 
