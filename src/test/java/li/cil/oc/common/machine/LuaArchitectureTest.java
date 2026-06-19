@@ -547,7 +547,7 @@ final class LuaArchitectureTest {
         components.put("fs1-address", "filesystem");
         components.put("fs2-address", "filesystem");
         components.put("gpu-address", "gpu");
-        LuaArchitecture architecture = new LuaArchitecture("selected = component.setPrimary('filesystem', 'fs2-address'); rejected = component.setPrimary('filesystem', 'gpu-address'); fs = component.getPrimary('filesystem'); result = fs.label()");
+        LuaArchitecture architecture = new LuaArchitecture("selected = component.setPrimary('filesystem', 'fs2-address'); rejected = component.setPrimary('filesystem', 'gpu-address'); missing, missingMessage = component.setPrimary('filesystem', 'missing'); fs = component.getPrimary('filesystem'); result = fs.label()");
         architecture.bind(machineWithInvokeCapture(components, invokedAddress));
 
         assertTrue(architecture.initialize());
@@ -555,6 +555,8 @@ final class LuaArchitectureTest {
 
         assertEquals(true, architecture.globalBoolean("selected"));
         assertEquals(false, architecture.globalBoolean("rejected"));
+        assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("no such component", architecture.globalString("missingMessage"));
         assertEquals("tmp", architecture.globalString("result"));
         assertEquals("fs2-address", invokedAddress[0]);
     }
