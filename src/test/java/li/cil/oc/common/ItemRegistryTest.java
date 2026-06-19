@@ -2,11 +2,13 @@ package li.cil.oc.common;
 
 import li.cil.oc.api.API;
 import li.cil.oc.api.detail.ItemInfo;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -45,5 +47,15 @@ final class ItemRegistryTest {
         assertNull(registry.get((ItemStack) null));
         assertNull(registry.registerFloppy("loot", DyeColor.BLUE, () -> null, true));
         assertNull(registry.registerEEPROM("bios", new byte[]{1}, new byte[]{2}, true));
+    }
+
+    @Test
+    void eepromFactoryDataStoresConfiguredCodeDataAndReadonlyFlag() {
+        CompoundTag data = ItemRegistry.createEepromData("bios", new byte[]{1, 2}, new byte[]{3}, true);
+
+        assertEquals("bios", data.getString(ItemRegistry.EEPROM_LABEL_TAG));
+        assertArrayEquals(new byte[]{1, 2}, data.getByteArray(ItemRegistry.EEPROM_CODE_TAG));
+        assertArrayEquals(new byte[]{3}, data.getByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG));
+        assertEquals(true, data.getBoolean(ItemRegistry.EEPROM_READONLY_TAG));
     }
 }

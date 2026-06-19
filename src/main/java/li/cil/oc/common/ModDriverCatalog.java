@@ -9,7 +9,7 @@ public final class ModDriverCatalog {
     public static void registerDefaults() {
         if (API.driver instanceof DriverRegistry registry) {
             registerBlocks(registry, new ComputerCaseBlockDriver());
-            register(registry, ModItems.CPU_TIER1.get(), ModItems.MEMORY_TIER1.get(), ModItems.HDD_TIER1.get());
+            register(registry, ModItems.CPU_TIER1.get(), ModItems.MEMORY_TIER1.get(), ModItems.HDD_TIER1.get(), ModItems.EEPROM.get());
         }
     }
 

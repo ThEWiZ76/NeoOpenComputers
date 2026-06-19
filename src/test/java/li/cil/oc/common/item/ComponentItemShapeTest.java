@@ -38,4 +38,13 @@ final class ComponentItemShapeTest {
         assertTrue(DriverItem.class.isAssignableFrom(HardDiskDriveItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
     }
+
+    @Test
+    void eepromItemIsItemDriver() throws NoSuchMethodException {
+        final Constructor<EepromItem> constructor = EepromItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(EepromItem.class));
+        assertTrue(DriverItem.class.isAssignableFrom(EepromItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
 }

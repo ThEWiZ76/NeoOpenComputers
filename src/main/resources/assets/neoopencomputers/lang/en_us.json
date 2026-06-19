@@ -1,6 +1,7 @@
 {
   "block.neoopencomputers.computer_case_tier1": "Computer Case (Tier 1)",
   "item.neoopencomputers.cpu_tier1": "CPU (Tier 1)",
+  "item.neoopencomputers.eeprom": "EEPROM",
   "item.neoopencomputers.hdd_tier1": "Hard Disk Drive (Tier 1)",
   "item.neoopencomputers.manual": "OpenComputers Manual",
   "item.neoopencomputers.memory_tier1": "Memory (Tier 1)",

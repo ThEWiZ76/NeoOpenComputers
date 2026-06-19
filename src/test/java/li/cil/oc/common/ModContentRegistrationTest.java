@@ -41,6 +41,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void eepromItemIdIsStable() {
+        assertEquals("eeprom", ModContentIds.EEPROM);
+    }
+
+    @Test
     void computerCaseMenuIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
     }

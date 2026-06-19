@@ -19,7 +19,8 @@ public final class ModContentCatalog {
                 ModItems.MANUAL.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.MEMORY_TIER1.get(),
-                ModItems.HDD_TIER1.get());
+                ModItems.HDD_TIER1.get(),
+                ModItems.EEPROM.get());
         }
     }
 
@@ -30,13 +31,15 @@ public final class ModContentCatalog {
         final Item manualItem,
         final Item cpuTier1Item,
         final Item memoryTier1Item,
-        final Item hddTier1Item) {
+        final Item hddTier1Item,
+        final Item eepromItem) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(COMPAT_COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(ModContentIds.CPU_TIER1, null, cpuTier1Item);
         registry.register(ModContentIds.MEMORY_TIER1, null, memoryTier1Item);
         registry.register(ModContentIds.HDD_TIER1, null, hddTier1Item);
+        registry.register(ModContentIds.EEPROM, null, eepromItem);
         registry.register(COMPAT_CPU_TIER1, null, cpuTier1Item);
         registry.register(COMPAT_MEMORY_TIER1, null, memoryTier1Item);
         registry.register(COMPAT_HDD_TIER1, null, hddTier1Item);
