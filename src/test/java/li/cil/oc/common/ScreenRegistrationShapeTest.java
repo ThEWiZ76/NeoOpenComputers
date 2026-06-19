@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
+import li.cil.oc.api.driver.DeviceInfo;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -34,6 +35,7 @@ final class ScreenRegistrationShapeTest {
 
         assertTrue(BlockEntity.class.isAssignableFrom(ScreenBlockEntity.class));
         assertTrue(TextBuffer.class.isAssignableFrom(ScreenBlockEntity.class));
+        assertTrue(DeviceInfo.class.isAssignableFrom(ScreenBlockEntity.class));
         assertArrayEquals(new Class<?>[]{BlockPos.class, BlockState.class}, constructor.getParameterTypes());
     }
 }

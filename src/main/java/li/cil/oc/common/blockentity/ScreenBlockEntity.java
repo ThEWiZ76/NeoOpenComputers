@@ -1,6 +1,7 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -13,7 +14,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
+import java.util.Map;
+
+public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo {
     private static final int DEFAULT_WIDTH = 40;
     private static final int DEFAULT_HEIGHT = 16;
     private static final int DEFAULT_FOREGROUND = 0xFFFFFF;
@@ -384,6 +387,11 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public void onMessage(final Message message) {
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return ScreenEnvironment.deviceInfo(maximumWidth, maximumHeight, maximumColorDepth);
     }
 
     @Override

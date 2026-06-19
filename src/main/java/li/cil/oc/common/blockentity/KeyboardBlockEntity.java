@@ -1,6 +1,7 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Keyboard;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -13,7 +14,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class KeyboardBlockEntity extends BlockEntity implements Keyboard {
+import java.util.Map;
+
+public class KeyboardBlockEntity extends BlockEntity implements Keyboard, DeviceInfo {
     private static final String TAG_NODE = "node";
 
     private UsabilityChecker usabilityOverride;
@@ -53,6 +56,11 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard {
     @Override
     public void onMessage(final Message message) {
         inputState.onMessage(node(), message, this::isUsableByPlayer);
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return KeyboardEnvironment.deviceInfo();
     }
 
     @Override

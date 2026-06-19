@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Keyboard;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
@@ -34,6 +35,7 @@ final class KeyboardRegistrationShapeTest {
 
         assertTrue(BlockEntity.class.isAssignableFrom(KeyboardBlockEntity.class));
         assertTrue(Keyboard.class.isAssignableFrom(KeyboardBlockEntity.class));
+        assertTrue(DeviceInfo.class.isAssignableFrom(KeyboardBlockEntity.class));
         assertArrayEquals(new Class<?>[]{BlockPos.class, BlockState.class}, constructor.getParameterTypes());
     }
 }
