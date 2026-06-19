@@ -280,6 +280,18 @@ final class LuaArchitectureTest {
         assertEquals("tmp", architecture.globalString("result"));
     }
 
+    @Test
+    void exposesPrimaryComponentProxyToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("fs = component.getPrimary('filesystem'); result = fs.label(); missing = component.getPrimary('gpu')");
+        architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{"tmp"}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("tmp", architecture.globalString("result"));
+        assertEquals("nil", architecture.globalString("missing"));
+    }
+
     private static Machine machineWithUptime(final double uptime) {
         return machine(new ArrayDeque<>(), uptime);
     }
@@ -310,6 +322,10 @@ final class LuaArchitectureTest {
 
     private static Machine machineWithInvokeResult(final Object[] invokeResult) {
         return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), invokeResult);
+    }
+
+    private static Machine machineWithComponentsAndInvokeResult(final Map<String, String> components, final Object[] invokeResult) {
+        return machine(new ArrayDeque<>(), 0D, null, null, components, invokeResult);
     }
 
     private static Machine machineWithMethods(final Map<String, Callback> methods) {

@@ -336,6 +336,16 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return slot < 0 ? LuaValue.NIL : LuaValue.valueOf(slot);
             }
         });
+        component.set("getPrimary", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 1) {
+                    return LuaValue.NIL;
+                }
+                final String address = firstComponentAddress(args.arg1().tojstring());
+                return address == null ? LuaValue.NIL : createComponentProxy(address);
+            }
+        });
         component.set("methods", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
@@ -419,6 +429,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         });
         components.setmetatable(metatable);
         return components;
+    }
+
+    private String firstComponentAddress(final String type) {
+        if (machine == null) {
+            return null;
+        }
+        for (Map.Entry<String, String> entry : machine.components().entrySet()) {
+            if (entry.getValue().equals(type)) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
     private static boolean matchesComponentFilter(final String type, final String filter, final boolean exact) {
