@@ -24,8 +24,8 @@ final class ComputerCaseMenuShapeTest {
 
     @Test
     void computerCaseMenuSlotCountsAreStable() {
-        assertEquals(4, ComputerCaseMenu.COMPUTER_SLOT_COUNT);
+        assertEquals(7, ComputerCaseMenu.COMPUTER_SLOT_COUNT);
         assertEquals(36, ComputerCaseMenu.PLAYER_SLOT_COUNT);
-        assertEquals(40, ComputerCaseMenu.TOTAL_SLOT_COUNT);
+        assertEquals(43, ComputerCaseMenu.TOTAL_SLOT_COUNT);
     }
 }

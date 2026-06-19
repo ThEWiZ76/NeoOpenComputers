@@ -31,10 +31,13 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
         this.computerInventory = computerInventory;
         computerInventory.startOpen(playerInventory.player);
 
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_CPU, 80, 17));
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_MEMORY_0, 62, 44));
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_MEMORY_1, 98, 44));
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_HDD, 80, 62));
+        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_CARD_0, 35, 17));
+        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_CARD_1, 53, 17));
+        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_MEMORY_0, 80, 17));
+        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_HDD, 107, 17));
+        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_CPU, 62, 44));
+        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_MEMORY_1, 89, 44));
+        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_EEPROM, 116, 44));
         addPlayerInventory(playerInventory);
     }
 

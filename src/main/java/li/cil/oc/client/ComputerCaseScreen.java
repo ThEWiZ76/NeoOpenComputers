@@ -19,10 +19,13 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         final int top = topPos;
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
         guiGraphics.fill(left + 7, top + 16, left + 169, top + 76, 0xFF3B4252);
+        drawSlot(guiGraphics, left + 34, top + 16);
+        drawSlot(guiGraphics, left + 52, top + 16);
         drawSlot(guiGraphics, left + 79, top + 16);
+        drawSlot(guiGraphics, left + 106, top + 16);
         drawSlot(guiGraphics, left + 61, top + 43);
-        drawSlot(guiGraphics, left + 97, top + 43);
-        drawSlot(guiGraphics, left + 79, top + 61);
+        drawSlot(guiGraphics, left + 88, top + 43);
+        drawSlot(guiGraphics, left + 115, top + 43);
     }
 
     @Override

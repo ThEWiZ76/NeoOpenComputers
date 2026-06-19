@@ -60,10 +60,13 @@ final class ComputerCaseRegistrationShapeTest {
 
     @Test
     void tierOneComputerCaseHasInitialComponentSlots() {
-        assertEquals(4, ComputerCaseBlockEntity.CONTAINER_SIZE);
-        assertEquals(0, ComputerCaseBlockEntity.SLOT_CPU);
-        assertEquals(1, ComputerCaseBlockEntity.SLOT_MEMORY_0);
-        assertEquals(2, ComputerCaseBlockEntity.SLOT_MEMORY_1);
+        assertEquals(7, ComputerCaseBlockEntity.CONTAINER_SIZE);
+        assertEquals(0, ComputerCaseBlockEntity.SLOT_CARD_0);
+        assertEquals(1, ComputerCaseBlockEntity.SLOT_CARD_1);
+        assertEquals(2, ComputerCaseBlockEntity.SLOT_MEMORY_0);
         assertEquals(3, ComputerCaseBlockEntity.SLOT_HDD);
+        assertEquals(4, ComputerCaseBlockEntity.SLOT_CPU);
+        assertEquals(5, ComputerCaseBlockEntity.SLOT_MEMORY_1);
+        assertEquals(6, ComputerCaseBlockEntity.SLOT_EEPROM);
     }
 }
