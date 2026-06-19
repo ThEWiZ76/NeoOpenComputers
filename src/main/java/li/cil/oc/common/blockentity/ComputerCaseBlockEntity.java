@@ -54,6 +54,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (machine.isRunning() || machine.isPaused()) {
             return machine.stop();
         }
+        if (!canStartMachine()) {
+            machine.crash("missing required components");
+            return false;
+        }
         return machine.start();
     }
 
@@ -185,6 +189,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         };
     }
 
+    static boolean hasRequiredComponents(final String cpuSlot, final String memorySlot0, final String memorySlot1) {
+        return Slot.CPU.equals(cpuSlot) && Slot.Memory.equals(memorySlot0) && Slot.Memory.equals(memorySlot1);
+    }
+
     @Override
     public int tier() {
         return 0;
@@ -286,10 +294,22 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private void tickServer() {
     }
 
+    private boolean canStartMachine() {
+        return hasRequiredComponents(
+            driverSlotType(items.get(SLOT_CPU)),
+            driverSlotType(items.get(SLOT_MEMORY_0)),
+            driverSlotType(items.get(SLOT_MEMORY_1)));
+    }
+
     private void removeMachineNode() {
         if (machine.node() != null) {
             machine.node().remove();
         }
+    }
+
+    private static String driverSlotType(final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        return driver == null ? Slot.None : driver.slot(stack);
     }
 
     private static Direction rotateHorizontal(final Direction value, final int steps) {
