@@ -6,6 +6,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Processor;
+import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.ExecutionResult;
@@ -283,6 +284,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             public LuaValue call() {
                 final Connector connector = machineConnector();
                 return LuaValue.valueOf(connector == null ? 0D : connector.globalBufferSize());
+            }
+        });
+        computer.set("isRobot", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(machine != null && machine.host() instanceof Robot);
             }
         });
         computer.set("getDeviceInfo", new ZeroArgFunction() {

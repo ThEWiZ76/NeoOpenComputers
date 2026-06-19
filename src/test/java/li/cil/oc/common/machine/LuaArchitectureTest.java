@@ -7,6 +7,7 @@ import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.fs.FileSystem;
+import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
@@ -317,6 +318,22 @@ final class LuaArchitectureTest {
 
         assertEquals(7D, architecture.globalDouble("energy"), 0.000_001D);
         assertEquals(20D, architecture.globalDouble("maxEnergy"), 0.000_001D);
+    }
+
+    @Test
+    void exposesRobotFlagToLua() {
+        LuaArchitecture regular = new LuaArchitecture("regularRobot = computer.isRobot()");
+        regular.bind(machine(new ArrayDeque<>(), 0D));
+        LuaArchitecture robot = new LuaArchitecture("robotFlag = computer.isRobot()");
+        robot.bind(machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], Map.of(), new String[0], null, null, null, null, robotHost()));
+
+        assertTrue(regular.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, regular.runThreaded(false));
+        assertTrue(robot.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, robot.runThreaded(false));
+
+        assertEquals(false, regular.globalBoolean("regularRobot"));
+        assertEquals(true, robot.globalBoolean("robotFlag"));
     }
 
     @Test
@@ -822,6 +839,18 @@ final class LuaArchitectureTest {
             public void markChanged() {
             }
         };
+    }
+
+    private static MachineHost robotHost() {
+        return (MachineHost) Proxy.newProxyInstance(
+            Robot.class.getClassLoader(),
+            new Class<?>[]{Robot.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-robot-host";
+                default -> defaultValue(method.getReturnType());
+            });
     }
 
     private static Machine machineWithBeep(final String[] beepPattern) {
