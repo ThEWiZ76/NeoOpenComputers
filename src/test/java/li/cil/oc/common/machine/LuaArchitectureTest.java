@@ -256,6 +256,59 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void suspendsComputerPullSignalUntilSignalArrives() {
+        Queue<Signal> signals = new ArrayDeque<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            name, value = computer.pullSignal()
+            continued = true
+            """);
+        architecture.bind(machine(signals, 0D));
+
+        assertTrue(architecture.initialize());
+        ExecutionResult firstResult = architecture.runThreaded(false);
+
+        assertInstanceOf(ExecutionResult.Sleep.class, firstResult);
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        signals.add(new TestSignal("event", new Object[]{"payload"}));
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("event", architecture.globalString("name"));
+        assertEquals("payload", architecture.globalString("value"));
+        assertTrue(architecture.globalBoolean("continued"));
+    }
+
+    @Test
+    void resumesComputerPullSignalAfterTimeout() {
+        Queue<Signal> signals = new ArrayDeque<>();
+        double[] uptime = {10D};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            name = computer.pullSignal(0.5)
+            continued = true
+            """);
+        architecture.bind(machineWithUptime(signals, uptime));
+
+        assertTrue(architecture.initialize());
+        ExecutionResult firstResult = architecture.runThreaded(false);
+
+        ExecutionResult.Sleep sleep = assertInstanceOf(ExecutionResult.Sleep.class, firstResult);
+        assertEquals(10, sleep.ticks);
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        uptime[0] = 10.25D;
+        assertEquals(false, architecture.globalBoolean("continued"));
+        ExecutionResult secondResult = architecture.runThreaded(false);
+        assertInstanceOf(ExecutionResult.Sleep.class, secondResult);
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        uptime[0] = 10.5D;
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("name"));
+        assertTrue(architecture.globalBoolean("continued"));
+    }
+
+    @Test
     void exposesComputerPushSignalToLua() {
         String[] signalName = {null};
         Object[][] signalArguments = {null};
@@ -1171,6 +1224,22 @@ final class LuaArchitectureTest {
 
     private static Machine machine(final Queue<Signal> signals, final double uptime, final String address, final String[] beepPattern) {
         return machine(signals, uptime, address, beepPattern, Map.of(), new Object[0]);
+    }
+
+    private static Machine machineWithUptime(final Queue<Signal> signals, final double[] uptime) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "upTime" -> uptime[0];
+                case "popSignal" -> signals.poll();
+                case "components" -> Map.of();
+                case "methods" -> Map.of();
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
     }
 
     private static Machine machine(

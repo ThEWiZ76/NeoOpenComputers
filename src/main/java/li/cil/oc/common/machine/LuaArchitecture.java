@@ -23,6 +23,7 @@ import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
@@ -55,6 +56,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String BOOT_SOURCE_TAG = "bootSource";
     private static final String BOOT_ADDRESS_TAG = "bootAddress";
     private static final String MEMORY_TAG = "memory";
+    private static final String PULL_SIGNAL_MARKER = "\u0000oc.pullSignal";
     private static final boolean DEFAULT_ALLOW_BYTECODE = false;
     private static final boolean DEFAULT_ALLOW_GC = false;
     private static final double DEFAULT_TIMEOUT = 5D;
@@ -66,8 +68,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private Machine machine;
     private Globals globals;
     private LuaValue bootChunk;
+    private LuaThread bootThread;
     private ExecutionResult pendingResult;
     private double memoryBytes;
+    private boolean waitingForSignal;
+    private double signalDeadlineSeconds;
     private final LongSupplier wallTimeMillis;
     private final Map<String, String> primaryComponents = new HashMap<>();
     private final Map<String, LuaTable> componentProxyCache = new HashMap<>();
@@ -123,6 +128,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         installSystemLibrary();
         try {
             bootChunk = globals.load(bootSource, "boot");
+            bootThread = new LuaThread(globals, bootChunk);
         } catch (LuaError e) {
             close();
             return false;
@@ -137,7 +143,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         booted = false;
         globals = null;
         bootChunk = null;
+        bootThread = null;
         pendingResult = null;
+        waitingForSignal = false;
+        signalDeadlineSeconds = 0D;
         componentProxyCache.clear();
     }
 
@@ -150,16 +159,21 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (!initialized) {
             return new ExecutionResult.Error("Lua architecture is not initialized");
         }
+        if (waitingForSignal) {
+            final Signal signal = machine == null ? null : machine.popSignal();
+            if (signal != null) {
+                waitingForSignal = false;
+                return resumeBoot(signalToLuaValues(signal));
+            }
+            if (machineUpTime() >= signalDeadlineSeconds) {
+                waitingForSignal = false;
+                return resumeBoot(LuaValue.NONE);
+            }
+            return sleepUntilSignalDeadline();
+        }
         if (!booted) {
             booted = true;
-            try {
-                bootChunk.call();
-            } catch (LuaError e) {
-                return new ExecutionResult.Error(e.getMessage());
-            }
-            if (pendingResult != null) {
-                return pendingResult;
-            }
+            return resumeBoot(LuaValue.NONE);
         }
         return new ExecutionResult.Sleep(1);
     }
@@ -396,16 +410,15 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     return LuaValue.NIL;
                 }
                 final Signal signal = machine.popSignal();
-                if (signal == null) {
-                    return LuaValue.NIL;
+                if (signal != null) {
+                    return signalToLuaValues(signal);
                 }
-                final Object[] signalArgs = signal.args();
-                final LuaValue[] values = new LuaValue[signalArgs.length + 1];
-                values[0] = LuaValue.valueOf(signal.name());
-                for (int index = 0; index < signalArgs.length; index++) {
-                    values[index + 1] = toLuaValue(signalArgs[index]);
-                }
-                return LuaValue.varargsOf(values);
+                final double timeout = args.narg() >= 1 && args.arg(1).isnumber()
+                    ? Math.max(0D, args.arg(1).todouble())
+                    : Double.POSITIVE_INFINITY;
+                waitingForSignal = true;
+                signalDeadlineSeconds = Double.isInfinite(timeout) ? Double.POSITIVE_INFINITY : machineUpTime() + timeout;
+                return globals.yield(LuaValue.valueOf(PULL_SIGNAL_MARKER));
             }
         });
         computer.set("pushSignal", new VarArgFunction() {
@@ -984,6 +997,42 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         metadata.set("getter", LuaValue.valueOf(callback != null && callback.getter()));
         metadata.set("setter", LuaValue.valueOf(callback != null && callback.setter()));
         return metadata;
+    }
+
+    private ExecutionResult resumeBoot(final Varargs args) {
+        final Varargs result = bootThread.resume(args);
+        if (!result.arg1().toboolean()) {
+            return new ExecutionResult.Error(result.arg(2).tojstring());
+        }
+        if (pendingResult != null) {
+            return pendingResult;
+        }
+        if (waitingForSignal && PULL_SIGNAL_MARKER.equals(result.arg(2).tojstring())) {
+            return sleepUntilSignalDeadline();
+        }
+        return new ExecutionResult.Sleep(1);
+    }
+
+    private ExecutionResult.Sleep sleepUntilSignalDeadline() {
+        if (Double.isInfinite(signalDeadlineSeconds)) {
+            return new ExecutionResult.Sleep(1);
+        }
+        final double remainingSeconds = Math.max(0D, signalDeadlineSeconds - machineUpTime());
+        return new ExecutionResult.Sleep((int) Math.ceil(remainingSeconds * 20D));
+    }
+
+    private double machineUpTime() {
+        return machine == null ? 0D : machine.upTime();
+    }
+
+    private static Varargs signalToLuaValues(final Signal signal) {
+        final Object[] signalArgs = signal.args();
+        final LuaValue[] values = new LuaValue[signalArgs.length + 1];
+        values[0] = LuaValue.valueOf(signal.name());
+        for (int index = 0; index < signalArgs.length; index++) {
+            values[index + 1] = toLuaValue(signalArgs[index]);
+        }
+        return LuaValue.varargsOf(values);
     }
 
     private LuaValue machineAddress() {
