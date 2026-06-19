@@ -268,7 +268,44 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
             }
         });
+        component.set("proxy", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 1) {
+                    return LuaValue.NIL;
+                }
+                return createComponentProxy(args.arg(1).tojstring());
+            }
+        });
         globals.set("component", component);
+    }
+
+    private LuaTable createComponentProxy(final String address) {
+        final LuaTable proxy = new LuaTable();
+        final LuaTable metatable = new LuaTable();
+        metatable.set("__index", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final String method = args.arg(2).tojstring();
+                return new VarArgFunction() {
+                    @Override
+                    public Varargs invoke(final Varargs callbackArgs) {
+                        final int offset = callbackArgs.narg() > 0 && callbackArgs.arg(1).eq_b(proxy) ? 1 : 0;
+                        final Object[] javaArgs = new Object[Math.max(0, callbackArgs.narg() - offset)];
+                        for (int index = 0; index < javaArgs.length; index++) {
+                            javaArgs[index] = toJavaValue(callbackArgs.arg(index + offset + 1));
+                        }
+                        try {
+                            return toLuaValues(machine.invoke(address, method, javaArgs));
+                        } catch (Exception e) {
+                            throw new LuaError(e.getMessage() == null ? e.toString() : e.getMessage());
+                        }
+                    }
+                };
+            }
+        });
+        proxy.setmetatable(metatable);
+        return proxy;
     }
 
     private LuaValue machineAddress() {

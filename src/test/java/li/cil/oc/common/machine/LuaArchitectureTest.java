@@ -143,6 +143,17 @@ final class LuaArchitectureTest {
         assertEquals("tmp", architecture.globalString("result"));
     }
 
+    @Test
+    void exposesComponentProxyToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result = fs.label('arg')");
+        architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("tmp", architecture.globalString("result"));
+    }
+
     private static Machine machineWithUptime(final double uptime) {
         return machine(new ArrayDeque<>(), uptime);
     }
