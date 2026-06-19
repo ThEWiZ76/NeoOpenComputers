@@ -3,6 +3,7 @@ package li.cil.oc;
 import com.mojang.logging.LogUtils;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModBlocks;
+import li.cil.oc.common.ModContentCatalog;
 import li.cil.oc.common.ModCreativeTabs;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.OpenComputersApi;
@@ -28,7 +29,10 @@ public final class NeoOpenComputers {
     }
 
     private void onCommonSetup(final FMLCommonSetupEvent event) {
-        event.enqueueWork(ModCreativeTabs::assignApiCreativeTab);
+        event.enqueueWork(() -> {
+            ModCreativeTabs.assignApiCreativeTab();
+            ModContentCatalog.registerDefaults();
+        });
         LOGGER.debug("NeoOpenComputers common setup complete.");
     }
 }
