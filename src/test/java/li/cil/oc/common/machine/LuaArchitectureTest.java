@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Queue;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -77,6 +78,21 @@ final class LuaArchitectureTest {
 
         assertEquals("event", architecture.globalString("name"));
         assertEquals("payload", architecture.globalString("value"));
+    }
+
+    @Test
+    void exposesComputerPushSignalToLua() {
+        String[] signalName = {null};
+        Object[][] signalArguments = {null};
+        LuaArchitecture architecture = new LuaArchitecture("result = computer.pushSignal('event', 'payload', 7, true)");
+        architecture.bind(machineWithSignalCapture(signalName, signalArguments));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.globalBoolean("result"));
+        assertEquals("event", signalName[0]);
+        assertArrayEquals(new Object[]{"payload", 7D, true}, signalArguments[0]);
     }
 
     @Test
@@ -209,6 +225,10 @@ final class LuaArchitectureTest {
         return machine(new ArrayDeque<>(Arrays.asList(signals)), 0D);
     }
 
+    private static Machine machineWithSignalCapture(final String[] signalName, final Object[][] signalArguments) {
+        return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], Map.of(), new String[0], null, null, signalName, signalArguments);
+    }
+
     private static Machine machineWithAddress(final String address) {
         return machine(new ArrayDeque<>(), 0D, address);
     }
@@ -280,6 +300,23 @@ final class LuaArchitectureTest {
         final String[] added,
         final String[] removed
     ) {
+        return machine(signals, uptime, address, beepPattern, components, invokeResult, methods, users, added, removed, null, null);
+    }
+
+    private static Machine machine(
+        final Queue<Signal> signals,
+        final double uptime,
+        final String address,
+        final String[] beepPattern,
+        final Map<String, String> components,
+        final Object[] invokeResult,
+        final Map<String, Callback> methods,
+        final String[] users,
+        final String[] added,
+        final String[] removed,
+        final String[] signalName,
+        final Object[][] signalArguments
+    ) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -300,6 +337,15 @@ final class LuaArchitectureTest {
                 case "removeUser" -> {
                     if (removed != null) {
                         removed[0] = (String) args[0];
+                    }
+                    yield true;
+                }
+                case "signal" -> {
+                    if (signalName != null) {
+                        signalName[0] = (String) args[0];
+                    }
+                    if (signalArguments != null) {
+                        signalArguments[0] = (Object[]) args[1];
                     }
                     yield true;
                 }

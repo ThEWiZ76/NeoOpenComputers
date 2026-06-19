@@ -273,6 +273,19 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.varargsOf(values);
             }
         });
+        computer.set("pushSignal", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 1) {
+                    return LuaValue.FALSE;
+                }
+                final Object[] signalArgs = new Object[Math.max(0, args.narg() - 1)];
+                for (int index = 0; index < signalArgs.length; index++) {
+                    signalArgs[index] = toJavaValue(args.arg(index + 2));
+                }
+                return LuaValue.valueOf(machine.signal(args.arg1().tojstring(), signalArgs));
+            }
+        });
         globals.set("computer", computer);
     }
 
