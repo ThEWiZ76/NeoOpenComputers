@@ -21,6 +21,8 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Architecture.Name("Lua")
@@ -295,17 +297,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("list", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final LuaTable components = new LuaTable();
                 final String filter = args.narg() >= 1 && !args.arg1().isnil() ? args.arg1().tojstring() : null;
                 final boolean exact = args.narg() < 2 || args.arg(2).toboolean();
-                if (machine != null) {
-                    for (Map.Entry<String, String> entry : machine.components().entrySet()) {
-                        if (matchesComponentFilter(entry.getValue(), filter, exact)) {
-                            components.set(entry.getKey(), entry.getValue());
-                        }
-                    }
-                }
-                return components;
+                return createComponentList(filter, exact);
             }
         });
         component.set("type", new VarArgFunction() {
@@ -397,6 +391,34 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             }
         });
         globals.set("component", component);
+    }
+
+    private LuaTable createComponentList(final String filter, final boolean exact) {
+        final LuaTable components = new LuaTable();
+        final List<String> addresses = new ArrayList<>();
+        if (machine != null) {
+            for (Map.Entry<String, String> entry : machine.components().entrySet()) {
+                if (matchesComponentFilter(entry.getValue(), filter, exact)) {
+                    components.set(entry.getKey(), entry.getValue());
+                    addresses.add(entry.getKey());
+                }
+            }
+        }
+        final LuaTable metatable = new LuaTable();
+        metatable.set("__call", new VarArgFunction() {
+            private int index;
+
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (index >= addresses.size()) {
+                    return LuaValue.NIL;
+                }
+                final String address = addresses.get(index++);
+                return LuaValue.varargsOf(LuaValue.valueOf(address), components.get(address));
+            }
+        });
+        components.setmetatable(metatable);
+        return components;
     }
 
     private static boolean matchesComponentFilter(final String type, final String filter, final boolean exact) {
