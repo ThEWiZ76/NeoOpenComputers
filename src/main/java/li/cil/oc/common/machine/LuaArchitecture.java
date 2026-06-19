@@ -3,6 +3,8 @@ package li.cil.oc.common.machine;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Memory;
+import li.cil.oc.api.driver.item.MutableProcessor;
+import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.ExecutionResult;
@@ -367,6 +369,66 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.valueOf(machine.signal(args.arg1().tojstring(), signalArgs));
             }
         });
+        computer.set("getArchitectures", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaTable architectures = new LuaTable();
+                final Processor processor = processor();
+                if (processor == null) {
+                    return architectures;
+                }
+                int index = 1;
+                if (processor instanceof MutableProcessor mutableProcessor) {
+                    for (Class<? extends Architecture> architecture : mutableProcessor.allArchitectures()) {
+                        final String name = li.cil.oc.api.Machine.getArchitectureName(architecture);
+                        if (name != null) {
+                            architectures.set(index++, name);
+                        }
+                    }
+                } else {
+                    final String name = li.cil.oc.api.Machine.getArchitectureName(processor.architecture(processorStack()));
+                    if (name != null) {
+                        architectures.set(index, name);
+                    }
+                }
+                return architectures;
+            }
+        });
+        computer.set("getArchitecture", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final Processor processor = processor();
+                if (processor == null) {
+                    return LuaValue.NIL;
+                }
+                final String name = li.cil.oc.api.Machine.getArchitectureName(processor.architecture(processorStack()));
+                return name == null ? LuaValue.NIL : LuaValue.valueOf(name);
+            }
+        });
+        computer.set("setArchitecture", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (args.narg() < 1) {
+                    return LuaValue.NIL;
+                }
+                final Processor processor = processor();
+                if (!(processor instanceof MutableProcessor mutableProcessor)) {
+                    return LuaValue.NIL;
+                }
+                final String requestedName = args.arg1().tojstring();
+                final ItemStack stack = processorStack();
+                for (Class<? extends Architecture> architecture : mutableProcessor.allArchitectures()) {
+                    if (requestedName.equals(li.cil.oc.api.Machine.getArchitectureName(architecture))) {
+                        if (architecture != mutableProcessor.architecture(stack)) {
+                            mutableProcessor.setArchitecture(stack, architecture);
+                            return LuaValue.TRUE;
+                        }
+                        return LuaValue.FALSE;
+                    }
+                }
+                return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("unknown architecture"));
+            }
+        });
         globals.set("computer", computer);
     }
 
@@ -653,6 +715,29 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return connector;
     }
 
+    private Processor processor() {
+        final ProcessorCandidate candidate = processorCandidate();
+        return candidate == null ? null : candidate.processor();
+    }
+
+    private ItemStack processorStack() {
+        final ProcessorCandidate candidate = processorCandidate();
+        return candidate == null ? null : candidate.stack();
+    }
+
+    private ProcessorCandidate processorCandidate() {
+        if (machine == null || machine.host() == null) {
+            return null;
+        }
+        for (ItemStack stack : machine.host().internalComponents()) {
+            final DriverItem driver = Driver.driverFor(stack);
+            if (driver instanceof Processor processor) {
+                return new ProcessorCandidate(stack, processor);
+            }
+        }
+        return null;
+    }
+
     private double worldTimestamp() {
         return ((machine == null ? 0L : machine.worldTime()) + 6000L) * 60D * 60D / 1000D;
     }
@@ -751,5 +836,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return value.touserdata();
         }
         return value.tojstring();
+    }
+
+    private record ProcessorCandidate(ItemStack stack, Processor processor) {
     }
 }

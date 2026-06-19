@@ -3,8 +3,10 @@ package li.cil.oc.common.machine;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.item.Memory;
+import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.fs.FileSystem;
+import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.Callback;
@@ -15,9 +17,11 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.ItemRegistry;
+import li.cil.oc.common.MachineRegistry;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,8 +29,10 @@ import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -246,6 +252,42 @@ final class LuaArchitectureTest {
 
         assertEquals(7D, architecture.globalDouble("energy"), 0.000_001D);
         assertEquals(20D, architecture.globalDouble("maxEnergy"), 0.000_001D);
+    }
+
+    @Test
+    void exposesComputerArchitectureSelectionToLua() {
+        DriverRegistry drivers = new DriverRegistry();
+        TestMutableProcessor processor = new TestMutableProcessor(FirstArchitecture.class);
+        drivers.add(processor);
+        API.driver = drivers;
+        MachineRegistry machines = new MachineRegistry();
+        machines.add(FirstArchitecture.class);
+        machines.add(SecondArchitecture.class);
+        API.machine = machines;
+        Machine machine = machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], Map.of(), new String[0], null, null, null, null, hostWithComponents(Collections.singletonList(null)));
+        LuaArchitecture architecture = new LuaArchitecture("""
+            architectures = computer.getArchitectures()
+            first = architectures[1]
+            second = architectures[2]
+            current = computer.getArchitecture()
+            changed = computer.setArchitecture('second')
+            after = computer.getArchitecture()
+            unchanged = computer.setArchitecture('second')
+            missing, missingMessage = computer.setArchitecture('missing')
+            """);
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("first", architecture.globalString("first"));
+        assertEquals("second", architecture.globalString("second"));
+        assertEquals("first", architecture.globalString("current"));
+        assertEquals(true, architecture.globalBoolean("changed"));
+        assertEquals("second", architecture.globalString("after"));
+        assertEquals(false, architecture.globalBoolean("unchanged"));
+        assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("unknown architecture", architecture.globalString("missingMessage"));
     }
 
     @Test
@@ -558,6 +600,57 @@ final class LuaArchitectureTest {
             });
     }
 
+    private static MachineHost hostWithComponents(final Iterable<ItemStack> components) {
+        return new MachineHost() {
+            @Override
+            public Machine machine() {
+                return null;
+            }
+
+            @Override
+            public Iterable<ItemStack> internalComponents() {
+                return components;
+            }
+
+            @Override
+            public int componentSlot(final String address) {
+                return -1;
+            }
+
+            @Override
+            public void onMachineConnect(final li.cil.oc.api.network.Node node) {
+            }
+
+            @Override
+            public void onMachineDisconnect(final li.cil.oc.api.network.Node node) {
+            }
+
+            @Override
+            public Level world() {
+                return null;
+            }
+
+            @Override
+            public double xPosition() {
+                return 0;
+            }
+
+            @Override
+            public double yPosition() {
+                return 0;
+            }
+
+            @Override
+            public double zPosition() {
+                return 0;
+            }
+
+            @Override
+            public void markChanged() {
+            }
+        };
+    }
+
     private static Machine machineWithBeep(final String[] beepPattern) {
         return machine(new ArrayDeque<>(), 0D, null, beepPattern);
     }
@@ -811,6 +904,59 @@ final class LuaArchitectureTest {
     private static void directCallback() {
     }
 
+    private static final class TestMutableProcessor implements MutableProcessor {
+        private Class<? extends Architecture> architecture;
+
+        private TestMutableProcessor(final Class<? extends Architecture> architecture) {
+            this.architecture = architecture;
+        }
+
+        @Override
+        public Collection<Class<? extends Architecture>> allArchitectures() {
+            return List.of(FirstArchitecture.class, SecondArchitecture.class);
+        }
+
+        @Override
+        public void setArchitecture(final ItemStack stack, final Class<? extends Architecture> architecture) {
+            this.architecture = architecture;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 8;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return architecture;
+        }
+
+        @Override
+        public boolean worksWith(final ItemStack stack) {
+            return true;
+        }
+
+        @Override
+        public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+            return null;
+        }
+
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int tier(final ItemStack stack) {
+            return 0;
+        }
+
+        @Override
+        public CompoundTag dataTag(final ItemStack stack) {
+            return new CompoundTag();
+        }
+    }
+
     private record TestMemoryDriver(double amount) implements Memory {
         @Override
         public boolean worksWith(final ItemStack stack) {
@@ -844,5 +990,13 @@ final class LuaArchitectureTest {
     }
 
     private record TestSignal(String name, Object[] args) implements Signal {
+    }
+
+    @Architecture.Name("first")
+    private abstract static class FirstArchitecture implements Architecture {
+    }
+
+    @Architecture.Name("second")
+    private abstract static class SecondArchitecture implements Architecture {
     }
 }
