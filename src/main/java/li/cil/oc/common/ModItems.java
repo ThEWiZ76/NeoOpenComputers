@@ -14,7 +14,11 @@ public final class ModItems {
         ModContentIds.COMPUTER_CASE_TIER1,
         ModBlocks.COMPUTER_CASE_TIER1);
 
+    public static final DeferredItem<Item> CPU_TIER1 = ITEMS.registerSimpleItem(ModContentIds.CPU_TIER1, new Item.Properties());
+
     public static final DeferredItem<Item> MANUAL = ITEMS.registerSimpleItem(ModContentIds.MANUAL, new Item.Properties());
+
+    public static final DeferredItem<Item> MEMORY_TIER1 = ITEMS.registerSimpleItem(ModContentIds.MEMORY_TIER1, new Item.Properties());
 
     public static void register(final IEventBus modEventBus) {
         ITEMS.register(modEventBus);

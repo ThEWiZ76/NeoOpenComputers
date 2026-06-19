@@ -24,4 +24,14 @@ final class ModContentRegistrationTest {
     void computerCaseBlockEntityIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_BLOCK_ENTITY);
     }
+
+    @Test
+    void cpuTier1ItemIdIsStable() {
+        assertEquals("cpu_tier1", ModContentIds.CPU_TIER1);
+    }
+
+    @Test
+    void memoryTier1ItemIdIsStable() {
+        assertEquals("memory_tier1", ModContentIds.MEMORY_TIER1);
+    }
 }

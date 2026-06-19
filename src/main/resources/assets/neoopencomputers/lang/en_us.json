@@ -1,6 +1,8 @@
 {
   "block.neoopencomputers.computer_case_tier1": "Computer Case (Tier 1)",
+  "item.neoopencomputers.cpu_tier1": "CPU (Tier 1)",
   "item.neoopencomputers.manual": "OpenComputers Manual",
+  "item.neoopencomputers.memory_tier1": "Memory (Tier 1)",
   "itemGroup.neoopencomputers": "NeoOpenComputers",
   "mod.neoopencomputers": "NeoOpenComputers"
 }
