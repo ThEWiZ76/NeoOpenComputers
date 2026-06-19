@@ -11,6 +11,7 @@ import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Queue;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -120,6 +121,28 @@ final class LuaArchitectureTest {
         assertEquals("..-", beepPattern[0]);
     }
 
+    @Test
+    void exposesComponentListToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("components = component.list(); fs = components['fs-address']");
+        architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("filesystem", architecture.globalString("fs"));
+    }
+
+    @Test
+    void exposesComponentInvokeToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'label', 'arg')");
+        architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("tmp", architecture.globalString("result"));
+    }
+
     private static Machine machineWithUptime(final double uptime) {
         return machine(new ArrayDeque<>(), uptime);
     }
@@ -136,6 +159,14 @@ final class LuaArchitectureTest {
         return machine(new ArrayDeque<>(), 0D, null, beepPattern);
     }
 
+    private static Machine machineWithComponents(final Map<String, String> components) {
+        return machine(new ArrayDeque<>(), 0D, null, null, components, new Object[0]);
+    }
+
+    private static Machine machineWithInvokeResult(final Object[] invokeResult) {
+        return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), invokeResult);
+    }
+
     private static Machine machine(final Queue<Signal> signals, final double uptime) {
         return machine(signals, uptime, null);
     }
@@ -145,6 +176,17 @@ final class LuaArchitectureTest {
     }
 
     private static Machine machine(final Queue<Signal> signals, final double uptime, final String address, final String[] beepPattern) {
+        return machine(signals, uptime, address, beepPattern, Map.of(), new Object[0]);
+    }
+
+    private static Machine machine(
+        final Queue<Signal> signals,
+        final double uptime,
+        final String address,
+        final String[] beepPattern,
+        final Map<String, String> components,
+        final Object[] invokeResult
+    ) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -152,6 +194,8 @@ final class LuaArchitectureTest {
                 case "upTime" -> uptime;
                 case "popSignal" -> signals.poll();
                 case "tmpAddress" -> address;
+                case "components" -> components;
+                case "invoke" -> invokeResult;
                 case "beep" -> {
                     if (beepPattern != null && args.length == 1) {
                         beepPattern[0] = (String) args[0];

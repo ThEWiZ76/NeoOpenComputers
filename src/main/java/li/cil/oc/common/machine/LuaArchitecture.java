@@ -19,6 +19,7 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Architecture.Name("Lua")
 public final class LuaArchitecture implements Architecture, MachineBoundArchitecture {
@@ -70,6 +71,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals = JsePlatform.standardGlobals();
         pendingResult = null;
         installComputerLibrary();
+        installComponentLibrary();
         try {
             bootChunk = globals.load(bootSource, "boot");
         } catch (LuaError e) {
@@ -233,6 +235,42 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.set("computer", computer);
     }
 
+    private void installComponentLibrary() {
+        final LuaTable component = new LuaTable();
+        component.set("list", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaTable components = new LuaTable();
+                if (machine != null) {
+                    for (Map.Entry<String, String> entry : machine.components().entrySet()) {
+                        components.set(entry.getKey(), entry.getValue());
+                    }
+                }
+                return components;
+            }
+        });
+        component.set("invoke", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 2) {
+                    return LuaValue.NIL;
+                }
+                final String address = args.arg(1).tojstring();
+                final String method = args.arg(2).tojstring();
+                final Object[] javaArgs = new Object[Math.max(0, args.narg() - 2)];
+                for (int index = 0; index < javaArgs.length; index++) {
+                    javaArgs[index] = toJavaValue(args.arg(index + 3));
+                }
+                try {
+                    return toLuaValues(machine.invoke(address, method, javaArgs));
+                } catch (Exception e) {
+                    throw new LuaError(e.getMessage() == null ? e.toString() : e.getMessage());
+                }
+            }
+        });
+        globals.set("component", component);
+    }
+
     private LuaValue machineAddress() {
         if (machine == null || machine.tmpAddress() == null) {
             return LuaValue.NIL;
@@ -254,5 +292,29 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.valueOf(new String(bytes, StandardCharsets.UTF_8));
         }
         return LuaValue.valueOf(String.valueOf(value));
+    }
+
+    private static Varargs toLuaValues(final Object[] values) {
+        if (values == null || values.length == 0) {
+            return LuaValue.NIL;
+        }
+        final LuaValue[] luaValues = new LuaValue[values.length];
+        for (int index = 0; index < values.length; index++) {
+            luaValues[index] = toLuaValue(values[index]);
+        }
+        return LuaValue.varargsOf(luaValues);
+    }
+
+    private static Object toJavaValue(final LuaValue value) {
+        if (value.isnil()) {
+            return null;
+        }
+        if (value.isboolean()) {
+            return value.toboolean();
+        }
+        if (value.isnumber()) {
+            return value.todouble();
+        }
+        return value.tojstring();
     }
 }
