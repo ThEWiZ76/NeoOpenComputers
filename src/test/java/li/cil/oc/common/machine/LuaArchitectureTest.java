@@ -776,6 +776,39 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComponentProxyMetadataToLua() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        methods.put("accessor", callback("accessorCallback"));
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.proxy('fs-address')
+            again = component.proxy('fs-address')
+            primary = component.getPrimary('filesystem')
+            address = fs.address
+            componentType = fs.type
+            slot = fs.slot
+            getter = fs.fields.accessor.getter
+            setter = fs.fields.accessor.setter
+            regularField = fs.fields.label
+            sameProxy = fs == again
+            samePrimary = fs == primary
+            """);
+        architecture.bind(machineWithComponentsMethodsAndHostSlot(Map.of("fs-address", "filesystem"), methods, "fs-address", 3));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("fs-address", architecture.globalString("address"));
+        assertEquals("filesystem", architecture.globalString("componentType"));
+        assertEquals(3, architecture.globalInteger("slot"));
+        assertTrue(architecture.globalBoolean("getter"));
+        assertTrue(architecture.globalBoolean("setter"));
+        assertEquals("nil", architecture.globalString("regularField"));
+        assertTrue(architecture.globalBoolean("sameProxy"));
+        assertTrue(architecture.globalBoolean("samePrimary"));
+    }
+
+    @Test
     void exposesPrimaryComponentProxyToLua() {
         LuaArchitecture architecture = new LuaArchitecture("fs = component.getPrimary('filesystem'); result = fs.label(); missing = component.getPrimary('gpu')");
         architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{"tmp"}));
@@ -1079,6 +1112,20 @@ final class LuaArchitectureTest {
                 default -> defaultValue(method.getReturnType());
             });
         return machine(new ArrayDeque<>(), 0D, null, null, components, new Object[0], Map.of(), new String[0], null, null, null, null, host);
+    }
+
+    private static Machine machineWithComponentsMethodsAndHostSlot(final Map<String, String> components, final Map<String, Callback> methods, final String address, final int slot) {
+        final MachineHost host = (MachineHost) Proxy.newProxyInstance(
+            MachineHost.class.getClassLoader(),
+            new Class<?>[]{MachineHost.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "componentSlot" -> address.equals(args[0]) ? slot : -1;
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-host";
+                default -> defaultValue(method.getReturnType());
+            });
+        return machine(new ArrayDeque<>(), 0D, null, null, components, new Object[0], methods, new String[0], null, null, null, null, host);
     }
 
     private static Machine machine(final Queue<Signal> signals, final double uptime) {

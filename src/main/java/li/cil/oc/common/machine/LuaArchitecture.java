@@ -70,6 +70,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private double memoryBytes;
     private final LongSupplier wallTimeMillis;
     private final Map<String, String> primaryComponents = new HashMap<>();
+    private final Map<String, LuaTable> componentProxyCache = new HashMap<>();
 
     public LuaArchitecture() {
         this("");
@@ -112,6 +113,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     @Override
     public boolean initialize() {
+        componentProxyCache.clear();
         globals = sandboxGlobals();
         pendingResult = null;
         installComputerLibrary();
@@ -136,6 +138,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals = null;
         bootChunk = null;
         pendingResult = null;
+        componentProxyCache.clear();
     }
 
     @Override
@@ -861,7 +864,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private LuaTable createComponentProxy(final String address) {
+        final LuaTable cached = componentProxyCache.get(address);
+        if (cached != null) {
+            return cached;
+        }
         final LuaTable proxy = new LuaTable();
+        proxy.set("address", address);
+        proxy.set("type", machine.components().get(address));
+        final MachineHost host = machine.host();
+        if (host != null) {
+            proxy.set("slot", host.componentSlot(address));
+        }
+        proxy.set("fields", componentFields(address));
         final LuaTable metatable = new LuaTable();
         metatable.set("__index", new VarArgFunction() {
             @Override
@@ -903,7 +917,34 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             }
         });
         proxy.setmetatable(metatable);
+        componentProxyCache.put(address, proxy);
         return proxy;
+    }
+
+    private LuaTable componentFields(final String address) {
+        final LuaTable fields = new LuaTable();
+        if (machine == null) {
+            return fields;
+        }
+        final Map<String, Callback> methods = machine.methods(address);
+        if (methods == null) {
+            return fields;
+        }
+        for (Map.Entry<String, Callback> entry : methods.entrySet()) {
+            final Callback callback = entry.getValue();
+            if (callback != null && (callback.getter() || callback.setter())) {
+                fields.set(entry.getKey(), callbackMetadata(callback));
+            }
+        }
+        return fields;
+    }
+
+    private static LuaTable callbackMetadata(final Callback callback) {
+        final LuaTable metadata = new LuaTable();
+        metadata.set("direct", LuaValue.valueOf(callback != null && callback.direct()));
+        metadata.set("getter", LuaValue.valueOf(callback != null && callback.getter()));
+        metadata.set("setter", LuaValue.valueOf(callback != null && callback.setter()));
+        return metadata;
     }
 
     private LuaValue machineAddress() {
