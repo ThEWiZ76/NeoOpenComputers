@@ -340,6 +340,19 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return methods;
             }
         });
+        component.set("doc", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 2) {
+                    return LuaValue.NIL;
+                }
+                final Callback callback = machine.methods(args.arg(1).tojstring()).get(args.arg(2).tojstring());
+                if (callback == null || callback.doc().isEmpty()) {
+                    return LuaValue.NIL;
+                }
+                return LuaValue.valueOf(callback.doc());
+            }
+        });
         component.set("invoke", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {

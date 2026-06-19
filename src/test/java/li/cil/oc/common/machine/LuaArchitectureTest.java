@@ -220,6 +220,20 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComponentDocumentationToLua() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        LuaArchitecture architecture = new LuaArchitecture("doc = component.doc('fs-address', 'label'); missing = component.doc('fs-address', 'missing')");
+        architecture.bind(machineWithMethods(methods));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("function():string -- Regular callback.", architecture.globalString("doc"));
+        assertEquals("nil", architecture.globalString("missing"));
+    }
+
+    @Test
     void exposesComponentInvokeToLua() {
         LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'label', 'arg')");
         architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
