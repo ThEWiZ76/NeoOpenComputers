@@ -572,6 +572,29 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return methods;
             }
         });
+        component.set("fields", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaTable fields = new LuaTable();
+                if (machine != null && args.narg() >= 1) {
+                    final String address = args.arg(1).tojstring();
+                    if (!hasComponent(address)) {
+                        return noSuchComponent();
+                    }
+                    for (Map.Entry<String, Callback> entry : machine.methods(address).entrySet()) {
+                        final Callback callback = entry.getValue();
+                        if (callback != null && (callback.getter() || callback.setter())) {
+                            final LuaTable metadata = new LuaTable();
+                            metadata.set("direct", LuaValue.valueOf(callback.direct()));
+                            metadata.set("getter", LuaValue.valueOf(callback.getter()));
+                            metadata.set("setter", LuaValue.valueOf(callback.setter()));
+                            fields.set(entry.getKey(), metadata);
+                        }
+                    }
+                }
+                return fields;
+            }
+        });
         component.set("doc", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {

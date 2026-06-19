@@ -623,6 +623,26 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComponentFieldsToLua() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        methods.put("direct", callback("directCallback"));
+        methods.put("accessor", callback("accessorCallback"));
+        LuaArchitecture architecture = new LuaArchitecture("fields = component.fields('fs-address'); getter = fields.accessor.getter; setter = fields.accessor.setter; direct = fields.direct; label = fields.label; missing, missingMessage = component.fields('missing')");
+        architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.globalBoolean("getter"));
+        assertEquals(true, architecture.globalBoolean("setter"));
+        assertEquals("nil", architecture.globalString("direct"));
+        assertEquals("nil", architecture.globalString("label"));
+        assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("no such component", architecture.globalString("missingMessage"));
+    }
+
+    @Test
     void exposesComponentDocumentationToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
