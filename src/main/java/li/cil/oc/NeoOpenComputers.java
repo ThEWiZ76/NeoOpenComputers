@@ -1,6 +1,8 @@
 package li.cil.oc;
 
 import com.mojang.logging.LogUtils;
+import li.cil.oc.common.ModCreativeTabs;
+import li.cil.oc.common.ModItems;
 import li.cil.oc.common.OpenComputersApi;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -15,11 +17,14 @@ public final class NeoOpenComputers {
 
     public NeoOpenComputers(final IEventBus modEventBus, final ModContainer modContainer) {
         OpenComputersApi.initialize();
+        ModItems.register(modEventBus);
+        ModCreativeTabs.register(modEventBus);
         modEventBus.addListener(this::onCommonSetup);
         LOGGER.info("Loading NeoOpenComputers {}", modContainer.getModInfo().getVersion());
     }
 
     private void onCommonSetup(final FMLCommonSetupEvent event) {
+        event.enqueueWork(ModCreativeTabs::assignApiCreativeTab);
         LOGGER.debug("NeoOpenComputers common setup complete.");
     }
 }
