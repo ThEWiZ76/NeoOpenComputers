@@ -1,10 +1,13 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.Network;
+import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.ManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.AfterEach;
@@ -68,6 +71,21 @@ final class MachineRegistryTest {
         assertTrue(machine.crash("bad"));
         assertEquals("bad", machine.lastError());
         assertFalse(machine.isRunning());
+    }
+
+    @Test
+    void machineDiscoversAndInvokesConnectedComponents() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        FileSystem fileSystem = API.fileSystem.fromMemory(128);
+        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(fileSystemEnvironment.node());
+
+        assertEquals("filesystem", machine.components().get(fileSystemEnvironment.node().address()));
+        assertEquals(1, machine.componentCount());
+        assertArrayEquals(new Object[]{false}, machine.invoke(fileSystemEnvironment.node().address(), "isReadOnly", new Object[0]));
     }
 
     private static class TestArchitecture implements Architecture {

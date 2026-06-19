@@ -17,6 +17,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -59,17 +60,26 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public Map<String, String> components() {
-        return Map.of();
+        if (node() == null || node().network() == null) {
+            return Map.of();
+        }
+        final Map<String, String> components = new LinkedHashMap<>();
+        for (li.cil.oc.api.network.Node reachable : node().reachableNodes()) {
+            if (reachable instanceof Component component && component.canBeSeenFrom(node())) {
+                components.put(component.address(), component.name());
+            }
+        }
+        return components;
     }
 
     @Override
     public int componentCount() {
-        return 0;
+        return components().size();
     }
 
     @Override
     public int maxComponents() {
-        return 0;
+        return 64;
     }
 
     @Override
