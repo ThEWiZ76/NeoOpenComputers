@@ -24,6 +24,7 @@ import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -584,6 +585,19 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         }
         if (value.isnumber()) {
             return value.todouble();
+        }
+        if (value instanceof LuaTable table) {
+            final Map<Object, Object> values = new LinkedHashMap<>();
+            LuaValue key = LuaValue.NIL;
+            while (true) {
+                final Varargs next = table.next(key);
+                key = next.arg1();
+                if (key.isnil()) {
+                    break;
+                }
+                values.put(toJavaValue(key), toJavaValue(next.arg(2)));
+            }
+            return values;
         }
         if (value.isuserdata()) {
             return value.touserdata();

@@ -296,6 +296,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void convertsLuaTableArgumentsToJavaMaps() {
+        Object[] capturedArgument = {null};
+        LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'configure', {label = 'disk', size = 4})");
+        architecture.bind(machineWithArgumentCapture(capturedArgument));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("ok", architecture.globalString("result"));
+        Map<?, ?> argument = (Map<?, ?>) capturedArgument[0];
+        assertEquals("disk", argument.get("label"));
+        assertEquals(4D, argument.get("size"));
+    }
+
+    @Test
     void exposesComponentProxyToLua() {
         LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result = fs.label('arg')");
         architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
@@ -403,6 +418,23 @@ final class LuaArchitectureTest {
                     }
                     handleRoundTripped[0] = javaArgs.length == 1 && javaArgs[0] == handle;
                     yield handleRoundTripped[0] ? new Object[]{"ok"} : new Object[]{"bad"};
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithArgumentCapture(final Object[] capturedArgument) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "invoke" -> {
+                    final Object[] javaArgs = (Object[]) args[2];
+                    capturedArgument[0] = javaArgs[0];
+                    yield new Object[]{"ok"};
                 }
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
