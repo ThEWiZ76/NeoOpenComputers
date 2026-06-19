@@ -211,6 +211,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         }
     }
 
+    static void notifyHardwareChanged(final Machine machine) {
+        machine.onHostChanged();
+    }
+
     @Override
     public int tier() {
         return 0;
@@ -241,13 +245,18 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             setChanged();
+            notifyHardwareChanged(machine);
         }
         return removed;
     }
 
     @Override
     public ItemStack removeItemNoUpdate(final int slot) {
-        return ContainerHelper.takeItem(items, slot);
+        final ItemStack removed = ContainerHelper.takeItem(items, slot);
+        if (!removed.isEmpty()) {
+            notifyHardwareChanged(machine);
+        }
+        return removed;
     }
 
     @Override
@@ -260,6 +269,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
             stack.setCount(getMaxStackSize());
         }
         setChanged();
+        notifyHardwareChanged(machine);
     }
 
     @Override
@@ -277,6 +287,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     public void clearContent() {
         items.clear();
         setChanged();
+        notifyHardwareChanged(machine);
     }
 
     @Override
@@ -296,6 +307,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         super.loadAdditional(tag, registries);
         color = tag.getInt(TAG_COLOR);
         ContainerHelper.loadAllItems(tag, items, registries);
+        notifyHardwareChanged(machine);
         machine.load(tag.getCompound(TAG_MACHINE));
     }
 

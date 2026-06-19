@@ -55,7 +55,19 @@ final class ComputerCaseBootValidationTest {
         assertEquals(0, updates[0]);
     }
 
+    @Test
+    void inventoryChangeNotifiesHostedMachineAboutHardwareChanges() {
+        final int[] refreshes = {0};
+        ComputerCaseBlockEntity.notifyHardwareChanged(machine(true, new int[1], refreshes));
+
+        assertEquals(1, refreshes[0]);
+    }
+
     private static Machine machine(final boolean canUpdate, final int[] updates) {
+        return machine(canUpdate, updates, new int[1]);
+    }
+
+    private static Machine machine(final boolean canUpdate, final int[] updates, final int[] refreshes) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -63,6 +75,10 @@ final class ComputerCaseBootValidationTest {
                 case "canUpdate" -> canUpdate;
                 case "update" -> {
                     updates[0]++;
+                    yield null;
+                }
+                case "onHostChanged" -> {
+                    refreshes[0]++;
                     yield null;
                 }
                 case "equals" -> proxy == args[0];
