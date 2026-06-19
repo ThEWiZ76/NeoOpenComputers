@@ -544,6 +544,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 final String address = args.arg(1).tojstring();
                 final String method = args.arg(2).tojstring();
+                if (!hasComponent(address)) {
+                    return noSuchComponent();
+                }
                 final Object[] javaArgs = new Object[Math.max(0, args.narg() - 2)];
                 for (int index = 0; index < javaArgs.length; index++) {
                     javaArgs[index] = toJavaValue(args.arg(index + 3));
@@ -561,7 +564,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (machine == null || args.narg() < 1) {
                     return LuaValue.NIL;
                 }
-                return createComponentProxy(args.arg(1).tojstring());
+                final String address = args.arg(1).tojstring();
+                return hasComponent(address) ? createComponentProxy(address) : noSuchComponent();
             }
         });
         globals.set("component", component);

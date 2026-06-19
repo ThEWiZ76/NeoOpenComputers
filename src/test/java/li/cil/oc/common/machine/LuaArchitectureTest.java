@@ -463,19 +463,21 @@ final class LuaArchitectureTest {
 
     @Test
     void exposesComponentInvokeToLua() {
-        LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'label', 'arg')");
-        architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
+        LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'label', 'arg'); missing, missingMessage = component.invoke('missing', 'label')");
+        architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{"tmp"}));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("tmp", architecture.globalString("result"));
+        assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("no such component", architecture.globalString("missingMessage"));
     }
 
     @Test
     void convertsArrayInvokeResultsToLuaTables() {
         LuaArchitecture architecture = new LuaArchitecture("items = component.invoke('fs-address', 'list'); first = items[1]; second = items[2]");
-        architecture.bind(machineWithInvokeResult(new Object[]{new String[]{"init.lua", "bin"}}));
+        architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{new String[]{"init.lua", "bin"}}));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
@@ -489,7 +491,7 @@ final class LuaArchitectureTest {
         Object handle = new Object();
         boolean[] handleRoundTripped = {false};
         LuaArchitecture architecture = new LuaArchitecture("handle = component.invoke('fs-address', 'open'); result = component.invoke('fs-address', 'read', handle)");
-        architecture.bind(machineWithHandleInvoke(handle, handleRoundTripped));
+        architecture.bind(machineWithComponentsAndHandleInvoke(Map.of("fs-address", "filesystem"), handle, handleRoundTripped));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
@@ -502,7 +504,7 @@ final class LuaArchitectureTest {
     void convertsLuaTableArgumentsToJavaMaps() {
         Object[] capturedArgument = {null};
         LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'configure', {label = 'disk', size = 4})");
-        architecture.bind(machineWithArgumentCapture(capturedArgument));
+        architecture.bind(machineWithComponentsAndArgumentCapture(Map.of("fs-address", "filesystem"), capturedArgument));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
@@ -515,13 +517,15 @@ final class LuaArchitectureTest {
 
     @Test
     void exposesComponentProxyToLua() {
-        LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result = fs.label('arg')");
-        architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
+        LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result = fs.label('arg'); missing, missingMessage = component.proxy('missing')");
+        architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{"tmp"}));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("tmp", architecture.globalString("result"));
+        assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("no such component", architecture.globalString("missingMessage"));
     }
 
     @Test
@@ -710,10 +714,15 @@ final class LuaArchitectureTest {
     }
 
     private static Machine machineWithHandleInvoke(final Object handle, final boolean[] handleRoundTripped) {
+        return machineWithComponentsAndHandleInvoke(Map.of(), handle, handleRoundTripped);
+    }
+
+    private static Machine machineWithComponentsAndHandleInvoke(final Map<String, String> components, final Object handle, final boolean[] handleRoundTripped) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
             (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> components;
                 case "invoke" -> {
                     final String componentMethod = (String) args[1];
                     final Object[] javaArgs = (Object[]) args[2];
@@ -731,10 +740,15 @@ final class LuaArchitectureTest {
     }
 
     private static Machine machineWithArgumentCapture(final Object[] capturedArgument) {
+        return machineWithComponentsAndArgumentCapture(Map.of(), capturedArgument);
+    }
+
+    private static Machine machineWithComponentsAndArgumentCapture(final Map<String, String> components, final Object[] capturedArgument) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
             (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> components;
                 case "invoke" -> {
                     final Object[] javaArgs = (Object[]) args[2];
                     capturedArgument[0] = javaArgs[0];
