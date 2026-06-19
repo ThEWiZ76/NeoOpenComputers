@@ -7,6 +7,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.fs.Handle;
+import li.cil.oc.api.fs.Label;
 import li.cil.oc.api.fs.Mode;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.AfterEach;
@@ -138,6 +139,21 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentExposesLabelCallbacks() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        MutableLabel label = new MutableLabel("tmp");
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, label, null, null, 1);
+        Component component = (Component) environment.node();
+
+        assertArrayEquals(new Object[]{"tmp"}, component.invoke("getLabel", null));
+        assertArrayEquals(new Object[]{"data"}, component.invoke("setLabel", null, "data"));
+        assertEquals("data", label.getLabel());
+        assertArrayEquals(new Object[]{null}, component.invoke("setLabel", null, new Object[]{null}));
+        assertNull(label.getLabel());
+    }
+
+    @Test
     void managedFileSystemEnvironmentReadsAndWritesFiles() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(256);
@@ -154,5 +170,35 @@ final class FileSystemRegistryTest {
         assertArrayEquals(new Object[]{0L}, component.invoke("seek", null, readHandle, "set", 0));
         assertArrayEquals("he".getBytes(StandardCharsets.UTF_8), (byte[]) component.invoke("read", null, readHandle, 2)[0]);
         component.invoke("close", null, readHandle);
+    }
+
+    private static final class MutableLabel implements Label {
+        private String value;
+
+        private MutableLabel(final String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String getLabel() {
+            return value;
+        }
+
+        @Override
+        public void setLabel(final String value) {
+            this.value = value;
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+            value = nbt.contains("label") ? nbt.getString("label") : null;
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+            if (value != null) {
+                nbt.putString("label", value);
+            }
+        }
     }
 }

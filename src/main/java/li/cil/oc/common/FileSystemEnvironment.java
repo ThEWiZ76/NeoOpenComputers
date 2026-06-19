@@ -80,6 +80,21 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         );
     }
 
+    @Callback(direct = true, doc = "function():string -- Get the current label of the drive.")
+    public Object[] getLabel(final Context context, final Arguments arguments) {
+        return new Object[]{label == null ? null : label.getLabel()};
+    }
+
+    @Callback(doc = "function(value:string):string -- Sets the label of the drive. Returns the new value, which may be truncated.")
+    public Object[] setLabel(final Context context, final Arguments arguments) throws Exception {
+        if (label == null) {
+            throw new Exception("drive does not support labeling");
+        }
+        final Object value = arguments.checkAny(0);
+        label.setLabel(value == null ? null : arguments.checkString(0));
+        return new Object[]{label.getLabel()};
+    }
+
     @Callback(direct = true, doc = "function():boolean -- Returns whether the file system is read-only.")
     public Object[] isReadOnly(final Context context, final Arguments arguments) {
         return new Object[]{fileSystem.isReadOnly()};
