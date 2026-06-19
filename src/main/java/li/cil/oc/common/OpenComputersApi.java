@@ -13,6 +13,9 @@ public final class OpenComputersApi {
         if (API.manual == null) {
             API.manual = new ManualRegistry();
         }
+        if (API.nanomachines == null) {
+            API.nanomachines = new NanomachinesRegistry();
+        }
     }
 
     private OpenComputersApi() {
