@@ -255,7 +255,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public int getForegroundColor(final int column, final int row) {
-        return foregroundColor;
+        final int cellColor = buffer.getForegroundColor(column, row);
+        return cellColor == 0 ? foregroundColor : cellColor;
     }
 
     @Override
@@ -265,7 +266,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public int getBackgroundColor(final int column, final int row) {
-        return backgroundColor;
+        final int cellColor = buffer.getBackgroundColor(column, row);
+        return cellColor == 0 ? backgroundColor : cellColor;
     }
 
     @Override
@@ -287,10 +289,14 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public void rawSetForeground(final int column, final int row, final int[][] color) {
+        buffer.rawSetForeground(column, row, color);
+        setChanged();
     }
 
     @Override
     public void rawSetBackground(final int column, final int row, final int[][] color) {
+        buffer.rawSetBackground(column, row, color);
+        setChanged();
     }
 
     @Override

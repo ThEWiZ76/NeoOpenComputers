@@ -12,6 +12,8 @@ final class TextBufferState {
     private int width;
     private int height;
     private int[][] text;
+    private int[][] foreground;
+    private int[][] background;
 
     TextBufferState(final int width, final int height) {
         resize(width, height);
@@ -21,6 +23,8 @@ final class TextBufferState {
         this.width = Math.max(1, width);
         this.height = Math.max(1, height);
         text = new int[this.height][this.width];
+        foreground = new int[this.height][this.width];
+        background = new int[this.height][this.width];
         fill(0, 0, this.width, this.height, ' ');
     }
 
@@ -87,6 +91,22 @@ final class TextBufferState {
         }
     }
 
+    void rawSetForeground(final int column, final int row, final int[][] color) {
+        rawSetColor(foreground, column, row, color);
+    }
+
+    void rawSetBackground(final int column, final int row, final int[][] color) {
+        rawSetColor(background, column, row, color);
+    }
+
+    int getForegroundColor(final int column, final int row) {
+        return isInside(column, row) ? foreground[row][column] : 0;
+    }
+
+    int getBackgroundColor(final int column, final int row) {
+        return isInside(column, row) ? background[row][column] : 0;
+    }
+
     void load(final CompoundTag tag) {
         final int loadedWidth = Math.max(1, tag.getInt(TAG_WIDTH));
         final int loadedHeight = Math.max(1, tag.getInt(TAG_HEIGHT));
@@ -113,6 +133,21 @@ final class TextBufferState {
     private void put(final int column, final int row, final int value) {
         if (isInside(column, row)) {
             text[row][column] = value;
+        }
+    }
+
+    private void rawSetColor(final int[][] target, final int column, final int row, final int[][] color) {
+        if (color == null) {
+            return;
+        }
+        for (int y = 0; y < color.length; y++) {
+            for (int x = 0; x < color[y].length; x++) {
+                final int targetX = column + x;
+                final int targetY = row + y;
+                if (isInside(targetX, targetY)) {
+                    target[targetY][targetX] = color[y][x];
+                }
+            }
         }
     }
 
