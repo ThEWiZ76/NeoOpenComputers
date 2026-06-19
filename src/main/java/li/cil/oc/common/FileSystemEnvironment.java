@@ -2,7 +2,9 @@ package li.cil.oc.common;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.fs.FileSystem;
+import li.cil.oc.api.fs.Handle;
 import li.cil.oc.api.fs.Label;
+import li.cil.oc.api.fs.Mode;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -11,8 +13,10 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.api.prefab.AbstractValue;
 import net.minecraft.nbt.CompoundTag;
 
+import java.io.IOException;
 import java.util.Optional;
 
 final class FileSystemEnvironment extends AbstractManagedEnvironment {
@@ -111,6 +115,54 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment {
         return new Object[]{fileSystem.rename(clean(arguments.checkString(0)), clean(arguments.checkString(1)))};
     }
 
+    @Callback(direct = true, doc = "function(path:string[,mode:string='r']):userdata -- Opens a file handle.")
+    public Object[] open(final Context context, final Arguments arguments) throws java.io.FileNotFoundException {
+        final int handle = fileSystem.open(clean(arguments.checkString(0)), parseMode(arguments.optString(1, "r")));
+        return new Object[]{new FileHandleValue(this, handle)};
+    }
+
+    @Callback(direct = true, doc = "function(handle:userdata) -- Closes an open file handle.")
+    public Object[] close(final Context context, final Arguments arguments) throws IOException {
+        close(checkHandle(arguments, 0));
+        return null;
+    }
+
+    @Callback(direct = true, doc = "function(handle:userdata,count:number):string -- Reads up to count bytes from a file handle.")
+    public Object[] read(final Context context, final Arguments arguments) throws IOException {
+        final Handle handle = getHandle(checkHandle(arguments, 0));
+        final byte[] buffer = new byte[Math.max(0, arguments.checkInteger(1))];
+        final int read = handle.read(buffer);
+        if (read < 0) {
+            return new Object[]{null};
+        }
+        if (read == buffer.length) {
+            return new Object[]{buffer};
+        }
+        final byte[] bytes = new byte[read];
+        System.arraycopy(buffer, 0, bytes, 0, read);
+        return new Object[]{bytes};
+    }
+
+    @Callback(direct = true, doc = "function(handle:userdata,whence:string,offset:number):number -- Seeks in a file handle.")
+    public Object[] seek(final Context context, final Arguments arguments) throws IOException {
+        final Handle handle = getHandle(checkHandle(arguments, 0));
+        final String whence = arguments.checkString(1);
+        final long offset = arguments.checkLong(2);
+        final long position = switch (whence) {
+            case "cur" -> handle.seek(handle.position() + offset);
+            case "set" -> handle.seek(offset);
+            case "end" -> handle.seek(handle.length() + offset);
+            default -> throw new IllegalArgumentException("invalid mode");
+        };
+        return new Object[]{position};
+    }
+
+    @Callback(direct = true, doc = "function(handle:userdata,value:string):boolean -- Writes bytes to a file handle.")
+    public Object[] write(final Context context, final Arguments arguments) throws IOException {
+        getHandle(checkHandle(arguments, 0)).write(arguments.checkByteArray(1));
+        return new Object[]{true};
+    }
+
     @Override
     public void onDisconnect(final Node node) {
         if (node == node()) {
@@ -196,5 +248,61 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment {
             }
         }
         return fileSystem.delete(path);
+    }
+
+    private Mode parseMode(final String mode) {
+        return switch (mode) {
+            case "r", "rb" -> Mode.Read;
+            case "w", "wb" -> Mode.Write;
+            case "a", "ab" -> Mode.Append;
+            default -> throw new IllegalArgumentException("unsupported mode");
+        };
+    }
+
+    private int checkHandle(final Arguments arguments, final int index) throws IOException {
+        final Object value = arguments.checkAny(index);
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof FileHandleValue handleValue && handleValue.owner == this) {
+            return handleValue.handle;
+        }
+        throw new IOException("bad file descriptor");
+    }
+
+    private Handle getHandle(final int handle) throws IOException {
+        final Handle file = fileSystem.getHandle(handle);
+        if (file == null) {
+            throw new IOException("bad file descriptor");
+        }
+        return file;
+    }
+
+    private void close(final int handle) throws IOException {
+        getHandle(handle).close();
+    }
+
+    private static final class FileHandleValue extends AbstractValue {
+        private final FileSystemEnvironment owner;
+        private final int handle;
+
+        private FileHandleValue(final FileSystemEnvironment owner, final int handle) {
+            this.owner = owner;
+            this.handle = handle;
+        }
+
+        @Override
+        public void dispose(final Context context) {
+            try {
+                owner.close(handle);
+            } catch (IOException ignored) {
+                // Already closed.
+            }
+        }
+
+        @Override
+        public String toString() {
+            return Integer.toString(handle);
+        }
     }
 }

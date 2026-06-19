@@ -117,4 +117,23 @@ final class FileSystemRegistryTest {
         assertArrayEquals(new Object[]{true}, component.invoke("remove", null, "tmp/renamed"));
         assertArrayEquals(new Object[]{false}, component.invoke("exists", null, "tmp/renamed"));
     }
+
+    @Test
+    void managedFileSystemEnvironmentReadsAndWritesFiles() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        assertTrue(fileSystem.makeDirectory("tmp"));
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+
+        Object writeHandle = component.invoke("open", null, "tmp/data.txt", "w")[0];
+        assertArrayEquals(new Object[]{true}, component.invoke("write", null, writeHandle, "hello"));
+        component.invoke("close", null, writeHandle);
+
+        Object readHandle = component.invoke("open", null, "tmp/data.txt", "r")[0];
+        assertArrayEquals("hello".getBytes(StandardCharsets.UTF_8), (byte[]) component.invoke("read", null, readHandle, 5)[0]);
+        assertArrayEquals(new Object[]{0L}, component.invoke("seek", null, readHandle, "set", 0));
+        assertArrayEquals("he".getBytes(StandardCharsets.UTF_8), (byte[]) component.invoke("read", null, readHandle, 2)[0]);
+        component.invoke("close", null, readHandle);
+    }
 }
