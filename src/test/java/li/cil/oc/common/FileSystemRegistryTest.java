@@ -109,5 +109,12 @@ final class FileSystemRegistryTest {
         assertArrayEquals(new Object[]{false}, component.invoke("isReadOnly", null));
         assertArrayEquals(new Object[]{256L}, component.invoke("spaceTotal", null));
         assertArrayEquals(new Object[]{true}, component.invoke("exists", null, "tmp"));
+        assertArrayEquals(new Object[]{0L}, component.invoke("size", null, "tmp"));
+        assertArrayEquals(new Object[]{true}, component.invoke("isDirectory", null, "tmp"));
+        assertArrayEquals(new Object[]{true}, component.invoke("makeDirectory", null, "tmp/nested/child"));
+        assertArrayEquals(new String[]{"nested/"}, (String[]) component.invoke("list", null, "tmp")[0]);
+        assertArrayEquals(new Object[]{true}, component.invoke("rename", null, "tmp/nested", "tmp/renamed"));
+        assertArrayEquals(new Object[]{true}, component.invoke("remove", null, "tmp/renamed"));
+        assertArrayEquals(new Object[]{false}, component.invoke("exists", null, "tmp/renamed"));
     }
 }

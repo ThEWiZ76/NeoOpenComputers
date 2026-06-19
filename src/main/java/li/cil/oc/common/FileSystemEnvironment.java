@@ -76,6 +76,41 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment {
         return new Object[]{fileSystem.exists(clean(arguments.checkString(0)))};
     }
 
+    @Callback(direct = true, doc = "function(path:string):number -- Returns the size of the object at the specified path.")
+    public Object[] size(final Context context, final Arguments arguments) {
+        return new Object[]{fileSystem.size(clean(arguments.checkString(0)))};
+    }
+
+    @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether the object at the specified path is a directory.")
+    public Object[] isDirectory(final Context context, final Arguments arguments) {
+        return new Object[]{fileSystem.isDirectory(clean(arguments.checkString(0)))};
+    }
+
+    @Callback(direct = true, doc = "function(path:string):number -- Returns the timestamp of when the object at the path was modified.")
+    public Object[] lastModified(final Context context, final Arguments arguments) {
+        return new Object[]{fileSystem.lastModified(clean(arguments.checkString(0)))};
+    }
+
+    @Callback(doc = "function(path:string):table -- Returns names of objects in the directory at the specified path.")
+    public Object[] list(final Context context, final Arguments arguments) {
+        return new Object[]{fileSystem.list(clean(arguments.checkString(0)))};
+    }
+
+    @Callback(doc = "function(path:string):boolean -- Creates a directory at the specified path, including parent directories.")
+    public Object[] makeDirectory(final Context context, final Arguments arguments) {
+        return new Object[]{makeDirectory(clean(arguments.checkString(0)))};
+    }
+
+    @Callback(doc = "function(path:string):boolean -- Removes the object at the specified path.")
+    public Object[] remove(final Context context, final Arguments arguments) {
+        return new Object[]{remove(clean(arguments.checkString(0)))};
+    }
+
+    @Callback(doc = "function(from:string,to:string):boolean -- Renames or moves an object.")
+    public Object[] rename(final Context context, final Arguments arguments) throws java.io.FileNotFoundException {
+        return new Object[]{fileSystem.rename(clean(arguments.checkString(0)), clean(arguments.checkString(1)))};
+    }
+
     @Override
     public void onDisconnect(final Node node) {
         if (node == node()) {
@@ -132,5 +167,34 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment {
             }
         }
         return String.join("/", segments);
+    }
+
+    private boolean makeDirectory(final String path) {
+        if (path.isEmpty() || fileSystem.exists(path)) {
+            return false;
+        }
+        final int separator = path.lastIndexOf('/');
+        if (separator > 0) {
+            final String parent = path.substring(0, separator);
+            if (!fileSystem.exists(parent) && !makeDirectory(parent)) {
+                return false;
+            }
+        }
+        return fileSystem.makeDirectory(path);
+    }
+
+    private boolean remove(final String path) {
+        if (fileSystem.isDirectory(path)) {
+            final String[] children = fileSystem.list(path);
+            if (children != null) {
+                for (String child : children) {
+                    final String childPath = path.isEmpty() ? child : path + "/" + child;
+                    if (!remove(clean(childPath))) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return fileSystem.delete(path);
     }
 }
