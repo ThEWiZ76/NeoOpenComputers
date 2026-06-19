@@ -1,5 +1,6 @@
 package li.cil.oc.common.component;
 
+import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Architecture;
@@ -74,6 +75,23 @@ final class NetworkCardEnvironmentTest {
         }));
 
         assertEquals(List.of(Arrays.asList("modem_message", card.node().address(), "remote", 123, 0D, "payload")), host.signals);
+    }
+
+    @Test
+    void sendDeliversPacketToReachableModemAddress() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost senderHost = new TestMachineHost();
+        TestMachineHost receiverHost = new TestMachineHost();
+        NetworkCardEnvironment sender = new NetworkCardEnvironment(senderHost);
+        NetworkCardEnvironment receiver = new NetworkCardEnvironment(receiverHost);
+        Network.joinNewNetwork(sender.node());
+        sender.node().connect(receiver.node());
+        sender.open(null, new TestArguments(123));
+        receiver.open(null, new TestArguments(123));
+
+        assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments(receiver.node().address(), 123, "payload")));
+
+        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
