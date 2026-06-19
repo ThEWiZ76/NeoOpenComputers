@@ -34,4 +34,9 @@ final class ModContentRegistrationTest {
     void memoryTier1ItemIdIsStable() {
         assertEquals("memory_tier1", ModContentIds.MEMORY_TIER1);
     }
+
+    @Test
+    void computerCaseMenuIdIsStable() {
+        assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
+    }
 }

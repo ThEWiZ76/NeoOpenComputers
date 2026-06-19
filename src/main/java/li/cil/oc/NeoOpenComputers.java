@@ -7,6 +7,7 @@ import li.cil.oc.common.ModContentCatalog;
 import li.cil.oc.common.ModCreativeTabs;
 import li.cil.oc.common.ModDriverCatalog;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.OpenComputersApi;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -24,6 +25,7 @@ public final class NeoOpenComputers {
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         ModItems.register(modEventBus);
+        ModMenus.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
         modEventBus.addListener(this::onCommonSetup);
         LOGGER.info("Loading NeoOpenComputers {}", modContainer.getModInfo().getVersion());

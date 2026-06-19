@@ -61,7 +61,11 @@ public class ComputerCaseBlock extends HorizontalDirectionalBlock implements Ent
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockEntity(pos) instanceof ComputerCaseBlockEntity computerCase) {
-            computerCase.toggleMachine();
+            if (player.isShiftKeyDown()) {
+                computerCase.toggleMachine();
+            } else {
+                player.openMenu(computerCase);
+            }
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;

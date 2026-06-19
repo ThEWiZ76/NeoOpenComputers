@@ -16,13 +16,18 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import li.cil.oc.common.menu.ComputerCaseMenu;
 
-public class ComputerCaseBlockEntity extends BlockEntity implements Case {
+public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider {
     public static final int SLOT_CPU = 0;
     public static final int SLOT_MEMORY_0 = 1;
     public static final int SLOT_MEMORY_1 = 2;
@@ -50,6 +55,16 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case {
             return machine.stop();
         }
         return machine.start();
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.computer_case_tier1");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new ComputerCaseMenu(containerId, playerInventory, this);
     }
 
     @Override
