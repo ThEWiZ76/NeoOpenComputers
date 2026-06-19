@@ -95,6 +95,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         pendingResult = null;
         installComputerLibrary();
         installComponentLibrary();
+        installOsLibrary();
         try {
             bootChunk = globals.load(bootSource, "boot");
         } catch (LuaError e) {
@@ -476,6 +477,58 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.set("component", component);
     }
 
+    private void installOsLibrary() {
+        final LuaTable os = new LuaTable();
+        os.set("clock", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(machine == null ? 0D : machine.cpuTime());
+            }
+        });
+        os.set("time", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (args.isnoneornil(1)) {
+                    return LuaValue.valueOf(worldTimestamp());
+                }
+                final LuaTable time = args.checktable(1);
+                final int second = intField(time, "sec", 0);
+                final int minute = intField(time, "min", 0);
+                final int hour = intField(time, "hour", 12);
+                final int day = intField(time, "day", -1);
+                final int month = intField(time, "month", -1);
+                final int year = intField(time, "year", -1);
+                final Long timestamp = GameTimeFormatter.mktime(year, month, day, hour, minute, second);
+                return timestamp == null ? LuaValue.NIL : LuaValue.valueOf(timestamp.doubleValue());
+            }
+        });
+        os.set("date", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                String format = args.narg() > 0 && args.arg(1).isstring() ? args.arg(1).tojstring() : "%d/%m/%y %H:%M:%S";
+                final double time = args.narg() > 1 && args.arg(2).isnumber() ? args.arg(2).todouble() : worldTimestamp();
+                if (format.startsWith("!")) {
+                    format = format.substring(1);
+                }
+                final GameTimeFormatter.DateTime dateTime = GameTimeFormatter.parse(time);
+                if ("*t".equals(format)) {
+                    final LuaTable table = new LuaTable();
+                    table.set("year", dateTime.year());
+                    table.set("month", dateTime.month());
+                    table.set("day", dateTime.day());
+                    table.set("hour", dateTime.hour());
+                    table.set("min", dateTime.minute());
+                    table.set("sec", dateTime.second());
+                    table.set("wday", dateTime.weekDay());
+                    table.set("yday", dateTime.yearDay());
+                    return table;
+                }
+                return LuaValue.valueOf(GameTimeFormatter.format(format, dateTime));
+            }
+        });
+        globals.set("os", os);
+    }
+
     private LuaTable createComponentList(final String filter, final boolean exact) {
         final LuaTable components = new LuaTable();
         final List<String> addresses = new ArrayList<>();
@@ -585,6 +638,21 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return null;
         }
         return connector;
+    }
+
+    private double worldTimestamp() {
+        return ((machine == null ? 0L : machine.worldTime()) + 6000L) * 60D * 60D / 1000D;
+    }
+
+    private static int intField(final LuaTable table, final String key, final int defaultValue) {
+        final LuaValue value = table.get(key);
+        if (value.isint()) {
+            return value.toint();
+        }
+        if (defaultValue < 0) {
+            throw new LuaError("field '" + key + "' missing in date table");
+        }
+        return defaultValue;
     }
 
     private static LuaValue toLuaValue(final Object value) {

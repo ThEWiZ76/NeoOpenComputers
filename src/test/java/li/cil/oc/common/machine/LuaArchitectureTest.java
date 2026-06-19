@@ -98,6 +98,9 @@ final class LuaArchitectureTest {
         LuaArchitecture architecture = new LuaArchitecture("""
             ioType = type(io)
             osType = type(os)
+            osExecuteType = type(os.execute)
+            osGetenvType = type(os.getenv)
+            osRemoveType = type(os.remove)
             packageType = type(package)
             requireType = type(require)
             luajavaType = type(luajava)
@@ -107,10 +110,37 @@ final class LuaArchitectureTest {
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("nil", architecture.globalString("ioType"));
-        assertEquals("nil", architecture.globalString("osType"));
+        assertEquals("table", architecture.globalString("osType"));
+        assertEquals("nil", architecture.globalString("osExecuteType"));
+        assertEquals("nil", architecture.globalString("osGetenvType"));
+        assertEquals("nil", architecture.globalString("osRemoveType"));
         assertEquals("nil", architecture.globalString("packageType"));
         assertEquals("nil", architecture.globalString("requireType"));
         assertEquals("nil", architecture.globalString("luajavaType"));
+    }
+
+    @Test
+    void exposesSandboxedOsTimeApiToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            clock = os.clock()
+            time = os.time()
+            formatted = os.date('%F %T', 86400)
+            date = os.date('*t', 86400)
+            day = date.day
+            hour = date.hour
+            fromTable = os.time({year = 1970, month = 1, day = 2, hour = 0, min = 0, sec = 0})
+            """);
+        architecture.bind(machineWithTimes(4000L, 1.25D));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(1.25D, architecture.globalDouble("clock"), 0.000_001D);
+        assertEquals(36_000D, architecture.globalDouble("time"), 0.000_001D);
+        assertEquals("1970-01-02 00:00:00", architecture.globalString("formatted"));
+        assertEquals(2, architecture.globalInteger("day"));
+        assertEquals(0, architecture.globalInteger("hour"));
+        assertEquals(86_400D, architecture.globalDouble("fromTable"), 0.000_001D);
     }
 
     @Test
@@ -502,6 +532,20 @@ final class LuaArchitectureTest {
 
     private static Machine machineWithAddress(final String address) {
         return machine(new ArrayDeque<>(), 0D, address);
+    }
+
+    private static Machine machineWithTimes(final long worldTime, final double cpuTime) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "worldTime" -> worldTime;
+                case "cpuTime" -> cpuTime;
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
     }
 
     private static Machine machineWithBeep(final String[] beepPattern) {
