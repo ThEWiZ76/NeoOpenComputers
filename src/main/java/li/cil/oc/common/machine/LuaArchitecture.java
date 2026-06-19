@@ -218,6 +218,42 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.TRUE;
             }
         });
+        computer.set("users", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                final LuaTable users = new LuaTable();
+                if (machine != null) {
+                    final String[] names = machine.users();
+                    for (int index = 0; index < names.length; index++) {
+                        users.set(index + 1, names[index]);
+                    }
+                }
+                return users;
+            }
+        });
+        computer.set("addUser", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 1) {
+                    return LuaValue.FALSE;
+                }
+                try {
+                    machine.addUser(args.arg1().tojstring());
+                    return LuaValue.TRUE;
+                } catch (Exception e) {
+                    throw new LuaError(e.getMessage() == null ? e.toString() : e.getMessage());
+                }
+            }
+        });
+        computer.set("removeUser", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 1) {
+                    return LuaValue.FALSE;
+                }
+                return LuaValue.valueOf(machine.removeUser(args.arg1().tojstring()));
+            }
+        });
         computer.set("pullSignal", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {

@@ -124,6 +124,24 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComputerUsersToLua() {
+        String[] added = {null};
+        String[] removed = {null};
+        LuaArchitecture architecture = new LuaArchitecture("users = computer.users(); first = users[1]; second = users[2]; added = computer.addUser('carol'); removed = computer.removeUser('bob')");
+        architecture.bind(machineWithUserAccess(new String[]{"alice", "bob"}, added, removed));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("alice", architecture.globalString("first"));
+        assertEquals("bob", architecture.globalString("second"));
+        assertEquals(true, architecture.globalBoolean("added"));
+        assertEquals(true, architecture.globalBoolean("removed"));
+        assertEquals("carol", added[0]);
+        assertEquals("bob", removed[0]);
+    }
+
+    @Test
     void exposesComponentListToLua() {
         LuaArchitecture architecture = new LuaArchitecture("components = component.list(); fs = components['fs-address']");
         architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));
@@ -199,6 +217,10 @@ final class LuaArchitectureTest {
         return machine(new ArrayDeque<>(), 0D, null, beepPattern);
     }
 
+    private static Machine machineWithUserAccess(final String[] users, final String[] added, final String[] removed) {
+        return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], Map.of(), users, added, removed);
+    }
+
     private static Machine machineWithComponents(final Map<String, String> components) {
         return machine(new ArrayDeque<>(), 0D, null, null, components, new Object[0]);
     }
@@ -243,6 +265,21 @@ final class LuaArchitectureTest {
         final Object[] invokeResult,
         final Map<String, Callback> methods
     ) {
+        return machine(signals, uptime, address, beepPattern, components, invokeResult, methods, new String[0], null, null);
+    }
+
+    private static Machine machine(
+        final Queue<Signal> signals,
+        final double uptime,
+        final String address,
+        final String[] beepPattern,
+        final Map<String, String> components,
+        final Object[] invokeResult,
+        final Map<String, Callback> methods,
+        final String[] users,
+        final String[] added,
+        final String[] removed
+    ) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -253,6 +290,19 @@ final class LuaArchitectureTest {
                 case "components" -> components;
                 case "methods" -> methods;
                 case "invoke" -> invokeResult;
+                case "users" -> users;
+                case "addUser" -> {
+                    if (added != null) {
+                        added[0] = (String) args[0];
+                    }
+                    yield null;
+                }
+                case "removeUser" -> {
+                    if (removed != null) {
+                        removed[0] = (String) args[0];
+                    }
+                    yield true;
+                }
                 case "beep" -> {
                     if (beepPattern != null && args.length == 1) {
                         beepPattern[0] = (String) args[0];
