@@ -133,6 +133,18 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComponentTypeToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("kind = component.type('fs-address'); missing = component.type('missing')");
+        architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("filesystem", architecture.globalString("kind"));
+        assertEquals("nil", architecture.globalString("missing"));
+    }
+
+    @Test
     void exposesComponentInvokeToLua() {
         LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'label', 'arg')");
         architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
