@@ -122,6 +122,25 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void colorSettersReturnPreviousColorAndPaletteIndex() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        FakeTextBuffer screen = new FakeTextBuffer();
+        Network.joinNewNetwork(gpu.node());
+        gpu.node().connect(screen.node());
+        gpu.bind(null, new TestArguments(screen.node().address(), true));
+        screen.setPaletteColor(3, 0x112233);
+        screen.setForegroundColor(3, true);
+        screen.setPaletteColor(4, 0x445566);
+        screen.setBackgroundColor(4, true);
+
+        assertArrayEquals(new Object[]{0x112233, 3}, gpu.setForeground(null, new TestArguments(0xAAAAAA)));
+        assertArrayEquals(new Object[]{0x445566, 4}, gpu.setBackground(null, new TestArguments(0xBBBBBB)));
+        assertArrayEquals(new Object[]{0xAAAAAA, null}, gpu.setForeground(null, new TestArguments(0xCCCCCC)));
+        assertArrayEquals(new Object[]{0xBBBBBB, null}, gpu.setBackground(null, new TestArguments(0xDDDDDD)));
+    }
+
+    @Test
     void managesVideoBuffersWithoutBoundScreen() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
@@ -208,6 +227,8 @@ final class GraphicsCardEnvironmentTest {
         private int viewportHeight = 16;
         private int foreground = 0xFFFFFF;
         private int background = 0x000000;
+        private boolean foregroundFromPalette;
+        private boolean backgroundFromPalette;
         private ColorDepth depth = ColorDepth.OneBit;
         private final int[] palette = new int[16];
 
@@ -326,12 +347,14 @@ final class GraphicsCardEnvironmentTest {
 
         @Override
         public void setForegroundColor(final int color) {
+            foregroundFromPalette = false;
             foreground = color;
         }
 
         @Override
         public void setForegroundColor(final int color, final boolean isFromPalette) {
             foreground = color;
+            foregroundFromPalette = isFromPalette;
         }
 
         @Override
@@ -341,17 +364,19 @@ final class GraphicsCardEnvironmentTest {
 
         @Override
         public boolean isForegroundFromPalette() {
-            return false;
+            return foregroundFromPalette;
         }
 
         @Override
         public void setBackgroundColor(final int color) {
+            backgroundFromPalette = false;
             background = color;
         }
 
         @Override
         public void setBackgroundColor(final int color, final boolean isFromPalette) {
             background = color;
+            backgroundFromPalette = isFromPalette;
         }
 
         @Override
@@ -361,7 +386,7 @@ final class GraphicsCardEnvironmentTest {
 
         @Override
         public boolean isBackgroundFromPalette() {
-            return false;
+            return backgroundFromPalette;
         }
 
         @Override
@@ -397,7 +422,7 @@ final class GraphicsCardEnvironmentTest {
 
         @Override
         public boolean isForegroundFromPalette(final int column, final int row) {
-            return false;
+            return foregroundFromPalette;
         }
 
         @Override
@@ -407,7 +432,7 @@ final class GraphicsCardEnvironmentTest {
 
         @Override
         public boolean isBackgroundFromPalette(final int column, final int row) {
-            return false;
+            return backgroundFromPalette;
         }
 
         @Override

@@ -153,15 +153,16 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         return withActiveBuffer(buffer -> new Object[]{buffer.getBackgroundColor(), buffer.isBackgroundFromPalette()});
     }
 
-    @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, boolean -- Sets the background color.")
+    @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, number or nil -- Sets the background color.")
     public Object[] setBackground(final Context context, final Arguments args) {
         final int color = args.checkInteger(0);
         final boolean palette = args.optBoolean(1, false);
         return withActiveBuffer(buffer -> {
             final int previous = buffer.getBackgroundColor();
             final boolean wasPalette = buffer.isBackgroundFromPalette();
+            final Object[] result = previousColorResult(buffer, previous, wasPalette);
             buffer.setBackgroundColor(color, palette);
-            return new Object[]{previous, wasPalette};
+            return result;
         });
     }
 
@@ -170,15 +171,16 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         return withActiveBuffer(buffer -> new Object[]{buffer.getForegroundColor(), buffer.isForegroundFromPalette()});
     }
 
-    @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, boolean -- Sets the foreground color.")
+    @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, number or nil -- Sets the foreground color.")
     public Object[] setForeground(final Context context, final Arguments args) {
         final int color = args.checkInteger(0);
         final boolean palette = args.optBoolean(1, false);
         return withActiveBuffer(buffer -> {
             final int previous = buffer.getForegroundColor();
             final boolean wasPalette = buffer.isForegroundFromPalette();
+            final Object[] result = previousColorResult(buffer, previous, wasPalette);
             buffer.setForegroundColor(color, palette);
-            return new Object[]{previous, wasPalette};
+            return result;
         });
     }
 
@@ -470,6 +472,12 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     private static Object[] invalidBufferIndex() {
         return new Object[]{null, "invalid buffer index"};
+    }
+
+    private static Object[] previousColorResult(final TextBuffer buffer, final int previous, final boolean wasPalette) {
+        return wasPalette
+            ? new Object[]{buffer.getPaletteColor(previous), previous}
+            : new Object[]{previous, null};
     }
 
     private static int[][] textSnapshot(final TextBuffer source, final int column, final int row, final int width, final int height) {
