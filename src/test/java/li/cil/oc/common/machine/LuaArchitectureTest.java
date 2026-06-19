@@ -181,6 +181,18 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComponentAvailabilityToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("hasFs = component.isAvailable('filesystem'); hasGpu = component.isAvailable('gpu')");
+        architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.globalBoolean("hasFs"));
+        assertEquals(false, architecture.globalBoolean("hasGpu"));
+    }
+
+    @Test
     void exposesComponentMethodsToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
