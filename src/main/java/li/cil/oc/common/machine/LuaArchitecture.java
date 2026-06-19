@@ -50,6 +50,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String BOOTED_TAG = "booted";
     private static final String BOOT_SOURCE_TAG = "bootSource";
     private static final String MEMORY_TAG = "memory";
+    private static final boolean DEFAULT_ALLOW_BYTECODE = false;
+    private static final boolean DEFAULT_ALLOW_GC = false;
+    private static final double DEFAULT_TIMEOUT = 5D;
 
     private boolean initialized;
     private boolean booted;
@@ -109,6 +112,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         installComponentLibrary();
         installOsLibrary();
         installUnicodeLibrary();
+        installSystemLibrary();
         try {
             bootChunk = globals.load(bootSource, "boot");
         } catch (LuaError e) {
@@ -698,6 +702,29 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             }
         });
         globals.set("unicode", unicode);
+    }
+
+    private void installSystemLibrary() {
+        final LuaTable system = new LuaTable();
+        system.set("allowBytecode", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(DEFAULT_ALLOW_BYTECODE);
+            }
+        });
+        system.set("allowGC", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(DEFAULT_ALLOW_GC);
+            }
+        });
+        system.set("timeout", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(DEFAULT_TIMEOUT);
+            }
+        });
+        globals.set("system", system);
     }
 
     private LuaTable createComponentList(final String filter, final boolean exact) {

@@ -138,6 +138,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesSystemLibraryToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            bytecode = system.allowBytecode()
+            gc = system.allowGC()
+            timeout = system.timeout()
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("bytecode"));
+        assertEquals(false, architecture.globalBoolean("gc"));
+        assertEquals(5D, architecture.globalDouble("timeout"), 0.000_001D);
+    }
+
+    @Test
     void hidesHostAccessLuaLibraries() {
         LuaArchitecture architecture = new LuaArchitecture("""
             ioType = type(io)
