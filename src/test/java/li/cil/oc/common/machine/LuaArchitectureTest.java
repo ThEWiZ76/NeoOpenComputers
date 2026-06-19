@@ -416,14 +416,17 @@ final class LuaArchitectureTest {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
         methods.put("direct", callback("directCallback"));
-        LuaArchitecture architecture = new LuaArchitecture("methods = component.methods('fs-address'); label = methods.label; direct = methods.direct");
+        methods.put("accessor", callback("accessorCallback"));
+        LuaArchitecture architecture = new LuaArchitecture("methods = component.methods('fs-address'); labelDirect = methods.label.direct; direct = methods.direct.direct; getter = methods.accessor.getter; setter = methods.accessor.setter");
         architecture.bind(machineWithMethods(methods));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals(false, architecture.globalBoolean("label"));
+        assertEquals(false, architecture.globalBoolean("labelDirect"));
         assertEquals(true, architecture.globalBoolean("direct"));
+        assertEquals(true, architecture.globalBoolean("getter"));
+        assertEquals(true, architecture.globalBoolean("setter"));
     }
 
     @Test
@@ -902,6 +905,10 @@ final class LuaArchitectureTest {
 
     @Callback(direct = true, doc = "function():string -- Direct callback.")
     private static void directCallback() {
+    }
+
+    @Callback(getter = true, setter = true)
+    private static void accessorCallback() {
     }
 
     private static final class TestMutableProcessor implements MutableProcessor {
