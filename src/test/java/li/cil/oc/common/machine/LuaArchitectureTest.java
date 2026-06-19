@@ -1,7 +1,11 @@
 package li.cil.oc.common.machine;
 
 import li.cil.oc.api.machine.ExecutionResult;
+import li.cil.oc.common.ItemRegistry;
+import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -28,5 +32,18 @@ final class LuaArchitectureTest {
 
         ExecutionResult.Error error = assertInstanceOf(ExecutionResult.Error.class, result);
         assertTrue(error.message.contains("boot failed"));
+    }
+
+    @Test
+    void readsBootSourceFromEepromDataTag() {
+        CompoundTag data = new CompoundTag();
+        data.putByteArray(ItemRegistry.EEPROM_CODE_TAG, "counter = 7".getBytes(StandardCharsets.UTF_8));
+        LuaArchitecture architecture = new LuaArchitecture();
+
+        architecture.configureBootSource(data);
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(7, architecture.globalInteger("counter"));
     }
 }

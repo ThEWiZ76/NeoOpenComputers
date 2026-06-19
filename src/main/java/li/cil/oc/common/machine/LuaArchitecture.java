@@ -1,7 +1,10 @@
 package li.cil.oc.common.machine;
 
+import li.cil.oc.api.Driver;
+import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
+import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.luaj.vm2.Globals;
@@ -9,8 +12,11 @@ import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
+import java.nio.charset.StandardCharsets;
+
 @Architecture.Name("Lua")
 public final class LuaArchitecture implements Architecture {
+    private static final String EEPROM_SLOT = "eeprom";
     private static final String INITIALIZED_TAG = "initialized";
     private static final String BOOTED_TAG = "booted";
     private static final String BOOT_SOURCE_TAG = "bootSource";
@@ -36,6 +42,13 @@ public final class LuaArchitecture implements Architecture {
 
     @Override
     public boolean recomputeMemory(final Iterable<ItemStack> components) {
+        for (ItemStack stack : components) {
+            final DriverItem driver = Driver.driverFor(stack);
+            if (driver != null && EEPROM_SLOT.equals(driver.slot(stack))) {
+                configureBootSource(driver.dataTag(stack));
+                break;
+            }
+        }
         return true;
     }
 
@@ -111,5 +124,16 @@ public final class LuaArchitecture implements Architecture {
             return 0;
         }
         return globals.get(name).toint();
+    }
+
+    void configureBootSource(final CompoundTag eepromData) {
+        bootSource = bootSourceFrom(eepromData);
+    }
+
+    private static String bootSourceFrom(final CompoundTag eepromData) {
+        if (eepromData == null || !eepromData.contains(ItemRegistry.EEPROM_CODE_TAG)) {
+            return "";
+        }
+        return new String(eepromData.getByteArray(ItemRegistry.EEPROM_CODE_TAG), StandardCharsets.UTF_8);
     }
 }
