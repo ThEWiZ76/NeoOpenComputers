@@ -2,17 +2,29 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Architecture;
+import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.machine.MachineHost;
+import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Packet;
 import li.cil.oc.common.OpenComputersApi;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.lang.reflect.Method;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -50,12 +62,26 @@ final class NetworkCardEnvironmentTest {
         assertNotNull(card.node());
     }
 
+    @Test
+    void receivedPacketOnOpenPortQueuesModemMessageSignal() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost host = new TestMachineHost();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(host);
+        card.open(null, new TestArguments(123));
+
+        card.onMessage(new TestMessage(null, "network.message", new Object[]{
+            new TestPacket("remote", card.node().address(), 123, new Object[]{"payload"})
+        }));
+
+        assertEquals(List.of(Arrays.asList("modem_message", card.node().address(), "remote", 123, 0D, "payload")), host.signals);
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = NetworkCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
     }
 
-    private record TestHost() implements EnvironmentHost {
+    private static class TestHost implements EnvironmentHost {
         @Override
         public Level world() {
             return null;
@@ -79,6 +105,101 @@ final class NetworkCardEnvironmentTest {
         @Override
         public void markChanged() {
         }
+    }
+
+    private static final class TestMachineHost extends TestHost implements MachineHost {
+        private final List<List<Object>> signals = new ArrayList<>();
+        private final Machine machine = new TestMachine(signals);
+
+        @Override
+        public Machine machine() {
+            return machine;
+        }
+
+        @Override
+        public Iterable<ItemStack> internalComponents() {
+            return List.of();
+        }
+
+        @Override
+        public int componentSlot(final String address) {
+            return -1;
+        }
+
+        @Override
+        public void onMachineConnect(final Node node) {
+        }
+
+        @Override
+        public void onMachineDisconnect(final Node node) {
+        }
+    }
+
+    private static final class TestMachine implements Machine {
+        private final List<List<Object>> signals;
+
+        private TestMachine(final List<List<Object>> signals) {
+            this.signals = signals;
+        }
+
+        @Override public boolean signal(final String name, final Object... args) {
+            final List<Object> values = new ArrayList<>();
+            values.add(name);
+            values.addAll(Arrays.asList(args));
+            signals.add(values);
+            return true;
+        }
+        @Override public MachineHost host() { return null; }
+        @Override public void onHostChanged() {}
+        @Override public Architecture architecture() { return null; }
+        @Override public Map<String, String> components() { return Map.of(); }
+        @Override public int componentCount() { return 0; }
+        @Override public int maxComponents() { return 0; }
+        @Override public double getCostPerTick() { return 0; }
+        @Override public void setCostPerTick(final double value) {}
+        @Override public String tmpAddress() { return null; }
+        @Override public String lastError() { return null; }
+        @Override public long worldTime() { return 0; }
+        @Override public double upTime() { return 0; }
+        @Override public double cpuTime() { return 0; }
+        @Override public void beep(final short frequency, final short duration) {}
+        @Override public void beep(final String pattern) {}
+        @Override public boolean crash(final String message) { return false; }
+        @Override public Signal popSignal() { return null; }
+        @Override public Map<String, Callback> methods(final Object value) { return Map.of(); }
+        @Override public Object[] invoke(final String address, final String method, final Object[] args) { return new Object[0]; }
+        @Override public Object[] invoke(final li.cil.oc.api.machine.Value value, final String method, final Object[] args) { return new Object[0]; }
+        @Override public String[] users() { return new String[0]; }
+        @Override public void addUser(final String name) {}
+        @Override public boolean removeUser(final String name) { return false; }
+        @Override public boolean canInteract(final String player) { return true; }
+        @Override public boolean isRunning() { return false; }
+        @Override public boolean isPaused() { return false; }
+        @Override public boolean start() { return false; }
+        @Override public boolean pause(final double seconds) { return false; }
+        @Override public boolean stop() { return false; }
+        @Override public void consumeCallBudget(final double callCost) {}
+        @Override public boolean canUpdate() { return false; }
+        @Override public void update() {}
+        @Override public Node node() { return null; }
+        @Override public void onConnect(final Node node) {}
+        @Override public void onDisconnect(final Node node) {}
+        @Override public void onMessage(final Message message) {}
+        @Override public void load(final CompoundTag nbt) {}
+        @Override public void save(final CompoundTag nbt) {}
+    }
+
+    private record TestMessage(Node source, String name, Object[] data) implements Message {
+        @Override
+        public void cancel() {
+        }
+    }
+
+    private record TestPacket(String source, String destination, int port, Object[] data) implements Packet {
+        @Override public int size() { return data.length; }
+        @Override public int ttl() { return 16; }
+        @Override public Packet hop() { return this; }
+        @Override public void save(final CompoundTag nbt) {}
     }
 
     private record TestArguments(Object... values) implements Arguments {

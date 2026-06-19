@@ -4,6 +4,7 @@ import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -24,6 +25,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment {
     private static final int MIN_PORT = 1;
     private static final int MAX_PORT = 65535;
     private static final String NETWORK_MESSAGE = "network.message";
+    private static final String MODEM_MESSAGE_SIGNAL = "modem_message";
 
     private final EnvironmentHost host;
     private final Set<Integer> openPorts = new LinkedHashSet<>();
@@ -120,6 +122,8 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment {
                 openPorts.clear();
                 markChanged();
             }
+        } else if (NETWORK_MESSAGE.equals(message.name())) {
+            receivePacket(message);
         }
     }
 
@@ -144,6 +148,22 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment {
         if (host != null) {
             host.markChanged();
         }
+    }
+
+    private void receivePacket(final Message message) {
+        if (message.data().length == 0 || !(message.data()[0] instanceof Packet packet) || !openPorts.contains(packet.port())) {
+            return;
+        }
+        if (!(host instanceof MachineHost machineHost) || machineHost.machine() == null || node() == null) {
+            return;
+        }
+        final Object[] signalArgs = new Object[4 + packet.data().length];
+        signalArgs[0] = node().address();
+        signalArgs[1] = packet.source();
+        signalArgs[2] = packet.port();
+        signalArgs[3] = 0D;
+        System.arraycopy(packet.data(), 0, signalArgs, 4, packet.data().length);
+        machineHost.machine().signal(MODEM_MESSAGE_SIGNAL, signalArgs);
     }
 
     private static Object[] remaining(final Arguments args, final int offset) {
