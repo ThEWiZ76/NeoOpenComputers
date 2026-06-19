@@ -20,6 +20,7 @@ import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -530,6 +531,32 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         }
         if (value instanceof byte[] bytes) {
             return LuaValue.valueOf(new String(bytes, StandardCharsets.UTF_8));
+        }
+        if (value instanceof Map<?, ?> mapValue) {
+            final LuaTable table = new LuaTable();
+            for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
+                final LuaValue key = toLuaValue(entry.getKey());
+                if (!key.isnil()) {
+                    table.set(key, toLuaValue(entry.getValue()));
+                }
+            }
+            return table;
+        }
+        if (value instanceof Iterable<?> iterableValue) {
+            final LuaTable table = new LuaTable();
+            int index = 1;
+            for (Object entry : iterableValue) {
+                table.set(index++, toLuaValue(entry));
+            }
+            return table;
+        }
+        if (value.getClass().isArray()) {
+            final LuaTable table = new LuaTable();
+            final int length = Array.getLength(value);
+            for (int index = 0; index < length; index++) {
+                table.set(index + 1, toLuaValue(Array.get(value, index)));
+            }
+            return table;
         }
         return LuaValue.valueOf(String.valueOf(value));
     }

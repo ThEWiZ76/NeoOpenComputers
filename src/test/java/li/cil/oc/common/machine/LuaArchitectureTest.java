@@ -270,6 +270,18 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void convertsArrayInvokeResultsToLuaTables() {
+        LuaArchitecture architecture = new LuaArchitecture("items = component.invoke('fs-address', 'list'); first = items[1]; second = items[2]");
+        architecture.bind(machineWithInvokeResult(new Object[]{new String[]{"init.lua", "bin"}}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("init.lua", architecture.globalString("first"));
+        assertEquals("bin", architecture.globalString("second"));
+    }
+
+    @Test
     void exposesComponentProxyToLua() {
         LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result = fs.label('arg')");
         architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
