@@ -41,6 +41,15 @@ final class GraphicsCardEnvironmentTest {
         assertCallback("setForeground");
         assertCallback("getPaletteColor");
         assertCallback("setPaletteColor");
+        assertCallback("getActiveBuffer");
+        assertCallback("setActiveBuffer");
+        assertCallback("buffers");
+        assertCallback("allocateBuffer");
+        assertCallback("freeBuffer");
+        assertCallback("freeAllBuffers");
+        assertCallback("totalMemory");
+        assertCallback("freeMemory");
+        assertCallback("getBufferSize");
         assertCallback("getDepth");
         assertCallback("setDepth");
         assertCallback("maxDepth");
@@ -109,6 +118,41 @@ final class GraphicsCardEnvironmentTest {
         assertArrayEquals(new Object[]{0x112233}, gpu.getPaletteColor(null, new TestArguments(2)));
         assertArrayEquals(new Object[]{0x112233}, gpu.setPaletteColor(null, new TestArguments(2, 0x445566)));
         assertArrayEquals(new Object[]{0x445566}, gpu.getPaletteColor(null, new TestArguments(2)));
+    }
+
+    @Test
+    void managesVideoBuffersWithoutBoundScreen() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+
+        assertArrayEquals(new Object[]{0}, gpu.getActiveBuffer(null, new TestArguments()));
+        int initialFreeMemory = ((Number) gpu.freeMemory(null, new TestArguments())[0]).intValue();
+
+        assertArrayEquals(new Object[]{1}, gpu.allocateBuffer(null, new TestArguments(4, 2)));
+        assertArrayEquals(new int[]{1}, (int[]) gpu.buffers(null, new TestArguments())[0]);
+        assertEquals(initialFreeMemory - 8, ((Number) gpu.freeMemory(null, new TestArguments())[0]).intValue());
+        assertArrayEquals(new Object[]{4, 2}, gpu.getBufferSize(null, new TestArguments(1)));
+
+        assertArrayEquals(new Object[]{0}, gpu.setActiveBuffer(null, new TestArguments(1)));
+        assertArrayEquals(new Object[]{1}, gpu.getActiveBuffer(null, new TestArguments()));
+        assertArrayEquals(new Object[]{true}, gpu.set(null, new TestArguments(1, 1, "A")));
+        assertArrayEquals(new Object[]{"A", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(1, 1)));
+        assertArrayEquals(new Object[]{false}, gpu.setResolution(null, new TestArguments(5, 2)));
+        assertArrayEquals(new Object[]{4, 2}, gpu.getBufferSize(null, new TestArguments(1)));
+
+        assertArrayEquals(new Object[]{true}, gpu.freeBuffer(null, new TestArguments(1)));
+        assertArrayEquals(new Object[]{0}, gpu.getActiveBuffer(null, new TestArguments()));
+        assertEquals(initialFreeMemory, ((Number) gpu.freeMemory(null, new TestArguments())[0]).intValue());
+    }
+
+    @Test
+    void rejectsInvalidVideoBufferRequests() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+
+        assertArrayEquals(new Object[]{null, "invalid page dimensions: must be greater than zero"}, gpu.allocateBuffer(null, new TestArguments(0, 2)));
+        assertArrayEquals(new Object[]{null, "invalid buffer index"}, gpu.setActiveBuffer(null, new TestArguments(1)));
+        assertArrayEquals(new Object[]{null, "no buffer at index"}, gpu.freeBuffer(null, new TestArguments(1)));
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {

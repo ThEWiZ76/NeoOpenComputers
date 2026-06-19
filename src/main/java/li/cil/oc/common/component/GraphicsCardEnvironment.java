@@ -11,19 +11,25 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class GraphicsCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "gpu";
     private static final String SCREEN_TAG = "screen";
+    private static final int SCREEN_INDEX = 0;
 
     private final int tier;
     private final int maxWidth;
     private final int maxHeight;
     private final TextBuffer.ColorDepth maxDepth;
+    private final int totalVideoMemory;
+    private final Map<Integer, VideoBuffer> videoBuffers = new LinkedHashMap<>();
     private String screenAddress;
     private TextBuffer screen;
+    private int activeBufferIndex = SCREEN_INDEX;
 
     public GraphicsCardEnvironment(final int tier) {
         final int clampedTier = Math.max(0, Math.min(2, tier));
@@ -43,6 +49,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             case 1 -> TextBuffer.ColorDepth.FourBit;
             default -> TextBuffer.ColorDepth.EightBit;
         };
+        totalVideoMemory = maxWidth * maxHeight * 4;
 
         final var builder = Network.newNode(this, Visibility.Neighbors);
         if (builder != null) {
@@ -96,7 +103,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():number, number -- Returns the current screen resolution.")
     public Object[] getResolution(final Context context, final Arguments args) {
-        return withScreen(buffer -> new Object[]{buffer.getWidth(), buffer.getHeight()});
+        return withActiveBuffer(buffer -> new Object[]{buffer.getWidth(), buffer.getHeight()});
     }
 
     @Callback(doc = "function(width:number, height:number):boolean -- Sets the current screen resolution.")
@@ -104,12 +111,12 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final int width = args.checkInteger(0);
         final int height = args.checkInteger(1);
         checkSize(width, height, maxWidth, maxHeight, "unsupported resolution");
-        return withScreen(buffer -> new Object[]{buffer.setResolution(width, height)});
+        return withActiveBuffer(buffer -> new Object[]{buffer.setResolution(width, height)});
     }
 
     @Callback(direct = true, doc = "function():number, number -- Returns the maximum screen resolution.")
     public Object[] maxResolution(final Context context, final Arguments args) {
-        return withScreen(buffer -> new Object[]{
+        return withActiveBuffer(buffer -> new Object[]{
             Math.min(maxWidth, buffer.getMaximumWidth()),
             Math.min(maxHeight, buffer.getMaximumHeight())
         });
@@ -117,7 +124,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():number, number -- Returns the current viewport resolution.")
     public Object[] getViewport(final Context context, final Arguments args) {
-        return withScreen(buffer -> new Object[]{buffer.getViewportWidth(), buffer.getViewportHeight()});
+        return withActiveBuffer(buffer -> new Object[]{buffer.getViewportWidth(), buffer.getViewportHeight()});
     }
 
     @Callback(doc = "function(width:number, height:number):boolean -- Sets the current viewport resolution.")
@@ -125,7 +132,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final int width = args.checkInteger(0);
         final int height = args.checkInteger(1);
         checkSize(width, height, maxWidth, maxHeight, "unsupported viewport size");
-        return withScreen(buffer -> {
+        return withActiveBuffer(buffer -> {
             if (width > buffer.getWidth() || height > buffer.getHeight()) {
                 throw new IllegalArgumentException("unsupported viewport size");
             }
@@ -135,14 +142,14 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():number, boolean -- Returns the background color.")
     public Object[] getBackground(final Context context, final Arguments args) {
-        return withScreen(buffer -> new Object[]{buffer.getBackgroundColor(), buffer.isBackgroundFromPalette()});
+        return withActiveBuffer(buffer -> new Object[]{buffer.getBackgroundColor(), buffer.isBackgroundFromPalette()});
     }
 
     @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, boolean -- Sets the background color.")
     public Object[] setBackground(final Context context, final Arguments args) {
         final int color = args.checkInteger(0);
         final boolean palette = args.optBoolean(1, false);
-        return withScreen(buffer -> {
+        return withActiveBuffer(buffer -> {
             final int previous = buffer.getBackgroundColor();
             final boolean wasPalette = buffer.isBackgroundFromPalette();
             buffer.setBackgroundColor(color, palette);
@@ -152,14 +159,14 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():number, boolean -- Returns the foreground color.")
     public Object[] getForeground(final Context context, final Arguments args) {
-        return withScreen(buffer -> new Object[]{buffer.getForegroundColor(), buffer.isForegroundFromPalette()});
+        return withActiveBuffer(buffer -> new Object[]{buffer.getForegroundColor(), buffer.isForegroundFromPalette()});
     }
 
     @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, boolean -- Sets the foreground color.")
     public Object[] setForeground(final Context context, final Arguments args) {
         final int color = args.checkInteger(0);
         final boolean palette = args.optBoolean(1, false);
-        return withScreen(buffer -> {
+        return withActiveBuffer(buffer -> {
             final int previous = buffer.getForegroundColor();
             final boolean wasPalette = buffer.isForegroundFromPalette();
             buffer.setForegroundColor(color, palette);
@@ -170,23 +177,96 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     @Callback(direct = true, doc = "function(index:number):number -- Gets a palette color.")
     public Object[] getPaletteColor(final Context context, final Arguments args) {
         final int index = args.checkInteger(0);
-        return withScreen(buffer -> new Object[]{buffer.getPaletteColor(index)});
+        return withActiveBuffer(buffer -> new Object[]{buffer.getPaletteColor(index)});
     }
 
     @Callback(direct = true, doc = "function(index:number, color:number):number -- Sets a palette color and returns the previous value.")
     public Object[] setPaletteColor(final Context context, final Arguments args) {
         final int index = args.checkInteger(0);
         final int color = args.checkInteger(1);
-        return withScreen(buffer -> {
+        return withActiveBuffer(buffer -> {
             final int previous = buffer.getPaletteColor(index);
             buffer.setPaletteColor(index, color);
             return new Object[]{previous};
         });
     }
 
+    @Callback(direct = true, doc = "function():number -- Returns the active buffer index. Zero is the screen.")
+    public Object[] getActiveBuffer(final Context context, final Arguments args) {
+        return new Object[]{activeBufferIndex};
+    }
+
+    @Callback(direct = true, doc = "function(index:number):number -- Sets the active buffer index and returns the previous index.")
+    public Object[] setActiveBuffer(final Context context, final Arguments args) {
+        final int index = args.checkInteger(0);
+        if (index != SCREEN_INDEX && !videoBuffers.containsKey(index)) {
+            return invalidBufferIndex();
+        }
+        final int previous = activeBufferIndex;
+        activeBufferIndex = index;
+        return new Object[]{previous};
+    }
+
+    @Callback(direct = true, doc = "function():table -- Returns allocated buffer indexes.")
+    public Object[] buffers(final Context context, final Arguments args) {
+        return new Object[]{videoBuffers.keySet().stream().mapToInt(Integer::intValue).toArray()};
+    }
+
+    @Callback(direct = true, doc = "function([width:number, height:number]):number -- Allocates a video memory buffer.")
+    public Object[] allocateBuffer(final Context context, final Arguments args) {
+        final int width = args.optInteger(0, maxWidth);
+        final int height = args.optInteger(1, maxHeight);
+        if (width <= 0 || height <= 0) {
+            return new Object[]{null, "invalid page dimensions: must be greater than zero"};
+        }
+        final int size = width * height;
+        if (size > freeVideoMemory()) {
+            return new Object[]{null, "not enough video memory"};
+        }
+        final int index = nextBufferIndex();
+        videoBuffers.put(index, new VideoBuffer(width, height, maxDepth));
+        return new Object[]{index};
+    }
+
+    @Callback(direct = true, doc = "function([index:number]):boolean -- Frees a video memory buffer.")
+    public Object[] freeBuffer(final Context context, final Arguments args) {
+        final int index = args.optInteger(0, activeBufferIndex);
+        if (videoBuffers.remove(index) == null) {
+            return new Object[]{null, "no buffer at index"};
+        }
+        if (activeBufferIndex == index) {
+            activeBufferIndex = SCREEN_INDEX;
+        }
+        return new Object[]{true};
+    }
+
+    @Callback(direct = true, doc = "function():number -- Frees all video memory buffers and returns the count.")
+    public Object[] freeAllBuffers(final Context context, final Arguments args) {
+        final int count = videoBuffers.size();
+        videoBuffers.clear();
+        activeBufferIndex = SCREEN_INDEX;
+        return new Object[]{count};
+    }
+
+    @Callback(direct = true, doc = "function():number -- Returns total video memory available for buffers.")
+    public Object[] totalMemory(final Context context, final Arguments args) {
+        return new Object[]{totalVideoMemory};
+    }
+
+    @Callback(direct = true, doc = "function():number -- Returns free video memory available for buffers.")
+    public Object[] freeMemory(final Context context, final Arguments args) {
+        return new Object[]{freeVideoMemory()};
+    }
+
+    @Callback(direct = true, doc = "function([index:number]):number, number -- Returns buffer dimensions.")
+    public Object[] getBufferSize(final Context context, final Arguments args) {
+        final int index = args.optInteger(0, activeBufferIndex);
+        return withBuffer(index, buffer -> new Object[]{buffer.getWidth(), buffer.getHeight()});
+    }
+
     @Callback(direct = true, doc = "function():number -- Returns the current color depth.")
     public Object[] getDepth(final Context context, final Arguments args) {
-        return withScreen(buffer -> new Object[]{bits(buffer.getColorDepth())});
+        return withActiveBuffer(buffer -> new Object[]{bits(buffer.getColorDepth())});
     }
 
     @Callback(doc = "function(depth:number):number -- Sets the current color depth.")
@@ -195,7 +275,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         if (depth.ordinal() > maxDepth.ordinal()) {
             throw new IllegalArgumentException("unsupported depth");
         }
-        return withScreen(buffer -> {
+        return withActiveBuffer(buffer -> {
             final int previous = bits(buffer.getColorDepth());
             if (!buffer.setColorDepth(depth)) {
                 throw new IllegalArgumentException("unsupported depth");
@@ -206,14 +286,14 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():number -- Returns the maximum supported color depth.")
     public Object[] maxDepth(final Context context, final Arguments args) {
-        return withScreen(buffer -> new Object[]{bits(minDepth(maxDepth, buffer.getMaximumColorDepth()))});
+        return withActiveBuffer(buffer -> new Object[]{bits(minDepth(maxDepth, buffer.getMaximumColorDepth()))});
     }
 
     @Callback(direct = true, doc = "function(x:number, y:number):string, number, number, boolean, boolean -- Gets a screen cell.")
     public Object[] get(final Context context, final Arguments args) {
         final int x = args.checkInteger(0) - 1;
         final int y = args.checkInteger(1) - 1;
-        return withScreen(buffer -> new Object[]{
+        return withActiveBuffer(buffer -> new Object[]{
             new String(Character.toChars(buffer.getCodePoint(x, y))),
             buffer.getForegroundColor(x, y),
             buffer.getBackgroundColor(x, y),
@@ -228,7 +308,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final int y = args.checkInteger(1) - 1;
         final String value = args.checkString(2);
         final boolean vertical = args.optBoolean(3, false);
-        return withScreen(buffer -> {
+        return withActiveBuffer(buffer -> {
             buffer.set(x, y, value, vertical);
             return new Object[]{true};
         });
@@ -242,7 +322,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final int height = Math.max(0, args.checkInteger(3));
         final int tx = args.checkInteger(4);
         final int ty = args.checkInteger(5);
-        return withScreen(buffer -> {
+        return withActiveBuffer(buffer -> {
             buffer.copy(x, y, width, height, tx, ty);
             return new Object[]{true};
         });
@@ -258,7 +338,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         if (value.codePointCount(0, value.length()) != 1) {
             throw new IllegalArgumentException("invalid fill value");
         }
-        return withScreen(buffer -> {
+        return withActiveBuffer(buffer -> {
             buffer.fill(x, y, width, height, value.codePointAt(0));
             return new Object[]{true};
         });
@@ -283,6 +363,8 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         if (node() != null && message.source() != null && node().isNeighborOf(message.source()) &&
             ("computer.started".equals(message.name()) || "computer.stopped".equals(message.name()))) {
             screen = null;
+            activeBufferIndex = SCREEN_INDEX;
+            videoBuffers.clear();
         }
     }
 
@@ -308,15 +390,44 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         buffer.setBackgroundColor(0x000000);
     }
 
-    private Object[] withScreen(final ScreenOperation operation) {
-        if (screen == null) {
-            return noScreen();
+    private Object[] withActiveBuffer(final ScreenOperation operation) {
+        return withBuffer(activeBufferIndex, operation);
+    }
+
+    private Object[] withBuffer(final int index, final ScreenOperation operation) {
+        final TextBuffer buffer = buffer(index);
+        if (buffer == null) {
+            return index == SCREEN_INDEX ? noScreen() : invalidBufferIndex();
         }
-        return operation.apply(screen);
+        return operation.apply(buffer);
+    }
+
+    private TextBuffer buffer(final int index) {
+        return index == SCREEN_INDEX ? screen : videoBuffers.get(index);
     }
 
     private static Object[] noScreen() {
         return new Object[]{null, "no screen"};
+    }
+
+    private static Object[] invalidBufferIndex() {
+        return new Object[]{null, "invalid buffer index"};
+    }
+
+    private int nextBufferIndex() {
+        int index = 1;
+        while (videoBuffers.containsKey(index)) {
+            index++;
+        }
+        return index;
+    }
+
+    private int usedVideoMemory() {
+        return videoBuffers.values().stream().mapToInt(VideoBuffer::size).sum();
+    }
+
+    private int freeVideoMemory() {
+        return totalVideoMemory - usedVideoMemory();
     }
 
     private static void checkSize(final int width, final int height, final int maxWidth, final int maxHeight, final String message) {
@@ -357,5 +468,410 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     @FunctionalInterface
     private interface ScreenOperation {
         Object[] apply(TextBuffer buffer);
+    }
+
+    private static final class VideoBuffer extends AbstractManagedEnvironment implements TextBuffer {
+        private final ColorDepth maximumDepth;
+        private final int maximumWidth;
+        private final int maximumHeight;
+        private final int[] palette = new int[16];
+        private int width;
+        private int height;
+        private int viewportWidth;
+        private int viewportHeight;
+        private int foregroundColor = 0xFFFFFF;
+        private int backgroundColor = 0x000000;
+        private boolean foregroundFromPalette;
+        private boolean backgroundFromPalette;
+        private ColorDepth colorDepth;
+        private int[][] text;
+        private int[][] foreground;
+        private int[][] background;
+
+        private VideoBuffer(final int width, final int height, final ColorDepth maximumDepth) {
+            this.maximumWidth = Math.max(1, width);
+            this.maximumHeight = Math.max(1, height);
+            this.maximumDepth = maximumDepth;
+            this.colorDepth = maximumDepth == null ? ColorDepth.OneBit : maximumDepth;
+            resize(this.maximumWidth, this.maximumHeight);
+        }
+
+        private int size() {
+            return width * height;
+        }
+
+        @Override
+        public void setEnergyCostPerTick(final double value) {
+        }
+
+        @Override
+        public double getEnergyCostPerTick() {
+            return 0;
+        }
+
+        @Override
+        public void setPowerState(final boolean value) {
+        }
+
+        @Override
+        public boolean getPowerState() {
+            return true;
+        }
+
+        @Override
+        public void setMaximumResolution(final int width, final int height) {
+        }
+
+        @Override
+        public int getMaximumWidth() {
+            return maximumWidth;
+        }
+
+        @Override
+        public int getMaximumHeight() {
+            return maximumHeight;
+        }
+
+        @Override
+        public void setAspectRatio(final double width, final double height) {
+        }
+
+        @Override
+        public double getAspectRatio() {
+            return 1;
+        }
+
+        @Override
+        public boolean setResolution(final int width, final int height) {
+            if (width < 1 || height < 1 || width > maximumWidth || height > maximumHeight) {
+                return false;
+            }
+            resize(width, height);
+            return true;
+        }
+
+        @Override
+        public int getWidth() {
+            return width;
+        }
+
+        @Override
+        public int getHeight() {
+            return height;
+        }
+
+        @Override
+        public boolean setViewport(final int width, final int height) {
+            if (width < 1 || height < 1 || width > this.width || height > this.height) {
+                return false;
+            }
+            viewportWidth = width;
+            viewportHeight = height;
+            return true;
+        }
+
+        @Override
+        public int getViewportWidth() {
+            return viewportWidth;
+        }
+
+        @Override
+        public int getViewportHeight() {
+            return viewportHeight;
+        }
+
+        @Override
+        public void setMaximumColorDepth(final ColorDepth depth) {
+        }
+
+        @Override
+        public ColorDepth getMaximumColorDepth() {
+            return maximumDepth;
+        }
+
+        @Override
+        public boolean setColorDepth(final ColorDepth depth) {
+            if (depth == null || depth.ordinal() > maximumDepth.ordinal()) {
+                return false;
+            }
+            colorDepth = depth;
+            return true;
+        }
+
+        @Override
+        public ColorDepth getColorDepth() {
+            return colorDepth;
+        }
+
+        @Override
+        public void setPaletteColor(final int index, final int color) {
+            if (index >= 0 && index < palette.length) {
+                palette[index] = color;
+            }
+        }
+
+        @Override
+        public int getPaletteColor(final int index) {
+            return index >= 0 && index < palette.length ? palette[index] : 0;
+        }
+
+        @Override
+        public void setForegroundColor(final int color) {
+            setForegroundColor(color, false);
+        }
+
+        @Override
+        public void setForegroundColor(final int color, final boolean isFromPalette) {
+            foregroundColor = color;
+            foregroundFromPalette = isFromPalette;
+        }
+
+        @Override
+        public int getForegroundColor() {
+            return foregroundColor;
+        }
+
+        @Override
+        public boolean isForegroundFromPalette() {
+            return foregroundFromPalette;
+        }
+
+        @Override
+        public void setBackgroundColor(final int color) {
+            setBackgroundColor(color, false);
+        }
+
+        @Override
+        public void setBackgroundColor(final int color, final boolean isFromPalette) {
+            backgroundColor = color;
+            backgroundFromPalette = isFromPalette;
+        }
+
+        @Override
+        public int getBackgroundColor() {
+            return backgroundColor;
+        }
+
+        @Override
+        public boolean isBackgroundFromPalette() {
+            return backgroundFromPalette;
+        }
+
+        @Override
+        public void copy(final int column, final int row, final int width, final int height, final int horizontalTranslation, final int verticalTranslation) {
+            final int[][] textSnapshot = snapshot(text, column, row, width, height);
+            final int[][] foregroundSnapshot = snapshot(foreground, column, row, width, height);
+            final int[][] backgroundSnapshot = snapshot(background, column, row, width, height);
+            rawSetText(column + horizontalTranslation, row + verticalTranslation, textSnapshot);
+            rawSetForeground(column + horizontalTranslation, row + verticalTranslation, foregroundSnapshot);
+            rawSetBackground(column + horizontalTranslation, row + verticalTranslation, backgroundSnapshot);
+        }
+
+        @Override
+        public void fill(final int column, final int row, final int width, final int height, final char value) {
+            fill(column, row, width, height, (int) value);
+        }
+
+        @Override
+        public void fill(final int column, final int row, final int width, final int height, final int value) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    put(column + x, row + y, value, foregroundColor, backgroundColor);
+                }
+            }
+        }
+
+        @Override
+        public void set(final int column, final int row, final String value, final boolean vertical) {
+            if (value == null) {
+                return;
+            }
+            final int[] codePoints = value.codePoints().toArray();
+            for (int index = 0; index < codePoints.length; index++) {
+                final int x = vertical ? column : column + index;
+                final int y = vertical ? row + index : row;
+                put(x, y, codePoints[index], foregroundColor, backgroundColor);
+            }
+        }
+
+        @Override
+        public char get(final int column, final int row) {
+            return (char) getCodePoint(column, row);
+        }
+
+        @Override
+        public int getCodePoint(final int column, final int row) {
+            return isInside(column, row) ? text[row][column] : ' ';
+        }
+
+        @Override
+        public int getForegroundColor(final int column, final int row) {
+            return isInside(column, row) ? foreground[row][column] : foregroundColor;
+        }
+
+        @Override
+        public boolean isForegroundFromPalette(final int column, final int row) {
+            return foregroundFromPalette;
+        }
+
+        @Override
+        public int getBackgroundColor(final int column, final int row) {
+            return isInside(column, row) ? background[row][column] : backgroundColor;
+        }
+
+        @Override
+        public boolean isBackgroundFromPalette(final int column, final int row) {
+            return backgroundFromPalette;
+        }
+
+        @Override
+        public void rawSetText(final int column, final int row, final char[][] text) {
+            if (text == null) {
+                return;
+            }
+            for (int y = 0; y < text.length; y++) {
+                for (int x = 0; x < text[y].length; x++) {
+                    putText(column + x, row + y, text[y][x]);
+                }
+            }
+        }
+
+        @Override
+        public void rawSetText(final int column, final int row, final int[][] text) {
+            if (text == null) {
+                return;
+            }
+            for (int y = 0; y < text.length; y++) {
+                for (int x = 0; x < text[y].length; x++) {
+                    putText(column + x, row + y, text[y][x]);
+                }
+            }
+        }
+
+        @Override
+        public void rawSetForeground(final int column, final int row, final int[][] color) {
+            rawSetColor(foreground, column, row, color);
+        }
+
+        @Override
+        public void rawSetBackground(final int column, final int row, final int[][] color) {
+            rawSetColor(background, column, row, color);
+        }
+
+        @Override
+        public boolean renderText() {
+            return false;
+        }
+
+        @Override
+        public int renderWidth() {
+            return viewportWidth;
+        }
+
+        @Override
+        public int renderHeight() {
+            return viewportHeight;
+        }
+
+        @Override
+        public void setRenderingEnabled(final boolean enabled) {
+        }
+
+        @Override
+        public boolean isRenderingEnabled() {
+            return false;
+        }
+
+        @Override
+        public void keyDown(final char character, final int code, final Player player) {
+        }
+
+        @Override
+        public void keyUp(final char character, final int code, final Player player) {
+        }
+
+        @Override
+        public void clipboard(final String value, final Player player) {
+        }
+
+        @Override
+        public void mouseDown(final double x, final double y, final int button, final Player player) {
+        }
+
+        @Override
+        public void mouseDrag(final double x, final double y, final int button, final Player player) {
+        }
+
+        @Override
+        public void mouseUp(final double x, final double y, final int button, final Player player) {
+        }
+
+        @Override
+        public void mouseScroll(final double x, final double y, final int delta, final Player player) {
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+        }
+
+        private void resize(final int width, final int height) {
+            this.width = Math.max(1, width);
+            this.height = Math.max(1, height);
+            viewportWidth = this.width;
+            viewportHeight = this.height;
+            text = new int[this.height][this.width];
+            foreground = new int[this.height][this.width];
+            background = new int[this.height][this.width];
+            fill(0, 0, this.width, this.height, ' ');
+        }
+
+        private void put(final int column, final int row, final int value, final int foregroundColor, final int backgroundColor) {
+            if (isInside(column, row)) {
+                text[row][column] = value;
+                foreground[row][column] = foregroundColor;
+                background[row][column] = backgroundColor;
+            }
+        }
+
+        private void putText(final int column, final int row, final int value) {
+            if (isInside(column, row)) {
+                text[row][column] = value;
+            }
+        }
+
+        private void rawSetColor(final int[][] target, final int column, final int row, final int[][] color) {
+            if (color == null) {
+                return;
+            }
+            for (int y = 0; y < color.length; y++) {
+                for (int x = 0; x < color[y].length; x++) {
+                    final int targetX = column + x;
+                    final int targetY = row + y;
+                    if (isInside(targetX, targetY)) {
+                        target[targetY][targetX] = color[y][x];
+                    }
+                }
+            }
+        }
+
+        private int[][] snapshot(final int[][] source, final int column, final int row, final int width, final int height) {
+            final int[][] snapshot = new int[Math.max(0, height)][Math.max(0, width)];
+            for (int y = 0; y < snapshot.length; y++) {
+                for (int x = 0; x < snapshot[y].length; x++) {
+                    final int sourceX = column + x;
+                    final int sourceY = row + y;
+                    snapshot[y][x] = isInside(sourceX, sourceY) ? source[sourceY][sourceX] : 0;
+                }
+            }
+            return snapshot;
+        }
+
+        private boolean isInside(final int column, final int row) {
+            return column >= 0 && row >= 0 && column < width && row < height;
+        }
     }
 }
