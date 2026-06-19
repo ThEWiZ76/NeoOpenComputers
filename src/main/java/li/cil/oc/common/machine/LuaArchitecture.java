@@ -22,6 +22,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +40,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private Globals globals;
     private LuaValue bootChunk;
     private ExecutionResult pendingResult;
+    private final Map<String, String> primaryComponents = new HashMap<>();
 
     public LuaArchitecture() {
         this("");
@@ -346,6 +348,15 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return address == null ? LuaValue.NIL : createComponentProxy(address);
             }
         });
+        component.set("setPrimary", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 2) {
+                    return LuaValue.FALSE;
+                }
+                return LuaValue.valueOf(setPrimaryComponent(args.arg(1).tojstring(), args.arg(2).tojstring()));
+            }
+        });
         component.set("methods", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
@@ -435,12 +446,31 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (machine == null) {
             return null;
         }
-        for (Map.Entry<String, String> entry : machine.components().entrySet()) {
+        final Map<String, String> components = machine.components();
+        final String primary = primaryComponents.get(type);
+        if (primary != null && type.equals(components.get(primary))) {
+            return primary;
+        }
+        if (primary != null) {
+            primaryComponents.remove(type);
+        }
+        for (Map.Entry<String, String> entry : components.entrySet()) {
             if (entry.getValue().equals(type)) {
                 return entry.getKey();
             }
         }
         return null;
+    }
+
+    private boolean setPrimaryComponent(final String type, final String address) {
+        if (machine == null) {
+            return false;
+        }
+        if (!type.equals(machine.components().get(address))) {
+            return false;
+        }
+        primaryComponents.put(type, address);
+        return true;
     }
 
     private static boolean matchesComponentFilter(final String type, final String filter, final boolean exact) {

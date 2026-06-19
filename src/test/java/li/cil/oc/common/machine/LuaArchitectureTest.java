@@ -292,6 +292,25 @@ final class LuaArchitectureTest {
         assertEquals("nil", architecture.globalString("missing"));
     }
 
+    @Test
+    void setsPrimaryComponentForLua() {
+        String[] invokedAddress = {null};
+        Map<String, String> components = new LinkedHashMap<>();
+        components.put("fs1-address", "filesystem");
+        components.put("fs2-address", "filesystem");
+        components.put("gpu-address", "gpu");
+        LuaArchitecture architecture = new LuaArchitecture("selected = component.setPrimary('filesystem', 'fs2-address'); rejected = component.setPrimary('filesystem', 'gpu-address'); fs = component.getPrimary('filesystem'); result = fs.label()");
+        architecture.bind(machineWithInvokeCapture(components, invokedAddress));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.globalBoolean("selected"));
+        assertEquals(false, architecture.globalBoolean("rejected"));
+        assertEquals("tmp", architecture.globalString("result"));
+        assertEquals("fs2-address", invokedAddress[0]);
+    }
+
     private static Machine machineWithUptime(final double uptime) {
         return machine(new ArrayDeque<>(), uptime);
     }
@@ -326,6 +345,23 @@ final class LuaArchitectureTest {
 
     private static Machine machineWithComponentsAndInvokeResult(final Map<String, String> components, final Object[] invokeResult) {
         return machine(new ArrayDeque<>(), 0D, null, null, components, invokeResult);
+    }
+
+    private static Machine machineWithInvokeCapture(final Map<String, String> components, final String[] invokedAddress) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> components;
+                case "invoke" -> {
+                    invokedAddress[0] = (String) args[0];
+                    yield new Object[]{"tmp"};
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
     }
 
     private static Machine machineWithMethods(final Map<String, Callback> methods) {
