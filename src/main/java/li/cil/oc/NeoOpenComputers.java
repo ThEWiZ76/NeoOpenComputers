@@ -5,6 +5,7 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModContentCatalog;
 import li.cil.oc.common.ModCreativeTabs;
+import li.cil.oc.common.ModDriverCatalog;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.OpenComputersApi;
 import net.neoforged.bus.api.IEventBus;
@@ -32,6 +33,7 @@ public final class NeoOpenComputers {
         event.enqueueWork(() -> {
             ModCreativeTabs.assignApiCreativeTab();
             ModContentCatalog.registerDefaults();
+            ModDriverCatalog.registerDefaults();
         });
         LOGGER.debug("NeoOpenComputers common setup complete.");
     }
