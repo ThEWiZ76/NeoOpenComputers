@@ -34,6 +34,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
     private boolean backgroundFromPalette;
     private boolean renderingEnabled = true;
     private final int[] palette = new int[16];
+    private final TextBufferState buffer = new TextBufferState(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
     public ScreenBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.SCREEN.get(), pos, blockState);
@@ -95,6 +96,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
         }
         this.width = width;
         this.height = height;
+        buffer.resize(width, height);
         viewportWidth = Math.min(viewportWidth, width);
         viewportHeight = Math.min(viewportHeight, height);
         setChanged();
@@ -219,28 +221,35 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public void copy(final int column, final int row, final int width, final int height, final int horizontalTranslation, final int verticalTranslation) {
+        buffer.copy(column, row, width, height, horizontalTranslation, verticalTranslation);
+        setChanged();
     }
 
     @Override
     public void fill(final int column, final int row, final int width, final int height, final char value) {
+        fill(column, row, width, height, (int) value);
     }
 
     @Override
     public void fill(final int column, final int row, final int width, final int height, final int value) {
+        buffer.fill(column, row, width, height, value);
+        setChanged();
     }
 
     @Override
     public void set(final int column, final int row, final String value, final boolean vertical) {
+        buffer.set(column, row, value, vertical);
+        setChanged();
     }
 
     @Override
     public char get(final int column, final int row) {
-        return ' ';
+        return (char) getCodePoint(column, row);
     }
 
     @Override
     public int getCodePoint(final int column, final int row) {
-        return ' ';
+        return buffer.getCodePoint(column, row);
     }
 
     @Override
@@ -265,10 +274,14 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public void rawSetText(final int column, final int row, final char[][] text) {
+        buffer.rawSetText(column, row, text);
+        setChanged();
     }
 
     @Override
     public void rawSetText(final int column, final int row, final int[][] text) {
+        buffer.rawSetText(column, row, text);
+        setChanged();
     }
 
     @Override
