@@ -1,7 +1,9 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -10,6 +12,7 @@ import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.Component;
+import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
@@ -29,6 +32,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private final MachineHost host;
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
     private final Set<String> users = new LinkedHashSet<>();
+    private final Set<ManagedEnvironment> componentEnvironments = new LinkedHashSet<>();
     private boolean running;
     private boolean paused;
     private String lastError;
@@ -51,6 +55,37 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public void onHostChanged() {
+        for (ManagedEnvironment environment : componentEnvironments) {
+            if (environment.node() != null) {
+                host.onMachineDisconnect(environment.node());
+                environment.node().remove();
+            }
+        }
+        componentEnvironments.clear();
+
+        if (host == null || node() == null) {
+            return;
+        }
+
+        if (node().network() == null) {
+            Network.joinNewNetwork(node());
+        }
+
+        for (ItemStack stack : host.internalComponents()) {
+            final DriverItem driver = Driver.driverFor(stack, host.getClass());
+            if (driver == null) {
+                continue;
+            }
+
+            final ManagedEnvironment environment = driver.createEnvironment(stack, host);
+            if (environment == null || environment.node() == null) {
+                continue;
+            }
+
+            node().connect(environment.node());
+            componentEnvironments.add(environment);
+            host.onMachineConnect(environment.node());
+        }
     }
 
     @Override

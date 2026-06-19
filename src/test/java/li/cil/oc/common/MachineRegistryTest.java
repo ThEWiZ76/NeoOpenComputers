@@ -6,13 +6,22 @@ import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -88,6 +97,20 @@ final class MachineRegistryTest {
         assertArrayEquals(new Object[]{false}, machine.invoke(fileSystemEnvironment.node().address(), "isReadOnly", new Object[0]));
     }
 
+    @Test
+    void hostChangedConnectsInternalComponentEnvironments() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+
+        machine.onHostChanged();
+
+        assertEquals("test_component", machine.components().values().iterator().next());
+        assertEquals(1, machine.componentCount());
+    }
+
     private static class TestArchitecture implements Architecture {
         @Override public boolean isInitialized() { return false; }
         @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return false; }
@@ -103,5 +126,89 @@ final class MachineRegistryTest {
 
     @Architecture.Name("named")
     private static final class NamedArchitecture extends TestArchitecture {
+    }
+
+    private static final class TestDriver implements DriverItem {
+        @Override
+        public boolean worksWith(final ItemStack stack) {
+            return true;
+        }
+
+        @Override
+        public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+            return new TestEnvironment();
+        }
+
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.Card;
+        }
+
+        @Override
+        public int tier(final ItemStack stack) {
+            return 0;
+        }
+
+        @Override
+        public CompoundTag dataTag(final ItemStack stack) {
+            return new CompoundTag();
+        }
+    }
+
+    private static final class TestEnvironment extends AbstractManagedEnvironment {
+        private TestEnvironment() {
+            setNode(Network.newNode(this, Visibility.Network)
+                .withComponent("test_component", Visibility.Network)
+                .create());
+        }
+    }
+
+    private static final class TestHost implements MachineHost {
+        @Override
+        public Machine machine() {
+            return null;
+        }
+
+        @Override
+        public Iterable<ItemStack> internalComponents() {
+            return Collections.singletonList(null);
+        }
+
+        @Override
+        public int componentSlot(final String address) {
+            return -1;
+        }
+
+        @Override
+        public void onMachineConnect(final Node node) {
+        }
+
+        @Override
+        public void onMachineDisconnect(final Node node) {
+        }
+
+        @Override
+        public Level world() {
+            return null;
+        }
+
+        @Override
+        public double xPosition() {
+            return 0;
+        }
+
+        @Override
+        public double yPosition() {
+            return 0;
+        }
+
+        @Override
+        public double zPosition() {
+            return 0;
+        }
+
+        @Override
+        public void markChanged() {
+        }
     }
 }
