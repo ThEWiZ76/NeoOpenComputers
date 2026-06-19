@@ -1,0 +1,35 @@
+package li.cil.oc.common;
+
+import li.cil.oc.api.machine.MachineHost;
+import li.cil.oc.common.block.ComputerCaseBlock;
+import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Constructor;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+final class ComputerCaseRegistrationShapeTest {
+    @Test
+    void computerCaseBlockProvidesBlockEntity() {
+        assertTrue(Block.class.isAssignableFrom(ComputerCaseBlock.class));
+        assertTrue(EntityBlock.class.isAssignableFrom(ComputerCaseBlock.class));
+    }
+
+    @Test
+    void computerCaseBlockEntityHostsMachine() throws NoSuchMethodException {
+        final Constructor<ComputerCaseBlockEntity> constructor = ComputerCaseBlockEntity.class.getDeclaredConstructor(
+            BlockPos.class,
+            BlockState.class);
+
+        assertTrue(BlockEntity.class.isAssignableFrom(ComputerCaseBlockEntity.class));
+        assertTrue(MachineHost.class.isAssignableFrom(ComputerCaseBlockEntity.class));
+        assertArrayEquals(new Class<?>[]{BlockPos.class, BlockState.class}, constructor.getParameterTypes());
+    }
+}

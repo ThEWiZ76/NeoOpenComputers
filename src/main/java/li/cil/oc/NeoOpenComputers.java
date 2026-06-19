@@ -1,6 +1,7 @@
 package li.cil.oc;
 
 import com.mojang.logging.LogUtils;
+import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModCreativeTabs;
 import li.cil.oc.common.ModItems;
@@ -19,6 +20,7 @@ public final class NeoOpenComputers {
     public NeoOpenComputers(final IEventBus modEventBus, final ModContainer modContainer) {
         OpenComputersApi.initialize();
         ModBlocks.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
         ModItems.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
         modEventBus.addListener(this::onCommonSetup);
