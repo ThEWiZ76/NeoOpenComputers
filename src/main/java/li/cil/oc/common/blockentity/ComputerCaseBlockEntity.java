@@ -1,6 +1,7 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Driver;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Case;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider {
+public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider, DeviceInfo {
     public static final int SLOT_CARD_0 = 0;
     public static final int SLOT_CARD_1 = 1;
     public static final int SLOT_MEMORY_0 = 2;
@@ -92,6 +93,11 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     public Node node() {
         return machine.node();
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return deviceInfo(getContainerSize());
     }
 
     @Override
@@ -265,6 +271,16 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (node != null && node.address() != null) {
             slots.remove(node.address());
         }
+    }
+
+    static Map<String, String> deviceInfo(final int capacity) {
+        return Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.System,
+            DeviceInfo.DeviceAttribute.Description, "Computer",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Product, "Blocker",
+            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(Math.max(0, capacity))
+        );
     }
 
     private static int nextComponentSlot(final List<ItemStack> items, final int start) {

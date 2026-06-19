@@ -1,5 +1,6 @@
 package li.cil.oc.common;
 
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Case;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.common.block.ComputerCaseBlock;
@@ -55,6 +56,7 @@ final class ComputerCaseRegistrationShapeTest {
         assertTrue(Case.class.isAssignableFrom(ComputerCaseBlockEntity.class));
         assertTrue(Container.class.isAssignableFrom(ComputerCaseBlockEntity.class));
         assertTrue(MachineHost.class.isAssignableFrom(ComputerCaseBlockEntity.class));
+        assertTrue(DeviceInfo.class.isAssignableFrom(ComputerCaseBlockEntity.class));
         assertArrayEquals(new Class<?>[]{BlockPos.class, BlockState.class}, constructor.getParameterTypes());
     }
 

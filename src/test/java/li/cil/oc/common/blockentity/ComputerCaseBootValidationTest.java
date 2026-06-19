@@ -1,5 +1,6 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Node;
@@ -90,6 +91,16 @@ final class ComputerCaseBootValidationTest {
         ComputerCaseBlockEntity.removeComponentSlot(slots, node("component-address"));
 
         assertEquals(-1, ComputerCaseBlockEntity.componentSlot(slots, "component-address"));
+    }
+
+    @Test
+    void exposesDeviceInfoMetadata() {
+        Map<String, String> metadata = ComputerCaseBlockEntity.deviceInfo(7);
+
+        assertEquals(DeviceInfo.DeviceClass.System, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Computer", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("Blocker", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("7", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
     }
 
     private static Machine machine(final boolean canUpdate, final int[] updates) {
