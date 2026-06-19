@@ -1,6 +1,7 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -16,16 +17,29 @@ import net.minecraft.nbt.CompoundTag;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
-public class NetworkCardEnvironment extends AbstractManagedEnvironment {
+public class NetworkCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "modem";
     private static final String OPEN_PORTS_TAG = "openPorts";
     private static final int MAX_OPEN_PORTS = 16;
+    private static final int MAX_PACKET_SIZE = 8192;
+    private static final int MAX_PACKET_PARTS = 8;
     private static final int MIN_PORT = 1;
     private static final int MAX_PORT = 65535;
     private static final String NETWORK_MESSAGE = "network.message";
     private static final String MODEM_MESSAGE_SIGNAL = "modem_message";
+    private static final Map<String, String> DEVICE_INFO = Map.of(
+        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
+        DeviceInfo.DeviceAttribute.Description, "Ethernet controller",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Product, "42i520 (MPN-01)",
+        DeviceInfo.DeviceAttribute.Version, "1.0",
+        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(MAX_PACKET_SIZE),
+        DeviceInfo.DeviceAttribute.Size, Integer.toString(MAX_OPEN_PORTS),
+        DeviceInfo.DeviceAttribute.Width, Integer.toString(MAX_PACKET_PARTS)
+    );
 
     private final EnvironmentHost host;
     private final Set<Integer> openPorts = new LinkedHashSet<>();
@@ -36,6 +50,11 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment {
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create());
         }
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return DEVICE_INFO;
     }
 
     @Callback(doc = "function(port:number):boolean -- Opens the specified port.")

@@ -1,6 +1,7 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Architecture;
@@ -26,6 +27,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -61,6 +63,22 @@ final class NetworkCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, card.isWired(null, new TestArguments()));
         assertArrayEquals(new Object[]{false}, card.isWireless(null, new TestArguments()));
         assertNotNull(card.node());
+    }
+
+    @Test
+    void exposesDeviceInfoMetadata() {
+        OpenComputersApi.initialize();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(new TestHost());
+
+        DeviceInfo info = assertInstanceOf(DeviceInfo.class, card);
+        Map<String, String> metadata = info.getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Network, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Ethernet controller", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("42i520 (MPN-01)", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("8192", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("16", metadata.get(DeviceInfo.DeviceAttribute.Size));
+        assertEquals("8", metadata.get(DeviceInfo.DeviceAttribute.Width));
     }
 
     @Test
