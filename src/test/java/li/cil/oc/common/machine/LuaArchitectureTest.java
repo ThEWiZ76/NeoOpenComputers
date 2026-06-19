@@ -3,6 +3,7 @@ package li.cil.oc.common.machine;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
@@ -205,6 +206,18 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComponentSlotToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("slot = component.slot('fs-address'); missing = component.slot('missing')");
+        architecture.bind(machineWithHostSlot("fs-address", 3));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(3, architecture.globalInteger("slot"));
+        assertEquals("nil", architecture.globalString("missing"));
+    }
+
+    @Test
     void exposesComponentMethodsToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
@@ -291,6 +304,20 @@ final class LuaArchitectureTest {
         return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], methods);
     }
 
+    private static Machine machineWithHostSlot(final String address, final int slot) {
+        final MachineHost host = (MachineHost) Proxy.newProxyInstance(
+            MachineHost.class.getClassLoader(),
+            new Class<?>[]{MachineHost.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "componentSlot" -> address.equals(args[0]) ? slot : -1;
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-host";
+                default -> defaultValue(method.getReturnType());
+            });
+        return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], Map.of(), new String[0], null, null, null, null, host);
+    }
+
     private static Machine machine(final Queue<Signal> signals, final double uptime) {
         return machine(signals, uptime, null);
     }
@@ -355,6 +382,24 @@ final class LuaArchitectureTest {
         final String[] signalName,
         final Object[][] signalArguments
     ) {
+        return machine(signals, uptime, address, beepPattern, components, invokeResult, methods, users, added, removed, signalName, signalArguments, null);
+    }
+
+    private static Machine machine(
+        final Queue<Signal> signals,
+        final double uptime,
+        final String address,
+        final String[] beepPattern,
+        final Map<String, String> components,
+        final Object[] invokeResult,
+        final Map<String, Callback> methods,
+        final String[] users,
+        final String[] added,
+        final String[] removed,
+        final String[] signalName,
+        final Object[][] signalArguments,
+        final MachineHost host
+    ) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -362,6 +407,7 @@ final class LuaArchitectureTest {
                 case "upTime" -> uptime;
                 case "popSignal" -> signals.poll();
                 case "tmpAddress" -> address;
+                case "host" -> host;
                 case "components" -> components;
                 case "methods" -> methods;
                 case "invoke" -> invokeResult;

@@ -27,7 +27,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider {
     public static final int SLOT_CARD_0 = 0;
@@ -45,6 +49,8 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     private final Machine machine;
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
+    private final Map<String, Integer> componentSlots = new HashMap<>();
+    private int pendingComponentSlot = -1;
     private int color;
 
     public ComputerCaseBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -102,22 +108,41 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public Iterable<ItemStack> internalComponents() {
-        return items.stream()
-            .filter(stack -> !stack.isEmpty())
-            .toList();
+        return () -> new Iterator<>() {
+            private int nextSlot = nextComponentSlot(items, 0);
+
+            @Override
+            public boolean hasNext() {
+                return nextSlot >= 0;
+            }
+
+            @Override
+            public ItemStack next() {
+                if (nextSlot < 0) {
+                    throw new NoSuchElementException();
+                }
+                final int slot = nextSlot;
+                nextSlot = nextComponentSlot(items, slot + 1);
+                pendingComponentSlot = slot;
+                return items.get(slot);
+            }
+        };
     }
 
     @Override
     public int componentSlot(final String address) {
-        return -1;
+        return componentSlot(componentSlots, address);
     }
 
     @Override
     public void onMachineConnect(final Node node) {
+        recordComponentSlot(componentSlots, node, pendingComponentSlot);
+        pendingComponentSlot = -1;
     }
 
     @Override
     public void onMachineDisconnect(final Node node) {
+        removeComponentSlot(componentSlots, node);
     }
 
     @Override
@@ -221,6 +246,34 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         for (int slot = 0; slot < items.size(); slot++) {
             items.set(slot, value);
         }
+    }
+
+    static int componentSlot(final Map<String, Integer> slots, final String address) {
+        if (address == null) {
+            return -1;
+        }
+        return slots.getOrDefault(address, -1);
+    }
+
+    static void recordComponentSlot(final Map<String, Integer> slots, final Node node, final int slot) {
+        if (node != null && node.address() != null && slot >= 0) {
+            slots.put(node.address(), slot);
+        }
+    }
+
+    static void removeComponentSlot(final Map<String, Integer> slots, final Node node) {
+        if (node != null && node.address() != null) {
+            slots.remove(node.address());
+        }
+    }
+
+    private static int nextComponentSlot(final List<ItemStack> items, final int start) {
+        for (int slot = start; slot < items.size(); slot++) {
+            if (!items.get(slot).isEmpty()) {
+                return slot;
+            }
+        }
+        return -1;
     }
 
     @Override

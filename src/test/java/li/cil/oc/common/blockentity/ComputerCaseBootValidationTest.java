@@ -2,11 +2,14 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.network.Node;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -75,6 +78,20 @@ final class ComputerCaseBootValidationTest {
         assertEquals(3, items.size());
     }
 
+    @Test
+    void componentSlotMapTracksConnectedNodeAddresses() {
+        final Map<String, Integer> slots = new HashMap<>();
+
+        ComputerCaseBlockEntity.recordComponentSlot(slots, node("component-address"), 3);
+
+        assertEquals(3, ComputerCaseBlockEntity.componentSlot(slots, "component-address"));
+        assertEquals(-1, ComputerCaseBlockEntity.componentSlot(slots, "missing"));
+
+        ComputerCaseBlockEntity.removeComponentSlot(slots, node("component-address"));
+
+        assertEquals(-1, ComputerCaseBlockEntity.componentSlot(slots, "component-address"));
+    }
+
     private static Machine machine(final boolean canUpdate, final int[] updates) {
         return machine(canUpdate, updates, new int[1]);
     }
@@ -117,5 +134,18 @@ final class ComputerCaseBootValidationTest {
             return null;
         }
         return null;
+    }
+
+    private static Node node(final String address) {
+        return (Node) Proxy.newProxyInstance(
+            Node.class.getClassLoader(),
+            new Class<?>[]{Node.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "address" -> address;
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-node";
+                default -> defaultValue(method.getReturnType());
+            });
     }
 }

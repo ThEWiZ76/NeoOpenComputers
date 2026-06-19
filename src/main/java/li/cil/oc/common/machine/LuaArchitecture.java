@@ -6,6 +6,7 @@ import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
@@ -325,6 +326,20 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 final String type = args.arg1().tojstring();
                 return LuaValue.valueOf(machine.components().containsValue(type));
+            }
+        });
+        component.set("slot", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || args.narg() < 1) {
+                    return LuaValue.NIL;
+                }
+                final MachineHost host = machine.host();
+                if (host == null) {
+                    return LuaValue.NIL;
+                }
+                final int slot = host.componentSlot(args.arg1().tojstring());
+                return slot < 0 ? LuaValue.NIL : LuaValue.valueOf(slot);
             }
         });
         component.set("methods", new VarArgFunction() {
