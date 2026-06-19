@@ -1,10 +1,14 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -25,6 +29,28 @@ final class ModDriverCatalogTest {
         assertEquals(2, drivers.size());
         assertSame(first, drivers.get(0));
         assertSame(second, drivers.get(1));
+    }
+
+    @Test
+    void registersInitialBlockDriversInOrder() {
+        final DriverRegistry registry = new DriverRegistry();
+        final TestBlockDriver first = new TestBlockDriver();
+
+        ModDriverCatalog.registerBlocks(registry, first);
+
+        assertSame(first, registry.driverFor(null, BlockPos.ZERO, Direction.NORTH));
+    }
+
+    private static final class TestBlockDriver implements DriverBlock {
+        @Override
+        public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
+            return true;
+        }
+
+        @Override
+        public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
+            return null;
+        }
     }
 
     private static final class TestDriver implements DriverItem {
