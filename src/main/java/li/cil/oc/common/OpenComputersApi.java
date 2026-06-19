@@ -7,6 +7,9 @@ public final class OpenComputersApi {
         if (API.driver == null) {
             API.driver = new DriverRegistry();
         }
+        if (API.machine == null) {
+            API.machine = new MachineRegistry();
+        }
     }
 
     private OpenComputersApi() {
