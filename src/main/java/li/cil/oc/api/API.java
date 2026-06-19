@@ -6,6 +6,7 @@ import li.cil.oc.api.detail.ItemAPI;
 import li.cil.oc.api.detail.MachineAPI;
 import li.cil.oc.api.detail.ManualAPI;
 import li.cil.oc.api.detail.NanomachinesAPI;
+import li.cil.oc.api.detail.NetworkAPI;
 
 /**
  * Central service references for the NeoOpenComputers API.
@@ -28,6 +29,7 @@ public final class API {
     public static MachineAPI machine = null;
     public static ManualAPI manual = null;
     public static NanomachinesAPI nanomachines = null;
+    public static NetworkAPI network = null;
 
     private API() {
     }
