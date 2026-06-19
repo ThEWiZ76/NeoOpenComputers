@@ -76,6 +76,18 @@ final class LuaArchitectureTest {
         assertEquals("payload", architecture.globalString("value"));
     }
 
+    @Test
+    void exposesComputerAddressesToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("address = computer.address(); tmp = computer.tmpAddress()");
+        architecture.bind(machineWithAddress("machine-address"));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("machine-address", architecture.globalString("address"));
+        assertEquals("machine-address", architecture.globalString("tmp"));
+    }
+
     private static Machine machineWithUptime(final double uptime) {
         return machine(new ArrayDeque<>(), uptime);
     }
@@ -84,13 +96,22 @@ final class LuaArchitectureTest {
         return machine(new ArrayDeque<>(Arrays.asList(signals)), 0D);
     }
 
+    private static Machine machineWithAddress(final String address) {
+        return machine(new ArrayDeque<>(), 0D, address);
+    }
+
     private static Machine machine(final Queue<Signal> signals, final double uptime) {
+        return machine(signals, uptime, null);
+    }
+
+    private static Machine machine(final Queue<Signal> signals, final double uptime, final String address) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
             (proxy, method, args) -> switch (method.getName()) {
                 case "upTime" -> uptime;
                 case "popSignal" -> signals.poll();
+                case "tmpAddress" -> address;
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
                 case "toString" -> "test-machine";

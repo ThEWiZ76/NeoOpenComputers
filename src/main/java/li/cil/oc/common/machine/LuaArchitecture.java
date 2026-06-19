@@ -172,6 +172,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.valueOf(machine == null ? 0D : machine.upTime());
             }
         });
+        computer.set("address", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return machineAddress();
+            }
+        });
+        computer.set("tmpAddress", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return machineAddress();
+            }
+        });
         computer.set("pullSignal", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
@@ -192,6 +204,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             }
         });
         globals.set("computer", computer);
+    }
+
+    private LuaValue machineAddress() {
+        if (machine == null || machine.tmpAddress() == null) {
+            return LuaValue.NIL;
+        }
+        return LuaValue.valueOf(machine.tmpAddress());
     }
 
     private static LuaValue toLuaValue(final Object value) {
