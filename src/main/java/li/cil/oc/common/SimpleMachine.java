@@ -31,6 +31,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
     private static final String ARCHITECTURE_TAG = "architecture";
+    private static final String COMPUTER_STARTED_MESSAGE = "computer.started";
+    private static final String COMPUTER_STOPPED_MESSAGE = "computer.stopped";
 
     private final MachineHost host;
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
@@ -179,11 +181,15 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public boolean crash(final String message) {
+        final boolean wasRunning = running || paused;
         lastError = message;
         running = false;
         paused = false;
         if (architecture != null) {
             architecture.close();
+        }
+        if (wasRunning) {
+            sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }
         return true;
     }
@@ -273,11 +279,15 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public boolean start() {
+        final boolean wasRunning = running;
         if (architecture != null && !architecture.isInitialized() && !architecture.initialize()) {
             return false;
         }
         running = true;
         paused = false;
+        if (!wasRunning) {
+            sendLifecycleMessage(COMPUTER_STARTED_MESSAGE);
+        }
         return true;
     }
 
@@ -297,6 +307,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         paused = false;
         if (architecture != null) {
             architecture.close();
+        }
+        if (wasRunning) {
+            sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }
         return wasRunning;
     }
@@ -351,6 +364,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             return constructor.newInstance();
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("failed to instantiate architecture " + type.getName(), e);
+        }
+    }
+
+    private void sendLifecycleMessage(final String name) {
+        if (node() != null) {
+            node().sendToReachable(name);
         }
     }
 

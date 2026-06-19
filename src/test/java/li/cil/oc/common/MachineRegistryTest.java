@@ -10,6 +10,7 @@ import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.driver.DriverItem;
@@ -22,6 +23,7 @@ import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -200,6 +202,20 @@ final class MachineRegistryTest {
         assertEquals(1, architecture.threadedRuns);
     }
 
+    @Test
+    void startAndStopNotifyReachableComponents() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        TestEnvironment environment = new TestEnvironment();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+
+        assertTrue(machine.start());
+        assertTrue(machine.stop());
+
+        assertEquals(List.of("computer.started", "computer.stopped"), environment.messages);
+    }
+
     private static class TestArchitecture implements Architecture {
         @Override public boolean isInitialized() { return false; }
         @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return false; }
@@ -320,10 +336,17 @@ final class MachineRegistryTest {
     }
 
     private static final class TestEnvironment extends AbstractManagedEnvironment {
+        private final List<String> messages = new ArrayList<>();
+
         private TestEnvironment() {
             setNode(Network.newNode(this, Visibility.Network)
                 .withComponent("test_component", Visibility.Network)
                 .create());
+        }
+
+        @Override
+        public void onMessage(final Message message) {
+            messages.add(message.name());
         }
     }
 
