@@ -1,9 +1,11 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.api.Network;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.component.ScreenEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
@@ -16,6 +18,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
     private static final int DEFAULT_FOREGROUND = 0xFFFFFF;
     private static final int DEFAULT_BACKGROUND = 0x000000;
     private static final String TAG_BUFFER = "buffer";
+    private static final String TAG_NODE = "node";
 
     private double energyCostPerTick;
     private boolean powered = true;
@@ -36,9 +39,11 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
     private boolean renderingEnabled = true;
     private final int[] palette = new int[16];
     private final TextBufferState buffer = new TextBufferState(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    private Node node;
 
     public ScreenBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.SCREEN.get(), pos, blockState);
+        node = ScreenEnvironment.createNode(this);
     }
 
     @Override
@@ -354,7 +359,10 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public Node node() {
-        return null;
+        if (node == null) {
+            node = ScreenEnvironment.createNode(this);
+        }
+        return node;
     }
 
     @Override
@@ -380,6 +388,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public void load(final CompoundTag nbt) {
+        if (nbt.contains(TAG_NODE) && node() != null) {
+            node().load(nbt.getCompound(TAG_NODE));
+        }
         powered = nbt.getBoolean("powered");
         width = Math.max(1, nbt.getInt("width"));
         height = Math.max(1, nbt.getInt("height"));
@@ -395,6 +406,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
 
     @Override
     public void save(final CompoundTag nbt) {
+        saveNode(nbt);
         nbt.putBoolean("powered", powered);
         nbt.putInt("width", width);
         nbt.putInt("height", height);
@@ -406,5 +418,21 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer {
         final CompoundTag bufferTag = new CompoundTag();
         buffer.save(bufferTag);
         nbt.put(TAG_BUFFER, bufferTag);
+    }
+
+    private void saveNode(final CompoundTag nbt) {
+        if (node() == null) {
+            return;
+        }
+
+        final CompoundTag nodeTag = new CompoundTag();
+        if (node().address() == null) {
+            Network.joinNewNetwork(node());
+            node().save(nodeTag);
+            node().remove();
+        } else {
+            node().save(nodeTag);
+        }
+        nbt.put(TAG_NODE, nodeTag);
     }
 }
