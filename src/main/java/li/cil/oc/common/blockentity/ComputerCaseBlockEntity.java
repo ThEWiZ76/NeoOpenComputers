@@ -128,12 +128,20 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case {
 
     @Override
     public Direction toGlobal(final Direction value) {
-        return value;
+        return toGlobal(facing(), value);
     }
 
     @Override
     public Direction toLocal(final Direction value) {
-        return value;
+        return toLocal(facing(), value);
+    }
+
+    static Direction toGlobal(final Direction facing, final Direction value) {
+        return rotateHorizontal(value, horizontalSteps(facing));
+    }
+
+    static Direction toLocal(final Direction facing, final Direction value) {
+        return rotateHorizontal(value, (4 - horizontalSteps(facing)) % 4);
     }
 
     @Override
@@ -214,5 +222,25 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case {
         if (machine.node() != null) {
             machine.node().remove();
         }
+    }
+
+    private static Direction rotateHorizontal(final Direction value, final int steps) {
+        if (value.getAxis().isVertical()) {
+            return value;
+        }
+        Direction result = value;
+        for (int index = 0; index < steps; index++) {
+            result = result.getClockWise();
+        }
+        return result;
+    }
+
+    private static int horizontalSteps(final Direction facing) {
+        return switch (facing) {
+            case EAST -> 1;
+            case SOUTH -> 2;
+            case WEST -> 3;
+            default -> 0;
+        };
     }
 }
