@@ -10,6 +10,9 @@ public final class OpenComputersApi {
         if (API.machine == null) {
             API.machine = new MachineRegistry();
         }
+        if (API.manual == null) {
+            API.manual = new ManualRegistry();
+        }
     }
 
     private OpenComputersApi() {
