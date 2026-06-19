@@ -3,6 +3,7 @@ package li.cil.oc.common.item;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.HostAware;
 import net.minecraft.world.item.Item;
 import org.junit.jupiter.api.Test;
 
@@ -54,6 +55,15 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(GraphicsCardItem.class));
         assertTrue(DriverItem.class.isAssignableFrom(GraphicsCardItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void networkCardItemIsHostAwareCardDriver() throws NoSuchMethodException {
+        final Constructor<NetworkCardItem> constructor = NetworkCardItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(NetworkCardItem.class));
+        assertTrue(HostAware.class.isAssignableFrom(NetworkCardItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
     }
 }

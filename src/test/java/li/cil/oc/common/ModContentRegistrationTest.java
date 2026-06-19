@@ -51,6 +51,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void networkCardItemIdIsStable() {
+        assertEquals("network_card", ModContentIds.NETWORK_CARD);
+    }
+
+    @Test
     void computerCaseMenuIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
     }

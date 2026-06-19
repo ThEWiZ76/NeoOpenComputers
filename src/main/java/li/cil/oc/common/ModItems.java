@@ -6,6 +6,7 @@ import li.cil.oc.common.item.EepromItem;
 import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
 import li.cil.oc.common.item.MemoryItem;
+import li.cil.oc.common.item.NetworkCardItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
@@ -40,6 +41,10 @@ public final class ModItems {
     public static final DeferredItem<MemoryItem> MEMORY_TIER1 = ITEMS.register(
         ModContentIds.MEMORY_TIER1,
         () -> new MemoryItem(new Item.Properties()));
+
+    public static final DeferredItem<NetworkCardItem> NETWORK_CARD = ITEMS.register(
+        ModContentIds.NETWORK_CARD,
+        () -> new NetworkCardItem(new Item.Properties()));
 
     public static void register(final IEventBus modEventBus) {
         ITEMS.register(modEventBus);

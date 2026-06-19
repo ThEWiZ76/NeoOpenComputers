@@ -10,6 +10,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_GRAPHICS_CARD_TIER1 = "graphicscard1";
     public static final String COMPAT_HDD_TIER1 = "hdd1";
     public static final String COMPAT_MEMORY_TIER1 = "ram1";
+    public static final String COMPAT_NETWORK_CARD = "lancard";
 
     public static void registerDefaults() {
         if (API.items instanceof ItemRegistry registry) {
@@ -22,7 +23,8 @@ public final class ModContentCatalog {
                 ModItems.MEMORY_TIER1.get(),
                 ModItems.HDD_TIER1.get(),
                 ModItems.EEPROM.get(),
-                ModItems.GRAPHICS_CARD_TIER1.get());
+                ModItems.GRAPHICS_CARD_TIER1.get(),
+                ModItems.NETWORK_CARD.get());
         }
     }
 
@@ -35,7 +37,8 @@ public final class ModContentCatalog {
         final Item memoryTier1Item,
         final Item hddTier1Item,
         final Item eepromItem,
-        final Item graphicsCardTier1Item) {
+        final Item graphicsCardTier1Item,
+        final Item networkCardItem) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(COMPAT_COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
@@ -44,10 +47,12 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.HDD_TIER1, null, hddTier1Item);
         registry.register(ModContentIds.EEPROM, null, eepromItem);
         registry.register(ModContentIds.GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
+        registry.register(ModContentIds.NETWORK_CARD, null, networkCardItem);
         registry.register(COMPAT_CPU_TIER1, null, cpuTier1Item);
         registry.register(COMPAT_MEMORY_TIER1, null, memoryTier1Item);
         registry.register(COMPAT_HDD_TIER1, null, hddTier1Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
+        registry.register(COMPAT_NETWORK_CARD, null, networkCardItem);
     }
 
     private ModContentCatalog() {

@@ -6,6 +6,7 @@
   "item.neoopencomputers.hdd_tier1": "Hard Disk Drive (Tier 1)",
   "item.neoopencomputers.manual": "OpenComputers Manual",
   "item.neoopencomputers.memory_tier1": "Memory (Tier 1)",
+  "item.neoopencomputers.network_card": "Network Card",
   "itemGroup.neoopencomputers": "NeoOpenComputers",
   "mod.neoopencomputers": "NeoOpenComputers"
 }
