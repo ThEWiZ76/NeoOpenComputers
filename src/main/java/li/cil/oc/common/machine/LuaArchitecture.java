@@ -2,6 +2,7 @@ package li.cil.oc.common.machine;
 
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.ExecutionResult;
@@ -34,6 +35,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String INITIALIZED_TAG = "initialized";
     private static final String BOOTED_TAG = "booted";
     private static final String BOOT_SOURCE_TAG = "bootSource";
+    private static final String MEMORY_TAG = "memory";
 
     private boolean initialized;
     private boolean booted;
@@ -42,6 +44,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private Globals globals;
     private LuaValue bootChunk;
     private ExecutionResult pendingResult;
+    private double memoryBytes;
     private final Map<String, String> primaryComponents = new HashMap<>();
 
     public LuaArchitecture() {
@@ -64,13 +67,17 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     @Override
     public boolean recomputeMemory(final Iterable<ItemStack> components) {
+        double totalMemory = 0D;
         for (ItemStack stack : components) {
             final DriverItem driver = Driver.driverFor(stack);
             if (driver != null && EEPROM_SLOT.equals(driver.slot(stack))) {
                 configureBootSource(driver.dataTag(stack));
-                break;
+            }
+            if (driver instanceof Memory memory) {
+                totalMemory += Math.max(0D, memory.amount(stack)) * 1024D;
             }
         }
+        memoryBytes = Math.max(0D, totalMemory);
         return true;
     }
 
@@ -139,6 +146,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         } else {
             initialized = false;
         }
+        memoryBytes = Math.max(0D, nbt.getDouble(MEMORY_TAG));
     }
 
     @Override
@@ -146,6 +154,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         nbt.putBoolean(INITIALIZED_TAG, initialized);
         nbt.putBoolean(BOOTED_TAG, booted);
         nbt.putString(BOOT_SOURCE_TAG, bootSource);
+        nbt.putDouble(MEMORY_TAG, memoryBytes);
     }
 
     int globalInteger(final String name) {
@@ -196,6 +205,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public LuaValue call() {
                 return machineAddress();
+            }
+        });
+        computer.set("freeMemory", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(memoryBytes / 2D);
+            }
+        });
+        computer.set("totalMemory", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(memoryBytes);
             }
         });
         computer.set("tmpAddress", new ZeroArgFunction() {

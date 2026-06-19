@@ -2,16 +2,21 @@ package li.cil.oc.common.machine;
 
 import li.cil.oc.api.API;
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.item.Memory;
+import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +24,7 @@ import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -125,6 +131,21 @@ final class LuaArchitectureTest {
 
         assertEquals("machine-address", architecture.globalString("address"));
         assertEquals("machine-address", architecture.globalString("tmp"));
+    }
+
+    @Test
+    void exposesComputerMemoryToLua() {
+        DriverRegistry drivers = new DriverRegistry();
+        drivers.add(new TestMemoryDriver(192D));
+        API.driver = drivers;
+        LuaArchitecture architecture = new LuaArchitecture("free = computer.freeMemory(); total = computer.totalMemory()");
+
+        assertTrue(architecture.recomputeMemory(Collections.singletonList(null)));
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(98_304D, architecture.globalDouble("free"), 0.000_001D);
+        assertEquals(196_608D, architecture.globalDouble("total"), 0.000_001D);
     }
 
     @Test
@@ -674,6 +695,38 @@ final class LuaArchitectureTest {
 
     @Callback(direct = true, doc = "function():string -- Direct callback.")
     private static void directCallback() {
+    }
+
+    private record TestMemoryDriver(double amount) implements Memory {
+        @Override
+        public boolean worksWith(final ItemStack stack) {
+            return true;
+        }
+
+        @Override
+        public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+            return null;
+        }
+
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.Memory;
+        }
+
+        @Override
+        public int tier(final ItemStack stack) {
+            return 0;
+        }
+
+        @Override
+        public CompoundTag dataTag(final ItemStack stack) {
+            return new CompoundTag();
+        }
+
+        @Override
+        public double amount(final ItemStack stack) {
+            return amount;
+        }
     }
 
     private record TestSignal(String name, Object[] args) implements Signal {
