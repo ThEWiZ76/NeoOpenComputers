@@ -180,6 +180,26 @@ final class MachineRegistryTest {
         assertNull(machine.architecture());
     }
 
+    @Test
+    void runningMachineDispatchesSignalsAndExecutionStepsToArchitecture() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        machine.onHostChanged();
+        TrackingArchitecture architecture = (TrackingArchitecture) machine.architecture();
+        machine.start();
+
+        assertTrue(machine.canUpdate());
+        assertTrue(machine.signal("event"));
+        machine.update();
+
+        assertEquals(1, architecture.signalCount);
+        assertEquals(1, architecture.synchronizedRuns);
+        assertEquals(1, architecture.threadedRuns);
+    }
+
     private static class TestArchitecture implements Architecture {
         @Override public boolean isInitialized() { return false; }
         @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return false; }
@@ -243,6 +263,9 @@ final class MachineRegistryTest {
 
     public static final class TrackingArchitecture implements Architecture {
         private boolean initialized;
+        private int signalCount;
+        private int synchronizedRuns;
+        private int threadedRuns;
 
         @Override
         public boolean isInitialized() {
@@ -267,15 +290,18 @@ final class MachineRegistryTest {
 
         @Override
         public void runSynchronized() {
+            synchronizedRuns++;
         }
 
         @Override
         public ExecutionResult runThreaded(final boolean isSynchronizedReturn) {
+            threadedRuns++;
             return new ExecutionResult.Sleep(1);
         }
 
         @Override
         public void onSignal() {
+            signalCount++;
         }
 
         @Override

@@ -8,6 +8,7 @@ import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
@@ -245,6 +246,32 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     }
 
     @Override
+    public boolean canUpdate() {
+        return true;
+    }
+
+    @Override
+    public void update() {
+        if (!running || paused || architecture == null) {
+            return;
+        }
+        try {
+            architecture.runSynchronized();
+            final ExecutionResult result = architecture.runThreaded(false);
+            if (result instanceof ExecutionResult.Shutdown shutdown) {
+                stop();
+                if (shutdown.reboot) {
+                    start();
+                }
+            } else if (result instanceof ExecutionResult.Error error) {
+                crash(error.message);
+            }
+        } catch (RuntimeException e) {
+            crash(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+        }
+    }
+
+    @Override
     public boolean start() {
         if (architecture != null && !architecture.isInitialized() && !architecture.initialize()) {
             return false;
@@ -281,6 +308,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     @Override
     public boolean signal(final String name, final Object... args) {
         signals.addLast(new SimpleSignal(name, args == null ? new Object[0] : Arrays.copyOf(args, args.length)));
+        if (architecture != null) {
+            architecture.onSignal();
+        }
         return true;
     }
 
