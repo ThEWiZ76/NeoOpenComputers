@@ -14,4 +14,9 @@ final class ModContentRegistrationTest {
     void creativeTabIdIsStable() {
         assertEquals("main", ModContentIds.MAIN_CREATIVE_TAB);
     }
+
+    @Test
+    void computerCaseBlockIdIsStable() {
+        assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
+    }
 }
