@@ -19,6 +19,9 @@ public final class OpenComputersApi {
         if (API.fileSystem == null) {
             API.fileSystem = new FileSystemRegistry();
         }
+        if (API.network == null) {
+            API.network = new NetworkRegistry();
+        }
     }
 
     private OpenComputersApi() {
