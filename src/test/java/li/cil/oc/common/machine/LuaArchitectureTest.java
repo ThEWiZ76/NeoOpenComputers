@@ -2,6 +2,7 @@ package li.cil.oc.common.machine;
 
 import li.cil.oc.api.API;
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Slot;
@@ -15,6 +16,8 @@ import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.MachineRegistry;
@@ -313,6 +316,34 @@ final class LuaArchitectureTest {
 
         assertEquals(7D, architecture.globalDouble("energy"), 0.000_001D);
         assertEquals(20D, architecture.globalDouble("maxEnergy"), 0.000_001D);
+    }
+
+    @Test
+    void exposesDeviceInfoToLua() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        Network.joinNewNetwork(machine.node());
+        TestDeviceEnvironment device = new TestDeviceEnvironment("gpu", Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Display,
+            DeviceInfo.DeviceAttribute.Product, "Test GPU"
+        ));
+        machine.node().connect(device.node());
+        LuaArchitecture architecture = new LuaArchitecture("""
+            devices = computer.getDeviceInfo()
+            for address, info in pairs(devices) do
+              if info.class == 'display' then
+                deviceAddress = address
+                product = info.product
+              end
+            end
+            """);
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(device.node().address(), architecture.globalString("deviceAddress"));
+        assertEquals("Test GPU", architecture.globalString("product"));
     }
 
     @Test
@@ -1131,6 +1162,20 @@ final class LuaArchitectureTest {
     }
 
     private record TestSignal(String name, Object[] args) implements Signal {
+    }
+
+    private static final class TestDeviceEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+        private final Map<String, String> deviceInfo;
+
+        private TestDeviceEnvironment(final String name, final Map<String, String> deviceInfo) {
+            this.deviceInfo = deviceInfo;
+            setNode(Network.newNode(this, Visibility.Network).withComponent(name, Visibility.Network).create());
+        }
+
+        @Override
+        public Map<String, String> getDeviceInfo() {
+            return deviceInfo;
+        }
     }
 
     @Architecture.Name("first")

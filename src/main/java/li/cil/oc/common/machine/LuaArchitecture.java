@@ -1,6 +1,7 @@
 package li.cil.oc.common.machine;
 
 import li.cil.oc.api.Driver;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.MutableProcessor;
@@ -11,7 +12,9 @@ import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -280,6 +283,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             public LuaValue call() {
                 final Connector connector = machineConnector();
                 return LuaValue.valueOf(connector == null ? 0D : connector.globalBufferSize());
+            }
+        });
+        computer.set("getDeviceInfo", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return deviceInfo();
             }
         });
         computer.set("tmpAddress", new ZeroArgFunction() {
@@ -860,6 +869,40 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return null;
         }
         return connector;
+    }
+
+    private LuaTable deviceInfo() {
+        final LuaTable devices = new LuaTable();
+        if (machine == null) {
+            return devices;
+        }
+        if (machine.host() instanceof DeviceInfo hostInfo && machine.tmpAddress() != null) {
+            addDeviceInfo(devices, machine.tmpAddress(), hostInfo.getDeviceInfo());
+        }
+        final Node machineNode = machine.node();
+        if (machineNode == null || machineNode.network() == null) {
+            return devices;
+        }
+        for (Node node : machineNode.reachableNodes()) {
+            if (!(node.host() instanceof DeviceInfo nodeInfo)) {
+                continue;
+            }
+            if (node instanceof Component component) {
+                if (node != machineNode && !component.canBeSeenFrom(machineNode)) {
+                    continue;
+                }
+            } else if (!node.canBeReachedFrom(machineNode)) {
+                continue;
+            }
+            addDeviceInfo(devices, node.address(), nodeInfo.getDeviceInfo());
+        }
+        return devices;
+    }
+
+    private static void addDeviceInfo(final LuaTable devices, final String address, final Map<String, String> info) {
+        if (address != null && info != null) {
+            devices.set(address, toLuaValue(info));
+        }
     }
 
     private Processor processor() {
