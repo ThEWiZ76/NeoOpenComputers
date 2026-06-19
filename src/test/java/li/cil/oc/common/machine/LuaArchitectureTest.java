@@ -108,6 +108,18 @@ final class LuaArchitectureTest {
         assertEquals(true, result.reboot);
     }
 
+    @Test
+    void exposesComputerBeepToLua() {
+        String[] beepPattern = {null};
+        LuaArchitecture architecture = new LuaArchitecture("computer.beep('..-')");
+        architecture.bind(machineWithBeep(beepPattern));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("..-", beepPattern[0]);
+    }
+
     private static Machine machineWithUptime(final double uptime) {
         return machine(new ArrayDeque<>(), uptime);
     }
@@ -120,11 +132,19 @@ final class LuaArchitectureTest {
         return machine(new ArrayDeque<>(), 0D, address);
     }
 
+    private static Machine machineWithBeep(final String[] beepPattern) {
+        return machine(new ArrayDeque<>(), 0D, null, beepPattern);
+    }
+
     private static Machine machine(final Queue<Signal> signals, final double uptime) {
         return machine(signals, uptime, null);
     }
 
     private static Machine machine(final Queue<Signal> signals, final double uptime, final String address) {
+        return machine(signals, uptime, address, null);
+    }
+
+    private static Machine machine(final Queue<Signal> signals, final double uptime, final String address, final String[] beepPattern) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -132,6 +152,12 @@ final class LuaArchitectureTest {
                 case "upTime" -> uptime;
                 case "popSignal" -> signals.poll();
                 case "tmpAddress" -> address;
+                case "beep" -> {
+                    if (beepPattern != null && args.length == 1) {
+                        beepPattern[0] = (String) args[0];
+                    }
+                    yield null;
+                }
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
                 case "toString" -> "test-machine";

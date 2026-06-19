@@ -197,6 +197,20 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.NIL;
             }
         });
+        computer.set("beep", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null) {
+                    return LuaValue.FALSE;
+                }
+                if (args.narg() == 1 && args.arg1().isstring()) {
+                    machine.beep(args.arg1().tojstring());
+                } else if (args.narg() >= 2) {
+                    machine.beep((short) args.arg(1).toint(), (short) args.arg(2).toint());
+                }
+                return LuaValue.TRUE;
+            }
+        });
         computer.set("pullSignal", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
