@@ -3,6 +3,8 @@ package li.cil.oc.common;
 import li.cil.oc.api.API;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
+import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.machine.Signal;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.AfterEach;
@@ -10,14 +12,17 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class MachineRegistryTest {
     @AfterEach
     void resetApi() {
         API.machine = null;
+        API.network = null;
     }
 
     @Test
@@ -46,8 +51,23 @@ final class MachineRegistryTest {
     }
 
     @Test
-    void createIsDeferredUntilMachineRuntimeExists() {
-        assertNull(new MachineRegistry().create(null));
+    void createsRunnableMachineSkeleton() {
+        Machine machine = new MachineRegistry().create(null);
+
+        assertNotNull(machine);
+        assertNotNull(machine.node());
+        assertFalse(machine.isRunning());
+        assertTrue(machine.start());
+        assertTrue(machine.isRunning());
+        assertTrue(machine.signal("boot", "ok"));
+
+        Signal signal = machine.popSignal();
+        assertEquals("boot", signal.name());
+        assertArrayEquals(new Object[]{"ok"}, signal.args());
+
+        assertTrue(machine.crash("bad"));
+        assertEquals("bad", machine.lastError());
+        assertFalse(machine.isRunning());
     }
 
     private static class TestArchitecture implements Architecture {

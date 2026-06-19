@@ -30,6 +30,6 @@ public final class MachineRegistry implements MachineAPI {
 
     @Override
     public Machine create(final MachineHost host) {
-        return null;
+        return new SimpleMachine(host);
     }
 }
