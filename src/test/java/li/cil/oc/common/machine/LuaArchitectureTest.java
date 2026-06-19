@@ -282,6 +282,20 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void roundTripsOpaqueJavaHandlesThroughLua() {
+        Object handle = new Object();
+        boolean[] handleRoundTripped = {false};
+        LuaArchitecture architecture = new LuaArchitecture("handle = component.invoke('fs-address', 'open'); result = component.invoke('fs-address', 'read', handle)");
+        architecture.bind(machineWithHandleInvoke(handle, handleRoundTripped));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("ok", architecture.globalString("result"));
+        assertEquals(true, handleRoundTripped[0]);
+    }
+
+    @Test
     void exposesComponentProxyToLua() {
         LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result = fs.label('arg')");
         architecture.bind(machineWithInvokeResult(new Object[]{"tmp"}));
@@ -368,6 +382,27 @@ final class LuaArchitectureTest {
                 case "invoke" -> {
                     invokedAddress[0] = (String) args[0];
                     yield new Object[]{"tmp"};
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithHandleInvoke(final Object handle, final boolean[] handleRoundTripped) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "invoke" -> {
+                    final String componentMethod = (String) args[1];
+                    final Object[] javaArgs = (Object[]) args[2];
+                    if ("open".equals(componentMethod)) {
+                        yield new Object[]{handle};
+                    }
+                    handleRoundTripped[0] = javaArgs.length == 1 && javaArgs[0] == handle;
+                    yield handleRoundTripped[0] ? new Object[]{"ok"} : new Object[]{"bad"};
                 }
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);

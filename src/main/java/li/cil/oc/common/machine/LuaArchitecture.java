@@ -558,7 +558,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             }
             return table;
         }
-        return LuaValue.valueOf(String.valueOf(value));
+        if (value instanceof CharSequence text) {
+            return LuaValue.valueOf(text.toString());
+        }
+        return LuaValue.userdataOf(value);
     }
 
     private static Varargs toLuaValues(final Object[] values) {
@@ -581,6 +584,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         }
         if (value.isnumber()) {
             return value.todouble();
+        }
+        if (value.isuserdata()) {
+            return value.touserdata();
         }
         return value.tojstring();
     }
