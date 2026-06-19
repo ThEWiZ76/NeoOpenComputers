@@ -16,6 +16,9 @@ public final class OpenComputersApi {
         if (API.nanomachines == null) {
             API.nanomachines = new NanomachinesRegistry();
         }
+        if (API.fileSystem == null) {
+            API.fileSystem = new FileSystemRegistry();
+        }
     }
 
     private OpenComputersApi() {
