@@ -1,5 +1,8 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.api.Driver;
+import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Case;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Message;
@@ -152,6 +155,14 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case {
         return rotateHorizontal(value, (4 - horizontalSteps(facing)) % 4);
     }
 
+    static String slotType(final int slot) {
+        return switch (slot) {
+            case SLOT_CPU -> Slot.CPU;
+            case SLOT_MEMORY_0, SLOT_MEMORY_1 -> Slot.Memory;
+            default -> Slot.None;
+        };
+    }
+
     @Override
     public int tier() {
         return 0;
@@ -201,6 +212,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case {
             stack.setCount(getMaxStackSize());
         }
         setChanged();
+    }
+
+    @Override
+    public boolean canPlaceItem(final int slot, final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        return driver != null && slotType(slot).equals(driver.slot(stack));
     }
 
     @Override
