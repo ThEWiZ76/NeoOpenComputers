@@ -187,6 +187,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     @Callback(direct = true, doc = "function(index:number):number -- Gets a palette color.")
     public Object[] getPaletteColor(final Context context, final Arguments args) {
         final int index = args.checkInteger(0);
+        checkPaletteIndex(index);
         return withActiveBuffer(buffer -> new Object[]{buffer.getPaletteColor(index)});
     }
 
@@ -194,6 +195,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     public Object[] setPaletteColor(final Context context, final Arguments args) {
         final int index = args.checkInteger(0);
         final int color = args.checkInteger(1);
+        checkPaletteIndex(index);
         return withActiveBuffer(buffer -> {
             final int previous = buffer.getPaletteColor(index);
             buffer.setPaletteColor(index, color);
@@ -533,6 +535,12 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     private static void checkSize(final int width, final int height, final int maxWidth, final int maxHeight, final String message) {
         if (width < 1 || height < 1 || width > maxWidth || height > maxHeight || (long) width * height > (long) maxWidth * maxHeight) {
             throw new IllegalArgumentException(message);
+        }
+    }
+
+    private static void checkPaletteIndex(final int index) {
+        if (index < 0 || index >= 16) {
+            throw new IllegalArgumentException("invalid palette index");
         }
     }
 

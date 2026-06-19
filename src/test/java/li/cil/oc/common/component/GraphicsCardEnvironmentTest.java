@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class GraphicsCardEnvironmentTest {
@@ -119,6 +120,22 @@ final class GraphicsCardEnvironmentTest {
         assertArrayEquals(new Object[]{0x112233}, gpu.getPaletteColor(null, new TestArguments(2)));
         assertArrayEquals(new Object[]{0x112233}, gpu.setPaletteColor(null, new TestArguments(2, 0x445566)));
         assertArrayEquals(new Object[]{0x445566}, gpu.getPaletteColor(null, new TestArguments(2)));
+    }
+
+    @Test
+    void rejectsInvalidPaletteColorIndexes() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        gpu.allocateBuffer(null, new TestArguments(2, 1));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+
+        IllegalArgumentException getError = assertThrows(IllegalArgumentException.class,
+            () -> gpu.getPaletteColor(null, new TestArguments(16)));
+        IllegalArgumentException setError = assertThrows(IllegalArgumentException.class,
+            () -> gpu.setPaletteColor(null, new TestArguments(-1, 0x112233)));
+
+        assertEquals("invalid palette index", getError.getMessage());
+        assertEquals("invalid palette index", setError.getMessage());
     }
 
     @Test
