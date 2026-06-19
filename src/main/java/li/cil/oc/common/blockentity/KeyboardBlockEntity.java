@@ -6,6 +6,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.component.KeyboardEnvironment;
+import li.cil.oc.common.component.KeyboardInputState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
@@ -16,6 +17,7 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard {
     private static final String TAG_NODE = "node";
 
     private UsabilityChecker usabilityOverride;
+    private final KeyboardInputState inputState = new KeyboardInputState();
     private Node node;
 
     public KeyboardBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -50,6 +52,7 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard {
 
     @Override
     public void onMessage(final Message message) {
+        inputState.onMessage(node(), message, this::isUsableByPlayer);
     }
 
     @Override
