@@ -169,6 +169,18 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void filtersComponentListForLua() {
+        LuaArchitecture architecture = new LuaArchitecture("components = component.list('file', false); fs = components['fs-address']; gpu = components['gpu-address']");
+        architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem", "gpu-address", "gpu")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("filesystem", architecture.globalString("fs"));
+        assertEquals("nil", architecture.globalString("gpu"));
+    }
+
+    @Test
     void exposesComponentTypeToLua() {
         LuaArchitecture architecture = new LuaArchitecture("kind = component.type('fs-address'); missing = component.type('missing')");
         architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));

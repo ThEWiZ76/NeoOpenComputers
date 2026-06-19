@@ -295,9 +295,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 final LuaTable components = new LuaTable();
+                final String filter = args.narg() >= 1 && !args.arg1().isnil() ? args.arg1().tojstring() : null;
+                final boolean exact = args.narg() < 2 || args.arg(2).toboolean();
                 if (machine != null) {
                     for (Map.Entry<String, String> entry : machine.components().entrySet()) {
-                        components.set(entry.getKey(), entry.getValue());
+                        if (matchesComponentFilter(entry.getValue(), filter, exact)) {
+                            components.set(entry.getKey(), entry.getValue());
+                        }
                     }
                 }
                 return components;
@@ -365,6 +369,16 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             }
         });
         globals.set("component", component);
+    }
+
+    private static boolean matchesComponentFilter(final String type, final String filter, final boolean exact) {
+        if (filter == null || filter.isEmpty()) {
+            return true;
+        }
+        if (type == null) {
+            return false;
+        }
+        return exact ? type.equals(filter) : type.startsWith(filter);
     }
 
     private LuaTable createComponentProxy(final String address) {
