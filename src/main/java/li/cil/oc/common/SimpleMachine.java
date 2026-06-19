@@ -15,6 +15,7 @@ import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
@@ -34,6 +35,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private static final String LAST_ERROR_TAG = "lastError";
     private static final String ARCHITECTURE_TAG = "architecture";
     private static final String CPU_TIME_NANOS_TAG = "cpuTimeNanos";
+    private static final String CHECKED_SIGNAL_MESSAGE = "computer.checked_signal";
     private static final String COMPUTER_STARTED_MESSAGE = "computer.started";
     private static final String COMPUTER_STOPPED_MESSAGE = "computer.stopped";
 
@@ -192,6 +194,13 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public void beep(final String pattern) {
+    }
+
+    @Override
+    public void onMessage(final Message message) {
+        if (CHECKED_SIGNAL_MESSAGE.equals(message.name())) {
+            queueCheckedSignal(message.data());
+        }
     }
 
     @Override
@@ -395,6 +404,17 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         if (node() != null) {
             node().sendToReachable(name);
         }
+    }
+
+    private void queueCheckedSignal(final Object[] data) {
+        if (data.length == 0) {
+            return;
+        }
+        final int nameIndex = data[0] instanceof String ? 0 : 1;
+        if (data.length <= nameIndex || !(data[nameIndex] instanceof String signalName)) {
+            return;
+        }
+        signal(signalName, Arrays.copyOfRange(data, nameIndex + 1, data.length));
     }
 
     private record MachineArguments(Object[] values) implements Arguments {

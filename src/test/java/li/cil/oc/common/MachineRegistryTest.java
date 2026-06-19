@@ -249,6 +249,21 @@ final class MachineRegistryTest {
         assertEquals(0.003D, machine.cpuTime(), 0.000_001D);
     }
 
+    @Test
+    void checkedSignalNetworkMessagesQueueMachineSignals() {
+        Machine machine = new MachineRegistry().create(null);
+
+        machine.onMessage(new TestMessage(null, "computer.checked_signal", new Object[]{"key_down", 'a', 30}));
+        machine.onMessage(new TestMessage(null, "computer.checked_signal", new Object[]{null, "touch", 2, 3, 0}));
+
+        Signal keySignal = machine.popSignal();
+        assertEquals("key_down", keySignal.name());
+        assertArrayEquals(new Object[]{'a', 30}, keySignal.args());
+        Signal touchSignal = machine.popSignal();
+        assertEquals("touch", touchSignal.name());
+        assertArrayEquals(new Object[]{2, 3, 0}, touchSignal.args());
+    }
+
     private static class TestArchitecture implements Architecture {
         @Override public boolean isInitialized() { return false; }
         @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return false; }
@@ -452,6 +467,12 @@ final class MachineRegistryTest {
         @Override
         public void onMessage(final Message message) {
             messages.add(message.name());
+        }
+    }
+
+    private record TestMessage(Node source, String name, Object[] data) implements Message {
+        @Override
+        public void cancel() {
         }
     }
 
