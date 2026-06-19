@@ -70,6 +70,8 @@ final class FileSystemRegistryTest {
         FileSystem readOnly = registry.asReadOnly(fileSystem);
 
         assertTrue(readOnly.isReadOnly());
+        assertEquals(256, readOnly.spaceTotal());
+        assertEquals(0, readOnly.spaceUsed());
         assertFalse(readOnly.makeDirectory("other"));
         assertThrows(FileNotFoundException.class, () -> readOnly.open("tmp/data.txt", Mode.Write));
     }

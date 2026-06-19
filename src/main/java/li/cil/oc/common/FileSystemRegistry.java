@@ -99,7 +99,7 @@ final class FileSystemRegistry implements FileSystemAPI {
 
         @Override
         public long spaceTotal() {
-            return inner.spaceUsed();
+            return inner.spaceTotal();
         }
 
         @Override
