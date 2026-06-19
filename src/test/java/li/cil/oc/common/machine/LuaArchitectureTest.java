@@ -282,6 +282,44 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComputerBootAddressToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            before = computer.getBootAddress()
+            changed = computer.setBootAddress('fs-address')
+            after = computer.getBootAddress()
+            cleared = computer.setBootAddress()
+            final = computer.getBootAddress()
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("before"));
+        assertEquals(true, architecture.globalBoolean("changed"));
+        assertEquals("fs-address", architecture.globalString("after"));
+        assertEquals(true, architecture.globalBoolean("cleared"));
+        assertEquals("nil", architecture.globalString("final"));
+    }
+
+    @Test
+    void persistsComputerBootAddress() {
+        LuaArchitecture first = new LuaArchitecture("computer.setBootAddress('fs-address')");
+
+        assertTrue(first.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, first.runThreaded(false));
+        CompoundTag tag = new CompoundTag();
+        first.save(tag);
+        assertEquals("fs-address", tag.getString("bootAddress"));
+
+        LuaArchitecture second = new LuaArchitecture();
+        second.load(tag);
+        CompoundTag roundTrip = new CompoundTag();
+        second.save(roundTrip);
+
+        assertEquals("fs-address", roundTrip.getString("bootAddress"));
+    }
+
+    @Test
     void exposesComputerMemoryToLua() {
         DriverRegistry drivers = new DriverRegistry();
         drivers.add(new TestMemoryDriver(192D));

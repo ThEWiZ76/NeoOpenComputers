@@ -53,6 +53,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String INITIALIZED_TAG = "initialized";
     private static final String BOOTED_TAG = "booted";
     private static final String BOOT_SOURCE_TAG = "bootSource";
+    private static final String BOOT_ADDRESS_TAG = "bootAddress";
     private static final String MEMORY_TAG = "memory";
     private static final boolean DEFAULT_ALLOW_BYTECODE = false;
     private static final boolean DEFAULT_ALLOW_GC = false;
@@ -61,6 +62,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private boolean initialized;
     private boolean booted;
     private String bootSource;
+    private String bootAddress;
     private Machine machine;
     private Globals globals;
     private LuaValue bootChunk;
@@ -170,6 +172,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     @Override
     public void load(final CompoundTag nbt) {
         bootSource = nbt.contains(BOOT_SOURCE_TAG) ? nbt.getString(BOOT_SOURCE_TAG) : "";
+        bootAddress = nbt.contains(BOOT_ADDRESS_TAG) ? nbt.getString(BOOT_ADDRESS_TAG) : null;
         booted = nbt.getBoolean(BOOTED_TAG);
         if (nbt.getBoolean(INITIALIZED_TAG)) {
             initialize();
@@ -184,6 +187,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         nbt.putBoolean(INITIALIZED_TAG, initialized);
         nbt.putBoolean(BOOTED_TAG, booted);
         nbt.putString(BOOT_SOURCE_TAG, bootSource);
+        if (bootAddress != null) {
+            nbt.putString(BOOT_ADDRESS_TAG, bootAddress);
+        }
         nbt.putDouble(MEMORY_TAG, memoryBytes);
     }
 
@@ -284,6 +290,19 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             public LuaValue call() {
                 final Connector connector = machineConnector();
                 return LuaValue.valueOf(connector == null ? 0D : connector.globalBufferSize());
+            }
+        });
+        computer.set("getBootAddress", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return bootAddress == null ? LuaValue.NIL : LuaValue.valueOf(bootAddress);
+            }
+        });
+        computer.set("setBootAddress", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                bootAddress = args.isnoneornil(1) ? null : args.checkjstring(1);
+                return LuaValue.TRUE;
             }
         });
         computer.set("isRobot", new ZeroArgFunction() {
