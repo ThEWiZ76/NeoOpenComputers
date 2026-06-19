@@ -114,7 +114,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
                 architecture = instantiate(processor.architecture(stack));
                 if (architecture != null) {
                     bindArchitecture(architecture);
-                    architecture.recomputeMemory(host.internalComponents());
+                    if (!architecture.recomputeMemory(host.internalComponents())) {
+                        architecture.close();
+                        architecture = null;
+                    }
                 }
             }
 
@@ -338,6 +341,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     @Override
     public boolean start() {
         final boolean wasRunning = running;
+        if (architecture == null && host != null) {
+            return false;
+        }
         if (architecture != null && !architecture.isInitialized() && !architecture.initialize()) {
             return false;
         }

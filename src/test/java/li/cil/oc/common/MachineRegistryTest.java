@@ -149,6 +149,20 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void hostChangedRejectsArchitectureWhenMemoryRecomputeFails() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new RejectingProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+
+        machine.onHostChanged();
+
+        assertNull(machine.architecture());
+        assertFalse(machine.start());
+    }
+
+    @Test
     void hostChangedBindsMachineAwareArchitecture() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();
@@ -370,6 +384,23 @@ final class MachineRegistryTest {
         @Override
         public Class<? extends Architecture> architecture(final ItemStack stack) {
             return TimedArchitecture.class;
+        }
+    }
+
+    private static final class RejectingProcessorDriver extends TestDriver implements Processor {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return TestArchitecture.class;
         }
     }
 
