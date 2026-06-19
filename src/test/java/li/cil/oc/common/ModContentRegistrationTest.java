@@ -56,6 +56,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void screenTier1BlockIdIsStable() {
+        assertEquals("screen_tier1", ModContentIds.SCREEN_TIER1);
+    }
+
+    @Test
     void computerCaseMenuIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
     }

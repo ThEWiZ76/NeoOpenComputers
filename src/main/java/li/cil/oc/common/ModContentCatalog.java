@@ -11,6 +11,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_HDD_TIER1 = "hdd1";
     public static final String COMPAT_MEMORY_TIER1 = "ram1";
     public static final String COMPAT_NETWORK_CARD = "lancard";
+    public static final String COMPAT_SCREEN_TIER1 = "screen1";
 
     public static void registerDefaults() {
         if (API.items instanceof ItemRegistry registry) {
@@ -18,6 +19,8 @@ public final class ModContentCatalog {
                 registry,
                 ModBlocks.COMPUTER_CASE_TIER1.get(),
                 ModItems.COMPUTER_CASE_TIER1.get(),
+                ModBlocks.SCREEN_TIER1.get(),
+                ModItems.SCREEN_TIER1.get(),
                 ModItems.MANUAL.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.MEMORY_TIER1.get(),
@@ -32,6 +35,8 @@ public final class ModContentCatalog {
         final ItemRegistry registry,
         final Block computerCaseTier1,
         final Item computerCaseTier1Item,
+        final Block screenTier1,
+        final Item screenTier1Item,
         final Item manualItem,
         final Item cpuTier1Item,
         final Item memoryTier1Item,
@@ -42,6 +47,8 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(COMPAT_COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
+        registry.register(ModContentIds.SCREEN_TIER1, screenTier1, screenTier1Item);
+        registry.register(COMPAT_SCREEN_TIER1, screenTier1, screenTier1Item);
         registry.register(ModContentIds.CPU_TIER1, null, cpuTier1Item);
         registry.register(ModContentIds.MEMORY_TIER1, null, memoryTier1Item);
         registry.register(ModContentIds.HDD_TIER1, null, hddTier1Item);

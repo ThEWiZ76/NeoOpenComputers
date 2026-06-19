@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.block.ComputerCaseBlock;
+import li.cil.oc.common.block.ScreenBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -16,6 +17,10 @@ public final class ModBlocks {
         ModContentIds.COMPUTER_CASE_TIER1,
         () -> new ComputerCaseBlock(computerCaseProperties()));
 
+    public static final DeferredBlock<Block> SCREEN_TIER1 = BLOCKS.register(
+        ModContentIds.SCREEN_TIER1,
+        () -> new ScreenBlock(screenProperties()));
+
     public static void register(final IEventBus modEventBus) {
         BLOCKS.register(modEventBus);
     }
@@ -27,5 +32,11 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(2.0F, 6.0F);
+    }
+
+    private static BlockBehaviour.Properties screenProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_BLACK)
+            .strength(1.5F, 4.0F);
     }
 }

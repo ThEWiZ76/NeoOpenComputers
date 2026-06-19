@@ -46,6 +46,10 @@ public final class ModItems {
         ModContentIds.NETWORK_CARD,
         () -> new NetworkCardItem(new Item.Properties()));
 
+    public static final DeferredItem<BlockItem> SCREEN_TIER1 = ITEMS.registerSimpleBlockItem(
+        ModContentIds.SCREEN_TIER1,
+        ModBlocks.SCREEN_TIER1);
+
     public static void register(final IEventBus modEventBus) {
         ITEMS.register(modEventBus);
     }
