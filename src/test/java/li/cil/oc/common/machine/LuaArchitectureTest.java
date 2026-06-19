@@ -25,6 +25,7 @@ import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
@@ -516,6 +517,30 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void mapsComponentInvokeFailuresToLuaResults() {
+        LuaArchitecture architecture = new LuaArchitecture("result, message = component.invoke('fs-address', 'bad')");
+        architecture.bind(machineWithThrowingInvoke(new IllegalArgumentException("bad argument")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("result"));
+        assertEquals("bad argument", architecture.globalString("message"));
+    }
+
+    @Test
+    void mapsComponentProxyFailuresToLuaResults() {
+        LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result, message = fs.bad()");
+        architecture.bind(machineWithThrowingInvoke(new IOException("disk failed")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("result"));
+        assertEquals("i/o error", architecture.globalString("message"));
+    }
+
+    @Test
     void exposesComponentProxyToLua() {
         LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result = fs.label('arg'); missing, missingMessage = component.proxy('missing')");
         architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{"tmp"}));
@@ -756,6 +781,20 @@ final class LuaArchitectureTest {
                     capturedArgument[0] = javaArgs[0];
                     yield new Object[]{"ok"};
                 }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithThrowingInvoke(final Exception failure) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> Map.of("fs-address", "filesystem");
+                case "invoke" -> throw failure;
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
                 case "toString" -> "test-machine";

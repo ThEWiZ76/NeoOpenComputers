@@ -31,6 +31,8 @@ import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 import org.luaj.vm2.lib.jse.JseMathLib;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -555,11 +557,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 for (int index = 0; index < javaArgs.length; index++) {
                     javaArgs[index] = toJavaValue(args.arg(index + 3));
                 }
-                try {
-                    return toLuaValues(machine.invoke(address, method, javaArgs));
-                } catch (Exception e) {
-                    throw new LuaError(e.getMessage() == null ? e.toString() : e.getMessage());
-                }
+                return invokeComponent(address, method, javaArgs);
             }
         });
         component.set("proxy", new VarArgFunction() {
@@ -711,11 +709,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                         for (int index = 0; index < javaArgs.length; index++) {
                             javaArgs[index] = toJavaValue(callbackArgs.arg(index + offset + 1));
                         }
-                        try {
-                            return toLuaValues(machine.invoke(address, method, javaArgs));
-                        } catch (Exception e) {
-                            throw new LuaError(e.getMessage() == null ? e.toString() : e.getMessage());
-                        }
+                        return invokeComponent(address, method, javaArgs);
                     }
                 };
             }
@@ -737,6 +731,26 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private static Varargs noSuchComponent() {
         return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such component"));
+    }
+
+    private Varargs invokeComponent(final String address, final String method, final Object[] javaArgs) {
+        try {
+            return toLuaValues(machine.invoke(address, method, javaArgs));
+        } catch (IllegalArgumentException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "bad argument" : e.getMessage()));
+        } catch (IndexOutOfBoundsException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("index out of bounds"));
+        } catch (NoSuchMethodException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such method"));
+        } catch (FileNotFoundException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("file not found"));
+        } catch (SecurityException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("access denied"));
+        } catch (IOException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("i/o error"));
+        } catch (Exception e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
+        }
     }
 
     private Connector machineConnector() {
