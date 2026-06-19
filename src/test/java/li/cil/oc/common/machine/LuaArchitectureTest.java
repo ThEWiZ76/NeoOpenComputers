@@ -72,6 +72,48 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesSafeLuaStandardLibraries() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            mathValue = math.floor(2.9)
+            textValue = string.upper('ok')
+            values = {}
+            table.insert(values, 'item')
+            coroutineValue = type(coroutine.create(function() end))
+            bitValue = bit32.band(7, 3)
+            loaded = load('return 4')()
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(2, architecture.globalInteger("mathValue"));
+        assertEquals("OK", architecture.globalString("textValue"));
+        assertEquals("thread", architecture.globalString("coroutineValue"));
+        assertEquals(3, architecture.globalInteger("bitValue"));
+        assertEquals(4, architecture.globalInteger("loaded"));
+    }
+
+    @Test
+    void hidesHostAccessLuaLibraries() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            ioType = type(io)
+            osType = type(os)
+            packageType = type(package)
+            requireType = type(require)
+            luajavaType = type(luajava)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("ioType"));
+        assertEquals("nil", architecture.globalString("osType"));
+        assertEquals("nil", architecture.globalString("packageType"));
+        assertEquals("nil", architecture.globalString("requireType"));
+        assertEquals("nil", architecture.globalString("luajavaType"));
+    }
+
+    @Test
     void readsBootSourceFromEepromDataTag() {
         CompoundTag data = new CompoundTag();
         data.putByteArray(ItemRegistry.EEPROM_CODE_TAG, "counter = 7".getBytes(StandardCharsets.UTF_8));

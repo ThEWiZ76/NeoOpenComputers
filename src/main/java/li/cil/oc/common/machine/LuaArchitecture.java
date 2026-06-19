@@ -14,13 +14,20 @@ import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.luaj.vm2.Globals;
+import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lib.BaseLib;
+import org.luaj.vm2.lib.Bit32Lib;
+import org.luaj.vm2.lib.CoroutineLib;
+import org.luaj.vm2.lib.StringLib;
+import org.luaj.vm2.lib.TableLib;
 import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
-import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.lib.jse.JseMathLib;
 
 import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
@@ -84,7 +91,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     @Override
     public boolean initialize() {
-        globals = JsePlatform.standardGlobals();
+        globals = sandboxGlobals();
         pendingResult = null;
         installComputerLibrary();
         installComponentLibrary();
@@ -192,6 +199,23 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return "";
         }
         return new String(eepromData.getByteArray(ItemRegistry.EEPROM_CODE_TAG), StandardCharsets.UTF_8);
+    }
+
+    private static Globals sandboxGlobals() {
+        final Globals globals = new Globals();
+        globals.load(new BaseLib());
+        final LuaTable packageTable = new LuaTable();
+        packageTable.set("loaded", new LuaTable());
+        globals.set("package", packageTable);
+        globals.load(new TableLib());
+        globals.load(new StringLib());
+        globals.load(new CoroutineLib());
+        globals.load(new Bit32Lib());
+        globals.load(new JseMathLib());
+        globals.set("package", LuaValue.NIL);
+        LoadState.install(globals);
+        LuaC.install(globals);
+        return globals;
     }
 
     private void installComputerLibrary() {
