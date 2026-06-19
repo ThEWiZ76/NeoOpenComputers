@@ -1,6 +1,7 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -10,12 +11,21 @@ import li.cil.oc.common.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.zip.CRC32;
 
-public final class EepromEnvironment extends AbstractManagedEnvironment {
+public final class EepromEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final int EEPROM_SIZE = 4096;
     private static final int DATA_SIZE = 256;
     private static final int MAX_LABEL_LENGTH = 24;
+    private static final Map<String, String> DEVICE_INFO = Map.of(
+        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Memory,
+        DeviceInfo.DeviceAttribute.Description, "EEPROM",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Product, "FlashStick2k",
+        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(EEPROM_SIZE),
+        DeviceInfo.DeviceAttribute.Size, Integer.toString(EEPROM_SIZE)
+    );
 
     private final CompoundTag data;
     private final Runnable onChanged;
@@ -33,6 +43,11 @@ public final class EepromEnvironment extends AbstractManagedEnvironment {
             .withComponent("eeprom", Visibility.Neighbors)
             .withConnector()
             .create());
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return DEVICE_INFO;
     }
 
     @Callback(direct = true, doc = "function():string -- Get the currently stored byte array.")

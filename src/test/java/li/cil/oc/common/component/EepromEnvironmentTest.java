@@ -1,5 +1,6 @@
 package li.cil.oc.common.component;
 
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ItemRegistry;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -64,6 +66,21 @@ final class EepromEnvironmentTest {
         assertArrayEquals(new Object[]{null, "storage is readonly"}, component.invoke("setLabel", null, "Changed"));
         assertArrayEquals(bytes("code"), (byte[]) component.invoke("get", null)[0]);
         assertArrayEquals(new Object[]{"ROM"}, component.invoke("getLabel", null));
+    }
+
+    @Test
+    void exposesDeviceInfoMetadata() {
+        OpenComputersApi.initialize();
+        EepromEnvironment environment = new EepromEnvironment(data("ROM", "code", "data", false));
+
+        DeviceInfo info = assertInstanceOf(DeviceInfo.class, environment);
+        Map<String, String> metadata = info.getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Memory, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("EEPROM", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("FlashStick2k", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("4096", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("4096", metadata.get(DeviceInfo.DeviceAttribute.Size));
     }
 
     private static CompoundTag data(final String label, final String code, final String data, final boolean readonly) {
