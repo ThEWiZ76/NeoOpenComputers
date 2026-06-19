@@ -4,6 +4,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.ItemRegistry;
+import li.cil.oc.common.component.EepromEnvironment;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -34,7 +35,8 @@ public class EepromItem extends Item implements DriverItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return null;
+        final CompoundTag data = dataTag(stack);
+        return new EepromEnvironment(data, () -> writeDataTag(stack, data));
     }
 
     @Override
@@ -57,5 +59,14 @@ public class EepromItem extends Item implements DriverItem {
             return new CompoundTag();
         }
         return customData.getUnsafe().getCompound(ItemRegistry.EEPROM_DATA_TAG);
+    }
+
+    private static void writeDataTag(final ItemStack stack, final CompoundTag data) {
+        if (stack == null) {
+            return;
+        }
+        final CompoundTag root = new CompoundTag();
+        root.put(ItemRegistry.EEPROM_DATA_TAG, data.copy());
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 }
