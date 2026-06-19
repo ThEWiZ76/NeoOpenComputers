@@ -1,12 +1,18 @@
 package li.cil.oc.common.machine;
 
+import li.cil.oc.api.API;
+import li.cil.oc.api.Network;
+import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.ItemRegistry;
+import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
@@ -21,8 +27,21 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 final class LuaArchitectureTest {
+    @AfterEach
+    void resetApi() {
+        API.driver = null;
+        API.fileSystem = null;
+        API.items = null;
+        API.machine = null;
+        API.manual = null;
+        API.nanomachines = null;
+        API.network = null;
+        li.cil.oc.api.Machine.LuaArchitecture = null;
+    }
+
     @Test
     void executesConfiguredLuaChunkOnce() {
         LuaArchitecture architecture = new LuaArchitecture("counter = (counter or 0) + 1");
@@ -350,6 +369,42 @@ final class LuaArchitectureTest {
         assertEquals(false, architecture.globalBoolean("rejected"));
         assertEquals("tmp", architecture.globalString("result"));
         assertEquals("fs2-address", invokedAddress[0]);
+    }
+
+    @Test
+    void invokesRealFilesystemComponentFromLua() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        FileSystem fileSystem = API.fileSystem.fromMemory(512);
+        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(fileSystemEnvironment.node());
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.getPrimary('filesystem')
+            fs.makeDirectory('tmp')
+            handle = fs.open('tmp/data.txt', 'w')
+            wrote = fs.write(handle, 'hello')
+            fs.close(handle)
+            handle = fs.open('tmp/data.txt', 'r')
+            data = fs.read(handle, 5)
+            fs.close(handle)
+            entries = fs.list('tmp')
+            firstEntry = entries[1]
+            exists = fs.exists('tmp/data.txt')
+            """);
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        ExecutionResult result = architecture.runThreaded(false);
+        if (result instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+        assertInstanceOf(ExecutionResult.Sleep.class, result);
+
+        assertEquals(true, architecture.globalBoolean("wrote"));
+        assertEquals("hello", architecture.globalString("data"));
+        assertEquals("data.txt", architecture.globalString("firstEntry"));
+        assertEquals(true, architecture.globalBoolean("exists"));
     }
 
     private static Machine machineWithUptime(final double uptime) {
