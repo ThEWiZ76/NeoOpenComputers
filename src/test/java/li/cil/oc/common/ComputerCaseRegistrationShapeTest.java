@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ final class ComputerCaseRegistrationShapeTest {
     @Test
     void computerCaseBlockProvidesBlockEntity() {
         assertTrue(Block.class.isAssignableFrom(ComputerCaseBlock.class));
+        assertTrue(HorizontalDirectionalBlock.class.isAssignableFrom(ComputerCaseBlock.class));
         assertTrue(EntityBlock.class.isAssignableFrom(ComputerCaseBlock.class));
     }
 

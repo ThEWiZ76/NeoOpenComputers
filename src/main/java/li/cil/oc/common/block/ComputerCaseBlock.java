@@ -1,20 +1,36 @@
 package li.cil.oc.common.block;
 
+import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.item.context.BlockPlaceContext;
 
-public class ComputerCaseBlock extends Block implements EntityBlock {
+@SuppressWarnings("deprecation")
+public class ComputerCaseBlock extends HorizontalDirectionalBlock implements EntityBlock {
+    public static final MapCodec<ComputerCaseBlock> CODEC = simpleCodec(ComputerCaseBlock::new);
+
     public ComputerCaseBlock(final BlockBehaviour.Properties properties) {
         super(properties);
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+    }
+
+    @Override
+    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+        return CODEC;
     }
 
     @Override
@@ -29,5 +45,25 @@ public class ComputerCaseBlock extends Block implements EntityBlock {
         }
         return (tickerLevel, pos, blockState, blockEntity) ->
             ComputerCaseBlockEntity.serverTick(tickerLevel, pos, blockState, (ComputerCaseBlockEntity) blockEntity);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(final BlockPlaceContext context) {
+        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    protected BlockState rotate(final BlockState state, final Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    protected BlockState mirror(final BlockState state, final Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(final StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING);
     }
 }

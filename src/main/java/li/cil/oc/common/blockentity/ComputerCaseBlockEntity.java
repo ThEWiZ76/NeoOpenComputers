@@ -6,6 +6,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.block.ComputerCaseBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -118,6 +119,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case {
 
     @Override
     public Direction facing() {
+        final BlockState state = getBlockState();
+        if (state.getBlock() instanceof ComputerCaseBlock && state.hasProperty(ComputerCaseBlock.FACING)) {
+            return state.getValue(ComputerCaseBlock.FACING);
+        }
         return Direction.NORTH;
     }
 
