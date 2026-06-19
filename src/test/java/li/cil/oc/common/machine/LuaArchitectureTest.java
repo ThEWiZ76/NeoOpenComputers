@@ -238,6 +238,13 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsMemoryRecomputeWithoutRam() {
+        LuaArchitecture architecture = new LuaArchitecture();
+
+        assertEquals(false, architecture.recomputeMemory(Collections.emptyList()));
+    }
+
+    @Test
     void exposesComputerEnergyToLua() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);

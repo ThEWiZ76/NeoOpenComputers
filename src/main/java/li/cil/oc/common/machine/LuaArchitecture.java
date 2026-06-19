@@ -95,7 +95,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             }
         }
         memoryBytes = Math.max(0D, totalMemory);
-        return true;
+        return memoryBytes > 0D;
     }
 
     @Override
