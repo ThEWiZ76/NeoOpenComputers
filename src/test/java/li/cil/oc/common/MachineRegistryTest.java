@@ -264,6 +264,20 @@ final class MachineRegistryTest {
         assertArrayEquals(new Object[]{2, 3, 0}, touchSignal.args());
     }
 
+    @Test
+    void hostChangedWhileRunningNotifiesReachableComponentsStopped() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        TestEnvironment environment = new TestEnvironment();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+
+        assertTrue(machine.start());
+        machine.onHostChanged();
+
+        assertEquals(List.of("computer.started", "computer.stopped"), environment.messages);
+    }
+
     private static class TestArchitecture implements Architecture {
         @Override public boolean isInitialized() { return false; }
         @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return false; }

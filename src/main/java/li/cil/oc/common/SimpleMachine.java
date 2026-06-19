@@ -74,6 +74,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public void onHostChanged() {
+        final boolean wasRunning = running || paused;
+        if (wasRunning) {
+            sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
+        }
         for (ManagedEnvironment environment : componentEnvironments) {
             if (environment.node() != null) {
                 host.onMachineDisconnect(environment.node());
