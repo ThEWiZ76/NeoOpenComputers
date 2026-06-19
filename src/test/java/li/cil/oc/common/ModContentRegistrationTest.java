@@ -36,6 +36,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void hardDiskDriveTier1ItemIdIsStable() {
+        assertEquals("hdd_tier1", ModContentIds.HDD_TIER1);
+    }
+
+    @Test
     void computerCaseMenuIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
     }

@@ -34,6 +34,7 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
         addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_CPU, 80, 17));
         addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_MEMORY_0, 62, 44));
         addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_MEMORY_1, 98, 44));
+        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_HDD, 80, 62));
         addPlayerInventory(playerInventory);
     }
 

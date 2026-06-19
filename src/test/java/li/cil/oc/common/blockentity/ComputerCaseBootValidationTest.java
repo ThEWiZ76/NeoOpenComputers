@@ -9,17 +9,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class ComputerCaseBootValidationTest {
     @Test
     void tierOneCaseCanBootWithCpuAndTwoMemorySticks() {
-        assertTrue(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.Memory));
+        assertTrue(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.Memory, Slot.HDD));
     }
 
     @Test
     void tierOneCaseCannotBootWithoutCpu() {
-        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.None, Slot.Memory, Slot.Memory));
+        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.None, Slot.Memory, Slot.Memory, Slot.HDD));
     }
 
     @Test
     void tierOneCaseCannotBootWithoutBothMemorySticks() {
-        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.None));
-        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.None, Slot.Memory));
+        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.None, Slot.HDD));
+        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.None, Slot.Memory, Slot.HDD));
+    }
+
+    @Test
+    void tierOneCaseCannotBootWithoutHardDiskDrive() {
+        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.Memory, Slot.None));
     }
 }

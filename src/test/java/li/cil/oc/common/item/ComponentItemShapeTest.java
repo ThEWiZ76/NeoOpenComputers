@@ -2,6 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
+import li.cil.oc.api.driver.DriverItem;
 import net.minecraft.world.item.Item;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,15 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(MemoryItem.class));
         assertTrue(Memory.class.isAssignableFrom(MemoryItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void hardDiskDriveItemIsStorageDriver() throws NoSuchMethodException {
+        final Constructor<HardDiskDriveItem> constructor = HardDiskDriveItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(HardDiskDriveItem.class));
+        assertTrue(DriverItem.class.isAssignableFrom(HardDiskDriveItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
     }
 }

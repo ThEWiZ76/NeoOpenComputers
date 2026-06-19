@@ -31,7 +31,8 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     public static final int SLOT_CPU = 0;
     public static final int SLOT_MEMORY_0 = 1;
     public static final int SLOT_MEMORY_1 = 2;
-    public static final int CONTAINER_SIZE = 3;
+    public static final int SLOT_HDD = 3;
+    public static final int CONTAINER_SIZE = 4;
 
     private static final String TAG_COLOR = "oc:color";
     private static final String TAG_MACHINE = "oc:machine";
@@ -185,12 +186,13 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         return switch (slot) {
             case SLOT_CPU -> Slot.CPU;
             case SLOT_MEMORY_0, SLOT_MEMORY_1 -> Slot.Memory;
+            case SLOT_HDD -> Slot.HDD;
             default -> Slot.None;
         };
     }
 
-    static boolean hasRequiredComponents(final String cpuSlot, final String memorySlot0, final String memorySlot1) {
-        return Slot.CPU.equals(cpuSlot) && Slot.Memory.equals(memorySlot0) && Slot.Memory.equals(memorySlot1);
+    static boolean hasRequiredComponents(final String cpuSlot, final String memorySlot0, final String memorySlot1, final String hddSlot) {
+        return Slot.CPU.equals(cpuSlot) && Slot.Memory.equals(memorySlot0) && Slot.Memory.equals(memorySlot1) && Slot.HDD.equals(hddSlot);
     }
 
     @Override
@@ -298,7 +300,8 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         return hasRequiredComponents(
             driverSlotType(items.get(SLOT_CPU)),
             driverSlotType(items.get(SLOT_MEMORY_0)),
-            driverSlotType(items.get(SLOT_MEMORY_1)));
+            driverSlotType(items.get(SLOT_MEMORY_1)),
+            driverSlotType(items.get(SLOT_HDD)));
     }
 
     private void removeMachineNode() {

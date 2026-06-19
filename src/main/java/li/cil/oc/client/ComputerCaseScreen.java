@@ -22,6 +22,7 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         drawSlot(guiGraphics, left + 79, top + 16);
         drawSlot(guiGraphics, left + 61, top + 43);
         drawSlot(guiGraphics, left + 97, top + 43);
+        drawSlot(guiGraphics, left + 79, top + 61);
     }
 
     @Override
