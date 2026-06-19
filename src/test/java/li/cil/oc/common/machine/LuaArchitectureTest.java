@@ -168,6 +168,16 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComputerRealTimeToLua() {
+        LuaArchitecture architecture = new LuaArchitecture("seconds = computer.realTime()", () -> 12_345L);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(12.345D, architecture.globalDouble("seconds"), 0.000_001D);
+    }
+
+    @Test
     void exposesComputerPullSignalToLua() {
         LuaArchitecture architecture = new LuaArchitecture("name, value = computer.pullSignal()");
         architecture.bind(machineWithSignals(new TestSignal("event", new Object[]{"payload"})));

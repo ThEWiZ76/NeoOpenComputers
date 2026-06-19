@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.LongSupplier;
 
 @Architecture.Name("Lua")
 public final class LuaArchitecture implements Architecture, MachineBoundArchitecture {
@@ -53,6 +54,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private LuaValue bootChunk;
     private ExecutionResult pendingResult;
     private double memoryBytes;
+    private final LongSupplier wallTimeMillis;
     private final Map<String, String> primaryComponents = new HashMap<>();
 
     public LuaArchitecture() {
@@ -60,7 +62,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     LuaArchitecture(final String bootSource) {
+        this(bootSource, System::currentTimeMillis);
+    }
+
+    LuaArchitecture(final String bootSource, final LongSupplier wallTimeMillis) {
         this.bootSource = bootSource == null ? "" : bootSource;
+        this.wallTimeMillis = wallTimeMillis;
     }
 
     @Override
@@ -225,6 +232,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public LuaValue call() {
                 return LuaValue.valueOf(machine == null ? 0D : machine.upTime());
+            }
+        });
+        computer.set("realTime", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(wallTimeMillis.getAsLong() / 1000D);
             }
         });
         computer.set("address", new ZeroArgFunction() {
