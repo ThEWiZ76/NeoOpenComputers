@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "neoopencomputers:block/keyboard" },
+    "facing=east": { "model": "neoopencomputers:block/keyboard", "y": 90 },
+    "facing=south": { "model": "neoopencomputers:block/keyboard", "y": 180 },
+    "facing=west": { "model": "neoopencomputers:block/keyboard", "y": 270 }
+  }
+}

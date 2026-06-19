@@ -8,6 +8,7 @@ public final class ModContentIds {
     public static final String EEPROM = "eeprom";
     public static final String GRAPHICS_CARD_TIER1 = "graphics_card_tier1";
     public static final String HDD_TIER1 = "hdd_tier1";
+    public static final String KEYBOARD = "keyboard";
     public static final String MAIN_CREATIVE_TAB = "main";
     public static final String MANUAL = "manual";
     public static final String MEMORY_TIER1 = "memory_tier1";

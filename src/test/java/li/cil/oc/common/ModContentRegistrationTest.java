@@ -61,6 +61,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void keyboardBlockIdIsStable() {
+        assertEquals("keyboard", ModContentIds.KEYBOARD);
+    }
+
+    @Test
     void computerCaseMenuIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
     }

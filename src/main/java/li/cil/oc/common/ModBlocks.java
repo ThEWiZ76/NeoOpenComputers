@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.block.ComputerCaseBlock;
+import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -21,6 +22,10 @@ public final class ModBlocks {
         ModContentIds.SCREEN_TIER1,
         () -> new ScreenBlock(screenProperties()));
 
+    public static final DeferredBlock<Block> KEYBOARD = BLOCKS.register(
+        ModContentIds.KEYBOARD,
+        () -> new KeyboardBlock(keyboardProperties()));
+
     public static void register(final IEventBus modEventBus) {
         BLOCKS.register(modEventBus);
     }
@@ -38,5 +43,11 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_BLACK)
             .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties keyboardProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_GRAY)
+            .strength(1.0F, 3.0F);
     }
 }

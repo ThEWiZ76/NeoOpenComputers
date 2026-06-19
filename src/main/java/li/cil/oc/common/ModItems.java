@@ -50,6 +50,10 @@ public final class ModItems {
         ModContentIds.SCREEN_TIER1,
         ModBlocks.SCREEN_TIER1);
 
+    public static final DeferredItem<BlockItem> KEYBOARD = ITEMS.registerSimpleBlockItem(
+        ModContentIds.KEYBOARD,
+        ModBlocks.KEYBOARD);
+
     public static void register(final IEventBus modEventBus) {
         ITEMS.register(modEventBus);
     }
