@@ -57,6 +57,7 @@ final class GraphicsCardEnvironmentTest {
         assertCallback("set");
         assertCallback("copy");
         assertCallback("fill");
+        assertCallback("bitblt");
     }
 
     @Test
@@ -153,6 +154,25 @@ final class GraphicsCardEnvironmentTest {
         assertArrayEquals(new Object[]{null, "invalid page dimensions: must be greater than zero"}, gpu.allocateBuffer(null, new TestArguments(0, 2)));
         assertArrayEquals(new Object[]{null, "invalid buffer index"}, gpu.setActiveBuffer(null, new TestArguments(1)));
         assertArrayEquals(new Object[]{null, "no buffer at index"}, gpu.freeBuffer(null, new TestArguments(1)));
+    }
+
+    @Test
+    void bitbltCopiesBetweenVideoBuffers() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        gpu.allocateBuffer(null, new TestArguments(3, 2));
+        gpu.allocateBuffer(null, new TestArguments(3, 2));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+        gpu.set(null, new TestArguments(1, 1, "AB"));
+        gpu.set(null, new TestArguments(1, 2, "CD"));
+
+        assertArrayEquals(new Object[]{true}, gpu.bitblt(null, new TestArguments(2, 1, 1, 2, 2, 1, 1, 1)));
+
+        gpu.setActiveBuffer(null, new TestArguments(2));
+        assertArrayEquals(new Object[]{"A", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(1, 1)));
+        assertArrayEquals(new Object[]{"B", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(2, 1)));
+        assertArrayEquals(new Object[]{"C", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(1, 2)));
+        assertArrayEquals(new Object[]{"D", 0xFFFFFF, 0x000000, false, false}, gpu.get(null, new TestArguments(2, 2)));
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {

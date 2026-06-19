@@ -344,6 +344,28 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         });
     }
 
+    @Callback(direct = true, doc = "function([dst:number, x:number, y:number, width:number, height:number, src:number, fromX:number, fromY:number]):boolean -- Copies between video buffers and screens.")
+    public Object[] bitblt(final Context context, final Arguments args) {
+        final int dstIndex = args.optInteger(0, SCREEN_INDEX);
+        return withBuffer(dstIndex, dst -> {
+            final int x = args.optInteger(1, 1) - 1;
+            final int y = args.optInteger(2, 1) - 1;
+            final int width = Math.max(0, args.optInteger(3, dst.getWidth()));
+            final int height = Math.max(0, args.optInteger(4, dst.getHeight()));
+            final int srcIndex = args.optInteger(5, activeBufferIndex);
+            final TextBuffer src = buffer(srcIndex);
+            if (src == null) {
+                return srcIndex == SCREEN_INDEX ? noScreen() : invalidBufferIndex();
+            }
+            final int fromX = args.optInteger(6, 1) - 1;
+            final int fromY = args.optInteger(7, 1) - 1;
+            dst.rawSetText(x, y, textSnapshot(src, fromX, fromY, width, height));
+            dst.rawSetForeground(x, y, foregroundSnapshot(src, fromX, fromY, width, height));
+            dst.rawSetBackground(x, y, backgroundSnapshot(src, fromX, fromY, width, height));
+            return new Object[]{true};
+        });
+    }
+
     @Override
     public void onConnect(final Node node) {
         if (screen == null && screenAddress != null && screenAddress.equals(node.address()) && node.host() instanceof TextBuffer buffer) {
@@ -412,6 +434,36 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     private static Object[] invalidBufferIndex() {
         return new Object[]{null, "invalid buffer index"};
+    }
+
+    private static int[][] textSnapshot(final TextBuffer source, final int column, final int row, final int width, final int height) {
+        final int[][] snapshot = new int[Math.max(0, height)][Math.max(0, width)];
+        for (int y = 0; y < snapshot.length; y++) {
+            for (int x = 0; x < snapshot[y].length; x++) {
+                snapshot[y][x] = source.getCodePoint(column + x, row + y);
+            }
+        }
+        return snapshot;
+    }
+
+    private static int[][] foregroundSnapshot(final TextBuffer source, final int column, final int row, final int width, final int height) {
+        final int[][] snapshot = new int[Math.max(0, height)][Math.max(0, width)];
+        for (int y = 0; y < snapshot.length; y++) {
+            for (int x = 0; x < snapshot[y].length; x++) {
+                snapshot[y][x] = source.getForegroundColor(column + x, row + y);
+            }
+        }
+        return snapshot;
+    }
+
+    private static int[][] backgroundSnapshot(final TextBuffer source, final int column, final int row, final int width, final int height) {
+        final int[][] snapshot = new int[Math.max(0, height)][Math.max(0, width)];
+        for (int y = 0; y < snapshot.length; y++) {
+            for (int x = 0; x < snapshot[y].length; x++) {
+                snapshot[y][x] = source.getBackgroundColor(column + x, row + y);
+            }
+        }
+        return snapshot;
     }
 
     private int nextBufferIndex() {
