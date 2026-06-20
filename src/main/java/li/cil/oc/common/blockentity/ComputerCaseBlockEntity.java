@@ -91,6 +91,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private int tier;
     private int color;
     private final int[] redstoneOutputs = new int[6];
+    private final int[] redstoneInputs = new int[6];
 
     public ComputerCaseBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.COMPUTER_CASE.get(), pos, blockState);
@@ -238,6 +239,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     public int redstoneOutput(final Direction direction) {
         synchronized (redstoneOutputs) {
             return redstoneOutputs[direction.get3DDataValue()];
+        }
+    }
+
+    public int redstoneInput(final Direction direction) {
+        synchronized (redstoneInputs) {
+            return redstoneInputs[direction.get3DDataValue()];
         }
     }
 
@@ -494,6 +501,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     private void tickServer() {
+        updateRedstoneInputs();
         tickHostedMachine(machine);
     }
 
@@ -532,6 +540,17 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         final int[] savedOutputs = tag.getIntArray(TAG_REDSTONE_OUTPUTS);
         for (int index = 0; index < redstoneOutputs.length; index++) {
             redstoneOutputs[index] = index < savedOutputs.length ? Math.clamp(savedOutputs[index], 0, 15) : 0;
+        }
+    }
+
+    private void updateRedstoneInputs() {
+        if (level == null) {
+            return;
+        }
+        synchronized (redstoneInputs) {
+            for (Direction direction : Direction.values()) {
+                redstoneInputs[direction.get3DDataValue()] = level.getSignal(worldPosition.relative(direction), direction.getOpposite());
+            }
         }
     }
 

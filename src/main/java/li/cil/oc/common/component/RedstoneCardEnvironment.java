@@ -41,6 +41,11 @@ public class RedstoneCardEnvironment extends AbstractManagedEnvironment implemen
         return new Object[]{computerCaseHost().redstoneOutput(direction(args.checkInteger(0)))};
     }
 
+    @Callback(direct = true, doc = "function(side:number):number -- Gets redstone input level on the specified side.")
+    public Object[] getInput(final Context context, final Arguments args) {
+        return new Object[]{computerCaseHost().redstoneInput(direction(args.checkInteger(0)))};
+    }
+
     @Callback(doc = "function(side:number, value:number):number -- Sets redstone output level and returns the previous value.")
     public Object[] setOutput(final Context context, final Arguments args) {
         final Direction direction = direction(args.checkInteger(0));
