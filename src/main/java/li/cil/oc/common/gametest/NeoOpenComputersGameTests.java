@@ -3,6 +3,7 @@ package li.cil.oc.common.gametest;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Driver;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Chargeable;
@@ -911,6 +912,7 @@ public final class NeoOpenComputersGameTests {
         assertScreenItemDriver(helper, new ItemStack(ModItems.SCREEN_TIER1.get()), 0, 50, 16, TextBuffer.ColorDepth.OneBit);
         assertScreenItemDriver(helper, new ItemStack(ModItems.SCREEN_TIER2.get()), 1, 80, 25, TextBuffer.ColorDepth.FourBit);
         assertScreenItemDriver(helper, new ItemStack(ModItems.SCREEN_TIER3.get()), 2, 160, 50, TextBuffer.ColorDepth.EightBit);
+        assertKeyboardItemDriver(helper, new ItemStack(ModItems.KEYBOARD.get()));
         helper.succeed();
     }
 
@@ -2443,6 +2445,20 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(buffer.getMaximumWidth() == width, "Expected screen item max width " + width + " but got " + buffer.getMaximumWidth());
         helper.assertTrue(buffer.getMaximumHeight() == height, "Expected screen item max height " + height + " but got " + buffer.getMaximumHeight());
         helper.assertTrue(buffer.getMaximumColorDepth() == depth, "Expected screen item depth " + depth + " but got " + buffer.getMaximumColorDepth());
+    }
+
+    private static void assertKeyboardItemDriver(final GameTestHelper helper, final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        helper.assertTrue(Slot.Upgrade.equals(driver.slot(stack)), "Expected keyboard item upgrade slot for " + stack);
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment instanceof li.cil.oc.api.internal.Keyboard, "Keyboard item did not create keyboard environment for " + stack);
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Keyboard item has no component node for " + stack);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("keyboard".equals(component.name()), "Keyboard item component name mismatch for " + stack);
+        helper.assertTrue(environment instanceof DeviceInfo, "Keyboard item environment lacks device info");
+        final DeviceInfo info = (DeviceInfo) environment;
+        helper.assertTrue(DeviceInfo.DeviceClass.Input.equals(info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Class)), "Keyboard item device class mismatch");
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {

@@ -7,6 +7,7 @@ import li.cil.oc.common.driver.ComputerCaseBlockDriver;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
 import li.cil.oc.common.driver.DiskDriveContainerDriver;
 import li.cil.oc.common.driver.InventoryBlockDriver;
+import li.cil.oc.common.driver.KeyboardItemDriver;
 import li.cil.oc.common.driver.ScreenBlockDriver;
 import li.cil.oc.common.driver.ScreenItemDriver;
 
@@ -32,6 +33,7 @@ public final class ModDriverCatalog {
                 new ScreenItemDriver(ModItems.SCREEN_TIER1.get(), 0),
                 new ScreenItemDriver(ModItems.SCREEN_TIER2.get(), 1),
                 new ScreenItemDriver(ModItems.SCREEN_TIER3.get(), 2),
+                new KeyboardItemDriver(),
                 ModItems.GRAPHICS_CARD_TIER1.get(), ModItems.GRAPHICS_CARD_TIER2.get(), ModItems.GRAPHICS_CARD_TIER3.get(),
                 ModItems.NETWORK_CARD.get(), ModItems.WIRELESS_NETWORK_CARD_TIER1.get(), ModItems.WIRELESS_NETWORK_CARD_TIER2.get(), ModItems.REDSTONE_CARD.get(),
                 ModItems.PISTON_UPGRADE.get(), ModItems.STICKY_PISTON_UPGRADE.get(), ModItems.SIGN_UPGRADE.get(), ModItems.TRADING_UPGRADE.get(),
