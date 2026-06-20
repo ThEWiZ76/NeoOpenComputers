@@ -220,6 +220,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tabletItemPersistsAssemblyData(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.TABLET.get());
+        final TabletItem tablet = (TabletItem) stack.getItem();
+        final ItemStack container = new ItemStack(ModItems.CARD_CONTAINER_TIER1.get());
+        final ItemStack component = new ItemStack(ModItems.NETWORK_CARD.get());
+
+        tablet.setTier(stack, 1);
+        tablet.setRunning(stack, true);
+        tablet.setContainer(stack, container);
+        tablet.setComponent(stack, 2, component);
+
+        helper.assertTrue(tablet.tier(stack) == 1, "Tablet tier did not persist");
+        helper.assertTrue(tablet.isRunning(stack), "Tablet running state did not persist");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(container, tablet.getContainer(stack)), "Tablet container did not persist");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(component, tablet.getComponent(stack, 2)), "Tablet component did not persist");
+        helper.assertTrue(tablet.getComponent(stack, 32).isEmpty(), "Tablet out-of-range component read should be empty");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredComponentItemsExposeTierCapabilities(final GameTestHelper helper) {
         assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER1.get()), 8);
         assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER2.get()), 12);
