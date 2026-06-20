@@ -416,6 +416,27 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void basicMaterialRecipesUseUpstreamInputs() throws IOException {
+        JsonObject cuttingWire = readJson(RECIPE_ROOT.resolve(ModContentIds.CUTTING_WIRE + ".json"));
+        JsonObject acid = readJson(RECIPE_ROOT.resolve(ModContentIds.ACID + ".json"));
+        JsonObject cuttingWireKeys = cuttingWire.getAsJsonObject("key");
+
+        assertPattern(cuttingWire, "SIS");
+        assertItem(cuttingWireKeys, "S", "minecraft:stick");
+        assertTag(cuttingWireKeys, "I", "c:nuggets/iron");
+        assertResultCount(cuttingWire, 1);
+
+        assertEquals("minecraft:crafting_shapeless", acid.get("type").getAsString());
+        assertIngredientItem(acid, "minecraft:water_bucket");
+        assertIngredientItem(acid, "minecraft:sugar");
+        assertIngredientItem(acid, "minecraft:slime_ball");
+        assertIngredientItem(acid, "minecraft:fermented_spider_eye");
+        assertIngredientItem(acid, "minecraft:bone");
+        assertIngredientCount(acid, 5);
+        assertResultCount(acid, 1);
+    }
+
+    @Test
     void capacitorRecipeUsesMaterialProgression() throws IOException {
         JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
 

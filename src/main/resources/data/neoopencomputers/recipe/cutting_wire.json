@@ -1,16 +1,19 @@
 {
-  "type": "minecraft:crafting_shapeless",
+  "type": "minecraft:crafting_shaped",
   "category": "misc",
-  "ingredients": [
-    {
-      "tag": "c:ingots/iron"
+  "key": {
+    "I": {
+      "tag": "c:nuggets/iron"
     },
-    {
-      "item": "minecraft:string"
+    "S": {
+      "item": "minecraft:stick"
     }
+  },
+  "pattern": [
+    "SIS"
   ],
   "result": {
-    "count": 2,
+    "count": 1,
     "id": "neoopencomputers:cutting_wire"
   }
 }
