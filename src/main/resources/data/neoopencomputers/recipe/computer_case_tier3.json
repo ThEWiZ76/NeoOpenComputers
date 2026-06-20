@@ -2,20 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
     "C": {
-      "item": "neoopencomputers:computer_case_tier2"
+      "item": "neoopencomputers:microchip_tier3"
     },
-    "D": {
+    "F": {
+      "item": "minecraft:iron_bars"
+    },
+    "H": {
+      "item": "minecraft:chest"
+    },
+    "I": {
       "item": "minecraft:diamond"
-    },
-    "R": {
-      "item": "minecraft:redstone"
     }
   },
   "pattern": [
-    "DDD",
-    "RCR",
-    "DDD"
+    "ICI",
+    "FHF",
+    "IBI"
   ],
   "result": {
     "count": 1,

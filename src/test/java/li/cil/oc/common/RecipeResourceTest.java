@@ -454,6 +454,37 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void computerCaseRecipesUseMaterialProgression() throws IOException {
+        JsonObject tier1 = readJson(RECIPE_ROOT.resolve(ModContentIds.COMPUTER_CASE_TIER1 + ".json"));
+        JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.COMPUTER_CASE_TIER2 + ".json"));
+        JsonObject tier3 = readJson(RECIPE_ROOT.resolve(ModContentIds.COMPUTER_CASE_TIER3 + ".json"));
+        JsonObject tier1Keys = tier1.getAsJsonObject("key");
+        JsonObject tier2Keys = tier2.getAsJsonObject("key");
+        JsonObject tier3Keys = tier3.getAsJsonObject("key");
+
+        assertPattern(tier1, "ICI", "FHF", "IBI");
+        assertTag(tier1Keys, "I", "c:ingots/iron");
+        assertItem(tier1Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(tier1Keys, "F", "minecraft:iron_bars");
+        assertItem(tier1Keys, "H", "minecraft:chest");
+        assertItem(tier1Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(tier2, "ICI", "FHF", "IBI");
+        assertTag(tier2Keys, "I", "c:ingots/gold");
+        assertItem(tier2Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier2Keys, "F", "minecraft:iron_bars");
+        assertItem(tier2Keys, "H", "minecraft:chest");
+        assertItem(tier2Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(tier3, "ICI", "FHF", "IBI");
+        assertItem(tier3Keys, "I", "minecraft:diamond");
+        assertItem(tier3Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier3Keys, "F", "minecraft:iron_bars");
+        assertItem(tier3Keys, "H", "minecraft:chest");
+        assertItem(tier3Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
     void inputDeviceRecipesUseMaterialParts() throws IOException {
         JsonObject manual = readJson(RECIPE_ROOT.resolve(ModContentIds.MANUAL + ".json"));
         JsonObject buttonGroup = readJson(RECIPE_ROOT.resolve(ModContentIds.BUTTON_GROUP + ".json"));
