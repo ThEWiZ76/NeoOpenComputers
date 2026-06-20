@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    {
+      "item": "neoopencomputers:floppy"
+    },
+    {
+      "item": "neoopencomputers:interweb"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:floppy",
+    "components": {
+      "minecraft:custom_data": {
+        "oc:color": "cyan",
+        "oc:factory": "neoopencomputers:loot/oppm",
+        "oc:label": "OPPM (Package Manager)",
+        "oc:recipeCycling": true
+      }
+    }
+  }
+}
