@@ -127,7 +127,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     }
 
     @Callback(doc = "function(address:string, port:number, ...):boolean -- Sends a packet to the specified address.")
-    public Object[] send(final Context context, final Arguments args) {
+    public Object[] send(final Context context, final Arguments args) throws IOException {
         final String address = args.checkString(0);
         final int port = checkPort(args.checkInteger(1));
         if (node() == null) {
@@ -139,12 +139,12 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             return new Object[]{false};
         }
 
-        doSend(address, packet);
+        doSend(context, address, packet);
         return new Object[]{true};
     }
 
     @Callback(doc = "function(port:number, ...):boolean -- Broadcasts a packet on the specified port.")
-    public Object[] broadcast(final Context context, final Arguments args) {
+    public Object[] broadcast(final Context context, final Arguments args) throws IOException {
         final int port = checkPort(args.checkInteger(0));
         if (node() == null) {
             return new Object[]{false};
@@ -155,7 +155,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             return new Object[]{false};
         }
 
-        doBroadcast(packet);
+        doBroadcast(context, packet);
         return new Object[]{true};
     }
 
@@ -216,11 +216,11 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         return machine != null && message.source() == machine.node();
     }
 
-    protected void doSend(final String address, final Packet packet) {
+    protected void doSend(final Context context, final String address, final Packet packet) throws IOException {
         node().sendToAddress(address, NETWORK_MESSAGE, packet);
     }
 
-    protected void doBroadcast(final Packet packet) {
+    protected void doBroadcast(final Context context, final Packet packet) throws IOException {
         node().sendToReachable(NETWORK_MESSAGE, packet);
     }
 

@@ -8,6 +8,7 @@ import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NetworkCardEnvironmentTest {
@@ -333,6 +335,33 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void wirelessBroadcastRequiresEnergyAndConsumesBuffer() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
+        TestMachineHost receiverHost = new TestMachineHost(3, 4, 0);
+        WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(senderHost, 0);
+        WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(receiverHost, 0);
+        ComponentConnector connector = assertInstanceOf(ComponentConnector.class, sender.node());
+        RecordingContext context = new RecordingContext(sender.node());
+        Network.joinNewNetwork(sender.node());
+        Network.joinNewNetwork(receiver.node());
+        receiver.open(null, new TestArguments(123));
+        sender.setStrength(null, new TestArguments(5D));
+
+        Exception error = assertThrows(Exception.class, () -> sender.broadcast(context, new TestArguments(123, "payload")));
+        assertEquals("not enough energy", error.getMessage());
+        assertEquals(List.of(), receiverHost.signals);
+
+        connector.setLocalBufferSize(1D);
+        connector.changeBuffer(1D);
+
+        assertArrayEquals(new Object[]{true}, sender.broadcast(context, new TestArguments(123, "payload")));
+
+        assertEquals(0.75D, connector.localBuffer(), 0.000_001D);
+        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 5D, "payload")), receiverHost.signals);
+    }
+
+    @Test
     void wirelessBroadcastDoesNotDeliverBeyondStrength() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
@@ -352,6 +381,17 @@ final class NetworkCardEnvironmentTest {
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = NetworkCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private record RecordingContext(Node node) implements li.cil.oc.api.machine.Context {
+        @Override public boolean canInteract(final String player) { return true; }
+        @Override public boolean isRunning() { return true; }
+        @Override public boolean isPaused() { return false; }
+        @Override public boolean start() { return true; }
+        @Override public boolean pause(final double seconds) { return true; }
+        @Override public boolean stop() { return true; }
+        @Override public void consumeCallBudget(final double callCost) { }
+        @Override public boolean signal(final String name, final Object... args) { return true; }
     }
 
     private static class TestHost implements EnvironmentHost {

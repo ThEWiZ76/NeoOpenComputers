@@ -5,18 +5,22 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.WirelessEndpoint;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment implements WirelessEndpoint {
     private static final String STRENGTH_TAG = "strength";
     private static final double[] MAX_RANGE_BY_TIER = {16D, 400D};
+    private static final double WIRELESS_COST_PER_RANGE = 0.05D;
     private static final Map<String, String> TIER1_DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
         DeviceInfo.DeviceAttribute.Description, "Wireless ethernet controller",
@@ -45,6 +49,10 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
         super(host);
         this.tier = Math.max(0, Math.min(tier, MAX_RANGE_BY_TIER.length - 1));
         strength = maxWirelessRange();
+        final var builder = Network.newNode(this, Visibility.Network);
+        if (builder != null) {
+            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
+        }
     }
 
     @Override
@@ -103,22 +111,24 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
     }
 
     @Override
-    protected void doSend(final String address, final Packet packet) {
+    protected void doSend(final Context context, final String address, final Packet packet) throws IOException {
         if (strength > 0D) {
+            consumeWirelessEnergy(context);
             Network.sendWirelessPacket(this, strength, packet);
         }
         if (isWiredTier()) {
-            super.doSend(address, packet);
+            super.doSend(context, address, packet);
         }
     }
 
     @Override
-    protected void doBroadcast(final Packet packet) {
+    protected void doBroadcast(final Context context, final Packet packet) throws IOException {
         if (strength > 0D) {
+            consumeWirelessEnergy(context);
             Network.sendWirelessPacket(this, strength, packet);
         }
         if (isWiredTier()) {
-            super.doBroadcast(packet);
+            super.doBroadcast(context, packet);
         }
     }
 
@@ -158,6 +168,16 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
 
     private double maxWirelessRange() {
         return MAX_RANGE_BY_TIER[tier];
+    }
+
+    private void consumeWirelessEnergy(final Context context) throws IOException {
+        if (context == null || !(context.node() instanceof Connector connector)) {
+            return;
+        }
+        final double cost = strength * WIRELESS_COST_PER_RANGE;
+        if (cost > 0D && !connector.tryChangeBuffer(-cost)) {
+            throw new IOException("not enough energy");
+        }
     }
 
     private double distanceTo(final WirelessEndpoint sender) {
