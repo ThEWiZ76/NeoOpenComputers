@@ -5,20 +5,23 @@
     "A": {
       "item": "neoopencomputers:analyzer"
     },
-    "C": {
-      "tag": "c:ingots/copper"
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
     },
     "G": {
-      "tag": "c:glass_blocks"
+      "tag": "c:ingots/gold"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "M": {
+      "item": "neoopencomputers:microchip_tier2"
     }
   },
   "pattern": [
-    "CRC",
     "GAG",
-    "CRC"
+    "EME",
+    "GBG"
   ],
   "result": {
     "count": 1,

@@ -121,6 +121,17 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void geolyzerRecipeUsesMaterialParts() throws IOException {
+        JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.GEOLYZER + ".json"));
+        JsonObject keys = json.getAsJsonObject("key");
+
+        assertEquals("neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD, keys.getAsJsonObject("B").get("item").getAsString());
+        assertEquals("neoopencomputers:" + ModContentIds.MICROCHIP_TIER2, keys.getAsJsonObject("M").get("item").getAsString());
+        assertEquals("minecraft:ender_eye", keys.getAsJsonObject("E").get("item").getAsString());
+        assertEquals("c:ingots/gold", keys.getAsJsonObject("G").get("tag").getAsString());
+    }
+
+    @Test
     void analyzerRecipeUsesMaterialParts() throws IOException {
         JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.ANALYZER + ".json"));
         JsonObject keys = json.getAsJsonObject("key");
