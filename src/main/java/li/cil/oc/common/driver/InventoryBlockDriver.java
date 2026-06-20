@@ -176,6 +176,15 @@ public final class InventoryBlockDriver implements DriverBlock {
             return new Object[]{container.getItem(checkSlot(arguments, 0))};
         }
 
+        @Callback(doc = "function():table -- Get a list of raw item stacks for all slots in this inventory.")
+        public Object[] getAllStacks(final Context context, final Arguments arguments) {
+            final ItemStack[] stacks = new ItemStack[container.getContainerSize()];
+            for (int slot = 0; slot < stacks.length; slot++) {
+                stacks[slot] = container.getItem(slot).copy();
+            }
+            return new Object[]{stacks};
+        }
+
         private int checkSlot(final Arguments arguments, final int index) {
             final int slot = arguments.checkInteger(index) - 1;
             if (slot < 0 || slot >= container.getContainerSize()) {

@@ -283,6 +283,11 @@ public final class NeoOpenComputersGameTests {
             try {
                 assertInvokeResult(helper, computer, address, "getInventorySize", new Object[]{}, 27);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{1}, 3);
+                final Object[] stacksResult = computer.machine().invoke(address, "getAllStacks", new Object[]{});
+                helper.assertTrue(stacksResult.length == 1 && stacksResult[0] instanceof ItemStack[], "getAllStacks did not return an item-stack array");
+                final ItemStack[] stacks = (ItemStack[]) stacksResult[0];
+                helper.assertTrue(stacks.length == 27, "getAllStacks returned wrong chest size");
+                helper.assertTrue(stacks[0].is(net.minecraft.world.item.Items.DIAMOND) && stacks[0].getCount() == 3, "getAllStacks did not include first slot diamonds");
                 assertInvokeResult(helper, computer, address, "transferStack", new Object[]{1, 2, 2}, true);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{1}, 1);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{2}, 2);
