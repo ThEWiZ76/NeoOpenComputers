@@ -72,6 +72,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.CPU_TIER1.get();
         ModItems.CPU_TIER2.get();
         ModItems.CPU_TIER3.get();
+        ModItems.DATABASE_UPGRADE_TIER1.get();
         ModItems.EEPROM.get();
         ModItems.FLOPPY.get();
         ModItems.GRAPHICS_CARD_TIER1.get();
@@ -94,6 +95,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.CPU_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.CPU_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.CPU_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 2);

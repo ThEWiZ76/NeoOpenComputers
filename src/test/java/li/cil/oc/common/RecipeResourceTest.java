@@ -28,6 +28,7 @@ final class RecipeResourceTest {
             ModContentIds.CPU_TIER1,
             ModContentIds.CPU_TIER2,
             ModContentIds.CPU_TIER3,
+            ModContentIds.DATABASE_UPGRADE_TIER1,
             ModContentIds.DISK_DRIVE,
             ModContentIds.EEPROM,
             ModContentIds.FLOPPY,

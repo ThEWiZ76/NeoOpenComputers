@@ -136,4 +136,13 @@ final class ComponentItemShapeTest {
         assertTrue(HostAware.class.isAssignableFrom(NetworkCardItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
     }
+
+    @Test
+    void databaseUpgradeItemIsUpgradeDriver() throws NoSuchMethodException {
+        final Constructor<DatabaseUpgradeItem> constructor = DatabaseUpgradeItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(DatabaseUpgradeItem.class));
+        assertTrue(DriverItem.class.isAssignableFrom(DatabaseUpgradeItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
 }

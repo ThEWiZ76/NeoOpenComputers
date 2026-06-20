@@ -13,6 +13,7 @@ public final class ModContentIds {
     public static final String CPU_TIER1 = "cpu_tier1";
     public static final String CPU_TIER2 = "cpu_tier2";
     public static final String CPU_TIER3 = "cpu_tier3";
+    public static final String DATABASE_UPGRADE_TIER1 = "database_upgrade_tier1";
     public static final String DISK_DRIVE = "disk_drive";
     public static final String DISK_DRIVE_BLOCK_ENTITY = "disk_drive";
     public static final String DISK_DRIVE_MENU = "disk_drive";
