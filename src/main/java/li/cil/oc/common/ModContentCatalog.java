@@ -106,6 +106,7 @@ public final class ModContentCatalog {
                 ModItems.TABLET_CASE_TIER1.get(),
                 ModItems.TABLET_CASE_TIER2.get(),
                 ModItems.TABLET_CASE_CREATIVE.get(),
+                ModItems.TABLET.get(),
                 ModItems.DATA_CARD_TIER1.get(),
                 ModItems.DATA_CARD_TIER2.get(),
                 ModItems.DATA_CARD_TIER3.get(),
@@ -191,6 +192,7 @@ public final class ModContentCatalog {
         final Item tabletCaseTier1Item,
         final Item tabletCaseTier2Item,
         final Item tabletCaseCreativeItem,
+        final Item tabletItem,
         final Item dataCardTier1Item,
         final Item dataCardTier2Item,
         final Item dataCardTier3Item,
@@ -260,6 +262,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.TABLET_CASE_TIER1, null, tabletCaseTier1Item);
         registry.register(ModContentIds.TABLET_CASE_TIER2, null, tabletCaseTier2Item);
         registry.register(ModContentIds.TABLET_CASE_CREATIVE, null, tabletCaseCreativeItem);
+        registry.register(ModContentIds.TABLET, null, tabletItem);
         registry.register(ModContentIds.DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(ModContentIds.DATA_CARD_TIER2, null, dataCardTier2Item);
         registry.register(ModContentIds.DATA_CARD_TIER3, null, dataCardTier3Item);

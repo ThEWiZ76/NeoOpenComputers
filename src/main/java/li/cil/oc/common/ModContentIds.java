@@ -14,6 +14,7 @@ public final class ModContentIds {
     public static final String TABLET_CASE_TIER1 = "tablet_case_tier1";
     public static final String TABLET_CASE_TIER2 = "tablet_case_tier2";
     public static final String TABLET_CASE_CREATIVE = "tablet_case_creative";
+    public static final String TABLET = "tablet";
     public static final String COMPUTER_CASE_BLOCK_ENTITY = "computer_case";
     public static final String COMPUTER_CASE_MENU = "computer_case";
     public static final String COMPUTER_CASE_TIER1 = "computer_case_tier1";

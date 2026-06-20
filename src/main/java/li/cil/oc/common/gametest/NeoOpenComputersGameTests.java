@@ -30,6 +30,7 @@ import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
+import li.cil.oc.common.item.TabletItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -93,6 +94,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.TABLET_CASE_TIER1.get();
         ModItems.TABLET_CASE_TIER2.get();
         ModItems.TABLET_CASE_CREATIVE.get();
+        ModItems.TABLET.get();
         ModItems.CPU_TIER1.get();
         ModItems.CPU_TIER2.get();
         ModItems.CPU_TIER3.get();
@@ -185,6 +187,23 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(ModItems.TABLET_CASE_TIER1.get().tier() == 0, "Tier 1 tablet case did not report tier 0");
         helper.assertTrue(ModItems.TABLET_CASE_TIER2.get().tier() == 1, "Tier 2 tablet case did not report tier 1");
         helper.assertTrue(ModItems.TABLET_CASE_CREATIVE.get().tier() == 3, "Creative tablet case did not report tier 3");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tabletItemStoresCharge(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.TABLET.get());
+        final TabletItem tablet = (TabletItem) stack.getItem();
+
+        tablet.setMaxCharge(stack, 1000D);
+        helper.assertTrue(stack.getMaxStackSize() == 1, "Tablet item should not stack");
+        helper.assertTrue(tablet.maxCharge(stack) == 1000D, "Tablet max charge did not persist");
+        helper.assertTrue(tablet.charge(stack, 250D, false) == 250D, "Tablet did not accept initial charge");
+        helper.assertTrue(tablet.getCharge(stack) == 250D, "Tablet charge did not persist");
+        helper.assertTrue(tablet.charge(stack, 1000D, true) == 750D, "Tablet simulated charge did not cap to remaining capacity");
+        helper.assertTrue(tablet.getCharge(stack) == 250D, "Tablet simulated charge mutated stored charge");
+        helper.assertTrue(tablet.charge(stack, 1000D, false) == 750D, "Tablet did not cap accepted charge");
+        helper.assertTrue(tablet.getCharge(stack) == 1000D, "Tablet charge did not cap at max");
         helper.succeed();
     }
 

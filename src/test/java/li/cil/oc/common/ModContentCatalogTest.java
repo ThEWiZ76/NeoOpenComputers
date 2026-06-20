@@ -56,6 +56,7 @@ final class ModContentCatalogTest {
             null, null, null,
             null,
             null,
+            null,
             null);
 
         assertNotNull(registry.get(ModContentIds.ADAPTER));
@@ -93,6 +94,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.TABLET_CASE_TIER1));
         assertNotNull(registry.get(ModContentIds.TABLET_CASE_TIER2));
         assertNotNull(registry.get(ModContentIds.TABLET_CASE_CREATIVE));
+        assertNotNull(registry.get(ModContentIds.TABLET));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER1));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER2));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER3));
@@ -208,6 +210,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.TABLET_CASE_TIER1, registry.get(ModContentIds.TABLET_CASE_TIER1).name());
         assertEquals(ModContentIds.TABLET_CASE_TIER2, registry.get(ModContentIds.TABLET_CASE_TIER2).name());
         assertEquals(ModContentIds.TABLET_CASE_CREATIVE, registry.get(ModContentIds.TABLET_CASE_CREATIVE).name());
+        assertEquals(ModContentIds.TABLET, registry.get(ModContentIds.TABLET).name());
         assertEquals(ModContentIds.DATA_CARD_TIER1, registry.get(ModContentIds.DATA_CARD_TIER1).name());
         assertEquals(ModContentIds.DATA_CARD_TIER2, registry.get(ModContentIds.DATA_CARD_TIER2).name());
         assertEquals(ModContentIds.DATA_CARD_TIER3, registry.get(ModContentIds.DATA_CARD_TIER3).name());

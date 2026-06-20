@@ -151,6 +151,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void tabletItemIsChargeableAssemblyOutput() throws NoSuchMethodException {
+        final Constructor<TabletItem> constructor = TabletItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(TabletItem.class));
+        assertTrue(Chargeable.class.isAssignableFrom(TabletItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void graphicsCardItemIsCardDriver() throws NoSuchMethodException {
         final Constructor<GraphicsCardItem> constructor = GraphicsCardItem.class.getConstructor(Item.Properties.class);
 

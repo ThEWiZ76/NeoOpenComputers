@@ -101,6 +101,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void tabletItemIdIsStable() {
+        assertEquals("tablet", ModContentIds.TABLET);
+    }
+
+    @Test
     void upgradeContainerTier1ItemIdIsStable() {
         assertEquals("upgrade_container_tier1", ModContentIds.UPGRADE_CONTAINER_TIER1);
     }
