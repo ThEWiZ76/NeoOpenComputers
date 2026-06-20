@@ -8,6 +8,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.util.InventoryComparison;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -66,12 +67,12 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         return new Object[]{stack.isEmpty() ? 0 : Math.min(container.getMaxStackSize(), stack.getMaxStackSize())};
     }
 
-    @Callback(doc = "function(side:number, slotA:number, slotB:number):boolean -- Compare two item stacks in the specified inventory.")
+    @Callback(doc = "function(side:number, slotA:number, slotB:number[, checkNBT:boolean=false]):boolean -- Compare two item stacks in the specified inventory.")
     public Object[] compareStacks(final Context context, final Arguments arguments) {
         final Container container = container(arguments.checkInteger(0));
         final int slotA = checkSlot(container, arguments.checkInteger(1));
         final int slotB = checkSlot(container, arguments.checkInteger(2));
-        return new Object[]{slotA == slotB || ItemStack.isSameItemSameComponents(container.getItem(slotA), container.getItem(slotB))};
+        return new Object[]{slotA == slotB || InventoryComparison.sameItem(container.getItem(slotA), container.getItem(slotB), arguments.optBoolean(3, false))};
     }
 
     @Callback(doc = "function(side:number, slotA:number, slotB:number):boolean -- Check whether two item stacks share an item tag.")

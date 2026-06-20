@@ -10,6 +10,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.util.InventoryComparison;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -124,11 +125,11 @@ public final class InventoryBlockDriver implements DriverBlock {
             return new Object[]{stack.isEmpty() ? container.getMaxStackSize() : Math.min(container.getMaxStackSize(), stack.getMaxStackSize())};
         }
 
-        @Callback(doc = "function(slotA:number, slotB:number):boolean -- Compare the two item stacks in the specified slots for equality.")
+        @Callback(doc = "function(slotA:number, slotB:number[, checkNBT:boolean=false]):boolean -- Compare the two item stacks in the specified slots.")
         public Object[] compareStacks(final Context context, final Arguments arguments) {
             final int slotA = checkSlot(arguments, 0);
             final int slotB = checkSlot(arguments, 1);
-            return new Object[]{slotA == slotB || ItemStack.isSameItemSameComponents(container.getItem(slotA), container.getItem(slotB))};
+            return new Object[]{slotA == slotB || InventoryComparison.sameItem(container.getItem(slotA), container.getItem(slotB), arguments.optBoolean(2, false))};
         }
 
         @Callback(doc = "function(slotA:number, slotB:number[, count:number=64]):boolean -- Move up to the specified number of items from the first specified slot to the second.")
@@ -150,7 +151,7 @@ public final class InventoryBlockDriver implements DriverBlock {
                 container.setChanged();
                 return new Object[]{true};
             }
-            if (ItemStack.isSameItemSameComponents(source, target)) {
+            if (InventoryComparison.sameItem(source, target, true)) {
                 final int space = Math.min(container.getMaxStackSize(), target.getMaxStackSize()) - target.getCount();
                 final int amount = Math.min(count, Math.min(space, source.getCount()));
                 if (amount > 0) {

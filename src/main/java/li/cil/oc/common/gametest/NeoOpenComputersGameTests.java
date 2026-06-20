@@ -284,6 +284,8 @@ public final class NeoOpenComputersGameTests {
         chest.setItem(2, new ItemStack(net.minecraft.world.item.Items.DIRT, 1));
         chest.setItem(3, new ItemStack(net.minecraft.world.item.Items.OAK_LOG, 1));
         chest.setItem(4, new ItemStack(net.minecraft.world.item.Items.SPRUCE_LOG, 1));
+        chest.setItem(5, namedStack(net.minecraft.world.item.Items.COBBLESTONE, "left"));
+        chest.setItem(6, namedStack(net.minecraft.world.item.Items.COBBLESTONE, "right"));
 
         helper.succeedWhen(() -> {
             final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
@@ -295,9 +297,11 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "getInventorySize", new Object[]{east}, 27);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{east, 1}, 4);
                 assertInvokeResult(helper, computer, address, "getSlotMaxStackSize", new Object[]{east, 1}, 64);
-                assertInvokeResult(helper, computer, address, "getSlotMaxStackSize", new Object[]{east, 6}, 0);
+                assertInvokeResult(helper, computer, address, "getSlotMaxStackSize", new Object[]{east, 8}, 0);
                 assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{east, 1, 2}, true);
                 assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{east, 1, 3}, false);
+                assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{east, 6, 7}, true);
+                assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{east, 6, 7, true}, false);
                 assertInvokeResult(helper, computer, address, "areStacksEquivalent", new Object[]{east, 4, 5}, true);
                 assertInvokeResult(helper, computer, address, "areStacksEquivalent", new Object[]{east, 1, 3}, false);
                 final Object[] stackResult = computer.machine().invoke(address, "getStackInSlot", new Object[]{east, 1});
@@ -324,6 +328,8 @@ public final class NeoOpenComputersGameTests {
 
         final net.minecraft.world.Container chest = helper.getBlockEntity(chestPos);
         chest.setItem(0, new ItemStack(net.minecraft.world.item.Items.DIAMOND, 3));
+        chest.setItem(2, namedStack(net.minecraft.world.item.Items.COBBLESTONE, "left"));
+        chest.setItem(3, namedStack(net.minecraft.world.item.Items.COBBLESTONE, "right"));
 
         helper.succeedWhen(() -> {
             final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
@@ -337,6 +343,8 @@ public final class NeoOpenComputersGameTests {
                 final ItemStack[] stacks = (ItemStack[]) stacksResult[0];
                 helper.assertTrue(stacks.length == 27, "getAllStacks returned wrong chest size");
                 helper.assertTrue(stacks[0].is(net.minecraft.world.item.Items.DIAMOND) && stacks[0].getCount() == 3, "getAllStacks did not include first slot diamonds");
+                assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{3, 4}, true);
+                assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{3, 4, true}, false);
                 assertInvokeResult(helper, computer, address, "transferStack", new Object[]{1, 2, 2}, true);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{1}, 1);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{2}, 2);
@@ -949,6 +957,12 @@ public final class NeoOpenComputersGameTests {
 
     private static void assertDroppedItem(final GameTestHelper helper, final Item item) {
         droppedItemStack(helper, item);
+    }
+
+    private static ItemStack namedStack(final Item item, final String name) {
+        final ItemStack stack = new ItemStack(item);
+        stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
+        return stack;
     }
 
     private static void assertInvokeResult(
