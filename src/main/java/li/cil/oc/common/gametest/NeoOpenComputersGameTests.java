@@ -135,6 +135,10 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(!tier2.canPlaceItem(6, new ItemStack(ModItems.CPU_TIER3.get())), "Tier 2 CPU slot accepted tier 3 CPU");
         helper.assertTrue(tier3.canPlaceItem(8, new ItemStack(ModItems.CPU_TIER3.get())), "Tier 3 CPU slot rejected tier 3 CPU");
         helper.assertTrue(tier3.canPlaceItem(7, new ItemStack(ModItems.FLOPPY.get())), "Tier 3 floppy slot rejected floppy");
+        tier1.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER2.get()));
+        tier1.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        tier1.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+        helper.assertTrue(!tier1.toggleMachine(), "Tier 1 case started with an installed tier 2 CPU");
         helper.succeed();
     }
 

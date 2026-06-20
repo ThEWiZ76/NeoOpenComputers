@@ -152,7 +152,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     public Iterable<ItemStack> internalComponents() {
         return () -> new Iterator<>() {
-            private int nextSlot = nextComponentSlot(items, 0);
+            private int nextSlot = nextComponentSlot(items, tier, 0);
 
             @Override
             public boolean hasNext() {
@@ -165,7 +165,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
                     throw new NoSuchElementException();
                 }
                 final int slot = nextSlot;
-                nextSlot = nextComponentSlot(items, slot + 1);
+                nextSlot = nextComponentSlot(items, tier, slot + 1);
                 pendingComponentSlot = slot;
                 return items.get(slot);
             }
@@ -325,9 +325,9 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         );
     }
 
-    private static int nextComponentSlot(final List<ItemStack> items, final int start) {
+    private static int nextComponentSlot(final List<ItemStack> items, final int tier, final int start) {
         for (int slot = start; slot < items.size(); slot++) {
-            if (!items.get(slot).isEmpty()) {
+            if (slotAcceptsStack(tier, slot, items.get(slot))) {
                 return slot;
             }
         }
@@ -399,10 +399,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public boolean canPlaceItem(final int slot, final ItemStack stack) {
-        final DriverItem driver = Driver.driverFor(stack);
-        return driver != null
-            && slotType(tier, slot).equals(driver.slot(stack))
-            && driver.tier(stack) <= slotTier(tier, slot);
+        return slotAcceptsStack(tier, slot, stack);
     }
 
     @Override
@@ -458,8 +455,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         boolean hasEeprom = false;
         for (int slot = 0; slot < items.size(); slot++) {
             final String expected = slotType(tier, slot);
-            final String actual = driverSlotType(items.get(slot));
-            if (!expected.equals(actual)) {
+            if (!slotAcceptsStack(tier, slot, items.get(slot))) {
                 continue;
             }
             if (Slot.CPU.equals(expected)) {
@@ -482,6 +478,13 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private static String driverSlotType(final ItemStack stack) {
         final DriverItem driver = Driver.driverFor(stack);
         return driver == null ? Slot.None : driver.slot(stack);
+    }
+
+    private static boolean slotAcceptsStack(final int tier, final int slot, final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        return driver != null
+            && slotType(tier, slot).equals(driver.slot(stack))
+            && driver.tier(stack) <= slotTier(tier, slot);
     }
 
     private static Direction rotateHorizontal(final Direction value, final int steps) {
