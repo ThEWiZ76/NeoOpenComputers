@@ -1,5 +1,6 @@
 package li.cil.oc.common.component;
 
+import li.cil.oc.api.API;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -13,8 +14,10 @@ import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Method;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -80,6 +83,42 @@ final class InternetCardEnvironmentTest {
         assertArrayEquals(new Object[]{200, "OK", Map.of("content-type", List.of("text/plain"))}, request.response(null, new TestArguments()));
         assertArrayEquals("hello".getBytes(StandardCharsets.UTF_8), (byte[]) request.read(null, new TestArguments(32))[0]);
         assertArrayEquals(new Object[]{null}, request.read(null, new TestArguments(32)));
+    }
+
+    @Test
+    void httpRequestUsesUpstreamDefaultUserAgent() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+        CompletableFuture<String> userAgent = new CompletableFuture<>();
+        ExecutorService serverThread = Executors.newSingleThreadExecutor();
+
+        try (ServerSocket server = new ServerSocket(0)) {
+            serverThread.submit(() -> {
+                try (Socket socket = server.accept();
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1))) {
+                    String header;
+                    while ((header = reader.readLine()) != null && !header.isEmpty()) {
+                        if (header.regionMatches(true, 0, "User-Agent:", 0, "User-Agent:".length())) {
+                            userAgent.complete(header.substring("User-Agent:".length()).trim());
+                        }
+                    }
+                    socket.getOutputStream().write("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+                    socket.getOutputStream().flush();
+                } catch (IOException e) {
+                    userAgent.completeExceptionally(e);
+                }
+                return null;
+            });
+
+            Object handle = card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/headers"))[0];
+            InternetCardEnvironment.HttpRequest request = assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
+            awaitHttpConnected(request);
+
+            assertEquals("opencomputers/" + API.VERSION, userAgent.get(2, TimeUnit.SECONDS));
+        } finally {
+            serverThread.shutdownNow();
+            assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
+        }
     }
 
     @Test
@@ -184,6 +223,16 @@ final class InternetCardEnvironmentTest {
             Thread.sleep(10);
         }
         throw new AssertionError("socket did not connect");
+    }
+
+    private static void awaitHttpConnected(final InternetCardEnvironment.HttpRequest request) throws Exception {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            if (Boolean.TRUE.equals(request.finishConnect(null, new TestArguments())[0])) {
+                return;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("HTTP request did not connect");
     }
 
     private static byte[] awaitRead(final InternetCardEnvironment.TcpSocket socket, final int length) throws Exception {
