@@ -7,6 +7,7 @@ import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.fs.FileSystem;
+import li.cil.oc.api.fs.Mode;
 import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
@@ -22,7 +23,9 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.MachineRegistry;
+import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.component.EepromEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -401,6 +404,7 @@ final class LuaArchitectureTest {
         Machine machine = API.machine.create(null);
         Connector connector = (Connector) machine.node();
         connector.setLocalBufferSize(20D);
+        connector.changeBuffer(-20D);
         connector.changeBuffer(7D);
         LuaArchitecture architecture = new LuaArchitecture("energy = computer.energy(); maxEnergy = computer.maxEnergy()");
         architecture.bind(machine);
@@ -963,6 +967,58 @@ final class LuaArchitectureTest {
         assertEquals("hello", architecture.globalString("data"));
         assertEquals("data.txt", architecture.globalString("firstEntry"));
         assertEquals(true, architecture.globalBoolean("exists"));
+    }
+
+    @Test
+    void bundledLuaBiosBootsInitFromFilesystemComponent() throws IOException {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        FileSystem fileSystem = API.fileSystem.fromMemory(1024);
+        int outputHandle = fileSystem.open("init.lua", Mode.Write);
+        fileSystem.getHandle(outputHandle).write("bootedFromBios = true".getBytes(StandardCharsets.UTF_8));
+        fileSystem.getHandle(outputHandle).close();
+        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(fileSystem, "OpenOS", null, null, 1);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(fileSystemEnvironment.node());
+        LuaArchitecture architecture = new LuaArchitecture(new String(ModEeproms.luaBiosCode(), StandardCharsets.UTF_8));
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        ExecutionResult result = architecture.runThreaded(false);
+        if (result instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+
+        assertInstanceOf(ExecutionResult.Sleep.class, result);
+        assertEquals(true, architecture.globalBoolean("bootedFromBios"));
+    }
+
+    @Test
+    void bundledLuaBiosStoresSelectedFilesystemInEepromData() throws IOException {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        CompoundTag eepromData = new CompoundTag();
+        eepromData.putByteArray(ItemRegistry.EEPROM_CODE_TAG, ModEeproms.luaBiosCode());
+        EepromEnvironment eeprom = new EepromEnvironment(eepromData);
+        FileSystem fileSystem = API.fileSystem.fromMemory(1024);
+        int outputHandle = fileSystem.open("init.lua", Mode.Write);
+        fileSystem.getHandle(outputHandle).write("bootedFromBios = true".getBytes(StandardCharsets.UTF_8));
+        fileSystem.getHandle(outputHandle).close();
+        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(fileSystem, "OpenOS", null, null, 1);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(eeprom.node());
+        machine.node().connect(fileSystemEnvironment.node());
+        LuaArchitecture architecture = new LuaArchitecture(new String(ModEeproms.luaBiosCode(), StandardCharsets.UTF_8));
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        ExecutionResult result = architecture.runThreaded(false);
+        if (result instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+
+        assertEquals(true, architecture.globalBoolean("bootedFromBios"));
+        assertEquals(fileSystemEnvironment.node().address(), new String(eepromData.getByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG), StandardCharsets.UTF_8));
     }
 
     private static Machine machineWithUptime(final double uptime) {

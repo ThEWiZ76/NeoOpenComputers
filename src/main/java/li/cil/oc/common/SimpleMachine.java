@@ -14,6 +14,7 @@ import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.Component;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -34,6 +35,7 @@ import java.util.function.LongSupplier;
 final class SimpleMachine extends AbstractManagedEnvironment implements Machine {
     private static final double NANOS_PER_SECOND = 1_000_000_000D;
     private static final long NANOS_PER_TICK = 50_000_000L;
+    private static final double DEFAULT_BOOT_ENERGY_BUFFER = 1_000D;
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
     private static final String ARCHITECTURE_TAG = "architecture";
@@ -66,10 +68,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         if (API.network == null) {
             API.network = new NetworkRegistry();
         }
-        setNode(Network.newNode(this, Visibility.Network)
+        final Connector connector = Network.newNode(this, Visibility.Network)
             .withComponent("computer", Visibility.Network)
-            .withConnector()
-            .create());
+            .withConnector(DEFAULT_BOOT_ENERGY_BUFFER)
+            .create();
+        connector.changeBuffer(DEFAULT_BOOT_ENERGY_BUFFER);
+        setNode(connector);
     }
 
     @Override

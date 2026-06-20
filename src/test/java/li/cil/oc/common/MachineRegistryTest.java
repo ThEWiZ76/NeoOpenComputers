@@ -9,6 +9,7 @@ import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -32,6 +33,7 @@ import java.util.function.LongSupplier;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -60,6 +62,16 @@ final class MachineRegistryTest {
         assertNotNull(li.cil.oc.api.Machine.LuaArchitecture);
         assertTrue(li.cil.oc.api.Machine.architectures().contains(li.cil.oc.api.Machine.LuaArchitecture));
         assertEquals("Lua", li.cil.oc.api.Machine.getArchitectureName(li.cil.oc.api.Machine.LuaArchitecture));
+    }
+
+    @Test
+    void createdMachineHasInitialEnergyForBootIo() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+
+        Connector connector = assertInstanceOf(Connector.class, machine.node());
+        assertTrue(connector.localBufferSize() > 0);
+        assertTrue(connector.localBuffer() > 0);
     }
 
     @Test
