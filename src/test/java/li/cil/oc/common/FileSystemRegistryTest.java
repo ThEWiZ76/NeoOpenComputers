@@ -83,6 +83,27 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void memoryFileSystemRestoresOutputHandlePosition() throws IOException {
+        FileSystem fileSystem = new FileSystemRegistry().fromMemory(16);
+        int outputHandle = fileSystem.open("data.txt", Mode.Write);
+        Handle output = fileSystem.getHandle(outputHandle);
+        output.write("abcd".getBytes(StandardCharsets.UTF_8));
+        output.seek(1);
+        CompoundTag nbt = new CompoundTag();
+        fileSystem.save(nbt);
+
+        FileSystem loaded = new FileSystemRegistry().fromMemory(16);
+        loaded.load(nbt);
+        loaded.getHandle(outputHandle).write("Z".getBytes(StandardCharsets.UTF_8));
+        loaded.getHandle(outputHandle).close();
+
+        int inputHandle = loaded.open("data.txt", Mode.Read);
+        byte[] buffer = new byte[4];
+        assertEquals(4, loaded.getHandle(inputHandle).read(buffer));
+        assertArrayEquals("aZcd".getBytes(StandardCharsets.UTF_8), buffer);
+    }
+
+    @Test
     void memoryFileSystemClosePreservesStoredFiles() throws IOException {
         FileSystem fileSystem = new FileSystemRegistry().fromMemory(256);
         assertTrue(fileSystem.makeDirectory("tmp"));

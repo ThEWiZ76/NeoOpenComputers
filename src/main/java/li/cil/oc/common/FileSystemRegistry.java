@@ -435,7 +435,7 @@ final class FileSystemRegistry implements FileSystemAPI {
                 final Entry entry = find(savedHandle.getString(PATH_TAG));
                 if (entry instanceof File file) {
                     final int handle = savedHandle.getInt(HANDLE_TAG);
-                    handles.put(handle, new OpenHandle(handle, file, true, file.data.length));
+                    handles.put(handle, new OpenHandle(handle, file, true, savedHandle.getLong(POSITION_TAG)));
                     nextHandle = Math.max(nextHandle, handle + 1);
                 }
             }
