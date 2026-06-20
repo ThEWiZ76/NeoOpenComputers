@@ -35,6 +35,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 @GameTestHolder(NeoOpenComputers.MODID)
@@ -271,7 +272,7 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
 
         final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
-        final ItemStack bootDisk = bootableHardDiskStack(helper);
+        final ItemStack bootDisk = bootableHardDiskStack(helper, "computer.pushSignal('hdd_booted', 'ok')");
         helper.assertTrue(computer.canPlaceItem(ComputerCaseBlockEntity.SLOT_HDD, bootDisk), "Computer case rejected bootable hard disk");
 
         computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
@@ -284,6 +285,48 @@ public final class NeoOpenComputersGameTests {
         helper.runAtTickTime(80, () -> {
             helper.assertTrue(computer.machine().isRunning(), "Computer stopped while booting from hard disk: " + computer.machine().lastError());
             assertNextSignal(helper, computer, "hdd_booted", "ok");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void installedNetworkCardsExchangeModemMessages(final GameTestHelper helper) {
+        final BlockPos receiverPos = new BlockPos(1, 1, 1);
+        final BlockPos senderPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(receiverPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(senderPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity receiver = helper.getBlockEntity(receiverPos);
+        final ComputerCaseBlockEntity sender = helper.getBlockEntity(senderPos);
+        installBootComputer(receiver, bootableHardDiskStack(helper, """
+            local modem = component.proxy(component.list('modem')())
+            modem.open(123)
+            while true do
+              local event, localAddress, remoteAddress, port, distance, payload = computer.pullSignal(1)
+              if event == 'modem_message' and port == 123 then
+                computer.pushSignal('modem_received', payload)
+                break
+              end
+            end
+            """));
+        installBootComputer(sender, bootableHardDiskStack(helper, """
+            local modem = component.proxy(component.list('modem')())
+            modem.broadcast(123, 'payload')
+            """));
+
+        helper.assertTrue(receiver.node().network() == sender.node().network(), "Computer cases are not on the same wired network");
+        helper.assertTrue(receiver.machine().components().containsValue("modem"), "Receiver modem is not visible: " + receiver.machine().components());
+        helper.assertTrue(sender.machine().components().containsValue("modem"), "Sender modem is not visible: " + sender.machine().components());
+        helper.assertTrue(receiver.toggleMachine(), "Receiver computer did not start");
+        helper.runAtTickTime(100, () -> {
+            helper.assertTrue(modemPortOpen(helper, receiver, 123), "Receiver modem port was not open before sender broadcast");
+            helper.assertTrue(sender.toggleMachine(), "Sender computer did not start");
+        });
+        helper.runAtTickTime(170, () -> {
+            helper.assertTrue(receiver.machine().isRunning(), "Receiver stopped while waiting for modem message: " + receiver.machine().lastError());
+            helper.assertTrue(sender.machine().isRunning(), "Sender stopped while broadcasting modem message: " + sender.machine().lastError());
+            assertNextSignal(helper, receiver, "modem_received", "payload");
             helper.succeed();
         });
     }
@@ -363,7 +406,15 @@ public final class NeoOpenComputersGameTests {
         return stack;
     }
 
-    private static ItemStack bootableHardDiskStack(final GameTestHelper helper) {
+    private static void installBootComputer(final ComputerCaseBlockEntity computer, final ItemStack bootDisk) {
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.NETWORK_CARD.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootDisk);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+    }
+
+    private static ItemStack bootableHardDiskStack(final GameTestHelper helper, final String initLua) {
         final ItemStack stack = new ItemStack(ModItems.HDD_TIER1.get());
         final DriverItem driver = Driver.driverFor(stack);
         helper.assertTrue(driver != null, "Hard disk has no item driver");
@@ -373,7 +424,7 @@ public final class NeoOpenComputersGameTests {
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         try {
             final Object handle = component.invoke("open", null, "init.lua", "w")[0];
-            component.invoke("write", null, handle, "computer.pushSignal('hdd_booted', 'ok')".getBytes(StandardCharsets.UTF_8));
+            component.invoke("write", null, handle, initLua.getBytes(StandardCharsets.UTF_8));
             component.invoke("close", null, handle);
             environment.save(new CompoundTag());
         } catch (Exception e) {
@@ -461,6 +512,27 @@ public final class NeoOpenComputersGameTests {
             helper.fail("Component invocation failed: " + method + " " + e.getMessage());
             return new Object[0];
         }
+    }
+
+    private static boolean modemPortOpen(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final int port) {
+        final String modemAddress = componentAddress(computer, "modem");
+        helper.assertTrue(modemAddress != null, "Computer has no modem component: " + computer.machine().components());
+        try {
+            final Object[] result = computer.machine().invoke(modemAddress, "isOpen", new Object[]{port});
+            return result.length == 1 && Boolean.TRUE.equals(result[0]);
+        } catch (Exception e) {
+            helper.fail("Failed to check modem port: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static String componentAddress(final ComputerCaseBlockEntity computer, final String componentType) {
+        for (Map.Entry<String, String> entry : computer.machine().components().entrySet()) {
+            if (componentType.equals(entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
     private static boolean screenHasNonBlankText(final ScreenBlockEntity screen) {

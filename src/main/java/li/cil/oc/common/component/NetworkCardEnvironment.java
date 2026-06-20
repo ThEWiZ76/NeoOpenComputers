@@ -162,7 +162,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     @Override
     public void onMessage(final Message message) {
         if ("computer.started".equals(message.name()) || "computer.stopped".equals(message.name())) {
-            if (!openPorts.isEmpty()) {
+            if (isOwnComputerMessage(message) && !openPorts.isEmpty()) {
                 openPorts.clear();
                 markChanged();
             }
@@ -206,6 +206,14 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         if (host != null) {
             host.markChanged();
         }
+    }
+
+    private boolean isOwnComputerMessage(final Message message) {
+        if (!(host instanceof MachineHost machineHost)) {
+            return false;
+        }
+        final var machine = machineHost.machine();
+        return machine != null && message.source() == machine.node();
     }
 
     private void receivePacket(final Message message) {

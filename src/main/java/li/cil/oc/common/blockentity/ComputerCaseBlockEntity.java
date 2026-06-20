@@ -85,6 +85,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private final Machine machine;
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
+    private volatile boolean pendingServerThreadChangeMark;
     private int pendingComponentSlot = -1;
     private int tier;
     private int color;
@@ -210,7 +211,15 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public void markChanged() {
-        setChanged();
+        if (level != null && level.getServer() != null && !level.getServer().isSameThread()) {
+            if (!pendingServerThreadChangeMark) {
+                pendingServerThreadChangeMark = true;
+                level.getServer().execute(this::markChangedOnServerThread);
+            }
+            return;
+        }
+
+        markChangedOnServerThread();
     }
 
     @Override
@@ -473,6 +482,11 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (machine.node() != null) {
             machine.node().remove();
         }
+    }
+
+    private void markChangedOnServerThread() {
+        pendingServerThreadChangeMark = false;
+        super.setChanged();
     }
 
     private static String driverSlotType(final ItemStack stack) {

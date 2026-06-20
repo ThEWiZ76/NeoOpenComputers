@@ -12,6 +12,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -65,6 +66,31 @@ final class NetworkCardEnvironmentTest {
         card.open(null, new TestArguments(123));
 
         card.onDisconnect(card.node());
+
+        assertArrayEquals(new Object[]{false}, card.isOpen(null, new TestArguments(123)));
+    }
+
+    @Test
+    void keepsOpenPortsWhenRemoteComputerStarts() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost receiverHost = new TestMachineHost();
+        TestMachineHost senderHost = new TestMachineHost();
+        NetworkCardEnvironment receiver = new NetworkCardEnvironment(receiverHost);
+        receiver.open(null, new TestArguments(123));
+
+        receiver.onMessage(new TestMessage(senderHost.machine.node(), "computer.started", new Object[0]));
+
+        assertArrayEquals(new Object[]{true}, receiver.isOpen(null, new TestArguments(123)));
+    }
+
+    @Test
+    void clearsOpenPortsWhenOwnComputerStarts() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost host = new TestMachineHost();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(host);
+        card.open(null, new TestArguments(123));
+
+        card.onMessage(new TestMessage(host.machine.node(), "computer.started", new Object[0]));
 
         assertArrayEquals(new Object[]{false}, card.isOpen(null, new TestArguments(123)));
     }
@@ -319,10 +345,12 @@ final class NetworkCardEnvironmentTest {
 
     private static final class TestMachine implements Machine {
         private final List<List<Object>> signals;
+        private final Node node;
         private int starts;
 
         private TestMachine(final List<List<Object>> signals) {
             this.signals = signals;
+            node = Network.newNode(this, Visibility.Network).create();
         }
 
         @Override public boolean signal(final String name, final Object... args) {
@@ -367,7 +395,7 @@ final class NetworkCardEnvironmentTest {
         @Override public void consumeCallBudget(final double callCost) {}
         @Override public boolean canUpdate() { return false; }
         @Override public void update() {}
-        @Override public Node node() { return null; }
+        @Override public Node node() { return node; }
         @Override public void onConnect(final Node node) {}
         @Override public void onDisconnect(final Node node) {}
         @Override public void onMessage(final Message message) {}
