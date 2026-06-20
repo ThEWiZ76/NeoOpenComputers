@@ -74,6 +74,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.MOTION_SENSOR.get();
         ModBlocks.REDSTONE_IO.get();
         ModBlocks.TRANSPOSER.get();
+        ModBlocks.WAYPOINT.get();
         ModItems.ADAPTER.get();
         ModItems.CABLE.get();
         ModItems.CPU_TIER1.get();
@@ -106,6 +107,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.NETWORK_CARD.get();
         ModItems.REDSTONE_IO.get();
         ModItems.TRANSPOSER.get();
+        ModItems.WAYPOINT.get();
         ModItems.WIRELESS_NETWORK_CARD_TIER1.get();
         ModItems.WIRELESS_NETWORK_CARD_TIER2.get();
         ModItems.REDSTONE_CARD.get();

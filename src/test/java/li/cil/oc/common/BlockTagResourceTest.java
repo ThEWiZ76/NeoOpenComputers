@@ -39,7 +39,8 @@ final class BlockTagResourceTest {
             ModContentIds.SCREEN_TIER1,
             ModContentIds.SCREEN_TIER2,
             ModContentIds.SCREEN_TIER3,
-            ModContentIds.TRANSPOSER);
+            ModContentIds.TRANSPOSER,
+            ModContentIds.WAYPOINT);
 
         assertFalse(json.get("replace").getAsBoolean());
         for (String id : ids) {

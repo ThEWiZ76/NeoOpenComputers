@@ -198,6 +198,10 @@ public final class ModItems {
         ModContentIds.TRANSPOSER,
         ModBlocks.TRANSPOSER);
 
+    public static final DeferredItem<BlockItem> WAYPOINT = ITEMS.registerSimpleBlockItem(
+        ModContentIds.WAYPOINT,
+        ModBlocks.WAYPOINT);
+
     public static void register(final IEventBus modEventBus) {
         ITEMS.register(modEventBus);
     }

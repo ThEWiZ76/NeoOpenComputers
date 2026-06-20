@@ -12,6 +12,7 @@ import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
+import li.cil.oc.common.blockentity.WaypointBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
@@ -87,6 +88,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.TRANSPOSER_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(TransposerBlockEntity::new, ModBlocks.TRANSPOSER.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<WaypointBlockEntity>> WAYPOINT =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.WAYPOINT_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(WaypointBlockEntity::new, ModBlocks.WAYPOINT.get()).build(null));
 
     public static void register(final IEventBus modEventBus) {
         BLOCK_ENTITY_TYPES.register(modEventBus);

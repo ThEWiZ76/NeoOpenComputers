@@ -246,6 +246,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void waypointBlockIdIsStable() {
+        assertEquals("waypoint", ModContentIds.WAYPOINT);
+    }
+
+    @Test
+    void waypointBlockEntityIdIsStable() {
+        assertEquals("waypoint", ModContentIds.WAYPOINT_BLOCK_ENTITY);
+    }
+
+    @Test
     void motionSensorBlockIdIsStable() {
         assertEquals("motion_sensor", ModContentIds.MOTION_SENSOR);
     }

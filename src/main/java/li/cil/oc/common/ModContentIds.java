@@ -59,6 +59,8 @@ public final class ModContentIds {
     public static final String SCREEN_BLOCK_ENTITY = "screen";
     public static final String TRANSPOSER = "transposer";
     public static final String TRANSPOSER_BLOCK_ENTITY = "transposer";
+    public static final String WAYPOINT = "waypoint";
+    public static final String WAYPOINT_BLOCK_ENTITY = "waypoint";
 
     private ModContentIds() {
     }

@@ -12,6 +12,7 @@ import li.cil.oc.common.block.MotionSensorBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.TransposerBlock;
+import li.cil.oc.common.block.WaypointBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -86,6 +87,10 @@ public final class ModBlocks {
         ModContentIds.TRANSPOSER,
         () -> new TransposerBlock(transposerProperties()));
 
+    public static final DeferredBlock<Block> WAYPOINT = BLOCKS.register(
+        ModContentIds.WAYPOINT,
+        () -> new WaypointBlock(waypointProperties()));
+
     public static void register(final IEventBus modEventBus) {
         BLOCKS.register(modEventBus);
     }
@@ -158,5 +163,12 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties waypointProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_PURPLE)
+            .strength(1.0F, 3.0F)
+            .noOcclusion();
     }
 }
