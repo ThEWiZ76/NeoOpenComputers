@@ -13,6 +13,8 @@ import li.cil.oc.api.fs.Mode;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.TestNodes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -288,6 +290,29 @@ final class FileSystemRegistryTest {
         assertEquals("too many open handles", error.getMessage());
         component.invoke("close", context, firstHandle);
         assertNotNull(component.invoke("open", context, "overflow.txt", "w")[0]);
+    }
+
+    @Test
+    void managedFileSystemEnvironmentPersistsHandleOwners() throws Exception {
+        OpenComputersApi.initialize();
+        RecordingContext context = new RecordingContext("owner");
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(256), "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+        Object handle = component.invoke("open", context, "data.txt", "w")[0];
+        int rawHandle = Integer.parseInt(handle.toString());
+        CompoundTag nbt = new CompoundTag();
+        environment.save(nbt);
+        ListTag owners = nbt.getList("owners", Tag.TAG_COMPOUND);
+        assertEquals(1, owners.size());
+        assertEquals("owner", owners.getCompound(0).getString("address"));
+        assertArrayEquals(new int[]{rawHandle}, owners.getCompound(0).getIntArray("handles"));
+
+        ManagedEnvironment loaded = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(256), "tmp", null, null, 1);
+        loaded.load(nbt);
+        Component loadedComponent = (Component) loaded.node();
+
+        assertArrayEquals(new Object[]{true}, loadedComponent.invoke("write", context, rawHandle, "after reload"));
+        loadedComponent.invoke("close", context, rawHandle);
     }
 
     @Test

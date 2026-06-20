@@ -16,6 +16,9 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.AbstractValue;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -26,6 +29,9 @@ import java.util.Set;
 
 final class FileSystemEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String FILE_SYSTEM_TAG = "fs";
+    private static final String OWNERS_TAG = "owners";
+    private static final String ADDRESS_TAG = "address";
+    private static final String HANDLES_TAG = "handles";
     private static final int MAX_OPEN_HANDLES = 16;
     private static final int MAX_READ_BUFFER = 2048;
     private static final double[] READ_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
@@ -245,6 +251,21 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
+        owners.clear();
+        final ListTag ownersTag = nbt.getList(OWNERS_TAG, Tag.TAG_COMPOUND);
+        for (int index = 0; index < ownersTag.size(); index++) {
+            final CompoundTag ownerTag = ownersTag.getCompound(index);
+            final String address = ownerTag.getString(ADDRESS_TAG);
+            if (!address.isEmpty()) {
+                final Set<Integer> handles = new LinkedHashSet<>();
+                for (int handle : ownerTag.getIntArray(HANDLES_TAG)) {
+                    handles.add(handle);
+                }
+                if (!handles.isEmpty()) {
+                    owners.put(address, handles);
+                }
+            }
+        }
         if (label != null) {
             label.load(nbt);
         }
@@ -255,13 +276,32 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
 
     @Override
     public void save(final CompoundTag nbt) {
-        super.save(nbt);
+        final Map<String, Set<Integer>> savedOwners = snapshotOwners();
         if (label != null) {
             label.save(nbt);
         }
         CompoundTag fileSystemTag = new CompoundTag();
         fileSystem.save(fileSystemTag);
         nbt.put(FILE_SYSTEM_TAG, fileSystemTag);
+        super.save(nbt);
+        final ListTag ownersTag = new ListTag();
+        for (Map.Entry<String, Set<Integer>> owner : savedOwners.entrySet()) {
+            if (!owner.getValue().isEmpty()) {
+                final CompoundTag ownerTag = new CompoundTag();
+                ownerTag.putString(ADDRESS_TAG, owner.getKey());
+                ownerTag.put(HANDLES_TAG, new IntArrayTag(owner.getValue().stream().mapToInt(Integer::intValue).toArray()));
+                ownersTag.add(ownerTag);
+            }
+        }
+        nbt.put(OWNERS_TAG, ownersTag);
+    }
+
+    private Map<String, Set<Integer>> snapshotOwners() {
+        final Map<String, Set<Integer>> snapshot = new LinkedHashMap<>();
+        for (Map.Entry<String, Set<Integer>> owner : owners.entrySet()) {
+            snapshot.put(owner.getKey(), new LinkedHashSet<>(owner.getValue()));
+        }
+        return snapshot;
     }
 
     private String clean(final String path) {
