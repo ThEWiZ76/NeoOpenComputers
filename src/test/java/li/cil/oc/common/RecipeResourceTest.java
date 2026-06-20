@@ -367,6 +367,29 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void inputDeviceRecipesUseMaterialParts() throws IOException {
+        JsonObject manual = readJson(RECIPE_ROOT.resolve(ModContentIds.MANUAL + ".json"));
+        JsonObject buttonGroup = readJson(RECIPE_ROOT.resolve(ModContentIds.BUTTON_GROUP + ".json"));
+        JsonObject arrowKeys = readJson(RECIPE_ROOT.resolve(ModContentIds.ARROW_KEYS + ".json"));
+        JsonObject numPad = readJson(RECIPE_ROOT.resolve(ModContentIds.NUM_PAD + ".json"));
+        JsonObject keyboard = readJson(RECIPE_ROOT.resolve(ModContentIds.KEYBOARD + ".json"));
+
+        assertEquals("minecraft:crafting_shapeless", manual.get("type").getAsString());
+        assertIngredientItem(manual, "minecraft:book");
+        assertIngredientItem(manual, "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertPattern(buttonGroup, "BBB", "BBB");
+        assertItem(buttonGroup.getAsJsonObject("key"), "B", "minecraft:stone_button");
+        assertPattern(arrowKeys, " B ", "BBB");
+        assertItem(arrowKeys.getAsJsonObject("key"), "B", "minecraft:stone_button");
+        assertPattern(numPad, "BBB", "BBB", "BBB");
+        assertItem(numPad.getAsJsonObject("key"), "B", "minecraft:stone_button");
+        assertPattern(keyboard, "GGG", "GAN");
+        assertItem(keyboard.getAsJsonObject("key"), "G", "neoopencomputers:" + ModContentIds.BUTTON_GROUP);
+        assertItem(keyboard.getAsJsonObject("key"), "A", "neoopencomputers:" + ModContentIds.ARROW_KEYS);
+        assertItem(keyboard.getAsJsonObject("key"), "N", "neoopencomputers:" + ModContentIds.NUM_PAD);
+    }
+
+    @Test
     void blockDeviceRecipesUseMaterialProgression() throws IOException {
         JsonObject adapter = recipeKeys(ModContentIds.ADAPTER);
         JsonObject redstone = recipeKeys(ModContentIds.REDSTONE_IO);
@@ -417,5 +440,23 @@ final class RecipeResourceTest {
         assertItem(keys, "P", "minecraft:piston");
         assertItem(keys, "H", "minecraft:chest");
         assertItem(keys, "B", "neoopencomputers:" + base);
+    }
+
+    private static void assertPattern(final JsonObject json, final String... expected) {
+        JsonElement pattern = json.get("pattern");
+        assertTrue(pattern != null && pattern.isJsonArray());
+        assertEquals(expected.length, pattern.getAsJsonArray().size());
+        for (int index = 0; index < expected.length; index++) {
+            assertEquals(expected[index], pattern.getAsJsonArray().get(index).getAsString());
+        }
+    }
+
+    private static void assertIngredientItem(final JsonObject json, final String item) {
+        for (JsonElement element : json.getAsJsonArray("ingredients")) {
+            if (item.equals(element.getAsJsonObject().get("item").getAsString())) {
+                return;
+            }
+        }
+        assertTrue(false, "Missing ingredient " + item);
     }
 }

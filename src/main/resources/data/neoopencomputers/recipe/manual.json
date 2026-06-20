@@ -1,18 +1,13 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "minecraft:crafting_shapeless",
   "category": "misc",
-  "key": {
-    "B": {
+  "ingredients": [
+    {
       "item": "minecraft:book"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    {
+      "item": "neoopencomputers:microchip_tier1"
     }
-  },
-  "pattern": [
-    " R ",
-    " B ",
-    "   "
   ],
   "result": {
     "count": 1,

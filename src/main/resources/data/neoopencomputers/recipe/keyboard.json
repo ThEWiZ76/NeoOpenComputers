@@ -2,20 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "B": {
-      "item": "minecraft:stone_button"
+    "G": {
+      "item": "neoopencomputers:button_group"
     },
-    "I": {
-      "tag": "c:ingots/iron"
+    "A": {
+      "item": "neoopencomputers:arrow_keys"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "N": {
+      "item": "neoopencomputers:num_pad"
     }
   },
   "pattern": [
-    "BBB",
-    "IRI",
-    "III"
+    "GGG",
+    "GAN"
   ],
   "result": {
     "count": 1,
