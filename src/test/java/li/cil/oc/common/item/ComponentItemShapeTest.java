@@ -8,6 +8,7 @@ import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.HostAware;
+import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.OpenComputersApi;
@@ -137,6 +138,15 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(UpgradeContainerItem.class));
         assertTrue(Container.class.isAssignableFrom(UpgradeContainerItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void tabletCaseItemIsTieredAssemblyInput() throws NoSuchMethodException {
+        final Constructor<TabletCaseItem> constructor = TabletCaseItem.class.getConstructor(Item.Properties.class, int.class);
+
+        assertTrue(Item.class.isAssignableFrom(TabletCaseItem.class));
+        assertTrue(Tiered.class.isAssignableFrom(TabletCaseItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
     }
 

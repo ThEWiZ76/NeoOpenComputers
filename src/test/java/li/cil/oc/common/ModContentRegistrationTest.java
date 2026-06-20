@@ -86,6 +86,21 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void tabletCaseTier1ItemIdIsStable() {
+        assertEquals("tablet_case_tier1", ModContentIds.TABLET_CASE_TIER1);
+    }
+
+    @Test
+    void tabletCaseTier2ItemIdIsStable() {
+        assertEquals("tablet_case_tier2", ModContentIds.TABLET_CASE_TIER2);
+    }
+
+    @Test
+    void tabletCaseCreativeItemIdIsStable() {
+        assertEquals("tablet_case_creative", ModContentIds.TABLET_CASE_CREATIVE);
+    }
+
+    @Test
     void upgradeContainerTier1ItemIdIsStable() {
         assertEquals("upgrade_container_tier1", ModContentIds.UPGRADE_CONTAINER_TIER1);
     }

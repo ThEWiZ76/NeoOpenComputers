@@ -90,6 +90,9 @@ public final class NeoOpenComputersGameTests {
         ModItems.CARD_CONTAINER_TIER1.get();
         ModItems.CARD_CONTAINER_TIER2.get();
         ModItems.CARD_CONTAINER_TIER3.get();
+        ModItems.TABLET_CASE_TIER1.get();
+        ModItems.TABLET_CASE_TIER2.get();
+        ModItems.TABLET_CASE_CREATIVE.get();
         ModItems.CPU_TIER1.get();
         ModItems.CPU_TIER2.get();
         ModItems.CPU_TIER3.get();
@@ -174,6 +177,14 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.LINKED_CARD.get()), 1);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tabletCaseItemsReportAssemblyTier(final GameTestHelper helper) {
+        helper.assertTrue(ModItems.TABLET_CASE_TIER1.get().tier() == 0, "Tier 1 tablet case did not report tier 0");
+        helper.assertTrue(ModItems.TABLET_CASE_TIER2.get().tier() == 1, "Tier 2 tablet case did not report tier 1");
+        helper.assertTrue(ModItems.TABLET_CASE_CREATIVE.get().tier() == 3, "Creative tablet case did not report tier 3");
         helper.succeed();
     }
 

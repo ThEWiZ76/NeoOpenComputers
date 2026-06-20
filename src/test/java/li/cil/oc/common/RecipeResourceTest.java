@@ -78,6 +78,8 @@ final class RecipeResourceTest {
             ModContentIds.SCREEN_TIER1,
             ModContentIds.SCREEN_TIER2,
             ModContentIds.SCREEN_TIER3,
+            ModContentIds.TABLET_CASE_TIER1,
+            ModContentIds.TABLET_CASE_TIER2,
             ModContentIds.SOLAR_GENERATOR_UPGRADE);
 
         for (String id : ids) {

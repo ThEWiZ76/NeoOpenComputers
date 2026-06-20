@@ -11,6 +11,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_CARD_CONTAINER_TIER1 = "cardcontainer1";
     public static final String COMPAT_CARD_CONTAINER_TIER2 = "cardcontainer2";
     public static final String COMPAT_CARD_CONTAINER_TIER3 = "cardcontainer3";
+    public static final String COMPAT_TABLET_CASE_TIER1 = "tabletcase1";
+    public static final String COMPAT_TABLET_CASE_TIER2 = "tabletcase2";
+    public static final String COMPAT_TABLET_CASE_CREATIVE = "tabletcasecreative";
     public static final String COMPAT_COMPUTER_CASE_TIER1 = "case1";
     public static final String COMPAT_COMPUTER_CASE_TIER2 = "case2";
     public static final String COMPAT_COMPUTER_CASE_TIER3 = "case3";
@@ -100,6 +103,9 @@ public final class ModContentCatalog {
                 ModItems.CARD_CONTAINER_TIER1.get(),
                 ModItems.CARD_CONTAINER_TIER2.get(),
                 ModItems.CARD_CONTAINER_TIER3.get(),
+                ModItems.TABLET_CASE_TIER1.get(),
+                ModItems.TABLET_CASE_TIER2.get(),
+                ModItems.TABLET_CASE_CREATIVE.get(),
                 ModItems.DATA_CARD_TIER1.get(),
                 ModItems.DATA_CARD_TIER2.get(),
                 ModItems.DATA_CARD_TIER3.get(),
@@ -182,6 +188,9 @@ public final class ModContentCatalog {
         final Item cardContainerTier1Item,
         final Item cardContainerTier2Item,
         final Item cardContainerTier3Item,
+        final Item tabletCaseTier1Item,
+        final Item tabletCaseTier2Item,
+        final Item tabletCaseCreativeItem,
         final Item dataCardTier1Item,
         final Item dataCardTier2Item,
         final Item dataCardTier3Item,
@@ -248,6 +257,9 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.CARD_CONTAINER_TIER1, null, cardContainerTier1Item);
         registry.register(ModContentIds.CARD_CONTAINER_TIER2, null, cardContainerTier2Item);
         registry.register(ModContentIds.CARD_CONTAINER_TIER3, null, cardContainerTier3Item);
+        registry.register(ModContentIds.TABLET_CASE_TIER1, null, tabletCaseTier1Item);
+        registry.register(ModContentIds.TABLET_CASE_TIER2, null, tabletCaseTier2Item);
+        registry.register(ModContentIds.TABLET_CASE_CREATIVE, null, tabletCaseCreativeItem);
         registry.register(ModContentIds.DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(ModContentIds.DATA_CARD_TIER2, null, dataCardTier2Item);
         registry.register(ModContentIds.DATA_CARD_TIER3, null, dataCardTier3Item);
@@ -290,6 +302,9 @@ public final class ModContentCatalog {
         registry.register(COMPAT_CARD_CONTAINER_TIER1, null, cardContainerTier1Item);
         registry.register(COMPAT_CARD_CONTAINER_TIER2, null, cardContainerTier2Item);
         registry.register(COMPAT_CARD_CONTAINER_TIER3, null, cardContainerTier3Item);
+        registry.register(COMPAT_TABLET_CASE_TIER1, null, tabletCaseTier1Item);
+        registry.register(COMPAT_TABLET_CASE_TIER2, null, tabletCaseTier2Item);
+        registry.register(COMPAT_TABLET_CASE_CREATIVE, null, tabletCaseCreativeItem);
         registry.register(COMPAT_DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(COMPAT_DATA_CARD_TIER2, null, dataCardTier2Item);
         registry.register(COMPAT_DATA_CARD_TIER3, null, dataCardTier3Item);

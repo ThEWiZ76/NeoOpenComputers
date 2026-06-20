@@ -21,6 +21,7 @@ import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.RedstoneCardItem;
 import li.cil.oc.common.item.SolarGeneratorUpgradeItem;
 import li.cil.oc.common.item.TankUpgradeItem;
+import li.cil.oc.common.item.TabletCaseItem;
 import li.cil.oc.common.item.UpgradeContainerItem;
 import li.cil.oc.common.item.WirelessNetworkCardItem;
 import net.minecraft.world.item.BlockItem;
@@ -91,6 +92,18 @@ public final class ModItems {
     public static final DeferredItem<CardContainerItem> CARD_CONTAINER_TIER3 = ITEMS.register(
         ModContentIds.CARD_CONTAINER_TIER3,
         () -> new CardContainerItem(new Item.Properties(), 2));
+
+    public static final DeferredItem<TabletCaseItem> TABLET_CASE_TIER1 = ITEMS.register(
+        ModContentIds.TABLET_CASE_TIER1,
+        () -> new TabletCaseItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<TabletCaseItem> TABLET_CASE_TIER2 = ITEMS.register(
+        ModContentIds.TABLET_CASE_TIER2,
+        () -> new TabletCaseItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<TabletCaseItem> TABLET_CASE_CREATIVE = ITEMS.register(
+        ModContentIds.TABLET_CASE_CREATIVE,
+        () -> new TabletCaseItem(new Item.Properties(), 3));
 
     public static final DeferredItem<CpuItem> CPU_TIER1 = ITEMS.register(
         ModContentIds.CPU_TIER1,
