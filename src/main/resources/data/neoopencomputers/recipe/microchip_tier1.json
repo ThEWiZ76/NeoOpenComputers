@@ -2,20 +2,20 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "B": {
-      "item": "neoopencomputers:printed_circuit_board"
+    "G": {
+      "tag": "c:nuggets/gold"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "I": {
+      "tag": "c:nuggets/iron"
     },
     "T": {
       "item": "neoopencomputers:transistor"
     }
   },
   "pattern": [
-    "TRT",
-    "RBR",
-    "TRT"
+    "I I",
+    "TGT",
+    "I I"
   ],
   "result": {
     "count": 1,

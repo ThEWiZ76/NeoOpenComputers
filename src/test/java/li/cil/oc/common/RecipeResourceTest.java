@@ -358,6 +358,18 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void microchipTierOneRecipeUsesUpstreamHardmodeShape() throws IOException {
+        JsonObject recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.MICROCHIP_TIER1 + ".json"));
+        JsonObject keys = recipe.getAsJsonObject("key");
+
+        assertPattern(recipe, "I I", "TGT", "I I");
+        assertTag(keys, "I", "c:nuggets/iron");
+        assertItem(keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertTag(keys, "G", "c:nuggets/gold");
+        assertResultCount(recipe, 1);
+    }
+
+    @Test
     void capacitorRecipeUsesMaterialProgression() throws IOException {
         JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
 
