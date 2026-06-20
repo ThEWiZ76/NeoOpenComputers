@@ -10,11 +10,12 @@ final class ModContentCatalogTest {
     void registersInitialApiItemNames() {
         final ItemRegistry registry = new ItemRegistry();
 
-        ModContentCatalog.register(registry, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        ModContentCatalog.register(registry, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         assertNotNull(registry.get(ModContentIds.MANUAL));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER1));
+        assertNotNull(registry.get(ModContentIds.DISK_DRIVE));
         assertNotNull(registry.get(ModContentIds.SCREEN_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_SCREEN_TIER1));
         assertNotNull(registry.get(ModContentIds.KEYBOARD));
@@ -33,6 +34,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.MANUAL, registry.get(ModContentIds.MANUAL).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER1, registry.get(ModContentIds.COMPUTER_CASE_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER1, registry.get(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER1).name());
+        assertEquals(ModContentIds.DISK_DRIVE, registry.get(ModContentIds.DISK_DRIVE).name());
         assertEquals(ModContentIds.SCREEN_TIER1, registry.get(ModContentIds.SCREEN_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_SCREEN_TIER1, registry.get(ModContentCatalog.COMPAT_SCREEN_TIER1).name());
         assertEquals(ModContentIds.KEYBOARD, registry.get(ModContentIds.KEYBOARD).name());

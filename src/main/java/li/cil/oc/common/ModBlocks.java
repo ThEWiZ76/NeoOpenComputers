@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.block.ComputerCaseBlock;
+import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import net.minecraft.world.level.block.Block;
@@ -17,6 +18,10 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> COMPUTER_CASE_TIER1 = BLOCKS.register(
         ModContentIds.COMPUTER_CASE_TIER1,
         () -> new ComputerCaseBlock(computerCaseProperties()));
+
+    public static final DeferredBlock<Block> DISK_DRIVE = BLOCKS.register(
+        ModContentIds.DISK_DRIVE,
+        () -> new DiskDriveBlock(diskDriveProperties()));
 
     public static final DeferredBlock<Block> SCREEN_TIER1 = BLOCKS.register(
         ModContentIds.SCREEN_TIER1,
@@ -42,6 +47,12 @@ public final class ModBlocks {
     private static BlockBehaviour.Properties screenProperties() {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_BLACK)
+            .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties diskDriveProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);
     }
 

@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
+import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.registries.Registries;
@@ -18,6 +19,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.COMPUTER_CASE_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(ComputerCaseBlockEntity::new, ModBlocks.COMPUTER_CASE_TIER1.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DiskDriveBlockEntity>> DISK_DRIVE =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.DISK_DRIVE_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(DiskDriveBlockEntity::new, ModBlocks.DISK_DRIVE.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ScreenBlockEntity>> SCREEN =
         BLOCK_ENTITY_TYPES.register(

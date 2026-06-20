@@ -26,6 +26,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void diskDriveBlockIdIsStable() {
+        assertEquals("disk_drive", ModContentIds.DISK_DRIVE);
+    }
+
+    @Test
+    void diskDriveBlockEntityIdIsStable() {
+        assertEquals("disk_drive", ModContentIds.DISK_DRIVE_BLOCK_ENTITY);
+    }
+
+    @Test
     void cpuTier1ItemIdIsStable() {
         assertEquals("cpu_tier1", ModContentIds.CPU_TIER1);
     }

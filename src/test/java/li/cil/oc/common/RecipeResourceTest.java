@@ -22,6 +22,7 @@ final class RecipeResourceTest {
         List<String> ids = List.of(
             ModContentIds.COMPUTER_CASE_TIER1,
             ModContentIds.CPU_TIER1,
+            ModContentIds.DISK_DRIVE,
             ModContentIds.EEPROM,
             ModContentIds.GRAPHICS_CARD_TIER1,
             ModContentIds.HDD_TIER1,

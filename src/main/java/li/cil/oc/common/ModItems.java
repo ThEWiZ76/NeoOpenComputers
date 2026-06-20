@@ -21,6 +21,10 @@ public final class ModItems {
         ModContentIds.COMPUTER_CASE_TIER1,
         ModBlocks.COMPUTER_CASE_TIER1);
 
+    public static final DeferredItem<BlockItem> DISK_DRIVE = ITEMS.registerSimpleBlockItem(
+        ModContentIds.DISK_DRIVE,
+        ModBlocks.DISK_DRIVE);
+
     public static final DeferredItem<CpuItem> CPU_TIER1 = ITEMS.register(
         ModContentIds.CPU_TIER1,
         () -> new CpuItem(new Item.Properties()));

@@ -19,6 +19,8 @@ public final class ModContentCatalog {
                 registry,
                 ModBlocks.COMPUTER_CASE_TIER1.get(),
                 ModItems.COMPUTER_CASE_TIER1.get(),
+                ModBlocks.DISK_DRIVE.get(),
+                ModItems.DISK_DRIVE.get(),
                 ModBlocks.SCREEN_TIER1.get(),
                 ModItems.SCREEN_TIER1.get(),
                 ModBlocks.KEYBOARD.get(),
@@ -38,6 +40,8 @@ public final class ModContentCatalog {
         final ItemRegistry registry,
         final Block computerCaseTier1,
         final Item computerCaseTier1Item,
+        final Block diskDrive,
+        final Item diskDriveItem,
         final Block screenTier1,
         final Item screenTier1Item,
         final Block keyboard,
@@ -53,6 +57,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(COMPAT_COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
+        registry.register(ModContentIds.DISK_DRIVE, diskDrive, diskDriveItem);
         registry.register(ModContentIds.SCREEN_TIER1, screenTier1, screenTier1Item);
         registry.register(COMPAT_SCREEN_TIER1, screenTier1, screenTier1Item);
         registry.register(ModContentIds.KEYBOARD, keyboard, keyboardItem);

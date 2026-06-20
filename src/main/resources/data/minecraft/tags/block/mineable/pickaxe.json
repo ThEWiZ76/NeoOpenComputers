@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "neoopencomputers:computer_case_tier1",
+    "neoopencomputers:disk_drive",
     "neoopencomputers:keyboard",
     "neoopencomputers:screen_tier1"
   ]
