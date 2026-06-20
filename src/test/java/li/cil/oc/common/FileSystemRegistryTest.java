@@ -62,6 +62,24 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void memoryFileSystemAllowsOverwritingExistingBytesAtCapacity() throws IOException {
+        FileSystem fileSystem = new FileSystemRegistry().fromMemory(4);
+
+        int outputHandle = fileSystem.open("data.txt", Mode.Write);
+        Handle output = fileSystem.getHandle(outputHandle);
+        output.write("abcd".getBytes(StandardCharsets.UTF_8));
+        output.seek(0);
+
+        output.write("WXYZ".getBytes(StandardCharsets.UTF_8));
+        output.close();
+
+        int inputHandle = fileSystem.open("data.txt", Mode.Read);
+        byte[] buffer = new byte[4];
+        assertEquals(4, fileSystem.getHandle(inputHandle).read(buffer));
+        assertArrayEquals("WXYZ".getBytes(StandardCharsets.UTF_8), buffer);
+    }
+
+    @Test
     void memoryFileSystemClosePreservesStoredFiles() throws IOException {
         FileSystem fileSystem = new FileSystemRegistry().fromMemory(256);
         assertTrue(fileSystem.makeDirectory("tmp"));

@@ -686,10 +686,11 @@ final class FileSystemRegistry implements FileSystemAPI {
                 if (!writable) {
                     throw new IOException("bad file descriptor");
                 }
-                if (capacity - spaceUsed() < value.length) {
+                final int end = Math.toIntExact(position + value.length);
+                final long growth = Math.max(0L, (long) end - file.data.length);
+                if (capacity - spaceUsed() < growth) {
                     throw new IOException("not enough space");
                 }
-                final int end = Math.toIntExact(position + value.length);
                 if (end > file.data.length) {
                     file.data = Arrays.copyOf(file.data, end);
                 }
