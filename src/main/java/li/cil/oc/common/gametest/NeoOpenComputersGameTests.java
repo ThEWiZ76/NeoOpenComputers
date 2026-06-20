@@ -270,6 +270,39 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 320)
+    public static void openOsTerminalRunsTypedCommand(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+        final BlockPos diskDrivePos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.toggleMachine(), "Computer case did not start with OpenOS terminal command setup");
+        helper.runAtTickTime(120, () -> {
+            typeText(screen, "echo ocok");
+            typeKey(screen, '\n', 0x1C);
+        });
+        helper.runAtTickTime(260, () -> {
+            final String text = screenText(screen);
+            helper.assertTrue(countOccurrences(text, "ocok") >= 2, "OpenOS terminal did not run typed echo command:\n" + text);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void tier3ComputerBootsOpenOsFromInternalFloppy(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
@@ -657,6 +690,35 @@ public final class NeoOpenComputersGameTests {
     private static void typeKey(final ScreenBlockEntity screen, final char character, final int code) {
         screen.keyDown(character, code, null);
         screen.keyUp(character, code, null);
+    }
+
+    private static void typeText(final ScreenBlockEntity screen, final String text) {
+        for (int index = 0; index < text.length(); index++) {
+            final char character = text.charAt(index);
+            typeKey(screen, character, keyCode(character));
+        }
+    }
+
+    private static int keyCode(final char character) {
+        return switch (character) {
+            case ' ' -> 0x39;
+            case 'c' -> 0x2E;
+            case 'e' -> 0x12;
+            case 'h' -> 0x23;
+            case 'k' -> 0x25;
+            case 'o' -> 0x18;
+            default -> throw new IllegalArgumentException("No test key code for " + character);
+        };
+    }
+
+    private static int countOccurrences(final String text, final String value) {
+        int count = 0;
+        int index = 0;
+        while ((index = text.indexOf(value, index)) >= 0) {
+            count++;
+            index += value.length();
+        }
+        return count;
     }
 
     private static boolean screenHasNonBlankText(final ScreenBlockEntity screen) {
