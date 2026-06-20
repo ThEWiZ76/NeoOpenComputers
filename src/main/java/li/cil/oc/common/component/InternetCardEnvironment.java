@@ -6,6 +6,8 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.Value;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
@@ -50,6 +52,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
     private final HttpTransport transport;
     private final Set<Object> connections = Collections.newSetFromMap(new IdentityHashMap<>());
+    private Context owner;
 
     public InternetCardEnvironment() {
         this(InternetCardEnvironment::openUrl);
@@ -75,6 +78,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(doc = "function(url:string[, postData:string[, headers:table[, method:string]]]):userdata -- Starts an HTTP request.")
     public synchronized Object[] request(final Context context, final Arguments args) throws IOException {
+        checkOwner(context);
         final String url = checkHttpUrl(args.checkString(0));
         final byte[] postData = args.count() > 1 && args.checkAny(1) != null ? args.checkByteArray(1) : null;
         final Map<String, String> headers = args.isTable(2) ? headers(args.checkTable(2)) : Map.of();
@@ -92,6 +96,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(doc = "function(address:string[, port:number]):userdata -- Opens a new TCP connection.")
     public synchronized Object[] connect(final Context context, final Arguments args) throws IOException {
+        checkOwner(context);
         final TcpAddress address = checkTcpAddress(args.checkString(0), args.optInteger(1, -1));
         ensureConnectionSlot();
         final TcpSocket socket = new TcpSocket(address.host(), address.port(), this);
@@ -107,6 +112,52 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
     private synchronized void unregisterConnection(final Object connection) {
         connections.remove(connection);
+    }
+
+    private void checkOwner(final Context context) {
+        if (owner == null && context != null) {
+            owner = context;
+        }
+        if (owner != null && context != null && context.node() != owner.node()) {
+            throw new IllegalArgumentException("can only be used by the owning computer");
+        }
+    }
+
+    @Override
+    public synchronized void onConnect(final Node node) {
+        super.onConnect(node);
+        if (owner == null && node.host() instanceof Context context) {
+            owner = context;
+        }
+    }
+
+    @Override
+    public synchronized void onDisconnect(final Node node) {
+        super.onDisconnect(node);
+        if (node == node() || owner != null && node.host() == owner) {
+            owner = null;
+            closeConnections();
+        }
+    }
+
+    @Override
+    public synchronized void onMessage(final Message message) {
+        super.onMessage(message);
+        if (owner != null && message.source() == owner.node() && ("computer.stopped".equals(message.name()) || "computer.started".equals(message.name()))) {
+            closeConnections();
+        }
+    }
+
+    private void closeConnections() {
+        final Object[] handles = connections.toArray();
+        for (final Object handle : handles) {
+            if (handle instanceof HttpRequest request) {
+                request.close();
+            } else if (handle instanceof TcpSocket socket) {
+                socket.close();
+            }
+        }
+        connections.clear();
     }
 
     private static String checkHttpUrl(final String address) {

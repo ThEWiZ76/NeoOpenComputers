@@ -3,6 +3,12 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.Network;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.Test;
@@ -117,6 +123,22 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void rejectsCallsFromNonOwnerContextWhenOwned() throws Exception {
+        OpenComputersApi.initialize();
+        CompletableFuture<InternetCardEnvironment.HttpResponse> pending = new CompletableFuture<>();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> pending);
+        TestComputerContext owner = new TestComputerContext();
+        TestComputerContext intruder = new TestComputerContext();
+        owner.node().connect(card.node());
+
+        Object handle = card.request(owner, new TestArguments("https://example.test/owner"))[0];
+        assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> card.request(intruder, new TestArguments("https://example.test/intruder")));
+        assertEquals("can only be used by the owning computer", error.getMessage());
+    }
+
+    @Test
     void tcpSocketConnectsWritesAndReadsLoopbackData() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment();
@@ -208,5 +230,26 @@ final class InternetCardEnvironmentTest {
         @Override public boolean isItemStack(final int index) { return index >= 0 && index < values.length && values[index] instanceof ItemStack; }
         @Override public Object[] toArray() { return Arrays.copyOf(values, values.length); }
         @Override public Iterator<Object> iterator() { return Arrays.asList(values).iterator(); }
+    }
+
+    private static final class TestComputerContext implements Context, Environment {
+        private final Node node;
+
+        private TestComputerContext() {
+            node = Network.newNode(this, Visibility.Network).create();
+        }
+
+        @Override public Node node() { return node; }
+        @Override public boolean canInteract(final String player) { return true; }
+        @Override public boolean isRunning() { return true; }
+        @Override public boolean isPaused() { return false; }
+        @Override public boolean start() { return true; }
+        @Override public boolean pause(final double seconds) { return true; }
+        @Override public boolean stop() { return true; }
+        @Override public void consumeCallBudget(final double callCost) { }
+        @Override public boolean signal(final String name, final Object... args) { return true; }
+        @Override public void onConnect(final Node node) { }
+        @Override public void onDisconnect(final Node node) { }
+        @Override public void onMessage(final Message message) { }
     }
 }
