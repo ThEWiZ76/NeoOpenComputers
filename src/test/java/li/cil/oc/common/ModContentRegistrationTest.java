@@ -66,6 +66,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void disassemblerBlockIdIsStable() {
+        assertEquals("disassembler", ModContentIds.DISASSEMBLER);
+    }
+
+    @Test
+    void disassemblerBlockEntityIdIsStable() {
+        assertEquals("disassembler", ModContentIds.DISASSEMBLER_BLOCK_ENTITY);
+    }
+
+    @Test
     void cpuTier1ItemIdIsStable() {
         assertEquals("cpu_tier1", ModContentIds.CPU_TIER1);
     }

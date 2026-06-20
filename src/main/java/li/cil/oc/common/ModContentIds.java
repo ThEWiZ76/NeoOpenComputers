@@ -31,6 +31,8 @@ public final class ModContentIds {
     public static final String DATABASE_UPGRADE_TIER1 = "database_upgrade_tier1";
     public static final String DATABASE_UPGRADE_TIER2 = "database_upgrade_tier2";
     public static final String DATABASE_UPGRADE_TIER3 = "database_upgrade_tier3";
+    public static final String DISASSEMBLER = "disassembler";
+    public static final String DISASSEMBLER_BLOCK_ENTITY = "disassembler";
     public static final String DISK_DRIVE = "disk_drive";
     public static final String DISK_DRIVE_BLOCK_ENTITY = "disk_drive";
     public static final String DISK_DRIVE_MENU = "disk_drive";

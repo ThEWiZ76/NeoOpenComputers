@@ -74,6 +74,8 @@ public final class ModContentCatalog {
                 ModItems.COMPUTER_CASE_TIER2.get(),
                 ModBlocks.COMPUTER_CASE_TIER3.get(),
                 ModItems.COMPUTER_CASE_TIER3.get(),
+                ModBlocks.DISASSEMBLER.get(),
+                ModItems.DISASSEMBLER.get(),
                 ModBlocks.DISK_DRIVE.get(),
                 ModItems.DISK_DRIVE.get(),
                 ModBlocks.GEOLYZER.get(),
@@ -162,6 +164,8 @@ public final class ModContentCatalog {
         final Item computerCaseTier2Item,
         final Block computerCaseTier3,
         final Item computerCaseTier3Item,
+        final Block disassembler,
+        final Item disassemblerItem,
         final Block diskDrive,
         final Item diskDriveItem,
         final Block geolyzer,
@@ -243,6 +247,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(COMPAT_COMPUTER_CASE_TIER2, computerCaseTier2, computerCaseTier2Item);
         registry.register(COMPAT_COMPUTER_CASE_TIER3, computerCaseTier3, computerCaseTier3Item);
+        registry.register(ModContentIds.DISASSEMBLER, disassembler, disassemblerItem);
         registry.register(ModContentIds.DISK_DRIVE, diskDrive, diskDriveItem);
         registry.register(ModContentIds.GEOLYZER, geolyzer, geolyzerItem);
         registry.register(ModContentIds.SCREEN_TIER1, screenTier1, screenTier1Item);

@@ -5,6 +5,7 @@ import li.cil.oc.common.block.AdapterBlock;
 import li.cil.oc.common.block.AssemblerBlock;
 import li.cil.oc.common.block.CableBlock;
 import li.cil.oc.common.block.ComputerCaseBlock;
+import li.cil.oc.common.block.DisassemblerBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.GeolyzerBlock;
 import li.cil.oc.common.block.HologramBlock;
@@ -47,6 +48,10 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> COMPUTER_CASE_TIER3 = BLOCKS.register(
         ModContentIds.COMPUTER_CASE_TIER3,
         () -> new ComputerCaseBlock(computerCaseProperties(), 2));
+
+    public static final DeferredBlock<Block> DISASSEMBLER = BLOCKS.register(
+        ModContentIds.DISASSEMBLER,
+        () -> new DisassemblerBlock(disassemblerProperties()));
 
     public static final DeferredBlock<Block> DISK_DRIVE = BLOCKS.register(
         ModContentIds.DISK_DRIVE,
@@ -138,6 +143,13 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties disassemblerProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
+            .strength(2.0F, 6.0F)
+            .noOcclusion();
     }
 
     private static BlockBehaviour.Properties geolyzerProperties() {

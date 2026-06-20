@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": {
+      "tag": "c:chests/wooden"
+    },
+    "T": {
+      "item": "minecraft:crafting_table"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "IRI",
+    "ITI",
+    "ICR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:disassembler"
+  }
+}

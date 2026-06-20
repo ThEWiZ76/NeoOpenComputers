@@ -5,6 +5,7 @@ import li.cil.oc.common.blockentity.AdapterBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
+import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
@@ -47,6 +48,11 @@ public final class ModBlockEntities {
                 ModBlocks.COMPUTER_CASE_TIER1.get(),
                 ModBlocks.COMPUTER_CASE_TIER2.get(),
                 ModBlocks.COMPUTER_CASE_TIER3.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DisassemblerBlockEntity>> DISASSEMBLER =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.DISASSEMBLER_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(DisassemblerBlockEntity::new, ModBlocks.DISASSEMBLER.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DiskDriveBlockEntity>> DISK_DRIVE =
         BLOCK_ENTITY_TYPES.register(

@@ -28,6 +28,7 @@ final class ModContentCatalogTest {
             null, null,
             null, null,
             null, null,
+            null, null,
             null,
             null, null, null,
             null, null, null,
@@ -70,6 +71,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER3));
+        assertNotNull(registry.get(ModContentIds.DISASSEMBLER));
         assertNotNull(registry.get(ModContentIds.DISK_DRIVE));
         assertNotNull(registry.get(ModContentIds.SCREEN_TIER1));
         assertNotNull(registry.get(ModContentIds.SCREEN_TIER2));

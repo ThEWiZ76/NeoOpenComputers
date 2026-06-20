@@ -27,6 +27,7 @@ import li.cil.oc.common.ModItems;
 import li.cil.oc.api.Network;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
+import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
@@ -81,6 +82,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.COMPUTER_CASE_TIER1.get();
         ModBlocks.COMPUTER_CASE_TIER2.get();
         ModBlocks.COMPUTER_CASE_TIER3.get();
+        ModBlocks.DISASSEMBLER.get();
         ModBlocks.DISK_DRIVE.get();
         ModBlocks.GEOLYZER.get();
         ModBlocks.HOLOGRAM_TIER1.get();
@@ -492,6 +494,29 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(result.length == 1 && result[0].is(Items.EMERALD), "IMC disassembler template did not produce output");
             helper.succeed();
         }
+    }
+
+    @GameTest(template = "empty")
+    public static void disassemblerBlockDisassemblesTablet(final GameTestHelper helper) {
+        final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
+        final ItemStack memory = new ItemStack(ModItems.MEMORY_TIER1.get());
+        final ItemStack tablet = ModItems.TABLET.get().assembleFromCase(
+            new ItemStack(ModItems.TABLET_CASE_TIER2.get()),
+            ItemStack.EMPTY,
+            cpu.copy(),
+            memory.copy());
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.DISASSEMBLER.get());
+        final DisassemblerBlockEntity disassembler = helper.getBlockEntity(pos);
+        disassembler.setItem(DisassemblerBlockEntity.SLOT_INPUT, tablet);
+
+        helper.assertTrue(disassembler.canDisassemble(), "Disassembler did not accept tablet");
+        helper.assertTrue(disassembler.disassemble(), "Disassembler did not start disassembly");
+        helper.assertTrue(disassembler.getItem(DisassemblerBlockEntity.SLOT_INPUT).isEmpty(), "Disassembler did not clear input");
+        helper.assertTrue(disassembler.containsOutput(ModItems.TABLET_CASE_TIER2.get()), "Disassembler did not output tablet case");
+        helper.assertTrue(disassembler.containsOutput(ModItems.CPU_TIER1.get()), "Disassembler did not output CPU");
+        helper.assertTrue(disassembler.containsOutput(ModItems.MEMORY_TIER1.get()), "Disassembler did not output memory");
+        helper.succeed();
     }
 
     @GameTest(template = "empty")

@@ -58,6 +58,10 @@ public final class ModItems {
         ModContentIds.COMPUTER_CASE_TIER3,
         ModBlocks.COMPUTER_CASE_TIER3);
 
+    public static final DeferredItem<BlockItem> DISASSEMBLER = ITEMS.registerSimpleBlockItem(
+        ModContentIds.DISASSEMBLER,
+        ModBlocks.DISASSEMBLER);
+
     public static final DeferredItem<BlockItem> DISK_DRIVE = ITEMS.registerSimpleBlockItem(
         ModContentIds.DISK_DRIVE,
         ModBlocks.DISK_DRIVE);
