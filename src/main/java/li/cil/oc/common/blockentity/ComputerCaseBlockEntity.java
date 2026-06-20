@@ -11,6 +11,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.ComputerCaseBlock;
+import li.cil.oc.common.component.RedstoneControllerHost;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider, DeviceInfo {
+public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider, DeviceInfo, RedstoneControllerHost {
     public static final int SLOT_CARD_0 = 0;
     public static final int SLOT_CARD_1 = 1;
     public static final int SLOT_MEMORY_0 = 2;
