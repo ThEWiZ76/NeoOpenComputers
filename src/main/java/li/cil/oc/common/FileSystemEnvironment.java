@@ -27,6 +27,7 @@ import java.util.Set;
 final class FileSystemEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String FILE_SYSTEM_TAG = "fs";
     private static final int MAX_OPEN_HANDLES = 16;
+    private static final int MAX_READ_BUFFER = 2048;
     private static final double[] READ_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
     private static final double[] SEEK_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
     private static final double[] WRITE_COSTS = {1.0D / 1.0D, 1.0D / 2.0D, 1.0D / 3.0D, 1.0D / 4.0D, 1.0D / 5.0D, 1.0D / 6.0D};
@@ -179,7 +180,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         final int handleId = checkHandle(arguments, 0);
         checkOwner(context, handleId);
         final Handle handle = getHandle(handleId);
-        final byte[] buffer = new byte[Math.max(0, arguments.checkInteger(1))];
+        final byte[] buffer = new byte[Math.min(MAX_READ_BUFFER, Math.max(0, arguments.checkInteger(1)))];
         final int read = handle.read(buffer);
         if (read < 0) {
             return new Object[]{null};

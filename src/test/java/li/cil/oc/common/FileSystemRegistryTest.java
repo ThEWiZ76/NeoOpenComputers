@@ -280,6 +280,25 @@ final class FileSystemRegistryTest {
         assertNotNull(component.invoke("open", context, "overflow.txt", "w")[0]);
     }
 
+    @Test
+    void managedFileSystemEnvironmentCapsReadBufferSize() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+        byte[] data = new byte[2050];
+        java.util.Arrays.fill(data, (byte) 'x');
+
+        Object writeHandle = component.invoke("open", null, "data.txt", "w")[0];
+        assertArrayEquals(new Object[]{true}, component.invoke("write", null, writeHandle, data));
+        component.invoke("close", null, writeHandle);
+        Object readHandle = component.invoke("open", null, "data.txt", "r")[0];
+
+        byte[] read = (byte[]) component.invoke("read", null, readHandle, 4096)[0];
+
+        assertEquals(2048, read.length);
+    }
+
     private static final class MutableLabel implements Label {
         private String value;
 
