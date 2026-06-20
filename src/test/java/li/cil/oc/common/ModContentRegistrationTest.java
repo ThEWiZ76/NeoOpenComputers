@@ -47,6 +47,7 @@ final class ModContentRegistrationTest {
             Map.entry("printed_circuit_board", ModContentIds.PRINTED_CIRCUIT_BOARD),
             Map.entry("card", ModContentIds.CARD),
             Map.entry("transistor", ModContentIds.TRANSISTOR),
+            Map.entry("capacitor", ModContentIds.CAPACITOR),
             Map.entry("microchip_tier1", ModContentIds.MICROCHIP_TIER1),
             Map.entry("microchip_tier2", ModContentIds.MICROCHIP_TIER2),
             Map.entry("microchip_tier3", ModContentIds.MICROCHIP_TIER3),

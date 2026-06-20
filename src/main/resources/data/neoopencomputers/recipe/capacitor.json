@@ -1,9 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
+  "category": "redstone",
   "key": {
-    "C": {
-      "item": "neoopencomputers:capacitor"
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     },
     "G": {
       "tag": "c:nuggets/gold"
@@ -11,17 +11,20 @@
     "I": {
       "tag": "c:ingots/iron"
     },
+    "P": {
+      "item": "minecraft:paper"
+    },
     "T": {
       "item": "neoopencomputers:transistor"
     }
   },
   "pattern": [
-    "IGI",
-    "TCT",
-    "IGI"
+    "ITI",
+    "GPG",
+    "IBI"
   ],
   "result": {
     "count": 1,
-    "id": "neoopencomputers:battery_upgrade_tier1"
+    "id": "neoopencomputers:capacitor"
   }
 }

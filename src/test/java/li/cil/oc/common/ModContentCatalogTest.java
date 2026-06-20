@@ -28,15 +28,20 @@ final class ModContentCatalogTest {
             null,
             null,
             null,
+            null,
             null);
 
         assertNotNull(registry.get(ModContentIds.TRANSISTOR));
+        assertNotNull(registry.get(ModContentIds.CAPACITOR));
         assertNotNull(registry.get(ModContentIds.PRINTED_CIRCUIT_BOARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CAPACITOR));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MATERIAL_CARD));
         assertEquals(ModContentIds.TRANSISTOR, registry.get(ModContentIds.TRANSISTOR).name());
+        assertEquals(ModContentIds.CAPACITOR, registry.get(ModContentIds.CAPACITOR).name());
         assertEquals(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR, registry.get(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR).name());
+        assertEquals(ModContentCatalog.COMPAT_CAPACITOR, registry.get(ModContentCatalog.COMPAT_CAPACITOR).name());
         assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1).name());
     }
 

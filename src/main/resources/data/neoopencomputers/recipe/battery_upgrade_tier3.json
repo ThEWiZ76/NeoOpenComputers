@@ -2,20 +2,20 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "neoopencomputers:battery_upgrade_tier2"
+    "C": {
+      "item": "neoopencomputers:capacitor"
     },
-    "E": {
-      "item": "minecraft:ender_pearl"
+    "D": {
+      "item": "minecraft:diamond"
     },
-    "R": {
-      "item": "minecraft:redstone_block"
+    "T": {
+      "item": "neoopencomputers:transistor"
     }
   },
   "pattern": [
-    "RER",
-    "EBE",
-    "RER"
+    "DCD",
+    "TCT",
+    "DCD"
   ],
   "result": {
     "count": 1,

@@ -2,20 +2,23 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "neoopencomputers:battery_upgrade_tier1"
+    "C": {
+      "item": "neoopencomputers:capacitor"
     },
-    "D": {
-      "item": "minecraft:diamond"
+    "G": {
+      "tag": "c:nuggets/gold"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "I": {
+      "tag": "c:ingots/gold"
+    },
+    "T": {
+      "item": "neoopencomputers:transistor"
     }
   },
   "pattern": [
-    "RDR",
-    "DBD",
-    "RDR"
+    "ICI",
+    "TGT",
+    "ICI"
   ],
   "result": {
     "count": 1,

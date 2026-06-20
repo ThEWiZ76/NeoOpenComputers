@@ -75,6 +75,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_MATERIAL_INTERWEB = "materialInterweb";
     public static final String COMPAT_MATERIAL_NUM_PAD = "materialNumPad";
     public static final String COMPAT_MATERIAL_TRANSISTOR = "materialTransistor";
+    public static final String COMPAT_CAPACITOR = "capacitor";
 
     public static void registerDefaults() {
         if (API.items instanceof ItemRegistry registry) {
@@ -176,6 +177,7 @@ public final class ModContentCatalog {
                 ModItems.PRINTED_CIRCUIT_BOARD.get(),
                 ModItems.CARD.get(),
                 ModItems.TRANSISTOR.get(),
+                ModItems.CAPACITOR.get(),
                 ModItems.MICROCHIP_TIER1.get(),
                 ModItems.MICROCHIP_TIER2.get(),
                 ModItems.MICROCHIP_TIER3.get(),
@@ -198,6 +200,7 @@ public final class ModContentCatalog {
         final Item printedCircuitBoardItem,
         final Item cardItem,
         final Item transistorItem,
+        final Item capacitorItem,
         final Item microchipTier1Item,
         final Item microchipTier2Item,
         final Item microchipTier3Item,
@@ -215,6 +218,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.PRINTED_CIRCUIT_BOARD, null, printedCircuitBoardItem);
         registry.register(ModContentIds.CARD, null, cardItem);
         registry.register(ModContentIds.TRANSISTOR, null, transistorItem);
+        registry.register(ModContentIds.CAPACITOR, null, capacitorItem);
         registry.register(ModContentIds.MICROCHIP_TIER1, null, microchipTier1Item);
         registry.register(ModContentIds.MICROCHIP_TIER2, null, microchipTier2Item);
         registry.register(ModContentIds.MICROCHIP_TIER3, null, microchipTier3Item);

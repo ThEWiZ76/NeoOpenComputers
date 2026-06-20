@@ -16,6 +16,7 @@ public final class ModContentIds {
     public static final String CABLE = "cable";
     public static final String CABLE_BLOCK_ENTITY = "cable";
     public static final String CARD = "card";
+    public static final String CAPACITOR = "capacitor";
     public static final String CARD_CONTAINER_TIER1 = "card_container_tier1";
     public static final String CARD_CONTAINER_TIER2 = "card_container_tier2";
     public static final String CARD_CONTAINER_TIER3 = "card_container_tier3";

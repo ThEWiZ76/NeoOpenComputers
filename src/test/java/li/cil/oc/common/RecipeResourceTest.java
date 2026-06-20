@@ -28,6 +28,7 @@ final class RecipeResourceTest {
             ModContentIds.PRINTED_CIRCUIT_BOARD,
             ModContentIds.CARD,
             ModContentIds.TRANSISTOR,
+            ModContentIds.CAPACITOR,
             ModContentIds.MICROCHIP_TIER1,
             ModContentIds.MICROCHIP_TIER2,
             ModContentIds.MICROCHIP_TIER3,
@@ -282,6 +283,36 @@ final class RecipeResourceTest {
         assertItem(hdd3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
         assertItem(hdd3, "H", "neoopencomputers:" + ModContentIds.HDD_TIER2);
         assertItem(hdd3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
+    }
+
+    @Test
+    void capacitorRecipeUsesMaterialProgression() throws IOException {
+        JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
+
+        assertTag(keys, "I", "c:ingots/iron");
+        assertItem(keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertTag(keys, "G", "c:nuggets/gold");
+        assertItem(keys, "P", "minecraft:paper");
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
+    void batteryUpgradeRecipesUseCapacitorProgression() throws IOException {
+        JsonObject tier1 = recipeKeys(ModContentIds.BATTERY_UPGRADE_TIER1);
+        JsonObject tier2 = recipeKeys(ModContentIds.BATTERY_UPGRADE_TIER2);
+        JsonObject tier3 = recipeKeys(ModContentIds.BATTERY_UPGRADE_TIER3);
+
+        assertTag(tier1, "I", "c:ingots/iron");
+        assertTag(tier1, "G", "c:nuggets/gold");
+        assertItem(tier1, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
+        assertTag(tier2, "I", "c:ingots/gold");
+        assertTag(tier2, "G", "c:nuggets/gold");
+        assertItem(tier2, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
+        assertItem(tier3, "D", "minecraft:diamond");
+        assertItem(tier3, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
     }
 
     @Test
