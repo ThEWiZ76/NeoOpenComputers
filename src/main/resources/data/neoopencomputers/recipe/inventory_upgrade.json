@@ -2,8 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "P": {
-      "tag": "minecraft:planks"
+    "I": {
+      "tag": "c:ingots/iron"
     },
     "H": {
       "item": "minecraft:hopper"
@@ -22,9 +22,9 @@
     }
   },
   "pattern": [
-    "PHP",
+    "IHI",
     "DCM",
-    "PBP"
+    "IBI"
   ],
   "result": {
     "count": 1,

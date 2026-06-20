@@ -522,15 +522,20 @@ final class RecipeResourceTest {
 
     @Test
     void inventoryAndTankUpgradeRecipesUseUpstreamShape() throws IOException {
-        JsonObject inventory = recipeKeys(ModContentIds.INVENTORY_UPGRADE);
-        JsonObject tank = recipeKeys(ModContentIds.TANK_UPGRADE);
+        JsonObject inventoryRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.INVENTORY_UPGRADE + ".json"));
+        JsonObject tankRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.TANK_UPGRADE + ".json"));
+        JsonObject inventory = inventoryRecipe.getAsJsonObject("key");
+        JsonObject tank = tankRecipe.getAsJsonObject("key");
 
-        assertTag(inventory, "P", "minecraft:planks");
+        assertPattern(inventoryRecipe, "IHI", "DCM", "IBI");
+        assertTag(inventory, "I", "c:ingots/iron");
         assertItem(inventory, "H", "minecraft:hopper");
         assertItem(inventory, "D", "minecraft:dropper");
         assertItem(inventory, "C", "minecraft:chest");
         assertItem(inventory, "M", "minecraft:piston");
         assertItem(inventory, "B", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+
+        assertPattern(tankRecipe, "PFP", "DCM", "PBP");
         assertTag(tank, "P", "minecraft:planks");
         assertItem(tank, "F", "minecraft:iron_bars");
         assertItem(tank, "D", "minecraft:dispenser");
