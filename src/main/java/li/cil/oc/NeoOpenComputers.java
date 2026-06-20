@@ -6,6 +6,7 @@ import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModContentCatalog;
 import li.cil.oc.common.ModCreativeTabs;
 import li.cil.oc.common.ModDriverCatalog;
+import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModMenus;
@@ -40,6 +41,7 @@ public final class NeoOpenComputers {
         event.enqueueWork(() -> {
             ModCreativeTabs.assignApiCreativeTab();
             ModContentCatalog.registerDefaults();
+            ModEeproms.registerDefaults();
             ModLootDisks.registerDefaults();
             ModDriverCatalog.registerDefaults();
         });
