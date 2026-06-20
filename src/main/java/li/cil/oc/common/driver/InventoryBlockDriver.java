@@ -3,9 +3,11 @@ package li.cil.oc.common.driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverBlock;
+import li.cil.oc.api.internal.Database;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -132,6 +134,14 @@ public final class InventoryBlockDriver implements DriverBlock {
             return new Object[]{slotA == slotB || InventoryComparison.sameItem(container.getItem(slotA), container.getItem(slotB), arguments.optBoolean(2, false))};
         }
 
+        @Callback(doc = "function(slot:number, dbAddress:string, dbSlot:number[, checkNBT:boolean=false]):boolean -- Compare an item in the specified inventory slot with one in the database with the specified address.")
+        public Object[] compareStackToDatabase(final Context context, final Arguments arguments) {
+            final int slot = checkSlot(arguments, 0);
+            final Database database = database(arguments.checkString(1));
+            final int databaseSlot = checkSlot(database, arguments.checkInteger(2));
+            return new Object[]{InventoryComparison.sameItem(container.getItem(slot), database.getStackInSlot(databaseSlot), arguments.optBoolean(3, false))};
+        }
+
         @Callback(doc = "function(slotA:number, slotB:number[, count:number=64]):boolean -- Move up to the specified number of items from the first specified slot to the second.")
         public Object[] transferStack(final Context context, final Arguments arguments) {
             final int slotA = checkSlot(arguments, 0);
@@ -186,12 +196,43 @@ public final class InventoryBlockDriver implements DriverBlock {
             return new Object[]{stacks};
         }
 
+        @Callback(doc = "function(slot:number, dbAddress:string, dbSlot:number):boolean -- Store an item stack description in the specified database slot.")
+        public Object[] store(final Context context, final Arguments arguments) {
+            final ItemStack stack = container.getItem(checkSlot(arguments, 0));
+            final Database database = database(arguments.checkString(1));
+            final int databaseSlot = checkSlot(database, arguments.checkInteger(2));
+            final boolean overwritten = !database.getStackInSlot(databaseSlot).isEmpty();
+            database.setStackInSlot(databaseSlot, stack.copy());
+            return new Object[]{overwritten};
+        }
+
         private int checkSlot(final Arguments arguments, final int index) {
             final int slot = arguments.checkInteger(index) - 1;
             if (slot < 0 || slot >= container.getContainerSize()) {
                 throw new IllegalArgumentException("slot index out of bounds");
             }
             return slot;
+        }
+
+        private static int checkSlot(final Database database, final int slot) {
+            final int index = slot - 1;
+            if (index < 0 || index >= database.size()) {
+                throw new IllegalArgumentException("slot index out of bounds");
+            }
+            return index;
+        }
+
+        private Database database(final String address) {
+            if (node() == null || node().network() == null) {
+                throw new IllegalArgumentException("no such component");
+            }
+            if (!(node().network().node(address) instanceof Component component)) {
+                throw new IllegalArgumentException("no such component");
+            }
+            if (!(component.host() instanceof Database database)) {
+                throw new IllegalArgumentException("not a database");
+            }
+            return database;
         }
     }
 }
