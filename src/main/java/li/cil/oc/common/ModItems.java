@@ -92,6 +92,9 @@ public final class ModItems {
     public static final DeferredItem<Item> CARD = ITEMS.registerSimpleItem(ModContentIds.CARD, new Item.Properties());
     public static final DeferredItem<Item> TRANSISTOR = ITEMS.registerSimpleItem(ModContentIds.TRANSISTOR, new Item.Properties());
     public static final DeferredItem<Item> CAPACITOR = ITEMS.registerSimpleItem(ModContentIds.CAPACITOR, new Item.Properties());
+    public static final DeferredItem<Item> COMPONENT_BUS_TIER1 = ITEMS.registerSimpleItem(ModContentIds.COMPONENT_BUS_TIER1, new Item.Properties());
+    public static final DeferredItem<Item> COMPONENT_BUS_TIER2 = ITEMS.registerSimpleItem(ModContentIds.COMPONENT_BUS_TIER2, new Item.Properties());
+    public static final DeferredItem<Item> COMPONENT_BUS_TIER3 = ITEMS.registerSimpleItem(ModContentIds.COMPONENT_BUS_TIER3, new Item.Properties());
     public static final DeferredItem<Item> MICROCHIP_TIER1 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER1, new Item.Properties());
     public static final DeferredItem<Item> MICROCHIP_TIER2 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER2, new Item.Properties());
     public static final DeferredItem<Item> MICROCHIP_TIER3 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER3, new Item.Properties());

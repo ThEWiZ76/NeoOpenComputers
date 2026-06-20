@@ -29,6 +29,9 @@ final class RecipeResourceTest {
             ModContentIds.CARD,
             ModContentIds.TRANSISTOR,
             ModContentIds.CAPACITOR,
+            ModContentIds.COMPONENT_BUS_TIER1,
+            ModContentIds.COMPONENT_BUS_TIER2,
+            ModContentIds.COMPONENT_BUS_TIER3,
             ModContentIds.MICROCHIP_TIER1,
             ModContentIds.MICROCHIP_TIER2,
             ModContentIds.MICROCHIP_TIER3,
@@ -294,6 +297,37 @@ final class RecipeResourceTest {
         assertTag(keys, "G", "c:nuggets/gold");
         assertItem(keys, "P", "minecraft:paper");
         assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
+    void componentBusRecipesUseMaterialProgression() throws IOException {
+        JsonObject tier1 = readJson(RECIPE_ROOT.resolve(ModContentIds.COMPONENT_BUS_TIER1 + ".json"));
+        JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.COMPONENT_BUS_TIER2 + ".json"));
+        JsonObject tier3 = readJson(RECIPE_ROOT.resolve(ModContentIds.COMPONENT_BUS_TIER3 + ".json"));
+        JsonObject tier1Keys = tier1.getAsJsonObject("key");
+        JsonObject tier2Keys = tier2.getAsJsonObject("key");
+        JsonObject tier3Keys = tier3.getAsJsonObject("key");
+
+        assertPattern(tier1, "IRI", "CU ", "IBI");
+        assertTag(tier1Keys, "I", "c:nuggets/iron");
+        assertItem(tier1Keys, "R", "minecraft:redstone");
+        assertItem(tier1Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(tier1Keys, "U", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
+        assertItem(tier1Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(tier2, "IRI", "CU ", "IBI");
+        assertTag(tier2Keys, "I", "c:nuggets/gold");
+        assertItem(tier2Keys, "R", "minecraft:redstone");
+        assertItem(tier2Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier2Keys, "U", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
+        assertItem(tier2Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(tier3, "IRI", "CU ", "IBI");
+        assertItem(tier3Keys, "I", "minecraft:diamond");
+        assertItem(tier3Keys, "R", "minecraft:redstone");
+        assertItem(tier3Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier3Keys, "U", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
+        assertItem(tier3Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
     @Test

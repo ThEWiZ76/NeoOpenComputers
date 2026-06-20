@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "I": {
+      "item": "minecraft:diamond"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "U": {
+      "item": "neoopencomputers:control_unit"
+    }
+  },
+  "pattern": [
+    "IRI",
+    "CU ",
+    "IBI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:component_bus_tier3"
+  }
+}
