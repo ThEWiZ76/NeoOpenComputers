@@ -36,6 +36,9 @@ import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.AssemblerTemplates;
+import li.cil.oc.common.template.DisassemblerTemplate;
+import li.cil.oc.common.template.DisassemblerTemplateImc;
+import li.cil.oc.common.template.DisassemblerTemplates;
 import net.neoforged.fml.InterModComms;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -442,6 +445,51 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(assembler.canAssemble(), "IMC assembler template did not validate");
             helper.assertTrue(assembler.start(true), "IMC assembler template did not start");
             helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).is(Items.EMERALD), "IMC assembler template did not produce output");
+            helper.succeed();
+        }
+    }
+
+    @GameTest(template = "empty")
+    public static void registeredDisassemblerTemplatesDisassembleStacks(final GameTestHelper helper) {
+        final DisassemblerTemplate template = new DisassemblerTemplate() {
+            @Override
+            public String name() {
+                return "diamond";
+            }
+
+            @Override
+            public boolean matches(final ItemStack stack) {
+                return stack.is(Items.DIAMOND);
+            }
+
+            @Override
+            public ItemStack[] disassemble(final ItemStack stack) {
+                return new ItemStack[]{new ItemStack(Items.EMERALD)};
+            }
+        };
+
+        try (DisassemblerTemplates.Registration ignored = DisassemblerTemplates.register(template)) {
+            final ItemStack[] result = DisassemblerTemplates.disassemble(new ItemStack(Items.DIAMOND));
+            helper.assertTrue(result.length == 1 && result[0].is(Items.EMERALD), "Custom disassembler template did not produce output");
+            helper.succeed();
+        }
+    }
+
+    @GameTest(template = "empty")
+    public static void disassemblerProcessesImcTemplates(final GameTestHelper helper) {
+        final CompoundTag payload = new CompoundTag();
+        payload.putString("name", "imc_test");
+        payload.putString("select", NeoOpenComputersGameTests.class.getName() + ".selectDiamondTemplate");
+        payload.putString("disassemble", NeoOpenComputersGameTests.class.getName() + ".disassembleEmeraldTemplate");
+        final InterModComms.IMCMessage message = new InterModComms.IMCMessage(
+            "addon",
+            NeoOpenComputers.MODID,
+            li.cil.oc.api.IMC.REGISTER_DISASSEMBLER_TEMPLATE,
+            () -> payload);
+
+        try (DisassemblerTemplates.Registration ignored = DisassemblerTemplateImc.process(java.util.stream.Stream.of(message)).getFirst()) {
+            final ItemStack[] result = DisassemblerTemplates.disassemble(new ItemStack(Items.DIAMOND));
+            helper.assertTrue(result.length == 1 && result[0].is(Items.EMERALD), "IMC disassembler template did not produce output");
             helper.succeed();
         }
     }
@@ -1627,6 +1675,10 @@ public final class NeoOpenComputersGameTests {
 
     public static Object[] assembleEmeraldTemplate(final net.minecraft.world.Container inventory) {
         return new Object[]{new ItemStack(Items.EMERALD), 1D};
+    }
+
+    public static ItemStack[] disassembleEmeraldTemplate(final ItemStack stack) {
+        return new ItemStack[]{new ItemStack(Items.EMERALD)};
     }
 
     private record DatabaseCloneContext(Node node, double[] pauseSeconds) implements Context {
