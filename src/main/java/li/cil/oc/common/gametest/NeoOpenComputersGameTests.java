@@ -159,6 +159,8 @@ public final class NeoOpenComputersGameTests {
         ModItems.HDD_TIER3.get();
         ModItems.INVENTORY_CONTROLLER_UPGRADE.get();
         ModItems.INVENTORY_UPGRADE.get();
+        ModItems.CRAFTING_UPGRADE.get();
+        ModItems.EXPERIENCE_UPGRADE.get();
         ModItems.INTERNET_CARD.get();
         ModItems.LINKED_CARD.get();
         ModItems.MEMORY_TIER1.get();
@@ -167,10 +169,14 @@ public final class NeoOpenComputersGameTests {
         ModItems.MOTION_SENSOR.get();
         ModItems.NAVIGATION_UPGRADE.get();
         ModItems.NETWORK_CARD.get();
+        ModItems.PISTON_UPGRADE.get();
         ModItems.REDSTONE_IO.get();
         ModItems.SOLAR_GENERATOR_UPGRADE.get();
+        ModItems.STICKY_PISTON_UPGRADE.get();
+        ModItems.SIGN_UPGRADE.get();
         ModItems.TANK_UPGRADE.get();
         ModItems.TANK_CONTROLLER_UPGRADE.get();
+        ModItems.TRADING_UPGRADE.get();
         ModItems.TRANSPOSER.get();
         ModItems.UPGRADE_CONTAINER_TIER1.get();
         ModItems.UPGRADE_CONTAINER_TIER2.get();
@@ -212,7 +218,13 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.CRAFTING_UPGRADE.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.INTERNET_CARD.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.PISTON_UPGRADE.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.STICKY_PISTON_UPGRADE.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.SIGN_UPGRADE.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.TRADING_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.SOLAR_GENERATOR_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), 1);
