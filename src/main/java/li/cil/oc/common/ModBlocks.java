@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.block.CableBlock;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.KeyboardBlock;
@@ -14,6 +15,10 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(NeoOpenComputers.MODID);
+
+    public static final DeferredBlock<Block> CABLE = BLOCKS.register(
+        ModContentIds.CABLE,
+        () -> new CableBlock(cableProperties()));
 
     public static final DeferredBlock<Block> COMPUTER_CASE_TIER1 = BLOCKS.register(
         ModContentIds.COMPUTER_CASE_TIER1,
@@ -58,6 +63,12 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(2.0F, 6.0F);
+    }
+
+    private static BlockBehaviour.Properties cableProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_GRAY)
+            .strength(0.5F, 1.0F);
     }
 
     private static BlockBehaviour.Properties screenProperties() {

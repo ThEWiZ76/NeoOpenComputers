@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
@@ -14,6 +15,11 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES =
         DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, NeoOpenComputers.MODID);
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CableBlockEntity>> CABLE =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.CABLE_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(CableBlockEntity::new, ModBlocks.CABLE.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ComputerCaseBlockEntity>> COMPUTER_CASE =
         BLOCK_ENTITY_TYPES.register(

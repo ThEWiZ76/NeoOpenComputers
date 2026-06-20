@@ -18,6 +18,7 @@ final class ModContentCatalogTest {
             null, null,
             null, null,
             null, null,
+            null, null,
             null,
             null, null, null,
             null, null, null,
@@ -29,6 +30,7 @@ final class ModContentCatalogTest {
             null);
 
         assertNotNull(registry.get(ModContentIds.MANUAL));
+        assertNotNull(registry.get(ModContentIds.CABLE));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER1));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER2));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER3));
@@ -72,6 +74,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER3));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_NETWORK_CARD));
         assertEquals(ModContentIds.MANUAL, registry.get(ModContentIds.MANUAL).name());
+        assertEquals(ModContentIds.CABLE, registry.get(ModContentIds.CABLE).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER1, registry.get(ModContentIds.COMPUTER_CASE_TIER1).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER2, registry.get(ModContentIds.COMPUTER_CASE_TIER2).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER3, registry.get(ModContentIds.COMPUTER_CASE_TIER3).name());

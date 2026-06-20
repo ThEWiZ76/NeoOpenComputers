@@ -29,6 +29,8 @@ public final class ModContentCatalog {
         if (API.items instanceof ItemRegistry registry) {
             register(
                 registry,
+                ModBlocks.CABLE.get(),
+                ModItems.CABLE.get(),
                 ModBlocks.COMPUTER_CASE_TIER1.get(),
                 ModItems.COMPUTER_CASE_TIER1.get(),
                 ModBlocks.COMPUTER_CASE_TIER2.get(),
@@ -66,6 +68,8 @@ public final class ModContentCatalog {
 
     static void register(
         final ItemRegistry registry,
+        final Block cable,
+        final Item cableItem,
         final Block computerCaseTier1,
         final Item computerCaseTier1Item,
         final Block computerCaseTier2,
@@ -99,6 +103,7 @@ public final class ModContentCatalog {
         final Item graphicsCardTier3Item,
         final Item networkCardItem) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
+        registry.register(ModContentIds.CABLE, cable, cableItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(ModContentIds.COMPUTER_CASE_TIER2, computerCaseTier2, computerCaseTier2Item);
         registry.register(ModContentIds.COMPUTER_CASE_TIER3, computerCaseTier3, computerCaseTier3Item);

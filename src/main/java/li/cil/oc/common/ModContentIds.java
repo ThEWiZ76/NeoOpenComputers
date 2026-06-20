@@ -1,6 +1,8 @@
 package li.cil.oc.common;
 
 public final class ModContentIds {
+    public static final String CABLE = "cable";
+    public static final String CABLE_BLOCK_ENTITY = "cable";
     public static final String COMPUTER_CASE_BLOCK_ENTITY = "computer_case";
     public static final String COMPUTER_CASE_MENU = "computer_case";
     public static final String COMPUTER_CASE_TIER1 = "computer_case_tier1";

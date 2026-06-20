@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
+    "neoopencomputers:cable",
     "neoopencomputers:computer_case_tier1",
     "neoopencomputers:computer_case_tier2",
     "neoopencomputers:computer_case_tier3",

@@ -17,6 +17,10 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(NeoOpenComputers.MODID);
 
+    public static final DeferredItem<BlockItem> CABLE = ITEMS.registerSimpleBlockItem(
+        ModContentIds.CABLE,
+        ModBlocks.CABLE);
+
     public static final DeferredItem<BlockItem> COMPUTER_CASE_TIER1 = ITEMS.registerSimpleBlockItem(
         ModContentIds.COMPUTER_CASE_TIER1,
         ModBlocks.COMPUTER_CASE_TIER1);

@@ -14,6 +14,7 @@ import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
@@ -47,6 +48,7 @@ import java.util.concurrent.Callable;
 public final class NeoOpenComputersGameTests {
     @GameTest(template = "empty")
     public static void registeredContentAvailable(final GameTestHelper helper) {
+        ModBlocks.CABLE.get();
         ModBlocks.COMPUTER_CASE_TIER1.get();
         ModBlocks.COMPUTER_CASE_TIER2.get();
         ModBlocks.COMPUTER_CASE_TIER3.get();
@@ -55,6 +57,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.SCREEN_TIER2.get();
         ModBlocks.SCREEN_TIER3.get();
         ModBlocks.KEYBOARD.get();
+        ModItems.CABLE.get();
         ModItems.CPU_TIER1.get();
         ModItems.CPU_TIER2.get();
         ModItems.CPU_TIER3.get();
@@ -181,6 +184,26 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(diskDriveNode != null, "Disk drive has no network node");
             helper.assertTrue(computerNode.network() != null, "Computer case node is not joined to a network");
             helper.assertTrue(computerNode.network() == diskDriveNode.network(), "Adjacent block nodes are not in the same network");
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void cableConnectsSeparatedBlocks(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos cablePos = new BlockPos(1, 1, 1);
+        final BlockPos diskDrivePos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(cablePos, ModBlocks.CABLE.get());
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final CableBlockEntity cable = helper.getBlockEntity(cablePos);
+            final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(cable.node().network() == computer.node().network(), "Cable is not on the computer network");
+            helper.assertTrue(diskDrive.node().network() == computer.node().network(), "Disk drive is not connected through cable");
         });
     }
 
