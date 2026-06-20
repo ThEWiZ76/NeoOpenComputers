@@ -6,6 +6,7 @@ import li.cil.oc.api.internal.Database;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
@@ -146,21 +147,52 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
         return new Object[]{hadStack};
     }
 
-    @Callback(doc = "function(fromSlot:number, toSlot:number):boolean -- Copies an entry to another local slot. Returns true if something was overwritten.")
+    @Callback(doc = "function(fromSlot:number, toSlot:number[, address:string]):boolean -- Copies an entry to another slot, optionally to another database. Returns true if something was overwritten.")
     public Object[] copy(final Context context, final Arguments arguments) {
         final int fromSlot = checkSlot(arguments, 0);
-        final int toSlot = checkSlot(arguments, 1);
-        final boolean overwritten = items[toSlot] != null && !items[toSlot].isEmpty();
-        items[toSlot] = getStackInSlot(fromSlot);
+        final Database target = arguments.count() > 2 ? database(arguments.checkString(2)) : this;
+        final int toSlot = checkSlot(arguments, 1, target.size());
+        final boolean overwritten = !target.getStackInSlot(toSlot).isEmpty();
+        target.setStackInSlot(toSlot, getStackInSlot(fromSlot));
         return new Object[]{overwritten};
     }
 
+    @Callback(doc = "function(address:string):number -- Copies the data stored in this database to another database with the specified address.")
+    public Object[] clone(final Context context, final Arguments arguments) {
+        final Database target = database(arguments.checkString(0));
+        final int slots = Math.min(size(), target.size());
+        for (int slot = 0; slot < slots; slot++) {
+            target.setStackInSlot(slot, getStackInSlot(slot));
+        }
+        if (context != null) {
+            context.pause(0.25);
+        }
+        return new Object[]{slots};
+    }
+
     private int checkSlot(final Arguments arguments, final int index) {
+        return checkSlot(arguments, index, items.length);
+    }
+
+    private int checkSlot(final Arguments arguments, final int index, final int size) {
         final int slot = arguments.checkInteger(index) - 1;
-        if (slot < 0 || slot >= items.length) {
+        if (slot < 0 || slot >= size) {
             throw new IllegalArgumentException("slot index out of bounds");
         }
         return slot;
+    }
+
+    private Database database(final String address) {
+        if (node() == null || node().network() == null) {
+            throw new IllegalArgumentException("no such component");
+        }
+        if (!(node().network().node(address) instanceof Component component)) {
+            throw new IllegalArgumentException("no such component");
+        }
+        if (!(component.host() instanceof Database database)) {
+            throw new IllegalArgumentException("not a database");
+        }
+        return database;
     }
 
     private void clearAll() {

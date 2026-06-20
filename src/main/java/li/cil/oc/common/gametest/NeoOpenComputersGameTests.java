@@ -143,6 +143,65 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void databaseUpgradeCopiesEntriesToAddressedDatabase(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
+        helper.assertTrue(driver != null, "No driver for database upgrade");
+        final ManagedEnvironment sourceEnvironment = driver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        final ManagedEnvironment targetEnvironment = driver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        helper.assertTrue(sourceEnvironment instanceof li.cil.oc.api.internal.Database, "Source is not a database");
+        helper.assertTrue(targetEnvironment instanceof li.cil.oc.api.internal.Database, "Target is not a database");
+        Network.joinNewNetwork(sourceEnvironment.node());
+        sourceEnvironment.node().connect(targetEnvironment.node());
+
+        ((li.cil.oc.api.internal.Database) sourceEnvironment).setStackInSlot(0, new ItemStack(Items.DIAMOND, 2));
+        ((li.cil.oc.api.internal.Database) targetEnvironment).setStackInSlot(1, new ItemStack(Items.GOLD_INGOT));
+        try {
+            final Object[] result = ((li.cil.oc.api.network.Component) sourceEnvironment.node()).invoke("copy", null, 1, 2, targetEnvironment.node().address());
+            helper.assertTrue(result.length == 1 && Boolean.TRUE.equals(result[0]), "Remote copy did not report overwritten slot");
+        } catch (Exception e) {
+            helper.fail("Remote database copy failed: " + e.getMessage());
+        }
+
+        final ItemStack copied = ((li.cil.oc.api.internal.Database) targetEnvironment).getStackInSlot(1);
+        helper.assertTrue(copied.is(Items.DIAMOND) && copied.getCount() == 2, "Remote database slot did not receive copied stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void databaseUpgradeClonesEntriesToAddressedDatabase(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
+        helper.assertTrue(driver != null, "No driver for database upgrade");
+        final ManagedEnvironment sourceEnvironment = driver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        final ManagedEnvironment targetEnvironment = driver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        helper.assertTrue(sourceEnvironment instanceof li.cil.oc.api.internal.Database, "Source is not a database");
+        helper.assertTrue(targetEnvironment instanceof li.cil.oc.api.internal.Database, "Target is not a database");
+        Network.joinNewNetwork(sourceEnvironment.node());
+        sourceEnvironment.node().connect(targetEnvironment.node());
+
+        final li.cil.oc.api.internal.Database source = (li.cil.oc.api.internal.Database) sourceEnvironment;
+        final li.cil.oc.api.internal.Database target = (li.cil.oc.api.internal.Database) targetEnvironment;
+        source.setStackInSlot(0, new ItemStack(Items.DIAMOND, 2));
+        source.setStackInSlot(1, new ItemStack(Items.EMERALD, 4));
+        target.setStackInSlot(0, new ItemStack(Items.GOLD_INGOT));
+        target.setStackInSlot(2, new ItemStack(Items.IRON_INGOT));
+        final double[] pauseSeconds = {0D};
+        final Context context = new DatabaseCloneContext(sourceEnvironment.node(), pauseSeconds);
+
+        try {
+            final Object[] result = ((li.cil.oc.api.network.Component) sourceEnvironment.node()).invoke("clone", context, targetEnvironment.node().address());
+            helper.assertTrue(result.length == 1 && result[0].equals(9), "Clone did not report copied slot count");
+        } catch (Exception e) {
+            helper.fail("Database clone failed: " + e.getMessage());
+        }
+
+        helper.assertTrue(target.getStackInSlot(0).is(Items.DIAMOND) && target.getStackInSlot(0).getCount() == 2, "Clone did not copy first source slot");
+        helper.assertTrue(target.getStackInSlot(1).is(Items.EMERALD) && target.getStackInSlot(1).getCount() == 4, "Clone did not copy second source slot");
+        helper.assertTrue(target.getStackInSlot(2).isEmpty(), "Clone did not clear stale target slot");
+        helper.assertTrue(pauseSeconds[0] == 0.25D, "Clone did not pause for upstream delay");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredComputerCasesReportTheirTier(final GameTestHelper helper) {
         final BlockPos tier1Pos = new BlockPos(0, 1, 0);
         final BlockPos tier2Pos = new BlockPos(1, 1, 0);
@@ -1123,6 +1182,48 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(signal.args().length == args.length, "Expected signal " + name + " to have " + args.length + " arguments but got " + signal.args().length);
         for (int index = 0; index < args.length; index++) {
             helper.assertTrue(args[index].equals(signal.args()[index]), "Expected signal " + name + " argument " + index + " to be " + args[index] + " but got " + signal.args()[index]);
+        }
+    }
+
+    private record DatabaseCloneContext(Node node, double[] pauseSeconds) implements Context {
+        @Override
+        public boolean canInteract(final String player) {
+            return true;
+        }
+
+        @Override
+        public boolean isRunning() {
+            return true;
+        }
+
+        @Override
+        public boolean isPaused() {
+            return false;
+        }
+
+        @Override
+        public boolean start() {
+            return true;
+        }
+
+        @Override
+        public boolean pause(final double seconds) {
+            pauseSeconds[0] = seconds;
+            return true;
+        }
+
+        @Override
+        public boolean stop() {
+            return true;
+        }
+
+        @Override
+        public void consumeCallBudget(final double callCost) {
+        }
+
+        @Override
+        public boolean signal(final String name, final Object... args) {
+            return true;
         }
     }
 
