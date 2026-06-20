@@ -6,6 +6,7 @@ import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
+import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -54,6 +55,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.KEYBOARD_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(KeyboardBlockEntity::new, ModBlocks.KEYBOARD.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<MotionSensorBlockEntity>> MOTION_SENSOR =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.MOTION_SENSOR_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(MotionSensorBlockEntity::new, ModBlocks.MOTION_SENSOR.get()).build(null));
 
     public static void register(final IEventBus modEventBus) {
         BLOCK_ENTITY_TYPES.register(modEventBus);

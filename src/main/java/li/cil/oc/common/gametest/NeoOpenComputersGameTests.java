@@ -68,6 +68,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.SCREEN_TIER2.get();
         ModBlocks.SCREEN_TIER3.get();
         ModBlocks.KEYBOARD.get();
+        ModBlocks.MOTION_SENSOR.get();
         ModItems.ADAPTER.get();
         ModItems.CABLE.get();
         ModItems.CPU_TIER1.get();
@@ -93,6 +94,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.MEMORY_TIER1.get();
         ModItems.MEMORY_TIER2.get();
         ModItems.MEMORY_TIER3.get();
+        ModItems.MOTION_SENSOR.get();
         ModItems.NETWORK_CARD.get();
         ModItems.WIRELESS_NETWORK_CARD_TIER1.get();
         ModItems.WIRELESS_NETWORK_CARD_TIER2.get();

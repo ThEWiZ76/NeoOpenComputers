@@ -6,6 +6,7 @@ import li.cil.oc.common.block.CableBlock;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.KeyboardBlock;
+import li.cil.oc.common.block.MotionSensorBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -57,6 +58,10 @@ public final class ModBlocks {
         ModContentIds.KEYBOARD,
         () -> new KeyboardBlock(keyboardProperties()));
 
+    public static final DeferredBlock<Block> MOTION_SENSOR = BLOCKS.register(
+        ModContentIds.MOTION_SENSOR,
+        () -> new MotionSensorBlock(motionSensorProperties()));
+
     public static void register(final IEventBus modEventBus) {
         BLOCKS.register(modEventBus);
     }
@@ -97,6 +102,12 @@ public final class ModBlocks {
     private static BlockBehaviour.Properties keyboardProperties() {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_GRAY)
+            .strength(1.0F, 3.0F);
+    }
+
+    private static BlockBehaviour.Properties motionSensorProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
             .strength(1.0F, 3.0F);
     }
 }

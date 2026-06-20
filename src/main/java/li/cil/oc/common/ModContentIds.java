@@ -40,6 +40,8 @@ public final class ModContentIds {
     public static final String MEMORY_TIER1 = "memory_tier1";
     public static final String MEMORY_TIER2 = "memory_tier2";
     public static final String MEMORY_TIER3 = "memory_tier3";
+    public static final String MOTION_SENSOR = "motion_sensor";
+    public static final String MOTION_SENSOR_BLOCK_ENTITY = "motion_sensor";
     public static final String NETWORK_CARD = "network_card";
     public static final String REDSTONE_CARD = "redstone_card";
     public static final String WIRELESS_NETWORK_CARD_TIER1 = "wireless_network_card_tier1";

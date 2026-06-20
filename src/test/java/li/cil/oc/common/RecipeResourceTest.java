@@ -50,6 +50,7 @@ final class RecipeResourceTest {
             ModContentIds.MEMORY_TIER1,
             ModContentIds.MEMORY_TIER2,
             ModContentIds.MEMORY_TIER3,
+            ModContentIds.MOTION_SENSOR,
             ModContentIds.NETWORK_CARD,
             ModContentIds.WIRELESS_NETWORK_CARD_TIER1,
             ModContentIds.WIRELESS_NETWORK_CARD_TIER2,

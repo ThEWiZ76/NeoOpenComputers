@@ -201,6 +201,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void motionSensorBlockIdIsStable() {
+        assertEquals("motion_sensor", ModContentIds.MOTION_SENSOR);
+    }
+
+    @Test
+    void motionSensorBlockEntityIdIsStable() {
+        assertEquals("motion_sensor", ModContentIds.MOTION_SENSOR_BLOCK_ENTITY);
+    }
+
+    @Test
     void computerCaseMenuIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
     }

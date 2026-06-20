@@ -174,6 +174,10 @@ public final class ModItems {
         ModContentIds.KEYBOARD,
         ModBlocks.KEYBOARD);
 
+    public static final DeferredItem<BlockItem> MOTION_SENSOR = ITEMS.registerSimpleBlockItem(
+        ModContentIds.MOTION_SENSOR,
+        ModBlocks.MOTION_SENSOR);
+
     public static void register(final IEventBus modEventBus) {
         ITEMS.register(modEventBus);
     }

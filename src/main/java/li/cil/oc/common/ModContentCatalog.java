@@ -62,6 +62,8 @@ public final class ModContentCatalog {
                 ModItems.SCREEN_TIER3.get(),
                 ModBlocks.KEYBOARD.get(),
                 ModItems.KEYBOARD.get(),
+                ModBlocks.MOTION_SENSOR.get(),
+                ModItems.MOTION_SENSOR.get(),
                 ModItems.MANUAL.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
@@ -115,6 +117,8 @@ public final class ModContentCatalog {
         final Item screenTier3Item,
         final Block keyboard,
         final Item keyboardItem,
+        final Block motionSensor,
+        final Item motionSensorItem,
         final Item manualItem,
         final Item cpuTier1Item,
         final Item cpuTier2Item,
@@ -160,6 +164,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_SCREEN_TIER2, screenTier2, screenTier2Item);
         registry.register(COMPAT_SCREEN_TIER3, screenTier3, screenTier3Item);
         registry.register(ModContentIds.KEYBOARD, keyboard, keyboardItem);
+        registry.register(ModContentIds.MOTION_SENSOR, motionSensor, motionSensorItem);
         registry.register(ModContentIds.CPU_TIER1, null, cpuTier1Item);
         registry.register(ModContentIds.CPU_TIER2, null, cpuTier2Item);
         registry.register(ModContentIds.CPU_TIER3, null, cpuTier3Item);
