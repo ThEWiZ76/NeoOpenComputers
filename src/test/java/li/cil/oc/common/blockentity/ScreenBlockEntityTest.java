@@ -3,6 +3,9 @@ package li.cil.oc.common.blockentity;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.common.component.KeyboardEnvironment;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -15,6 +18,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ScreenBlockEntityTest {
@@ -24,6 +28,7 @@ final class ScreenBlockEntityTest {
         assertCallback("turnOn");
         assertCallback("turnOff");
         assertCallback("getAspectRatio");
+        assertCallback("getKeyboards");
         assertCallback("isPrecise");
         assertCallback("setPrecise");
     }
@@ -55,6 +60,22 @@ final class ScreenBlockEntityTest {
         assertArrayEquals(new Object[]{true}, loaded.isPrecise(null, new TestArguments()));
     }
 
+    @Test
+    void listsNeighborKeyboardAddresses() throws Exception {
+        OpenComputersApi.initialize();
+        ScreenBlockEntity screen = allocateScreen();
+        Node screenNode = screen.node();
+        li.cil.oc.api.Network.joinNewNetwork(screenNode);
+        TestKeyboard keyboard = new TestKeyboard();
+        keyboard.node = KeyboardEnvironment.createNode(keyboard);
+
+        screenNode.connect(keyboard.node);
+        Object[] result = screen.getKeyboards(null, new TestArguments());
+
+        assertEquals(1, result.length);
+        assertArrayEquals(new String[]{keyboard.node.address()}, (String[]) result[0]);
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = ScreenBlockEntity.class.getMethod(methodName, Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
@@ -70,6 +91,18 @@ final class ScreenBlockEntityTest {
         Field field = ScreenBlockEntity.class.getDeclaredField("buffer");
         field.setAccessible(true);
         field.set(screen, new TextBufferState(1, 1));
+    }
+
+    private static final class TestKeyboard implements li.cil.oc.api.internal.Keyboard {
+        private Node node;
+
+        @Override public void setUsableOverride(final UsabilityChecker callback) {}
+        @Override public Node node() { return node; }
+        @Override public void onConnect(final Node node) {}
+        @Override public void onDisconnect(final Node node) {}
+        @Override public void onMessage(final Message message) {}
+        @Override public void load(final CompoundTag nbt) {}
+        @Override public void save(final CompoundTag nbt) {}
     }
 
     private record TestArguments(Object... values) implements Arguments {

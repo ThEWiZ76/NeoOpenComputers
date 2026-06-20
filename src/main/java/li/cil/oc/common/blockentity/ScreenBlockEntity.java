@@ -2,6 +2,7 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.internal.Keyboard;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -17,6 +18,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo {
@@ -126,6 +128,19 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Callback(direct = true, doc = "function():number, number -- The aspect ratio of the screen.")
     public Object[] getAspectRatio(final Context context, final Arguments args) {
         return new Object[]{aspectWidth, aspectHeight};
+    }
+
+    @Callback(doc = "function():table -- The list of keyboards attached to the screen.")
+    public Object[] getKeyboards(final Context context, final Arguments args) {
+        final ArrayList<String> addresses = new ArrayList<>();
+        if (node() != null) {
+            for (Node neighbor : node().neighbors()) {
+                if (neighbor.host() instanceof Keyboard && neighbor.address() != null) {
+                    addresses.add(neighbor.address());
+                }
+            }
+        }
+        return new Object[]{addresses.toArray(String[]::new)};
     }
 
     @Callback(direct = true, doc = "function():boolean -- Returns whether the screen is in high precision mode.")
