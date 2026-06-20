@@ -289,6 +289,7 @@ final class RecipeResourceTest {
         JsonObject adapter = recipeKeys(ModContentIds.ADAPTER);
         JsonObject redstone = recipeKeys(ModContentIds.REDSTONE_IO);
         JsonObject motion = recipeKeys(ModContentIds.MOTION_SENSOR);
+        JsonObject transposer = recipeKeys(ModContentIds.TRANSPOSER);
 
         assertItem(adapter, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(adapter, "C", "neoopencomputers:" + ModContentIds.CABLE);
@@ -301,6 +302,11 @@ final class RecipeResourceTest {
         assertItem(motion, "C", "neoopencomputers:" + ModContentIds.CPU_TIER2);
         assertItem(motion, "D", "minecraft:daylight_detector");
         assertTag(motion, "G", "c:ingots/gold");
+        assertItem(transposer, "I", "neoopencomputers:" + ModContentIds.INVENTORY_CONTROLLER_UPGRADE);
+        assertItem(transposer, "T", "neoopencomputers:" + ModContentIds.TANK_CONTROLLER_UPGRADE);
+        assertItem(transposer, "H", "minecraft:hopper");
+        assertItem(transposer, "B", "minecraft:bucket");
+        assertTag(transposer, "G", "c:ingots/iron");
     }
 
     private static JsonObject readJson(final Path path) throws IOException {
