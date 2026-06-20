@@ -908,6 +908,9 @@ public final class NeoOpenComputersGameTests {
         assertTankCapacity(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 16000);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), false, 16D);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), true, 400D);
+        assertScreenItemDriver(helper, new ItemStack(ModItems.SCREEN_TIER1.get()), 0, 50, 16, TextBuffer.ColorDepth.OneBit);
+        assertScreenItemDriver(helper, new ItemStack(ModItems.SCREEN_TIER2.get()), 1, 80, 25, TextBuffer.ColorDepth.FourBit);
+        assertScreenItemDriver(helper, new ItemStack(ModItems.SCREEN_TIER3.get()), 2, 160, 50, TextBuffer.ColorDepth.EightBit);
         helper.succeed();
     }
 
@@ -2424,6 +2427,22 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(wiredResult.length == 1 && Boolean.valueOf(wired).equals(wiredResult[0]), "Expected " + stack + " wired=" + wired);
         final Object[] strengthResult = invokeComponent(helper, component, "getStrength");
         helper.assertTrue(strengthResult.length == 1 && Double.valueOf(strength).equals(strengthResult[0]), "Expected " + stack + " strength " + strength);
+    }
+
+    private static void assertScreenItemDriver(final GameTestHelper helper, final ItemStack stack, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        helper.assertTrue(Slot.Upgrade.equals(driver.slot(stack)), "Expected screen item upgrade slot for " + stack);
+        helper.assertTrue(driver.tier(stack) == tier, "Expected screen tier " + tier + " for " + stack + " but got " + driver.tier(stack));
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment instanceof TextBuffer, "Screen item did not create text buffer environment for " + stack);
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Screen item has no component node for " + stack);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("screen".equals(component.name()), "Screen item component name mismatch for " + stack);
+        final TextBuffer buffer = (TextBuffer) environment;
+        helper.assertTrue(buffer.getMaximumWidth() == width, "Expected screen item max width " + width + " but got " + buffer.getMaximumWidth());
+        helper.assertTrue(buffer.getMaximumHeight() == height, "Expected screen item max height " + height + " but got " + buffer.getMaximumHeight());
+        helper.assertTrue(buffer.getMaximumColorDepth() == depth, "Expected screen item depth " + depth + " but got " + buffer.getMaximumColorDepth());
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {
