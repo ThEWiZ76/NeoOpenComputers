@@ -8,6 +8,7 @@ import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
 import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.NetworkCardItem;
+import li.cil.oc.common.item.RedstoneCardItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
@@ -98,6 +99,10 @@ public final class ModItems {
     public static final DeferredItem<NetworkCardItem> NETWORK_CARD = ITEMS.register(
         ModContentIds.NETWORK_CARD,
         () -> new NetworkCardItem(new Item.Properties()));
+
+    public static final DeferredItem<RedstoneCardItem> REDSTONE_CARD = ITEMS.register(
+        ModContentIds.REDSTONE_CARD,
+        () -> new RedstoneCardItem(new Item.Properties()));
 
     public static final DeferredItem<BlockItem> SCREEN_TIER1 = ITEMS.registerSimpleBlockItem(
         ModContentIds.SCREEN_TIER1,

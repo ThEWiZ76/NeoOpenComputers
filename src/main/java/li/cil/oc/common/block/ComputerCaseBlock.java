@@ -10,6 +10,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -82,6 +83,19 @@ public class ComputerCaseBlock extends HorizontalDirectionalBlock implements Ent
         }
         Containers.dropContentsOnDestroy(state, newState, level, pos);
         super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    @Override
+    protected boolean isSignalSource(final BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected int getSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
+        if (level.getBlockEntity(pos) instanceof ComputerCaseBlockEntity computerCase) {
+            return computerCase.redstoneOutput(direction);
+        }
+        return 0;
     }
 
     @Override

@@ -18,7 +18,7 @@ public final class ModDriverCatalog {
                 ModItems.HDD_TIER1.get(), ModItems.HDD_TIER2.get(), ModItems.HDD_TIER3.get(),
                 ModItems.EEPROM.get(), ModItems.FLOPPY.get(),
                 ModItems.GRAPHICS_CARD_TIER1.get(), ModItems.GRAPHICS_CARD_TIER2.get(), ModItems.GRAPHICS_CARD_TIER3.get(),
-                ModItems.NETWORK_CARD.get());
+                ModItems.NETWORK_CARD.get(), ModItems.REDSTONE_CARD.get());
         }
     }
 

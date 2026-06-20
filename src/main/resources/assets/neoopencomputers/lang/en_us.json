@@ -24,6 +24,7 @@
   "item.neoopencomputers.memory_tier2": "Memory (Tier 2)",
   "item.neoopencomputers.memory_tier3": "Memory (Tier 3)",
   "item.neoopencomputers.network_card": "Network Card",
+  "item.neoopencomputers.redstone_card": "Redstone Card",
   "itemGroup.neoopencomputers": "NeoOpenComputers",
   "mod.neoopencomputers": "NeoOpenComputers"
 }

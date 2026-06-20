@@ -20,6 +20,7 @@ final class RecipeResourceTest {
     @Test
     void registeredContentHasCraftingRecipes() throws IOException {
         List<String> ids = List.of(
+            ModContentIds.CABLE,
             ModContentIds.COMPUTER_CASE_TIER1,
             ModContentIds.COMPUTER_CASE_TIER2,
             ModContentIds.COMPUTER_CASE_TIER3,
@@ -41,6 +42,7 @@ final class RecipeResourceTest {
             ModContentIds.MEMORY_TIER2,
             ModContentIds.MEMORY_TIER3,
             ModContentIds.NETWORK_CARD,
+            ModContentIds.REDSTONE_CARD,
             ModContentIds.SCREEN_TIER1,
             ModContentIds.SCREEN_TIER2,
             ModContentIds.SCREEN_TIER3);

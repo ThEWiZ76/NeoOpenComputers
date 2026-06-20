@@ -46,6 +46,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     private static final String TAG_COLOR = "oc:color";
     private static final String TAG_MACHINE = "oc:machine";
+    private static final String TAG_REDSTONE_OUTPUTS = "oc:redstoneOutputs";
     private static final String SLOT_TYPE_EEPROM = "eeprom";
     private static final int TIER_ANY = Integer.MAX_VALUE;
     private static final CaseSlot[][] SLOT_LAYOUTS = {
@@ -89,6 +90,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private int pendingComponentSlot = -1;
     private int tier;
     private int color;
+    private final int[] redstoneOutputs = new int[6];
 
     public ComputerCaseBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.COMPUTER_CASE.get(), pos, blockState);
@@ -231,6 +233,41 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     public void setColor(final int value) {
         color = value;
         setChanged();
+    }
+
+    public int redstoneOutput(final Direction direction) {
+        synchronized (redstoneOutputs) {
+            return redstoneOutputs[direction.get3DDataValue()];
+        }
+    }
+
+    public void setRedstoneOutput(final Direction direction, final int value) {
+        final int clampedValue = Math.clamp(value, 0, 15);
+        final int index = direction.get3DDataValue();
+        synchronized (redstoneOutputs) {
+            if (redstoneOutputs[index] == clampedValue) {
+                return;
+            }
+            redstoneOutputs[index] = clampedValue;
+        }
+
+        scheduleRedstoneUpdate(direction);
+    }
+
+    private void scheduleRedstoneUpdate(final Direction direction) {
+        if (level != null && level.getServer() != null && !level.getServer().isSameThread()) {
+            level.getServer().execute(() -> updateRedstoneNeighbors(direction));
+            return;
+        }
+        updateRedstoneNeighbors(direction);
+    }
+
+    private void updateRedstoneNeighbors(final Direction direction) {
+        markChangedOnServerThread();
+        if (level != null) {
+            level.updateNeighborsAt(getBlockPos(), getBlockState().getBlock());
+            level.updateNeighborsAt(getBlockPos().relative(direction), getBlockState().getBlock());
+        }
     }
 
     @Override
@@ -439,6 +476,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         color = tag.getInt(TAG_COLOR);
+        loadRedstoneOutputs(tag);
         ContainerHelper.loadAllItems(tag, items, registries);
         notifyHardwareChanged(machine);
         machine.load(tag.getCompound(TAG_MACHINE));
@@ -448,6 +486,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putInt(TAG_COLOR, color);
+        tag.putIntArray(TAG_REDSTONE_OUTPUTS, redstoneOutputs);
         ContainerHelper.saveAllItems(tag, items, registries);
         final CompoundTag machineTag = new CompoundTag();
         machine.save(machineTag);
@@ -487,6 +526,13 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private void markChangedOnServerThread() {
         pendingServerThreadChangeMark = false;
         super.setChanged();
+    }
+
+    private void loadRedstoneOutputs(final CompoundTag tag) {
+        final int[] savedOutputs = tag.getIntArray(TAG_REDSTONE_OUTPUTS);
+        for (int index = 0; index < redstoneOutputs.length; index++) {
+            redstoneOutputs[index] = index < savedOutputs.length ? Math.clamp(savedOutputs[index], 0, 15) : 0;
+        }
     }
 
     private static String driverSlotType(final ItemStack stack) {

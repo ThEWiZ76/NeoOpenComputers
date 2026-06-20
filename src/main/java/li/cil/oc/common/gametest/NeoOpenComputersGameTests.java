@@ -73,6 +73,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.MEMORY_TIER2.get();
         ModItems.MEMORY_TIER3.get();
         ModItems.NETWORK_CARD.get();
+        ModItems.REDSTONE_CARD.get();
         helper.succeed();
     }
 
@@ -377,6 +378,35 @@ public final class NeoOpenComputersGameTests {
         helper.runAtTickTime(80, () -> {
             helper.assertTrue(computer.machine().isRunning(), "Computer stopped while booting from hard disk: " + computer.machine().lastError());
             assertNextSignal(helper, computer, "hdd_booted", "ok");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 160)
+    public static void installedRedstoneCardEmitsWorldSignal(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final ItemStack bootDisk = bootableHardDiskStack(helper, """
+            local redstone = component.proxy(component.list('redstone')())
+            local previous = redstone.setOutput(5, 15)
+            computer.pushSignal('redstone_set', previous, redstone.getOutput(5))
+            """);
+
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.REDSTONE_CARD.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootDisk);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.machine().components().containsValue("redstone"), "Redstone component is not visible: " + computer.machine().components());
+        helper.assertTrue(computer.toggleMachine(), "Computer did not start with redstone card");
+        helper.runAtTickTime(100, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Computer stopped while setting redstone output: " + computer.machine().lastError());
+            assertNextSignal(helper, computer, "redstone_set", 0D, 15D);
+            helper.assertTrue(helper.getLevel().getSignal(helper.absolutePos(computerPos), Direction.EAST) == 15, "Computer case did not emit east redstone signal");
             helper.succeed();
         });
     }

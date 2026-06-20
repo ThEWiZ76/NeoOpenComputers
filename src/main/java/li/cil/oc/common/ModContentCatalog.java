@@ -21,6 +21,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_MEMORY_TIER2 = "ram2";
     public static final String COMPAT_MEMORY_TIER3 = "ram3";
     public static final String COMPAT_NETWORK_CARD = "lancard";
+    public static final String COMPAT_REDSTONE_CARD = "redstone";
     public static final String COMPAT_SCREEN_TIER1 = "screen1";
     public static final String COMPAT_SCREEN_TIER2 = "screen2";
     public static final String COMPAT_SCREEN_TIER3 = "screen3";
@@ -62,7 +63,8 @@ public final class ModContentCatalog {
                 ModItems.GRAPHICS_CARD_TIER1.get(),
                 ModItems.GRAPHICS_CARD_TIER2.get(),
                 ModItems.GRAPHICS_CARD_TIER3.get(),
-                ModItems.NETWORK_CARD.get());
+                ModItems.NETWORK_CARD.get(),
+                ModItems.REDSTONE_CARD.get());
         }
     }
 
@@ -101,7 +103,8 @@ public final class ModContentCatalog {
         final Item graphicsCardTier1Item,
         final Item graphicsCardTier2Item,
         final Item graphicsCardTier3Item,
-        final Item networkCardItem) {
+        final Item networkCardItem,
+        final Item redstoneCardItem) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
@@ -133,6 +136,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.GRAPHICS_CARD_TIER2, null, graphicsCardTier2Item);
         registry.register(ModContentIds.GRAPHICS_CARD_TIER3, null, graphicsCardTier3Item);
         registry.register(ModContentIds.NETWORK_CARD, null, networkCardItem);
+        registry.register(ModContentIds.REDSTONE_CARD, null, redstoneCardItem);
         registry.register(COMPAT_CPU_TIER1, null, cpuTier1Item);
         registry.register(COMPAT_CPU_TIER2, null, cpuTier2Item);
         registry.register(COMPAT_CPU_TIER3, null, cpuTier3Item);
@@ -146,6 +150,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_GRAPHICS_CARD_TIER2, null, graphicsCardTier2Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER3, null, graphicsCardTier3Item);
         registry.register(COMPAT_NETWORK_CARD, null, networkCardItem);
+        registry.register(COMPAT_REDSTONE_CARD, null, redstoneCardItem);
     }
 
     private ModContentCatalog() {
