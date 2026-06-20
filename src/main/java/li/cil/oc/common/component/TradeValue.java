@@ -123,17 +123,13 @@ public class TradeValue extends AbstractValue {
         final ItemCost secondCost = offer.getItemCostB().orElse(null);
         final int secondCostCount = offer.getCostB().getCount();
         final ItemStack output = offer.getResult().copy();
-        if (!extract(inventory, firstCost::test, firstCostCount, true)
-            || !extract(inventory, stack -> secondCost == null || secondCost.test(stack), secondCost == null ? 0 : secondCostCount, true)) {
-            return new Object[]{false, "not enough items to trade"};
-        }
-        if (!insert(inventory, output, true)) {
-            return new Object[]{false, "not enough inventory space to trade"};
-        }
 
         final ItemStack[] snapshot = snapshot(inventory);
-        extract(inventory, firstCost::test, firstCostCount, false);
-        extract(inventory, stack -> secondCost == null || secondCost.test(stack), secondCost == null ? 0 : secondCostCount, false);
+        if (!extract(inventory, firstCost::test, firstCostCount, false)
+            || !extract(inventory, stack -> secondCost == null || secondCost.test(stack), secondCost == null ? 0 : secondCostCount, false)) {
+            restore(inventory, snapshot);
+            return new Object[]{false, "not enough items to trade"};
+        }
         if (!insert(inventory, output, false)) {
             restore(inventory, snapshot);
             return new Object[]{false, "not enough inventory space to trade"};

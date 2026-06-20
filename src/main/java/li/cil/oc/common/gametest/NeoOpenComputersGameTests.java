@@ -87,6 +87,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -1198,6 +1199,43 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(traded.length == 1 && Boolean.TRUE.equals(traded[0]), "Trade did not accept matching item cost with extra components");
         helper.assertTrue(!containsStack(host.mainInventory(), Items.EMERALD, 1), "Trade did not consume renamed emerald");
         helper.assertTrue(containsStack(host.mainInventory(), Items.BREAD, 3), "Trade did not insert bread");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tradingUpgradeDoesNotDoubleCountTwoCosts(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for trading upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        host.mainInventory().setItem(0, new ItemStack(Items.EMERALD));
+        final BlockPos villagerPos = helper.absolutePos(new BlockPos(1, 0, 0));
+        final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "Villager did not spawn");
+        final MerchantOffers offers = new MerchantOffers();
+        offers.add(new MerchantOffer(
+            new ItemCost(Items.EMERALD, 1),
+            Optional.of(new ItemCost(Items.EMERALD, 1)),
+            new ItemStack(Items.BREAD, 3),
+            4,
+            1,
+            0.05F));
+        villager.setOffers(offers);
+        villager.setNoAi(true);
+        villager.moveTo(villagerPos.getX() + 0.5D, villagerPos.getY(), villagerPos.getZ() + 0.5D, 0, 0);
+        helper.getLevel().addFreshEntity(villager);
+
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRADING_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Trading upgrade did not create trading environment");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        final Object[] result = component.invoke("getTrades", null);
+        final Object trade = ((java.util.List<?>) result[0]).getFirst();
+        final Method tradeMethod = trade.getClass().getMethod("trade", Context.class, Arguments.class);
+        final Object[] traded = (Object[]) tradeMethod.invoke(trade, null, null);
+
+        helper.assertTrue(traded.length >= 2 && Boolean.FALSE.equals(traded[0]) && "not enough items to trade".equals(traded[1]), "Two-cost trade should reject one emerald");
+        helper.assertTrue(containsStack(host.mainInventory(), Items.EMERALD, 1), "Rejected trade consumed emerald");
+        helper.assertTrue(!containsStack(host.mainInventory(), Items.BREAD, 1), "Rejected trade inserted bread");
         helper.succeed();
     }
 
