@@ -88,6 +88,15 @@ runs {
     }
 }
 
+tasks.register('syncGameTestStructures', Sync) {
+    from layout.projectDirectory.dir('gameteststructures')
+    into layout.projectDirectory.dir('run/gameTestServer/gameteststructures')
+}
+
+tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+    dependsOn tasks.named('syncGameTestStructures')
+}
+
 // Sets up a dependency configuration called 'localRuntime'.
 // This configuration should be used instead of 'runtimeOnly' to declare
 // a dependency that will be present for runtime testing but that is
