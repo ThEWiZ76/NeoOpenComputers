@@ -16,6 +16,7 @@ import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
+import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -237,6 +238,38 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 260)
+    public static void openOsTerminalEchoesKeyboardInput(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+        final BlockPos diskDrivePos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.toggleMachine(), "Computer case did not start with OpenOS terminal setup");
+        helper.runAtTickTime(120, () -> {
+            typeKey(screen, 'z', 0x2C);
+            typeKey(screen, 'z', 0x2C);
+        });
+        helper.runAtTickTime(220, () -> {
+            helper.assertTrue(screenText(screen).contains("zz"), "OpenOS terminal did not echo keyboard input:\n" + screenText(screen));
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void tier3ComputerBootsOpenOsFromInternalFloppy(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
@@ -389,14 +422,15 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
 
         final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final KeyboardBlockEntity keyboard = helper.getBlockEntity(keyboardPos);
         final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
         helper.assertTrue(screen.node().network() == computer.node().network(), "Screen and computer are not on the same network");
         screen.keyDown('a', 30, null);
         screen.keyUp('a', 30, null);
 
         helper.runAtTickTime(5, () -> {
-            assertNextSignal(helper, computer, "key_down", 'a', 30);
-            assertNextSignal(helper, computer, "key_up", 'a', 30);
+            assertNextSignal(helper, computer, "key_down", keyboard.node().address(), (int) 'a', 30);
+            assertNextSignal(helper, computer, "key_up", keyboard.node().address(), (int) 'a', 30);
             helper.succeed();
         });
     }
@@ -618,6 +652,11 @@ public final class NeoOpenComputersGameTests {
         } catch (Exception e) {
             helper.fail("Failed to inspect dropped hard disk: " + e.getMessage());
         }
+    }
+
+    private static void typeKey(final ScreenBlockEntity screen, final char character, final int code) {
+        screen.keyDown(character, code, null);
+        screen.keyUp(character, code, null);
     }
 
     private static boolean screenHasNonBlankText(final ScreenBlockEntity screen) {

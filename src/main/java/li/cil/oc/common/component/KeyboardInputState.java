@@ -28,7 +28,7 @@ public final class KeyboardInputState {
                 final char character = toCharacter(data[1]);
                 final int code = toInteger(data[2]);
                 pressedKeys.computeIfAbsent(player, ignored -> new HashMap<>()).put(code, character);
-                node.sendToReachable(SIGNAL_MESSAGE, "key_down", character, code);
+                node.sendToReachable(SIGNAL_MESSAGE, "key_down", node.address(), (int) character, code);
             }
         } else if (KEY_UP_MESSAGE.equals(message.name()) && data.length >= 3) {
             final Player player = (Player) data[0];
@@ -40,13 +40,13 @@ public final class KeyboardInputState {
                 if (playerKeys.isEmpty()) {
                     pressedKeys.remove(player);
                 }
-                node.sendToReachable(SIGNAL_MESSAGE, "key_up", character, code);
+                node.sendToReachable(SIGNAL_MESSAGE, "key_up", node.address(), (int) character, code);
             }
         } else if (CLIPBOARD_MESSAGE.equals(message.name()) && data.length >= 2) {
             final Player player = (Player) data[0];
             if (isUsable.test(player)) {
                 final String value = String.valueOf(data[1]);
-                value.lines().forEach(line -> node.sendToReachable(SIGNAL_MESSAGE, "clipboard", line));
+                value.lines().forEach(line -> node.sendToReachable(SIGNAL_MESSAGE, "clipboard", node.address(), line));
             }
         }
     }

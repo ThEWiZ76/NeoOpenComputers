@@ -259,10 +259,24 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.load(new JseMathLib());
         globals.set("package", LuaValue.NIL);
         installCheckArg(globals);
+        installDebugLibrary(globals);
         installStringCompatibility(globals);
         LoadState.install(globals);
         LuaC.install(globals);
         return globals;
+    }
+
+    private static void installDebugLibrary(final Globals globals) {
+        final LuaTable debug = new LuaTable();
+        debug.set("traceback", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaValue message = args.arg(1);
+                final String prefix = message.isnil() ? "" : message.tojstring() + "\n";
+                return LuaValue.valueOf(prefix + "stack traceback unavailable");
+            }
+        });
+        globals.set("debug", debug);
     }
 
     private static void installCheckArg(final Globals globals) {

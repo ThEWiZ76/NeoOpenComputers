@@ -116,6 +116,20 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesMinimalDebugTraceback() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            tracebackType = type(debug.traceback)
+            tracebackText = debug.traceback('boot failed')
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("function", architecture.globalString("tracebackType"));
+        assertTrue(architecture.globalString("tracebackText").contains("boot failed"));
+    }
+
+    @Test
     void exposesTablePackAndUnpackCompatibility() {
         LuaArchitecture architecture = new LuaArchitecture("""
             packed = table.pack('a', nil, 'c')

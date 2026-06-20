@@ -24,8 +24,8 @@ final class KeyboardInputStateTest {
         state.onMessage(node, new TestMessage("keyboard.keyUp", null, 'a', 30), player -> true);
 
         assertEquals(2, node.signals.size());
-        assertEquals(List.of("computer.checked_signal", "key_down", 'a', 30), node.signals.get(0));
-        assertEquals(List.of("computer.checked_signal", "key_up", 'a', 30), node.signals.get(1));
+        assertEquals(List.of("computer.checked_signal", "key_down", "keyboard", (int) 'a', 30), node.signals.get(0));
+        assertEquals(List.of("computer.checked_signal", "key_up", "keyboard", (int) 'a', 30), node.signals.get(1));
     }
 
     @Test
@@ -46,8 +46,8 @@ final class KeyboardInputStateTest {
         state.onMessage(node, new TestMessage("keyboard.clipboard", null, "alpha\nbeta"), player -> true);
 
         assertEquals(2, node.signals.size());
-        assertEquals(List.of("computer.checked_signal", "clipboard", "alpha"), node.signals.get(0));
-        assertEquals(List.of("computer.checked_signal", "clipboard", "beta"), node.signals.get(1));
+        assertEquals(List.of("computer.checked_signal", "clipboard", "keyboard", "alpha"), node.signals.get(0));
+        assertEquals(List.of("computer.checked_signal", "clipboard", "keyboard", "beta"), node.signals.get(1));
     }
 
     private record TestMessage(String name, Object... data) implements Message {
