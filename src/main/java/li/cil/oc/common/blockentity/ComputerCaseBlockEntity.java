@@ -547,11 +547,27 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (level == null) {
             return;
         }
+        final String redstoneAddress = componentAddress("redstone");
         synchronized (redstoneInputs) {
             for (Direction direction : Direction.values()) {
-                redstoneInputs[direction.get3DDataValue()] = level.getSignal(worldPosition.relative(direction), direction.getOpposite());
+                final int index = direction.get3DDataValue();
+                final int oldValue = redstoneInputs[index];
+                final int newValue = level.getSignal(worldPosition.relative(direction), direction.getOpposite());
+                redstoneInputs[index] = newValue;
+                if (redstoneAddress != null && oldValue != newValue) {
+                    machine.signal("redstone_changed", redstoneAddress, toLocal(direction).get3DDataValue(), oldValue, newValue);
+                }
             }
         }
+    }
+
+    private String componentAddress(final String componentName) {
+        for (Map.Entry<String, String> entry : machine.components().entrySet()) {
+            if (componentName.equals(entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
     private static String driverSlotType(final ItemStack stack) {

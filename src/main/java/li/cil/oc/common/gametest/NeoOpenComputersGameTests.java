@@ -471,6 +471,38 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 180)
+    public static void redstoneCardQueuesInputChangeSignal(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final ItemStack bootDisk = bootableHardDiskStack(helper, """
+            while true do
+              local event, address, side, oldValue, newValue = computer.pullSignal(1)
+              if event == 'redstone_changed' then
+                computer.pushSignal('redstone_change_seen', address, side, oldValue, newValue)
+                break
+              end
+            end
+            """);
+
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.REDSTONE_CARD.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootDisk);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.toggleMachine(), "Computer did not start with redstone card");
+        helper.runAtTickTime(40, () -> helper.setBlock(computerPos.east(), Blocks.REDSTONE_BLOCK));
+        helper.runAtTickTime(120, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Computer stopped while waiting for redstone change: " + computer.machine().lastError());
+            assertNextSignal(helper, computer, "redstone_change_seen", componentAddress(computer, "redstone"), 5D, 0D, 15D);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void installedNetworkCardsExchangeModemMessages(final GameTestHelper helper) {
         final BlockPos receiverPos = new BlockPos(1, 1, 1);
