@@ -899,6 +899,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void craftingUpgradeCraftsTopLeftInventoryGrid(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.CRAFTING_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for crafting upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        host.mainInventory().setItem(0, new ItemStack(Items.OAK_LOG));
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.CRAFTING_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Crafting upgrade did not create crafting environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Crafting node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("crafting".equals(component.name()), "Crafting component name mismatch");
+
+        final Object[] craft = component.invoke("craft", null, 4);
+        helper.assertTrue(Boolean.TRUE.equals(craft[0]) && Integer.valueOf(4).equals(craft[1]), "Crafting upgrade did not craft four planks");
+        helper.assertTrue(!host.mainInventory().getItem(0).is(Items.OAK_LOG), "Crafting upgrade did not consume input log");
+        helper.assertTrue(containsStack(host.mainInventory(), Items.OAK_PLANKS, 4), "Crafting upgrade did not store crafted planks");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void databaseUpgradeCopiesEntriesToAddressedDatabase(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
         helper.assertTrue(driver != null, "No driver for database upgrade");
@@ -1806,6 +1826,16 @@ public final class NeoOpenComputersGameTests {
         final DriverItem driver = Driver.driverFor(stack);
         helper.assertTrue(driver != null, "No driver for " + stack);
         helper.assertTrue(driver.tier(stack) == tier, "Expected " + stack + " to report tier " + tier + " but got " + driver.tier(stack));
+    }
+
+    private static boolean containsStack(final net.minecraft.world.Container inventory, final Item item, final int count) {
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            final ItemStack stack = inventory.getItem(slot);
+            if (stack.is(item) && stack.getCount() >= count) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void assertProcessorComponents(final GameTestHelper helper, final ItemStack stack, final int supportedComponents) {
