@@ -50,6 +50,7 @@ import java.util.concurrent.Callable;
 public final class NeoOpenComputersGameTests {
     @GameTest(template = "empty")
     public static void registeredContentAvailable(final GameTestHelper helper) {
+        ModBlocks.ADAPTER.get();
         ModBlocks.CABLE.get();
         ModBlocks.COMPUTER_CASE_TIER1.get();
         ModBlocks.COMPUTER_CASE_TIER2.get();
@@ -59,6 +60,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.SCREEN_TIER2.get();
         ModBlocks.SCREEN_TIER3.get();
         ModBlocks.KEYBOARD.get();
+        ModItems.ADAPTER.get();
         ModItems.CABLE.get();
         ModItems.CPU_TIER1.get();
         ModItems.CPU_TIER2.get();
@@ -207,6 +209,26 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(computer.node().network() != null, "Computer has no network");
             helper.assertTrue(cable.node().network() == computer.node().network(), "Cable is not on the computer network");
             helper.assertTrue(diskDrive.node().network() == computer.node().network(), "Disk drive is not connected through cable");
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterConnectsSeparatedBlocks(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos diskDrivePos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final li.cil.oc.common.blockentity.AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+            final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(adapter.node().network() == computer.node().network(), "Adapter is not on the computer network");
+            helper.assertTrue(diskDrive.node().network() == computer.node().network(), "Disk drive is not connected through adapter");
         });
     }
 

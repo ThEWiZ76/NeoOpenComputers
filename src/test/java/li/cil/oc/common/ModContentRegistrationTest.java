@@ -16,6 +16,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void adapterBlockIdIsStable() {
+        assertEquals("adapter", ModContentIds.ADAPTER);
+    }
+
+    @Test
+    void adapterBlockEntityIdIsStable() {
+        assertEquals("adapter", ModContentIds.ADAPTER_BLOCK_ENTITY);
+    }
+
+    @Test
     void computerCaseBlockIdIsStable() {
         assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
     }
