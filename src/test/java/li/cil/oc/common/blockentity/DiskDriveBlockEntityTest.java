@@ -7,6 +7,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
 import net.minecraft.world.Container;
+import net.minecraft.world.MenuProvider;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
@@ -31,6 +32,7 @@ final class DiskDriveBlockEntityTest {
         assertTrue(EnvironmentHost.class.isAssignableFrom(DiskDriveBlockEntity.class));
         assertTrue(Container.class.isAssignableFrom(DiskDriveBlockEntity.class));
         assertTrue(DeviceInfo.class.isAssignableFrom(DiskDriveBlockEntity.class));
+        assertTrue(MenuProvider.class.isAssignableFrom(DiskDriveBlockEntity.class));
     }
 
     @Test

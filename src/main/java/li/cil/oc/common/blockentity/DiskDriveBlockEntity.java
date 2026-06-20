@@ -18,15 +18,20 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import li.cil.oc.common.menu.DiskDriveMenu;
 
 import java.util.Map;
 
-public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo {
+public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo, MenuProvider {
     public static final int SLOT_FLOPPY = 0;
     public static final int CONTAINER_SIZE = 1;
 
@@ -51,6 +56,16 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     public static boolean acceptsDriverSlot(final String slot) {
         return Slot.Floppy.equals(slot);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.disk_drive");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new DiskDriveMenu(containerId, playerInventory, this);
     }
 
     @Override

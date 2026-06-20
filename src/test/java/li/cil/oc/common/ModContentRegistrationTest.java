@@ -84,4 +84,9 @@ final class ModContentRegistrationTest {
     void computerCaseMenuIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
     }
+
+    @Test
+    void diskDriveMenuIdIsStable() {
+        assertEquals("disk_drive", ModContentIds.DISK_DRIVE_MENU);
+    }
 }

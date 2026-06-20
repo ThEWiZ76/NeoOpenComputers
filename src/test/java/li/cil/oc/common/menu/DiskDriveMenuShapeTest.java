@@ -1,0 +1,31 @@
+package li.cil.oc.common.menu;
+
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Constructor;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+final class DiskDriveMenuShapeTest {
+    @Test
+    void diskDriveMenuHasClientAndServerConstructors() throws NoSuchMethodException {
+        final Constructor<DiskDriveMenu> clientConstructor = DiskDriveMenu.class.getConstructor(int.class, Inventory.class);
+        final Constructor<DiskDriveMenu> serverConstructor = DiskDriveMenu.class.getConstructor(int.class, Inventory.class, Container.class);
+
+        assertTrue(AbstractContainerMenu.class.isAssignableFrom(DiskDriveMenu.class));
+        assertArrayEquals(new Class<?>[]{int.class, Inventory.class}, clientConstructor.getParameterTypes());
+        assertArrayEquals(new Class<?>[]{int.class, Inventory.class, Container.class}, serverConstructor.getParameterTypes());
+    }
+
+    @Test
+    void diskDriveMenuSlotCountsAreStable() {
+        assertEquals(1, DiskDriveMenu.DRIVE_SLOT_COUNT);
+        assertEquals(36, DiskDriveMenu.PLAYER_SLOT_COUNT);
+        assertEquals(37, DiskDriveMenu.TOTAL_SLOT_COUNT);
+    }
+}

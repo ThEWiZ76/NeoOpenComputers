@@ -7,6 +7,7 @@ public final class ModContentIds {
     public static final String CPU_TIER1 = "cpu_tier1";
     public static final String DISK_DRIVE = "disk_drive";
     public static final String DISK_DRIVE_BLOCK_ENTITY = "disk_drive";
+    public static final String DISK_DRIVE_MENU = "disk_drive";
     public static final String EEPROM = "eeprom";
     public static final String FLOPPY = "floppy";
     public static final String GRAPHICS_CARD_TIER1 = "graphics_card_tier1";
