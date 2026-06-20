@@ -5,6 +5,7 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ItemRegistry;
@@ -18,6 +19,7 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
     private static final int EEPROM_SIZE = 4096;
     private static final int DATA_SIZE = 256;
     private static final int MAX_LABEL_LENGTH = 24;
+    private static final double WRITE_COST = 50D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Memory,
         DeviceInfo.DeviceAttribute.Description, "EEPROM",
@@ -60,12 +62,16 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
         if (data.getBoolean(ItemRegistry.EEPROM_READONLY_TAG)) {
             return new Object[]{null, "storage is readonly"};
         }
+        if (!consumeEnergy(context)) {
+            return new Object[]{null, "not enough energy"};
+        }
         final byte[] newData = arguments.optByteArray(0, new byte[0]);
         if (newData.length > EEPROM_SIZE) {
             throw new IllegalArgumentException("not enough space");
         }
         data.putByteArray(ItemRegistry.EEPROM_CODE_TAG, copyBytes(newData));
         onChanged.run();
+        pause(context, 2D);
         return null;
     }
 
@@ -125,12 +131,16 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(doc = "function(data:string) -- Overwrite the currently stored byte array.")
     public Object[] setData(final Context context, final Arguments arguments) {
+        if (!consumeEnergy(context)) {
+            return new Object[]{null, "not enough energy"};
+        }
         final byte[] newData = arguments.optByteArray(0, new byte[0]);
         if (newData.length > DATA_SIZE) {
             throw new IllegalArgumentException("not enough space");
         }
         data.putByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG, copyBytes(newData));
         onChanged.run();
+        pause(context, 1D);
         return null;
     }
 
@@ -140,5 +150,15 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
 
     private static byte[] copyBytes(final byte[] bytes) {
         return bytes == null ? new byte[0] : Arrays.copyOf(bytes, bytes.length);
+    }
+
+    private static boolean consumeEnergy(final Context context) {
+        return context == null || !(context.node() instanceof Connector connector) || connector.tryChangeBuffer(-WRITE_COST);
+    }
+
+    private static void pause(final Context context, final double seconds) {
+        if (context != null) {
+            context.pause(seconds);
+        }
     }
 }

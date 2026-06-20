@@ -60,6 +60,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private double costPerTick;
     private long startedAtNanos = -1L;
     private long sleepUntilNanos = -1L;
+    private long pauseUntilNanos = -1L;
+    private long pauseUntilWorldTime = -1L;
     private long cpuTimeNanos;
 
     SimpleMachine(final MachineHost host) {
@@ -116,6 +118,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         paused = false;
         startedAtNanos = -1L;
         sleepUntilNanos = -1L;
+        pauseUntilNanos = -1L;
+        pauseUntilWorldTime = -1L;
 
         if (host == null || node() == null) {
             return;
@@ -259,6 +263,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         }
         startedAtNanos = -1L;
         sleepUntilNanos = -1L;
+        pauseUntilNanos = -1L;
+        pauseUntilWorldTime = -1L;
         if (wasRunning) {
             sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }
@@ -380,10 +386,21 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public void update() {
-        if (!running || paused || architecture == null) {
+        if (!running || architecture == null) {
             return;
         }
         final long updateStartedAt = nanoTime.getAsLong();
+        if (paused) {
+            if (pauseUntilWorldTime >= 0 && host != null && host.world() != null && host.world().getGameTime() < pauseUntilWorldTime) {
+                return;
+            }
+            if (pauseUntilWorldTime < 0 && pauseUntilNanos > updateStartedAt) {
+                return;
+            }
+            paused = false;
+            pauseUntilNanos = -1L;
+            pauseUntilWorldTime = -1L;
+        }
         if (sleepUntilNanos > updateStartedAt) {
             return;
         }
@@ -418,6 +435,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         }
         running = true;
         paused = false;
+        pauseUntilNanos = -1L;
+        pauseUntilWorldTime = -1L;
         sleepUntilNanos = -1L;
         if (!wasRunning) {
             startedAtNanos = nanoTime.getAsLong();
@@ -432,6 +451,14 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             return false;
         }
         paused = true;
+        final long ticks = Math.max(0L, (long) Math.ceil(seconds * 20D));
+        if (host != null && host.world() != null) {
+            pauseUntilWorldTime = host.world().getGameTime() + ticks;
+            pauseUntilNanos = -1L;
+        } else {
+            pauseUntilNanos = nanoTime.getAsLong() + Math.max(0L, (long) Math.ceil(seconds * NANOS_PER_SECOND));
+            pauseUntilWorldTime = -1L;
+        }
         return true;
     }
 
@@ -445,6 +472,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         }
         startedAtNanos = -1L;
         sleepUntilNanos = -1L;
+        pauseUntilNanos = -1L;
+        pauseUntilWorldTime = -1L;
         if (wasRunning) {
             sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }

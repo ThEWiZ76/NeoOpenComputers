@@ -350,6 +350,39 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void pausedMachineResumesAfterRequestedDelay() {
+        OpenComputersApi.initialize();
+        MutableClock clock = new MutableClock();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        SimpleMachine machine = new SimpleMachine(new TestHost(), clock);
+        machine.onHostChanged();
+        TrackingArchitecture architecture = (TrackingArchitecture) machine.architecture();
+        assertTrue(machine.start());
+
+        clock.nanos = 1_000_000_000L;
+        assertTrue(machine.pause(0.1D));
+        machine.update();
+
+        assertTrue(machine.isPaused());
+        assertEquals(0, architecture.synchronizedRuns);
+        assertEquals(0, architecture.threadedRuns);
+
+        clock.nanos += 99_000_000L;
+        machine.update();
+        assertTrue(machine.isPaused());
+        assertEquals(0, architecture.synchronizedRuns);
+        assertEquals(0, architecture.threadedRuns);
+
+        clock.nanos += 1_000_000L;
+        machine.update();
+        assertFalse(machine.isPaused());
+        assertEquals(1, architecture.synchronizedRuns);
+        assertEquals(1, architecture.threadedRuns);
+    }
+
+    @Test
     void startAndStopNotifyReachableComponents() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);

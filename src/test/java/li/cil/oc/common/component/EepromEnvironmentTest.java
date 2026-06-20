@@ -1,8 +1,12 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Component;
+import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
@@ -69,6 +73,37 @@ final class EepromEnvironmentTest {
     }
 
     @Test
+    void eepromWritesConsumeEnergyAndPauseLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        CompoundTag data = data("Lua BIOS", "code", "data", false);
+        Component component = (Component) new EepromEnvironment(data).node();
+        Connector connector = connectorWithEnergy(100);
+        RecordingContext context = new RecordingContext(connector);
+
+        component.invoke("set", context, "next");
+        assertEquals(50, connector.localBuffer());
+        assertEquals(2, context.pauseSeconds);
+
+        context.pauseSeconds = -1;
+        component.invoke("setData", context, "user");
+        assertEquals(0, connector.localBuffer());
+        assertEquals(1, context.pauseSeconds);
+    }
+
+    @Test
+    void eepromWritesFailWithoutEnoughEnergy() throws Exception {
+        OpenComputersApi.initialize();
+        CompoundTag data = data("Lua BIOS", "code", "data", false);
+        Component component = (Component) new EepromEnvironment(data).node();
+        Connector connector = connectorWithEnergy(49);
+        RecordingContext context = new RecordingContext(connector);
+
+        assertArrayEquals(new Object[]{null, "not enough energy"}, component.invoke("set", context, "next"));
+        assertArrayEquals(bytes("code"), data.getByteArray(ItemRegistry.EEPROM_CODE_TAG));
+        assertEquals(-1, context.pauseSeconds);
+    }
+
+    @Test
     void exposesDeviceInfoMetadata() {
         OpenComputersApi.initialize();
         EepromEnvironment environment = new EepromEnvironment(data("ROM", "code", "data", false));
@@ -94,5 +129,34 @@ final class EepromEnvironmentTest {
 
     private static byte[] bytes(final String value) {
         return value.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static Connector connectorWithEnergy(final double energy) {
+        Connector connector = li.cil.oc.api.API.network
+            .newNode(new AbstractManagedEnvironment() {
+            }, Visibility.Network)
+            .withConnector(100)
+            .create();
+        connector.changeBuffer(energy);
+        return connector;
+    }
+
+    private static final class RecordingContext implements Context {
+        private final Node node;
+        private double pauseSeconds = -1;
+
+        private RecordingContext(final Node node) {
+            this.node = node;
+        }
+
+        @Override public Node node() { return node; }
+        @Override public boolean canInteract(final String player) { return true; }
+        @Override public boolean isRunning() { return true; }
+        @Override public boolean isPaused() { return false; }
+        @Override public boolean start() { return true; }
+        @Override public boolean pause(final double seconds) { pauseSeconds = seconds; return true; }
+        @Override public boolean stop() { return true; }
+        @Override public void consumeCallBudget(final double callCost) { }
+        @Override public boolean signal(final String name, final Object... args) { return true; }
     }
 }
