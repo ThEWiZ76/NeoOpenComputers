@@ -3,17 +3,24 @@ package li.cil.oc.common.gametest;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Driver;
+import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.api.Network;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
@@ -229,6 +236,30 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(computer.node().network() != null, "Computer has no network");
             helper.assertTrue(adapter.node().network() == computer.node().network(), "Adapter is not on the computer network");
             helper.assertTrue(diskDrive.node().network() == computer.node().network(), "Disk drive is not connected through adapter");
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterExposesBlockDriverComponents(final GameTestHelper helper) {
+        Driver.add(new AdapterTestBlockDriver());
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.EMERALD_BLOCK);
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final String address = componentAddress(computer, AdapterTestEnvironment.COMPONENT_NAME);
+            helper.assertTrue(address != null, "Adapter did not expose block-driver component: " + computer.machine().components());
+            try {
+                final Object[] result = computer.machine().invoke(address, "ping", new Object[0]);
+                helper.assertTrue(result.length == 1 && "pong".equals(result[0]), "Adapter component invocation failed");
+            } catch (Exception e) {
+                helper.fail("Adapter component invocation failed: " + e.getMessage());
+            }
         });
     }
 
@@ -945,6 +976,33 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(signal.args().length == args.length, "Expected signal " + name + " to have " + args.length + " arguments but got " + signal.args().length);
         for (int index = 0; index < args.length; index++) {
             helper.assertTrue(args[index].equals(signal.args()[index]), "Expected signal " + name + " argument " + index + " to be " + args[index] + " but got " + signal.args()[index]);
+        }
+    }
+
+    private static final class AdapterTestBlockDriver implements DriverBlock {
+        @Override
+        public boolean worksWith(final net.minecraft.world.level.Level world, final BlockPos pos, final Direction side) {
+            return world != null && pos != null && world.getBlockState(pos).is(Blocks.EMERALD_BLOCK);
+        }
+
+        @Override
+        public ManagedEnvironment createEnvironment(final net.minecraft.world.level.Level world, final BlockPos pos, final Direction side) {
+            return new AdapterTestEnvironment();
+        }
+    }
+
+    private static final class AdapterTestEnvironment extends AbstractManagedEnvironment {
+        private static final String COMPONENT_NAME = "adapter_test";
+
+        private AdapterTestEnvironment() {
+            setNode(Network.newNode(this, Visibility.Network)
+                .withComponent(COMPONENT_NAME, Visibility.Network)
+                .create());
+        }
+
+        @Callback
+        public Object[] ping(final Context context, final Arguments arguments) {
+            return new Object[]{"pong"};
         }
     }
 
