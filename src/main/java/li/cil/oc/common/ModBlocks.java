@@ -6,6 +6,7 @@ import li.cil.oc.common.block.CableBlock;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.GeolyzerBlock;
+import li.cil.oc.common.block.HologramBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
@@ -48,6 +49,14 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> GEOLYZER = BLOCKS.register(
         ModContentIds.GEOLYZER,
         () -> new GeolyzerBlock(geolyzerProperties()));
+
+    public static final DeferredBlock<Block> HOLOGRAM_TIER1 = BLOCKS.register(
+        ModContentIds.HOLOGRAM_TIER1,
+        () -> new HologramBlock(hologramProperties(), 0));
+
+    public static final DeferredBlock<Block> HOLOGRAM_TIER2 = BLOCKS.register(
+        ModContentIds.HOLOGRAM_TIER2,
+        () -> new HologramBlock(hologramProperties(), 1));
 
     public static final DeferredBlock<Block> SCREEN_TIER1 = BLOCKS.register(
         ModContentIds.SCREEN_TIER1,
@@ -124,6 +133,13 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_GRAY)
             .strength(1.0F, 3.0F);
+    }
+
+    private static BlockBehaviour.Properties hologramProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
+            .strength(1.0F, 3.0F)
+            .noOcclusion();
     }
 
     private static BlockBehaviour.Properties motionSensorProperties() {

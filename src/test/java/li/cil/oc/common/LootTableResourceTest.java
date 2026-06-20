@@ -27,6 +27,8 @@ final class LootTableResourceTest {
             ModContentIds.COMPUTER_CASE_TIER3,
             ModContentIds.DISK_DRIVE,
             ModContentIds.GEOLYZER,
+            ModContentIds.HOLOGRAM_TIER1,
+            ModContentIds.HOLOGRAM_TIER2,
             ModContentIds.KEYBOARD,
             ModContentIds.MOTION_SENSOR,
             ModContentIds.REDSTONE_IO,

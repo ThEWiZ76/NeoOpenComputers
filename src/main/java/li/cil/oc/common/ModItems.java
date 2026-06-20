@@ -52,6 +52,14 @@ public final class ModItems {
         ModContentIds.GEOLYZER,
         ModBlocks.GEOLYZER);
 
+    public static final DeferredItem<BlockItem> HOLOGRAM_TIER1 = ITEMS.registerSimpleBlockItem(
+        ModContentIds.HOLOGRAM_TIER1,
+        ModBlocks.HOLOGRAM_TIER1);
+
+    public static final DeferredItem<BlockItem> HOLOGRAM_TIER2 = ITEMS.registerSimpleBlockItem(
+        ModContentIds.HOLOGRAM_TIER2,
+        ModBlocks.HOLOGRAM_TIER2);
+
     public static final DeferredItem<CpuItem> CPU_TIER1 = ITEMS.register(
         ModContentIds.CPU_TIER1,
         () -> new CpuItem(new Item.Properties(), 0));

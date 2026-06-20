@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "RGB",
+    "GEG",
+    "III"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:red_stained_glass"
+    },
+    "G": {
+      "item": "minecraft:green_stained_glass"
+    },
+    "B": {
+      "item": "minecraft:blue_stained_glass"
+    },
+    "E": {
+      "item": "neoopencomputers:hologram_tier1"
+    },
+    "I": {
+      "item": "minecraft:gold_ingot"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:hologram_tier2"
+  }
+}

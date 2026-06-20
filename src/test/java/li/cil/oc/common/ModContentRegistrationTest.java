@@ -231,6 +231,21 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void hologramTier1BlockIdIsStable() {
+        assertEquals("hologram_tier1", ModContentIds.HOLOGRAM_TIER1);
+    }
+
+    @Test
+    void hologramTier2BlockIdIsStable() {
+        assertEquals("hologram_tier2", ModContentIds.HOLOGRAM_TIER2);
+    }
+
+    @Test
+    void hologramBlockEntityIdIsStable() {
+        assertEquals("hologram", ModContentIds.HOLOGRAM_BLOCK_ENTITY);
+    }
+
+    @Test
     void motionSensorBlockIdIsStable() {
         assertEquals("motion_sensor", ModContentIds.MOTION_SENSOR);
     }

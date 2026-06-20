@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "neoopencomputers:hologram_tier2"
+        }
+      ]
+    }
+  ],
+  "random_sequence": "neoopencomputers:blocks/hologram_tier2"
+}

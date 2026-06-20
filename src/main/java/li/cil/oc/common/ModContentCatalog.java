@@ -21,6 +21,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_GRAPHICS_CARD_TIER1 = "graphicscard1";
     public static final String COMPAT_GRAPHICS_CARD_TIER2 = "graphicscard2";
     public static final String COMPAT_GRAPHICS_CARD_TIER3 = "graphicscard3";
+    public static final String COMPAT_HOLOGRAM_TIER1 = "hologram1";
+    public static final String COMPAT_HOLOGRAM_TIER2 = "hologram2";
     public static final String COMPAT_HDD_TIER1 = "hdd1";
     public static final String COMPAT_HDD_TIER2 = "hdd2";
     public static final String COMPAT_HDD_TIER3 = "hdd3";
@@ -70,6 +72,10 @@ public final class ModContentCatalog {
                 ModItems.REDSTONE_IO.get(),
                 ModBlocks.TRANSPOSER.get(),
                 ModItems.TRANSPOSER.get(),
+                ModBlocks.HOLOGRAM_TIER1.get(),
+                ModItems.HOLOGRAM_TIER1.get(),
+                ModBlocks.HOLOGRAM_TIER2.get(),
+                ModItems.HOLOGRAM_TIER2.get(),
                 ModItems.MANUAL.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
@@ -131,6 +137,10 @@ public final class ModContentCatalog {
         final Item redstoneIoItem,
         final Block transposer,
         final Item transposerItem,
+        final Block hologramTier1,
+        final Item hologramTier1Item,
+        final Block hologramTier2,
+        final Item hologramTier2Item,
         final Item manualItem,
         final Item cpuTier1Item,
         final Item cpuTier2Item,
@@ -180,6 +190,8 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.MOTION_SENSOR, motionSensor, motionSensorItem);
         registry.register(ModContentIds.REDSTONE_IO, redstoneIo, redstoneIoItem);
         registry.register(ModContentIds.TRANSPOSER, transposer, transposerItem);
+        registry.register(ModContentIds.HOLOGRAM_TIER1, hologramTier1, hologramTier1Item);
+        registry.register(ModContentIds.HOLOGRAM_TIER2, hologramTier2, hologramTier2Item);
         registry.register(ModContentIds.CPU_TIER1, null, cpuTier1Item);
         registry.register(ModContentIds.CPU_TIER2, null, cpuTier2Item);
         registry.register(ModContentIds.CPU_TIER3, null, cpuTier3Item);
@@ -228,6 +240,8 @@ public final class ModContentCatalog {
         registry.register(COMPAT_GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER2, null, graphicsCardTier2Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER3, null, graphicsCardTier3Item);
+        registry.register(COMPAT_HOLOGRAM_TIER1, hologramTier1, hologramTier1Item);
+        registry.register(COMPAT_HOLOGRAM_TIER2, hologramTier2, hologramTier2Item);
         registry.register(COMPAT_NETWORK_CARD, null, networkCardItem);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);

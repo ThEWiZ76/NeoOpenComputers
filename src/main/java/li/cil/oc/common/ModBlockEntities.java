@@ -6,6 +6,7 @@ import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
+import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
@@ -49,6 +50,14 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.GEOLYZER_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(GeolyzerBlockEntity::new, ModBlocks.GEOLYZER.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<HologramBlockEntity>> HOLOGRAM =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.HOLOGRAM_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(
+                HologramBlockEntity::new,
+                ModBlocks.HOLOGRAM_TIER1.get(),
+                ModBlocks.HOLOGRAM_TIER2.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ScreenBlockEntity>> SCREEN =
         BLOCK_ENTITY_TYPES.register(

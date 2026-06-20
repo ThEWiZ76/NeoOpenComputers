@@ -24,6 +24,8 @@ final class ModContentCatalogTest {
             null, null,
             null, null,
             null, null,
+            null, null,
+            null, null,
             null,
             null, null, null,
             null, null, null,
@@ -63,6 +65,10 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.MOTION_SENSOR));
         assertNotNull(registry.get(ModContentIds.REDSTONE_IO));
         assertNotNull(registry.get(ModContentIds.TRANSPOSER));
+        assertNotNull(registry.get(ModContentIds.HOLOGRAM_TIER1));
+        assertNotNull(registry.get(ModContentIds.HOLOGRAM_TIER2));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_HOLOGRAM_TIER1));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_HOLOGRAM_TIER2));
         assertNotNull(registry.get(ModContentIds.CPU_TIER1));
         assertNotNull(registry.get(ModContentIds.CPU_TIER2));
         assertNotNull(registry.get(ModContentIds.CPU_TIER3));
@@ -137,6 +143,10 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.MOTION_SENSOR, registry.get(ModContentIds.MOTION_SENSOR).name());
         assertEquals(ModContentIds.REDSTONE_IO, registry.get(ModContentIds.REDSTONE_IO).name());
         assertEquals(ModContentIds.TRANSPOSER, registry.get(ModContentIds.TRANSPOSER).name());
+        assertEquals(ModContentIds.HOLOGRAM_TIER1, registry.get(ModContentIds.HOLOGRAM_TIER1).name());
+        assertEquals(ModContentIds.HOLOGRAM_TIER2, registry.get(ModContentIds.HOLOGRAM_TIER2).name());
+        assertEquals(ModContentCatalog.COMPAT_HOLOGRAM_TIER1, registry.get(ModContentCatalog.COMPAT_HOLOGRAM_TIER1).name());
+        assertEquals(ModContentCatalog.COMPAT_HOLOGRAM_TIER2, registry.get(ModContentCatalog.COMPAT_HOLOGRAM_TIER2).name());
         assertEquals(ModContentIds.CPU_TIER1, registry.get(ModContentIds.CPU_TIER1).name());
         assertEquals(ModContentIds.CPU_TIER2, registry.get(ModContentIds.CPU_TIER2).name());
         assertEquals(ModContentIds.CPU_TIER3, registry.get(ModContentIds.CPU_TIER3).name());
