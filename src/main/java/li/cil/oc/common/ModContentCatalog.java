@@ -24,6 +24,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_GRAPHICS_CARD_TIER1 = "graphicscard1";
     public static final String COMPAT_GRAPHICS_CARD_TIER2 = "graphicscard2";
     public static final String COMPAT_GRAPHICS_CARD_TIER3 = "graphicscard3";
+    public static final String COMPAT_HOVER_UPGRADE_TIER1 = "hoverUpgrade1";
+    public static final String COMPAT_HOVER_UPGRADE_TIER2 = "hoverUpgrade2";
     public static final String COMPAT_HOLOGRAM_TIER1 = "hologram1";
     public static final String COMPAT_HOLOGRAM_TIER2 = "hologram2";
     public static final String COMPAT_HDD_TIER1 = "hdd1";
@@ -112,6 +114,8 @@ public final class ModContentCatalog {
                 ModItems.GRAPHICS_CARD_TIER1.get(),
                 ModItems.GRAPHICS_CARD_TIER2.get(),
                 ModItems.GRAPHICS_CARD_TIER3.get(),
+                ModItems.HOVER_UPGRADE_TIER1.get(),
+                ModItems.HOVER_UPGRADE_TIER2.get(),
                 ModItems.NETWORK_CARD.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER1.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER2.get(),
@@ -184,6 +188,8 @@ public final class ModContentCatalog {
         final Item graphicsCardTier1Item,
         final Item graphicsCardTier2Item,
         final Item graphicsCardTier3Item,
+        final Item hoverUpgradeTier1Item,
+        final Item hoverUpgradeTier2Item,
         final Item networkCardItem,
         final Item wirelessNetworkCardTier1Item,
         final Item wirelessNetworkCardTier2Item,
@@ -240,6 +246,8 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
         registry.register(ModContentIds.GRAPHICS_CARD_TIER2, null, graphicsCardTier2Item);
         registry.register(ModContentIds.GRAPHICS_CARD_TIER3, null, graphicsCardTier3Item);
+        registry.register(ModContentIds.HOVER_UPGRADE_TIER1, null, hoverUpgradeTier1Item);
+        registry.register(ModContentIds.HOVER_UPGRADE_TIER2, null, hoverUpgradeTier2Item);
         registry.register(ModContentIds.NETWORK_CARD, null, networkCardItem);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
@@ -270,6 +278,8 @@ public final class ModContentCatalog {
         registry.register(COMPAT_GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER2, null, graphicsCardTier2Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER3, null, graphicsCardTier3Item);
+        registry.register(COMPAT_HOVER_UPGRADE_TIER1, null, hoverUpgradeTier1Item);
+        registry.register(COMPAT_HOVER_UPGRADE_TIER2, null, hoverUpgradeTier2Item);
         registry.register(COMPAT_HOLOGRAM_TIER1, hologramTier1, hologramTier1Item);
         registry.register(COMPAT_HOLOGRAM_TIER2, hologramTier2, hologramTier2Item);
         registry.register(COMPAT_NETWORK_CARD, null, networkCardItem);

@@ -36,6 +36,8 @@
   "item.neoopencomputers.hdd_tier1": "Hard Disk Drive (Tier 1)",
   "item.neoopencomputers.hdd_tier2": "Hard Disk Drive (Tier 2)",
   "item.neoopencomputers.hdd_tier3": "Hard Disk Drive (Tier 3)",
+  "item.neoopencomputers.hover_upgrade_tier1": "Hover Upgrade (Tier 1)",
+  "item.neoopencomputers.hover_upgrade_tier2": "Hover Upgrade (Tier 2)",
   "item.neoopencomputers.inventory_controller_upgrade": "Inventory Controller Upgrade",
   "item.neoopencomputers.inventory_upgrade": "Inventory Upgrade",
   "item.neoopencomputers.internet_card": "Internet Card",

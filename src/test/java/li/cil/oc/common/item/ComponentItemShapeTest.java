@@ -131,6 +131,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void hoverUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
+        final Constructor<HoverUpgradeItem> constructor = HoverUpgradeItem.class.getConstructor(Item.Properties.class, int.class);
+
+        assertTrue(Item.class.isAssignableFrom(HoverUpgradeItem.class));
+        assertTrue(HostAware.class.isAssignableFrom(HoverUpgradeItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void internetCardItemIsCardDriver() throws NoSuchMethodException {
         final Constructor<InternetCardItem> constructor = InternetCardItem.class.getConstructor(Item.Properties.class);
 

@@ -9,6 +9,7 @@ import li.cil.oc.common.item.EepromItem;
 import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
+import li.cil.oc.common.item.HoverUpgradeItem;
 import li.cil.oc.common.item.InventoryControllerUpgradeItem;
 import li.cil.oc.common.item.InventoryUpgradeItem;
 import li.cil.oc.common.item.InternetCardItem;
@@ -142,6 +143,14 @@ public final class ModItems {
     public static final DeferredItem<HardDiskDriveItem> HDD_TIER3 = ITEMS.register(
         ModContentIds.HDD_TIER3,
         () -> new HardDiskDriveItem(new Item.Properties(), 2));
+
+    public static final DeferredItem<HoverUpgradeItem> HOVER_UPGRADE_TIER1 = ITEMS.register(
+        ModContentIds.HOVER_UPGRADE_TIER1,
+        () -> new HoverUpgradeItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<HoverUpgradeItem> HOVER_UPGRADE_TIER2 = ITEMS.register(
+        ModContentIds.HOVER_UPGRADE_TIER2,
+        () -> new HoverUpgradeItem(new Item.Properties(), 1));
 
     public static final DeferredItem<InventoryControllerUpgradeItem> INVENTORY_CONTROLLER_UPGRADE = ITEMS.register(
         ModContentIds.INVENTORY_CONTROLLER_UPGRADE,

@@ -35,6 +35,8 @@ public final class ModContentIds {
     public static final String HDD_TIER1 = "hdd_tier1";
     public static final String HDD_TIER2 = "hdd_tier2";
     public static final String HDD_TIER3 = "hdd_tier3";
+    public static final String HOVER_UPGRADE_TIER1 = "hover_upgrade_tier1";
+    public static final String HOVER_UPGRADE_TIER2 = "hover_upgrade_tier2";
     public static final String HOLOGRAM_TIER1 = "hologram_tier1";
     public static final String HOLOGRAM_TIER2 = "hologram_tier2";
     public static final String HOLOGRAM_BLOCK_ENTITY = "hologram";

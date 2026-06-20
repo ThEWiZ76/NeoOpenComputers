@@ -171,6 +171,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void hoverUpgradeTier1ItemIdIsStable() {
+        assertEquals("hover_upgrade_tier1", ModContentIds.HOVER_UPGRADE_TIER1);
+    }
+
+    @Test
+    void hoverUpgradeTier2ItemIdIsStable() {
+        assertEquals("hover_upgrade_tier2", ModContentIds.HOVER_UPGRADE_TIER2);
+    }
+
+    @Test
     void internetCardItemIdIsStable() {
         assertEquals("internet_card", ModContentIds.INTERNET_CARD);
     }

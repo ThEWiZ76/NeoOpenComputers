@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "minecraft:iron_boots"
+    },
+    "F": {
+      "item": "minecraft:feather"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    " F ",
+    "RBR",
+    " F "
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:hover_upgrade_tier1"
+  }
+}

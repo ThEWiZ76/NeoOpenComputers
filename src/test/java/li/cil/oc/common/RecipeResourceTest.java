@@ -44,6 +44,8 @@ final class RecipeResourceTest {
             ModContentIds.GRAPHICS_CARD_TIER1,
             ModContentIds.GRAPHICS_CARD_TIER2,
             ModContentIds.GRAPHICS_CARD_TIER3,
+            ModContentIds.HOVER_UPGRADE_TIER1,
+            ModContentIds.HOVER_UPGRADE_TIER2,
             ModContentIds.HOLOGRAM_TIER1,
             ModContentIds.HOLOGRAM_TIER2,
             ModContentIds.HDD_TIER1,

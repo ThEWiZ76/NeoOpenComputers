@@ -45,6 +45,7 @@ final class ModContentCatalogTest {
             null, null, null,
             null, null,
             null, null,
+            null, null,
             null,
             null);
 
@@ -108,6 +109,8 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.GRAPHICS_CARD_TIER1));
         assertNotNull(registry.get(ModContentIds.GRAPHICS_CARD_TIER2));
         assertNotNull(registry.get(ModContentIds.GRAPHICS_CARD_TIER3));
+        assertNotNull(registry.get(ModContentIds.HOVER_UPGRADE_TIER1));
+        assertNotNull(registry.get(ModContentIds.HOVER_UPGRADE_TIER2));
         assertNotNull(registry.get(ModContentIds.NETWORK_CARD));
         assertNotNull(registry.get(ModContentIds.WIRELESS_NETWORK_CARD_TIER1));
         assertNotNull(registry.get(ModContentIds.WIRELESS_NETWORK_CARD_TIER2));
@@ -132,6 +135,8 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER3));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_HOVER_UPGRADE_TIER1));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_HOVER_UPGRADE_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_NETWORK_CARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD_TIER2));
@@ -197,6 +202,8 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.GRAPHICS_CARD_TIER1, registry.get(ModContentIds.GRAPHICS_CARD_TIER1).name());
         assertEquals(ModContentIds.GRAPHICS_CARD_TIER2, registry.get(ModContentIds.GRAPHICS_CARD_TIER2).name());
         assertEquals(ModContentIds.GRAPHICS_CARD_TIER3, registry.get(ModContentIds.GRAPHICS_CARD_TIER3).name());
+        assertEquals(ModContentIds.HOVER_UPGRADE_TIER1, registry.get(ModContentIds.HOVER_UPGRADE_TIER1).name());
+        assertEquals(ModContentIds.HOVER_UPGRADE_TIER2, registry.get(ModContentIds.HOVER_UPGRADE_TIER2).name());
         assertEquals(ModContentIds.NETWORK_CARD, registry.get(ModContentIds.NETWORK_CARD).name());
         assertEquals(ModContentIds.WIRELESS_NETWORK_CARD_TIER1, registry.get(ModContentIds.WIRELESS_NETWORK_CARD_TIER1).name());
         assertEquals(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, registry.get(ModContentIds.WIRELESS_NETWORK_CARD_TIER2).name());
@@ -221,6 +228,8 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER1, registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER2, registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER3, registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER3).name());
+        assertEquals(ModContentCatalog.COMPAT_HOVER_UPGRADE_TIER1, registry.get(ModContentCatalog.COMPAT_HOVER_UPGRADE_TIER1).name());
+        assertEquals(ModContentCatalog.COMPAT_HOVER_UPGRADE_TIER2, registry.get(ModContentCatalog.COMPAT_HOVER_UPGRADE_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_NETWORK_CARD, registry.get(ModContentCatalog.COMPAT_NETWORK_CARD).name());
         assertEquals(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD_TIER1, registry.get(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD_TIER2, registry.get(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD_TIER2).name());

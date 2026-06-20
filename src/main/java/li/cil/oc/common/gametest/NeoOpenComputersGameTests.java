@@ -98,6 +98,8 @@ public final class NeoOpenComputersGameTests {
         ModItems.GRAPHICS_CARD_TIER1.get();
         ModItems.GRAPHICS_CARD_TIER2.get();
         ModItems.GRAPHICS_CARD_TIER3.get();
+        ModItems.HOVER_UPGRADE_TIER1.get();
+        ModItems.HOVER_UPGRADE_TIER2.get();
         ModItems.HDD_TIER1.get();
         ModItems.HDD_TIER2.get();
         ModItems.HDD_TIER3.get();
@@ -140,6 +142,8 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.HOVER_UPGRADE_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.HOVER_UPGRADE_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER3.get()), 2);

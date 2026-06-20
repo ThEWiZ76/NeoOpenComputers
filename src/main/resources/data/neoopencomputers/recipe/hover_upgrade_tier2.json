@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "minecraft:golden_boots"
+    },
+    "F": {
+      "item": "minecraft:phantom_membrane"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    " F ",
+    "RBR",
+    " F "
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:hover_upgrade_tier2"
+  }
+}
