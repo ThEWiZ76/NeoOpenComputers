@@ -6,6 +6,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.common.driver.ComputerCaseBlockDriver;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
 import li.cil.oc.common.driver.DiskDriveContainerDriver;
+import li.cil.oc.common.driver.GeolyzerItemDriver;
 import li.cil.oc.common.driver.InventoryBlockDriver;
 import li.cil.oc.common.driver.KeyboardItemDriver;
 import li.cil.oc.common.driver.MotionSensorItemDriver;
@@ -31,6 +32,7 @@ public final class ModDriverCatalog {
                 ModItems.INVENTORY_CONTROLLER_UPGRADE.get(), ModItems.INVENTORY_UPGRADE.get(), ModItems.CRAFTING_UPGRADE.get(), ModItems.EXPERIENCE_UPGRADE.get(),
                 ModItems.INTERNET_CARD.get(), ModItems.LINKED_CARD.get(), ModItems.NAVIGATION_UPGRADE.get(),
                 ModItems.EEPROM.get(), ModItems.FLOPPY.get(),
+                new GeolyzerItemDriver(),
                 new ScreenItemDriver(ModItems.SCREEN_TIER1.get(), 0),
                 new ScreenItemDriver(ModItems.SCREEN_TIER2.get(), 1),
                 new ScreenItemDriver(ModItems.SCREEN_TIER3.get(), 2),

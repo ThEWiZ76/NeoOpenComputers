@@ -914,6 +914,7 @@ public final class NeoOpenComputersGameTests {
         assertScreenItemDriver(helper, new ItemStack(ModItems.SCREEN_TIER3.get()), 2, 160, 50, TextBuffer.ColorDepth.EightBit);
         assertKeyboardItemDriver(helper, new ItemStack(ModItems.KEYBOARD.get()));
         assertMotionSensorItemDriver(helper, new ItemStack(ModItems.MOTION_SENSOR.get()));
+        assertGeolyzerItemDriver(helper, new ItemStack(ModItems.GEOLYZER.get()));
         helper.succeed();
     }
 
@@ -2478,6 +2479,25 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(oldSensitivity.length == 1 && Double.valueOf(0.4D).equals(oldSensitivity[0]), "Motion sensor did not return old sensitivity");
         final Object[] clampedSensitivity = invokeComponent(helper, component, "getSensitivity");
         helper.assertTrue(clampedSensitivity.length == 1 && Double.valueOf(0.2D).equals(clampedSensitivity[0]), "Motion sensor did not clamp sensitivity");
+    }
+
+    private static void assertGeolyzerItemDriver(final GameTestHelper helper, final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        helper.assertTrue(Slot.Upgrade.equals(driver.slot(stack)), "Expected geolyzer item upgrade slot for " + stack);
+        helper.assertTrue(driver.tier(stack) == 0, "Expected geolyzer tier 0 for " + stack + " but got " + driver.tier(stack));
+        final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticEnvironmentHost(helper));
+        helper.assertTrue(environment != null, "Geolyzer item did not create environment for " + stack);
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Geolyzer item has no connector component node for " + stack);
+        final ComponentConnector component = (ComponentConnector) environment.node();
+        helper.assertTrue("geolyzer".equals(component.name()), "Geolyzer item component name mismatch for " + stack);
+        final Object[] noEnergy = invokeComponent(helper, component, "scan", 0, 0, 0, 1, 1, 1);
+        assertNoEnergy(helper, noEnergy, "Geolyzer item scan");
+        component.setLocalBufferSize(10D);
+        component.changeBuffer(10D);
+        final Object[] scan = invokeComponent(helper, component, "scan", 0, 0, 0, 1, 1, 1);
+        helper.assertTrue(scan.length == 1 && scan[0] instanceof float[], "Geolyzer item scan did not return data");
+        helper.assertTrue(Double.compare(0D, component.localBuffer()) == 0, "Geolyzer item scan did not consume energy");
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {
