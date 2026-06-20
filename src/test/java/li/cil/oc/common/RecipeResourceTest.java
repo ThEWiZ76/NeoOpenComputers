@@ -82,6 +82,7 @@ final class RecipeResourceTest {
             ModContentIds.INTERNET_CARD,
             ModContentIds.INVENTORY_CONTROLLER_UPGRADE,
             ModContentIds.INVENTORY_UPGRADE,
+            ModContentIds.CRAFTING_UPGRADE,
             ModContentIds.KEYBOARD,
             ModContentIds.LINKED_CARD,
             ModContentIds.MANUAL,
@@ -589,6 +590,8 @@ final class RecipeResourceTest {
     @Test
     void utilityUpgradeRecipesUsePortedMaterials() throws IOException {
         JsonObject waypoint = recipeKeys(ModContentIds.WAYPOINT);
+        JsonObject craftingRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.CRAFTING_UPGRADE + ".json"));
+        JsonObject crafting = craftingRecipe.getAsJsonObject("key");
         JsonObject solarRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SOLAR_GENERATOR_UPGRADE + ".json"));
         JsonObject solar = solarRecipe.getAsJsonObject("key");
         JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
@@ -598,6 +601,13 @@ final class RecipeResourceTest {
         assertItem(waypoint, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
         assertItem(waypoint, "W", "neoopencomputers:" + ModContentIds.INTERWEB);
         assertItem(waypoint, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(craftingRecipe, "IPI", "CTC", "IBI");
+        assertTag(crafting, "I", "c:ingots/iron");
+        assertItem(crafting, "P", "minecraft:piston");
+        assertItem(crafting, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(crafting, "T", "minecraft:crafting_table");
+        assertItem(crafting, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
 
         assertPattern(solarRecipe, "GGG", "CUC");
         assertItem(solar, "G", "minecraft:glass");

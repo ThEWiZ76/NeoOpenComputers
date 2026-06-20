@@ -4,6 +4,7 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.BatteryUpgradeItem;
 import li.cil.oc.common.item.CardContainerItem;
+import li.cil.oc.common.item.CraftingUpgradeItem;
 import li.cil.oc.common.item.CpuItem;
 import li.cil.oc.common.item.DataCardItem;
 import li.cil.oc.common.item.DatabaseUpgradeItem;
@@ -234,6 +235,10 @@ public final class ModItems {
     public static final DeferredItem<InventoryUpgradeItem> INVENTORY_UPGRADE = ITEMS.register(
         ModContentIds.INVENTORY_UPGRADE,
         () -> new InventoryUpgradeItem(new Item.Properties()));
+
+    public static final DeferredItem<CraftingUpgradeItem> CRAFTING_UPGRADE = ITEMS.register(
+        ModContentIds.CRAFTING_UPGRADE,
+        () -> new CraftingUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<InternetCardItem> INTERNET_CARD = ITEMS.register(
         ModContentIds.INTERNET_CARD,

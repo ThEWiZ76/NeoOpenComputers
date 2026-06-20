@@ -296,6 +296,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void craftingUpgradeItemIdIsStable() {
+        assertEquals("crafting_upgrade", ModContentIds.CRAFTING_UPGRADE);
+    }
+
+    @Test
     void tankUpgradeItemIdIsStable() {
         assertEquals("tank_upgrade", ModContentIds.TANK_UPGRADE);
     }

@@ -34,6 +34,7 @@ public final class ModContentIds {
     public static final String COMPUTER_CASE_TIER3 = "computer_case_tier3";
     public static final String CIRCUIT_BOARD = "circuit_board";
     public static final String CONTROL_UNIT = "control_unit";
+    public static final String CRAFTING_UPGRADE = "crafting_upgrade";
     public static final String CPU_TIER1 = "cpu_tier1";
     public static final String CPU_TIER2 = "cpu_tier2";
     public static final String CPU_TIER3 = "cpu_tier3";
