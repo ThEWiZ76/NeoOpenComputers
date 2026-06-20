@@ -4,6 +4,7 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
@@ -118,6 +119,29 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void screenKeyboardSignalsReachComputer(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        helper.assertTrue(screen.node().network() == computer.node().network(), "Screen and computer are not on the same network");
+        screen.keyDown('a', 30, null);
+        screen.keyUp('a', 30, null);
+
+        helper.runAtTickTime(5, () -> {
+            assertNextSignal(helper, computer, "key_down", 'a', 30);
+            assertNextSignal(helper, computer, "key_up", 'a', 30);
+            helper.succeed();
+        });
+    }
+
     private static ItemStack luaBiosEepromStack() {
         final ItemStack stack = new ItemStack(ModItems.EEPROM.get());
         final CompoundTag data = new CompoundTag();
@@ -195,6 +219,26 @@ public final class NeoOpenComputersGameTests {
             }
         }
         return builder.toString();
+    }
+
+    private static void assertNextSignal(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final String name, final Object... args) {
+        for (int attempt = 0; attempt < 16; attempt++) {
+            final Signal signal = computer.machine().popSignal();
+            helper.assertTrue(signal != null, "Expected signal " + name + " but queue was empty");
+            if (name.equals(signal.name())) {
+                assertSignal(helper, signal, name, args);
+                return;
+            }
+        }
+        helper.fail("Expected signal " + name + " but it was not in the next 16 queued signals");
+    }
+
+    private static void assertSignal(final GameTestHelper helper, final Signal signal, final String name, final Object... args) {
+        helper.assertTrue(name.equals(signal.name()), "Expected signal " + name + " but got " + signal.name());
+        helper.assertTrue(signal.args().length == args.length, "Expected signal " + name + " to have " + args.length + " arguments but got " + signal.args().length);
+        for (int index = 0; index < args.length; index++) {
+            helper.assertTrue(args[index].equals(signal.args()[index]), "Expected signal " + name + " argument " + index + " to be " + args[index] + " but got " + signal.args()[index]);
+        }
     }
 
     private NeoOpenComputersGameTests() {
