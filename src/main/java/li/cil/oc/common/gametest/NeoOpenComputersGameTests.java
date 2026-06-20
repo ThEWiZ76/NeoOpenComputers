@@ -264,6 +264,28 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tabletItemDisassemblesToIngredients(final GameTestHelper helper) {
+        final TabletItem tablet = ModItems.TABLET.get();
+        final ItemStack container = new ItemStack(ModItems.CARD_CONTAINER_TIER1.get());
+        final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
+        final ItemStack memory = new ItemStack(ModItems.MEMORY_TIER1.get());
+        final ItemStack stack = tablet.assembleFromCase(
+            new ItemStack(ModItems.TABLET_CASE_TIER2.get()),
+            container,
+            cpu,
+            memory);
+
+        final ItemStack[] ingredients = tablet.disassembleToIngredients(stack);
+
+        helper.assertTrue(ingredients.length == 4, "Disassembled tablet returned wrong ingredient count");
+        helper.assertTrue(ingredients[0].is(ModItems.TABLET_CASE_TIER2.get()), "Disassembled tablet case did not match tier");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(container, ingredients[1]), "Disassembled tablet container missing");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(cpu, ingredients[2]), "Disassembled tablet CPU missing");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(memory, ingredients[3]), "Disassembled tablet memory missing");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredComponentItemsExposeTierCapabilities(final GameTestHelper helper) {
         assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER1.get()), 8);
         assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER2.get()), 12);

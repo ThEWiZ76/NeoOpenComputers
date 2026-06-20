@@ -13,6 +13,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
+import java.util.ArrayList;
+
 public class TabletItem extends Item implements Chargeable {
     public static final int COMPONENT_SLOTS = 32;
     public static final double DEFAULT_MAX_CHARGE = 10000D;
@@ -110,6 +112,22 @@ public class TabletItem extends Item implements Chargeable {
             }
         }
         return stack;
+    }
+
+    public ItemStack[] disassembleToIngredients(final ItemStack stack) {
+        final ArrayList<ItemStack> ingredients = new ArrayList<>();
+        ingredients.add(caseForTier(tier(stack)));
+        final ItemStack container = getContainer(stack);
+        if (!container.isEmpty()) {
+            ingredients.add(container);
+        }
+        for (int slot = 1; slot < COMPONENT_SLOTS; slot++) {
+            final ItemStack component = getComponent(stack, slot);
+            if (!component.isEmpty()) {
+                ingredients.add(component);
+            }
+        }
+        return ingredients.toArray(ItemStack[]::new);
     }
 
     public int tier(final ItemStack stack) {
@@ -228,5 +246,15 @@ public class TabletItem extends Item implements Chargeable {
             return tiered.tier();
         }
         return 0;
+    }
+
+    private static ItemStack caseForTier(final int tier) {
+        if (tier >= 3) {
+            return new ItemStack(ModItems.TABLET_CASE_CREATIVE.get());
+        }
+        if (tier >= 1) {
+            return new ItemStack(ModItems.TABLET_CASE_TIER2.get());
+        }
+        return new ItemStack(ModItems.TABLET_CASE_TIER1.get());
     }
 }
