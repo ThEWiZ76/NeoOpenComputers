@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "RGR",
+    "G G",
+    "RGR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:battery_upgrade_tier1"
+  }
+}

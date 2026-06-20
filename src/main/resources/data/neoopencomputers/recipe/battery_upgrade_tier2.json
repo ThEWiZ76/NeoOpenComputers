@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "neoopencomputers:battery_upgrade_tier1"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "RDR",
+    "DBD",
+    "RDR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:battery_upgrade_tier2"
+  }
+}

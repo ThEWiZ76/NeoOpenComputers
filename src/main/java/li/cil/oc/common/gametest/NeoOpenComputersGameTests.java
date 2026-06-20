@@ -5,6 +5,7 @@ import li.cil.oc.api.API;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Chargeable;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Arguments;
@@ -76,6 +77,9 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.TRANSPOSER.get();
         ModBlocks.WAYPOINT.get();
         ModItems.ADAPTER.get();
+        ModItems.BATTERY_UPGRADE_TIER1.get();
+        ModItems.BATTERY_UPGRADE_TIER2.get();
+        ModItems.BATTERY_UPGRADE_TIER3.get();
         ModItems.CABLE.get();
         ModItems.CPU_TIER1.get();
         ModItems.CPU_TIER2.get();
@@ -126,6 +130,9 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER2.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 2);
@@ -156,6 +163,9 @@ public final class NeoOpenComputersGameTests {
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), 9);
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER2.get()), 25);
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER3.get()), 81);
+        assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER1.get()), 10000D);
+        assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER2.get()), 15000D);
+        assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER3.get()), 20000D);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), false, 16D);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), true, 400D);
         helper.succeed();
@@ -1038,6 +1048,16 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment instanceof li.cil.oc.api.internal.Database, "No database environment for " + stack);
         final li.cil.oc.api.internal.Database database = (li.cil.oc.api.internal.Database) environment;
         helper.assertTrue(database.size() == capacity, "Expected " + stack + " to have " + capacity + " database slots but got " + database.size());
+    }
+
+    private static void assertBatteryCharge(final GameTestHelper helper, final ItemStack stack, final double capacity) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver instanceof Chargeable, "Expected chargeable driver for " + stack);
+        final Chargeable chargeable = (Chargeable) driver;
+        helper.assertTrue(chargeable.charge(stack, capacity * 0.75D, false) == capacity * 0.75D, "Battery did not accept initial charge");
+        helper.assertTrue(chargeable.charge(stack, capacity, true) == capacity * 0.25D, "Battery simulation did not report remaining capacity");
+        helper.assertTrue(chargeable.charge(stack, capacity, false) == capacity * 0.25D, "Battery did not cap at max charge");
+        helper.assertTrue(chargeable.charge(stack, 1D, false) == 0D, "Full battery accepted extra charge");
     }
 
     private static void assertWirelessModem(final GameTestHelper helper, final ItemStack stack, final boolean wired, final double strength) {

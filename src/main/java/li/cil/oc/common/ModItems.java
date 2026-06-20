@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.item.BatteryUpgradeItem;
 import li.cil.oc.common.item.CpuItem;
 import li.cil.oc.common.item.DataCardItem;
 import li.cil.oc.common.item.DatabaseUpgradeItem;
@@ -60,6 +61,18 @@ public final class ModItems {
     public static final DeferredItem<BlockItem> HOLOGRAM_TIER2 = ITEMS.registerSimpleBlockItem(
         ModContentIds.HOLOGRAM_TIER2,
         ModBlocks.HOLOGRAM_TIER2);
+
+    public static final DeferredItem<BatteryUpgradeItem> BATTERY_UPGRADE_TIER1 = ITEMS.register(
+        ModContentIds.BATTERY_UPGRADE_TIER1,
+        () -> new BatteryUpgradeItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<BatteryUpgradeItem> BATTERY_UPGRADE_TIER2 = ITEMS.register(
+        ModContentIds.BATTERY_UPGRADE_TIER2,
+        () -> new BatteryUpgradeItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<BatteryUpgradeItem> BATTERY_UPGRADE_TIER3 = ITEMS.register(
+        ModContentIds.BATTERY_UPGRADE_TIER3,
+        () -> new BatteryUpgradeItem(new Item.Properties(), 2));
 
     public static final DeferredItem<CpuItem> CPU_TIER1 = ITEMS.register(
         ModContentIds.CPU_TIER1,

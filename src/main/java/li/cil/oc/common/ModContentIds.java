@@ -3,6 +3,9 @@ package li.cil.oc.common;
 public final class ModContentIds {
     public static final String ADAPTER = "adapter";
     public static final String ADAPTER_BLOCK_ENTITY = "adapter";
+    public static final String BATTERY_UPGRADE_TIER1 = "battery_upgrade_tier1";
+    public static final String BATTERY_UPGRADE_TIER2 = "battery_upgrade_tier2";
+    public static final String BATTERY_UPGRADE_TIER3 = "battery_upgrade_tier3";
     public static final String CABLE = "cable";
     public static final String CABLE_BLOCK_ENTITY = "cable";
     public static final String COMPUTER_CASE_BLOCK_ENTITY = "computer_case";

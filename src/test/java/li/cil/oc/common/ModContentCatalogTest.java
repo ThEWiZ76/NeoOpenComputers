@@ -32,6 +32,7 @@ final class ModContentCatalogTest {
             null, null, null,
             null, null, null,
             null, null, null,
+            null, null, null,
             null, null,
             null,
             null,
@@ -87,9 +88,15 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.DATABASE_UPGRADE_TIER1));
         assertNotNull(registry.get(ModContentIds.DATABASE_UPGRADE_TIER2));
         assertNotNull(registry.get(ModContentIds.DATABASE_UPGRADE_TIER3));
+        assertNotNull(registry.get(ModContentIds.BATTERY_UPGRADE_TIER1));
+        assertNotNull(registry.get(ModContentIds.BATTERY_UPGRADE_TIER2));
+        assertNotNull(registry.get(ModContentIds.BATTERY_UPGRADE_TIER3));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_BATTERY_UPGRADE_TIER1));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_BATTERY_UPGRADE_TIER2));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_BATTERY_UPGRADE_TIER3));
         assertNotNull(registry.get(ModContentIds.INVENTORY_CONTROLLER_UPGRADE));
         assertNotNull(registry.get(ModContentIds.INTERNET_CARD));
         assertNotNull(registry.get(ModContentIds.LINKED_CARD));
@@ -168,9 +175,15 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.DATABASE_UPGRADE_TIER1, registry.get(ModContentIds.DATABASE_UPGRADE_TIER1).name());
         assertEquals(ModContentIds.DATABASE_UPGRADE_TIER2, registry.get(ModContentIds.DATABASE_UPGRADE_TIER2).name());
         assertEquals(ModContentIds.DATABASE_UPGRADE_TIER3, registry.get(ModContentIds.DATABASE_UPGRADE_TIER3).name());
+        assertEquals(ModContentIds.BATTERY_UPGRADE_TIER1, registry.get(ModContentIds.BATTERY_UPGRADE_TIER1).name());
+        assertEquals(ModContentIds.BATTERY_UPGRADE_TIER2, registry.get(ModContentIds.BATTERY_UPGRADE_TIER2).name());
+        assertEquals(ModContentIds.BATTERY_UPGRADE_TIER3, registry.get(ModContentIds.BATTERY_UPGRADE_TIER3).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER1, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3).name());
+        assertEquals(ModContentCatalog.COMPAT_BATTERY_UPGRADE_TIER1, registry.get(ModContentCatalog.COMPAT_BATTERY_UPGRADE_TIER1).name());
+        assertEquals(ModContentCatalog.COMPAT_BATTERY_UPGRADE_TIER2, registry.get(ModContentCatalog.COMPAT_BATTERY_UPGRADE_TIER2).name());
+        assertEquals(ModContentCatalog.COMPAT_BATTERY_UPGRADE_TIER3, registry.get(ModContentCatalog.COMPAT_BATTERY_UPGRADE_TIER3).name());
         assertEquals(ModContentIds.INVENTORY_CONTROLLER_UPGRADE, registry.get(ModContentIds.INVENTORY_CONTROLLER_UPGRADE).name());
         assertEquals(ModContentIds.INTERNET_CARD, registry.get(ModContentIds.INTERNET_CARD).name());
         assertEquals(ModContentIds.LINKED_CARD, registry.get(ModContentIds.LINKED_CARD).name());

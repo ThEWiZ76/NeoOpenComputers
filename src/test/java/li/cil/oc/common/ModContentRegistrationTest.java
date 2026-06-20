@@ -131,6 +131,21 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void batteryUpgradeTier1ItemIdIsStable() {
+        assertEquals("battery_upgrade_tier1", ModContentIds.BATTERY_UPGRADE_TIER1);
+    }
+
+    @Test
+    void batteryUpgradeTier2ItemIdIsStable() {
+        assertEquals("battery_upgrade_tier2", ModContentIds.BATTERY_UPGRADE_TIER2);
+    }
+
+    @Test
+    void batteryUpgradeTier3ItemIdIsStable() {
+        assertEquals("battery_upgrade_tier3", ModContentIds.BATTERY_UPGRADE_TIER3);
+    }
+
+    @Test
     void eepromItemIdIsStable() {
         assertEquals("eeprom", ModContentIds.EEPROM);
     }
