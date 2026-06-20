@@ -184,6 +184,11 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         if (!(host instanceof MachineHost machineHost) || machineHost.machine() == null || node() == null) {
             return;
         }
+        final String localAddress = node().address();
+        if ((localAddress != null && localAddress.equals(packet.source())) ||
+            (packet.destination() != null && (localAddress == null || !localAddress.equals(packet.destination())))) {
+            return;
+        }
         final Object[] signalArgs = new Object[4 + packet.data().length];
         signalArgs[0] = node().address();
         signalArgs[1] = packet.source();

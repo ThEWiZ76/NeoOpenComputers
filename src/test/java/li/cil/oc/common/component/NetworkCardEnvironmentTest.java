@@ -107,6 +107,36 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void ignoresPacketsAddressedToAnotherNode() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost host = new TestMachineHost();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(host);
+        Network.joinNewNetwork(card.node());
+        card.open(null, new TestArguments(123));
+
+        card.onMessage(new TestMessage(null, "network.message", new Object[]{
+            new TestPacket("remote", "other-node", 123, new Object[]{"payload"})
+        }));
+
+        assertEquals(List.of(), host.signals);
+    }
+
+    @Test
+    void ignoresPacketsSentByItself() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost host = new TestMachineHost();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(host);
+        Network.joinNewNetwork(card.node());
+        card.open(null, new TestArguments(123));
+
+        card.onMessage(new TestMessage(null, "network.message", new Object[]{
+            new TestPacket(card.node().address(), card.node().address(), 123, new Object[]{"payload"})
+        }));
+
+        assertEquals(List.of(), host.signals);
+    }
+
+    @Test
     void sendDeliversPacketToReachableModemAddress() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost senderHost = new TestMachineHost();
