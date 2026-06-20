@@ -41,6 +41,8 @@ final class NetworkCardEnvironmentTest {
         assertCallback("isWireless");
         assertCallback("send");
         assertCallback("broadcast");
+        assertCallback("getWakeMessage");
+        assertCallback("setWakeMessage");
     }
 
     @Test
@@ -74,6 +76,32 @@ final class NetworkCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, card.isWired(null, new TestArguments()));
         assertArrayEquals(new Object[]{false}, card.isWireless(null, new TestArguments()));
         assertNotNull(card.node());
+    }
+
+    @Test
+    void getsAndSetsWakeMessage() {
+        OpenComputersApi.initialize();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(new TestHost());
+
+        assertArrayEquals(new Object[]{null, false}, card.getWakeMessage(null, new TestArguments()));
+        assertArrayEquals(new Object[]{null, false}, card.setWakeMessage(null, new TestArguments("boot", true)));
+        assertArrayEquals(new Object[]{"boot", true}, card.getWakeMessage(null, new TestArguments()));
+        assertArrayEquals(new Object[]{"boot", true}, card.setWakeMessage(null, new TestArguments(null, false)));
+        assertArrayEquals(new Object[]{null, false}, card.getWakeMessage(null, new TestArguments()));
+    }
+
+    @Test
+    void persistsWakeMessage() {
+        OpenComputersApi.initialize();
+        NetworkCardEnvironment saved = new NetworkCardEnvironment(new TestHost());
+        saved.setWakeMessage(null, new TestArguments("boot", true));
+        CompoundTag tag = new CompoundTag();
+
+        saved.save(tag);
+        NetworkCardEnvironment loaded = new NetworkCardEnvironment(new TestHost());
+        loaded.load(tag);
+
+        assertArrayEquals(new Object[]{"boot", true}, loaded.getWakeMessage(null, new TestArguments()));
     }
 
     @Test

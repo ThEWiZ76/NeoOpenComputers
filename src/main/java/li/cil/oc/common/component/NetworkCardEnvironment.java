@@ -23,6 +23,8 @@ import java.util.Set;
 public class NetworkCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "modem";
     private static final String OPEN_PORTS_TAG = "openPorts";
+    private static final String WAKE_MESSAGE_TAG = "wakeMessage";
+    private static final String WAKE_MESSAGE_FUZZY_TAG = "wakeMessageFuzzy";
     private static final int MAX_OPEN_PORTS = 16;
     private static final int MAX_PACKET_SIZE = 8192;
     private static final int MAX_PACKET_PARTS = 8;
@@ -43,6 +45,8 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
 
     private final EnvironmentHost host;
     private final Set<Integer> openPorts = new LinkedHashSet<>();
+    private String wakeMessage;
+    private boolean wakeMessageFuzzy;
 
     public NetworkCardEnvironment(final EnvironmentHost host) {
         this.host = host;
@@ -99,6 +103,26 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     @Callback(direct = true, doc = "function():boolean -- Returns whether this modem is wired.")
     public Object[] isWired(final Context context, final Arguments args) {
         return new Object[]{true};
+    }
+
+    @Callback(direct = true, doc = "function():string, boolean -- Get the current wake-up message.")
+    public Object[] getWakeMessage(final Context context, final Arguments args) {
+        return new Object[]{wakeMessage, wakeMessageFuzzy};
+    }
+
+    @Callback(doc = "function(message:string[, fuzzy:boolean]):string, boolean -- Set the wake-up message and whether to ignore additional data/parameters.")
+    public Object[] setWakeMessage(final Context context, final Arguments args) {
+        final String oldMessage = wakeMessage;
+        final boolean oldFuzzy = wakeMessageFuzzy;
+
+        if (args.optAny(0, null) == null) {
+            wakeMessage = null;
+        } else {
+            wakeMessage = args.checkString(0);
+        }
+        wakeMessageFuzzy = args.optBoolean(1, wakeMessageFuzzy);
+        markChanged();
+        return new Object[]{oldMessage, oldFuzzy};
     }
 
     @Callback(doc = "function(address:string, port:number, ...):boolean -- Sends a packet to the specified address.")
@@ -163,12 +187,18 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
                 openPorts.add(port);
             }
         }
+        wakeMessage = nbt.contains(WAKE_MESSAGE_TAG) ? nbt.getString(WAKE_MESSAGE_TAG) : null;
+        wakeMessageFuzzy = nbt.getBoolean(WAKE_MESSAGE_FUZZY_TAG);
     }
 
     @Override
     public void save(final CompoundTag nbt) {
         super.save(nbt);
         nbt.putIntArray(OPEN_PORTS_TAG, openPorts.stream().mapToInt(Integer::intValue).toArray());
+        if (wakeMessage != null) {
+            nbt.putString(WAKE_MESSAGE_TAG, wakeMessage);
+        }
+        nbt.putBoolean(WAKE_MESSAGE_FUZZY_TAG, wakeMessageFuzzy);
     }
 
     private void markChanged() {
