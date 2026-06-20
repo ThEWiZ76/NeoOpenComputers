@@ -24,6 +24,7 @@ import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.MachineRegistry;
 import li.cil.oc.common.ModEeproms;
+import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.EepromEnvironment;
 import net.minecraft.nbt.CompoundTag;
@@ -107,6 +108,54 @@ final class LuaArchitectureTest {
         assertEquals("thread", architecture.globalString("coroutineValue"));
         assertEquals(3, architecture.globalInteger("bitValue"));
         assertEquals(4, architecture.globalInteger("loaded"));
+    }
+
+    @Test
+    void exposesTablePackAndUnpackCompatibility() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            packed = table.pack('a', nil, 'c')
+            packedCount = packed.n
+            first = packed[1]
+            third = packed[3]
+            unpackedFirst, unpackedSecond, unpackedThird = table.unpack(packed, 1, packed.n)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(3, architecture.globalInteger("packedCount"));
+        assertEquals("a", architecture.globalString("first"));
+        assertEquals("c", architecture.globalString("third"));
+        assertEquals("a", architecture.globalString("unpackedFirst"));
+        assertEquals("nil", architecture.globalString("unpackedSecond"));
+        assertEquals("c", architecture.globalString("unpackedThird"));
+    }
+
+    @Test
+    void exposesOpenComputersCheckArgCompatibility() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid = checkArg(1, 'text', 'string')
+            invalid, message = pcall(checkArg, 2, 5, 'string', 'nil')
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("valid"));
+        assertEquals(false, architecture.globalBoolean("invalid"));
+        assertEquals("bad argument #2 (string or nil expected, got number)", architecture.globalString("message"));
+    }
+
+    @Test
+    void stringFormatStringSpecifierUsesLuaToStringCompatibility() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            formatted = string.sub(string.format('%s', {}), 1, 6)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("table:", architecture.globalString("formatted"));
     }
 
     @Test
@@ -335,7 +384,7 @@ final class LuaArchitectureTest {
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("machine-address", architecture.globalString("address"));
-        assertEquals("machine-address", architecture.globalString("tmp"));
+        assertEquals("nil", architecture.globalString("tmp"));
     }
 
     @Test
@@ -1019,6 +1068,59 @@ final class LuaArchitectureTest {
 
         assertEquals(true, architecture.globalBoolean("bootedFromBios"));
         assertEquals(fileSystemEnvironment.node().address(), new String(eepromData.getByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void eepromBootAddressRoundTripIndexesFilesystemList() throws IOException {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        CompoundTag eepromData = new CompoundTag();
+        EepromEnvironment eeprom = new EepromEnvironment(eepromData);
+        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(1024), "OpenOS", null, null, 1);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(eeprom.node());
+        machine.node().connect(fileSystemEnvironment.node());
+        LuaArchitecture architecture = new LuaArchitecture("""
+            local eeprom = component.list('eeprom')()
+            local filesystem = component.list('filesystem')()
+            component.invoke(eeprom, 'setData', filesystem)
+            bootAddress = component.invoke(eeprom, 'getData')
+            bootAddressType = type(bootAddress)
+            bootAddressKind = component.list('filesystem')[bootAddress]
+            """);
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        ExecutionResult result = architecture.runThreaded(false);
+        if (result instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+
+        assertEquals("string", architecture.globalString("bootAddressType"));
+        assertEquals("filesystem", architecture.globalString("bootAddressKind"));
+    }
+
+    @Test
+    void bundledLuaBiosStartsBundledOpenOsWithoutRuntimeError() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        CompoundTag eepromData = new CompoundTag();
+        eepromData.putByteArray(ItemRegistry.EEPROM_CODE_TAG, ModEeproms.luaBiosCode());
+        EepromEnvironment eeprom = new EepromEnvironment(eepromData);
+        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(ModLootDisks.openOsFileSystem(), "OpenOS", null, null, 1);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(eeprom.node());
+        machine.node().connect(fileSystemEnvironment.node());
+        LuaArchitecture architecture = new LuaArchitecture(new String(ModEeproms.luaBiosCode(), StandardCharsets.UTF_8));
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        for (int tick = 0; tick < 16; tick++) {
+            ExecutionResult result = architecture.runThreaded(false);
+            if (result instanceof ExecutionResult.Error error) {
+                fail(error.message);
+            }
+        }
     }
 
     private static Machine machineWithUptime(final double uptime) {

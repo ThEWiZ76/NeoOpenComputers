@@ -258,9 +258,110 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.load(new Bit32Lib());
         globals.load(new JseMathLib());
         globals.set("package", LuaValue.NIL);
+        installCheckArg(globals);
+        installStringCompatibility(globals);
         LoadState.install(globals);
         LuaC.install(globals);
         return globals;
+    }
+
+    private static void installCheckArg(final Globals globals) {
+        globals.set("checkArg", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final int index = args.checkint(1);
+                final LuaValue value = args.arg(2);
+                if (matchesAnyType(value, args, 3)) {
+                    return LuaValue.NONE;
+                }
+                throw new LuaError("bad argument #" + index + " (" + expectedTypes(args, 3) + " expected, got " + luaTypeName(value) + ")");
+            }
+        });
+    }
+
+    private static boolean matchesAnyType(final LuaValue value, final Varargs args, final int firstTypeIndex) {
+        for (int index = firstTypeIndex; index <= args.narg(); index++) {
+            if (matchesType(value, args.checkjstring(index))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean matchesType(final LuaValue value, final String expectedType) {
+        return switch (expectedType) {
+            case "nil" -> value.type() == LuaValue.TNIL;
+            case "boolean" -> value.type() == LuaValue.TBOOLEAN;
+            case "number" -> value.type() == LuaValue.TNUMBER;
+            case "string" -> value.type() == LuaValue.TSTRING;
+            case "table" -> value.type() == LuaValue.TTABLE;
+            case "function" -> value.type() == LuaValue.TFUNCTION;
+            case "thread" -> value.type() == LuaValue.TTHREAD;
+            case "userdata" -> value.type() == LuaValue.TUSERDATA;
+            default -> expectedType.equals(luaTypeName(value));
+        };
+    }
+
+    private static String expectedTypes(final Varargs args, final int firstTypeIndex) {
+        final int count = Math.max(0, args.narg() - firstTypeIndex + 1);
+        if (count == 0) {
+            return "";
+        }
+        if (count == 1) {
+            return args.checkjstring(firstTypeIndex);
+        }
+        final StringBuilder builder = new StringBuilder();
+        for (int index = firstTypeIndex; index <= args.narg(); index++) {
+            if (index > firstTypeIndex) {
+                builder.append(index == args.narg() ? " or " : ", ");
+            }
+            builder.append(args.checkjstring(index));
+        }
+        return builder.toString();
+    }
+
+    private static String luaTypeName(final LuaValue value) {
+        return value.isnil() ? "nil" : value.typename();
+    }
+
+    private static void installStringCompatibility(final Globals globals) {
+        final LuaValue string = globals.get("string");
+        final LuaValue originalFormat = string.get("format");
+        string.set("format", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (args.narg() < 2) {
+                    return originalFormat.invoke(args);
+                }
+                final String format = args.checkjstring(1);
+                final LuaValue[] converted = new LuaValue[args.narg()];
+                converted[0] = args.arg(1);
+                for (int index = 2; index <= args.narg(); index++) {
+                    converted[index - 1] = args.arg(index);
+                }
+                int argumentIndex = 2;
+                for (int index = 0; index < format.length() && argumentIndex <= args.narg(); index++) {
+                    if (format.charAt(index) != '%') {
+                        continue;
+                    }
+                    if (index + 1 < format.length() && format.charAt(index + 1) == '%') {
+                        index++;
+                        continue;
+                    }
+                    while (index + 1 < format.length() && !Character.isLetter(format.charAt(index + 1))) {
+                        index++;
+                    }
+                    if (index + 1 < format.length()) {
+                        final char conversion = format.charAt(++index);
+                        if (conversion == 's') {
+                            converted[argumentIndex - 1] = LuaValue.valueOf(args.arg(argumentIndex).tojstring());
+                        }
+                        argumentIndex++;
+                    }
+                }
+                return originalFormat.invoke(LuaValue.varargsOf(converted));
+            }
+        });
     }
 
     private void installComputerLibrary() {
@@ -343,7 +444,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("tmpAddress", new ZeroArgFunction() {
             @Override
             public LuaValue call() {
-                return machineAddress();
+                return LuaValue.NIL;
             }
         });
         computer.set("shutdown", new VarArgFunction() {
