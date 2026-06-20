@@ -23,6 +23,7 @@ import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
+import li.cil.oc.common.item.PistonUpgradeItem;
 import li.cil.oc.common.item.RedstoneCardItem;
 import li.cil.oc.common.item.SignUpgradeItem;
 import li.cil.oc.common.item.SolarGeneratorUpgradeItem;
@@ -277,9 +278,9 @@ public final class ModItems {
         ModContentIds.NETWORK_CARD,
         () -> new NetworkCardItem(new Item.Properties()));
 
-    public static final DeferredItem<BasicUpgradeItem> PISTON_UPGRADE = ITEMS.register(
+    public static final DeferredItem<PistonUpgradeItem> PISTON_UPGRADE = ITEMS.register(
         ModContentIds.PISTON_UPGRADE,
-        () -> new BasicUpgradeItem(new Item.Properties(), 0));
+        () -> new PistonUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<BasicUpgradeItem> STICKY_PISTON_UPGRADE = ITEMS.register(
         ModContentIds.STICKY_PISTON_UPGRADE,

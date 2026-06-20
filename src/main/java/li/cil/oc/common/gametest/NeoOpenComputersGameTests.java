@@ -986,6 +986,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void pistonUpgradePushesBlockInFrontOfHost(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.PISTON_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for piston upgrade");
+
+        final BlockPos hostPos = new BlockPos(2, 1, 2);
+        final BlockPos sourcePos = hostPos.relative(Direction.EAST);
+        final BlockPos targetPos = sourcePos.relative(Direction.EAST);
+        helper.setBlock(sourcePos, Blocks.DIRT);
+        helper.setBlock(targetPos, Blocks.AIR);
+        final ManagedEnvironment environment = driver.createEnvironment(
+            new ItemStack(ModItems.PISTON_UPGRADE.get()),
+            new StaticRotatablePositionEnvironmentHost(helper, hostPos, Direction.EAST)
+        );
+        helper.assertTrue(environment != null, "Piston upgrade did not create piston environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Piston node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("piston".equals(component.name()), "Piston component name mismatch");
+
+        final Object[] sticky = component.invoke("isSticky", null);
+        helper.assertTrue(sticky.length == 1 && Boolean.FALSE.equals(sticky[0]), "Piston upgrade reported sticky");
+        final Object[] push = component.invoke("push", null);
+        helper.assertTrue(push.length == 1 && Boolean.TRUE.equals(push[0]), "Piston upgrade did not push block: " + java.util.Arrays.toString(push));
+        helper.assertTrue(helper.getBlockState(sourcePos).isAir(), "Piston upgrade did not clear source block");
+        helper.assertTrue(helper.getBlockState(targetPos).is(Blocks.DIRT), "Piston upgrade did not move block forward");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void databaseUpgradeCopiesEntriesToAddressedDatabase(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
         helper.assertTrue(driver != null, "No driver for database upgrade");
