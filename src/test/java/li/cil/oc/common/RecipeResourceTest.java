@@ -293,6 +293,17 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void cableRecipeUsesUpstreamShape() throws IOException {
+        JsonObject recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.CABLE + ".json"));
+        JsonObject keys = recipe.getAsJsonObject("key");
+
+        assertPattern(recipe, " I ", "IRI", " I ");
+        assertTag(keys, "I", "c:nuggets/iron");
+        assertItem(keys, "R", "minecraft:redstone");
+        assertResultCount(recipe, 4);
+    }
+
+    @Test
     void capacitorRecipeUsesMaterialProgression() throws IOException {
         JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
 
@@ -691,6 +702,10 @@ final class RecipeResourceTest {
         for (int index = 0; index < expected.length; index++) {
             assertEquals(expected[index], pattern.getAsJsonArray().get(index).getAsString());
         }
+    }
+
+    private static void assertResultCount(final JsonObject json, final int expected) {
+        assertEquals(expected, json.getAsJsonObject("result").get("count").getAsInt());
     }
 
     private static void assertIngredientItem(final JsonObject json, final String item) {

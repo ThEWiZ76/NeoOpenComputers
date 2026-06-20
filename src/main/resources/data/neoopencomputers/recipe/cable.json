@@ -3,19 +3,19 @@
   "category": "redstone",
   "key": {
     "I": {
-      "tag": "c:ingots/iron"
+      "tag": "c:nuggets/iron"
     },
     "R": {
       "item": "minecraft:redstone"
     }
   },
   "pattern": [
-    "III",
-    "RRR",
-    "III"
+    " I ",
+    "IRI",
+    " I "
   ],
   "result": {
-    "count": 8,
+    "count": 4,
     "id": "neoopencomputers:cable"
   }
 }
