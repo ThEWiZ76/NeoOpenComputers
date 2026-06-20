@@ -80,6 +80,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.HDD_TIER1.get();
         ModItems.HDD_TIER2.get();
         ModItems.HDD_TIER3.get();
+        ModItems.INVENTORY_CONTROLLER_UPGRADE.get();
         ModItems.MEMORY_TIER1.get();
         ModItems.MEMORY_TIER2.get();
         ModItems.MEMORY_TIER3.get();
@@ -259,6 +260,37 @@ public final class NeoOpenComputersGameTests {
                 helper.assertTrue(result.length == 1 && "pong".equals(result[0]), "Adapter component invocation failed");
             } catch (Exception e) {
                 helper.fail("Adapter component invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterInventoryControllerUpgradeReadsChest(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos chestPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(chestPos, Blocks.CHEST);
+
+        final li.cil.oc.common.blockentity.AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+        helper.assertTrue(adapter.canPlaceItem(0, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get())), "Adapter rejected inventory controller upgrade");
+        adapter.setItem(0, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get()));
+
+        final net.minecraft.world.Container chest = helper.getBlockEntity(chestPos);
+        chest.setItem(0, new ItemStack(net.minecraft.world.item.Items.DIAMOND, 4));
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final String address = componentAddress(computer, "inventory_controller");
+            helper.assertTrue(address != null, "Adapter did not expose inventory controller upgrade: " + computer.machine().components());
+            try {
+                final int east = Direction.EAST.get3DDataValue();
+                assertInvokeResult(helper, computer, address, "getInventorySize", new Object[]{east}, 27);
+                assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{east, 1}, 4);
+            } catch (Exception e) {
+                helper.fail("Inventory controller invocation failed: " + e.getMessage());
             }
         });
     }

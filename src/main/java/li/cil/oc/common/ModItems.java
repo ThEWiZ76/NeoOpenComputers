@@ -6,6 +6,7 @@ import li.cil.oc.common.item.EepromItem;
 import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
+import li.cil.oc.common.item.InventoryControllerUpgradeItem;
 import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.RedstoneCardItem;
@@ -85,6 +86,10 @@ public final class ModItems {
     public static final DeferredItem<HardDiskDriveItem> HDD_TIER3 = ITEMS.register(
         ModContentIds.HDD_TIER3,
         () -> new HardDiskDriveItem(new Item.Properties(), 2));
+
+    public static final DeferredItem<InventoryControllerUpgradeItem> INVENTORY_CONTROLLER_UPGRADE = ITEMS.register(
+        ModContentIds.INVENTORY_CONTROLLER_UPGRADE,
+        () -> new InventoryControllerUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<Item> MANUAL = ITEMS.registerSimpleItem(ModContentIds.MANUAL, new Item.Properties());
 

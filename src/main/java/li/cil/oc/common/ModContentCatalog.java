@@ -60,6 +60,7 @@ public final class ModContentCatalog {
                 ModItems.HDD_TIER1.get(),
                 ModItems.HDD_TIER2.get(),
                 ModItems.HDD_TIER3.get(),
+                ModItems.INVENTORY_CONTROLLER_UPGRADE.get(),
                 ModItems.EEPROM.get(),
                 ModItems.FLOPPY.get(),
                 ModItems.GRAPHICS_CARD_TIER1.get(),
@@ -102,6 +103,7 @@ public final class ModContentCatalog {
         final Item hddTier1Item,
         final Item hddTier2Item,
         final Item hddTier3Item,
+        final Item inventoryControllerUpgradeItem,
         final Item eepromItem,
         final Item floppyItem,
         final Item graphicsCardTier1Item,
@@ -135,6 +137,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.HDD_TIER1, null, hddTier1Item);
         registry.register(ModContentIds.HDD_TIER2, null, hddTier2Item);
         registry.register(ModContentIds.HDD_TIER3, null, hddTier3Item);
+        registry.register(ModContentIds.INVENTORY_CONTROLLER_UPGRADE, null, inventoryControllerUpgradeItem);
         registry.register(ModContentIds.EEPROM, null, eepromItem);
         registry.register(ModContentIds.FLOPPY, null, floppyItem);
         registry.register(ModContentIds.GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
