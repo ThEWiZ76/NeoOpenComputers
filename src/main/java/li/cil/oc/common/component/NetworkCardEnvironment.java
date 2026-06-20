@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class NetworkCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
-    private static final String COMPONENT_NAME = "modem";
+    protected static final String COMPONENT_NAME = "modem";
     private static final String OPEN_PORTS_TAG = "openPorts";
     private static final String WAKE_MESSAGE_TAG = "wakeMessage";
     private static final String WAKE_MESSAGE_FUZZY_TAG = "wakeMessageFuzzy";
@@ -31,9 +31,9 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     private static final int MAX_PACKET_PARTS = 8;
     private static final int MIN_PORT = 1;
     private static final int MAX_PORT = 65535;
-    private static final String NETWORK_MESSAGE = "network.message";
+    protected static final String NETWORK_MESSAGE = "network.message";
     private static final String MODEM_MESSAGE_SIGNAL = "modem_message";
-    private static final Map<String, String> DEVICE_INFO = Map.of(
+    private static final Map<String, String> WIRED_DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
         DeviceInfo.DeviceAttribute.Description, "Ethernet controller",
         DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
@@ -44,7 +44,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         DeviceInfo.DeviceAttribute.Width, Integer.toString(MAX_PACKET_PARTS)
     );
 
-    private final EnvironmentHost host;
+    protected final EnvironmentHost host;
     private final Set<Integer> openPorts = new LinkedHashSet<>();
     private String wakeMessage;
     private boolean wakeMessageFuzzy;
@@ -59,7 +59,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
 
     @Override
     public Map<String, String> getDeviceInfo() {
-        return DEVICE_INFO;
+        return WIRED_DEVICE_INFO;
     }
 
     @Callback(doc = "function(port:number):boolean -- Opens the specified port.")
@@ -139,7 +139,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             return new Object[]{false};
         }
 
-        node().sendToAddress(address, NETWORK_MESSAGE, packet);
+        doSend(address, packet);
         return new Object[]{true};
     }
 
@@ -155,7 +155,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             return new Object[]{false};
         }
 
-        node().sendToReachable(NETWORK_MESSAGE, packet);
+        doBroadcast(packet);
         return new Object[]{true};
     }
 
@@ -167,7 +167,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
                 markChanged();
             }
         } else if (NETWORK_MESSAGE.equals(message.name())) {
-            receivePacket(message);
+            receiveWiredPacket(message);
         }
     }
 
@@ -202,7 +202,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         nbt.putBoolean(WAKE_MESSAGE_FUZZY_TAG, wakeMessageFuzzy);
     }
 
-    private void markChanged() {
+    protected void markChanged() {
         if (host != null) {
             host.markChanged();
         }
@@ -216,10 +216,22 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         return machine != null && message.source() == machine.node();
     }
 
-    private void receivePacket(final Message message) {
+    protected void doSend(final String address, final Packet packet) {
+        node().sendToAddress(address, NETWORK_MESSAGE, packet);
+    }
+
+    protected void doBroadcast(final Packet packet) {
+        node().sendToReachable(NETWORK_MESSAGE, packet);
+    }
+
+    private void receiveWiredPacket(final Message message) {
         if (message.data().length == 0 || !(message.data()[0] instanceof Packet packet)) {
             return;
         }
+        receivePacket(packet, 0D);
+    }
+
+    protected void receivePacket(final Packet packet, final double distance) {
         if (!(host instanceof MachineHost machineHost) || node() == null) {
             return;
         }
@@ -239,7 +251,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             signalArgs[0] = node().address();
             signalArgs[1] = packet.source();
             signalArgs[2] = packet.port();
-            signalArgs[3] = 0D;
+            signalArgs[3] = distance;
             System.arraycopy(packetData, 0, signalArgs, 4, packetData.length);
             machine.signal(MODEM_MESSAGE_SIGNAL, signalArgs);
         }

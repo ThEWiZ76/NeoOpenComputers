@@ -89,6 +89,8 @@ public final class NeoOpenComputersGameTests {
         ModItems.MEMORY_TIER2.get();
         ModItems.MEMORY_TIER3.get();
         ModItems.NETWORK_CARD.get();
+        ModItems.WIRELESS_NETWORK_CARD_TIER1.get();
+        ModItems.WIRELESS_NETWORK_CARD_TIER2.get();
         ModItems.REDSTONE_CARD.get();
         helper.succeed();
     }
@@ -110,6 +112,8 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
         helper.succeed();
     }
 
@@ -127,6 +131,8 @@ public final class NeoOpenComputersGameTests {
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), 9);
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER2.get()), 25);
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER3.get()), 81);
+        assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), false, 16D);
+        assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), true, 400D);
         helper.succeed();
     }
 
@@ -1007,6 +1013,21 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment instanceof li.cil.oc.api.internal.Database, "No database environment for " + stack);
         final li.cil.oc.api.internal.Database database = (li.cil.oc.api.internal.Database) environment;
         helper.assertTrue(database.size() == capacity, "Expected " + stack + " to have " + capacity + " database slots but got " + database.size());
+    }
+
+    private static void assertWirelessModem(final GameTestHelper helper, final ItemStack stack, final boolean wired, final double strength) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment != null, "No wireless modem environment for " + stack);
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Wireless modem has no component for " + stack);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        final Object[] wirelessResult = invokeComponent(helper, component, "isWireless");
+        helper.assertTrue(wirelessResult.length == 1 && Boolean.TRUE.equals(wirelessResult[0]), "Expected wireless modem for " + stack);
+        final Object[] wiredResult = invokeComponent(helper, component, "isWired");
+        helper.assertTrue(wiredResult.length == 1 && Boolean.valueOf(wired).equals(wiredResult[0]), "Expected " + stack + " wired=" + wired);
+        final Object[] strengthResult = invokeComponent(helper, component, "getStrength");
+        helper.assertTrue(strengthResult.length == 1 && Double.valueOf(strength).equals(strengthResult[0]), "Expected " + stack + " strength " + strength);
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {

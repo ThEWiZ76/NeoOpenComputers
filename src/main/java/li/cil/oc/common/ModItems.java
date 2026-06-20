@@ -11,6 +11,7 @@ import li.cil.oc.common.item.InventoryControllerUpgradeItem;
 import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.RedstoneCardItem;
+import li.cil.oc.common.item.WirelessNetworkCardItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
@@ -121,6 +122,14 @@ public final class ModItems {
     public static final DeferredItem<NetworkCardItem> NETWORK_CARD = ITEMS.register(
         ModContentIds.NETWORK_CARD,
         () -> new NetworkCardItem(new Item.Properties()));
+
+    public static final DeferredItem<WirelessNetworkCardItem> WIRELESS_NETWORK_CARD_TIER1 = ITEMS.register(
+        ModContentIds.WIRELESS_NETWORK_CARD_TIER1,
+        () -> new WirelessNetworkCardItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<WirelessNetworkCardItem> WIRELESS_NETWORK_CARD_TIER2 = ITEMS.register(
+        ModContentIds.WIRELESS_NETWORK_CARD_TIER2,
+        () -> new WirelessNetworkCardItem(new Item.Properties(), 1));
 
     public static final DeferredItem<RedstoneCardItem> REDSTONE_CARD = ITEMS.register(
         ModContentIds.REDSTONE_CARD,

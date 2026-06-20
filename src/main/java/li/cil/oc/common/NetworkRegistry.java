@@ -52,6 +52,7 @@ final class NetworkRegistry implements NetworkAPI {
     private static final int MAX_PACKET_PARTS = 8;
 
     private int nextNodeId = 1;
+    private final Set<WirelessEndpoint> wirelessEndpoints = new LinkedHashSet<>();
 
     @Override
     public void joinOrCreateNetwork(final BlockEntity blockEntity) {
@@ -93,22 +94,44 @@ final class NetworkRegistry implements NetworkAPI {
 
     @Override
     public void joinWirelessNetwork(final WirelessEndpoint endpoint) {
+        if (endpoint != null) {
+            wirelessEndpoints.add(endpoint);
+        }
     }
 
     @Override
     public void updateWirelessNetwork(final WirelessEndpoint endpoint) {
+        if (endpoint != null) {
+            wirelessEndpoints.add(endpoint);
+        }
     }
 
     @Override
     public void leaveWirelessNetwork(final WirelessEndpoint endpoint) {
+        wirelessEndpoints.remove(endpoint);
     }
 
     @Override
     public void leaveWirelessNetwork(final WirelessEndpoint endpoint, final ResourceKey<Level> dimension) {
+        if (endpoint == null) {
+            return;
+        }
+        final Level world = endpoint.world();
+        if (world == null || world.dimension().equals(dimension)) {
+            leaveWirelessNetwork(endpoint);
+        }
     }
 
     @Override
     public void sendWirelessPacket(final WirelessEndpoint source, final double strength, final Packet packet) {
+        if (source == null || packet == null || strength <= 0D) {
+            return;
+        }
+        for (WirelessEndpoint endpoint : List.copyOf(wirelessEndpoints)) {
+            if (endpoint != source && endpoint.world() == source.world() && wirelessDistance(source, endpoint) <= strength) {
+                endpoint.receivePacket(packet, source);
+            }
+        }
     }
 
     @Override
@@ -172,6 +195,13 @@ final class NetworkRegistry implements NetworkAPI {
             }
         }
         return nodes;
+    }
+
+    private static double wirelessDistance(final WirelessEndpoint source, final WirelessEndpoint target) {
+        final double dx = source.x() - target.x();
+        final double dy = source.y() - target.y();
+        final double dz = source.z() - target.z();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     private final class NodeBuilder implements Builder.NodeBuilder {

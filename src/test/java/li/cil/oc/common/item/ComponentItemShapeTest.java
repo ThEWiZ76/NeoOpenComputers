@@ -138,6 +138,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void wirelessNetworkCardItemIsHostAwareCardDriver() throws NoSuchMethodException {
+        final Constructor<WirelessNetworkCardItem> constructor = WirelessNetworkCardItem.class.getConstructor(Item.Properties.class, int.class);
+
+        assertTrue(Item.class.isAssignableFrom(WirelessNetworkCardItem.class));
+        assertTrue(HostAware.class.isAssignableFrom(WirelessNetworkCardItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void databaseUpgradeItemIsUpgradeDriver() throws NoSuchMethodException {
         final Constructor<DatabaseUpgradeItem> constructor = DatabaseUpgradeItem.class.getConstructor(Item.Properties.class);
 

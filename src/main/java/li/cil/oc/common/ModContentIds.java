@@ -37,6 +37,8 @@ public final class ModContentIds {
     public static final String MEMORY_TIER3 = "memory_tier3";
     public static final String NETWORK_CARD = "network_card";
     public static final String REDSTONE_CARD = "redstone_card";
+    public static final String WIRELESS_NETWORK_CARD_TIER1 = "wireless_network_card_tier1";
+    public static final String WIRELESS_NETWORK_CARD_TIER2 = "wireless_network_card_tier2";
     public static final String SCREEN_TIER1 = "screen_tier1";
     public static final String SCREEN_TIER2 = "screen_tier2";
     public static final String SCREEN_TIER3 = "screen_tier3";

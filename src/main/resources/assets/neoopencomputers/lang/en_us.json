@@ -30,6 +30,8 @@
   "item.neoopencomputers.memory_tier3": "Memory (Tier 3)",
   "item.neoopencomputers.network_card": "Network Card",
   "item.neoopencomputers.redstone_card": "Redstone Card",
+  "item.neoopencomputers.wireless_network_card_tier1": "Wireless Network Card (Tier 1)",
+  "item.neoopencomputers.wireless_network_card_tier2": "Wireless Network Card (Tier 2)",
   "itemGroup.neoopencomputers": "NeoOpenComputers",
   "mod.neoopencomputers": "NeoOpenComputers"
 }

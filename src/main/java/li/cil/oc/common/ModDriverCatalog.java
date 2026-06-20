@@ -21,7 +21,7 @@ public final class ModDriverCatalog {
                 ModItems.INVENTORY_CONTROLLER_UPGRADE.get(),
                 ModItems.EEPROM.get(), ModItems.FLOPPY.get(),
                 ModItems.GRAPHICS_CARD_TIER1.get(), ModItems.GRAPHICS_CARD_TIER2.get(), ModItems.GRAPHICS_CARD_TIER3.get(),
-                ModItems.NETWORK_CARD.get(), ModItems.REDSTONE_CARD.get());
+                ModItems.NETWORK_CARD.get(), ModItems.WIRELESS_NETWORK_CARD_TIER1.get(), ModItems.WIRELESS_NETWORK_CARD_TIER2.get(), ModItems.REDSTONE_CARD.get());
         }
     }
 

@@ -48,6 +48,15 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void exposesWirelessModemCallbacks() throws NoSuchMethodException {
+        Method getStrength = WirelessNetworkCardEnvironment.class.getMethod("getStrength", li.cil.oc.api.machine.Context.class, Arguments.class);
+        Method setStrength = WirelessNetworkCardEnvironment.class.getMethod("setStrength", li.cil.oc.api.machine.Context.class, Arguments.class);
+
+        assertTrue(getStrength.isAnnotationPresent(Callback.class));
+        assertTrue(setStrength.isAnnotationPresent(Callback.class));
+    }
+
+    @Test
     void opensAndClosesPorts() throws Exception {
         OpenComputersApi.initialize();
         NetworkCardEnvironment card = new NetworkCardEnvironment(new TestHost());
@@ -103,6 +112,28 @@ final class NetworkCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, card.isWired(null, new TestArguments()));
         assertArrayEquals(new Object[]{false}, card.isWireless(null, new TestArguments()));
         assertNotNull(card.node());
+    }
+
+    @Test
+    void tierOneWirelessCardReportsWirelessOnlyAndClampsStrength() {
+        OpenComputersApi.initialize();
+        WirelessNetworkCardEnvironment card = new WirelessNetworkCardEnvironment(new TestHost(), 0);
+
+        assertArrayEquals(new Object[]{false}, card.isWired(null, new TestArguments()));
+        assertArrayEquals(new Object[]{true}, card.isWireless(null, new TestArguments()));
+        assertArrayEquals(new Object[]{16D}, card.getStrength(null, new TestArguments()));
+        assertArrayEquals(new Object[]{8D}, card.setStrength(null, new TestArguments(8D)));
+        assertArrayEquals(new Object[]{16D}, card.setStrength(null, new TestArguments(900D)));
+    }
+
+    @Test
+    void tierTwoWirelessCardReportsWirelessAndWired() {
+        OpenComputersApi.initialize();
+        WirelessNetworkCardEnvironment card = new WirelessNetworkCardEnvironment(new TestHost(), 1);
+
+        assertArrayEquals(new Object[]{true}, card.isWired(null, new TestArguments()));
+        assertArrayEquals(new Object[]{true}, card.isWireless(null, new TestArguments()));
+        assertArrayEquals(new Object[]{400D}, card.getStrength(null, new TestArguments()));
     }
 
     @Test
@@ -284,12 +315,60 @@ final class NetworkCardEnvironmentTest {
         assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
     }
 
+    @Test
+    void wirelessBroadcastDeliversWithinStrengthAndReportsDistance() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
+        TestMachineHost receiverHost = new TestMachineHost(3, 4, 0);
+        WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(senderHost, 0);
+        WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(receiverHost, 0);
+        Network.joinNewNetwork(sender.node());
+        Network.joinNewNetwork(receiver.node());
+        receiver.open(null, new TestArguments(123));
+
+        sender.setStrength(null, new TestArguments(5D));
+        assertArrayEquals(new Object[]{true}, sender.broadcast(null, new TestArguments(123, "payload")));
+
+        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 5D, "payload")), receiverHost.signals);
+    }
+
+    @Test
+    void wirelessBroadcastDoesNotDeliverBeyondStrength() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
+        TestMachineHost receiverHost = new TestMachineHost(6, 0, 0);
+        WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(senderHost, 0);
+        WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(receiverHost, 0);
+        Network.joinNewNetwork(sender.node());
+        Network.joinNewNetwork(receiver.node());
+        receiver.open(null, new TestArguments(123));
+
+        sender.setStrength(null, new TestArguments(5D));
+        assertArrayEquals(new Object[]{true}, sender.broadcast(null, new TestArguments(123, "payload")));
+
+        assertEquals(List.of(), receiverHost.signals);
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = NetworkCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
     }
 
     private static class TestHost implements EnvironmentHost {
+        private final int x;
+        private final int y;
+        private final int z;
+
+        private TestHost() {
+            this(0, 0, 0);
+        }
+
+        private TestHost(final int x, final int y, final int z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
         @Override
         public Level world() {
             return null;
@@ -297,17 +376,17 @@ final class NetworkCardEnvironmentTest {
 
         @Override
         public double xPosition() {
-            return 0;
+            return x + 0.5D;
         }
 
         @Override
         public double yPosition() {
-            return 0;
+            return y + 0.5D;
         }
 
         @Override
         public double zPosition() {
-            return 0;
+            return z + 0.5D;
         }
 
         @Override
@@ -318,6 +397,14 @@ final class NetworkCardEnvironmentTest {
     private static final class TestMachineHost extends TestHost implements MachineHost {
         private final List<List<Object>> signals = new ArrayList<>();
         private final TestMachine machine = new TestMachine(signals);
+
+        private TestMachineHost() {
+            super();
+        }
+
+        private TestMachineHost(final int x, final int y, final int z) {
+            super(x, y, z);
+        }
 
         @Override
         public Machine machine() {

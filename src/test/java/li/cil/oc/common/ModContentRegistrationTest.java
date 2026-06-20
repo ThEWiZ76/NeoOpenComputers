@@ -146,6 +146,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void wirelessNetworkCardTier1ItemIdIsStable() {
+        assertEquals("wireless_network_card_tier1", ModContentIds.WIRELESS_NETWORK_CARD_TIER1);
+    }
+
+    @Test
+    void wirelessNetworkCardTier2ItemIdIsStable() {
+        assertEquals("wireless_network_card_tier2", ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+    }
+
+    @Test
     void screenTier1BlockIdIsStable() {
         assertEquals("screen_tier1", ModContentIds.SCREEN_TIER1);
     }
