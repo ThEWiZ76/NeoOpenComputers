@@ -2,23 +2,32 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "C": {
-      "item": "neoopencomputers:tablet_case_tier1"
+    "B": {
+      "item": "minecraft:stone_button"
     },
-    "D": {
-      "item": "minecraft:diamond"
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
     },
     "G": {
-      "item": "minecraft:gold_ingot"
+      "tag": "c:ingots/gold"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "M": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "P": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "S": {
+      "item": "neoopencomputers:screen_tier2"
+    },
+    "U": {
+      "item": "neoopencomputers:component_bus_tier3"
     }
   },
   "pattern": [
-    "GDG",
-    "RCR",
-    "GDG"
+    "CBG",
+    "USM",
+    "CPG"
   ],
   "result": {
     "count": 1,

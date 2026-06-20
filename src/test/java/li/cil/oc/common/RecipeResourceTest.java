@@ -519,6 +519,31 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void tabletCaseRecipesUseComponentBusProgression() throws IOException {
+        JsonObject tier1 = readJson(RECIPE_ROOT.resolve(ModContentIds.TABLET_CASE_TIER1 + ".json"));
+        JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.TABLET_CASE_TIER2 + ".json"));
+        JsonObject tier1Keys = tier1.getAsJsonObject("key");
+        JsonObject tier2Keys = tier2.getAsJsonObject("key");
+
+        assertPattern(tier1, "GBG", "USC", "GPG");
+        assertTag(tier1Keys, "G", "c:ingots/gold");
+        assertItem(tier1Keys, "B", "minecraft:stone_button");
+        assertItem(tier1Keys, "U", "neoopencomputers:" + ModContentIds.COMPONENT_BUS_TIER1);
+        assertItem(tier1Keys, "S", "neoopencomputers:" + ModContentIds.SCREEN_TIER2);
+        assertItem(tier1Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier1Keys, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(tier2, "CBG", "USM", "CPG");
+        assertItem(tier2Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier2Keys, "B", "minecraft:stone_button");
+        assertTag(tier2Keys, "G", "c:ingots/gold");
+        assertItem(tier2Keys, "U", "neoopencomputers:" + ModContentIds.COMPONENT_BUS_TIER3);
+        assertItem(tier2Keys, "S", "neoopencomputers:" + ModContentIds.SCREEN_TIER2);
+        assertItem(tier2Keys, "M", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier2Keys, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
     void inputDeviceRecipesUseMaterialParts() throws IOException {
         JsonObject manual = readJson(RECIPE_ROOT.resolve(ModContentIds.MANUAL + ".json"));
         JsonObject buttonGroup = readJson(RECIPE_ROOT.resolve(ModContentIds.BUTTON_GROUP + ".json"));

@@ -2,20 +2,29 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
+    "B": {
+      "item": "minecraft:stone_button"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
     "G": {
-      "item": "minecraft:glass_pane"
+      "tag": "c:ingots/gold"
     },
-    "I": {
-      "item": "minecraft:iron_ingot"
+    "P": {
+      "item": "neoopencomputers:printed_circuit_board"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "S": {
+      "item": "neoopencomputers:screen_tier2"
+    },
+    "U": {
+      "item": "neoopencomputers:component_bus_tier1"
     }
   },
   "pattern": [
-    "IGI",
-    "R R",
-    "III"
+    "GBG",
+    "USC",
+    "GPG"
   ],
   "result": {
     "count": 1,
