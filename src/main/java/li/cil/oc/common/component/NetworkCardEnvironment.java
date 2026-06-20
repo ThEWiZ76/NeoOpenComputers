@@ -147,6 +147,14 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     }
 
     @Override
+    public void onDisconnect(final Node node) {
+        if (node == node() && !openPorts.isEmpty()) {
+            openPorts.clear();
+            markChanged();
+        }
+    }
+
+    @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
         openPorts.clear();

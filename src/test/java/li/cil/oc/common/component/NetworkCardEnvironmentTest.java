@@ -56,6 +56,17 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void clearsOpenPortsWhenCardDisconnects() throws Exception {
+        OpenComputersApi.initialize();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(new TestHost());
+        card.open(null, new TestArguments(123));
+
+        card.onDisconnect(card.node());
+
+        assertArrayEquals(new Object[]{false}, card.isOpen(null, new TestArguments(123)));
+    }
+
+    @Test
     void reportsWiredOnly() {
         OpenComputersApi.initialize();
         NetworkCardEnvironment card = new NetworkCardEnvironment(new TestHost());
