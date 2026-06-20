@@ -304,6 +304,16 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void diskPlatterRecipeUsesUpstreamShape() throws IOException {
+        JsonObject recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.DISK_PLATTER + ".json"));
+        JsonObject keys = recipe.getAsJsonObject("key");
+
+        assertPattern(recipe, " I ", "I I", " I ");
+        assertTag(keys, "I", "c:nuggets/iron");
+        assertResultCount(recipe, 1);
+    }
+
+    @Test
     void capacitorRecipeUsesMaterialProgression() throws IOException {
         JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
 
