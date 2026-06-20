@@ -1,13 +1,27 @@
 {
-  "type": "minecraft:crafting_shapeless",
+  "type": "minecraft:crafting_shaped",
   "category": "misc",
-  "ingredients": [
-    {
+  "key": {
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "G": {
+      "tag": "c:nuggets/gold"
+    },
+    "I": {
+      "tag": "c:nuggets/iron"
+    },
+    "P": {
       "item": "neoopencomputers:printed_circuit_board"
     },
-    {
-      "tag": "c:nuggets/iron"
+    "T": {
+      "item": "neoopencomputers:transistor"
     }
+  },
+  "pattern": [
+    "ICT",
+    "IPP",
+    "IGG"
   ],
   "result": {
     "count": 1,

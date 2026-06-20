@@ -331,6 +331,20 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void cardRecipeUsesUpstreamMaterialShape() throws IOException {
+        JsonObject recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.CARD + ".json"));
+        JsonObject keys = recipe.getAsJsonObject("key");
+
+        assertPattern(recipe, "ICT", "IPP", "IGG");
+        assertTag(keys, "I", "c:nuggets/iron");
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(keys, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertTag(keys, "G", "c:nuggets/gold");
+        assertResultCount(recipe, 1);
+    }
+
+    @Test
     void capacitorRecipeUsesMaterialProgression() throws IOException {
         JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
 
