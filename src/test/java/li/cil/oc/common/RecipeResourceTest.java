@@ -79,6 +79,7 @@ final class RecipeResourceTest {
             ModContentIds.HDD_TIER2,
             ModContentIds.HDD_TIER3,
             ModContentIds.INTERNET_CARD,
+            ModContentIds.INVENTORY_CONTROLLER_UPGRADE,
             ModContentIds.INVENTORY_UPGRADE,
             ModContentIds.KEYBOARD,
             ModContentIds.LINKED_CARD,
@@ -389,6 +390,30 @@ final class RecipeResourceTest {
         assertItem(tank, "C", "minecraft:cauldron");
         assertItem(tank, "M", "minecraft:piston");
         assertItem(tank, "B", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+    }
+
+    @Test
+    void controllerUpgradeRecipesUseUpstreamShape() throws IOException {
+        JsonObject inventory = readJson(RECIPE_ROOT.resolve(ModContentIds.INVENTORY_CONTROLLER_UPGRADE + ".json"));
+        JsonObject tank = readJson(RECIPE_ROOT.resolve(ModContentIds.TANK_CONTROLLER_UPGRADE + ".json"));
+        JsonObject inventoryKeys = inventory.getAsJsonObject("key");
+        JsonObject tankKeys = tank.getAsJsonObject("key");
+
+        assertPattern(inventory, "GAG", "DCP", "GBG");
+        assertTag(inventoryKeys, "G", "c:ingots/gold");
+        assertItem(inventoryKeys, "A", "neoopencomputers:" + ModContentIds.ANALYZER);
+        assertItem(inventoryKeys, "D", "minecraft:dropper");
+        assertItem(inventoryKeys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(inventoryKeys, "P", "minecraft:piston");
+        assertItem(inventoryKeys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(tank, "GBG", "DCP", "GRG");
+        assertTag(tankKeys, "G", "c:ingots/gold");
+        assertItem(tankKeys, "B", "minecraft:glass_bottle");
+        assertItem(tankKeys, "D", "minecraft:dispenser");
+        assertItem(tankKeys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tankKeys, "P", "minecraft:piston");
+        assertItem(tankKeys, "R", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
     @Test

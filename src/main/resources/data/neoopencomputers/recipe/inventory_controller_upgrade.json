@@ -2,20 +2,29 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "A": {
+      "item": "neoopencomputers:analyzer"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
     "C": {
-      "item": "minecraft:chest"
+      "item": "neoopencomputers:microchip_tier2"
     },
-    "I": {
-      "tag": "c:ingots/iron"
+    "D": {
+      "item": "minecraft:dropper"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "P": {
+      "item": "minecraft:piston"
     }
   },
   "pattern": [
-    "IRI",
-    "RCR",
-    "IRI"
+    "GAG",
+    "DCP",
+    "GBG"
   ],
   "result": {
     "count": 1,
