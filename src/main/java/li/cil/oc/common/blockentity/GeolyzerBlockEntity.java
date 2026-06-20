@@ -70,6 +70,30 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
 
     @Override
     public void onMessage(final Message message) {
+        if (message == null || !"tablet.use".equals(message.name())) {
+            return;
+        }
+        final Object[] data = message.data();
+        if (data.length < 4 || !(data[0] instanceof CompoundTag nbt) || !(data[3] instanceof BlockPos blockPos)) {
+            return;
+        }
+        if (!consumeEnergy()) {
+            return;
+        }
+        final GeolyzerEvent.Analyze event = new GeolyzerEvent.Analyze(this, Map.of(), blockPos);
+        fillAnalyze(event);
+        NeoForge.EVENT_BUS.post(event);
+        if (event.isCanceled()) {
+            return;
+        }
+        for (final Map.Entry<String, Object> entry : event.data.entrySet()) {
+            switch (entry.getValue()) {
+                case Number number -> nbt.putDouble(entry.getKey(), number.doubleValue());
+                case String string when !string.isEmpty() -> nbt.putString(entry.getKey(), string);
+                default -> {
+                }
+            }
+        }
     }
 
     @Override

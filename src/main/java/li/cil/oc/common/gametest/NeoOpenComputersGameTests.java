@@ -495,6 +495,35 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void geolyzerAddsAnalyzeDataToTabletUse(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = pos.relative(Direction.WEST);
+        helper.setBlock(pos, ModBlocks.GEOLYZER.get());
+        helper.setBlock(targetPos, Blocks.STONE);
+        final GeolyzerBlockEntity geolyzer = helper.getBlockEntity(pos);
+        final ComponentConnector component = (ComponentConnector) geolyzer.node();
+        component.setLocalBufferSize(10D);
+        component.changeBuffer(10D);
+
+        final CompoundTag tabletData = new CompoundTag();
+        geolyzer.onMessage(new TestMessage(null, "tablet.use", new Object[]{
+            tabletData,
+            new ItemStack(ModItems.TABLET.get()),
+            null,
+            helper.absolutePos(targetPos),
+            Direction.WEST,
+            Float.valueOf(0.5F),
+            Float.valueOf(0.5F),
+            Float.valueOf(0.5F)
+        }));
+
+        helper.assertTrue("minecraft:stone".equals(tabletData.getString("name")), "Geolyzer tablet analysis did not collect block name");
+        helper.assertTrue(tabletData.contains("hardness"), "Geolyzer tablet analysis did not collect block hardness");
+        helper.assertTrue(Double.compare(0D, component.localBuffer()) == 0, "Geolyzer tablet analysis did not consume energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void geolyzerOperationsReturnNoEnergyWhenUnderpowered(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.GEOLYZER.get());
