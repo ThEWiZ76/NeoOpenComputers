@@ -89,6 +89,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void floppyItemIsItemDriver() throws NoSuchMethodException {
+        final Constructor<FloppyItem> constructor = FloppyItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(FloppyItem.class));
+        assertTrue(DriverItem.class.isAssignableFrom(FloppyItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void graphicsCardItemIsCardDriver() throws NoSuchMethodException {
         final Constructor<GraphicsCardItem> constructor = GraphicsCardItem.class.getConstructor(Item.Properties.class);
 

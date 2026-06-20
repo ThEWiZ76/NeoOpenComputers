@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.item.CpuItem;
 import li.cil.oc.common.item.EepromItem;
+import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
 import li.cil.oc.common.item.MemoryItem;
@@ -28,7 +29,9 @@ public final class ModItems {
         ModContentIds.EEPROM,
         () -> new EepromItem(new Item.Properties()));
 
-    public static final DeferredItem<Item> FLOPPY = ITEMS.registerSimpleItem(ModContentIds.FLOPPY, new Item.Properties());
+    public static final DeferredItem<FloppyItem> FLOPPY = ITEMS.register(
+        ModContentIds.FLOPPY,
+        () -> new FloppyItem(new Item.Properties()));
 
     public static final DeferredItem<GraphicsCardItem> GRAPHICS_CARD_TIER1 = ITEMS.register(
         ModContentIds.GRAPHICS_CARD_TIER1,

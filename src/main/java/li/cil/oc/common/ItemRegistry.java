@@ -110,7 +110,7 @@ public final class ItemRegistry implements ItemAPI {
         return eepromData;
     }
 
-    Callable<FileSystem> floppyFactory(final ItemStack stack) {
+    public Callable<FileSystem> floppyFactory(final ItemStack stack) {
         if (stack == null) {
             return null;
         }
