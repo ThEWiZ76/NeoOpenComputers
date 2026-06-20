@@ -2,23 +2,22 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "C": {
+      "item": "neoopencomputers:cpu_tier2"
+    },
     "D": {
-      "item": "minecraft:diamond"
-    },
-    "E": {
-      "item": "minecraft:ender_eye"
-    },
-    "N": {
-      "item": "minecraft:nether_star"
-    },
-    "T": {
       "item": "neoopencomputers:data_card_tier2"
+    },
+    "M": {
+      "item": "neoopencomputers:memory_tier3"
+    },
+    "X": {
+      "item": "minecraft:diamond"
     }
   },
   "pattern": [
-    "DND",
-    "ETE",
-    "DND"
+    "XCM",
+    " D "
   ],
   "result": {
     "count": 1,

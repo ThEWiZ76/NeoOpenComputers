@@ -2,20 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "C": {
+    "B": {
       "item": "neoopencomputers:graphics_card_tier1"
     },
-    "G": {
-      "tag": "c:ingots/gold"
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
     },
     "M": {
       "item": "neoopencomputers:memory_tier2"
     }
   },
   "pattern": [
-    "GGG",
-    "MCM",
-    "GGG"
+    "CCM",
+    " B "
   ],
   "result": {
     "count": 1,

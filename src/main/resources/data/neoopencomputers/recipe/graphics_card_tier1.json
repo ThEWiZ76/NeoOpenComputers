@@ -2,20 +2,22 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "A": {
+      "item": "neoopencomputers:alu"
+    },
+    "B": {
+      "item": "neoopencomputers:card"
+    },
     "C": {
-      "tag": "c:ingots/copper"
+      "item": "neoopencomputers:microchip_tier1"
     },
-    "G": {
-      "item": "minecraft:glass_pane"
-    },
-    "R": {
-      "item": "minecraft:redstone"
+    "M": {
+      "item": "neoopencomputers:memory_tier1"
     }
   },
   "pattern": [
-    "GGG",
-    "CRC",
-    "CCC"
+    "CAM",
+    " B "
   ],
   "result": {
     "count": 1,
