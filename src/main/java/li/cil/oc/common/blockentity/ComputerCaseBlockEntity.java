@@ -47,9 +47,43 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private static final String TAG_COLOR = "oc:color";
     private static final String TAG_MACHINE = "oc:machine";
     private static final String SLOT_TYPE_EEPROM = "eeprom";
+    private static final int TIER_ANY = Integer.MAX_VALUE;
+    private static final CaseSlot[][] SLOT_LAYOUTS = {
+        {
+            new CaseSlot(Slot.Card, 0),
+            new CaseSlot(Slot.Card, 0),
+            new CaseSlot(Slot.Memory, 0),
+            new CaseSlot(Slot.HDD, 0),
+            new CaseSlot(Slot.CPU, 0),
+            new CaseSlot(Slot.Memory, 0),
+            new CaseSlot(SLOT_TYPE_EEPROM, TIER_ANY)
+        },
+        {
+            new CaseSlot(Slot.Card, 1),
+            new CaseSlot(Slot.Card, 0),
+            new CaseSlot(Slot.Memory, 1),
+            new CaseSlot(Slot.Memory, 1),
+            new CaseSlot(Slot.HDD, 1),
+            new CaseSlot(Slot.HDD, 0),
+            new CaseSlot(Slot.CPU, 1),
+            new CaseSlot(SLOT_TYPE_EEPROM, TIER_ANY)
+        },
+        {
+            new CaseSlot(Slot.Card, 2),
+            new CaseSlot(Slot.Card, 1),
+            new CaseSlot(Slot.Card, 1),
+            new CaseSlot(Slot.Memory, 2),
+            new CaseSlot(Slot.Memory, 2),
+            new CaseSlot(Slot.HDD, 2),
+            new CaseSlot(Slot.HDD, 1),
+            new CaseSlot(Slot.Floppy, 0),
+            new CaseSlot(Slot.CPU, 2),
+            new CaseSlot(SLOT_TYPE_EEPROM, TIER_ANY)
+        }
+    };
 
     private final Machine machine;
-    private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
+    private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private int pendingComponentSlot = -1;
     private int tier;
@@ -58,6 +92,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     public ComputerCaseBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.COMPUTER_CASE.get(), pos, blockState);
         tier = tierFromBlockState(blockState);
+        items = NonNullList.withSize(slotCount(tier), ItemStack.EMPTY);
         OpenComputersApi.initialize();
         machine = li.cil.oc.api.Machine.create(this);
     }
@@ -222,14 +257,21 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     static String slotType(final int slot) {
-        return switch (slot) {
-            case SLOT_CARD_0, SLOT_CARD_1 -> Slot.Card;
-            case SLOT_CPU -> Slot.CPU;
-            case SLOT_MEMORY_0, SLOT_MEMORY_1 -> Slot.Memory;
-            case SLOT_HDD -> Slot.HDD;
-            case SLOT_EEPROM -> SLOT_TYPE_EEPROM;
-            default -> Slot.None;
-        };
+        return slotType(0, slot);
+    }
+
+    static int slotCount(final int tier) {
+        return slotLayout(tier).length;
+    }
+
+    static String slotType(final int tier, final int slot) {
+        final CaseSlot[] layout = slotLayout(tier);
+        return slot >= 0 && slot < layout.length ? layout[slot].type() : Slot.None;
+    }
+
+    static int slotTier(final int tier, final int slot) {
+        final CaseSlot[] layout = slotLayout(tier);
+        return slot >= 0 && slot < layout.length ? layout[slot].tier() : -1;
     }
 
     static boolean hasRequiredComponents(final String cpuSlot, final String memorySlot0, final String memorySlot1, final String hddSlot, final String eepromSlot) {
@@ -314,11 +356,14 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public ItemStack getItem(final int slot) {
-        return isValidSlot(slot) ? items.get(slot) : ItemStack.EMPTY;
+        return isValidSlotForTier(slot) ? items.get(slot) : ItemStack.EMPTY;
     }
 
     @Override
     public ItemStack removeItem(final int slot, final int amount) {
+        if (!isValidSlotForTier(slot)) {
+            return ItemStack.EMPTY;
+        }
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             setChanged();
@@ -329,6 +374,9 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public ItemStack removeItemNoUpdate(final int slot) {
+        if (!isValidSlotForTier(slot)) {
+            return ItemStack.EMPTY;
+        }
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             notifyHardwareChanged(machine);
@@ -338,7 +386,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public void setItem(final int slot, final ItemStack stack) {
-        if (!isValidSlot(slot)) {
+        if (!isValidSlotForTier(slot)) {
             return;
         }
         items.set(slot, stack);
@@ -352,7 +400,9 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     public boolean canPlaceItem(final int slot, final ItemStack stack) {
         final DriverItem driver = Driver.driverFor(stack);
-        return driver != null && slotType(slot).equals(driver.slot(stack));
+        return driver != null
+            && slotType(tier, slot).equals(driver.slot(stack))
+            && driver.tier(stack) <= slotTier(tier, slot);
     }
 
     @Override
@@ -403,12 +453,24 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     private boolean canStartMachine() {
-        return hasRequiredComponents(
-            driverSlotType(items.get(SLOT_CPU)),
-            driverSlotType(items.get(SLOT_MEMORY_0)),
-            driverSlotType(items.get(SLOT_MEMORY_1)),
-            driverSlotType(items.get(SLOT_HDD)),
-            driverSlotType(items.get(SLOT_EEPROM)));
+        boolean hasCpu = false;
+        boolean hasMemory = false;
+        boolean hasEeprom = false;
+        for (int slot = 0; slot < items.size(); slot++) {
+            final String expected = slotType(tier, slot);
+            final String actual = driverSlotType(items.get(slot));
+            if (!expected.equals(actual)) {
+                continue;
+            }
+            if (Slot.CPU.equals(expected)) {
+                hasCpu = true;
+            } else if (Slot.Memory.equals(expected)) {
+                hasMemory = true;
+            } else if (SLOT_TYPE_EEPROM.equals(expected)) {
+                hasEeprom = true;
+            }
+        }
+        return hasCpu && hasMemory && hasEeprom;
     }
 
     private void removeMachineNode() {
@@ -442,8 +504,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         };
     }
 
-    private static boolean isValidSlot(final int slot) {
-        return slot >= 0 && slot < CONTAINER_SIZE;
+    private boolean isValidSlotForTier(final int slot) {
+        return slot >= 0 && slot < items.size();
+    }
+
+    private static CaseSlot[] slotLayout(final int tier) {
+        return SLOT_LAYOUTS[Math.clamp(tier, 0, SLOT_LAYOUTS.length - 1)];
     }
 
     private static int tierFromBlockState(final BlockState blockState) {
@@ -451,5 +517,8 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
             return computerCaseBlock.tier();
         }
         return 0;
+    }
+
+    private record CaseSlot(String type, int tier) {
     }
 }

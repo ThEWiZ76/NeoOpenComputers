@@ -115,6 +115,30 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tieredComputerCasesEnforceSlotTiers(final GameTestHelper helper) {
+        final BlockPos tier1Pos = new BlockPos(0, 1, 0);
+        final BlockPos tier2Pos = new BlockPos(1, 1, 0);
+        final BlockPos tier3Pos = new BlockPos(2, 1, 0);
+
+        helper.setBlock(tier1Pos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(tier2Pos, ModBlocks.COMPUTER_CASE_TIER2.get());
+        helper.setBlock(tier3Pos, ModBlocks.COMPUTER_CASE_TIER3.get());
+
+        final ComputerCaseBlockEntity tier1 = helper.getBlockEntity(tier1Pos);
+        final ComputerCaseBlockEntity tier2 = helper.getBlockEntity(tier2Pos);
+        final ComputerCaseBlockEntity tier3 = helper.getBlockEntity(tier3Pos);
+        helper.assertTrue(tier1.getContainerSize() == 7, "Expected tier 1 case to have 7 slots");
+        helper.assertTrue(tier2.getContainerSize() == 8, "Expected tier 2 case to have 8 slots");
+        helper.assertTrue(tier3.getContainerSize() == 10, "Expected tier 3 case to have 10 slots");
+        helper.assertTrue(!tier1.canPlaceItem(4, new ItemStack(ModItems.CPU_TIER2.get())), "Tier 1 CPU slot accepted tier 2 CPU");
+        helper.assertTrue(tier2.canPlaceItem(6, new ItemStack(ModItems.CPU_TIER2.get())), "Tier 2 CPU slot rejected tier 2 CPU");
+        helper.assertTrue(!tier2.canPlaceItem(6, new ItemStack(ModItems.CPU_TIER3.get())), "Tier 2 CPU slot accepted tier 3 CPU");
+        helper.assertTrue(tier3.canPlaceItem(8, new ItemStack(ModItems.CPU_TIER3.get())), "Tier 3 CPU slot rejected tier 3 CPU");
+        helper.assertTrue(tier3.canPlaceItem(7, new ItemStack(ModItems.FLOPPY.get())), "Tier 3 floppy slot rejected floppy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredScreensExposeTierCapabilities(final GameTestHelper helper) {
         final BlockPos tier1Pos = new BlockPos(0, 1, 0);
         final BlockPos tier2Pos = new BlockPos(1, 1, 0);

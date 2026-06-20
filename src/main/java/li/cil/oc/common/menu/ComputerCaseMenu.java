@@ -12,32 +12,51 @@ import net.minecraft.world.item.ItemStack;
 
 public class ComputerCaseMenu extends AbstractContainerMenu {
     public static final int COMPUTER_SLOT_COUNT = ComputerCaseBlockEntity.CONTAINER_SIZE;
+    public static final int MAX_COMPUTER_SLOT_COUNT = 10;
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int TOTAL_SLOT_COUNT = COMPUTER_SLOT_COUNT + PLAYER_SLOT_COUNT;
+    public static final int MAX_TOTAL_SLOT_COUNT = MAX_COMPUTER_SLOT_COUNT + PLAYER_SLOT_COUNT;
 
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 84;
     private static final int PLAYER_HOTBAR_Y = 142;
+    private static final int[][] COMPUTER_SLOT_POSITIONS = {
+        {35, 17},
+        {53, 17},
+        {80, 17},
+        {107, 17},
+        {62, 44},
+        {89, 44},
+        {116, 44},
+        {35, 44},
+        {143, 17},
+        {143, 44}
+    };
 
     private final Container computerInventory;
+    private final int computerSlotCount;
 
     public ComputerCaseMenu(final int containerId, final Inventory playerInventory) {
-        this(containerId, playerInventory, new SimpleContainer(COMPUTER_SLOT_COUNT));
+        this(containerId, playerInventory, new SimpleContainer(MAX_COMPUTER_SLOT_COUNT));
     }
 
     public ComputerCaseMenu(final int containerId, final Inventory playerInventory, final Container computerInventory) {
         super(ModMenus.COMPUTER_CASE.get(), containerId);
         checkContainerSize(computerInventory, COMPUTER_SLOT_COUNT);
         this.computerInventory = computerInventory;
+        computerSlotCount = MAX_COMPUTER_SLOT_COUNT;
         computerInventory.startOpen(playerInventory.player);
 
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_CARD_0, 35, 17));
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_CARD_1, 53, 17));
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_MEMORY_0, 80, 17));
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_HDD, 107, 17));
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_CPU, 62, 44));
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_MEMORY_1, 89, 44));
-        addSlot(new Slot(computerInventory, ComputerCaseBlockEntity.SLOT_EEPROM, 116, 44));
+        for (int slot = 0; slot < computerSlotCount; slot++) {
+            final int computerSlot = slot;
+            final int[] position = COMPUTER_SLOT_POSITIONS[slot];
+            addSlot(new Slot(computerInventory, computerSlot, position[0], position[1]) {
+                @Override
+                public boolean mayPlace(final ItemStack stack) {
+                    return computerInventory.canPlaceItem(computerSlot, stack);
+                }
+            });
+        }
         addPlayerInventory(playerInventory);
     }
 
@@ -48,11 +67,11 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
         if (slot != null && slot.hasItem()) {
             final ItemStack stack = slot.getItem();
             moved = stack.copy();
-            if (index < COMPUTER_SLOT_COUNT) {
-                if (!moveItemStackTo(stack, COMPUTER_SLOT_COUNT, TOTAL_SLOT_COUNT, true)) {
+            if (index < computerSlotCount) {
+                if (!moveItemStackTo(stack, computerSlotCount, computerSlotCount + PLAYER_SLOT_COUNT, true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!moveItemStackTo(stack, 0, COMPUTER_SLOT_COUNT, false)) {
+            } else if (!moveItemStackTo(stack, 0, computerSlotCount, false)) {
                 return ItemStack.EMPTY;
             }
 
