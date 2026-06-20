@@ -86,4 +86,22 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard, Device
         }
         nbt.put(TAG_NODE, nodeTag);
     }
+
+    @Override
+    public void onChunkUnloaded() {
+        super.onChunkUnloaded();
+        removeNode();
+    }
+
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        removeNode();
+    }
+
+    private void removeNode() {
+        if (node != null) {
+            node.remove();
+        }
+    }
 }

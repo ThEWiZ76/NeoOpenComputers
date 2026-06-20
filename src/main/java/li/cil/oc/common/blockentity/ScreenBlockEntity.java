@@ -528,4 +528,22 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         }
         nbt.put(TAG_NODE, nodeTag);
     }
+
+    @Override
+    public void onChunkUnloaded() {
+        super.onChunkUnloaded();
+        removeNode();
+    }
+
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        removeNode();
+    }
+
+    private void removeNode() {
+        if (node != null) {
+            node.remove();
+        }
+    }
 }

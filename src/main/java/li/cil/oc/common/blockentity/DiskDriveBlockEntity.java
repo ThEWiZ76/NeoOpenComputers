@@ -244,6 +244,18 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         save(tag);
     }
 
+    @Override
+    public void onChunkUnloaded() {
+        super.onChunkUnloaded();
+        removeNodes();
+    }
+
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        removeNodes();
+    }
+
     private void refreshDiskEnvironment() {
         if (diskEnvironment != null && diskEnvironment.node() != null) {
             diskEnvironment.node().remove();
@@ -271,5 +283,14 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     private static Node createNode(final ManagedEnvironment host) {
         final var builder = Network.newNode(host, Visibility.Neighbors);
         return builder == null ? null : builder.create();
+    }
+
+    private void removeNodes() {
+        if (diskEnvironment != null && diskEnvironment.node() != null) {
+            diskEnvironment.node().remove();
+        }
+        if (node != null) {
+            node.remove();
+        }
     }
 }
