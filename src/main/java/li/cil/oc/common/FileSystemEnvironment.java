@@ -26,6 +26,7 @@ import java.util.Set;
 
 final class FileSystemEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String FILE_SYSTEM_TAG = "fs";
+    private static final int MAX_OPEN_HANDLES = 16;
     private static final double[] READ_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
     private static final double[] SEEK_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
     private static final double[] WRITE_COSTS = {1.0D / 1.0D, 1.0D / 2.0D, 1.0D / 3.0D, 1.0D / 4.0D, 1.0D / 5.0D, 1.0D / 6.0D};
@@ -159,7 +160,8 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     }
 
     @Callback(direct = true, doc = "function(path:string[,mode:string='r']):userdata -- Opens a file handle.")
-    public Object[] open(final Context context, final Arguments arguments) throws java.io.FileNotFoundException {
+    public Object[] open(final Context context, final Arguments arguments) throws IOException {
+        checkHandleLimit(context);
         final int handle = fileSystem.open(clean(arguments.checkString(0)), parseMode(arguments.optString(1, "r")));
         rememberOwner(context, handle);
         return new Object[]{new FileHandleValue(this, handle)};
@@ -349,6 +351,17 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         final String address = ownerAddress(context);
         if (address != null) {
             owners.computeIfAbsent(address, ignored -> new LinkedHashSet<>()).add(handle);
+        }
+    }
+
+    private void checkHandleLimit(final Context context) throws IOException {
+        final String address = ownerAddress(context);
+        if (address == null) {
+            return;
+        }
+        final Set<Integer> handles = owners.get(address);
+        if (handles != null && handles.size() >= MAX_OPEN_HANDLES) {
+            throw new IOException("too many open handles");
         }
     }
 

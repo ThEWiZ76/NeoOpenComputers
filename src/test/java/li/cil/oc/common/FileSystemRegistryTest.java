@@ -258,6 +258,28 @@ final class FileSystemRegistryTest {
         component.invoke("close", owner, handle);
     }
 
+    @Test
+    void managedFileSystemEnvironmentLimitsOpenHandlesPerContext() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+        RecordingContext context = new RecordingContext("owner");
+        Object firstHandle = null;
+
+        for (int index = 0; index < 16; index++) {
+            Object handle = component.invoke("open", context, "data" + index + ".txt", "w")[0];
+            if (index == 0) {
+                firstHandle = handle;
+            }
+        }
+
+        IOException error = assertThrows(IOException.class, () -> component.invoke("open", context, "overflow.txt", "w"));
+        assertEquals("too many open handles", error.getMessage());
+        component.invoke("close", context, firstHandle);
+        assertNotNull(component.invoke("open", context, "overflow.txt", "w")[0]);
+    }
+
     private static final class MutableLabel implements Label {
         private String value;
 
