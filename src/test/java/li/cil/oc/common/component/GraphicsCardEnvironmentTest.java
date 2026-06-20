@@ -109,6 +109,30 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void computerStoppedMessageKeepsBindingAndResetsScreen() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        FakeTextBuffer screen = new FakeTextBuffer();
+        Network.joinNewNetwork(gpu.node());
+        gpu.node().connect(screen.node());
+        gpu.bind(null, new TestArguments(screen.node().address(), true));
+        screen.setResolution(10, 5);
+        screen.setForegroundColor(0x112233);
+        screen.setBackgroundColor(0x445566);
+        gpu.allocateBuffer(null, new TestArguments(2, 1));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+
+        gpu.onMessage(new TestMessage(screen.node(), "computer.stopped", new Object[0]));
+
+        assertArrayEquals(new Object[]{screen.node().address()}, gpu.getScreen(null, new TestArguments()));
+        assertArrayEquals(new Object[]{0}, gpu.getActiveBuffer(null, new TestArguments()));
+        assertArrayEquals(new int[0], (int[]) gpu.buffers(null, new TestArguments())[0]);
+        assertArrayEquals(new Object[]{50, 16}, gpu.getResolution(null, new TestArguments()));
+        assertArrayEquals(new Object[]{0xFFFFFF, false}, gpu.getForeground(null, new TestArguments()));
+        assertArrayEquals(new Object[]{0x000000, false}, gpu.getBackground(null, new TestArguments()));
+    }
+
+    @Test
     void delegatesPaletteColorCallbacksToScreen() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
@@ -309,6 +333,12 @@ final class GraphicsCardEnvironmentTest {
         @Override public boolean stop() { return true; }
         @Override public void consumeCallBudget(final double callCost) { callBudget += callCost; }
         @Override public boolean signal(final String name, final Object... args) { return true; }
+    }
+
+    private record TestMessage(Node source, String name, Object[] data) implements Message {
+        @Override
+        public void cancel() {
+        }
     }
 
     private static final class FakeTextBuffer extends AbstractManagedEnvironment implements TextBuffer {

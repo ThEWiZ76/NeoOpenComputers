@@ -412,9 +412,12 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     public void onMessage(final Message message) {
         if (node() != null && message.source() != null && node().isNeighborOf(message.source()) &&
             ("computer.started".equals(message.name()) || "computer.stopped".equals(message.name()))) {
-            screen = null;
             activeBufferIndex = SCREEN_INDEX;
             videoBuffers.clear();
+            if ("computer.stopped".equals(message.name()) && screen != null) {
+                resetScreen(screen);
+                screen.fill(0, 0, screen.getWidth(), screen.getHeight(), ' ');
+            }
         }
     }
 
