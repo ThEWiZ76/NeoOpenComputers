@@ -32,6 +32,7 @@ import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
+import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.template.AssemblerTemplate;
@@ -57,6 +58,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
@@ -317,6 +319,53 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(ItemStack.isSameItemSameComponents(container, ingredients[1]), "Disassembled tablet container missing");
         helper.assertTrue(ItemStack.isSameItemSameComponents(cpu, ingredients[2]), "Disassembled tablet CPU missing");
         helper.assertTrue(ItemStack.isSameItemSameComponents(memory, ingredients[3]), "Disassembled tablet memory missing");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void transposerInspectsAdjacentFluidTanks(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final int side = Direction.WEST.get3DDataValue();
+        helper.setBlock(pos, ModBlocks.TRANSPOSER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+        final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) transposer.node();
+
+        final Object[] count = invokeComponent(helper, component, "getTankCount", side);
+        final Object[] level = invokeComponent(helper, component, "getTankLevel", side, 1);
+        final Object[] capacity = invokeComponent(helper, component, "getTankCapacity", side, 1);
+        final Object[] fluid = invokeComponent(helper, component, "getFluidInTank", side, 1);
+
+        helper.assertTrue(Integer.valueOf(1).equals(count[0]), "Transposer did not see adjacent tank");
+        helper.assertTrue(Integer.valueOf(1000).equals(level[0]), "Transposer did not read tank level");
+        helper.assertTrue(Integer.valueOf(1000).equals(capacity[0]), "Transposer did not read tank capacity");
+        helper.assertTrue("minecraft:water".equals(fluid[0]), "Transposer did not report water fluid id");
+        helper.assertTrue(Integer.valueOf(1000).equals(fluid[1]), "Transposer did not report fluid amount");
+        helper.assertTrue(Integer.valueOf(1000).equals(fluid[2]), "Transposer did not report fluid capacity");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void transposerTransfersFluidBetweenAdjacentTanks(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.TRANSPOSER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+        helper.setBlock(pos.relative(Direction.EAST), Blocks.CAULDRON);
+        final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) transposer.node();
+
+        final Object[] result = invokeComponent(
+            helper,
+            component,
+            "transferFluid",
+            Direction.WEST.get3DDataValue(),
+            Direction.EAST.get3DDataValue(),
+            1000);
+
+        helper.assertTrue(Boolean.TRUE.equals(result[0]), "Transposer did not transfer fluid");
+        helper.assertTrue(Integer.valueOf(1000).equals(result[1]), "Transposer reported wrong transferred amount");
+        helper.assertTrue(helper.getBlockState(pos.relative(Direction.WEST)).is(Blocks.CAULDRON), "Source cauldron was not drained");
+        helper.assertTrue(helper.getBlockState(pos.relative(Direction.EAST)).is(Blocks.WATER_CAULDRON), "Sink cauldron was not filled");
         helper.succeed();
     }
 
@@ -1624,9 +1673,9 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(computerCase.tier() == tier, "Expected computer case tier " + tier + " but got " + computerCase.tier());
     }
 
-    private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method) {
+    private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method, final Object... args) {
         try {
-            return component.invoke(method, null);
+            return component.invoke(method, null, args);
         } catch (Exception e) {
             helper.fail("Component invocation failed: " + method + " " + e.getMessage());
             return new Object[0];

@@ -23,6 +23,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
 import java.util.Map;
 
@@ -173,6 +177,93 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
         return new Object[]{false};
     }
 
+    @Callback(doc = "function(side:number):number -- Get the number of tanks exposed by the fluid handler on the specified side.")
+    public Object[] getTankCount(final Context context, final Arguments args) {
+        return new Object[]{fluidHandler(args.checkInteger(0)).getTanks()};
+    }
+
+    @Callback(doc = "function(side:number[, tank:number]):number -- Get the amount of fluid in the specified tank, or the total amount in all tanks.")
+    public Object[] getTankLevel(final Context context, final Arguments args) {
+        final IFluidHandler handler = fluidHandler(args.checkInteger(0));
+        if (args.count() > 1 && args.checkAny(1) != null) {
+            final FluidStack stack = handler.getFluidInTank(checkTank(handler, args.checkInteger(1)));
+            return new Object[]{stack.isEmpty() ? 0 : stack.getAmount()};
+        }
+        int amount = 0;
+        for (int tank = 0; tank < handler.getTanks(); tank++) {
+            final FluidStack stack = handler.getFluidInTank(tank);
+            if (!stack.isEmpty()) {
+                amount += stack.getAmount();
+            }
+        }
+        return new Object[]{amount};
+    }
+
+    @Callback(doc = "function(side:number[, tank:number]):number -- Get the capacity of the specified tank, or the maximum capacity on the side.")
+    public Object[] getTankCapacity(final Context context, final Arguments args) {
+        final IFluidHandler handler = fluidHandler(args.checkInteger(0));
+        if (args.count() > 1 && args.checkAny(1) != null) {
+            return new Object[]{handler.getTankCapacity(checkTank(handler, args.checkInteger(1)))};
+        }
+        int capacity = 0;
+        for (int tank = 0; tank < handler.getTanks(); tank++) {
+            capacity = Math.max(capacity, handler.getTankCapacity(tank));
+        }
+        return new Object[]{capacity};
+    }
+
+    @Callback(doc = "function(side:number, tank:number):string, number, number -- Get fluid id, amount, and capacity for the specified tank.")
+    public Object[] getFluidInTank(final Context context, final Arguments args) {
+        final IFluidHandler handler = fluidHandler(args.checkInteger(0));
+        final int tank = checkTank(handler, args.checkInteger(1));
+        final FluidStack stack = handler.getFluidInTank(tank);
+        return new Object[]{
+            stack.isEmpty() ? "" : BuiltInRegistries.FLUID.getKey(stack.getFluid()).toString(),
+            stack.isEmpty() ? 0 : stack.getAmount(),
+            handler.getTankCapacity(tank)
+        };
+    }
+
+    @Callback(doc = "function(sourceSide:number, sinkSide:number[, count:number[, sourceTank:number]]):boolean, number -- Transfer fluid between adjacent tanks.")
+    public Object[] transferFluid(final Context context, final Arguments args) {
+        final IFluidHandler source = fluidHandler(args.checkInteger(0));
+        final IFluidHandler sink = fluidHandler(args.checkInteger(1));
+        final int count = Math.max(0, args.optInteger(2, 1000));
+        if (count == 0) {
+            return new Object[]{false, 0};
+        }
+
+        final FluidStack drainable;
+        if (args.count() > 3 && args.checkAny(3) != null) {
+            final FluidStack selected = source.getFluidInTank(checkTank(source, args.checkInteger(3)));
+            if (selected.isEmpty()) {
+                return new Object[]{false, 0};
+            }
+            final FluidStack requested = selected.copy();
+            requested.setAmount(Math.min(count, selected.getAmount()));
+            drainable = source.drain(requested, FluidAction.SIMULATE);
+        } else {
+            drainable = source.drain(count, FluidAction.SIMULATE);
+        }
+        if (drainable.isEmpty()) {
+            return new Object[]{false, 0};
+        }
+
+        final int fillable = sink.fill(drainable, FluidAction.SIMULATE);
+        if (fillable <= 0) {
+            return new Object[]{false, 0};
+        }
+
+        final FluidStack requested = drainable.copy();
+        requested.setAmount(Math.min(drainable.getAmount(), fillable));
+        final FluidStack drained = source.drain(requested, FluidAction.EXECUTE);
+        if (drained.isEmpty()) {
+            return new Object[]{false, 0};
+        }
+        final int filled = sink.fill(drained, FluidAction.EXECUTE);
+        return new Object[]{filled > 0, filled};
+    }
+
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
@@ -225,6 +316,21 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
             throw new IllegalArgumentException("no inventory");
         }
         return blockEntity;
+    }
+
+    private IFluidHandler fluidHandler(final int side) {
+        if (side < 0 || side > 5) {
+            throw new IllegalArgumentException("invalid side");
+        }
+        if (level == null) {
+            throw new IllegalStateException("no world");
+        }
+        final Direction direction = Direction.from3DDataValue(side);
+        final IFluidHandler handler = level.getCapability(Capabilities.FluidHandler.BLOCK, getBlockPos().relative(direction), direction.getOpposite());
+        if (handler != null) {
+            return handler;
+        }
+        throw new IllegalArgumentException("no tank");
     }
 
     private static boolean transferFromSlot(final Container source, final Container sink, final int sourceSlot, final int sinkSlot, final int count) {
@@ -300,6 +406,14 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
         final int index = slot - 1;
         if (index < 0 || index >= container.getContainerSize()) {
             throw new IllegalArgumentException("slot index out of bounds");
+        }
+        return index;
+    }
+
+    private static int checkTank(final IFluidHandler handler, final int tank) {
+        final int index = tank - 1;
+        if (index < 0 || index >= handler.getTanks()) {
+            throw new IllegalArgumentException("tank index out of bounds");
         }
         return index;
     }
