@@ -9,8 +9,11 @@ import li.cil.oc.api.prefab.AbstractValue;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.item.trading.MerchantOffer;
+
+import java.util.function.Predicate;
 
 public class TradeValue extends AbstractValue {
     private static final double TRADING_RANGE = 8.0D;
@@ -79,10 +82,13 @@ public class TradeValue extends AbstractValue {
         }
 
         final Container inventory = agent.mainInventory();
-        final ItemStack firstCost = offer.getCostA().copy();
-        final ItemStack secondCost = offer.getCostB().copy();
+        final ItemCost firstCost = offer.getItemCostA();
+        final int firstCostCount = offer.getCostA().getCount();
+        final ItemCost secondCost = offer.getItemCostB().orElse(null);
+        final int secondCostCount = offer.getCostB().getCount();
         final ItemStack output = offer.getResult().copy();
-        if (!extract(inventory, firstCost, true) || !extract(inventory, secondCost, true)) {
+        if (!extract(inventory, firstCost::test, firstCostCount, true)
+            || !extract(inventory, stack -> secondCost == null || secondCost.test(stack), secondCost == null ? 0 : secondCostCount, true)) {
             return new Object[]{false, "not enough items to trade"};
         }
         if (!insert(inventory, output, true)) {
@@ -90,8 +96,8 @@ public class TradeValue extends AbstractValue {
         }
 
         final ItemStack[] snapshot = snapshot(inventory);
-        extract(inventory, firstCost, false);
-        extract(inventory, secondCost, false);
+        extract(inventory, firstCost::test, firstCostCount, false);
+        extract(inventory, stack -> secondCost == null || secondCost.test(stack), secondCost == null ? 0 : secondCostCount, false);
         if (!insert(inventory, output, false)) {
             restore(inventory, snapshot);
             return new Object[]{false, "not enough inventory space to trade"};
@@ -112,14 +118,14 @@ public class TradeValue extends AbstractValue {
             && merchantEntity.distanceToSqr(host.xPosition(), host.yPosition(), host.zPosition()) <= TRADING_RANGE * TRADING_RANGE;
     }
 
-    private static boolean extract(final Container inventory, final ItemStack cost, final boolean simulate) {
-        if (cost.isEmpty()) {
+    private static boolean extract(final Container inventory, final Predicate<ItemStack> matches, final int count, final boolean simulate) {
+        if (count <= 0) {
             return true;
         }
-        int remaining = cost.getCount();
+        int remaining = count;
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             final ItemStack stack = inventory.getItem(slot);
-            if (!ItemStack.isSameItemSameComponents(stack, cost)) {
+            if (stack.isEmpty() || !matches.test(stack)) {
                 continue;
             }
             final int extracted = Math.min(remaining, stack.getCount());

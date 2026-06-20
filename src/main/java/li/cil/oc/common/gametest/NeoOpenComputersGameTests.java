@@ -1122,6 +1122,39 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tradingUpgradeAcceptsMatchingItemCostComponents(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for trading upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        final ItemStack renamedEmerald = new ItemStack(Items.EMERALD);
+        renamedEmerald.set(DataComponents.CUSTOM_NAME, Component.literal("trade coin"));
+        host.mainInventory().setItem(0, renamedEmerald);
+        final BlockPos villagerPos = helper.absolutePos(new BlockPos(1, 0, 0));
+        final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "Villager did not spawn");
+        final MerchantOffers offers = new MerchantOffers();
+        offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 1), new ItemStack(Items.BREAD, 3), 4, 1, 0.05F));
+        villager.setOffers(offers);
+        villager.setNoAi(true);
+        villager.moveTo(villagerPos.getX() + 0.5D, villagerPos.getY(), villagerPos.getZ() + 0.5D, 0, 0);
+        helper.getLevel().addFreshEntity(villager);
+
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRADING_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Trading upgrade did not create trading environment");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        final Object[] result = component.invoke("getTrades", null);
+        final Object trade = ((java.util.List<?>) result[0]).getFirst();
+        final Method tradeMethod = trade.getClass().getMethod("trade", Context.class, Arguments.class);
+        final Object[] traded = (Object[]) tradeMethod.invoke(trade, null, null);
+
+        helper.assertTrue(traded.length == 1 && Boolean.TRUE.equals(traded[0]), "Trade did not accept matching item cost with extra components");
+        helper.assertTrue(!containsStack(host.mainInventory(), Items.EMERALD, 1), "Trade did not consume renamed emerald");
+        helper.assertTrue(containsStack(host.mainInventory(), Items.BREAD, 3), "Trade did not insert bread");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void databaseUpgradeCopiesEntriesToAddressedDatabase(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
         helper.assertTrue(driver != null, "No driver for database upgrade");
