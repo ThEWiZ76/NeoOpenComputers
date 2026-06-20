@@ -14,12 +14,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
@@ -75,12 +79,13 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():boolean -- Returns whether TCP connections can be made.")
     public Object[] isTcpEnabled(final Context context, final Arguments args) {
-        return new Object[]{false};
+        return new Object[]{true};
     }
 
     @Callback(doc = "function(address:string[, port:number]):userdata -- Opens a new TCP connection.")
     public Object[] connect(final Context context, final Arguments args) {
-        return new Object[]{null, "tcp connections are unavailable"};
+        final TcpAddress address = checkTcpAddress(args.checkString(0), args.optInteger(1, -1));
+        return new Object[]{new TcpSocket(address.host(), address.port())};
     }
 
     private static String checkHttpUrl(final String address) {
@@ -106,6 +111,26 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             }
         }
         return headers;
+    }
+
+    private static TcpAddress checkTcpAddress(final String address, final int port) {
+        try {
+            final URI parsed = new URI(address);
+            if (parsed.getHost() != null && (parsed.getPort() > 0 || port > 0)) {
+                return new TcpAddress(parsed.getHost(), parsed.getPort() > 0 ? parsed.getPort() : port);
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            final URI simple = new URI("oc://" + address);
+            if (simple.getHost() != null && (simple.getPort() > 0 || port > 0)) {
+                return new TcpAddress(simple.getHost(), simple.getPort() > 0 ? simple.getPort() : port);
+            }
+        } catch (Exception ignored) {
+        }
+
+        throw new IllegalArgumentException("address could not be parsed or no valid port given");
     }
 
     private static CompletableFuture<HttpResponse> openUrl(
@@ -170,6 +195,9 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     public record HttpResponse(int code, String message, Map<String, List<String>> headers, byte[] body) {
     }
 
+    private record TcpAddress(String host, int port) {
+    }
+
     public static final class HttpRequest implements Value {
         private final CompletableFuture<HttpResponse> response;
         private int offset;
@@ -232,6 +260,116 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         @Override
         public void dispose(final Context context) {
             response.cancel(true);
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+        }
+    }
+
+    public static final class TcpSocket implements Value {
+        private final UUID id = UUID.randomUUID();
+        private final CompletableFuture<Socket> connection;
+
+        private TcpSocket(final String host, final int port) {
+            connection = CompletableFuture.supplyAsync(() -> {
+                try {
+                    final Socket socket = new Socket();
+                    socket.connect(new InetSocketAddress(host, port), 10_000);
+                    socket.setTcpNoDelay(true);
+                    return socket;
+                } catch (IOException e) {
+                    throw new CompletionException(e);
+                }
+            }, HTTP_EXECUTOR);
+        }
+
+        @Callback(doc = "function():boolean -- Ensures a socket is connected.")
+        public Object[] finishConnect(final Context context, final Arguments args) {
+            if (!connection.isDone()) {
+                return new Object[]{false};
+            }
+            socket();
+            return new Object[]{true};
+        }
+
+        @Callback(doc = "function([n:number]):string -- Tries to read data from the socket stream.")
+        public Object[] read(final Context context, final Arguments args) throws IOException {
+            if (!connection.isDone()) {
+                return new Object[]{new byte[0]};
+            }
+            final Socket socket = socket();
+            final InputStream input = socket.getInputStream();
+            final int available = input.available();
+            if (available <= 0) {
+                return socket.isClosed() ? new Object[]{null} : new Object[]{new byte[0]};
+            }
+            final int count = Math.min(Math.max(0, args.optInteger(0, MAX_READ_BUFFER)), Math.min(MAX_READ_BUFFER, available));
+            final byte[] data = input.readNBytes(count);
+            if (data.length == 0) {
+                return new Object[]{null};
+            }
+            return new Object[]{data};
+        }
+
+        @Callback(doc = "function(data:string):number -- Tries to write data to the socket stream.")
+        public Object[] write(final Context context, final Arguments args) throws IOException {
+            if (!connection.isDone()) {
+                return new Object[]{0};
+            }
+            final byte[] data = args.checkByteArray(0);
+            final OutputStream output = socket().getOutputStream();
+            output.write(data);
+            output.flush();
+            return new Object[]{data.length};
+        }
+
+        @Callback(direct = true, doc = "function() -- Closes an open socket stream.")
+        public Object[] close(final Context context, final Arguments args) {
+            close();
+            return null;
+        }
+
+        @Callback(direct = true, doc = "function():string -- Returns connection ID.")
+        public Object[] id(final Context context, final Arguments args) {
+            return new Object[]{id.toString()};
+        }
+
+        private Socket socket() {
+            return connection.join();
+        }
+
+        private void close() {
+            connection.thenAccept(socket -> {
+                try {
+                    socket.close();
+                } catch (IOException ignored) {
+                }
+            });
+            connection.cancel(true);
+        }
+
+        @Override
+        public Object apply(final Context context, final Arguments arguments) {
+            return this;
+        }
+
+        @Override
+        public void unapply(final Context context, final Arguments arguments) {
+        }
+
+        @Override
+        public Object[] call(final Context context, final Arguments arguments) {
+            return new Object[]{this};
+        }
+
+        @Override
+        public void dispose(final Context context) {
+            close();
         }
 
         @Override

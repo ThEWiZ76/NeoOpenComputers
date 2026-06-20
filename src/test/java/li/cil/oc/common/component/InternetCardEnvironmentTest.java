@@ -8,12 +8,17 @@ import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -89,17 +94,62 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
-    void tcpConnectReportsUnavailableUntilTcpPortIsImplemented() throws Exception {
+    void tcpSocketConnectsWritesAndReadsLoopbackData() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment();
+        ExecutorService serverThread = Executors.newSingleThreadExecutor();
 
-        assertArrayEquals(new Object[]{false}, card.isTcpEnabled(null, new TestArguments()));
-        assertArrayEquals(new Object[]{null, "tcp connections are unavailable"}, card.connect(null, new TestArguments("example.test", 80)));
+        try (ServerSocket server = new ServerSocket(0)) {
+            serverThread.submit(() -> {
+                try (Socket socket = server.accept()) {
+                    byte[] request = socket.getInputStream().readNBytes(4);
+                    if (!Arrays.equals("ping".getBytes(StandardCharsets.UTF_8), request)) {
+                        throw new AssertionError("unexpected request data");
+                    }
+                    socket.getOutputStream().write("pong".getBytes(StandardCharsets.UTF_8));
+                    socket.getOutputStream().flush();
+                }
+                return null;
+            });
+
+            assertArrayEquals(new Object[]{true}, card.isTcpEnabled(null, new TestArguments()));
+            Object handle = card.connect(null, new TestArguments("127.0.0.1", server.getLocalPort()))[0];
+            InternetCardEnvironment.TcpSocket socket = assertInstanceOf(InternetCardEnvironment.TcpSocket.class, handle);
+
+            awaitConnected(socket);
+            assertArrayEquals(new Object[]{4}, socket.write(null, new TestArguments("ping".getBytes(StandardCharsets.UTF_8))));
+            assertArrayEquals("pong".getBytes(StandardCharsets.UTF_8), awaitRead(socket, 4));
+            socket.close(null, new TestArguments());
+        } finally {
+            serverThread.shutdownNow();
+            assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
+        }
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = InternetCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static void awaitConnected(final InternetCardEnvironment.TcpSocket socket) throws Exception {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            if (Boolean.TRUE.equals(socket.finishConnect(null, new TestArguments())[0])) {
+                return;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("socket did not connect");
+    }
+
+    private static byte[] awaitRead(final InternetCardEnvironment.TcpSocket socket, final int length) throws Exception {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            Object value = socket.read(null, new TestArguments(length))[0];
+            if (value instanceof byte[] bytes && bytes.length > 0) {
+                return bytes;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("socket did not read data");
     }
 
     private record TestArguments(Object... values) implements Arguments {
