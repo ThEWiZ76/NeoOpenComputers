@@ -1202,6 +1202,46 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tradingUpgradeTradeValueReloadsMerchantOffer(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for trading upgrade");
+
+        final BlockPos hostPos = new BlockPos(2, 1, 2);
+        final BlockPos villagerPos = helper.absolutePos(hostPos.relative(Direction.EAST));
+        final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "Villager did not spawn");
+        final MerchantOffers offers = new MerchantOffers();
+        offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 1), new ItemStack(Items.BREAD, 3), 4, 1, 0.05F));
+        villager.setOffers(offers);
+        villager.setNoAi(true);
+        villager.moveTo(villagerPos.getX() + 0.5D, villagerPos.getY(), villagerPos.getZ() + 0.5D, 0, 0);
+        helper.getLevel().addFreshEntity(villager);
+
+        final StaticPositionEnvironmentHost host = new StaticPositionEnvironmentHost(helper, hostPos);
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRADING_UPGRADE.get()), host);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        final Object trade = ((java.util.List<?>) component.invoke("getTrades", null)[0]).getFirst();
+        final CompoundTag saved = new CompoundTag();
+        ((li.cil.oc.api.machine.Value) trade).save(saved);
+
+        final Object loaded = trade.getClass()
+            .getConstructor(li.cil.oc.api.network.EnvironmentHost.class)
+            .newInstance(host);
+        ((li.cil.oc.api.machine.Value) loaded).load(saved);
+
+        final Method getMerchantId = loaded.getClass().getMethod("getMerchantId", Context.class, Arguments.class);
+        final Object[] merchantId = (Object[]) getMerchantId.invoke(loaded, null, null);
+        helper.assertTrue(merchantId.length == 1 && Integer.valueOf(1).equals(merchantId[0]), "Reloaded trade merchant id mismatch");
+        final Method getOutput = loaded.getClass().getMethod("getOutput", Context.class, Arguments.class);
+        final Object[] output = (Object[]) getOutput.invoke(loaded, null, null);
+        helper.assertTrue(output.length == 1 && output[0] instanceof ItemStack stack && stack.is(Items.BREAD) && stack.getCount() == 3, "Reloaded trade output mismatch");
+        final Method isEnabled = loaded.getClass().getMethod("isEnabled", Context.class, Arguments.class);
+        final Object[] enabled = (Object[]) isEnabled.invoke(loaded, null, null);
+        helper.assertTrue(enabled.length == 1 && Boolean.TRUE.equals(enabled[0]), "Reloaded trade should be enabled");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void databaseUpgradeCopiesEntriesToAddressedDatabase(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
         helper.assertTrue(driver != null, "No driver for database upgrade");

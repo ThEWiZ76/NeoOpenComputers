@@ -6,23 +6,39 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.internal.Agent;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.prefab.AbstractValue;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.phys.AABB;
 
+import java.util.UUID;
 import java.util.function.Predicate;
 
 public class TradeValue extends AbstractValue {
     private static final double TRADING_RANGE = 8.0D;
+    private static final String MERCHANT_UUID_MOST_TAG = "merchantUUIDMost";
+    private static final String MERCHANT_UUID_LEAST_TAG = "merchantUUIDLeast";
+    private static final String OFFER_INDEX_TAG = "offerIndex";
+    private static final String MERCHANT_ID_TAG = "merchantId";
 
-    private final EnvironmentHost host;
-    private final Entity merchantEntity;
-    private final Merchant merchant;
-    private final int offerIndex;
-    private final int merchantId;
+    private EnvironmentHost host;
+    private Entity merchantEntity;
+    private Merchant merchant;
+    private int offerIndex;
+    private int merchantId;
+
+    public TradeValue() {
+        this(null);
+    }
+
+    public TradeValue(final EnvironmentHost host) {
+        this(host, null, null, -1, -1);
+    }
 
     public TradeValue(
         final EnvironmentHost host,
@@ -36,6 +52,26 @@ public class TradeValue extends AbstractValue {
         this.merchant = merchant;
         this.offerIndex = offerIndex;
         this.merchantId = merchantId;
+    }
+
+    @Override
+    public void load(final CompoundTag nbt) {
+        offerIndex = nbt.getInt(OFFER_INDEX_TAG);
+        merchantId = nbt.getInt(MERCHANT_ID_TAG);
+        if (nbt.contains(MERCHANT_UUID_MOST_TAG) && nbt.contains(MERCHANT_UUID_LEAST_TAG)) {
+            bindMerchant(new UUID(nbt.getLong(MERCHANT_UUID_MOST_TAG), nbt.getLong(MERCHANT_UUID_LEAST_TAG)));
+        }
+    }
+
+    @Override
+    public void save(final CompoundTag nbt) {
+        if (merchantEntity != null) {
+            final UUID uuid = merchantEntity.getUUID();
+            nbt.putLong(MERCHANT_UUID_MOST_TAG, uuid.getMostSignificantBits());
+            nbt.putLong(MERCHANT_UUID_LEAST_TAG, uuid.getLeastSignificantBits());
+        }
+        nbt.putInt(OFFER_INDEX_TAG, offerIndex);
+        nbt.putInt(MERCHANT_ID_TAG, merchantId);
     }
 
     @Callback(doc = "function():number -- Returns a sort index of the merchant that provides this trade.")
@@ -62,7 +98,7 @@ public class TradeValue extends AbstractValue {
     @Callback(doc = "function():boolean -- Returns whether the merchant currently wants to trade this.")
     public Object[] isEnabled(final Context context, final Arguments arguments) {
         final MerchantOffer offer = offer();
-        return new Object[]{merchantEntity.isAlive() && isInRange() && offer != null && !offer.isOutOfStock()};
+        return new Object[]{merchantEntity != null && merchantEntity.isAlive() && isInRange() && offer != null && !offer.isOutOfStock()};
     }
 
     @Callback(doc = "function():boolean, string -- Returns true when trade succeeds and nil, error when not.")
@@ -70,7 +106,7 @@ public class TradeValue extends AbstractValue {
         if (!(host instanceof Agent agent)) {
             return new Object[]{false, "trading requires an inventory upgrade to be installed"};
         }
-        if (!merchantEntity.isAlive() || !isInRange()) {
+        if (merchantEntity == null || merchant == null || !merchantEntity.isAlive() || !isInRange()) {
             return new Object[]{false, "trade has become invalid"};
         }
         final MerchantOffer offer = offer();
@@ -107,6 +143,9 @@ public class TradeValue extends AbstractValue {
     }
 
     private MerchantOffer offer() {
+        if (merchant == null) {
+            return null;
+        }
         if (offerIndex < 0 || offerIndex >= merchant.getOffers().size()) {
             return null;
         }
@@ -115,7 +154,38 @@ public class TradeValue extends AbstractValue {
 
     private boolean isInRange() {
         return host != null
+            && merchantEntity != null
             && merchantEntity.distanceToSqr(host.xPosition(), host.yPosition(), host.zPosition()) <= TRADING_RANGE * TRADING_RANGE;
+    }
+
+    private void bindMerchant(final UUID uuid) {
+        if (host == null || host.world() == null || uuid == null) {
+            merchantEntity = null;
+            merchant = null;
+            return;
+        }
+        Entity entity = null;
+        if (host.world() instanceof ServerLevel serverLevel) {
+            entity = serverLevel.getEntity(uuid);
+        }
+        if (entity == null) {
+            final AABB bounds = AABB.ofSize(
+                new net.minecraft.world.phys.Vec3(host.xPosition(), host.yPosition(), host.zPosition()),
+                TRADING_RANGE * 2D,
+                TRADING_RANGE * 2D,
+                TRADING_RANGE * 2D);
+            entity = host.world().getEntitiesOfClass(Entity.class, bounds, candidate -> uuid.equals(candidate.getUUID()))
+                .stream()
+                .findFirst()
+                .orElse(null);
+        }
+        if (entity instanceof Merchant reboundMerchant) {
+            merchantEntity = entity;
+            merchant = reboundMerchant;
+        } else {
+            merchantEntity = null;
+            merchant = null;
+        }
     }
 
     private static boolean extract(final Container inventory, final Predicate<ItemStack> matches, final int count, final boolean simulate) {
