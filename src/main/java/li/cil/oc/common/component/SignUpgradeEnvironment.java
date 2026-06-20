@@ -8,10 +8,12 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
@@ -50,6 +52,21 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
     @Override
     public Map<String, String> getDeviceInfo() {
         return DEVICE_INFO;
+    }
+
+    @Override
+    public void onMessage(final Message message) {
+        super.onMessage(message);
+        if (message == null || !"tablet.use".equals(message.name())) {
+            return;
+        }
+        final Object[] data = message.data();
+        if (data.length < 4 || !(data[0] instanceof CompoundTag nbt) || !(data[3] instanceof BlockPos blockPos)) {
+            return;
+        }
+        if (host.world().getBlockEntity(blockPos) instanceof SignBlockEntity sign) {
+            nbt.putString("signText", text(sign));
+        }
     }
 
     @Callback(doc = "function():string -- Get the text on the sign in front of the host.")

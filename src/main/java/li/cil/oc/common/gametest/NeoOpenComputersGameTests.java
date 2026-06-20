@@ -16,6 +16,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.Connector;
@@ -71,6 +72,8 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
@@ -1480,6 +1483,37 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty")
+    public static void signUpgradeAddsSignTextToTabletUseData(final GameTestHelper helper) {
+        final BlockPos signPos = new BlockPos(1, 1, 1);
+        helper.setBlock(signPos, Blocks.OAK_SIGN);
+        final SignBlockEntity sign = helper.getBlockEntity(signPos);
+        SignText text = sign.getFrontText();
+        text = text.setMessage(0, Component.literal("alpha"));
+        text = text.setMessage(1, Component.literal("beta"));
+        sign.setText(text, true);
+
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.SIGN_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for sign upgrade");
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.SIGN_UPGRADE.get()), new StaticPositionEnvironmentHost(helper, signPos));
+        helper.assertTrue(environment != null, "No sign upgrade environment");
+
+        final CompoundTag tabletData = new CompoundTag();
+        environment.onMessage(new TestMessage(null, "tablet.use", new Object[]{
+            tabletData,
+            new ItemStack(ModItems.TABLET.get()),
+            null,
+            helper.absolutePos(signPos),
+            Direction.NORTH,
+            Float.valueOf(0.5F),
+            Float.valueOf(0.5F),
+            Float.valueOf(0.5F)
+        }));
+
+        helper.assertTrue("alpha\nbeta\n\n".equals(tabletData.getString("signText")), "Sign upgrade did not add sign text to tablet use data");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void inventoryControllerStoresStacksInDatabase(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);
@@ -2376,6 +2410,12 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(result.length == 1 && Boolean.TRUE.equals(result[0]), "Dropped hard disk is missing " + path);
         } catch (Exception e) {
             helper.fail("Failed to inspect dropped hard disk: " + e.getMessage());
+        }
+    }
+
+    private record TestMessage(Node source, String name, Object[] data) implements Message {
+        @Override
+        public void cancel() {
         }
     }
 
