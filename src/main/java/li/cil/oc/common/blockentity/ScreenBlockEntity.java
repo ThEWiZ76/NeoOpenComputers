@@ -43,6 +43,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private int backgroundColor = DEFAULT_BACKGROUND;
     private boolean foregroundFromPalette;
     private boolean backgroundFromPalette;
+    private boolean precisionMode;
     private boolean renderingEnabled = true;
     private final int[] palette = new int[16];
     private final TextBufferState buffer = new TextBufferState(DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -125,6 +126,21 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Callback(direct = true, doc = "function():number, number -- The aspect ratio of the screen.")
     public Object[] getAspectRatio(final Context context, final Arguments args) {
         return new Object[]{aspectWidth, aspectHeight};
+    }
+
+    @Callback(direct = true, doc = "function():boolean -- Returns whether the screen is in high precision mode.")
+    public Object[] isPrecise(final Context context, final Arguments args) {
+        return new Object[]{precisionMode};
+    }
+
+    @Callback(doc = "function(enabled:boolean):boolean -- Set whether to use high precision mode.")
+    public Object[] setPrecise(final Context context, final Arguments args) {
+        final boolean oldValue = precisionMode;
+        precisionMode = args.checkBoolean(0);
+        if (precisionMode != oldValue) {
+            setChanged();
+        }
+        return new Object[]{oldValue};
     }
 
     @Override
@@ -440,6 +456,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         viewportHeight = Math.max(1, nbt.getInt("viewportHeight"));
         foregroundColor = nbt.getInt("foreground");
         backgroundColor = nbt.getInt("background");
+        precisionMode = nbt.getBoolean("precisionMode");
         renderingEnabled = !nbt.contains("renderingEnabled") || nbt.getBoolean("renderingEnabled");
         if (nbt.contains(TAG_BUFFER)) {
             buffer.load(nbt.getCompound(TAG_BUFFER));
@@ -456,6 +473,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         nbt.putInt("viewportHeight", viewportHeight);
         nbt.putInt("foreground", foregroundColor);
         nbt.putInt("background", backgroundColor);
+        nbt.putBoolean("precisionMode", precisionMode);
         nbt.putBoolean("renderingEnabled", renderingEnabled);
         final CompoundTag bufferTag = new CompoundTag();
         buffer.save(bufferTag);
