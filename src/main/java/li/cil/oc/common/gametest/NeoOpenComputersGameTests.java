@@ -963,6 +963,29 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void signUpgradeReadsAndWritesHostSign(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.SIGN_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for sign upgrade");
+
+        final BlockPos hostPos = new BlockPos(1, 1, 1);
+        helper.setBlock(hostPos, Blocks.OAK_SIGN);
+        final ManagedEnvironment environment = driver.createEnvironment(
+            new ItemStack(ModItems.SIGN_UPGRADE.get()),
+            new StaticRotatablePositionEnvironmentHost(helper, hostPos, Direction.NORTH)
+        );
+        helper.assertTrue(environment != null, "Sign upgrade did not create sign environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Sign node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("sign".equals(component.name()), "Sign component name mismatch");
+
+        final Object[] set = component.invoke("setValue", null, "alpha\nbeta");
+        helper.assertTrue(set.length == 1 && "alpha\nbeta\n\n".equals(set[0]), "Sign upgrade did not write normalized sign text");
+        final Object[] get = component.invoke("getValue", null);
+        helper.assertTrue(get.length == 1 && "alpha\nbeta\n\n".equals(get[0]), "Sign upgrade did not read sign text");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void databaseUpgradeCopiesEntriesToAddressedDatabase(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
         helper.assertTrue(driver != null, "No driver for database upgrade");
@@ -2359,6 +2382,43 @@ public final class NeoOpenComputersGameTests {
 
         @Override
         public void markChanged() {
+        }
+    }
+
+    private record StaticRotatablePositionEnvironmentHost(GameTestHelper helper, BlockPos pos, Direction facing)
+        implements li.cil.oc.api.network.EnvironmentHost, li.cil.oc.api.internal.Rotatable {
+        @Override
+        public net.minecraft.world.level.Level world() {
+            return helper.getLevel();
+        }
+
+        @Override
+        public double xPosition() {
+            return helper.absolutePos(pos).getX() + 0.5D;
+        }
+
+        @Override
+        public double yPosition() {
+            return helper.absolutePos(pos).getY() + 0.5D;
+        }
+
+        @Override
+        public double zPosition() {
+            return helper.absolutePos(pos).getZ() + 0.5D;
+        }
+
+        @Override
+        public void markChanged() {
+        }
+
+        @Override
+        public Direction toGlobal(final Direction value) {
+            return value;
+        }
+
+        @Override
+        public Direction toLocal(final Direction value) {
+            return value;
         }
     }
 

@@ -24,6 +24,7 @@ import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.RedstoneCardItem;
+import li.cil.oc.common.item.SignUpgradeItem;
 import li.cil.oc.common.item.SolarGeneratorUpgradeItem;
 import li.cil.oc.common.item.TankControllerUpgradeItem;
 import li.cil.oc.common.item.TankUpgradeItem;
@@ -284,9 +285,9 @@ public final class ModItems {
         ModContentIds.STICKY_PISTON_UPGRADE,
         () -> new BasicUpgradeItem(new Item.Properties(), 1));
 
-    public static final DeferredItem<BasicUpgradeItem> SIGN_UPGRADE = ITEMS.register(
+    public static final DeferredItem<SignUpgradeItem> SIGN_UPGRADE = ITEMS.register(
         ModContentIds.SIGN_UPGRADE,
-        () -> new BasicUpgradeItem(new Item.Properties(), 0));
+        () -> new SignUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<BasicUpgradeItem> TRADING_UPGRADE = ITEMS.register(
         ModContentIds.TRADING_UPGRADE,
