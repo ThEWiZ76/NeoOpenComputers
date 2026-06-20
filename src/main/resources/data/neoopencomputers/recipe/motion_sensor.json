@@ -2,23 +2,23 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
     "C": {
-      "tag": "c:ingots/copper"
+      "item": "neoopencomputers:cpu_tier2"
+    },
+    "D": {
+      "item": "minecraft:daylight_detector"
     },
     "G": {
-      "tag": "c:glass_blocks"
-    },
-    "O": {
-      "item": "minecraft:observer"
-    },
-    "R": {
-      "item": "minecraft:redstone"
+      "tag": "c:ingots/gold"
     }
   },
   "pattern": [
-    "CRC",
-    "GOG",
-    "CRC"
+    "GDG",
+    "DCD",
+    "GBG"
   ],
   "result": {
     "count": 1,

@@ -2,20 +2,23 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
     "C": {
-      "tag": "c:chests/wooden"
+      "item": "neoopencomputers:cable"
     },
     "I": {
       "tag": "c:ingots/iron"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "M": {
+      "item": "neoopencomputers:microchip_tier1"
     }
   },
   "pattern": [
-    "IRI",
     "ICI",
-    "IRI"
+    "CMC",
+    "IBI"
   ],
   "result": {
     "count": 1,

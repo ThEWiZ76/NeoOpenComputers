@@ -283,6 +283,25 @@ final class RecipeResourceTest {
         assertItem(hdd3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
     }
 
+    @Test
+    void blockDeviceRecipesUseMaterialProgression() throws IOException {
+        JsonObject adapter = recipeKeys(ModContentIds.ADAPTER);
+        JsonObject redstone = recipeKeys(ModContentIds.REDSTONE_IO);
+        JsonObject motion = recipeKeys(ModContentIds.MOTION_SENSOR);
+
+        assertItem(adapter, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(adapter, "C", "neoopencomputers:" + ModContentIds.CABLE);
+        assertItem(adapter, "M", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(redstone, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(redstone, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(redstone, "R", "neoopencomputers:" + ModContentIds.REDSTONE_CARD);
+        assertItem(redstone, "X", "minecraft:redstone_block");
+        assertItem(motion, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(motion, "C", "neoopencomputers:" + ModContentIds.CPU_TIER2);
+        assertItem(motion, "D", "minecraft:daylight_detector");
+        assertTag(motion, "G", "c:ingots/gold");
+    }
+
     private static JsonObject readJson(final Path path) throws IOException {
         try (Reader reader = Files.newBufferedReader(path)) {
             JsonElement element = JsonParser.parseReader(reader);

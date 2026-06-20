@@ -2,23 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "C": {
-      "tag": "c:ingots/copper"
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     },
-    "G": {
-      "tag": "c:glass_blocks"
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
     },
     "R": {
-      "item": "minecraft:redstone"
+      "item": "neoopencomputers:redstone_card"
     },
-    "B": {
+    "X": {
       "item": "minecraft:redstone_block"
     }
   },
   "pattern": [
-    "CRC",
-    "GBG",
-    "CRC"
+    "ICI",
+    "XRX",
+    "IBI"
   ],
   "result": {
     "count": 1,
