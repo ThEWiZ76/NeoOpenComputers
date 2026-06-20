@@ -126,6 +126,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void dataCardTier3ItemIdIsStable() {
+        assertEquals("data_card_tier3", ModContentIds.DATA_CARD_TIER3);
+    }
+
+    @Test
     void eepromItemIdIsStable() {
         assertEquals("eeprom", ModContentIds.EEPROM);
     }

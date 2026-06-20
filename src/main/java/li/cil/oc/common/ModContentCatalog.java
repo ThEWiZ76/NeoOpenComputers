@@ -13,6 +13,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_CPU_TIER3 = "cpu3";
     public static final String COMPAT_DATA_CARD_TIER1 = "datacard1";
     public static final String COMPAT_DATA_CARD_TIER2 = "datacard2";
+    public static final String COMPAT_DATA_CARD_TIER3 = "datacard3";
     public static final String COMPAT_DATA_CARD = "datacard";
     public static final String COMPAT_DATABASE_UPGRADE_TIER1 = "databaseUpgrade1";
     public static final String COMPAT_DATABASE_UPGRADE_TIER2 = "databaseUpgrade2";
@@ -66,6 +67,7 @@ public final class ModContentCatalog {
                 ModItems.CPU_TIER3.get(),
                 ModItems.DATA_CARD_TIER1.get(),
                 ModItems.DATA_CARD_TIER2.get(),
+                ModItems.DATA_CARD_TIER3.get(),
                 ModItems.DATABASE_UPGRADE_TIER1.get(),
                 ModItems.DATABASE_UPGRADE_TIER2.get(),
                 ModItems.DATABASE_UPGRADE_TIER3.get(),
@@ -117,6 +119,7 @@ public final class ModContentCatalog {
         final Item cpuTier3Item,
         final Item dataCardTier1Item,
         final Item dataCardTier2Item,
+        final Item dataCardTier3Item,
         final Item databaseUpgradeTier1Item,
         final Item databaseUpgradeTier2Item,
         final Item databaseUpgradeTier3Item,
@@ -159,6 +162,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.CPU_TIER3, null, cpuTier3Item);
         registry.register(ModContentIds.DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(ModContentIds.DATA_CARD_TIER2, null, dataCardTier2Item);
+        registry.register(ModContentIds.DATA_CARD_TIER3, null, dataCardTier3Item);
         registry.register(ModContentIds.DATABASE_UPGRADE_TIER1, null, databaseUpgradeTier1Item);
         registry.register(ModContentIds.DATABASE_UPGRADE_TIER2, null, databaseUpgradeTier2Item);
         registry.register(ModContentIds.DATABASE_UPGRADE_TIER3, null, databaseUpgradeTier3Item);
@@ -184,6 +188,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_CPU_TIER3, null, cpuTier3Item);
         registry.register(COMPAT_DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(COMPAT_DATA_CARD_TIER2, null, dataCardTier2Item);
+        registry.register(COMPAT_DATA_CARD_TIER3, null, dataCardTier3Item);
         registry.register(COMPAT_DATA_CARD, null, dataCardTier1Item);
         registry.register(COMPAT_DATABASE_UPGRADE_TIER1, null, databaseUpgradeTier1Item);
         registry.register(COMPAT_DATABASE_UPGRADE_TIER2, null, databaseUpgradeTier2Item);

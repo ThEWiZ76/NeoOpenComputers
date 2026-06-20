@@ -51,6 +51,7 @@ final class DataCardEnvironmentTest {
 
         assertEquals("SC01D H45h3r", assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(0)).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("SC02D Cryptic", assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(1)).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("SC03D Signer", assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(2)).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
     }
 
     @Test
@@ -82,6 +83,46 @@ final class DataCardEnvironmentTest {
         assertArrayEquals(aes(Cipher.ENCRYPT_MODE, data, key, iv), encrypted);
         assertArrayEquals(data, (byte[]) card.decrypt(null, new TestArguments(encrypted, key, iv))[0]);
         assertEquals(16, ((byte[]) card.random(null, new TestArguments(16))[0]).length);
+    }
+
+    @Test
+    void exposesTierThreeCallbacks() throws NoSuchMethodException {
+        assertCallback("generateKeyPair");
+        assertCallback("deserializeKey");
+        assertCallback("ecdh");
+        assertCallback("ecdsa");
+    }
+
+    @Test
+    void tierThreeAddsEllipticCurveOperations() throws Exception {
+        OpenComputersApi.initialize();
+        DataCardEnvironment alice = new DataCardEnvironment(2);
+        DataCardEnvironment bob = new DataCardEnvironment(2);
+        Object[] aliceKeys = alice.generateKeyPair(null, new TestArguments(256));
+        Object[] bobKeys = bob.generateKeyPair(null, new TestArguments(256));
+        DataCardEnvironment.ECKey alicePublic = assertInstanceOf(DataCardEnvironment.ECKey.class, aliceKeys[0]);
+        DataCardEnvironment.ECKey alicePrivate = assertInstanceOf(DataCardEnvironment.ECKey.class, aliceKeys[1]);
+        DataCardEnvironment.ECKey bobPublic = assertInstanceOf(DataCardEnvironment.ECKey.class, bobKeys[0]);
+        DataCardEnvironment.ECKey bobPrivate = assertInstanceOf(DataCardEnvironment.ECKey.class, bobKeys[1]);
+
+        assertEquals(true, alicePublic.isPublic(null, new TestArguments())[0]);
+        assertEquals(false, alicePrivate.isPublic(null, new TestArguments())[0]);
+        assertEquals("ec-public", alicePublic.keyType(null, new TestArguments())[0]);
+        assertEquals("ec-private", alicePrivate.keyType(null, new TestArguments())[0]);
+        assertArrayEquals(
+            (byte[]) alice.ecdh(null, new TestArguments(alicePrivate, bobPublic))[0],
+            (byte[]) bob.ecdh(null, new TestArguments(bobPrivate, alicePublic))[0]);
+
+        byte[] data = "signed payload".getBytes(StandardCharsets.UTF_8);
+        byte[] signature = (byte[]) alice.ecdsa(null, new TestArguments(data, alicePrivate))[0];
+        assertEquals(true, alice.ecdsa(null, new TestArguments(data, alicePublic, signature))[0]);
+        assertEquals(false, alice.ecdsa(null, new TestArguments("tampered".getBytes(StandardCharsets.UTF_8), alicePublic, signature))[0]);
+
+        byte[] serializedPublic = (byte[]) alicePublic.serialize(null, new TestArguments())[0];
+        DataCardEnvironment.ECKey restoredPublic = assertInstanceOf(
+            DataCardEnvironment.ECKey.class,
+            alice.deserializeKey(null, new TestArguments(serializedPublic, "ec-public"))[0]);
+        assertEquals(true, alice.ecdsa(null, new TestArguments(data, restoredPublic, signature))[0]);
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {

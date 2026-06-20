@@ -67,6 +67,10 @@ public final class ModItems {
         ModContentIds.DATA_CARD_TIER2,
         () -> new DataCardItem(new Item.Properties(), 1));
 
+    public static final DeferredItem<DataCardItem> DATA_CARD_TIER3 = ITEMS.register(
+        ModContentIds.DATA_CARD_TIER3,
+        () -> new DataCardItem(new Item.Properties(), 2));
+
     public static final DeferredItem<DatabaseUpgradeItem> DATABASE_UPGRADE_TIER1 = ITEMS.register(
         ModContentIds.DATABASE_UPGRADE_TIER1,
         () -> new DatabaseUpgradeItem(new Item.Properties(), 0));

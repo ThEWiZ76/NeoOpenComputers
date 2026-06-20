@@ -14,7 +14,7 @@ public class DataCardItem extends Item implements DriverItem {
 
     public DataCardItem(final Properties properties, final int tier) {
         super(properties);
-        this.tier = Math.max(0, Math.min(1, tier));
+        this.tier = Math.max(0, Math.min(2, tier));
     }
 
     @Override
