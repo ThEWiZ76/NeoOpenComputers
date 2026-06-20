@@ -6,10 +6,10 @@
       "item": "neoopencomputers:circuit_board"
     },
     {
-      "item": "neoopencomputers:acid"
+      "tag": "c:nuggets/gold"
     },
     {
-      "item": "minecraft:redstone"
+      "item": "neoopencomputers:acid"
     }
   ],
   "result": {

@@ -1,16 +1,12 @@
 {
-  "type": "minecraft:crafting_shapeless",
+  "type": "minecraft:smelting",
   "category": "misc",
-  "ingredients": [
-    {
-      "item": "neoopencomputers:raw_circuit_board"
-    },
-    {
-      "tag": "c:nuggets/gold"
-    }
-  ],
+  "cookingtime": 200,
+  "experience": 0.7,
+  "ingredient": {
+    "item": "neoopencomputers:raw_circuit_board"
+  },
   "result": {
-    "count": 1,
     "id": "neoopencomputers:circuit_board"
   }
 }

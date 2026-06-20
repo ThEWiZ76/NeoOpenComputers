@@ -112,7 +112,7 @@ final class RecipeResourceTest {
             Path recipe = RECIPE_ROOT.resolve(id + ".json");
             assertTrue(Files.isRegularFile(recipe), "Missing recipe for " + id);
             JsonObject json = readJson(recipe);
-            assertTrue(json.get("type").getAsString().startsWith("minecraft:crafting_"));
+            assertKnownRecipeType(json);
             assertEquals("neoopencomputers:" + id, json.getAsJsonObject("result").get("id").getAsString());
         }
     }
@@ -311,6 +311,23 @@ final class RecipeResourceTest {
         assertPattern(recipe, " I ", "I I", " I ");
         assertTag(keys, "I", "c:nuggets/iron");
         assertResultCount(recipe, 1);
+    }
+
+    @Test
+    void circuitBoardRecipesUseUpstreamProcessing() throws IOException {
+        JsonObject circuitBoard = readJson(RECIPE_ROOT.resolve(ModContentIds.CIRCUIT_BOARD + ".json"));
+        JsonObject printedCircuitBoard = readJson(RECIPE_ROOT.resolve(ModContentIds.PRINTED_CIRCUIT_BOARD + ".json"));
+
+        assertEquals("minecraft:smelting", circuitBoard.get("type").getAsString());
+        assertItem(circuitBoard, "ingredient", "neoopencomputers:" + ModContentIds.RAW_CIRCUIT_BOARD);
+        assertEquals("neoopencomputers:" + ModContentIds.CIRCUIT_BOARD, circuitBoard.getAsJsonObject("result").get("id").getAsString());
+
+        assertEquals("minecraft:crafting_shapeless", printedCircuitBoard.get("type").getAsString());
+        assertIngredientItem(printedCircuitBoard, "neoopencomputers:" + ModContentIds.CIRCUIT_BOARD);
+        assertIngredientItem(printedCircuitBoard, "neoopencomputers:" + ModContentIds.ACID);
+        assertIngredientTag(printedCircuitBoard, "c:nuggets/gold");
+        assertIngredientCount(printedCircuitBoard, 3);
+        assertResultCount(printedCircuitBoard, 1);
     }
 
     @Test
@@ -718,12 +735,32 @@ final class RecipeResourceTest {
         assertEquals(expected, json.getAsJsonObject("result").get("count").getAsInt());
     }
 
+    private static void assertKnownRecipeType(final JsonObject json) {
+        String type = json.get("type").getAsString();
+        assertTrue(type.startsWith("minecraft:crafting_") || "minecraft:smelting".equals(type));
+    }
+
+    private static void assertIngredientCount(final JsonObject json, final int expected) {
+        assertEquals(expected, json.getAsJsonArray("ingredients").size());
+    }
+
     private static void assertIngredientItem(final JsonObject json, final String item) {
         for (JsonElement element : json.getAsJsonArray("ingredients")) {
-            if (item.equals(element.getAsJsonObject().get("item").getAsString())) {
+            JsonObject ingredient = element.getAsJsonObject();
+            if (ingredient.has("item") && item.equals(ingredient.get("item").getAsString())) {
                 return;
             }
         }
         assertTrue(false, "Missing ingredient " + item);
+    }
+
+    private static void assertIngredientTag(final JsonObject json, final String tag) {
+        for (JsonElement element : json.getAsJsonArray("ingredients")) {
+            JsonObject ingredient = element.getAsJsonObject();
+            if (ingredient.has("tag") && tag.equals(ingredient.get("tag").getAsString())) {
+                return;
+            }
+        }
+        assertTrue(false, "Missing ingredient tag " + tag);
     }
 }
