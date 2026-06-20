@@ -289,6 +289,7 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(address != null, "Adapter did not expose inventory controller upgrade: " + computer.machine().components());
             try {
                 final int east = Direction.EAST.get3DDataValue();
+                assertInvokeResult(helper, computer, address, "getInventoryName", new Object[]{east}, "minecraft:chest");
                 assertInvokeResult(helper, computer, address, "getInventorySize", new Object[]{east}, 27);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{east, 1}, 4);
                 assertInvokeResult(helper, computer, address, "getSlotMaxStackSize", new Object[]{east, 1}, 64);

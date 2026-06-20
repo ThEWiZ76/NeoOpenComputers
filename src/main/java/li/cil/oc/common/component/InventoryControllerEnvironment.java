@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -42,6 +43,13 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
     @Callback(doc = "function(side:number):number -- Get the number of slots in the inventory on the specified side.")
     public Object[] getInventorySize(final Context context, final Arguments arguments) {
         return new Object[]{container(arguments.checkInteger(0)).getContainerSize()};
+    }
+
+    @Callback(doc = "function(side:number):string -- Get the registry name of the inventory on the specified side.")
+    public Object[] getInventoryName(final Context context, final Arguments arguments) {
+        final BlockEntity blockEntity = blockEntity(arguments.checkInteger(0));
+        final var key = BuiltInRegistries.BLOCK.getKey(blockEntity.getBlockState().getBlock());
+        return new Object[]{key == null ? "unknown" : key.toString()};
     }
 
     @Callback(doc = "function(side:number, slot:number):number -- Get the stack size of the item stack in the specified inventory slot.")
@@ -83,6 +91,14 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
     }
 
     private Container container(final int side) {
+        final BlockEntity blockEntity = blockEntity(side);
+        if (blockEntity instanceof Container container) {
+            return container;
+        }
+        throw new IllegalArgumentException("no inventory");
+    }
+
+    private BlockEntity blockEntity(final int side) {
         if (side < 0 || side > 5) {
             throw new IllegalArgumentException("invalid side");
         }
@@ -92,8 +108,8 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
 
         final BlockPos hostPos = BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition());
         final BlockEntity blockEntity = host.world().getBlockEntity(hostPos.relative(Direction.from3DDataValue(side)));
-        if (blockEntity instanceof Container container) {
-            return container;
+        if (blockEntity != null) {
+            return blockEntity;
         }
         throw new IllegalArgumentException("no inventory");
     }
