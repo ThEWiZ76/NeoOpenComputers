@@ -142,7 +142,8 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
 
     @Callback(doc = "function(path:string):table -- Returns names of objects in the directory at the specified path.")
     public Object[] list(final Context context, final Arguments arguments) {
-        return new Object[]{fileSystem.list(clean(arguments.checkString(0)))};
+        final String[] contents = fileSystem.list(clean(arguments.checkString(0)));
+        return contents == null ? null : new Object[]{contents};
     }
 
     @Callback(doc = "function(path:string):boolean -- Creates a directory at the specified path, including parent directories.")

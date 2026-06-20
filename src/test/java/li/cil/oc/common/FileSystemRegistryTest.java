@@ -178,6 +178,16 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentReturnsNoResultsWhenListingInvalidPath() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+
+        assertNull(component.invoke("list", null, "missing"));
+    }
+
+    @Test
     void managedFileSystemEnvironmentReportsInfiniteCapacityForUnlimitedFileSystems() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(-1);
