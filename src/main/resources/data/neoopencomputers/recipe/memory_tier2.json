@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "M": {
+      "item": "neoopencomputers:memory_tier1"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "RGR",
+    "GMG",
+    "RGR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:memory_tier2"
+  }
+}

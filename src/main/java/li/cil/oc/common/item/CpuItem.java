@@ -14,8 +14,15 @@ import net.minecraft.world.item.ItemStack;
 import java.util.Map;
 
 public class CpuItem extends Item implements Processor {
+    private final int tier;
+
     public CpuItem(final Properties properties) {
+        this(properties, 0);
+    }
+
+    public CpuItem(final Properties properties, final int tier) {
         super(properties);
+        this.tier = Math.max(0, Math.min(2, tier));
     }
 
     @Override
@@ -35,7 +42,7 @@ public class CpuItem extends Item implements Processor {
 
     @Override
     public int tier(final ItemStack stack) {
-        return 0;
+        return tier;
     }
 
     @Override
@@ -45,7 +52,11 @@ public class CpuItem extends Item implements Processor {
 
     @Override
     public int supportedComponents(final ItemStack stack) {
-        return 8;
+        return switch (tier) {
+            case 0 -> 8;
+            case 1 -> 12;
+            default -> 16;
+        };
     }
 
     @Override

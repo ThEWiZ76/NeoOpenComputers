@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "H": {
+      "item": "neoopencomputers:hdd_tier1"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "GGG",
+    "RHR",
+    "GGG"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:hdd_tier2"
+  }
+}

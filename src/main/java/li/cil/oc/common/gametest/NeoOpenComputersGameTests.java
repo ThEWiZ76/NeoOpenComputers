@@ -4,7 +4,10 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Memory;
+import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
@@ -42,12 +45,51 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.SCREEN_TIER1.get();
         ModBlocks.KEYBOARD.get();
         ModItems.CPU_TIER1.get();
+        ModItems.CPU_TIER2.get();
+        ModItems.CPU_TIER3.get();
         ModItems.EEPROM.get();
         ModItems.FLOPPY.get();
         ModItems.GRAPHICS_CARD_TIER1.get();
+        ModItems.GRAPHICS_CARD_TIER2.get();
+        ModItems.GRAPHICS_CARD_TIER3.get();
         ModItems.HDD_TIER1.get();
+        ModItems.HDD_TIER2.get();
+        ModItems.HDD_TIER3.get();
         ModItems.MEMORY_TIER1.get();
+        ModItems.MEMORY_TIER2.get();
+        ModItems.MEMORY_TIER3.get();
         ModItems.NETWORK_CARD.get();
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tieredComponentItemsReportTheirTier(final GameTestHelper helper) {
+        assertItemTier(helper, new ItemStack(ModItems.CPU_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.CPU_TIER2.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.CPU_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER2.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.HDD_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.HDD_TIER2.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.HDD_TIER3.get()), 2);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tieredComponentItemsExposeTierCapabilities(final GameTestHelper helper) {
+        assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER1.get()), 8);
+        assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER2.get()), 12);
+        assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER3.get()), 16);
+        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER1.get()), 192);
+        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 384);
+        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 768);
+        assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER1.get()), 1024L * 1024L);
+        assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER2.get()), 2048L * 1024L);
+        assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER3.get()), 4096L * 1024L);
         helper.succeed();
     }
 
@@ -225,6 +267,46 @@ public final class NeoOpenComputersGameTests {
             return factory.call();
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    private static void assertItemTier(final GameTestHelper helper, final ItemStack stack, final int tier) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        helper.assertTrue(driver.tier(stack) == tier, "Expected " + stack + " to report tier " + tier + " but got " + driver.tier(stack));
+    }
+
+    private static void assertProcessorComponents(final GameTestHelper helper, final ItemStack stack, final int supportedComponents) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver instanceof Processor, "Expected processor driver for " + stack);
+        final Processor processor = (Processor) driver;
+        helper.assertTrue(processor.supportedComponents(stack) == supportedComponents, "Expected " + stack + " to support " + supportedComponents + " components but got " + processor.supportedComponents(stack));
+    }
+
+    private static void assertMemoryAmount(final GameTestHelper helper, final ItemStack stack, final double amount) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver instanceof Memory, "Expected memory driver for " + stack);
+        final Memory memory = (Memory) driver;
+        helper.assertTrue(memory.amount(stack) == amount, "Expected " + stack + " to provide " + amount + " KB RAM but got " + memory.amount(stack));
+    }
+
+    private static void assertHardDiskCapacity(final GameTestHelper helper, final ItemStack stack, final long capacity) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment != null, "No HDD environment for " + stack);
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "HDD environment has no filesystem component for " + stack);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        final Object[] result = invokeComponent(helper, component, "spaceTotal");
+        helper.assertTrue(result.length == 1 && result[0].equals(capacity), "Expected " + stack + " capacity " + capacity + " but got " + (result.length == 0 ? "<empty>" : result[0]));
+    }
+
+    private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method) {
+        try {
+            return component.invoke(method, null);
+        } catch (Exception e) {
+            helper.fail("Component invocation failed: " + method + " " + e.getMessage());
+            return new Object[0];
         }
     }
 

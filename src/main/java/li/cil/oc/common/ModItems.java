@@ -27,7 +27,15 @@ public final class ModItems {
 
     public static final DeferredItem<CpuItem> CPU_TIER1 = ITEMS.register(
         ModContentIds.CPU_TIER1,
-        () -> new CpuItem(new Item.Properties()));
+        () -> new CpuItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<CpuItem> CPU_TIER2 = ITEMS.register(
+        ModContentIds.CPU_TIER2,
+        () -> new CpuItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<CpuItem> CPU_TIER3 = ITEMS.register(
+        ModContentIds.CPU_TIER3,
+        () -> new CpuItem(new Item.Properties(), 2));
 
     public static final DeferredItem<EepromItem> EEPROM = ITEMS.register(
         ModContentIds.EEPROM,
@@ -39,17 +47,41 @@ public final class ModItems {
 
     public static final DeferredItem<GraphicsCardItem> GRAPHICS_CARD_TIER1 = ITEMS.register(
         ModContentIds.GRAPHICS_CARD_TIER1,
-        () -> new GraphicsCardItem(new Item.Properties()));
+        () -> new GraphicsCardItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<GraphicsCardItem> GRAPHICS_CARD_TIER2 = ITEMS.register(
+        ModContentIds.GRAPHICS_CARD_TIER2,
+        () -> new GraphicsCardItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<GraphicsCardItem> GRAPHICS_CARD_TIER3 = ITEMS.register(
+        ModContentIds.GRAPHICS_CARD_TIER3,
+        () -> new GraphicsCardItem(new Item.Properties(), 2));
 
     public static final DeferredItem<HardDiskDriveItem> HDD_TIER1 = ITEMS.register(
         ModContentIds.HDD_TIER1,
-        () -> new HardDiskDriveItem(new Item.Properties()));
+        () -> new HardDiskDriveItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<HardDiskDriveItem> HDD_TIER2 = ITEMS.register(
+        ModContentIds.HDD_TIER2,
+        () -> new HardDiskDriveItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<HardDiskDriveItem> HDD_TIER3 = ITEMS.register(
+        ModContentIds.HDD_TIER3,
+        () -> new HardDiskDriveItem(new Item.Properties(), 2));
 
     public static final DeferredItem<Item> MANUAL = ITEMS.registerSimpleItem(ModContentIds.MANUAL, new Item.Properties());
 
     public static final DeferredItem<MemoryItem> MEMORY_TIER1 = ITEMS.register(
         ModContentIds.MEMORY_TIER1,
-        () -> new MemoryItem(new Item.Properties()));
+        () -> new MemoryItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<MemoryItem> MEMORY_TIER2 = ITEMS.register(
+        ModContentIds.MEMORY_TIER2,
+        () -> new MemoryItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<MemoryItem> MEMORY_TIER3 = ITEMS.register(
+        ModContentIds.MEMORY_TIER3,
+        () -> new MemoryItem(new Item.Properties(), 2));
 
     public static final DeferredItem<NetworkCardItem> NETWORK_CARD = ITEMS.register(
         ModContentIds.NETWORK_CARD,

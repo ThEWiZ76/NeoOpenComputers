@@ -41,13 +41,43 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void cpuTier2ItemIdIsStable() {
+        assertEquals("cpu_tier2", ModContentIds.CPU_TIER2);
+    }
+
+    @Test
+    void cpuTier3ItemIdIsStable() {
+        assertEquals("cpu_tier3", ModContentIds.CPU_TIER3);
+    }
+
+    @Test
     void memoryTier1ItemIdIsStable() {
         assertEquals("memory_tier1", ModContentIds.MEMORY_TIER1);
     }
 
     @Test
+    void memoryTier2ItemIdIsStable() {
+        assertEquals("memory_tier2", ModContentIds.MEMORY_TIER2);
+    }
+
+    @Test
+    void memoryTier3ItemIdIsStable() {
+        assertEquals("memory_tier3", ModContentIds.MEMORY_TIER3);
+    }
+
+    @Test
     void hardDiskDriveTier1ItemIdIsStable() {
         assertEquals("hdd_tier1", ModContentIds.HDD_TIER1);
+    }
+
+    @Test
+    void hardDiskDriveTier2ItemIdIsStable() {
+        assertEquals("hdd_tier2", ModContentIds.HDD_TIER2);
+    }
+
+    @Test
+    void hardDiskDriveTier3ItemIdIsStable() {
+        assertEquals("hdd_tier3", ModContentIds.HDD_TIER3);
     }
 
     @Test
@@ -63,6 +93,16 @@ final class ModContentRegistrationTest {
     @Test
     void graphicsCardTier1ItemIdIsStable() {
         assertEquals("graphics_card_tier1", ModContentIds.GRAPHICS_CARD_TIER1);
+    }
+
+    @Test
+    void graphicsCardTier2ItemIdIsStable() {
+        assertEquals("graphics_card_tier2", ModContentIds.GRAPHICS_CARD_TIER2);
+    }
+
+    @Test
+    void graphicsCardTier3ItemIdIsStable() {
+        assertEquals("graphics_card_tier3", ModContentIds.GRAPHICS_CARD_TIER3);
     }
 
     @Test

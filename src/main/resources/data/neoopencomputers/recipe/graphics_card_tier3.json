@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": {
+      "item": "neoopencomputers:graphics_card_tier2"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "M": {
+      "item": "neoopencomputers:memory_tier3"
+    }
+  },
+  "pattern": [
+    "DDD",
+    "MCM",
+    "DDD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:graphics_card_tier3"
+  }
+}

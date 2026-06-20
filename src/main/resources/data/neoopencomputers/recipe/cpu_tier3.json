@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": {
+      "item": "neoopencomputers:cpu_tier2"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "DRD",
+    "RCR",
+    "DRD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:cpu_tier3"
+  }
+}

@@ -13,8 +13,15 @@ import net.minecraft.world.item.ItemStack;
 import java.util.Map;
 
 public class MemoryItem extends Item implements Memory {
+    private final int tier;
+
     public MemoryItem(final Properties properties) {
+        this(properties, 0);
+    }
+
+    public MemoryItem(final Properties properties, final int tier) {
         super(properties);
+        this.tier = Math.max(0, Math.min(2, tier));
     }
 
     @Override
@@ -34,7 +41,7 @@ public class MemoryItem extends Item implements Memory {
 
     @Override
     public int tier(final ItemStack stack) {
-        return 0;
+        return tier;
     }
 
     @Override
@@ -44,7 +51,11 @@ public class MemoryItem extends Item implements Memory {
 
     @Override
     public double amount(final ItemStack stack) {
-        return 192;
+        return switch (tier) {
+            case 0 -> 192;
+            case 1 -> 384;
+            default -> 768;
+        };
     }
 
     static ManagedEnvironment createDeviceInfoEnvironment(final int tier) {

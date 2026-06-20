@@ -10,8 +10,15 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class GraphicsCardItem extends Item implements DriverItem {
+    private final int tier;
+
     public GraphicsCardItem(final Properties properties) {
+        this(properties, 0);
+    }
+
+    public GraphicsCardItem(final Properties properties, final int tier) {
         super(properties);
+        this.tier = Math.max(0, Math.min(2, tier));
     }
 
     @Override
@@ -31,7 +38,7 @@ public class GraphicsCardItem extends Item implements DriverItem {
 
     @Override
     public int tier(final ItemStack stack) {
-        return 0;
+        return tier;
     }
 
     @Override

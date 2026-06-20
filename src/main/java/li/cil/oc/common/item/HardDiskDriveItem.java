@@ -16,11 +16,21 @@ import net.minecraft.world.item.component.CustomData;
 import java.util.function.Consumer;
 
 public class HardDiskDriveItem extends Item implements DriverItem {
-    private static final long TIER_ONE_CAPACITY = 1024L * 1024L;
+    private static final long[] CAPACITIES = {
+        1024L * 1024L,
+        2048L * 1024L,
+        4096L * 1024L
+    };
     private static final String HDD_DATA_TAG = "oc:hdd";
+    private final int tier;
 
     public HardDiskDriveItem(final Properties properties) {
+        this(properties, 0);
+    }
+
+    public HardDiskDriveItem(final Properties properties, final int tier) {
         super(properties);
+        this.tier = Math.max(0, Math.min(2, tier));
     }
 
     @Override
@@ -30,11 +40,16 @@ public class HardDiskDriveItem extends Item implements DriverItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return createEnvironment(dataTag(stack), saved -> writeDataTag(stack, saved), host);
+        return createEnvironment(tier(stack), dataTag(stack), saved -> writeDataTag(stack, saved), host);
     }
 
     static ManagedEnvironment createEnvironment(final CompoundTag data, final Consumer<CompoundTag> saveData, final EnvironmentHost host) {
-        final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(TIER_ONE_CAPACITY);
+        return createEnvironment(0, data, saveData, host);
+    }
+
+    static ManagedEnvironment createEnvironment(final int tier, final CompoundTag data, final Consumer<CompoundTag> saveData, final EnvironmentHost host) {
+        final int clampedTier = Math.max(0, Math.min(2, tier));
+        final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(CAPACITIES[clampedTier]);
         if (fileSystem == null) {
             return null;
         }
@@ -55,7 +70,7 @@ public class HardDiskDriveItem extends Item implements DriverItem {
 
     @Override
     public int tier(final ItemStack stack) {
-        return 0;
+        return tier;
     }
 
     @Override

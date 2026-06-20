@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "M": {
+      "item": "neoopencomputers:memory_tier2"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "RDR",
+    "DMD",
+    "RDR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:memory_tier3"
+  }
+}
