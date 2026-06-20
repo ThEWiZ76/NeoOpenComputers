@@ -370,6 +370,28 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void higherMicrochipRecipesUseUpstreamHardmodeShapes() throws IOException {
+        JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.MICROCHIP_TIER2 + ".json"));
+        JsonObject tier3 = readJson(RECIPE_ROOT.resolve(ModContentIds.MICROCHIP_TIER3 + ".json"));
+        JsonObject tier2Keys = tier2.getAsJsonObject("key");
+        JsonObject tier3Keys = tier3.getAsJsonObject("key");
+
+        assertPattern(tier2, "GLG", "CQC", "GLG");
+        assertTag(tier2Keys, "G", "c:nuggets/gold");
+        assertItem(tier2Keys, "L", "minecraft:lapis_lazuli");
+        assertItem(tier2Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(tier2Keys, "Q", "minecraft:quartz");
+        assertResultCount(tier2, 1);
+
+        assertPattern(tier3, "RPR", "CDC", "RPR");
+        assertItem(tier3Keys, "R", "minecraft:glowstone_dust");
+        assertItem(tier3Keys, "P", "minecraft:comparator");
+        assertItem(tier3Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier3Keys, "D", "minecraft:diamond");
+        assertResultCount(tier3, 1);
+    }
+
+    @Test
     void capacitorRecipeUsesMaterialProgression() throws IOException {
         JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
 

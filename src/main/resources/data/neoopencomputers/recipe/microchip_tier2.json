@@ -2,20 +2,23 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "B": {
-      "item": "neoopencomputers:printed_circuit_board"
-    },
     "C": {
       "item": "neoopencomputers:microchip_tier1"
     },
     "G": {
       "tag": "c:nuggets/gold"
+    },
+    "L": {
+      "item": "minecraft:lapis_lazuli"
+    },
+    "Q": {
+      "item": "minecraft:quartz"
     }
   },
   "pattern": [
-    "GCG",
-    "CBC",
-    "GCG"
+    "GLG",
+    "CQC",
+    "GLG"
   ],
   "result": {
     "count": 1,
