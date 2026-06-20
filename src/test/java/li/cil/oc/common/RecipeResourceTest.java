@@ -285,6 +285,29 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void databaseUpgradeRecipesUseMaterialProgression() throws IOException {
+        JsonObject tier1 = recipeKeys(ModContentIds.DATABASE_UPGRADE_TIER1);
+        JsonObject tier2 = recipeKeys(ModContentIds.DATABASE_UPGRADE_TIER2);
+        JsonObject tier3 = recipeKeys(ModContentIds.DATABASE_UPGRADE_TIER3);
+
+        assertItem(tier1, "A", "neoopencomputers:" + ModContentIds.ANALYZER);
+        assertItem(tier1, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(tier1, "H", "neoopencomputers:" + ModContentIds.HDD_TIER1);
+        assertTag(tier1, "I", "c:ingots/iron");
+        assertItem(tier2, "A", "neoopencomputers:" + ModContentIds.ANALYZER);
+        assertItem(tier2, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier2, "H", "neoopencomputers:" + ModContentIds.HDD_TIER2);
+        assertTag(tier2, "I", "c:ingots/iron");
+        assertItem(tier3, "A", "neoopencomputers:" + ModContentIds.ANALYZER);
+        assertItem(tier3, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier3, "H", "neoopencomputers:" + ModContentIds.HDD_TIER3);
+        assertTag(tier3, "I", "c:ingots/iron");
+    }
+
+    @Test
     void blockDeviceRecipesUseMaterialProgression() throws IOException {
         JsonObject adapter = recipeKeys(ModContentIds.ADAPTER);
         JsonObject redstone = recipeKeys(ModContentIds.REDSTONE_IO);

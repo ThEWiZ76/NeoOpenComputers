@@ -2,20 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "D": {
-      "item": "minecraft:diamond"
+    "A": {
+      "item": "neoopencomputers:analyzer"
     },
-    "U": {
-      "item": "neoopencomputers:database_upgrade_tier2"
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "H": {
+      "item": "neoopencomputers:hdd_tier3"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "pattern": [
-    "DDD",
-    "RUR",
-    "DDD"
+    "IAI",
+    "CHC",
+    "IBI"
   ],
   "result": {
     "count": 1,
