@@ -4,8 +4,11 @@ import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -61,10 +64,45 @@ public class DiskDriveBlock extends HorizontalDirectionalBlock implements Entity
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockEntity(pos) instanceof DiskDriveBlockEntity diskDrive) {
+            if (player.isShiftKeyDown()) {
+                return removeDisk(diskDrive, player);
+            }
             player.openMenu(diskDrive);
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(
+        final ItemStack stack,
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final InteractionHand hand,
+        final BlockHitResult hitResult) {
+        if (level.getBlockEntity(pos) instanceof DiskDriveBlockEntity diskDrive &&
+            diskDrive.isEmpty() &&
+            diskDrive.canPlaceItem(DiskDriveBlockEntity.SLOT_FLOPPY, stack)) {
+            if (level.isClientSide) {
+                return ItemInteractionResult.SUCCESS;
+            }
+            diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, stack.split(1));
+            return ItemInteractionResult.CONSUME;
+        }
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+
+    private static InteractionResult removeDisk(final DiskDriveBlockEntity diskDrive, final Player player) {
+        final ItemStack removed = diskDrive.removeItemNoUpdate(DiskDriveBlockEntity.SLOT_FLOPPY);
+        if (removed.isEmpty()) {
+            return InteractionResult.PASS;
+        }
+        if (!player.addItem(removed)) {
+            player.drop(removed, false);
+        }
+        return InteractionResult.CONSUME;
     }
 
     @Override

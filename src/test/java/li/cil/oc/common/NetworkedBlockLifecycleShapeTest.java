@@ -5,9 +5,14 @@ import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.BlockHitResult;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
@@ -21,6 +26,21 @@ final class NetworkedBlockLifecycleShapeTest {
         assertNetworkLifecycleHooks(DiskDriveBlock.class);
         assertNetworkLifecycleHooks(ScreenBlock.class);
         assertNetworkLifecycleHooks(KeyboardBlock.class);
+    }
+
+    @Test
+    void diskDriveHandlesItemOnBlockInteraction() throws NoSuchMethodException {
+        Method useItemOn = DiskDriveBlock.class.getDeclaredMethod(
+            "useItemOn",
+            ItemStack.class,
+            BlockState.class,
+            Level.class,
+            BlockPos.class,
+            Player.class,
+            InteractionHand.class,
+            BlockHitResult.class);
+
+        assertEquals(ItemInteractionResult.class, useItemOn.getReturnType());
     }
 
     private static void assertNetworkLifecycleHooks(final Class<?> blockClass) throws NoSuchMethodException {
