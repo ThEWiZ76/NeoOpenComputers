@@ -46,6 +46,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private boolean foregroundFromPalette;
     private boolean backgroundFromPalette;
     private boolean precisionMode;
+    private boolean touchModeInverted;
     private boolean renderingEnabled = true;
     private final int[] palette = new int[16];
     private final TextBufferState buffer = new TextBufferState(DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -141,6 +142,21 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             }
         }
         return new Object[]{addresses.toArray(String[]::new)};
+    }
+
+    @Callback(direct = true, doc = "function():boolean -- Whether touch mode is inverted.")
+    public Object[] isTouchModeInverted(final Context context, final Arguments args) {
+        return new Object[]{touchModeInverted};
+    }
+
+    @Callback(doc = "function(value:boolean):boolean -- Sets whether to invert touch mode.")
+    public Object[] setTouchModeInverted(final Context context, final Arguments args) {
+        final boolean oldValue = touchModeInverted;
+        touchModeInverted = args.checkBoolean(0);
+        if (touchModeInverted != oldValue) {
+            setChanged();
+        }
+        return new Object[]{oldValue};
     }
 
     @Callback(direct = true, doc = "function():boolean -- Returns whether the screen is in high precision mode.")
@@ -472,6 +488,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         foregroundColor = nbt.getInt("foreground");
         backgroundColor = nbt.getInt("background");
         precisionMode = nbt.getBoolean("precisionMode");
+        touchModeInverted = nbt.getBoolean("touchModeInverted");
         renderingEnabled = !nbt.contains("renderingEnabled") || nbt.getBoolean("renderingEnabled");
         if (nbt.contains(TAG_BUFFER)) {
             buffer.load(nbt.getCompound(TAG_BUFFER));
@@ -489,6 +506,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         nbt.putInt("foreground", foregroundColor);
         nbt.putInt("background", backgroundColor);
         nbt.putBoolean("precisionMode", precisionMode);
+        nbt.putBoolean("touchModeInverted", touchModeInverted);
         nbt.putBoolean("renderingEnabled", renderingEnabled);
         final CompoundTag bufferTag = new CompoundTag();
         buffer.save(bufferTag);

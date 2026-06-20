@@ -29,6 +29,8 @@ final class ScreenBlockEntityTest {
         assertCallback("turnOff");
         assertCallback("getAspectRatio");
         assertCallback("getKeyboards");
+        assertCallback("isTouchModeInverted");
+        assertCallback("setTouchModeInverted");
         assertCallback("isPrecise");
         assertCallback("setPrecise");
     }
@@ -45,6 +47,17 @@ final class ScreenBlockEntityTest {
     }
 
     @Test
+    void togglesTouchModeInversion() throws Exception {
+        ScreenBlockEntity screen = allocateScreen();
+
+        assertArrayEquals(new Object[]{false}, screen.isTouchModeInverted(null, new TestArguments()));
+        assertArrayEquals(new Object[]{false}, screen.setTouchModeInverted(null, new TestArguments(true)));
+        assertArrayEquals(new Object[]{true}, screen.isTouchModeInverted(null, new TestArguments()));
+        assertArrayEquals(new Object[]{true}, screen.setTouchModeInverted(null, new TestArguments(false)));
+        assertArrayEquals(new Object[]{false}, screen.isTouchModeInverted(null, new TestArguments()));
+    }
+
+    @Test
     void persistsPreciseMode() throws Exception {
         OpenComputersApi.initialize();
         ScreenBlockEntity saved = allocateScreen();
@@ -58,6 +71,22 @@ final class ScreenBlockEntityTest {
         loaded.load(tag);
 
         assertArrayEquals(new Object[]{true}, loaded.isPrecise(null, new TestArguments()));
+    }
+
+    @Test
+    void persistsTouchModeInversion() throws Exception {
+        OpenComputersApi.initialize();
+        ScreenBlockEntity saved = allocateScreen();
+        initializeBuffer(saved);
+        saved.setTouchModeInverted(null, new TestArguments(true));
+        CompoundTag tag = new CompoundTag();
+
+        saved.save(tag);
+        ScreenBlockEntity loaded = allocateScreen();
+        initializeBuffer(loaded);
+        loaded.load(tag);
+
+        assertArrayEquals(new Object[]{true}, loaded.isTouchModeInverted(null, new TestArguments()));
     }
 
     @Test
