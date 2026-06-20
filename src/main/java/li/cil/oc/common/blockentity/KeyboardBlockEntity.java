@@ -9,6 +9,7 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.component.KeyboardEnvironment;
 import li.cil.oc.common.component.KeyboardInputState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -85,6 +86,18 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard, Device
             node().save(nodeTag);
         }
         nbt.put(TAG_NODE, nodeTag);
+    }
+
+    @Override
+    protected void loadAdditional(final CompoundTag nbt, final HolderLookup.Provider registries) {
+        super.loadAdditional(nbt, registries);
+        load(nbt);
+    }
+
+    @Override
+    protected void saveAdditional(final CompoundTag nbt, final HolderLookup.Provider registries) {
+        super.saveAdditional(nbt, registries);
+        save(nbt);
     }
 
     @Override
