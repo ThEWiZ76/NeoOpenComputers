@@ -1,9 +1,11 @@
 package li.cil.oc.client;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModMenus;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
@@ -24,5 +26,10 @@ public final class NeoOpenComputersClient {
     static void registerMenuScreens(final RegisterMenuScreensEvent event) {
         event.register(ModMenus.COMPUTER_CASE.get(), ComputerCaseScreen::new);
         event.register(ModMenus.DISK_DRIVE.get(), DiskDriveScreen::new);
+    }
+
+    @SubscribeEvent
+    static void registerEntityRenderers(final EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(ModBlockEntities.SCREEN.get(), ScreenBlockEntityRenderer::new);
     }
 }

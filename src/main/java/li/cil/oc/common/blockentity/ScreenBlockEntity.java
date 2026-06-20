@@ -13,7 +13,11 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.component.ScreenEnvironment;
 import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -497,6 +501,12 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     }
 
     @Override
+    protected void loadAdditional(final CompoundTag nbt, final HolderLookup.Provider registries) {
+        super.loadAdditional(nbt, registries);
+        load(nbt);
+    }
+
+    @Override
     public void save(final CompoundTag nbt) {
         saveNode(nbt);
         nbt.putBoolean("powered", powered);
@@ -512,6 +522,24 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         final CompoundTag bufferTag = new CompoundTag();
         buffer.save(bufferTag);
         nbt.put(TAG_BUFFER, bufferTag);
+    }
+
+    @Override
+    protected void saveAdditional(final CompoundTag nbt, final HolderLookup.Provider registries) {
+        super.saveAdditional(nbt, registries);
+        save(nbt);
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        save(tag);
+        return tag;
     }
 
     private void saveNode(final CompoundTag nbt) {
@@ -563,5 +591,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private void markChangedOnServerThread() {
         pendingServerThreadChangeMark = false;
         super.setChanged();
+        if (level != null && !level.isClientSide) {
+            final BlockState state = getBlockState();
+            level.sendBlockUpdated(getBlockPos(), state, state, 3);
+        }
     }
 }

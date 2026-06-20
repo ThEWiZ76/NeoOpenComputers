@@ -9,6 +9,7 @@ import li.cil.oc.common.component.KeyboardEnvironment;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.HolderLookup;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
@@ -103,6 +104,14 @@ final class ScreenBlockEntityTest {
 
         assertEquals(1, result.length);
         assertArrayEquals(new String[]{keyboard.node.address()}, (String[]) result[0]);
+    }
+
+    @Test
+    void declaresClientSyncHooks() throws NoSuchMethodException {
+        assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("getUpdatePacket").getDeclaringClass());
+        assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("getUpdateTag", HolderLookup.Provider.class).getDeclaringClass());
+        assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("loadAdditional", CompoundTag.class, HolderLookup.Provider.class).getDeclaringClass());
+        assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("saveAdditional", CompoundTag.class, HolderLookup.Provider.class).getDeclaringClass());
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
