@@ -63,7 +63,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
     public Object[] getSlotMaxStackSize(final Context context, final Arguments arguments) {
         final Container container = container(arguments.checkInteger(0));
         final ItemStack stack = container.getItem(checkSlot(container, arguments.checkInteger(1)));
-        return new Object[]{stack.isEmpty() ? container.getMaxStackSize() : Math.min(container.getMaxStackSize(), stack.getMaxStackSize())};
+        return new Object[]{stack.isEmpty() ? 0 : Math.min(container.getMaxStackSize(), stack.getMaxStackSize())};
     }
 
     @Callback(doc = "function(side:number, slotA:number, slotB:number):boolean -- Compare two item stacks in the specified inventory.")

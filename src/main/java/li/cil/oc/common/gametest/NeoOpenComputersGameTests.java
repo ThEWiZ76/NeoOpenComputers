@@ -295,6 +295,7 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "getInventorySize", new Object[]{east}, 27);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{east, 1}, 4);
                 assertInvokeResult(helper, computer, address, "getSlotMaxStackSize", new Object[]{east, 1}, 64);
+                assertInvokeResult(helper, computer, address, "getSlotMaxStackSize", new Object[]{east, 6}, 0);
                 assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{east, 1, 2}, true);
                 assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{east, 1, 3}, false);
                 assertInvokeResult(helper, computer, address, "areStacksEquivalent", new Object[]{east, 4, 5}, true);
