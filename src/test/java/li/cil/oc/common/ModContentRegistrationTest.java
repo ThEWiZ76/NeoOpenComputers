@@ -201,6 +201,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void geolyzerBlockIdIsStable() {
+        assertEquals("geolyzer", ModContentIds.GEOLYZER);
+    }
+
+    @Test
+    void geolyzerBlockEntityIdIsStable() {
+        assertEquals("geolyzer", ModContentIds.GEOLYZER_BLOCK_ENTITY);
+    }
+
+    @Test
     void motionSensorBlockIdIsStable() {
         assertEquals("motion_sensor", ModContentIds.MOTION_SENSOR);
     }

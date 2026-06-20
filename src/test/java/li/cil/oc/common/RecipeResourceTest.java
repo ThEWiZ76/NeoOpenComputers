@@ -37,6 +37,7 @@ final class RecipeResourceTest {
             ModContentIds.DISK_DRIVE,
             ModContentIds.EEPROM,
             ModContentIds.FLOPPY,
+            ModContentIds.GEOLYZER,
             ModContentIds.GRAPHICS_CARD_TIER1,
             ModContentIds.GRAPHICS_CARD_TIER2,
             ModContentIds.GRAPHICS_CARD_TIER3,

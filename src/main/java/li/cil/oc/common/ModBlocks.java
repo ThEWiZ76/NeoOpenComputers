@@ -5,6 +5,7 @@ import li.cil.oc.common.block.AdapterBlock;
 import li.cil.oc.common.block.CableBlock;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
+import li.cil.oc.common.block.GeolyzerBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
 import li.cil.oc.common.block.ScreenBlock;
@@ -41,6 +42,10 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> DISK_DRIVE = BLOCKS.register(
         ModContentIds.DISK_DRIVE,
         () -> new DiskDriveBlock(diskDriveProperties()));
+
+    public static final DeferredBlock<Block> GEOLYZER = BLOCKS.register(
+        ModContentIds.GEOLYZER,
+        () -> new GeolyzerBlock(geolyzerProperties()));
 
     public static final DeferredBlock<Block> SCREEN_TIER1 = BLOCKS.register(
         ModContentIds.SCREEN_TIER1,
@@ -97,6 +102,12 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties geolyzerProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
+            .strength(2.0F, 6.0F);
     }
 
     private static BlockBehaviour.Properties keyboardProperties() {

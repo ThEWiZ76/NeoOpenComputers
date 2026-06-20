@@ -21,6 +21,7 @@ final class ModContentCatalogTest {
             null, null,
             null, null,
             null, null,
+            null, null,
             null,
             null, null, null,
             null, null, null,
@@ -55,6 +56,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_SCREEN_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_SCREEN_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_SCREEN_TIER3));
+        assertNotNull(registry.get(ModContentIds.GEOLYZER));
         assertNotNull(registry.get(ModContentIds.KEYBOARD));
         assertNotNull(registry.get(ModContentIds.MOTION_SENSOR));
         assertNotNull(registry.get(ModContentIds.CPU_TIER1));
@@ -126,6 +128,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_SCREEN_TIER1, registry.get(ModContentCatalog.COMPAT_SCREEN_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_SCREEN_TIER2, registry.get(ModContentCatalog.COMPAT_SCREEN_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_SCREEN_TIER3, registry.get(ModContentCatalog.COMPAT_SCREEN_TIER3).name());
+        assertEquals(ModContentIds.GEOLYZER, registry.get(ModContentIds.GEOLYZER).name());
         assertEquals(ModContentIds.KEYBOARD, registry.get(ModContentIds.KEYBOARD).name());
         assertEquals(ModContentIds.MOTION_SENSOR, registry.get(ModContentIds.MOTION_SENSOR).name());
         assertEquals(ModContentIds.CPU_TIER1, registry.get(ModContentIds.CPU_TIER1).name());

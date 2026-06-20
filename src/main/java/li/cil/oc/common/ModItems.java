@@ -48,6 +48,10 @@ public final class ModItems {
         ModContentIds.DISK_DRIVE,
         ModBlocks.DISK_DRIVE);
 
+    public static final DeferredItem<BlockItem> GEOLYZER = ITEMS.registerSimpleBlockItem(
+        ModContentIds.GEOLYZER,
+        ModBlocks.GEOLYZER);
+
     public static final DeferredItem<CpuItem> CPU_TIER1 = ITEMS.register(
         ModContentIds.CPU_TIER1,
         () -> new CpuItem(new Item.Properties(), 0));

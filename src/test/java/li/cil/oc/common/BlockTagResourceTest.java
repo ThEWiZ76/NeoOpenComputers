@@ -30,7 +30,9 @@ final class BlockTagResourceTest {
             ModContentIds.COMPUTER_CASE_TIER2,
             ModContentIds.COMPUTER_CASE_TIER3,
             ModContentIds.DISK_DRIVE,
+            ModContentIds.GEOLYZER,
             ModContentIds.KEYBOARD,
+            ModContentIds.MOTION_SENSOR,
             ModContentIds.SCREEN_TIER1,
             ModContentIds.SCREEN_TIER2,
             ModContentIds.SCREEN_TIER3);

@@ -5,6 +5,7 @@ import li.cil.oc.common.blockentity.AdapterBlockEntity;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
+import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
@@ -41,6 +42,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.DISK_DRIVE_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(DiskDriveBlockEntity::new, ModBlocks.DISK_DRIVE.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GeolyzerBlockEntity>> GEOLYZER =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.GEOLYZER_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(GeolyzerBlockEntity::new, ModBlocks.GEOLYZER.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ScreenBlockEntity>> SCREEN =
         BLOCK_ENTITY_TYPES.register(

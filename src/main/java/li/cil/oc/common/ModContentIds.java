@@ -24,6 +24,8 @@ public final class ModContentIds {
     public static final String DISK_DRIVE_MENU = "disk_drive";
     public static final String EEPROM = "eeprom";
     public static final String FLOPPY = "floppy";
+    public static final String GEOLYZER = "geolyzer";
+    public static final String GEOLYZER_BLOCK_ENTITY = "geolyzer";
     public static final String GRAPHICS_CARD_TIER1 = "graphics_card_tier1";
     public static final String GRAPHICS_CARD_TIER2 = "graphics_card_tier2";
     public static final String GRAPHICS_CARD_TIER3 = "graphics_card_tier3";

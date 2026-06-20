@@ -64,6 +64,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.COMPUTER_CASE_TIER2.get();
         ModBlocks.COMPUTER_CASE_TIER3.get();
         ModBlocks.DISK_DRIVE.get();
+        ModBlocks.GEOLYZER.get();
         ModBlocks.SCREEN_TIER1.get();
         ModBlocks.SCREEN_TIER2.get();
         ModBlocks.SCREEN_TIER3.get();
@@ -82,6 +83,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.DATABASE_UPGRADE_TIER3.get();
         ModItems.EEPROM.get();
         ModItems.FLOPPY.get();
+        ModItems.GEOLYZER.get();
         ModItems.GRAPHICS_CARD_TIER1.get();
         ModItems.GRAPHICS_CARD_TIER2.get();
         ModItems.GRAPHICS_CARD_TIER3.get();
