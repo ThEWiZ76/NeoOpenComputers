@@ -32,6 +32,8 @@ import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.item.TabletItem;
+import li.cil.oc.common.template.AssemblerTemplate;
+import li.cil.oc.common.template.AssemblerTemplates;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -316,6 +318,47 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_CONTAINER_START).isEmpty(), "Assembler did not consume container slot");
         helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_COMPONENT_START).isEmpty(), "Assembler did not consume component slot");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void assemblerBlockUsesRegisteredTemplates(final GameTestHelper helper) {
+        try (AssemblerTemplates.Registration ignored = AssemblerTemplates.register(new AssemblerTemplate() {
+            @Override
+            public String name() {
+                return "test";
+            }
+
+            @Override
+            public boolean matches(final ItemStack stack) {
+                return stack.is(Items.DIAMOND);
+            }
+
+            @Override
+            public boolean validate(final AssemblerBlockEntity assembler) {
+                return true;
+            }
+
+            @Override
+            public boolean canPlaceItem(final AssemblerBlockEntity assembler, final int slot, final ItemStack stack) {
+                return slot == AssemblerBlockEntity.SLOT_TEMPLATE && matches(stack);
+            }
+
+            @Override
+            public ItemStack assemble(final AssemblerBlockEntity assembler) {
+                return new ItemStack(Items.EMERALD);
+            }
+        })) {
+            final BlockPos pos = new BlockPos(1, 1, 1);
+            helper.setBlock(pos, ModBlocks.ASSEMBLER.get());
+            final AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
+
+            assembler.setItem(AssemblerBlockEntity.SLOT_TEMPLATE, new ItemStack(Items.DIAMOND));
+
+            helper.assertTrue(assembler.canAssemble(), "Custom assembler template did not validate");
+            helper.assertTrue(assembler.start(true), "Custom assembler template did not start");
+            helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).is(Items.EMERALD), "Custom assembler template did not produce output");
+            helper.succeed();
+        }
     }
 
     @GameTest(template = "empty")

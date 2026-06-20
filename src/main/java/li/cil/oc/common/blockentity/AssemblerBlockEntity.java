@@ -1,10 +1,7 @@
 package li.cil.oc.common.blockentity;
 
-import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
-import li.cil.oc.api.driver.DriverItem;
-import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -15,10 +12,9 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
-import li.cil.oc.common.ModItems;
 import li.cil.oc.common.OpenComputersApi;
-import li.cil.oc.common.item.TabletCaseItem;
-import li.cil.oc.common.item.TabletItem;
+import li.cil.oc.common.template.AssemblerTemplate;
+import li.cil.oc.common.template.AssemblerTemplates;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -32,7 +28,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo {
@@ -68,7 +63,7 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     public boolean canAssemble() {
-        return !isAssembling() && isTabletCase(items.get(SLOT_TEMPLATE)) && hasCpu() && hasMemory();
+        return !isAssembling() && selectedTemplate().filter(template -> template.validate(this)).isPresent();
     }
 
     public boolean isAssembling() {
@@ -87,13 +82,15 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
             return false;
         }
 
-        final ItemStack template = items.get(SLOT_TEMPLATE).copy();
-        final ItemStack container = firstStoredStack(SLOT_CONTAINER_START, CONTAINER_SLOT_COUNT);
-        final ItemStack[] components = componentStacks();
+        final AssemblerTemplate template = selectedTemplate().orElse(null);
+        if (template == null || !template.validate(this)) {
+            return false;
+        }
+        final ItemStack output = template.assemble(this);
+        final double energyRequired = template.energyRequired(this);
         clearContent();
-        final ItemStack output = ModItems.TABLET.get().assembleFromCase(template, container, components);
         items.set(SLOT_TEMPLATE, output);
-        totalRequiredEnergy = finishImmediately ? 0D : 1D;
+        totalRequiredEnergy = finishImmediately ? 0D : energyRequired;
         requiredEnergy = 0D;
         setChanged();
         return true;
@@ -247,23 +244,9 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
             return false;
         }
         if (slot == SLOT_TEMPLATE) {
-            return isTabletCase(stack);
+            return AssemblerTemplates.select(stack).isPresent();
         }
-        final DriverItem driver = Driver.driverFor(stack);
-        if (driver == null) {
-            return false;
-        }
-        if (isContainerSlot(slot)) {
-            return driver instanceof li.cil.oc.api.driver.item.Container;
-        }
-        if (isUpgradeSlot(slot)) {
-            return Slot.Upgrade.equals(driver.slot(stack));
-        }
-        if (isComponentSlot(slot)) {
-            final String driverSlot = driver.slot(stack);
-            return !Slot.Container.equals(driverSlot) && !Slot.Upgrade.equals(driverSlot);
-        }
-        return false;
+        return selectedTemplate().filter(template -> template.canPlaceItem(this, slot, stack)).isPresent();
     }
 
     @Override
@@ -332,64 +315,12 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
         removeNode();
     }
 
-    private ItemStack[] componentStacks() {
-        final ArrayList<ItemStack> stacks = new ArrayList<>();
-        for (int slot = SLOT_COMPONENT_START; slot < SLOT_COMPONENT_START + COMPONENT_SLOT_COUNT; slot++) {
-            final ItemStack stack = items.get(slot);
-            if (!stack.isEmpty()) {
-                stacks.add(stack.copy());
-            }
-        }
-        return stacks.toArray(ItemStack[]::new);
-    }
-
-    private ItemStack firstStoredStack(final int start, final int count) {
-        for (int slot = start; slot < start + count; slot++) {
-            final ItemStack stack = items.get(slot);
-            if (!stack.isEmpty()) {
-                return stack.copy();
-            }
-        }
-        return ItemStack.EMPTY;
-    }
-
-    private boolean hasCpu() {
-        return hasDriverSlot(Slot.CPU);
-    }
-
-    private boolean hasMemory() {
-        return hasDriverSlot(Slot.Memory);
-    }
-
-    private boolean hasDriverSlot(final String expectedSlot) {
-        for (int slot = SLOT_COMPONENT_START; slot < SLOT_COMPONENT_START + COMPONENT_SLOT_COUNT; slot++) {
-            final ItemStack stack = items.get(slot);
-            final DriverItem driver = Driver.driverFor(stack);
-            if (driver != null && expectedSlot.equals(driver.slot(stack))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isTabletCase(final ItemStack stack) {
-        return stack.getItem() instanceof TabletCaseItem;
+    private java.util.Optional<AssemblerTemplate> selectedTemplate() {
+        return AssemblerTemplates.select(items.get(SLOT_TEMPLATE));
     }
 
     private static boolean isValidSlot(final int slot) {
         return slot >= 0 && slot < CONTAINER_SIZE;
-    }
-
-    private static boolean isContainerSlot(final int slot) {
-        return slot >= SLOT_CONTAINER_START && slot < SLOT_CONTAINER_START + CONTAINER_SLOT_COUNT;
-    }
-
-    private static boolean isUpgradeSlot(final int slot) {
-        return slot >= SLOT_UPGRADE_START && slot < SLOT_UPGRADE_START + UPGRADE_SLOT_COUNT;
-    }
-
-    private static boolean isComponentSlot(final int slot) {
-        return slot >= SLOT_COMPONENT_START && slot < SLOT_COMPONENT_START + COMPONENT_SLOT_COUNT;
     }
 
     private static Node createNode(final ManagedEnvironment host) {
