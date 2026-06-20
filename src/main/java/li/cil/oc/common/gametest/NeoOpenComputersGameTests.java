@@ -913,6 +913,7 @@ public final class NeoOpenComputersGameTests {
         assertScreenItemDriver(helper, new ItemStack(ModItems.SCREEN_TIER2.get()), 1, 80, 25, TextBuffer.ColorDepth.FourBit);
         assertScreenItemDriver(helper, new ItemStack(ModItems.SCREEN_TIER3.get()), 2, 160, 50, TextBuffer.ColorDepth.EightBit);
         assertKeyboardItemDriver(helper, new ItemStack(ModItems.KEYBOARD.get()));
+        assertMotionSensorItemDriver(helper, new ItemStack(ModItems.MOTION_SENSOR.get()));
         helper.succeed();
     }
 
@@ -2459,6 +2460,24 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment instanceof DeviceInfo, "Keyboard item environment lacks device info");
         final DeviceInfo info = (DeviceInfo) environment;
         helper.assertTrue(DeviceInfo.DeviceClass.Input.equals(info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Class)), "Keyboard item device class mismatch");
+    }
+
+    private static void assertMotionSensorItemDriver(final GameTestHelper helper, final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        helper.assertTrue(Slot.Upgrade.equals(driver.slot(stack)), "Expected motion sensor item upgrade slot for " + stack);
+        helper.assertTrue(driver.tier(stack) == 2, "Expected motion sensor tier 2 for " + stack + " but got " + driver.tier(stack));
+        final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticEnvironmentHost(helper));
+        helper.assertTrue(environment != null, "Motion sensor item did not create environment for " + stack);
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Motion sensor item has no component node for " + stack);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("motion_sensor".equals(component.name()), "Motion sensor item component name mismatch for " + stack);
+        final Object[] sensitivity = invokeComponent(helper, component, "getSensitivity");
+        helper.assertTrue(sensitivity.length == 1 && Double.valueOf(0.4D).equals(sensitivity[0]), "Motion sensor default sensitivity mismatch");
+        final Object[] oldSensitivity = invokeComponent(helper, component, "setSensitivity", 0.1D);
+        helper.assertTrue(oldSensitivity.length == 1 && Double.valueOf(0.4D).equals(oldSensitivity[0]), "Motion sensor did not return old sensitivity");
+        final Object[] clampedSensitivity = invokeComponent(helper, component, "getSensitivity");
+        helper.assertTrue(clampedSensitivity.length == 1 && Double.valueOf(0.2D).equals(clampedSensitivity[0]), "Motion sensor did not clamp sensitivity");
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {
