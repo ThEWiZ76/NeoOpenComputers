@@ -252,6 +252,37 @@ final class RecipeResourceTest {
         assertItem(tier3, "X", "minecraft:diamond");
     }
 
+    @Test
+    void storageRecipesUseMaterialProgression() throws IOException {
+        JsonObject eeprom = recipeKeys(ModContentIds.EEPROM);
+        JsonObject floppy = recipeKeys(ModContentIds.FLOPPY);
+        JsonObject drive = recipeKeys(ModContentIds.DISK_DRIVE);
+        JsonObject hdd1 = recipeKeys(ModContentIds.HDD_TIER1);
+        JsonObject hdd2 = recipeKeys(ModContentIds.HDD_TIER2);
+        JsonObject hdd3 = recipeKeys(ModContentIds.HDD_TIER3);
+
+        assertItem(eeprom, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(eeprom, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(eeprom, "X", "minecraft:redstone_torch");
+        assertTag(eeprom, "G", "c:nuggets/gold");
+        assertItem(floppy, "B", "neoopencomputers:" + ModContentIds.CIRCUIT_BOARD);
+        assertItem(floppy, "D", "neoopencomputers:" + ModContentIds.DISK_PLATTER);
+        assertItem(drive, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(drive, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(drive, "P", "minecraft:piston");
+        assertItem(hdd1, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(hdd1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(hdd1, "D", "neoopencomputers:" + ModContentIds.DISK_PLATTER);
+        assertItem(hdd1, "P", "minecraft:piston");
+        assertItem(hdd2, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(hdd2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(hdd2, "H", "neoopencomputers:" + ModContentIds.HDD_TIER1);
+        assertItem(hdd3, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(hdd3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(hdd3, "H", "neoopencomputers:" + ModContentIds.HDD_TIER2);
+        assertItem(hdd3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
+    }
+
     private static JsonObject readJson(final Path path) throws IOException {
         try (Reader reader = Files.newBufferedReader(path)) {
             JsonElement element = JsonParser.parseReader(reader);

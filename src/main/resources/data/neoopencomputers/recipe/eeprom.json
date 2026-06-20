@@ -2,20 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
     "G": {
-      "tag": "c:ingots/gold"
+      "tag": "c:nuggets/gold"
     },
     "P": {
       "item": "minecraft:paper"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "T": {
+      "item": "neoopencomputers:transistor"
+    },
+    "X": {
+      "item": "minecraft:redstone_torch"
     }
   },
   "pattern": [
-    " R ",
-    "GPG",
-    " R "
+    "GTG",
+    "PCP",
+    "GXG"
   ],
   "result": {
     "count": 1,
