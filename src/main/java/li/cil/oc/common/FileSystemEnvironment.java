@@ -102,7 +102,11 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
 
     @Callback(direct = true, doc = "function():number -- The overall capacity of the file system, in bytes.")
     public Object[] spaceTotal(final Context context, final Arguments arguments) {
-        return new Object[]{fileSystem.spaceTotal()};
+        final long space = fileSystem.spaceTotal();
+        if (space < 0) {
+            return new Object[]{Double.POSITIVE_INFINITY};
+        }
+        return new Object[]{space};
     }
 
     @Callback(direct = true, doc = "function():number -- The currently used capacity of the file system, in bytes.")

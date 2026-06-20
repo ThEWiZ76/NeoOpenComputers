@@ -177,6 +177,16 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentReportsInfiniteCapacityForUnlimitedFileSystems() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(-1);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+
+        assertArrayEquals(new Object[]{Double.POSITIVE_INFINITY}, component.invoke("spaceTotal", null));
+    }
+
+    @Test
     void managedFileSystemEnvironmentExposesLabelCallbacks() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(256);
