@@ -2,20 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "A": {
-      "item": "neoopencomputers:alu"
-    },
     "C": {
-      "item": "neoopencomputers:microchip_tier1"
+      "item": "minecraft:clock"
+    },
+    "D": {
+      "item": "minecraft:redstone"
+    },
+    "G": {
+      "tag": "c:nuggets/gold"
     },
     "R": {
-      "item": "minecraft:redstone"
+      "item": "minecraft:redstone_torch"
+    },
+    "T": {
+      "item": "neoopencomputers:transistor"
     }
   },
   "pattern": [
-    "CRC",
-    "RAR",
-    "CRC"
+    "GRG",
+    "TCT",
+    "GDG"
   ],
   "result": {
     "count": 1,

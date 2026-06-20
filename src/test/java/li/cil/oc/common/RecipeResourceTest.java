@@ -392,6 +392,30 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void processorMaterialRecipesUseUpstreamHardmodeShapes() throws IOException {
+        JsonObject alu = readJson(RECIPE_ROOT.resolve(ModContentIds.ALU + ".json"));
+        JsonObject controlUnit = readJson(RECIPE_ROOT.resolve(ModContentIds.CONTROL_UNIT + ".json"));
+        JsonObject aluKeys = alu.getAsJsonObject("key");
+        JsonObject controlUnitKeys = controlUnit.getAsJsonObject("key");
+
+        assertPattern(alu, "PRP", "TTT", "IDI");
+        assertItem(aluKeys, "P", "minecraft:repeater");
+        assertItem(aluKeys, "R", "minecraft:redstone_torch");
+        assertItem(aluKeys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertTag(aluKeys, "I", "c:nuggets/iron");
+        assertItem(aluKeys, "D", "minecraft:redstone");
+        assertResultCount(alu, 1);
+
+        assertPattern(controlUnit, "GRG", "TCT", "GDG");
+        assertTag(controlUnitKeys, "G", "c:nuggets/gold");
+        assertItem(controlUnitKeys, "R", "minecraft:redstone_torch");
+        assertItem(controlUnitKeys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(controlUnitKeys, "C", "minecraft:clock");
+        assertItem(controlUnitKeys, "D", "minecraft:redstone");
+        assertResultCount(controlUnit, 1);
+    }
+
+    @Test
     void capacitorRecipeUsesMaterialProgression() throws IOException {
         JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
 
