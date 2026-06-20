@@ -3,19 +3,25 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "neoopencomputers:upgrade_container_tier2"
+      "item": "neoopencomputers:microchip_tier2"
     },
-    "D": {
-      "item": "minecraft:diamond"
+    "I": {
+      "tag": "c:ingots/gold"
     },
-    "L": {
-      "item": "minecraft:lapis_lazuli"
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "H": {
+      "item": "minecraft:chest"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "pattern": [
-    "DLD",
-    "LCL",
-    "DLD"
+    "ICI",
+    "PH ",
+    "IBI"
   ],
   "result": {
     "count": 1,

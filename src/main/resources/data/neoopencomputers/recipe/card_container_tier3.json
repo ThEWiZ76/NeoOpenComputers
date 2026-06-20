@@ -3,19 +3,25 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "neoopencomputers:card_container_tier2"
+      "item": "neoopencomputers:microchip_tier2"
     },
-    "D": {
-      "item": "minecraft:diamond"
+    "I": {
+      "tag": "c:ingots/gold"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "H": {
+      "item": "minecraft:chest"
+    },
+    "B": {
+      "item": "neoopencomputers:card"
     }
   },
   "pattern": [
-    "DRD",
-    "RCR",
-    "DRD"
+    "ICI",
+    "PH ",
+    "IBI"
   ],
   "result": {
     "count": 1,

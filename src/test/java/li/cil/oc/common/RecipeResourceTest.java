@@ -327,6 +327,23 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void containerRecipesUseDirectUpstreamMaterials() throws IOException {
+        JsonObject card1 = recipeKeys(ModContentIds.CARD_CONTAINER_TIER1);
+        JsonObject card2 = recipeKeys(ModContentIds.CARD_CONTAINER_TIER2);
+        JsonObject card3 = recipeKeys(ModContentIds.CARD_CONTAINER_TIER3);
+        JsonObject upgrade1 = recipeKeys(ModContentIds.UPGRADE_CONTAINER_TIER1);
+        JsonObject upgrade2 = recipeKeys(ModContentIds.UPGRADE_CONTAINER_TIER2);
+        JsonObject upgrade3 = recipeKeys(ModContentIds.UPGRADE_CONTAINER_TIER3);
+
+        assertContainerRecipe(card1, ModContentIds.MICROCHIP_TIER1, ModContentIds.CARD, "c:ingots/iron");
+        assertContainerRecipe(card2, ModContentIds.MICROCHIP_TIER2, ModContentIds.CARD, "c:ingots/iron");
+        assertContainerRecipe(card3, ModContentIds.MICROCHIP_TIER2, ModContentIds.CARD, "c:ingots/gold");
+        assertContainerRecipe(upgrade1, ModContentIds.MICROCHIP_TIER1, ModContentIds.PRINTED_CIRCUIT_BOARD, "c:ingots/iron");
+        assertContainerRecipe(upgrade2, ModContentIds.MICROCHIP_TIER2, ModContentIds.PRINTED_CIRCUIT_BOARD, "c:ingots/iron");
+        assertContainerRecipe(upgrade3, ModContentIds.MICROCHIP_TIER2, ModContentIds.PRINTED_CIRCUIT_BOARD, "c:ingots/gold");
+    }
+
+    @Test
     void blockDeviceRecipesUseMaterialProgression() throws IOException {
         JsonObject adapter = recipeKeys(ModContentIds.ADAPTER);
         JsonObject redstone = recipeKeys(ModContentIds.REDSTONE_IO);
@@ -369,5 +386,13 @@ final class RecipeResourceTest {
 
     private static void assertTag(final JsonObject keys, final String key, final String tag) {
         assertEquals(tag, keys.getAsJsonObject(key).get("tag").getAsString());
+    }
+
+    private static void assertContainerRecipe(final JsonObject keys, final String chip, final String base, final String ingotTag) {
+        assertTag(keys, "I", ingotTag);
+        assertItem(keys, "C", "neoopencomputers:" + chip);
+        assertItem(keys, "P", "minecraft:piston");
+        assertItem(keys, "H", "minecraft:chest");
+        assertItem(keys, "B", "neoopencomputers:" + base);
     }
 }

@@ -3,19 +3,25 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "minecraft:chest"
+      "item": "neoopencomputers:microchip_tier1"
     },
     "I": {
-      "item": "minecraft:iron_ingot"
+      "tag": "c:ingots/iron"
     },
-    "L": {
-      "item": "minecraft:lapis_lazuli"
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "H": {
+      "item": "minecraft:chest"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "pattern": [
-    "ILI",
-    "LCL",
-    "ILI"
+    "ICI",
+    "PH ",
+    "IBI"
   ],
   "result": {
     "count": 1,

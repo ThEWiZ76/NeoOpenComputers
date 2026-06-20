@@ -3,19 +3,25 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "neoopencomputers:upgrade_container_tier1"
+      "item": "neoopencomputers:microchip_tier2"
     },
-    "G": {
-      "item": "minecraft:gold_ingot"
+    "I": {
+      "tag": "c:ingots/iron"
     },
-    "L": {
-      "item": "minecraft:lapis_lazuli"
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "H": {
+      "item": "minecraft:chest"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "pattern": [
-    "GLG",
-    "LCL",
-    "GLG"
+    "ICI",
+    "PH ",
+    "IBI"
   ],
   "result": {
     "count": 1,

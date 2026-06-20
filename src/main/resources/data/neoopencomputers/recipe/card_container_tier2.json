@@ -3,19 +3,25 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "neoopencomputers:card_container_tier1"
+      "item": "neoopencomputers:microchip_tier2"
     },
-    "G": {
-      "item": "minecraft:gold_ingot"
+    "I": {
+      "tag": "c:ingots/iron"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "H": {
+      "item": "minecraft:chest"
+    },
+    "B": {
+      "item": "neoopencomputers:card"
     }
   },
   "pattern": [
-    "GRG",
-    "RCR",
-    "GRG"
+    "ICI",
+    "PH ",
+    "IBI"
   ],
   "result": {
     "count": 1,
