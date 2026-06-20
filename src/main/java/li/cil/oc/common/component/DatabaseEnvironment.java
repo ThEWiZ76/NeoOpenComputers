@@ -19,6 +19,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class DatabaseEnvironment extends AbstractManagedEnvironment implements Database, DeviceInfo {
     private static final String COMPONENT_NAME = "database";
@@ -27,9 +28,15 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
     private static final String TAG_STACK = "stack";
 
     private final ItemStack[] items;
+    private final Consumer<CompoundTag> saveData;
 
     public DatabaseEnvironment(final int slots) {
+        this(slots, null);
+    }
+
+    public DatabaseEnvironment(final int slots, final Consumer<CompoundTag> saveData) {
         items = new ItemStack[Math.max(1, slots)];
+        this.saveData = saveData;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Network).create());
@@ -110,6 +117,9 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
             }
         }
         nbt.put(TAG_ITEMS, list);
+        if (saveData != null) {
+            saveData.accept(nbt.copy());
+        }
     }
 
     @Callback(doc = "function(slot:number):table -- Get the representation of the item stack stored in the specified slot.")

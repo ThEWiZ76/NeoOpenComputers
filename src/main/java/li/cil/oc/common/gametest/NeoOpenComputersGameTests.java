@@ -39,6 +39,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -119,6 +120,25 @@ public final class NeoOpenComputersGameTests {
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER1.get()), 1024L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER2.get()), 2048L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER3.get()), 4096L * 1024L);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void databaseUpgradePersistsStoredStacks(final GameTestHelper helper) {
+        final ItemStack databaseStack = new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get());
+        final DriverItem driver = Driver.driverFor(databaseStack);
+        helper.assertTrue(driver != null, "No driver for database upgrade");
+
+        final ManagedEnvironment firstEnvironment = driver.createEnvironment(databaseStack, null);
+        helper.assertTrue(firstEnvironment instanceof li.cil.oc.api.internal.Database, "Database upgrade did not create database environment");
+        final li.cil.oc.api.internal.Database firstDatabase = (li.cil.oc.api.internal.Database) firstEnvironment;
+        firstDatabase.setStackInSlot(0, new ItemStack(Items.DIAMOND, 3));
+        firstEnvironment.save(new CompoundTag());
+
+        final ManagedEnvironment secondEnvironment = driver.createEnvironment(databaseStack, null);
+        helper.assertTrue(secondEnvironment instanceof li.cil.oc.api.internal.Database, "Database upgrade did not recreate database environment");
+        final ItemStack restored = ((li.cil.oc.api.internal.Database) secondEnvironment).getStackInSlot(0);
+        helper.assertTrue(restored.is(Items.DIAMOND) && restored.getCount() == 3, "Database stack did not persist");
         helper.succeed();
     }
 
