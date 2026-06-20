@@ -55,7 +55,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
@@ -511,12 +513,103 @@ public final class NeoOpenComputersGameTests {
         disassembler.setItem(DisassemblerBlockEntity.SLOT_INPUT, tablet);
 
         helper.assertTrue(disassembler.canDisassemble(), "Disassembler did not accept tablet");
-        helper.assertTrue(disassembler.disassemble(), "Disassembler did not start disassembly");
+        helper.assertTrue(disassembler.disassemble(RandomSource.create(0L), 0D), "Disassembler did not start disassembly");
         helper.assertTrue(disassembler.getItem(DisassemblerBlockEntity.SLOT_INPUT).isEmpty(), "Disassembler did not clear input");
         helper.assertTrue(disassembler.containsOutput(ModItems.TABLET_CASE_TIER2.get()), "Disassembler did not output tablet case");
         helper.assertTrue(disassembler.containsOutput(ModItems.CPU_TIER1.get()), "Disassembler did not output CPU");
         helper.assertTrue(disassembler.containsOutput(ModItems.MEMORY_TIER1.get()), "Disassembler did not output memory");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void disassemblerOutputsToAdjacentInventory(final GameTestHelper helper) {
+        final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
+        final ItemStack memory = new ItemStack(ModItems.MEMORY_TIER1.get());
+        final ItemStack tablet = ModItems.TABLET.get().assembleFromCase(
+            new ItemStack(ModItems.TABLET_CASE_TIER2.get()),
+            ItemStack.EMPTY,
+            cpu.copy(),
+            memory.copy());
+        final BlockPos disassemblerPos = new BlockPos(1, 1, 1);
+        final BlockPos chestPos = new BlockPos(2, 1, 1);
+        helper.setBlock(disassemblerPos, ModBlocks.DISASSEMBLER.get());
+        helper.setBlock(chestPos, Blocks.CHEST);
+        final DisassemblerBlockEntity disassembler = helper.getBlockEntity(disassemblerPos);
+        final ChestBlockEntity chest = helper.getBlockEntity(chestPos);
+        disassembler.setItem(DisassemblerBlockEntity.SLOT_INPUT, tablet);
+
+        helper.assertTrue(disassembler.disassemble(RandomSource.create(0L), 0D), "Disassembler did not route output");
+        helper.assertTrue(disassembler.getItem(DisassemblerBlockEntity.SLOT_INPUT).isEmpty(), "Disassembler did not clear input");
+        helper.assertTrue(chestContains(chest, ModItems.TABLET_CASE_TIER2.get()), "Disassembler did not output tablet case to chest");
+        helper.assertTrue(chestContains(chest, ModItems.CPU_TIER1.get()), "Disassembler did not output CPU to chest");
+        helper.assertTrue(chestContains(chest, ModItems.MEMORY_TIER1.get()), "Disassembler did not output memory to chest");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void disassemblerBreakChanceCanDestroyOutputs(final GameTestHelper helper) {
+        try (DisassemblerTemplates.Registration ignored = DisassemblerTemplates.register(new DisassemblerTemplate() {
+            @Override
+            public String name() {
+                return "loss_test";
+            }
+
+            @Override
+            public boolean matches(final ItemStack stack) {
+                return stack.is(Items.DIAMOND);
+            }
+
+            @Override
+            public ItemStack[] disassemble(final ItemStack stack) {
+                return new ItemStack[]{new ItemStack(Items.EMERALD)};
+            }
+        })) {
+            final BlockPos pos = new BlockPos(1, 1, 1);
+            helper.setBlock(pos, ModBlocks.DISASSEMBLER.get());
+            final DisassemblerBlockEntity disassembler = helper.getBlockEntity(pos);
+            disassembler.setItem(DisassemblerBlockEntity.SLOT_INPUT, new ItemStack(Items.DIAMOND));
+
+            helper.assertTrue(disassembler.disassemble(RandomSource.create(0L), 1D), "Disassembler did not process lossy output");
+            helper.assertTrue(disassembler.getItem(DisassemblerBlockEntity.SLOT_INPUT).isEmpty(), "Disassembler did not clear input after lossy output");
+            helper.assertTrue(!disassembler.containsOutput(Items.EMERALD), "Disassembler kept an output despite 100% break chance");
+            helper.succeed();
+        }
+    }
+
+    @GameTest(template = "empty")
+    public static void disassemblerRoutesOverflowOutputsToAdjacentInventory(final GameTestHelper helper) {
+        try (DisassemblerTemplates.Registration ignored = DisassemblerTemplates.register(new DisassemblerTemplate() {
+            @Override
+            public String name() {
+                return "overflow_test";
+            }
+
+            @Override
+            public boolean matches(final ItemStack stack) {
+                return stack.is(Items.DIAMOND);
+            }
+
+            @Override
+            public ItemStack[] disassemble(final ItemStack stack) {
+                final ItemStack[] outputs = new ItemStack[10];
+                for (int index = 0; index < outputs.length; index++) {
+                    outputs[index] = new ItemStack(Items.EMERALD);
+                }
+                return outputs;
+            }
+        })) {
+            final BlockPos disassemblerPos = new BlockPos(1, 1, 1);
+            final BlockPos chestPos = new BlockPos(2, 1, 1);
+            helper.setBlock(disassemblerPos, ModBlocks.DISASSEMBLER.get());
+            helper.setBlock(chestPos, Blocks.CHEST);
+            final DisassemblerBlockEntity disassembler = helper.getBlockEntity(disassemblerPos);
+            final ChestBlockEntity chest = helper.getBlockEntity(chestPos);
+            disassembler.setItem(DisassemblerBlockEntity.SLOT_INPUT, new ItemStack(Items.DIAMOND));
+
+            helper.assertTrue(disassembler.disassemble(RandomSource.create(0L), 0D), "Disassembler rejected overflow output with adjacent chest");
+            helper.assertTrue(chestItemCount(chest, Items.EMERALD) == 10, "Disassembler did not move all overflow outputs to chest");
+            helper.succeed();
+        }
     }
 
     @GameTest(template = "empty")
@@ -1549,6 +1642,26 @@ public final class NeoOpenComputersGameTests {
         final ItemStack stack = new ItemStack(item);
         stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
         return stack;
+    }
+
+    private static boolean chestContains(final ChestBlockEntity chest, final Item item) {
+        for (int slot = 0; slot < chest.getContainerSize(); slot++) {
+            if (chest.getItem(slot).is(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static int chestItemCount(final ChestBlockEntity chest, final Item item) {
+        int count = 0;
+        for (int slot = 0; slot < chest.getContainerSize(); slot++) {
+            final ItemStack stack = chest.getItem(slot);
+            if (stack.is(item)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
     }
 
     private static void assertInvokeResult(

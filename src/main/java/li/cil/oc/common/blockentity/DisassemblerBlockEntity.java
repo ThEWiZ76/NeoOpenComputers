@@ -3,11 +3,14 @@ package li.cil.oc.common.blockentity;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.template.DisassemblerTemplates;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -19,6 +22,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Container {
     public static final int SLOT_OUTPUT_START = 1;
     public static final int OUTPUT_SLOT_COUNT = 9;
     public static final int CONTAINER_SIZE = 10;
+    public static final double DEFAULT_BREAK_CHANCE = 0.05D;
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
 
@@ -35,15 +39,17 @@ public class DisassemblerBlockEntity extends BlockEntity implements Container {
     }
 
     public boolean disassemble() {
+        return disassemble(level == null ? RandomSource.create() : level.random, DEFAULT_BREAK_CHANCE);
+    }
+
+    public boolean disassemble(final RandomSource random, final double breakChance) {
         final ItemStack input = items.get(SLOT_INPUT);
-        final ItemStack[] outputs = DisassemblerTemplates.disassemble(input);
-        if (!outputsFit(outputs)) {
+        final ItemStack[] outputs = survivingOutputs(DisassemblerTemplates.disassemble(input), random, breakChance);
+        if (!outputsFit(outputs) && outputs.length > 0 && !hasAdjacentInventory()) {
             return false;
         }
         items.set(SLOT_INPUT, ItemStack.EMPTY);
-        for (int index = 0; index < outputs.length && index < OUTPUT_SLOT_COUNT; index++) {
-            items.set(SLOT_OUTPUT_START + index, outputs[index].copy());
-        }
+        routeOutputs(outputs);
         setChanged();
         return true;
     }
@@ -129,6 +135,108 @@ public class DisassemblerBlockEntity extends BlockEntity implements Container {
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         ContainerHelper.saveAllItems(tag, items, registries);
+    }
+
+    private static ItemStack[] survivingOutputs(final ItemStack[] outputs, final RandomSource random, final double breakChance) {
+        if (outputs == null || outputs.length == 0) {
+            return new ItemStack[0];
+        }
+        final java.util.ArrayList<ItemStack> surviving = new java.util.ArrayList<>();
+        final double chance = Math.max(0D, Math.min(1D, breakChance));
+        for (ItemStack output : outputs) {
+            if (output == null || output.isEmpty()) {
+                continue;
+            }
+            final ItemStack stack = output.copy();
+            int survivors = 0;
+            for (int count = 0; count < stack.getCount(); count++) {
+                if (random.nextDouble() >= chance) {
+                    survivors++;
+                }
+            }
+            if (survivors > 0) {
+                stack.setCount(survivors);
+                surviving.add(stack);
+            }
+        }
+        return surviving.toArray(ItemStack[]::new);
+    }
+
+    private void routeOutputs(final ItemStack[] outputs) {
+        for (ItemStack output : outputs) {
+            ItemStack remaining = output.copy();
+            remaining = insertIntoAdjacentInventory(remaining);
+            if (!remaining.isEmpty()) {
+                remaining = insertIntoInternalOutput(remaining);
+            }
+            if (!remaining.isEmpty() && level != null) {
+                Containers.dropItemStack(level, worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D, worldPosition.getZ() + 0.5D, remaining);
+            }
+        }
+    }
+
+    private boolean hasAdjacentInventory() {
+        if (level == null) {
+            return false;
+        }
+        for (Direction direction : Direction.values()) {
+            if (level.getBlockEntity(worldPosition.relative(direction)) instanceof Container) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ItemStack insertIntoAdjacentInventory(final ItemStack stack) {
+        if (level == null || stack.isEmpty()) {
+            return stack;
+        }
+        ItemStack remaining = stack;
+        for (Direction direction : Direction.values()) {
+            final BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(direction));
+            if (blockEntity instanceof Container container) {
+                remaining = insertInto(container, remaining);
+                if (remaining.isEmpty()) {
+                    return ItemStack.EMPTY;
+                }
+            }
+        }
+        return remaining;
+    }
+
+    private ItemStack insertIntoInternalOutput(final ItemStack stack) {
+        ItemStack remaining = stack;
+        for (int slot = SLOT_OUTPUT_START; slot < CONTAINER_SIZE; slot++) {
+            if (items.get(slot).isEmpty()) {
+                items.set(slot, remaining.copy());
+                return ItemStack.EMPTY;
+            }
+        }
+        return remaining;
+    }
+
+    private static ItemStack insertInto(final Container container, final ItemStack stack) {
+        ItemStack remaining = stack.copy();
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            if (remaining.isEmpty()) {
+                return ItemStack.EMPTY;
+            }
+            final ItemStack existing = container.getItem(slot);
+            if (existing.isEmpty()) {
+                final ItemStack inserted = remaining.copy();
+                inserted.setCount(Math.min(remaining.getCount(), Math.min(inserted.getMaxStackSize(), container.getMaxStackSize())));
+                if (container.canPlaceItem(slot, inserted)) {
+                    container.setItem(slot, inserted);
+                    remaining.shrink(inserted.getCount());
+                }
+            } else if (ItemStack.isSameItemSameComponents(existing, remaining) && existing.getCount() < Math.min(existing.getMaxStackSize(), container.getMaxStackSize())) {
+                final int transferable = Math.min(remaining.getCount(), Math.min(existing.getMaxStackSize(), container.getMaxStackSize()) - existing.getCount());
+                existing.grow(transferable);
+                container.setItem(slot, existing);
+                remaining.shrink(transferable);
+            }
+        }
+        return remaining;
     }
 
     private boolean outputsFit(final ItemStack[] outputs) {
