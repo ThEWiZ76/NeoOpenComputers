@@ -10,6 +10,12 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
 
 import java.util.Map;
 
@@ -60,6 +66,41 @@ public class ExperienceUpgradeEnvironment extends AbstractManagedEnvironment imp
         return new Object[]{calculateExperienceLevel(level, experience)};
     }
 
+    @Callback(doc = "function():boolean -- Tries to consume the selected item and store its experience in this upgrade.")
+    public Object[] consume(final Context context, final Arguments arguments) {
+        if (level >= MAX_LEVEL) {
+            return new Object[]{null, "max level"};
+        }
+
+        final Container inventory = host.mainInventory();
+        if (inventory == null) {
+            return new Object[]{null, "no item"};
+        }
+
+        final int selectedSlot = host.selectedSlot();
+        if (selectedSlot < 0 || selectedSlot >= inventory.getContainerSize()) {
+            return new Object[]{null, "no item"};
+        }
+
+        final ItemStack stack = inventory.getItem(selectedSlot);
+        if (stack.isEmpty()) {
+            return new Object[]{null, "no item"};
+        }
+
+        final int extractedExperience = extractedExperience(stack);
+        if (extractedExperience <= 0) {
+            return new Object[]{null, "could not extract experience from item"};
+        }
+
+        final ItemStack consumed = inventory.removeItem(selectedSlot, 1);
+        if (consumed.isEmpty()) {
+            return new Object[]{null, "could not consume item"};
+        }
+
+        addExperience(extractedExperience * CONSTANT_XP_GROWTH);
+        return new Object[]{true};
+    }
+
     @Override
     public void load(final CompoundTag tag) {
         super.load(tag);
@@ -93,6 +134,20 @@ public class ExperienceUpgradeEnvironment extends AbstractManagedEnvironment imp
         }
         final double rawLevel = Math.pow(experience - BASE_XP_TO_LEVEL, 1D / EXPONENTIAL_XP_GROWTH) / CONSTANT_XP_GROWTH;
         return Math.max(0, Math.min((int) rawLevel, MAX_LEVEL));
+    }
+
+    private int extractedExperience(final ItemStack stack) {
+        if (stack.is(Items.EXPERIENCE_BOTTLE)) {
+            final Level level = host.world();
+            final RandomSource random = level == null ? RandomSource.create() : level.random;
+            return 3 + random.nextInt(5) + random.nextInt(5);
+        }
+
+        int experience = 0;
+        for (final var entry : EnchantmentHelper.getEnchantmentsForCrafting(stack).entrySet()) {
+            experience += entry.getKey().value().getMinCost(entry.getIntValue());
+        }
+        return experience;
     }
 
     private static double calculateExperienceLevel(final int level, final double experience) {

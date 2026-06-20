@@ -46,6 +46,7 @@ import li.cil.oc.common.template.DisassemblerTemplates;
 import net.neoforged.fml.InterModComms;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -60,6 +61,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
@@ -915,6 +917,48 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Boolean.TRUE.equals(craft[0]) && Integer.valueOf(4).equals(craft[1]), "Crafting upgrade did not craft four planks");
         helper.assertTrue(!host.mainInventory().getItem(0).is(Items.OAK_LOG), "Crafting upgrade did not consume input log");
         helper.assertTrue(containsStack(host.mainInventory(), Items.OAK_PLANKS, 4), "Crafting upgrade did not store crafted planks");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void experienceUpgradeConsumesExperienceBottle(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for experience upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        host.mainInventory().setItem(0, new ItemStack(Items.EXPERIENCE_BOTTLE));
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Experience upgrade did not create experience environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Experience node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        final Object[] consume = component.invoke("consume", null);
+        helper.assertTrue(Boolean.TRUE.equals(consume[0]), "Experience upgrade did not consume bottle");
+        helper.assertTrue(host.mainInventory().getItem(0).isEmpty(), "Experience upgrade did not remove consumed bottle");
+        final Object[] level = component.invoke("level", null);
+        helper.assertTrue(level.length == 1 && level[0] instanceof Number value && value.doubleValue() > 0D, "Experience upgrade did not gain experience");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void experienceUpgradeConsumesEnchantedItem(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for experience upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        final ItemStack sword = new ItemStack(Items.IRON_SWORD);
+        sword.enchant(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.SHARPNESS), 1);
+        host.mainInventory().setItem(0, sword);
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Experience upgrade did not create experience environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Experience node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        final Object[] consume = component.invoke("consume", null);
+        helper.assertTrue(Boolean.TRUE.equals(consume[0]), "Experience upgrade did not consume enchanted item");
+        helper.assertTrue(host.mainInventory().getItem(0).isEmpty(), "Experience upgrade did not remove enchanted item");
+        final Object[] level = component.invoke("level", null);
+        helper.assertTrue(level.length == 1 && level[0] instanceof Number value && value.doubleValue() > 0D, "Experience upgrade did not gain enchantment experience");
         helper.succeed();
     }
 

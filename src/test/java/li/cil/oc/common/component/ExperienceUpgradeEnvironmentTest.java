@@ -32,6 +32,7 @@ final class ExperienceUpgradeEnvironmentTest {
     @Test
     void exposesExperienceCallbacks() throws NoSuchMethodException {
         assertCallback("level");
+        assertCallback("consume");
     }
 
     @Test
