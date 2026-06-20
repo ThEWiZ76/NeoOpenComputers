@@ -21,6 +21,7 @@ final class RecipeResourceTest {
     void registeredContentHasCraftingRecipes() throws IOException {
         List<String> ids = List.of(
             ModContentIds.ADAPTER,
+            ModContentIds.ASSEMBLER,
             ModContentIds.BATTERY_UPGRADE_TIER1,
             ModContentIds.BATTERY_UPGRADE_TIER2,
             ModContentIds.BATTERY_UPGRADE_TIER3,

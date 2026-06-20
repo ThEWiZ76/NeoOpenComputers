@@ -29,6 +29,7 @@ import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
+import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.item.TabletItem;
 import net.minecraft.core.BlockPos;
@@ -67,6 +68,7 @@ public final class NeoOpenComputersGameTests {
     @GameTest(template = "empty")
     public static void registeredContentAvailable(final GameTestHelper helper) {
         ModBlocks.ADAPTER.get();
+        ModBlocks.ASSEMBLER.get();
         ModBlocks.CABLE.get();
         ModBlocks.COMPUTER_CASE_TIER1.get();
         ModBlocks.COMPUTER_CASE_TIER2.get();
@@ -84,6 +86,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.TRANSPOSER.get();
         ModBlocks.WAYPOINT.get();
         ModItems.ADAPTER.get();
+        ModItems.ASSEMBLER.get();
         ModItems.BATTERY_UPGRADE_TIER1.get();
         ModItems.BATTERY_UPGRADE_TIER2.get();
         ModItems.BATTERY_UPGRADE_TIER3.get();
@@ -282,6 +285,36 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(ItemStack.isSameItemSameComponents(container, ingredients[1]), "Disassembled tablet container missing");
         helper.assertTrue(ItemStack.isSameItemSameComponents(cpu, ingredients[2]), "Disassembled tablet CPU missing");
         helper.assertTrue(ItemStack.isSameItemSameComponents(memory, ingredients[3]), "Disassembled tablet memory missing");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void assemblerBlockAssemblesTabletFromInputs(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.ASSEMBLER.get());
+        final AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
+
+        final ItemStack container = new ItemStack(ModItems.CARD_CONTAINER_TIER1.get());
+        final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
+        final ItemStack memory = new ItemStack(ModItems.MEMORY_TIER1.get());
+
+        assembler.setItem(AssemblerBlockEntity.SLOT_TEMPLATE, new ItemStack(ModItems.TABLET_CASE_TIER2.get()));
+        assembler.setItem(AssemblerBlockEntity.SLOT_CONTAINER_START, container.copy());
+        assembler.setItem(AssemblerBlockEntity.SLOT_COMPONENT_START, cpu.copy());
+        assembler.setItem(AssemblerBlockEntity.SLOT_COMPONENT_START + 1, memory.copy());
+
+        helper.assertTrue(assembler.canAssemble(), "Assembler did not accept tablet recipe inputs");
+        helper.assertTrue(assembler.start(true), "Assembler did not start tablet assembly");
+        final ItemStack output = assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE);
+
+        helper.assertTrue(output.is(ModItems.TABLET.get()), "Assembler did not output a tablet");
+        final TabletItem tablet = (TabletItem) output.getItem();
+        helper.assertTrue(tablet.tier(output) == 1, "Output tablet tier did not match tablet case");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(container, tablet.getContainer(output)), "Output tablet container missing");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(cpu, tablet.getComponent(output, 1)), "Output tablet CPU missing");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(memory, tablet.getComponent(output, 2)), "Output tablet memory missing");
+        helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_CONTAINER_START).isEmpty(), "Assembler did not consume container slot");
+        helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_COMPONENT_START).isEmpty(), "Assembler did not consume component slot");
         helper.succeed();
     }
 

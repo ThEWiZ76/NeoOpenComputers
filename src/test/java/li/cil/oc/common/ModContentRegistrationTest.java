@@ -26,6 +26,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void assemblerBlockIdIsStable() {
+        assertEquals("assembler", ModContentIds.ASSEMBLER);
+    }
+
+    @Test
+    void assemblerBlockEntityIdIsStable() {
+        assertEquals("assembler", ModContentIds.ASSEMBLER_BLOCK_ENTITY);
+    }
+
+    @Test
     void computerCaseBlockIdIsStable() {
         assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
     }

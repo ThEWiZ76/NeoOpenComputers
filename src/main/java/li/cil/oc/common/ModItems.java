@@ -38,6 +38,10 @@ public final class ModItems {
         ModContentIds.ADAPTER,
         ModBlocks.ADAPTER);
 
+    public static final DeferredItem<BlockItem> ASSEMBLER = ITEMS.registerSimpleBlockItem(
+        ModContentIds.ASSEMBLER,
+        ModBlocks.ASSEMBLER);
+
     public static final DeferredItem<BlockItem> CABLE = ITEMS.registerSimpleBlockItem(
         ModContentIds.CABLE,
         ModBlocks.CABLE);

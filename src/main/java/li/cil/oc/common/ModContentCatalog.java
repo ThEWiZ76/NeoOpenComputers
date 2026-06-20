@@ -64,6 +64,8 @@ public final class ModContentCatalog {
                 registry,
                 ModBlocks.ADAPTER.get(),
                 ModItems.ADAPTER.get(),
+                ModBlocks.ASSEMBLER.get(),
+                ModItems.ASSEMBLER.get(),
                 ModBlocks.CABLE.get(),
                 ModItems.CABLE.get(),
                 ModBlocks.COMPUTER_CASE_TIER1.get(),
@@ -150,6 +152,8 @@ public final class ModContentCatalog {
         final ItemRegistry registry,
         final Block adapter,
         final Item adapterItem,
+        final Block assembler,
+        final Item assemblerItem,
         final Block cable,
         final Item cableItem,
         final Block computerCaseTier1,
@@ -231,6 +235,7 @@ public final class ModContentCatalog {
         final Item upgradeContainerTier3Item) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
+        registry.register(ModContentIds.ASSEMBLER, assembler, assemblerItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(ModContentIds.COMPUTER_CASE_TIER2, computerCaseTier2, computerCaseTier2Item);

@@ -9,6 +9,7 @@ import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.TransposerBlock;
 import li.cil.oc.common.block.WaypointBlock;
+import li.cil.oc.common.block.AssemblerBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
@@ -28,6 +29,7 @@ final class NetworkedBlockLifecycleShapeTest {
     @Test
     void networkedBlocksHandlePlacementAndNeighborChanges() throws NoSuchMethodException {
         assertNetworkLifecycleHooks(ComputerCaseBlock.class);
+        assertNetworkLifecycleHooks(AssemblerBlock.class);
         assertNetworkLifecycleHooks(DiskDriveBlock.class);
         assertNetworkLifecycleHooks(ScreenBlock.class);
         assertNetworkLifecycleHooks(KeyboardBlock.class);

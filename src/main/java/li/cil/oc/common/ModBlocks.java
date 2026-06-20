@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.block.AdapterBlock;
+import li.cil.oc.common.block.AssemblerBlock;
 import li.cil.oc.common.block.CableBlock;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
@@ -26,6 +27,10 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> ADAPTER = BLOCKS.register(
         ModContentIds.ADAPTER,
         () -> new AdapterBlock(adapterProperties()));
+
+    public static final DeferredBlock<Block> ASSEMBLER = BLOCKS.register(
+        ModContentIds.ASSEMBLER,
+        () -> new AssemblerBlock(assemblerProperties()));
 
     public static final DeferredBlock<Block> CABLE = BLOCKS.register(
         ModContentIds.CABLE,
@@ -114,6 +119,13 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties assemblerProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
+            .strength(2.0F, 6.0F)
+            .noOcclusion();
     }
 
     private static BlockBehaviour.Properties screenProperties() {

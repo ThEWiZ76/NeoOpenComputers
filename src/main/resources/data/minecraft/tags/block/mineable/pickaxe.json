@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "neoopencomputers:adapter",
+    "neoopencomputers:assembler",
     "neoopencomputers:cable",
     "neoopencomputers:computer_case_tier1",
     "neoopencomputers:computer_case_tier2",

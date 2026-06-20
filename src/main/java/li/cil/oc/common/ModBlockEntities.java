@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.blockentity.AdapterBlockEntity;
+import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
@@ -27,6 +28,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.ADAPTER_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(AdapterBlockEntity::new, ModBlocks.ADAPTER.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<AssemblerBlockEntity>> ASSEMBLER =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.ASSEMBLER_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(AssemblerBlockEntity::new, ModBlocks.ASSEMBLER.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CableBlockEntity>> CABLE =
         BLOCK_ENTITY_TYPES.register(

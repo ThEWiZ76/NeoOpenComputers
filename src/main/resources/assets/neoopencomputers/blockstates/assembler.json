@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "neoopencomputers:block/assembler" },
+    "facing=east": { "model": "neoopencomputers:block/assembler", "y": 90 },
+    "facing=south": { "model": "neoopencomputers:block/assembler", "y": 180 },
+    "facing=west": { "model": "neoopencomputers:block/assembler", "y": 270 }
+  }
+}

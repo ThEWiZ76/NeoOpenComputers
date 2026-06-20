@@ -25,6 +25,7 @@ final class BlockTagResourceTest {
         JsonArray values = json.getAsJsonArray("values");
         List<String> ids = List.of(
             ModContentIds.ADAPTER,
+            ModContentIds.ASSEMBLER,
             ModContentIds.CABLE,
             ModContentIds.COMPUTER_CASE_TIER1,
             ModContentIds.COMPUTER_CASE_TIER2,
