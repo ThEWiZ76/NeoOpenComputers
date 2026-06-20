@@ -24,6 +24,7 @@ final class RecipeResourceTest {
             ModContentIds.CPU_TIER1,
             ModContentIds.DISK_DRIVE,
             ModContentIds.EEPROM,
+            ModContentIds.FLOPPY,
             ModContentIds.GRAPHICS_CARD_TIER1,
             ModContentIds.HDD_TIER1,
             ModContentIds.KEYBOARD,
