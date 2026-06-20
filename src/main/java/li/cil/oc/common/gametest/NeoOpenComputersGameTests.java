@@ -9,6 +9,7 @@ import li.cil.oc.api.driver.item.Chargeable;
 import li.cil.oc.api.driver.item.Container;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
+import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -297,6 +298,22 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(ItemStack.isSameItemSameComponents(container, tablet.getContainer(stack)), "Tablet container did not persist");
         helper.assertTrue(ItemStack.isSameItemSameComponents(component, tablet.getComponent(stack, 2)), "Tablet component did not persist");
         helper.assertTrue(tablet.getComponent(stack, 32).isEmpty(), "Tablet out-of-range component read should be empty");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tabletItemRegistersDriverSlotAndTier(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.TABLET.get());
+        final TabletItem tablet = (TabletItem) stack.getItem();
+
+        tablet.setTier(stack, 1);
+        tablet.setRunning(stack, true);
+        final DriverItem driver = Driver.driverFor(stack);
+
+        helper.assertTrue(driver != null, "No driver registered for tablet item");
+        helper.assertTrue(Slot.Tablet.equals(driver.slot(stack)), "Tablet driver slot mismatch");
+        helper.assertTrue(driver.tier(stack) == 1, "Tablet driver tier mismatch");
+        helper.assertTrue(driver.dataTag(stack).getBoolean("running"), "Tablet driver data tag did not expose stored data");
         helper.succeed();
     }
 

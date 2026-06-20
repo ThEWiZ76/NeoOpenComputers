@@ -1,7 +1,11 @@
 package li.cil.oc.common.item;
 
+import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Chargeable;
+import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Tiered;
+import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.ModItems;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -15,7 +19,7 @@ import net.minecraft.world.item.component.CustomData;
 
 import java.util.ArrayList;
 
-public class TabletItem extends Item implements Chargeable {
+public class TabletItem extends Item implements Chargeable, DriverItem {
     public static final int COMPONENT_SLOTS = 32;
     public static final double DEFAULT_MAX_CHARGE = 10000D;
 
@@ -36,6 +40,21 @@ public class TabletItem extends Item implements Chargeable {
     @Override
     public boolean canCharge(final ItemStack stack) {
         return stack != null && stack.getItem() == this;
+    }
+
+    @Override
+    public boolean worksWith(final ItemStack stack) {
+        return canCharge(stack);
+    }
+
+    @Override
+    public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        return null;
+    }
+
+    @Override
+    public String slot(final ItemStack stack) {
+        return Slot.Tablet;
     }
 
     @Override
@@ -130,8 +149,14 @@ public class TabletItem extends Item implements Chargeable {
         return ingredients.toArray(ItemStack[]::new);
     }
 
+    @Override
     public int tier(final ItemStack stack) {
         return Math.max(0, readData(stack).getInt(TIER_TAG));
+    }
+
+    @Override
+    public CompoundTag dataTag(final ItemStack stack) {
+        return readData(stack);
     }
 
     public void setTier(final ItemStack stack, final int tier) {

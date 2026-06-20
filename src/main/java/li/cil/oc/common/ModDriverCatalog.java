@@ -17,6 +17,7 @@ public final class ModDriverCatalog {
                 registry,
                 ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(),
                 ModItems.CARD_CONTAINER_TIER1.get(), ModItems.CARD_CONTAINER_TIER2.get(), ModItems.CARD_CONTAINER_TIER3.get(),
+                ModItems.TABLET.get(),
                 ModItems.BATTERY_UPGRADE_TIER1.get(), ModItems.BATTERY_UPGRADE_TIER2.get(), ModItems.BATTERY_UPGRADE_TIER3.get(),
                 ModItems.DATA_CARD_TIER1.get(), ModItems.DATA_CARD_TIER2.get(), ModItems.DATA_CARD_TIER3.get(),
                 ModItems.DATABASE_UPGRADE_TIER1.get(), ModItems.DATABASE_UPGRADE_TIER2.get(), ModItems.DATABASE_UPGRADE_TIER3.get(),
