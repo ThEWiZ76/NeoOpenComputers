@@ -345,6 +345,19 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void transistorRecipeUsesUpstreamHardmodeShape() throws IOException {
+        JsonObject recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.TRANSISTOR + ".json"));
+        JsonObject keys = recipe.getAsJsonObject("key");
+
+        assertPattern(recipe, "III", "GPG", " R ");
+        assertTag(keys, "I", "c:nuggets/iron");
+        assertTag(keys, "G", "c:nuggets/gold");
+        assertItem(keys, "P", "minecraft:paper");
+        assertItem(keys, "R", "minecraft:redstone");
+        assertResultCount(recipe, 1);
+    }
+
+    @Test
     void capacitorRecipeUsesMaterialProgression() throws IOException {
         JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
 

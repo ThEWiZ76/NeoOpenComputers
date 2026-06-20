@@ -8,17 +8,20 @@
     "I": {
       "tag": "c:nuggets/iron"
     },
+    "P": {
+      "item": "minecraft:paper"
+    },
     "R": {
       "item": "minecraft:redstone"
     }
   },
   "pattern": [
-    " R ",
-    "GIG",
-    " I "
+    "III",
+    "GPG",
+    " R "
   ],
   "result": {
-    "count": 2,
+    "count": 1,
     "id": "neoopencomputers:transistor"
   }
 }
