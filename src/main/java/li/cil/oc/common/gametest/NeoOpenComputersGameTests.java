@@ -337,6 +337,7 @@ public final class NeoOpenComputersGameTests {
         final Object[] level = invokeComponent(helper, component, "getTankLevel", side, 1);
         final Object[] capacity = invokeComponent(helper, component, "getTankCapacity", side, 1);
         final Object[] fluid = invokeComponent(helper, component, "getFluidInTank", side, 1);
+        final Object[] allFluids = invokeComponent(helper, component, "getFluidInTank", side);
 
         helper.assertTrue(Integer.valueOf(1).equals(count[0]), "Transposer did not see adjacent tank");
         helper.assertTrue(Integer.valueOf(1000).equals(level[0]), "Transposer did not read tank level");
@@ -344,6 +345,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("minecraft:water".equals(fluid[0]), "Transposer did not report water fluid id");
         helper.assertTrue(Integer.valueOf(1000).equals(fluid[1]), "Transposer did not report fluid amount");
         helper.assertTrue(Integer.valueOf(1000).equals(fluid[2]), "Transposer did not report fluid capacity");
+        assertSingleWaterTankDescription(helper, allFluids, "Transposer");
         helper.succeed();
     }
 
@@ -420,6 +422,7 @@ public final class NeoOpenComputersGameTests {
         final Object[] level = invokeComponent(helper, component, "getTankLevel", side);
         final Object[] capacity = invokeComponent(helper, component, "getTankCapacity", side);
         final Object[] fluid = invokeComponent(helper, component, "getFluidInTank", side, 1);
+        final Object[] allFluids = invokeComponent(helper, component, "getFluidInTank", side);
 
         helper.assertTrue(Integer.valueOf(1).equals(count[0]), "Tank controller did not see adjacent tank");
         helper.assertTrue(Integer.valueOf(1000).equals(level[0]), "Tank controller did not sum tank level");
@@ -427,6 +430,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("minecraft:water".equals(fluid[0]), "Tank controller did not report water fluid id");
         helper.assertTrue(Integer.valueOf(1000).equals(fluid[1]), "Tank controller did not report fluid amount");
         helper.assertTrue(Integer.valueOf(1000).equals(fluid[2]), "Tank controller did not report fluid capacity");
+        assertSingleWaterTankDescription(helper, allFluids, "Tank controller");
         helper.succeed();
     }
 
@@ -1825,6 +1829,16 @@ public final class NeoOpenComputersGameTests {
             helper.fail("Component invocation failed: " + method + " " + e.getMessage());
             return new Object[0];
         }
+    }
+
+    private static void assertSingleWaterTankDescription(final GameTestHelper helper, final Object[] result, final String name) {
+        helper.assertTrue(result.length == 1 && result[0] instanceof Object[], name + " did not return a tank description list");
+        final Object[] tanks = (Object[]) result[0];
+        helper.assertTrue(tanks.length == 1 && tanks[0] instanceof Object[], name + " did not return one tank description");
+        final Object[] tank = (Object[]) tanks[0];
+        helper.assertTrue("minecraft:water".equals(tank[0]), name + " did not report water in all tank descriptions");
+        helper.assertTrue(Integer.valueOf(1000).equals(tank[1]), name + " did not report water amount in all tank descriptions");
+        helper.assertTrue(Integer.valueOf(1000).equals(tank[2]), name + " did not report water capacity in all tank descriptions");
     }
 
     private static boolean modemPortOpen(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final int port) {

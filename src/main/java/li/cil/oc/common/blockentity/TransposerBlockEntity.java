@@ -14,6 +14,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.util.FluidDescriptions;
 import li.cil.oc.common.util.InventoryComparison;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -234,16 +235,13 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
         return new Object[]{capacity};
     }
 
-    @Callback(doc = "function(side:number, tank:number):string, number, number -- Get fluid id, amount, and capacity for the specified tank.")
+    @Callback(doc = "function(side:number[, tank:number]):table -- Get fluid info for the specified tank, or all tanks on the side.")
     public Object[] getFluidInTank(final Context context, final Arguments args) {
         final IFluidHandler handler = fluidHandler(args.checkInteger(0));
-        final int tank = checkTank(handler, args.checkInteger(1));
-        final FluidStack stack = handler.getFluidInTank(tank);
-        return new Object[]{
-            stack.isEmpty() ? "" : BuiltInRegistries.FLUID.getKey(stack.getFluid()).toString(),
-            stack.isEmpty() ? 0 : stack.getAmount(),
-            handler.getTankCapacity(tank)
-        };
+        if (args.count() > 1 && args.checkAny(1) != null) {
+            return FluidDescriptions.describe(handler, checkTank(handler, args.checkInteger(1)));
+        }
+        return new Object[]{FluidDescriptions.describeAll(handler)};
     }
 
     @Callback(doc = "function(sourceSide:number, sinkSide:number[, count:number[, sourceTank:number]]):boolean, number -- Transfer fluid between adjacent tanks.")

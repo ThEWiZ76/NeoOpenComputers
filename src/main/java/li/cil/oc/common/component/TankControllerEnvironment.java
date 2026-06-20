@@ -8,9 +8,9 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.util.FluidDescriptions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
@@ -75,16 +75,13 @@ public class TankControllerEnvironment extends AbstractManagedEnvironment implem
         return new Object[]{capacity};
     }
 
-    @Callback(doc = "function(side:number, tank:number):string, number, number -- Get fluid id, amount, and capacity for the specified tank.")
+    @Callback(doc = "function(side:number[, tank:number]):table -- Get fluid info for the specified tank, or all tanks on the side.")
     public Object[] getFluidInTank(final Context context, final Arguments arguments) {
         final IFluidHandler handler = handler(arguments.checkInteger(0));
-        final int tank = checkTank(handler, arguments.checkInteger(1));
-        final FluidStack stack = handler.getFluidInTank(tank);
-        return new Object[]{
-            stack.isEmpty() ? "" : BuiltInRegistries.FLUID.getKey(stack.getFluid()).toString(),
-            stack.isEmpty() ? 0 : stack.getAmount(),
-            handler.getTankCapacity(tank)
-        };
+        if (arguments.count() > 1 && arguments.checkAny(1) != null) {
+            return FluidDescriptions.describe(handler, checkTank(handler, arguments.checkInteger(1)));
+        }
+        return new Object[]{FluidDescriptions.describeAll(handler)};
     }
 
     private IFluidHandler handler(final int side) {
