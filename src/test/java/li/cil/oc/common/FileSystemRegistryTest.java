@@ -316,6 +316,19 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentSaveKeepsLiveHandlesOpen() throws Exception {
+        OpenComputersApi.initialize();
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(256), "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+        Object handle = component.invoke("open", null, "data.txt", "w")[0];
+
+        environment.save(new CompoundTag());
+
+        assertArrayEquals(new Object[]{true}, component.invoke("write", null, handle, "still open"));
+        component.invoke("close", null, handle);
+    }
+
+    @Test
     void managedFileSystemEnvironmentCapsReadBufferSize() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(4096);

@@ -44,6 +44,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     private final Optional<String> accessSound;
     private final int speed;
     private final Map<String, Set<Integer>> owners = new LinkedHashMap<>();
+    private boolean saving;
 
     FileSystemEnvironment(final FileSystem fileSystem, final Label label, final EnvironmentHost host, final String accessSound, final int speed) {
         this.fileSystem = fileSystem;
@@ -228,6 +229,9 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
 
     @Override
     public void onDisconnect(final Node node) {
+        if (saving && node == node()) {
+            return;
+        }
         if (node == node()) {
             owners.clear();
             fileSystem.close();
@@ -283,7 +287,12 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         CompoundTag fileSystemTag = new CompoundTag();
         fileSystem.save(fileSystemTag);
         nbt.put(FILE_SYSTEM_TAG, fileSystemTag);
-        super.save(nbt);
+        saving = true;
+        try {
+            super.save(nbt);
+        } finally {
+            saving = false;
+        }
         final ListTag ownersTag = new ListTag();
         for (Map.Entry<String, Set<Integer>> owner : savedOwners.entrySet()) {
             if (!owner.getValue().isEmpty()) {
