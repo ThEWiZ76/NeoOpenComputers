@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": {
+      "item": "minecraft:glass_pane"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "S": {
+      "item": "neoopencomputers:screen_tier1"
+    },
+    "X": {
+      "item": "minecraft:gold_ingot"
+    }
+  },
+  "pattern": [
+    "GGG",
+    "RSR",
+    "XXX"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:screen_tier2"
+  }
+}

@@ -20,6 +20,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_MEMORY_TIER3 = "ram3";
     public static final String COMPAT_NETWORK_CARD = "lancard";
     public static final String COMPAT_SCREEN_TIER1 = "screen1";
+    public static final String COMPAT_SCREEN_TIER2 = "screen2";
+    public static final String COMPAT_SCREEN_TIER3 = "screen3";
 
     public static void registerDefaults() {
         if (API.items instanceof ItemRegistry registry) {
@@ -31,6 +33,10 @@ public final class ModContentCatalog {
                 ModItems.DISK_DRIVE.get(),
                 ModBlocks.SCREEN_TIER1.get(),
                 ModItems.SCREEN_TIER1.get(),
+                ModBlocks.SCREEN_TIER2.get(),
+                ModItems.SCREEN_TIER2.get(),
+                ModBlocks.SCREEN_TIER3.get(),
+                ModItems.SCREEN_TIER3.get(),
                 ModBlocks.KEYBOARD.get(),
                 ModItems.KEYBOARD.get(),
                 ModItems.MANUAL.get(),
@@ -60,6 +66,10 @@ public final class ModContentCatalog {
         final Item diskDriveItem,
         final Block screenTier1,
         final Item screenTier1Item,
+        final Block screenTier2,
+        final Item screenTier2Item,
+        final Block screenTier3,
+        final Item screenTier3Item,
         final Block keyboard,
         final Item keyboardItem,
         final Item manualItem,
@@ -83,7 +93,11 @@ public final class ModContentCatalog {
         registry.register(COMPAT_COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(ModContentIds.DISK_DRIVE, diskDrive, diskDriveItem);
         registry.register(ModContentIds.SCREEN_TIER1, screenTier1, screenTier1Item);
+        registry.register(ModContentIds.SCREEN_TIER2, screenTier2, screenTier2Item);
+        registry.register(ModContentIds.SCREEN_TIER3, screenTier3, screenTier3Item);
         registry.register(COMPAT_SCREEN_TIER1, screenTier1, screenTier1Item);
+        registry.register(COMPAT_SCREEN_TIER2, screenTier2, screenTier2Item);
+        registry.register(COMPAT_SCREEN_TIER3, screenTier3, screenTier3Item);
         registry.register(ModContentIds.KEYBOARD, keyboard, keyboardItem);
         registry.register(ModContentIds.CPU_TIER1, null, cpuTier1Item);
         registry.register(ModContentIds.CPU_TIER2, null, cpuTier2Item);

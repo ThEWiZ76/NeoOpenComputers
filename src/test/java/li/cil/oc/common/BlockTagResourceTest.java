@@ -27,7 +27,9 @@ final class BlockTagResourceTest {
             ModContentIds.COMPUTER_CASE_TIER1,
             ModContentIds.DISK_DRIVE,
             ModContentIds.KEYBOARD,
-            ModContentIds.SCREEN_TIER1);
+            ModContentIds.SCREEN_TIER1,
+            ModContentIds.SCREEN_TIER2,
+            ModContentIds.SCREEN_TIER3);
 
         assertFalse(json.get("replace").getAsBoolean());
         for (String id : ids) {

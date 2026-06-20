@@ -23,9 +23,20 @@ import net.minecraft.world.phys.BlockHitResult;
 public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlock {
     public static final MapCodec<ScreenBlock> CODEC = simpleCodec(ScreenBlock::new);
 
+    private final int tier;
+
     public ScreenBlock(final BlockBehaviour.Properties properties) {
+        this(properties, 0);
+    }
+
+    public ScreenBlock(final BlockBehaviour.Properties properties, final int tier) {
         super(properties);
+        this.tier = Math.clamp(tier, 0, 2);
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+    }
+
+    public int tier() {
+        return tier;
     }
 
     @Override

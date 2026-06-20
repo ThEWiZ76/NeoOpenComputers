@@ -91,6 +91,14 @@ public final class ModItems {
         ModContentIds.SCREEN_TIER1,
         ModBlocks.SCREEN_TIER1);
 
+    public static final DeferredItem<BlockItem> SCREEN_TIER2 = ITEMS.registerSimpleBlockItem(
+        ModContentIds.SCREEN_TIER2,
+        ModBlocks.SCREEN_TIER2);
+
+    public static final DeferredItem<BlockItem> SCREEN_TIER3 = ITEMS.registerSimpleBlockItem(
+        ModContentIds.SCREEN_TIER3,
+        ModBlocks.SCREEN_TIER3);
+
     public static final DeferredItem<BlockItem> KEYBOARD = ITEMS.registerSimpleBlockItem(
         ModContentIds.KEYBOARD,
         ModBlocks.KEYBOARD);

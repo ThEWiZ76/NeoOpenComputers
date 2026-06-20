@@ -25,7 +25,15 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> SCREEN_TIER1 = BLOCKS.register(
         ModContentIds.SCREEN_TIER1,
-        () -> new ScreenBlock(screenProperties()));
+        () -> new ScreenBlock(screenProperties(), 0));
+
+    public static final DeferredBlock<Block> SCREEN_TIER2 = BLOCKS.register(
+        ModContentIds.SCREEN_TIER2,
+        () -> new ScreenBlock(screenProperties(), 1));
+
+    public static final DeferredBlock<Block> SCREEN_TIER3 = BLOCKS.register(
+        ModContentIds.SCREEN_TIER3,
+        () -> new ScreenBlock(screenProperties(), 2));
 
     public static final DeferredBlock<Block> KEYBOARD = BLOCKS.register(
         ModContentIds.KEYBOARD,

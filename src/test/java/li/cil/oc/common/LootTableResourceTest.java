@@ -23,7 +23,9 @@ final class LootTableResourceTest {
             ModContentIds.COMPUTER_CASE_TIER1,
             ModContentIds.DISK_DRIVE,
             ModContentIds.KEYBOARD,
-            ModContentIds.SCREEN_TIER1);
+            ModContentIds.SCREEN_TIER1,
+            ModContentIds.SCREEN_TIER2,
+            ModContentIds.SCREEN_TIER3);
 
         for (String id : ids) {
             Path lootTable = LOOT_ROOT.resolve(id + ".json");

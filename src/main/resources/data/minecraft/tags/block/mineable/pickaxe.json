@@ -4,6 +4,8 @@
     "neoopencomputers:computer_case_tier1",
     "neoopencomputers:disk_drive",
     "neoopencomputers:keyboard",
-    "neoopencomputers:screen_tier1"
+    "neoopencomputers:screen_tier1",
+    "neoopencomputers:screen_tier2",
+    "neoopencomputers:screen_tier3"
   ]
 }

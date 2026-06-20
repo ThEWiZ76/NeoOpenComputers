@@ -6,6 +6,7 @@ import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
+import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
@@ -43,6 +44,8 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.COMPUTER_CASE_TIER1.get();
         ModBlocks.DISK_DRIVE.get();
         ModBlocks.SCREEN_TIER1.get();
+        ModBlocks.SCREEN_TIER2.get();
+        ModBlocks.SCREEN_TIER3.get();
         ModBlocks.KEYBOARD.get();
         ModItems.CPU_TIER1.get();
         ModItems.CPU_TIER2.get();
@@ -90,6 +93,22 @@ public final class NeoOpenComputersGameTests {
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER1.get()), 1024L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER2.get()), 2048L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER3.get()), 4096L * 1024L);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tieredScreensExposeTierCapabilities(final GameTestHelper helper) {
+        final BlockPos tier1Pos = new BlockPos(0, 1, 0);
+        final BlockPos tier2Pos = new BlockPos(1, 1, 0);
+        final BlockPos tier3Pos = new BlockPos(2, 1, 0);
+
+        helper.setBlock(tier1Pos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(tier2Pos, ModBlocks.SCREEN_TIER2.get());
+        helper.setBlock(tier3Pos, ModBlocks.SCREEN_TIER3.get());
+
+        assertScreenTier(helper, helper.getBlockEntity(tier1Pos), 0, 50, 16, TextBuffer.ColorDepth.OneBit);
+        assertScreenTier(helper, helper.getBlockEntity(tier2Pos), 1, 80, 25, TextBuffer.ColorDepth.FourBit);
+        assertScreenTier(helper, helper.getBlockEntity(tier3Pos), 2, 160, 50, TextBuffer.ColorDepth.EightBit);
         helper.succeed();
     }
 
@@ -209,8 +228,8 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(invokeUseWithoutItem(state, helper, screenPos, hit) == InteractionResult.CONSUME, "Screen click was not consumed");
 
         helper.runAtTickTime(5, () -> {
-            assertNextSignal(helper, computer, "touch", 11, 5, 0);
-            assertNextSignal(helper, computer, "drop", 11, 5, 0);
+            assertNextSignal(helper, computer, "touch", 13, 5, 0);
+            assertNextSignal(helper, computer, "drop", 13, 5, 0);
             helper.succeed();
         });
     }
@@ -299,6 +318,15 @@ public final class NeoOpenComputersGameTests {
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         final Object[] result = invokeComponent(helper, component, "spaceTotal");
         helper.assertTrue(result.length == 1 && result[0].equals(capacity), "Expected " + stack + " capacity " + capacity + " but got " + (result.length == 0 ? "<empty>" : result[0]));
+    }
+
+    private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {
+        helper.assertTrue(screen.tier() == tier, "Expected screen tier " + tier + " but got " + screen.tier());
+        helper.assertTrue(screen.getMaximumWidth() == width, "Expected screen max width " + width + " but got " + screen.getMaximumWidth());
+        helper.assertTrue(screen.getMaximumHeight() == height, "Expected screen max height " + height + " but got " + screen.getMaximumHeight());
+        helper.assertTrue(screen.getWidth() == width, "Expected screen width " + width + " but got " + screen.getWidth());
+        helper.assertTrue(screen.getHeight() == height, "Expected screen height " + height + " but got " + screen.getHeight());
+        helper.assertTrue(screen.getMaximumColorDepth() == depth, "Expected screen depth " + depth + " but got " + screen.getMaximumColorDepth());
     }
 
     private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method) {

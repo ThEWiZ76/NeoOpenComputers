@@ -4,12 +4,14 @@ import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Keyboard;
 import li.cil.oc.api.internal.TextBuffer;
+import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.component.ScreenEnvironment;
 import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.core.BlockPos;
@@ -25,15 +27,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo {
-    private static final int DEFAULT_WIDTH = 40;
-    private static final int DEFAULT_HEIGHT = 16;
+public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo, Tiered {
+    private static final int[] MAXIMUM_WIDTHS_BY_TIER = {50, 80, 160};
+    private static final int[] MAXIMUM_HEIGHTS_BY_TIER = {16, 25, 50};
+    private static final ColorDepth[] MAXIMUM_COLOR_DEPTHS_BY_TIER = {ColorDepth.OneBit, ColorDepth.FourBit, ColorDepth.EightBit};
+    private static final int DEFAULT_WIDTH = MAXIMUM_WIDTHS_BY_TIER[0];
+    private static final int DEFAULT_HEIGHT = MAXIMUM_HEIGHTS_BY_TIER[0];
     private static final int DEFAULT_FOREGROUND = 0xFFFFFF;
     private static final int DEFAULT_BACKGROUND = 0x000000;
     private static final String TAG_BUFFER = "buffer";
     private static final String TAG_NODE = "node";
 
     private double energyCostPerTick;
+    private int tier;
     private boolean powered = true;
     private int maximumWidth = DEFAULT_WIDTH;
     private int maximumHeight = DEFAULT_HEIGHT;
@@ -59,8 +65,18 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private Node node;
 
     public ScreenBlockEntity(final BlockPos pos, final BlockState blockState) {
+        this(pos, blockState, tierFromBlockState(blockState));
+    }
+
+    private ScreenBlockEntity(final BlockPos pos, final BlockState blockState, final int tier) {
         super(ModBlockEntities.SCREEN.get(), pos, blockState);
+        configureTier(tier);
         node = ScreenEnvironment.createNode(this);
+    }
+
+    @Override
+    public int tier() {
+        return tier;
     }
 
     @Override
@@ -482,14 +498,15 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Override
     public void load(final CompoundTag nbt) {
+        ensureTierConfigured();
         if (nbt.contains(TAG_NODE) && node() != null) {
             node().load(nbt.getCompound(TAG_NODE));
         }
         powered = nbt.getBoolean("powered");
-        width = Math.max(1, nbt.getInt("width"));
-        height = Math.max(1, nbt.getInt("height"));
-        viewportWidth = Math.max(1, nbt.getInt("viewportWidth"));
-        viewportHeight = Math.max(1, nbt.getInt("viewportHeight"));
+        width = Math.clamp(nbt.getInt("width"), 1, maximumWidth);
+        height = Math.clamp(nbt.getInt("height"), 1, maximumHeight);
+        viewportWidth = Math.clamp(nbt.getInt("viewportWidth"), 1, width);
+        viewportHeight = Math.clamp(nbt.getInt("viewportHeight"), 1, height);
         foregroundColor = nbt.getInt("foreground");
         backgroundColor = nbt.getInt("background");
         precisionMode = nbt.getBoolean("precisionMode");
@@ -498,6 +515,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (nbt.contains(TAG_BUFFER)) {
             buffer.load(nbt.getCompound(TAG_BUFFER));
         }
+        buffer.resize(width, height);
     }
 
     @Override
@@ -508,6 +526,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Override
     public void save(final CompoundTag nbt) {
+        ensureTierConfigured();
         saveNode(nbt);
         nbt.putBoolean("powered", powered);
         nbt.putInt("width", width);
@@ -574,6 +593,32 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (node != null) {
             node.remove();
         }
+    }
+
+    private void configureTier(final int tier) {
+        this.tier = Math.clamp(tier, 0, MAXIMUM_WIDTHS_BY_TIER.length - 1);
+        maximumWidth = MAXIMUM_WIDTHS_BY_TIER[this.tier];
+        maximumHeight = MAXIMUM_HEIGHTS_BY_TIER[this.tier];
+        maximumColorDepth = MAXIMUM_COLOR_DEPTHS_BY_TIER[this.tier];
+        colorDepth = maximumColorDepth;
+        width = maximumWidth;
+        height = maximumHeight;
+        viewportWidth = width;
+        viewportHeight = height;
+        buffer.resize(width, height);
+    }
+
+    private void ensureTierConfigured() {
+        if (maximumWidth < 1 || maximumHeight < 1 || maximumColorDepth == null) {
+            configureTier(tier);
+        }
+    }
+
+    private static int tierFromBlockState(final BlockState blockState) {
+        if (blockState != null && blockState.getBlock() instanceof ScreenBlock screenBlock) {
+            return screenBlock.tier();
+        }
+        return 0;
     }
 
     private void markChanged() {

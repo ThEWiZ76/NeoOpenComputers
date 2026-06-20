@@ -39,7 +39,9 @@ final class RecipeResourceTest {
             ModContentIds.MEMORY_TIER2,
             ModContentIds.MEMORY_TIER3,
             ModContentIds.NETWORK_CARD,
-            ModContentIds.SCREEN_TIER1);
+            ModContentIds.SCREEN_TIER1,
+            ModContentIds.SCREEN_TIER2,
+            ModContentIds.SCREEN_TIER3);
 
         for (String id : ids) {
             Path recipe = RECIPE_ROOT.resolve(id + ".json");

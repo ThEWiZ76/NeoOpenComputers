@@ -28,7 +28,11 @@ public final class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ScreenBlockEntity>> SCREEN =
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.SCREEN_BLOCK_ENTITY,
-            () -> BlockEntityType.Builder.of(ScreenBlockEntity::new, ModBlocks.SCREEN_TIER1.get()).build(null));
+            () -> BlockEntityType.Builder.of(
+                ScreenBlockEntity::new,
+                ModBlocks.SCREEN_TIER1.get(),
+                ModBlocks.SCREEN_TIER2.get(),
+                ModBlocks.SCREEN_TIER3.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<KeyboardBlockEntity>> KEYBOARD =
         BLOCK_ENTITY_TYPES.register(

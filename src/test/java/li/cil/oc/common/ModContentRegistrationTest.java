@@ -116,6 +116,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void screenTier2BlockIdIsStable() {
+        assertEquals("screen_tier2", ModContentIds.SCREEN_TIER2);
+    }
+
+    @Test
+    void screenTier3BlockIdIsStable() {
+        assertEquals("screen_tier3", ModContentIds.SCREEN_TIER3);
+    }
+
+    @Test
     void keyboardBlockIdIsStable() {
         assertEquals("keyboard", ModContentIds.KEYBOARD);
     }
