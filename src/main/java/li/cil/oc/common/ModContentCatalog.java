@@ -66,6 +66,8 @@ public final class ModContentCatalog {
                 ModItems.KEYBOARD.get(),
                 ModBlocks.MOTION_SENSOR.get(),
                 ModItems.MOTION_SENSOR.get(),
+                ModBlocks.REDSTONE_IO.get(),
+                ModItems.REDSTONE_IO.get(),
                 ModItems.MANUAL.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
@@ -123,6 +125,8 @@ public final class ModContentCatalog {
         final Item keyboardItem,
         final Block motionSensor,
         final Item motionSensorItem,
+        final Block redstoneIo,
+        final Item redstoneIoItem,
         final Item manualItem,
         final Item cpuTier1Item,
         final Item cpuTier2Item,
@@ -170,6 +174,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_SCREEN_TIER3, screenTier3, screenTier3Item);
         registry.register(ModContentIds.KEYBOARD, keyboard, keyboardItem);
         registry.register(ModContentIds.MOTION_SENSOR, motionSensor, motionSensorItem);
+        registry.register(ModContentIds.REDSTONE_IO, redstoneIo, redstoneIoItem);
         registry.register(ModContentIds.CPU_TIER1, null, cpuTier1Item);
         registry.register(ModContentIds.CPU_TIER2, null, cpuTier2Item);
         registry.register(ModContentIds.CPU_TIER3, null, cpuTier3Item);

@@ -8,6 +8,7 @@ import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
+import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -66,6 +67,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.MOTION_SENSOR_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(MotionSensorBlockEntity::new, ModBlocks.MOTION_SENSOR.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RedstoneIoBlockEntity>> REDSTONE_IO =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.REDSTONE_IO_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(RedstoneIoBlockEntity::new, ModBlocks.REDSTONE_IO.get()).build(null));
 
     public static void register(final IEventBus modEventBus) {
         BLOCK_ENTITY_TYPES.register(modEventBus);

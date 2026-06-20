@@ -8,6 +8,7 @@ import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.GeolyzerBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
+import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -67,6 +68,10 @@ public final class ModBlocks {
         ModContentIds.MOTION_SENSOR,
         () -> new MotionSensorBlock(motionSensorProperties()));
 
+    public static final DeferredBlock<Block> REDSTONE_IO = BLOCKS.register(
+        ModContentIds.REDSTONE_IO,
+        () -> new RedstoneIoBlock(redstoneIoProperties()));
+
     public static void register(final IEventBus modEventBus) {
         BLOCKS.register(modEventBus);
     }
@@ -120,5 +125,11 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(1.0F, 3.0F);
+    }
+
+    private static BlockBehaviour.Properties redstoneIoProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_RED)
+            .strength(1.5F, 4.0F);
     }
 }

@@ -29,6 +29,7 @@ final class LootTableResourceTest {
             ModContentIds.GEOLYZER,
             ModContentIds.KEYBOARD,
             ModContentIds.MOTION_SENSOR,
+            ModContentIds.REDSTONE_IO,
             ModContentIds.SCREEN_TIER1,
             ModContentIds.SCREEN_TIER2,
             ModContentIds.SCREEN_TIER3);

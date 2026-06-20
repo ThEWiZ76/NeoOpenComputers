@@ -166,6 +166,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void redstoneIoBlockIdIsStable() {
+        assertEquals("redstone", ModContentIds.REDSTONE_IO);
+    }
+
+    @Test
+    void redstoneIoBlockEntityIdIsStable() {
+        assertEquals("redstone", ModContentIds.REDSTONE_IO_BLOCK_ENTITY);
+    }
+
+    @Test
     void wirelessNetworkCardTier1ItemIdIsStable() {
         assertEquals("wireless_network_card_tier1", ModContentIds.WIRELESS_NETWORK_CARD_TIER1);
     }

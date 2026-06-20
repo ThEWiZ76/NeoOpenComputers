@@ -182,6 +182,10 @@ public final class ModItems {
         ModContentIds.MOTION_SENSOR,
         ModBlocks.MOTION_SENSOR);
 
+    public static final DeferredItem<BlockItem> REDSTONE_IO = ITEMS.registerSimpleBlockItem(
+        ModContentIds.REDSTONE_IO,
+        ModBlocks.REDSTONE_IO);
+
     public static void register(final IEventBus modEventBus) {
         ITEMS.register(modEventBus);
     }
