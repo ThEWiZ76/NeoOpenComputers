@@ -6,6 +6,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ItemRegistry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -50,7 +51,11 @@ public class FloppyItem extends Item implements DriverItem {
                 return null;
             }
             final String label = dataTag(stack).getString(ItemRegistry.FLOPPY_LABEL_TAG);
-            return FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
+            final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
+            if (environment != null && environment.node() instanceof li.cil.oc.api.network.Component component) {
+                component.setVisibility(Visibility.Network);
+            }
+            return environment;
         } catch (Exception e) {
             return null;
         }

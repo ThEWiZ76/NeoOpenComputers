@@ -51,6 +51,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private final int[] palette = new int[16];
     private final TextBufferState buffer = new TextBufferState(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     private final ScreenInputDispatcher inputDispatcher = new ScreenInputDispatcher();
+    private volatile boolean pendingServerThreadChangeMark;
     private Node node;
 
     public ScreenBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -71,7 +72,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Override
     public void setPowerState(final boolean value) {
         powered = value;
-        setChanged();
+        markChanged();
     }
 
     @Override
@@ -154,7 +155,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         final boolean oldValue = touchModeInverted;
         touchModeInverted = args.checkBoolean(0);
         if (touchModeInverted != oldValue) {
-            setChanged();
+            markChanged();
         }
         return new Object[]{oldValue};
     }
@@ -169,7 +170,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         final boolean oldValue = precisionMode;
         precisionMode = args.checkBoolean(0);
         if (precisionMode != oldValue) {
-            setChanged();
+            markChanged();
         }
         return new Object[]{oldValue};
     }
@@ -184,7 +185,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         buffer.resize(width, height);
         viewportWidth = Math.min(viewportWidth, width);
         viewportHeight = Math.min(viewportHeight, height);
-        setChanged();
+        markChanged();
         return true;
     }
 
@@ -205,7 +206,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         }
         viewportWidth = width;
         viewportHeight = height;
-        setChanged();
+        markChanged();
         return true;
     }
 
@@ -238,7 +239,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             return false;
         }
         colorDepth = depth;
-        setChanged();
+        markChanged();
         return true;
     }
 
@@ -251,7 +252,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     public void setPaletteColor(final int index, final int color) {
         if (index >= 0 && index < palette.length) {
             palette[index] = color;
-            setChanged();
+            markChanged();
         }
     }
 
@@ -269,7 +270,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     public void setForegroundColor(final int color, final boolean isFromPalette) {
         foregroundColor = color;
         foregroundFromPalette = isFromPalette;
-        setChanged();
+        markChanged();
     }
 
     @Override
@@ -291,7 +292,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     public void setBackgroundColor(final int color, final boolean isFromPalette) {
         backgroundColor = color;
         backgroundFromPalette = isFromPalette;
-        setChanged();
+        markChanged();
     }
 
     @Override
@@ -307,7 +308,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Override
     public void copy(final int column, final int row, final int width, final int height, final int horizontalTranslation, final int verticalTranslation) {
         buffer.copy(column, row, width, height, horizontalTranslation, verticalTranslation);
-        setChanged();
+        markChanged();
     }
 
     @Override
@@ -318,13 +319,13 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Override
     public void fill(final int column, final int row, final int width, final int height, final int value) {
         buffer.fill(column, row, width, height, value, foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
-        setChanged();
+        markChanged();
     }
 
     @Override
     public void set(final int column, final int row, final String value, final boolean vertical) {
         buffer.set(column, row, value, vertical, foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
-        setChanged();
+        markChanged();
     }
 
     @Override
@@ -360,25 +361,25 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Override
     public void rawSetText(final int column, final int row, final char[][] text) {
         buffer.rawSetText(column, row, text);
-        setChanged();
+        markChanged();
     }
 
     @Override
     public void rawSetText(final int column, final int row, final int[][] text) {
         buffer.rawSetText(column, row, text);
-        setChanged();
+        markChanged();
     }
 
     @Override
     public void rawSetForeground(final int column, final int row, final int[][] color) {
         buffer.rawSetForeground(column, row, color);
-        setChanged();
+        markChanged();
     }
 
     @Override
     public void rawSetBackground(final int column, final int row, final int[][] color) {
         buffer.rawSetBackground(column, row, color);
-        setChanged();
+        markChanged();
     }
 
     @Override
@@ -545,5 +546,22 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (node != null) {
             node.remove();
         }
+    }
+
+    private void markChanged() {
+        if (level != null && level.getServer() != null && !level.getServer().isSameThread()) {
+            if (!pendingServerThreadChangeMark) {
+                pendingServerThreadChangeMark = true;
+                level.getServer().execute(this::markChangedOnServerThread);
+            }
+            return;
+        }
+
+        markChangedOnServerThread();
+    }
+
+    private void markChangedOnServerThread() {
+        pendingServerThreadChangeMark = false;
+        super.setChanged();
     }
 }

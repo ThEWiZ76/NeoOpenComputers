@@ -47,11 +47,11 @@ final class FileSystemRegistry implements FileSystemAPI {
         }
         try {
             return switch (resource.getProtocol()) {
-                case "file" -> ResourceFileSystem.fromDirectory(Path.of(resource.toURI()));
+                case "file", "union" -> fromPathResource(resource);
                 case "jar" -> ResourceFileSystem.fromJar(resource);
                 default -> null;
             };
-        } catch (IOException | URISyntaxException | IllegalArgumentException e) {
+        } catch (IOException | URISyntaxException | RuntimeException e) {
             return null;
         }
     }
@@ -99,6 +99,10 @@ final class FileSystemRegistry implements FileSystemAPI {
             clean = clean.substring(0, clean.length() - 1);
         }
         return clean;
+    }
+
+    private static ResourceFileSystem fromPathResource(final URL resource) throws IOException, URISyntaxException {
+        return ResourceFileSystem.fromDirectory(Path.of(resource.toURI()));
     }
 
     private static String[] pathSegments(final String path) {
