@@ -704,6 +704,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 40)
+    public static void adapterDropsInstalledUpgradeWhenBroken(final GameTestHelper helper) {
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+
+        helper.killAllEntities();
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+
+        final li.cil.oc.common.blockentity.AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+        adapter.setItem(0, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get()));
+
+        helper.getLevel().destroyBlock(helper.absolutePos(adapterPos), true);
+        helper.runAtTickTime(1, () -> {
+            assertDroppedItem(helper, ModItems.INVENTORY_CONTROLLER_UPGRADE.get());
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
     public static void brokenComputerCaseDropsFlushedHardDiskData(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(1, 1, 1);
 

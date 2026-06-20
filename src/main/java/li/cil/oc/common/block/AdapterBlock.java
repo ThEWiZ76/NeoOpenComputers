@@ -3,6 +3,7 @@ package li.cil.oc.common.block;
 import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.blockentity.AdapterBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.Containers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -59,6 +60,7 @@ public class AdapterBlock extends Block implements EntityBlock {
         if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof AdapterBlockEntity adapter) {
             adapter.removeNode();
         }
+        Containers.dropContentsOnDestroy(state, newState, level, pos);
         super.onRemove(state, level, pos, newState, movedByPiston);
     }
 }
