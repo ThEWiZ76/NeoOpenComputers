@@ -374,6 +374,32 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void transposerPausesAfterFluidTransfer(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.TRANSPOSER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+        helper.setBlock(pos.relative(Direction.EAST), Blocks.CAULDRON);
+        final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) transposer.node();
+        final double[] pauseSeconds = new double[]{-1D};
+        final Context context = new RecordingContext(component, pauseSeconds);
+
+        try {
+            final Object[] result = component.invoke(
+                "transferFluid",
+                context,
+                Direction.WEST.get3DDataValue(),
+                Direction.EAST.get3DDataValue(),
+                1000);
+            helper.assertTrue(Boolean.TRUE.equals(result[0]), "Transposer did not transfer fluid");
+            helper.assertTrue(Double.compare(0.25D, pauseSeconds[0]) == 0, "Transposer did not pause for moved fluid amount");
+            helper.succeed();
+        } catch (Exception e) {
+            helper.fail("Component invocation failed: transferFluid " + e.getMessage());
+        }
+    }
+
+    @GameTest(template = "empty")
     public static void transposerStoresStacksInDatabase(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(1, 1, 1);
         final int side = Direction.WEST.get3DDataValue();
@@ -2048,6 +2074,48 @@ public final class NeoOpenComputersGameTests {
     }
 
     private record DatabaseCloneContext(Node node, double[] pauseSeconds) implements Context {
+        @Override
+        public boolean canInteract(final String player) {
+            return true;
+        }
+
+        @Override
+        public boolean isRunning() {
+            return true;
+        }
+
+        @Override
+        public boolean isPaused() {
+            return false;
+        }
+
+        @Override
+        public boolean start() {
+            return true;
+        }
+
+        @Override
+        public boolean pause(final double seconds) {
+            pauseSeconds[0] = seconds;
+            return true;
+        }
+
+        @Override
+        public boolean stop() {
+            return true;
+        }
+
+        @Override
+        public void consumeCallBudget(final double callCost) {
+        }
+
+        @Override
+        public boolean signal(final String name, final Object... args) {
+            return true;
+        }
+    }
+
+    private record RecordingContext(Node node, double[] pauseSeconds) implements Context {
         @Override
         public boolean canInteract(final String player) {
             return true;

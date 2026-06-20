@@ -36,6 +36,7 @@ import java.util.Map;
 public class TransposerBlockEntity extends BlockEntity implements Environment, EnvironmentHost, DeviceInfo {
     private static final String TAG_NODE = "node";
     private static final String COMPONENT_NAME = "transposer";
+    private static final double FLUID_TRANSFER_RATE = 4000D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Transposer",
@@ -281,6 +282,9 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
             return new Object[]{false, 0};
         }
         final int filled = sink.fill(drained, FluidAction.EXECUTE);
+        if (filled > 0 && context != null) {
+            context.pause(filled / FLUID_TRANSFER_RATE);
+        }
         return new Object[]{filled > 0, filled};
     }
 
