@@ -40,6 +40,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_NAVIGATION_UPGRADE = "navigationUpgrade";
     public static final String COMPAT_NETWORK_CARD = "lancard";
     public static final String COMPAT_REDSTONE_CARD = "redstone";
+    public static final String COMPAT_TANK_UPGRADE = "tankUpgrade";
     public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER1 = "wlancard1";
     public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER2 = "wlancard2";
     public static final String COMPAT_WIRELESS_NETWORK_CARD = "wlancard";
@@ -119,7 +120,8 @@ public final class ModContentCatalog {
                 ModItems.NETWORK_CARD.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER1.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER2.get(),
-                ModItems.REDSTONE_CARD.get());
+                ModItems.REDSTONE_CARD.get(),
+                ModItems.TANK_UPGRADE.get());
         }
     }
 
@@ -193,7 +195,8 @@ public final class ModContentCatalog {
         final Item networkCardItem,
         final Item wirelessNetworkCardTier1Item,
         final Item wirelessNetworkCardTier2Item,
-        final Item redstoneCardItem) {
+        final Item redstoneCardItem,
+        final Item tankUpgradeItem) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);
@@ -252,6 +255,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(ModContentIds.REDSTONE_CARD, null, redstoneCardItem);
+        registry.register(ModContentIds.TANK_UPGRADE, null, tankUpgradeItem);
         registry.register(COMPAT_CPU_TIER1, null, cpuTier1Item);
         registry.register(COMPAT_CPU_TIER2, null, cpuTier2Item);
         registry.register(COMPAT_CPU_TIER3, null, cpuTier3Item);
@@ -287,6 +291,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_REDSTONE_CARD, null, redstoneCardItem);
+        registry.register(COMPAT_TANK_UPGRADE, null, tankUpgradeItem);
     }
 
     private ModContentCatalog() {

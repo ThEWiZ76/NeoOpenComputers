@@ -205,6 +205,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void tankUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
+        final Constructor<TankUpgradeItem> constructor = TankUpgradeItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(TankUpgradeItem.class));
+        assertTrue(HostAware.class.isAssignableFrom(TankUpgradeItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void databaseUpgradeItemIsUpgradeDriver() throws NoSuchMethodException {
         final Constructor<DatabaseUpgradeItem> constructor = DatabaseUpgradeItem.class.getConstructor(Item.Properties.class);
 

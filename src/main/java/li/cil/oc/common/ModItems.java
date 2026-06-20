@@ -18,6 +18,7 @@ import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.RedstoneCardItem;
+import li.cil.oc.common.item.TankUpgradeItem;
 import li.cil.oc.common.item.WirelessNetworkCardItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -201,6 +202,10 @@ public final class ModItems {
     public static final DeferredItem<RedstoneCardItem> REDSTONE_CARD = ITEMS.register(
         ModContentIds.REDSTONE_CARD,
         () -> new RedstoneCardItem(new Item.Properties()));
+
+    public static final DeferredItem<TankUpgradeItem> TANK_UPGRADE = ITEMS.register(
+        ModContentIds.TANK_UPGRADE,
+        () -> new TankUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<BlockItem> SCREEN_TIER1 = ITEMS.registerSimpleBlockItem(
         ModContentIds.SCREEN_TIER1,

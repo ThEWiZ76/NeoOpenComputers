@@ -191,6 +191,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void tankUpgradeItemIdIsStable() {
+        assertEquals("tank_upgrade", ModContentIds.TANK_UPGRADE);
+    }
+
+    @Test
     void networkCardItemIdIsStable() {
         assertEquals("network_card", ModContentIds.NETWORK_CARD);
     }

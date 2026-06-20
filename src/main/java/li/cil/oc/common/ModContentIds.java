@@ -58,6 +58,7 @@ public final class ModContentIds {
     public static final String REDSTONE_CARD = "redstone_card";
     public static final String REDSTONE_IO = "redstone";
     public static final String REDSTONE_IO_BLOCK_ENTITY = "redstone";
+    public static final String TANK_UPGRADE = "tank_upgrade";
     public static final String WIRELESS_NETWORK_CARD_TIER1 = "wireless_network_card_tier1";
     public static final String WIRELESS_NETWORK_CARD_TIER2 = "wireless_network_card_tier2";
     public static final String SCREEN_TIER1 = "screen_tier1";

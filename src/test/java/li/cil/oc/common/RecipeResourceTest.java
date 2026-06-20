@@ -63,6 +63,7 @@ final class RecipeResourceTest {
             ModContentIds.NAVIGATION_UPGRADE,
             ModContentIds.NETWORK_CARD,
             ModContentIds.REDSTONE_IO,
+            ModContentIds.TANK_UPGRADE,
             ModContentIds.TRANSPOSER,
             ModContentIds.WAYPOINT,
             ModContentIds.WIRELESS_NETWORK_CARD_TIER1,

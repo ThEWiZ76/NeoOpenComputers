@@ -44,10 +44,14 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.IFluidTank;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
@@ -114,6 +118,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.NAVIGATION_UPGRADE.get();
         ModItems.NETWORK_CARD.get();
         ModItems.REDSTONE_IO.get();
+        ModItems.TANK_UPGRADE.get();
         ModItems.TRANSPOSER.get();
         ModItems.WAYPOINT.get();
         ModItems.WIRELESS_NETWORK_CARD_TIER1.get();
@@ -149,6 +154,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.INTERNET_CARD.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.LINKED_CARD.get()), 1);
@@ -173,6 +179,7 @@ public final class NeoOpenComputersGameTests {
         assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER2.get()), 15000D);
         assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER3.get()), 20000D);
         assertInventoryCapacity(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()), 16);
+        assertTankCapacity(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 16000);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), false, 16D);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), true, 400D);
         helper.succeed();
@@ -1072,6 +1079,19 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(driver instanceof li.cil.oc.api.driver.item.Inventory, "Expected inventory driver for " + stack);
         final li.cil.oc.api.driver.item.Inventory inventory = (li.cil.oc.api.driver.item.Inventory) driver;
         helper.assertTrue(inventory.inventoryCapacity(stack) == capacity, "Expected " + stack + " inventory capacity " + capacity + " but got " + inventory.inventoryCapacity(stack));
+    }
+
+    private static void assertTankCapacity(final GameTestHelper helper, final ItemStack stack, final int capacity) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment instanceof IFluidTank, "Expected tank environment for " + stack);
+        final IFluidTank tank = (IFluidTank) environment;
+        helper.assertTrue(tank.getCapacity() == capacity, "Expected " + stack + " tank capacity " + capacity + " but got " + tank.getCapacity());
+        helper.assertTrue(tank.fill(new FluidStack(Fluids.WATER, 1000), FluidAction.EXECUTE) == 1000, "Tank did not accept water");
+        helper.assertTrue(tank.getFluidAmount() == 1000, "Tank did not store water");
+        helper.assertTrue(tank.drain(250, FluidAction.EXECUTE).getAmount() == 250, "Tank did not drain water");
+        helper.assertTrue(tank.getFluidAmount() == 750, "Tank did not retain remaining water");
     }
 
     private static void assertWirelessModem(final GameTestHelper helper, final ItemStack stack, final boolean wired, final double strength) {
