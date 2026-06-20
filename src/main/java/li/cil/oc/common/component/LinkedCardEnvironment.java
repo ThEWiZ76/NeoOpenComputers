@@ -6,6 +6,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.MachineHost;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
@@ -27,6 +28,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
     private static final String MODEM_MESSAGE_SIGNAL = "modem_message";
     private static final int MAX_PACKET_SIZE = 8192;
     private static final int MAX_PACKET_PARTS = 8;
+    private static final double LINKED_CARD_BASE_COST = 0.05D * 400D * 5D;
     private static final Map<String, List<LinkedCardEnvironment>> CHANNELS = new LinkedHashMap<>();
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
@@ -47,7 +49,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         this.channel = normalizeChannel(channel);
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
-            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create());
+            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
         }
     }
 
@@ -65,12 +67,23 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         if (packet == null) {
             return new Object[]{false};
         }
+        if (!consumeEnergy(context, packet)) {
+            return new Object[]{null, "not enough energy"};
+        }
         for (LinkedCardEnvironment endpoint : List.copyOf(CHANNELS.getOrDefault(channel, List.of()))) {
             if (endpoint != this) {
                 endpoint.receivePacket(packet);
             }
         }
         return new Object[]{true};
+    }
+
+    private static boolean consumeEnergy(final Context context, final Packet packet) {
+        if (context == null || !(context.node() instanceof Connector connector)) {
+            return true;
+        }
+        final double cost = packet.size() / 32.0D + LINKED_CARD_BASE_COST;
+        return connector.tryChangeBuffer(-cost);
     }
 
     @Callback(direct = true, doc = "function():number -- Gets the maximum packet size.")
