@@ -319,6 +319,23 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentAcceptsHandleTables() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+
+        Object handle = component.invoke("open", null, "data.txt", "w")[0];
+        Map<String, Object> handleTable = Map.of("handle", Integer.parseInt(handle.toString()));
+
+        assertArrayEquals(new Object[]{true}, component.invoke("write", null, handleTable, "hello"));
+        component.invoke("close", null, handleTable);
+
+        Object readHandle = component.invoke("open", null, "data.txt", "r")[0];
+        assertArrayEquals("hello".getBytes(StandardCharsets.UTF_8), (byte[]) component.invoke("read", null, readHandle, 5)[0]);
+    }
+
+    @Test
     void managedFileSystemEnvironmentConsumesCallBudgetForIo() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(256);

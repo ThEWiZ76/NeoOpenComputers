@@ -384,6 +384,9 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         if (value instanceof Number number) {
             return number.intValue();
         }
+        if (value instanceof Map<?, ?> table && table.get("handle") instanceof Number number) {
+            return number.intValue();
+        }
         if (value instanceof FileHandleValue handleValue && handleValue.owner == this) {
             return handleValue.handle;
         }
