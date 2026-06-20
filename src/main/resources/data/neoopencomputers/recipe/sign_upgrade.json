@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "D": {
+      "item": "minecraft:black_dye"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "P": {
+      "item": "minecraft:sticky_piston"
+    }
+  },
+  "pattern": [
+    "IDI",
+    "CSC",
+    "IPI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:sign_upgrade"
+  }
+}

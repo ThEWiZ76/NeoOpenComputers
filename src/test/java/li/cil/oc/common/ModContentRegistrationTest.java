@@ -306,6 +306,14 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void worldInteractionUpgradeItemIdsAreStable() {
+        assertEquals("piston_upgrade", ModContentIds.PISTON_UPGRADE);
+        assertEquals("sticky_piston_upgrade", ModContentIds.STICKY_PISTON_UPGRADE);
+        assertEquals("sign_upgrade", ModContentIds.SIGN_UPGRADE);
+        assertEquals("trading_upgrade", ModContentIds.TRADING_UPGRADE);
+    }
+
+    @Test
     void tankUpgradeItemIdIsStable() {
         assertEquals("tank_upgrade", ModContentIds.TANK_UPGRADE);
     }

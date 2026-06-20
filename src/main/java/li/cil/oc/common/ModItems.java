@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.BatteryUpgradeItem;
+import li.cil.oc.common.item.BasicUpgradeItem;
 import li.cil.oc.common.item.CardContainerItem;
 import li.cil.oc.common.item.CraftingUpgradeItem;
 import li.cil.oc.common.item.CpuItem;
@@ -274,6 +275,22 @@ public final class ModItems {
     public static final DeferredItem<NetworkCardItem> NETWORK_CARD = ITEMS.register(
         ModContentIds.NETWORK_CARD,
         () -> new NetworkCardItem(new Item.Properties()));
+
+    public static final DeferredItem<BasicUpgradeItem> PISTON_UPGRADE = ITEMS.register(
+        ModContentIds.PISTON_UPGRADE,
+        () -> new BasicUpgradeItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<BasicUpgradeItem> STICKY_PISTON_UPGRADE = ITEMS.register(
+        ModContentIds.STICKY_PISTON_UPGRADE,
+        () -> new BasicUpgradeItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<BasicUpgradeItem> SIGN_UPGRADE = ITEMS.register(
+        ModContentIds.SIGN_UPGRADE,
+        () -> new BasicUpgradeItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<BasicUpgradeItem> TRADING_UPGRADE = ITEMS.register(
+        ModContentIds.TRADING_UPGRADE,
+        () -> new BasicUpgradeItem(new Item.Properties(), 1));
 
     public static final DeferredItem<WirelessNetworkCardItem> WIRELESS_NETWORK_CARD_TIER1 = ITEMS.register(
         ModContentIds.WIRELESS_NETWORK_CARD_TIER1,

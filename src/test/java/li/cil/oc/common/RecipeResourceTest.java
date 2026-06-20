@@ -84,6 +84,10 @@ final class RecipeResourceTest {
             ModContentIds.INVENTORY_UPGRADE,
             ModContentIds.CRAFTING_UPGRADE,
             ModContentIds.EXPERIENCE_UPGRADE,
+            ModContentIds.PISTON_UPGRADE,
+            ModContentIds.STICKY_PISTON_UPGRADE,
+            ModContentIds.SIGN_UPGRADE,
+            ModContentIds.TRADING_UPGRADE,
             ModContentIds.KEYBOARD,
             ModContentIds.LINKED_CARD,
             ModContentIds.MANUAL,
@@ -595,6 +599,13 @@ final class RecipeResourceTest {
         JsonObject crafting = craftingRecipe.getAsJsonObject("key");
         JsonObject experienceRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.EXPERIENCE_UPGRADE + ".json"));
         JsonObject experience = experienceRecipe.getAsJsonObject("key");
+        JsonObject pistonRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.PISTON_UPGRADE + ".json"));
+        JsonObject piston = pistonRecipe.getAsJsonObject("key");
+        JsonObject stickyPiston = readJson(RECIPE_ROOT.resolve(ModContentIds.STICKY_PISTON_UPGRADE + ".json"));
+        JsonObject signRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SIGN_UPGRADE + ".json"));
+        JsonObject sign = signRecipe.getAsJsonObject("key");
+        JsonObject tradingRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.TRADING_UPGRADE + ".json"));
+        JsonObject trading = tradingRecipe.getAsJsonObject("key");
         JsonObject solarRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SOLAR_GENERATOR_UPGRADE + ".json"));
         JsonObject solar = solarRecipe.getAsJsonObject("key");
         JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
@@ -618,6 +629,32 @@ final class RecipeResourceTest {
         assertItem(experience, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
         assertItem(experience, "E", "minecraft:emerald");
         assertItem(experience, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(pistonRecipe, "IPI", "SCS", "IBI");
+        assertTag(piston, "I", "c:ingots/iron");
+        assertItem(piston, "P", "minecraft:piston");
+        assertItem(piston, "S", "minecraft:stick");
+        assertItem(piston, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(piston, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertEquals("minecraft:crafting_shapeless", stickyPiston.get("type").getAsString());
+        assertIngredientItem(stickyPiston, "neoopencomputers:" + ModContentIds.PISTON_UPGRADE);
+        assertIngredientItem(stickyPiston, "minecraft:slime_ball");
+
+        assertPattern(signRecipe, "IDI", "CSC", "IPI");
+        assertTag(sign, "I", "c:ingots/iron");
+        assertItem(sign, "D", "minecraft:black_dye");
+        assertItem(sign, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(sign, "S", "minecraft:stick");
+        assertItem(sign, "P", "minecraft:sticky_piston");
+
+        assertPattern(tradingRecipe, "CHC", "ECE", "DBP");
+        assertItem(trading, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(trading, "H", "minecraft:chest");
+        assertItem(trading, "E", "minecraft:emerald");
+        assertItem(trading, "D", "minecraft:dropper");
+        assertItem(trading, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(trading, "P", "minecraft:piston");
 
         assertPattern(solarRecipe, "GGG", "CUC");
         assertItem(solar, "G", "minecraft:glass");

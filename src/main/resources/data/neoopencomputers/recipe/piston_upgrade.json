@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "pattern": [
+    "IPI",
+    "SCS",
+    "IBI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:piston_upgrade"
+  }
+}
