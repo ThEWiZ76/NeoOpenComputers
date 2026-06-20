@@ -9,6 +9,7 @@ import li.cil.oc.common.item.DataCardItem;
 import li.cil.oc.common.item.DatabaseUpgradeItem;
 import li.cil.oc.common.item.EepromItem;
 import li.cil.oc.common.item.FloppyItem;
+import li.cil.oc.common.item.GeneratorUpgradeItem;
 import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
 import li.cil.oc.common.item.HoverUpgradeItem;
@@ -189,6 +190,10 @@ public final class ModItems {
     public static final DeferredItem<FloppyItem> FLOPPY = ITEMS.register(
         ModContentIds.FLOPPY,
         () -> new FloppyItem(new Item.Properties()));
+
+    public static final DeferredItem<GeneratorUpgradeItem> GENERATOR_UPGRADE = ITEMS.register(
+        ModContentIds.GENERATOR_UPGRADE,
+        () -> new GeneratorUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<GraphicsCardItem> GRAPHICS_CARD_TIER1 = ITEMS.register(
         ModContentIds.GRAPHICS_CARD_TIER1,

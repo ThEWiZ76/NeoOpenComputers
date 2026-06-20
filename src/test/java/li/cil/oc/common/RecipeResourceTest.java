@@ -68,6 +68,7 @@ final class RecipeResourceTest {
             ModContentIds.EEPROM,
             ModContentIds.FLOPPY,
             ModContentIds.GEOLYZER,
+            "generator_upgrade",
             ModContentIds.GRAPHICS_CARD_TIER1,
             ModContentIds.GRAPHICS_CARD_TIER2,
             ModContentIds.GRAPHICS_CARD_TIER3,
@@ -588,7 +589,8 @@ final class RecipeResourceTest {
     @Test
     void utilityUpgradeRecipesUsePortedMaterials() throws IOException {
         JsonObject waypoint = recipeKeys(ModContentIds.WAYPOINT);
-        JsonObject solar = recipeKeys(ModContentIds.SOLAR_GENERATOR_UPGRADE);
+        JsonObject solarRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SOLAR_GENERATOR_UPGRADE + ".json"));
+        JsonObject solar = solarRecipe.getAsJsonObject("key");
         JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
 
         assertTag(waypoint, "I", "c:ingots/iron");
@@ -596,11 +598,12 @@ final class RecipeResourceTest {
         assertItem(waypoint, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
         assertItem(waypoint, "W", "neoopencomputers:" + ModContentIds.INTERWEB);
         assertItem(waypoint, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(solarRecipe, "GGG", "CUC");
         assertItem(solar, "G", "minecraft:glass");
         assertItem(solar, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
-        assertItem(solar, "L", "minecraft:lapis_block");
-        assertTag(solar, "I", "c:ingots/iron");
-        assertItem(solar, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(solar, "U", "neoopencomputers:generator_upgrade");
+
         assertItem(hover1, "F", "minecraft:feather");
         assertItem(hover1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertTag(hover1, "I", "c:nuggets/iron");
@@ -803,6 +806,18 @@ final class RecipeResourceTest {
         assertItem(disassemblerKeys, "O", "minecraft:obsidian");
         assertTag(disassemblerKeys, "I", "c:ingots/iron");
         assertItem(disassemblerKeys, "L", "minecraft:lava_bucket");
+    }
+
+    @Test
+    void generatorUpgradeRecipeUsesUpstreamHardmodeShape() throws IOException {
+        JsonObject generator = readJson(RECIPE_ROOT.resolve("generator_upgrade.json"));
+        JsonObject keys = generator.getAsJsonObject("key");
+
+        assertPattern(generator, "I I", "CPC", "BIB");
+        assertTag(keys, "I", "c:ingots/iron");
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(keys, "P", "minecraft:piston");
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
     private static JsonObject readJson(final Path path) throws IOException {

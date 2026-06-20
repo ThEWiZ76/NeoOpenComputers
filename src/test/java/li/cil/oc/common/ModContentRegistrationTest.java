@@ -311,6 +311,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void generatorUpgradeItemIdIsStable() throws ReflectiveOperationException {
+        assertEquals("generator_upgrade", ModContentIds.class.getField("GENERATOR_UPGRADE").get(null));
+    }
+
+    @Test
     void networkCardItemIdIsStable() {
         assertEquals("network_card", ModContentIds.NETWORK_CARD);
     }

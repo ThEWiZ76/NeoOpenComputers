@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "pattern": [
+    "I I",
+    "CPC",
+    "BIB"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:generator_upgrade"
+  }
+}

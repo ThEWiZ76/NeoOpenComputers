@@ -36,6 +36,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_GRAPHICS_CARD_TIER1 = "graphicscard1";
     public static final String COMPAT_GRAPHICS_CARD_TIER2 = "graphicscard2";
     public static final String COMPAT_GRAPHICS_CARD_TIER3 = "graphicscard3";
+    public static final String COMPAT_GENERATOR_UPGRADE = "generatorUpgrade";
     public static final String COMPAT_HOVER_UPGRADE_TIER1 = "hoverUpgrade1";
     public static final String COMPAT_HOVER_UPGRADE_TIER2 = "hoverUpgrade2";
     public static final String COMPAT_HOLOGRAM_TIER1 = "hologram1";
@@ -170,7 +171,8 @@ public final class ModContentCatalog {
                 ModItems.TANK_CONTROLLER_UPGRADE.get(),
                 ModItems.UPGRADE_CONTAINER_TIER1.get(),
                 ModItems.UPGRADE_CONTAINER_TIER2.get(),
-                ModItems.UPGRADE_CONTAINER_TIER3.get());
+                ModItems.UPGRADE_CONTAINER_TIER3.get(),
+                ModItems.GENERATOR_UPGRADE.get());
             registerMaterialItems(
                 registry,
                 ModItems.CUTTING_WIRE.get(),
@@ -352,7 +354,8 @@ public final class ModContentCatalog {
         final Item tankControllerUpgradeItem,
         final Item upgradeContainerTier1Item,
         final Item upgradeContainerTier2Item,
-        final Item upgradeContainerTier3Item) {
+        final Item upgradeContainerTier3Item,
+        final Item generatorUpgradeItem) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.ANALYZER, null, analyzerItem);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
@@ -421,6 +424,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(ModContentIds.REDSTONE_CARD, null, redstoneCardItem);
+        registry.register(ModContentIds.GENERATOR_UPGRADE, null, generatorUpgradeItem);
         registry.register(ModContentIds.SOLAR_GENERATOR_UPGRADE, null, solarGeneratorUpgradeItem);
         registry.register(ModContentIds.TANK_UPGRADE, null, tankUpgradeItem);
         registry.register(ModContentIds.TANK_CONTROLLER_UPGRADE, null, tankControllerUpgradeItem);
@@ -468,6 +472,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_REDSTONE_CARD, null, redstoneCardItem);
+        registry.register(COMPAT_GENERATOR_UPGRADE, null, generatorUpgradeItem);
         registry.register(COMPAT_SOLAR_GENERATOR_UPGRADE, null, solarGeneratorUpgradeItem);
         registry.register(COMPAT_TANK_UPGRADE, null, tankUpgradeItem);
         registry.register(COMPAT_TANK_CONTROLLER_UPGRADE, null, tankControllerUpgradeItem);

@@ -109,6 +109,7 @@ final class ModContentCatalogTest {
             null,
             null,
             null,
+            null,
             null);
 
         assertNotNull(registry.get(ModContentIds.ADAPTER));
@@ -190,6 +191,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.WIRELESS_NETWORK_CARD_TIER2));
         assertNotNull(registry.get(ModContentIds.REDSTONE_CARD));
         assertNotNull(registry.get(ModContentIds.SOLAR_GENERATOR_UPGRADE));
+        assertNotNull(registry.get(ModContentIds.GENERATOR_UPGRADE));
         assertNotNull(registry.get(ModContentIds.UPGRADE_CONTAINER_TIER1));
         assertNotNull(registry.get(ModContentIds.UPGRADE_CONTAINER_TIER2));
         assertNotNull(registry.get(ModContentIds.UPGRADE_CONTAINER_TIER3));
@@ -229,6 +231,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_REDSTONE_CARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_SOLAR_GENERATOR_UPGRADE));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_GENERATOR_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER3));
@@ -310,6 +313,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, registry.get(ModContentIds.WIRELESS_NETWORK_CARD_TIER2).name());
         assertEquals(ModContentIds.REDSTONE_CARD, registry.get(ModContentIds.REDSTONE_CARD).name());
         assertEquals(ModContentIds.SOLAR_GENERATOR_UPGRADE, registry.get(ModContentIds.SOLAR_GENERATOR_UPGRADE).name());
+        assertEquals(ModContentIds.GENERATOR_UPGRADE, registry.get(ModContentIds.GENERATOR_UPGRADE).name());
         assertEquals(ModContentIds.UPGRADE_CONTAINER_TIER1, registry.get(ModContentIds.UPGRADE_CONTAINER_TIER1).name());
         assertEquals(ModContentIds.UPGRADE_CONTAINER_TIER2, registry.get(ModContentIds.UPGRADE_CONTAINER_TIER2).name());
         assertEquals(ModContentIds.UPGRADE_CONTAINER_TIER3, registry.get(ModContentIds.UPGRADE_CONTAINER_TIER3).name());
@@ -349,6 +353,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD, registry.get(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD).name());
         assertEquals(ModContentCatalog.COMPAT_REDSTONE_CARD, registry.get(ModContentCatalog.COMPAT_REDSTONE_CARD).name());
         assertEquals(ModContentCatalog.COMPAT_SOLAR_GENERATOR_UPGRADE, registry.get(ModContentCatalog.COMPAT_SOLAR_GENERATOR_UPGRADE).name());
+        assertEquals(ModContentCatalog.COMPAT_GENERATOR_UPGRADE, registry.get(ModContentCatalog.COMPAT_GENERATOR_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER1, registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER2, registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER3, registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER3).name());
