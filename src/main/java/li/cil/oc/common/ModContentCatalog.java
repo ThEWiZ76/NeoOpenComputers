@@ -28,6 +28,7 @@ public final class ModContentCatalog {
                 ModItems.MEMORY_TIER1.get(),
                 ModItems.HDD_TIER1.get(),
                 ModItems.EEPROM.get(),
+                ModItems.FLOPPY.get(),
                 ModItems.GRAPHICS_CARD_TIER1.get(),
                 ModItems.NETWORK_CARD.get());
         }
@@ -46,6 +47,7 @@ public final class ModContentCatalog {
         final Item memoryTier1Item,
         final Item hddTier1Item,
         final Item eepromItem,
+        final Item floppyItem,
         final Item graphicsCardTier1Item,
         final Item networkCardItem) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
@@ -58,6 +60,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.MEMORY_TIER1, null, memoryTier1Item);
         registry.register(ModContentIds.HDD_TIER1, null, hddTier1Item);
         registry.register(ModContentIds.EEPROM, null, eepromItem);
+        registry.register(ModContentIds.FLOPPY, null, floppyItem);
         registry.register(ModContentIds.GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
         registry.register(ModContentIds.NETWORK_CARD, null, networkCardItem);
         registry.register(COMPAT_CPU_TIER1, null, cpuTier1Item);

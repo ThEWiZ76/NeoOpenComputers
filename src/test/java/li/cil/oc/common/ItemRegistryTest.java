@@ -50,6 +50,23 @@ final class ItemRegistryTest {
     }
 
     @Test
+    void floppyFactoryLookupHandlesMissingStacks() {
+        ItemRegistry registry = new ItemRegistry();
+
+        assertNull(registry.floppyFactory(null));
+    }
+
+    @Test
+    void floppyFactoryDataStoresConfiguredLabelColorAndFactoryId() {
+        CompoundTag tag = ItemRegistry.createFloppyData("OpenOS", DyeColor.LIME, "factory-id", true);
+
+        assertEquals("OpenOS", tag.getString(ItemRegistry.FLOPPY_LABEL_TAG));
+        assertEquals("lime", tag.getString(ItemRegistry.FLOPPY_COLOR_TAG));
+        assertEquals(true, tag.getBoolean(ItemRegistry.FLOPPY_RECIPE_CYCLING_TAG));
+        assertEquals("factory-id", tag.getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG));
+    }
+
+    @Test
     void eepromFactoryDataStoresConfiguredCodeDataAndReadonlyFlag() {
         CompoundTag data = ItemRegistry.createEepromData("bios", new byte[]{1, 2}, new byte[]{3}, true);
 

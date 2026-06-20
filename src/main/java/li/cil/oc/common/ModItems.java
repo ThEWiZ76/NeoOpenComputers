@@ -28,6 +28,8 @@ public final class ModItems {
         ModContentIds.EEPROM,
         () -> new EepromItem(new Item.Properties()));
 
+    public static final DeferredItem<Item> FLOPPY = ITEMS.registerSimpleItem(ModContentIds.FLOPPY, new Item.Properties());
+
     public static final DeferredItem<GraphicsCardItem> GRAPHICS_CARD_TIER1 = ITEMS.register(
         ModContentIds.GRAPHICS_CARD_TIER1,
         () -> new GraphicsCardItem(new Item.Properties()));

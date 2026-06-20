@@ -46,6 +46,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void floppyItemIdIsStable() {
+        assertEquals("floppy", ModContentIds.FLOPPY);
+    }
+
+    @Test
     void graphicsCardTier1ItemIdIsStable() {
         assertEquals("graphics_card_tier1", ModContentIds.GRAPHICS_CARD_TIER1);
     }

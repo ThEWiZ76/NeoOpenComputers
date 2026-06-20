@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.api.detail.ItemAPI;
 import li.cil.oc.api.detail.ItemInfo;
+import li.cil.oc.api.fs.FileSystem;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -14,9 +15,14 @@ import net.minecraft.world.level.block.Block;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 public final class ItemRegistry implements ItemAPI {
+    public static final String FLOPPY_COLOR_TAG = "oc:color";
+    public static final String FLOPPY_FACTORY_ID_TAG = "oc:factory";
+    public static final String FLOPPY_LABEL_TAG = "oc:label";
+    public static final String FLOPPY_RECIPE_CYCLING_TAG = "oc:recipeCycling";
     public static final String EEPROM_CODE_TAG = "oc:code";
     public static final String EEPROM_DATA_SECTION_TAG = "oc:dataSection";
     public static final String EEPROM_DATA_TAG = "oc:data";
@@ -24,6 +30,7 @@ public final class ItemRegistry implements ItemAPI {
     public static final String EEPROM_READONLY_TAG = "oc:readonly";
 
     private final Map<String, RegisteredItemInfo> infosByName = new LinkedHashMap<>();
+    private final Map<String, Callable<FileSystem>> floppyFactoriesById = new LinkedHashMap<>();
 
     RegisteredItemInfo register(final String name, final Block block, final Item item) {
         final RegisteredItemInfo info = new RegisteredItemInfo(name, block, item);
@@ -50,7 +57,25 @@ public final class ItemRegistry implements ItemAPI {
 
     @Override
     public ItemStack registerFloppy(final String name, final DyeColor color, final Callable<li.cil.oc.api.fs.FileSystem> factory, final boolean doRecipeCycling) {
-        return null;
+        if (factory == null) {
+            return null;
+        }
+        final ItemInfo info = get(ModContentIds.FLOPPY);
+        if (info == null) {
+            return null;
+        }
+        final ItemStack stack = info.createItemStack(1);
+        if (stack == null) {
+            return null;
+        }
+        final String factoryId = UUID.randomUUID().toString();
+        floppyFactoriesById.put(factoryId, factory);
+        final CompoundTag floppyData = createFloppyData(name, color, factoryId, doRecipeCycling);
+        if (name != null) {
+            stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
+        }
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(floppyData));
+        return stack;
     }
 
     @Override
@@ -83,6 +108,33 @@ public final class ItemRegistry implements ItemAPI {
         eepromData.putByteArray(EEPROM_DATA_SECTION_TAG, copyBytes(data));
         eepromData.putBoolean(EEPROM_READONLY_TAG, readonly);
         return eepromData;
+    }
+
+    Callable<FileSystem> floppyFactory(final ItemStack stack) {
+        if (stack == null) {
+            return null;
+        }
+        final CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+        if (data == null) {
+            return null;
+        }
+        final String factoryId = data.copyTag().getString(FLOPPY_FACTORY_ID_TAG);
+        return factoryId.isEmpty() ? null : floppyFactoriesById.get(factoryId);
+    }
+
+    static CompoundTag createFloppyData(final String name, final DyeColor color, final String factoryId, final boolean doRecipeCycling) {
+        final CompoundTag floppyData = new CompoundTag();
+        if (name != null) {
+            floppyData.putString(FLOPPY_LABEL_TAG, name);
+        }
+        if (color != null) {
+            floppyData.putString(FLOPPY_COLOR_TAG, color.getName());
+        }
+        if (factoryId != null) {
+            floppyData.putString(FLOPPY_FACTORY_ID_TAG, factoryId);
+        }
+        floppyData.putBoolean(FLOPPY_RECIPE_CYCLING_TAG, doRecipeCycling);
+        return floppyData;
     }
 
     private static byte[] copyBytes(final byte[] value) {

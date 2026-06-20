@@ -6,6 +6,7 @@ public final class ModContentIds {
     public static final String COMPUTER_CASE_TIER1 = "computer_case_tier1";
     public static final String CPU_TIER1 = "cpu_tier1";
     public static final String EEPROM = "eeprom";
+    public static final String FLOPPY = "floppy";
     public static final String GRAPHICS_CARD_TIER1 = "graphics_card_tier1";
     public static final String HDD_TIER1 = "hdd_tier1";
     public static final String KEYBOARD = "keyboard";
