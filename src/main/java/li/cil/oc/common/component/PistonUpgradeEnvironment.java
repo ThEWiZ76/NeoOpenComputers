@@ -29,10 +29,16 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
 
     private final EnvironmentHost host;
     private final Rotatable rotatable;
+    private final boolean sticky;
 
     public PistonUpgradeEnvironment(final EnvironmentHost host, final Rotatable rotatable) {
+        this(host, rotatable, false);
+    }
+
+    protected PistonUpgradeEnvironment(final EnvironmentHost host, final Rotatable rotatable, final boolean sticky) {
         this.host = host;
         this.rotatable = rotatable;
+        this.sticky = sticky;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
@@ -46,19 +52,24 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
 
     @Callback(doc = "function():boolean -- Returns true if the piston is sticky, i.e. it can also pull.")
     public Object[] isSticky(final Context context, final Arguments arguments) {
-        return new Object[]{false};
+        return new Object[]{sticky};
     }
 
     @Callback(doc = "function([side:number]):boolean -- Tries to push the block on the specified side of the container of the upgrade. Defaults to front.")
     public Object[] push(final Context context, final Arguments arguments) {
+        return move(context, arguments, true);
+    }
+
+    protected Object[] move(final Context context, final Arguments arguments, final boolean extending) {
         final Level level = host.world();
         if (level == null) {
             return new Object[]{false, "move failed"};
         }
 
         final Direction direction = direction(arguments);
-        final BlockPos sourcePos = hostPosition().relative(direction);
-        final BlockPos targetPos = sourcePos.relative(direction);
+        final BlockPos hostPos = hostPosition();
+        final BlockPos sourcePos = extending ? hostPos.relative(direction) : hostPos.relative(direction).relative(direction);
+        final BlockPos targetPos = extending ? sourcePos.relative(direction) : hostPos.relative(direction);
         final BlockState sourceState = level.getBlockState(sourcePos);
         if (sourceState.isAir()) {
             return new Object[]{false, "move failed"};

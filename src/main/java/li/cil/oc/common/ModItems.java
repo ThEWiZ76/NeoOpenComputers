@@ -27,6 +27,7 @@ import li.cil.oc.common.item.PistonUpgradeItem;
 import li.cil.oc.common.item.RedstoneCardItem;
 import li.cil.oc.common.item.SignUpgradeItem;
 import li.cil.oc.common.item.SolarGeneratorUpgradeItem;
+import li.cil.oc.common.item.StickyPistonUpgradeItem;
 import li.cil.oc.common.item.TankControllerUpgradeItem;
 import li.cil.oc.common.item.TankUpgradeItem;
 import li.cil.oc.common.item.TabletCaseItem;
@@ -282,9 +283,9 @@ public final class ModItems {
         ModContentIds.PISTON_UPGRADE,
         () -> new PistonUpgradeItem(new Item.Properties()));
 
-    public static final DeferredItem<BasicUpgradeItem> STICKY_PISTON_UPGRADE = ITEMS.register(
+    public static final DeferredItem<StickyPistonUpgradeItem> STICKY_PISTON_UPGRADE = ITEMS.register(
         ModContentIds.STICKY_PISTON_UPGRADE,
-        () -> new BasicUpgradeItem(new Item.Properties(), 1));
+        () -> new StickyPistonUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<SignUpgradeItem> SIGN_UPGRADE = ITEMS.register(
         ModContentIds.SIGN_UPGRADE,
