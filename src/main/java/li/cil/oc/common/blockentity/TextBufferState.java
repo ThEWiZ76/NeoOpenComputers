@@ -26,14 +26,36 @@ final class TextBufferState {
     }
 
     void resize(final int width, final int height) {
-        this.width = Math.max(1, width);
-        this.height = Math.max(1, height);
-        text = new int[this.height][this.width];
-        foreground = new int[this.height][this.width];
-        background = new int[this.height][this.width];
-        foregroundPalette = new boolean[this.height][this.width];
-        backgroundPalette = new boolean[this.height][this.width];
-        fill(0, 0, this.width, this.height, ' ', 0xFFFFFF, false, 0x000000, false);
+        final int newWidth = Math.max(1, width);
+        final int newHeight = Math.max(1, height);
+        final int[][] previousText = text;
+        final int[][] previousForeground = foreground;
+        final int[][] previousBackground = background;
+        final boolean[][] previousForegroundPalette = foregroundPalette;
+        final boolean[][] previousBackgroundPalette = backgroundPalette;
+        final int previousWidth = this.width;
+        final int previousHeight = this.height;
+
+        this.width = newWidth;
+        this.height = newHeight;
+        text = new int[newHeight][newWidth];
+        foreground = new int[newHeight][newWidth];
+        background = new int[newHeight][newWidth];
+        foregroundPalette = new boolean[newHeight][newWidth];
+        backgroundPalette = new boolean[newHeight][newWidth];
+        fill(0, 0, newWidth, newHeight, ' ', 0xFFFFFF, false, 0x000000, false);
+
+        if (previousText != null) {
+            final int rows = Math.min(previousHeight, newHeight);
+            final int columns = Math.min(previousWidth, newWidth);
+            for (int y = 0; y < rows; y++) {
+                System.arraycopy(previousText[y], 0, text[y], 0, columns);
+                System.arraycopy(previousForeground[y], 0, foreground[y], 0, columns);
+                System.arraycopy(previousBackground[y], 0, background[y], 0, columns);
+                System.arraycopy(previousForegroundPalette[y], 0, foregroundPalette[y], 0, columns);
+                System.arraycopy(previousBackgroundPalette[y], 0, backgroundPalette[y], 0, columns);
+            }
+        }
     }
 
     void copy(final int column, final int row, final int width, final int height, final int horizontalTranslation, final int verticalTranslation) {

@@ -78,6 +78,23 @@ final class TextBufferStateTest {
     }
 
     @Test
+    void resizePreservesOverlappingTextAndColors() {
+        TextBufferState buffer = new TextBufferState(2, 2);
+        buffer.set(0, 0, "A", false, 0x112233, true, 0x445566, false);
+
+        buffer.resize(3, 3);
+
+        assertEquals('A', buffer.getCodePoint(0, 0));
+        assertEquals(0x112233, buffer.getForegroundColor(0, 0));
+        assertEquals(0x445566, buffer.getBackgroundColor(0, 0));
+        assertEquals(true, buffer.isForegroundFromPalette(0, 0));
+        assertEquals(false, buffer.isBackgroundFromPalette(0, 0));
+        assertEquals(' ', buffer.getCodePoint(2, 2));
+        assertEquals(0xFFFFFF, buffer.getForegroundColor(2, 2));
+        assertEquals(0x000000, buffer.getBackgroundColor(2, 2));
+    }
+
+    @Test
     void rawColorWritesAffectCells() {
         TextBufferState buffer = new TextBufferState(3, 2);
 
