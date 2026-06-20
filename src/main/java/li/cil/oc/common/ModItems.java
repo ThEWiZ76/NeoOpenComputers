@@ -3,7 +3,6 @@ package li.cil.oc.common;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.BatteryUpgradeItem;
-import li.cil.oc.common.item.BasicUpgradeItem;
 import li.cil.oc.common.item.CardContainerItem;
 import li.cil.oc.common.item.CraftingUpgradeItem;
 import li.cil.oc.common.item.CpuItem;
@@ -32,6 +31,7 @@ import li.cil.oc.common.item.TankControllerUpgradeItem;
 import li.cil.oc.common.item.TankUpgradeItem;
 import li.cil.oc.common.item.TabletCaseItem;
 import li.cil.oc.common.item.TabletItem;
+import li.cil.oc.common.item.TradingUpgradeItem;
 import li.cil.oc.common.item.UpgradeContainerItem;
 import li.cil.oc.common.item.WirelessNetworkCardItem;
 import net.minecraft.world.item.BlockItem;
@@ -291,9 +291,9 @@ public final class ModItems {
         ModContentIds.SIGN_UPGRADE,
         () -> new SignUpgradeItem(new Item.Properties()));
 
-    public static final DeferredItem<BasicUpgradeItem> TRADING_UPGRADE = ITEMS.register(
+    public static final DeferredItem<TradingUpgradeItem> TRADING_UPGRADE = ITEMS.register(
         ModContentIds.TRADING_UPGRADE,
-        () -> new BasicUpgradeItem(new Item.Properties(), 1));
+        () -> new TradingUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<WirelessNetworkCardItem> WIRELESS_NETWORK_CARD_TIER1 = ITEMS.register(
         ModContentIds.WIRELESS_NETWORK_CARD_TIER1,

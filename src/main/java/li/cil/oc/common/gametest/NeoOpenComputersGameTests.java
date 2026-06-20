@@ -56,12 +56,16 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.trading.ItemCost;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
@@ -1038,6 +1042,49 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(pull.length == 1 && Boolean.TRUE.equals(pull[0]), "Sticky piston upgrade did not pull block: " + java.util.Arrays.toString(pull));
         helper.assertTrue(helper.getBlockState(sourcePos).isAir(), "Sticky piston upgrade did not clear source block");
         helper.assertTrue(helper.getBlockState(targetPos).is(Blocks.DIRT), "Sticky piston upgrade did not move block toward host");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tradingUpgradeListsNearbyVillagerTrades(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for trading upgrade");
+
+        final BlockPos hostPos = new BlockPos(2, 1, 2);
+        final BlockPos villagerPos = helper.absolutePos(hostPos.relative(Direction.EAST));
+        final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "Villager did not spawn");
+        final MerchantOffers offers = new MerchantOffers();
+        offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 1), new ItemStack(Items.BREAD, 3), 4, 1, 0.05F));
+        villager.setOffers(offers);
+        villager.setNoAi(true);
+        villager.moveTo(villagerPos.getX() + 0.5D, villagerPos.getY(), villagerPos.getZ() + 0.5D, 0, 0);
+        helper.getLevel().addFreshEntity(villager);
+
+        final ManagedEnvironment environment = driver.createEnvironment(
+            new ItemStack(ModItems.TRADING_UPGRADE.get()),
+            new StaticPositionEnvironmentHost(helper, hostPos)
+        );
+        helper.assertTrue(environment != null, "Trading upgrade did not create trading environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Trading node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("trading".equals(component.name()), "Trading component name mismatch");
+
+        final Object[] result = component.invoke("getTrades", null);
+        helper.assertTrue(result.length == 1 && result[0] instanceof java.util.List<?> trades && trades.size() == 1, "Trading upgrade did not list nearby trade");
+        final Object trade = ((java.util.List<?>) result[0]).getFirst();
+        final Method getMerchantId = trade.getClass().getMethod("getMerchantId", Context.class, Arguments.class);
+        final Object[] merchantId = (Object[]) getMerchantId.invoke(trade, null, null);
+        helper.assertTrue(merchantId.length == 1 && Integer.valueOf(1).equals(merchantId[0]), "Trade merchant id mismatch");
+        final Method getInput = trade.getClass().getMethod("getInput", Context.class, Arguments.class);
+        final Object[] input = (Object[]) getInput.invoke(trade, null, null);
+        helper.assertTrue(input.length == 2 && input[0] instanceof ItemStack firstInput && firstInput.is(Items.EMERALD) && firstInput.getCount() == 1, "Trade input mismatch");
+        final Method getOutput = trade.getClass().getMethod("getOutput", Context.class, Arguments.class);
+        final Object[] output = (Object[]) getOutput.invoke(trade, null, null);
+        helper.assertTrue(output.length == 1 && output[0] instanceof ItemStack firstOutput && firstOutput.is(Items.BREAD) && firstOutput.getCount() == 3, "Trade output mismatch");
+        final Method isEnabled = trade.getClass().getMethod("isEnabled", Context.class, Arguments.class);
+        final Object[] enabled = (Object[]) isEnabled.invoke(trade, null, null);
+        helper.assertTrue(enabled.length == 1 && Boolean.TRUE.equals(enabled[0]), "Trade should be enabled");
         helper.succeed();
     }
 
