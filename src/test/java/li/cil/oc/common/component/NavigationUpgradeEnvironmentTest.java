@@ -3,6 +3,8 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -18,6 +20,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NavigationUpgradeEnvironmentTest {
@@ -41,9 +44,47 @@ final class NavigationUpgradeEnvironmentTest {
         assertEquals("PathFinder v3", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
     }
 
+    @Test
+    void findWaypointsConsumesEnergyBeforePausing() {
+        OpenComputersApi.initialize();
+        NavigationUpgradeEnvironment navigation = new NavigationUpgradeEnvironment(new TestHost());
+        ComponentConnector connector = assertInstanceOf(ComponentConnector.class, navigation.node());
+        connector.setLocalBufferSize(1D);
+        RecordingContext context = new RecordingContext(navigation.node());
+
+        assertArrayEquals(new Object[]{null, "not enough energy"}, navigation.findWaypoints(context, new TestArguments(8D)));
+        assertEquals(-1D, context.pauseSeconds, 0.000_001D);
+
+        connector.changeBuffer(1D);
+        Object[] result = navigation.findWaypoints(context, new TestArguments(8D));
+
+        assertEquals(0, ((Map[]) result[0]).length);
+        assertEquals(0.5D, context.pauseSeconds, 0.000_001D);
+        assertEquals(0.9D, connector.localBuffer(), 0.000_001D);
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = NavigationUpgradeEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static final class RecordingContext implements Context {
+        private final Node node;
+        private double pauseSeconds = -1D;
+
+        private RecordingContext(final Node node) {
+            this.node = node;
+        }
+
+        @Override public Node node() { return node; }
+        @Override public boolean canInteract(final String player) { return true; }
+        @Override public boolean isRunning() { return true; }
+        @Override public boolean isPaused() { return false; }
+        @Override public boolean start() { return true; }
+        @Override public boolean pause(final double seconds) { pauseSeconds = seconds; return true; }
+        @Override public boolean stop() { return true; }
+        @Override public void consumeCallBudget(final double callCost) { }
+        @Override public boolean signal(final String name, final Object... args) { return true; }
     }
 
     private static final class TestHost implements EnvironmentHost, li.cil.oc.api.internal.Rotatable {
