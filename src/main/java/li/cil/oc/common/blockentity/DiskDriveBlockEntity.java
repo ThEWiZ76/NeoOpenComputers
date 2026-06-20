@@ -1,12 +1,260 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.api.Driver;
+import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class DiskDriveBlockEntity extends BlockEntity {
+import java.util.Map;
+
+public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo {
+    public static final int SLOT_FLOPPY = 0;
+    public static final int CONTAINER_SIZE = 1;
+
+    private static final String TAG_NODE = "node";
+    private static final String TAG_DISK = "disk";
+    private static final Map<String, String> DEVICE_INFO = Map.of(
+        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Disk,
+        DeviceInfo.DeviceAttribute.Description, "Disk drive",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Product, "OpenFloppy 21"
+    );
+
+    private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
+    private Node node;
+    private ManagedEnvironment diskEnvironment;
+
     public DiskDriveBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.DISK_DRIVE.get(), pos, blockState);
+        OpenComputersApi.initialize();
+        node = createNode(this);
+    }
+
+    public static boolean acceptsDriverSlot(final String slot) {
+        return Slot.Floppy.equals(slot);
+    }
+
+    @Override
+    public Node node() {
+        if (node == null) {
+            node = createNode(this);
+        }
+        return node;
+    }
+
+    @Override
+    public void onConnect(final Node node) {
+        if (diskEnvironment != null) {
+            connectDiskEnvironment();
+        }
+    }
+
+    @Override
+    public void onDisconnect(final Node node) {
+    }
+
+    @Override
+    public void onMessage(final Message message) {
+    }
+
+    @Override
+    public boolean canUpdate() {
+        return false;
+    }
+
+    @Override
+    public void update() {
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return DEVICE_INFO;
+    }
+
+    @Override
+    public Level world() {
+        return getLevel();
+    }
+
+    @Override
+    public double xPosition() {
+        return getBlockPos().getX() + 0.5D;
+    }
+
+    @Override
+    public double yPosition() {
+        return getBlockPos().getY() + 0.5D;
+    }
+
+    @Override
+    public double zPosition() {
+        return getBlockPos().getZ() + 0.5D;
+    }
+
+    @Override
+    public void markChanged() {
+        setChanged();
+    }
+
+    @Override
+    public int getContainerSize() {
+        return items.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return items.get(SLOT_FLOPPY).isEmpty();
+    }
+
+    @Override
+    public ItemStack getItem(final int slot) {
+        return slot == SLOT_FLOPPY ? items.get(SLOT_FLOPPY) : ItemStack.EMPTY;
+    }
+
+    @Override
+    public ItemStack removeItem(final int slot, final int amount) {
+        final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
+        if (!removed.isEmpty()) {
+            setChanged();
+            refreshDiskEnvironment();
+        }
+        return removed;
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(final int slot) {
+        final ItemStack removed = ContainerHelper.takeItem(items, slot);
+        if (!removed.isEmpty()) {
+            refreshDiskEnvironment();
+        }
+        return removed;
+    }
+
+    @Override
+    public void setItem(final int slot, final ItemStack stack) {
+        if (slot != SLOT_FLOPPY) {
+            return;
+        }
+        items.set(SLOT_FLOPPY, stack);
+        if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
+            stack.setCount(getMaxStackSize());
+        }
+        setChanged();
+        refreshDiskEnvironment();
+    }
+
+    @Override
+    public boolean canPlaceItem(final int slot, final ItemStack stack) {
+        if (slot != SLOT_FLOPPY) {
+            return false;
+        }
+        final DriverItem driver = Driver.driverFor(stack);
+        return driver != null && acceptsDriverSlot(driver.slot(stack));
+    }
+
+    @Override
+    public boolean stillValid(final Player player) {
+        return !isRemoved();
+    }
+
+    @Override
+    public void clearContent() {
+        items.set(SLOT_FLOPPY, ItemStack.EMPTY);
+        setChanged();
+        refreshDiskEnvironment();
+    }
+
+    @Override
+    public void load(final CompoundTag nbt) {
+        if (nbt.contains(TAG_NODE) && node() != null) {
+            node().load(nbt.getCompound(TAG_NODE));
+        }
+        if (nbt.contains(TAG_DISK) && diskEnvironment != null) {
+            diskEnvironment.load(nbt.getCompound(TAG_DISK));
+        }
+    }
+
+    @Override
+    public void save(final CompoundTag nbt) {
+        if (node() != null) {
+            final CompoundTag nodeTag = new CompoundTag();
+            if (node().address() == null) {
+                Network.joinNewNetwork(node());
+                node().save(nodeTag);
+                node().remove();
+                node = createNode(this);
+            } else {
+                node().save(nodeTag);
+            }
+            nbt.put(TAG_NODE, nodeTag);
+        }
+        if (diskEnvironment != null) {
+            final CompoundTag diskTag = new CompoundTag();
+            diskEnvironment.save(diskTag);
+            nbt.put(TAG_DISK, diskTag);
+        }
+    }
+
+    @Override
+    protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        ContainerHelper.loadAllItems(tag, items, registries);
+        load(tag);
+        refreshDiskEnvironment();
+    }
+
+    @Override
+    protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        ContainerHelper.saveAllItems(tag, items, registries);
+        save(tag);
+    }
+
+    private void refreshDiskEnvironment() {
+        if (diskEnvironment != null && diskEnvironment.node() != null) {
+            diskEnvironment.node().remove();
+        }
+        diskEnvironment = null;
+        final ItemStack stack = items.get(SLOT_FLOPPY);
+        final DriverItem driver = Driver.driverFor(stack);
+        if (driver == null || !acceptsDriverSlot(driver.slot(stack))) {
+            return;
+        }
+        diskEnvironment = driver.createEnvironment(stack, this);
+        connectDiskEnvironment();
+    }
+
+    private void connectDiskEnvironment() {
+        if (node() == null || diskEnvironment == null || diskEnvironment.node() == null) {
+            return;
+        }
+        if (node().network() == null) {
+            Network.joinNewNetwork(node());
+        }
+        node().connect(diskEnvironment.node());
+    }
+
+    private static Node createNode(final ManagedEnvironment host) {
+        final var builder = Network.newNode(host, Visibility.Neighbors);
+        return builder == null ? null : builder.create();
     }
 }
