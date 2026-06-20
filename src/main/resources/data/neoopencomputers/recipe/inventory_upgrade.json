@@ -2,20 +2,29 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "H": {
+      "item": "minecraft:hopper"
+    },
+    "D": {
+      "item": "minecraft:dropper"
+    },
     "C": {
       "item": "minecraft:chest"
     },
-    "I": {
-      "item": "minecraft:iron_ingot"
+    "M": {
+      "item": "minecraft:piston"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "B": {
+      "item": "neoopencomputers:microchip_tier1"
     }
   },
   "pattern": [
-    "IRI",
-    "RCR",
-    "IRI"
+    "PHP",
+    "DCM",
+    "PBP"
   ],
   "result": {
     "count": 1,

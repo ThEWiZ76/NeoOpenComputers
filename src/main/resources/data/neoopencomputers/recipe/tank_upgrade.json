@@ -2,20 +2,29 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "F": {
+      "item": "minecraft:iron_bars"
+    },
+    "D": {
+      "item": "minecraft:dispenser"
+    },
+    "C": {
+      "item": "minecraft:cauldron"
+    },
+    "M": {
+      "item": "minecraft:piston"
+    },
     "B": {
-      "item": "minecraft:bucket"
-    },
-    "G": {
-      "item": "minecraft:glass"
-    },
-    "R": {
-      "item": "minecraft:redstone"
+      "item": "neoopencomputers:microchip_tier1"
     }
   },
   "pattern": [
-    "GGG",
-    "RBR",
-    "GGG"
+    "PFP",
+    "DCM",
+    "PBP"
   ],
   "result": {
     "count": 1,

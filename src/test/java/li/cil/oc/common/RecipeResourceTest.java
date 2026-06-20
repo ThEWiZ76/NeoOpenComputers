@@ -308,6 +308,25 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void inventoryAndTankUpgradeRecipesUseUpstreamShape() throws IOException {
+        JsonObject inventory = recipeKeys(ModContentIds.INVENTORY_UPGRADE);
+        JsonObject tank = recipeKeys(ModContentIds.TANK_UPGRADE);
+
+        assertTag(inventory, "P", "minecraft:planks");
+        assertItem(inventory, "H", "minecraft:hopper");
+        assertItem(inventory, "D", "minecraft:dropper");
+        assertItem(inventory, "C", "minecraft:chest");
+        assertItem(inventory, "M", "minecraft:piston");
+        assertItem(inventory, "B", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertTag(tank, "P", "minecraft:planks");
+        assertItem(tank, "F", "minecraft:iron_bars");
+        assertItem(tank, "D", "minecraft:dispenser");
+        assertItem(tank, "C", "minecraft:cauldron");
+        assertItem(tank, "M", "minecraft:piston");
+        assertItem(tank, "B", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+    }
+
+    @Test
     void blockDeviceRecipesUseMaterialProgression() throws IOException {
         JsonObject adapter = recipeKeys(ModContentIds.ADAPTER);
         JsonObject redstone = recipeKeys(ModContentIds.REDSTONE_IO);
