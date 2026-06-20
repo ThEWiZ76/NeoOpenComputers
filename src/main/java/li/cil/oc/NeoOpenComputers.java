@@ -7,6 +7,7 @@ import li.cil.oc.common.ModContentCatalog;
 import li.cil.oc.common.ModCreativeTabs;
 import li.cil.oc.common.ModDriverCatalog;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.machine.ProgramLocationImc;
@@ -39,6 +40,7 @@ public final class NeoOpenComputers {
         event.enqueueWork(() -> {
             ModCreativeTabs.assignApiCreativeTab();
             ModContentCatalog.registerDefaults();
+            ModLootDisks.registerDefaults();
             ModDriverCatalog.registerDefaults();
         });
         LOGGER.debug("NeoOpenComputers common setup complete.");
