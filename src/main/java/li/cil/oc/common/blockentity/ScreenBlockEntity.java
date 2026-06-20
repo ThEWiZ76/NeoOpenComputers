@@ -3,6 +3,9 @@ package li.cil.oc.common.blockentity;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.TextBuffer;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
@@ -72,6 +75,25 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         return powered;
     }
 
+    @Callback(direct = true, doc = "function():boolean -- Returns whether the screen is currently on.")
+    public Object[] isOn(final Context context, final Arguments args) {
+        return new Object[]{getPowerState()};
+    }
+
+    @Callback(doc = "function():boolean, boolean -- Turns the screen on. Returns whether the state changed, and whether it is now on.")
+    public Object[] turnOn(final Context context, final Arguments args) {
+        final boolean oldPowerState = getPowerState();
+        setPowerState(true);
+        return new Object[]{getPowerState() != oldPowerState, getPowerState()};
+    }
+
+    @Callback(doc = "function():boolean, boolean -- Turns off the screen. Returns whether the state changed, and whether it is now on.")
+    public Object[] turnOff(final Context context, final Arguments args) {
+        final boolean oldPowerState = getPowerState();
+        setPowerState(false);
+        return new Object[]{getPowerState() != oldPowerState, getPowerState()};
+    }
+
     @Override
     public void setMaximumResolution(final int width, final int height) {
         maximumWidth = Math.max(1, width);
@@ -98,6 +120,11 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Override
     public double getAspectRatio() {
         return aspectWidth / Math.max(1.0D, aspectHeight);
+    }
+
+    @Callback(direct = true, doc = "function():number, number -- The aspect ratio of the screen.")
+    public Object[] getAspectRatio(final Context context, final Arguments args) {
+        return new Object[]{aspectWidth, aspectHeight};
     }
 
     @Override
