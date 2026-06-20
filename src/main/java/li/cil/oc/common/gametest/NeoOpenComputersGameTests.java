@@ -282,6 +282,8 @@ public final class NeoOpenComputersGameTests {
         chest.setItem(0, new ItemStack(net.minecraft.world.item.Items.DIAMOND, 4));
         chest.setItem(1, new ItemStack(net.minecraft.world.item.Items.DIAMOND, 1));
         chest.setItem(2, new ItemStack(net.minecraft.world.item.Items.DIRT, 1));
+        chest.setItem(3, new ItemStack(net.minecraft.world.item.Items.OAK_LOG, 1));
+        chest.setItem(4, new ItemStack(net.minecraft.world.item.Items.SPRUCE_LOG, 1));
 
         helper.succeedWhen(() -> {
             final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
@@ -295,6 +297,8 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "getSlotMaxStackSize", new Object[]{east, 1}, 64);
                 assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{east, 1, 2}, true);
                 assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{east, 1, 3}, false);
+                assertInvokeResult(helper, computer, address, "areStacksEquivalent", new Object[]{east, 4, 5}, true);
+                assertInvokeResult(helper, computer, address, "areStacksEquivalent", new Object[]{east, 1, 3}, false);
                 final Object[] stackResult = computer.machine().invoke(address, "getStackInSlot", new Object[]{east, 1});
                 helper.assertTrue(stackResult.length == 1 && stackResult[0] instanceof ItemStack stack && stack.is(net.minecraft.world.item.Items.DIAMOND) && stack.getCount() == 4, "Inventory controller did not expose slot stack");
                 final Object[] stacksResult = computer.machine().invoke(address, "getAllStacks", new Object[]{east});

@@ -74,6 +74,14 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         return new Object[]{slotA == slotB || ItemStack.isSameItemSameComponents(container.getItem(slotA), container.getItem(slotB))};
     }
 
+    @Callback(doc = "function(side:number, slotA:number, slotB:number):boolean -- Check whether two item stacks share an item tag.")
+    public Object[] areStacksEquivalent(final Context context, final Arguments arguments) {
+        final Container container = container(arguments.checkInteger(0));
+        final int slotA = checkSlot(container, arguments.checkInteger(1));
+        final int slotB = checkSlot(container, arguments.checkInteger(2));
+        return new Object[]{areEquivalent(container.getItem(slotA), container.getItem(slotB))};
+    }
+
     @Callback(doc = "function(side:number, slot:number):table -- Get the raw item stack in the specified inventory slot.")
     public Object[] getStackInSlot(final Context context, final Arguments arguments) {
         final Container container = container(arguments.checkInteger(0));
@@ -120,5 +128,15 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
             throw new IllegalArgumentException("slot index out of bounds");
         }
         return index;
+    }
+
+    private static boolean areEquivalent(final ItemStack stackA, final ItemStack stackB) {
+        if (ItemStack.isSameItemSameComponents(stackA, stackB)) {
+            return true;
+        }
+        if (stackA.isEmpty() || stackB.isEmpty()) {
+            return false;
+        }
+        return stackA.getTags().anyMatch(stackB::is);
     }
 }
