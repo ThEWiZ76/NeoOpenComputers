@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.api.API;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -16,7 +17,17 @@ public final class ModCreativeTabs {
         CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.neoopencomputers"))
             .icon(() -> new ItemStack(ModItems.MANUAL.get()))
-            .displayItems((parameters, output) -> ModItems.ITEMS.getEntries().forEach(item -> output.accept(item.get())))
+            .displayItems((parameters, output) -> {
+                ModItems.ITEMS.getEntries().forEach(item -> output.accept(item.get()));
+                if (API.items instanceof ItemRegistry registry) {
+                    registry.creativeStackSuppliers().forEach(stackSupplier -> {
+                        final ItemStack stack = stackSupplier.get();
+                        if (stack != null) {
+                            output.accept(stack);
+                        }
+                    });
+                }
+            })
             .build());
 
     public static void register(final IEventBus modEventBus) {

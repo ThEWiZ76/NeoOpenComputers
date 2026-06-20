@@ -12,11 +12,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 public final class ItemRegistry implements ItemAPI {
     public static final String FLOPPY_COLOR_TAG = "oc:color";
@@ -31,6 +34,7 @@ public final class ItemRegistry implements ItemAPI {
 
     private final Map<String, RegisteredItemInfo> infosByName = new LinkedHashMap<>();
     private final Map<String, Callable<FileSystem>> floppyFactoriesById = new LinkedHashMap<>();
+    private final List<Supplier<ItemStack>> creativeStackSuppliers = new ArrayList<>();
 
     RegisteredItemInfo register(final String name, final Block block, final Item item) {
         final RegisteredItemInfo info = new RegisteredItemInfo(name, block, item);
@@ -75,6 +79,7 @@ public final class ItemRegistry implements ItemAPI {
             stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
         }
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(floppyData));
+        rememberCreativeStackSupplier(stack::copy);
         return stack;
     }
 
@@ -96,7 +101,18 @@ public final class ItemRegistry implements ItemAPI {
         final CompoundTag root = new CompoundTag();
         root.put(EEPROM_DATA_TAG, eepromData);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+        rememberCreativeStackSupplier(stack::copy);
         return stack;
+    }
+
+    void rememberCreativeStackSupplier(final Supplier<ItemStack> stackSupplier) {
+        if (stackSupplier != null) {
+            creativeStackSuppliers.add(stackSupplier);
+        }
+    }
+
+    List<Supplier<ItemStack>> creativeStackSuppliers() {
+        return List.copyOf(creativeStackSuppliers);
     }
 
     static CompoundTag createEepromData(final String name, final byte[] code, final byte[] data, final boolean readonly) {

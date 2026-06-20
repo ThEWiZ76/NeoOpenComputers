@@ -8,6 +8,9 @@ import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -57,6 +60,19 @@ final class ItemRegistryTest {
     }
 
     @Test
+    void creativeStackSuppliersPreserveSpecialRegisteredStacks() {
+        ItemRegistry registry = new ItemRegistry();
+        Supplier<ItemStack> first = () -> null;
+        Supplier<ItemStack> second = () -> null;
+
+        registry.rememberCreativeStackSupplier(null);
+        registry.rememberCreativeStackSupplier(first);
+        registry.rememberCreativeStackSupplier(second);
+
+        assertEquals(List.of(first, second), registry.creativeStackSuppliers());
+    }
+
+    @Test
     void floppyFactoryDataStoresConfiguredLabelColorAndFactoryId() {
         CompoundTag tag = ItemRegistry.createFloppyData("OpenOS", DyeColor.LIME, "factory-id", true);
 
@@ -75,4 +91,5 @@ final class ItemRegistryTest {
         assertArrayEquals(new byte[]{3}, data.getByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG));
         assertEquals(true, data.getBoolean(ItemRegistry.EEPROM_READONLY_TAG));
     }
+
 }
