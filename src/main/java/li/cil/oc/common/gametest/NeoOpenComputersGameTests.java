@@ -915,6 +915,7 @@ public final class NeoOpenComputersGameTests {
         assertKeyboardItemDriver(helper, new ItemStack(ModItems.KEYBOARD.get()));
         assertMotionSensorItemDriver(helper, new ItemStack(ModItems.MOTION_SENSOR.get()));
         assertGeolyzerItemDriver(helper, new ItemStack(ModItems.GEOLYZER.get()));
+        assertTransposerItemDriver(helper, new ItemStack(ModItems.TRANSPOSER.get()));
         helper.succeed();
     }
 
@@ -2498,6 +2499,22 @@ public final class NeoOpenComputersGameTests {
         final Object[] scan = invokeComponent(helper, component, "scan", 0, 0, 0, 1, 1, 1);
         helper.assertTrue(scan.length == 1 && scan[0] instanceof float[], "Geolyzer item scan did not return data");
         helper.assertTrue(Double.compare(0D, component.localBuffer()) == 0, "Geolyzer item scan did not consume energy");
+    }
+
+    private static void assertTransposerItemDriver(final GameTestHelper helper, final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        helper.assertTrue(Slot.Upgrade.equals(driver.slot(stack)), "Expected transposer item upgrade slot for " + stack);
+        helper.assertTrue(driver.tier(stack) == 0, "Expected transposer tier 0 for " + stack + " but got " + driver.tier(stack));
+        final BlockPos hostPos = new BlockPos(2, 1, 2);
+        helper.setBlock(hostPos.relative(Direction.EAST), Blocks.CHEST);
+        final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticPositionEnvironmentHost(helper, hostPos));
+        helper.assertTrue(environment != null, "Transposer item did not create environment for " + stack);
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Transposer item has no connector component node for " + stack);
+        final ComponentConnector component = (ComponentConnector) environment.node();
+        helper.assertTrue("transposer".equals(component.name()), "Transposer item component name mismatch for " + stack);
+        final Object[] size = invokeComponent(helper, component, "getInventorySize", Direction.EAST.get3DDataValue());
+        helper.assertTrue(size.length == 1 && Integer.valueOf(27).equals(size[0]), "Transposer item did not inspect adjacent chest");
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {
