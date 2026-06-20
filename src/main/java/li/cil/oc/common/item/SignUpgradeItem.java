@@ -27,7 +27,10 @@ public class SignUpgradeItem extends Item implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return host instanceof Rotatable rotatable ? new SignUpgradeEnvironment(host, rotatable) : null;
+        if (host == null) {
+            return null;
+        }
+        return host instanceof Rotatable rotatable ? new SignUpgradeEnvironment(host, rotatable) : new SignUpgradeEnvironment(host);
     }
 
     @Override

@@ -1437,6 +1437,33 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterSignUpgradeWritesAdjacentSign(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos signPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(signPos, Blocks.OAK_SIGN);
+
+        final li.cil.oc.common.blockentity.AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+        helper.assertTrue(adapter.canPlaceItem(0, new ItemStack(ModItems.SIGN_UPGRADE.get())), "Adapter rejected sign upgrade");
+        adapter.setItem(0, new ItemStack(ModItems.SIGN_UPGRADE.get()));
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final String address = componentAddress(computer, "sign");
+            helper.assertTrue(address != null, "Adapter did not expose sign upgrade: " + computer.machine().components());
+            try {
+                assertInvokeResult(helper, computer, address, "setValue", new Object[]{"adapter\nsign"}, "adapter\nsign\n\n");
+                assertInvokeResult(helper, computer, address, "getValue", new Object[0], "adapter\nsign\n\n");
+            } catch (Exception e) {
+                helper.fail("Sign upgrade invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
     public static void inventoryControllerStoresStacksInDatabase(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);
         final BlockPos adapterPos = new BlockPos(1, 1, 1);

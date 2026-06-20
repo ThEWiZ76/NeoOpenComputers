@@ -11,6 +11,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
@@ -33,12 +34,16 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
     private final EnvironmentHost host;
     private final Rotatable rotatable;
 
+    public SignUpgradeEnvironment(final EnvironmentHost host) {
+        this(host, null);
+    }
+
     public SignUpgradeEnvironment(final EnvironmentHost host, final Rotatable rotatable) {
         this.host = host;
         this.rotatable = rotatable;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
-            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
+            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Network).withConnector().create());
         }
     }
 
@@ -85,9 +90,18 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
         if (host.world().getBlockEntity(hostPos) instanceof SignBlockEntity sign) {
             return sign;
         }
-        final BlockPos frontPos = hostPos.relative(rotatable.facing());
-        if (host.world().getBlockEntity(frontPos) instanceof SignBlockEntity sign) {
-            return sign;
+        if (rotatable != null) {
+            final BlockPos frontPos = hostPos.relative(rotatable.facing());
+            if (host.world().getBlockEntity(frontPos) instanceof SignBlockEntity sign) {
+                return sign;
+            }
+        } else {
+            for (final Direction direction : Direction.values()) {
+                final BlockPos adjacentPos = hostPos.relative(direction);
+                if (host.world().getBlockEntity(adjacentPos) instanceof SignBlockEntity sign) {
+                    return sign;
+                }
+            }
         }
         return null;
     }
