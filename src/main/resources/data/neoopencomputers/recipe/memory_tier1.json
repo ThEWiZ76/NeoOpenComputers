@@ -2,20 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "G": {
-      "item": "minecraft:glass_pane"
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     },
-    "I": {
-      "tag": "c:ingots/iron"
-    },
-    "R": {
-      "item": "minecraft:redstone"
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
     }
   },
   "pattern": [
-    "RGR",
-    "GIG",
-    "RGR"
+    "CCC",
+    "BBB"
   ],
   "result": {
     "count": 1,

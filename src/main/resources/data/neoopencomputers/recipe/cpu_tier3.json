@@ -3,19 +3,22 @@
   "category": "redstone",
   "key": {
     "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "M": {
+      "item": "neoopencomputers:memory_tier3"
+    },
+    "P": {
       "item": "neoopencomputers:cpu_tier2"
     },
-    "D": {
+    "X": {
       "item": "minecraft:diamond"
-    },
-    "R": {
-      "item": "minecraft:redstone"
     }
   },
   "pattern": [
-    "DRD",
-    "RCR",
-    "DRD"
+    "XMX",
+    "CPC",
+    "XMX"
   ],
   "result": {
     "count": 1,

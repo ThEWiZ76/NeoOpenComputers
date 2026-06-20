@@ -3,19 +3,22 @@
   "category": "redstone",
   "key": {
     "C": {
-      "item": "neoopencomputers:cpu_tier1"
+      "item": "neoopencomputers:microchip_tier2"
     },
     "G": {
-      "tag": "c:ingots/gold"
+      "tag": "c:nuggets/gold"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "M": {
+      "item": "neoopencomputers:memory_tier2"
+    },
+    "P": {
+      "item": "neoopencomputers:cpu_tier1"
     }
   },
   "pattern": [
-    "GRG",
-    "RCR",
-    "GRG"
+    "GMG",
+    "CPC",
+    "GMG"
   ],
   "result": {
     "count": 1,

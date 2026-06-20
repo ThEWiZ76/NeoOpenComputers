@@ -2,20 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "G": {
-      "tag": "c:ingots/gold"
+    "A": {
+      "item": "neoopencomputers:alu"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
     },
     "I": {
-      "tag": "c:ingots/iron"
+      "item": "minecraft:iron_nugget"
     },
     "R": {
       "item": "minecraft:redstone"
+    },
+    "U": {
+      "item": "neoopencomputers:control_unit"
     }
   },
   "pattern": [
     "IRI",
-    "RGR",
-    "IRI"
+    "CUC",
+    "IAI"
   ],
   "result": {
     "count": 1,

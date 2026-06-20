@@ -2,20 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "D": {
-      "item": "minecraft:diamond"
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
     },
     "M": {
       "item": "neoopencomputers:memory_tier2"
-    },
-    "R": {
-      "item": "minecraft:redstone"
     }
   },
   "pattern": [
-    "RDR",
-    "DMD",
-    "RDR"
+    "CCC",
+    "MBM"
   ],
   "result": {
     "count": 1,

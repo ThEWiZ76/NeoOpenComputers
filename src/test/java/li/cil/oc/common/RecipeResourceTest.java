@@ -217,6 +217,41 @@ final class RecipeResourceTest {
         assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER3);
     }
 
+    @Test
+    void memoryRecipesUseMaterialProgression() throws IOException {
+        JsonObject tier1 = recipeKeys(ModContentIds.MEMORY_TIER1);
+        JsonObject tier2 = recipeKeys(ModContentIds.MEMORY_TIER2);
+        JsonObject tier3 = recipeKeys(ModContentIds.MEMORY_TIER3);
+
+        assertItem(tier1, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(tier2, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier2, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
+        assertItem(tier3, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER2);
+    }
+
+    @Test
+    void cpuRecipesUseMaterialProgression() throws IOException {
+        JsonObject tier1 = recipeKeys(ModContentIds.CPU_TIER1);
+        JsonObject tier2 = recipeKeys(ModContentIds.CPU_TIER2);
+        JsonObject tier3 = recipeKeys(ModContentIds.CPU_TIER3);
+
+        assertItem(tier1, "A", "neoopencomputers:" + ModContentIds.ALU);
+        assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(tier1, "U", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
+        assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier2, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER2);
+        assertItem(tier2, "P", "neoopencomputers:" + ModContentIds.CPU_TIER1);
+        assertTag(tier2, "G", "c:nuggets/gold");
+        assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER3);
+        assertItem(tier3, "P", "neoopencomputers:" + ModContentIds.CPU_TIER2);
+        assertItem(tier3, "X", "minecraft:diamond");
+    }
+
     private static JsonObject readJson(final Path path) throws IOException {
         try (Reader reader = Files.newBufferedReader(path)) {
             JsonElement element = JsonParser.parseReader(reader);
