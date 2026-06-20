@@ -25,6 +25,9 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.state.BlockState;
@@ -331,6 +334,29 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void machineBlocksDropStoredItemsWhenBroken(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+        final BlockPos diskDrivePos = new BlockPos(2, 1, 1);
+
+        helper.killAllEntities();
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+
+        helper.getLevel().destroyBlock(helper.absolutePos(computerPos), true);
+        helper.getLevel().destroyBlock(helper.absolutePos(diskDrivePos), true);
+        helper.runAtTickTime(1, () -> {
+            assertDroppedItem(helper, ModItems.CPU_TIER1.get());
+            assertDroppedItem(helper, ModItems.FLOPPY.get());
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void screenKeyboardSignalsReachComputer(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
@@ -533,6 +559,15 @@ public final class NeoOpenComputersGameTests {
             }
         }
         return null;
+    }
+
+    private static void assertDroppedItem(final GameTestHelper helper, final Item item) {
+        for (ItemEntity entity : helper.getEntities(EntityType.ITEM)) {
+            if (entity.getItem().is(item)) {
+                return;
+            }
+        }
+        helper.fail("Expected dropped item " + item);
     }
 
     private static boolean screenHasNonBlankText(final ScreenBlockEntity screen) {
