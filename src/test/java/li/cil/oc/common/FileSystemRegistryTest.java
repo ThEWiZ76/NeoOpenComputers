@@ -11,6 +11,7 @@ import li.cil.oc.api.fs.Handle;
 import li.cil.oc.api.fs.Label;
 import li.cil.oc.api.fs.Mode;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.machine.TestNodes;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -239,6 +240,24 @@ final class FileSystemRegistryTest {
         assertEquals(1.0D, context.callBudget, 0.000_001D);
     }
 
+    @Test
+    void managedFileSystemEnvironmentRejectsHandlesOwnedByAnotherContext() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+        RecordingContext owner = new RecordingContext("owner");
+        RecordingContext stranger = new RecordingContext("stranger");
+
+        Object handle = component.invoke("open", owner, "data.txt", "w")[0];
+        int rawHandle = Integer.parseInt(handle.toString());
+
+        IOException error = assertThrows(IOException.class, () -> component.invoke("close", stranger, rawHandle));
+        assertEquals("bad file descriptor", error.getMessage());
+        assertArrayEquals(new Object[]{true}, component.invoke("write", owner, handle, "ok"));
+        component.invoke("close", owner, handle);
+    }
+
     private static final class MutableLabel implements Label {
         private String value;
 
@@ -271,10 +290,19 @@ final class FileSystemRegistryTest {
 
     private static final class RecordingContext implements Context {
         private double callBudget;
+        private final Node node;
+
+        private RecordingContext() {
+            this(null);
+        }
+
+        private RecordingContext(final String address) {
+            this.node = address == null ? null : TestNodes.node(address);
+        }
 
         @Override
         public Node node() {
-            return null;
+            return node;
         }
 
         @Override

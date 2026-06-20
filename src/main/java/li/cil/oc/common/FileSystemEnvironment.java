@@ -18,8 +18,11 @@ import li.cil.oc.api.prefab.AbstractValue;
 import net.minecraft.nbt.CompoundTag;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 final class FileSystemEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String FILE_SYSTEM_TAG = "fs";
@@ -32,6 +35,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     private final Optional<EnvironmentHost> host;
     private final Optional<String> accessSound;
     private final int speed;
+    private final Map<String, Set<Integer>> owners = new LinkedHashMap<>();
 
     FileSystemEnvironment(final FileSystem fileSystem, final Label label, final EnvironmentHost host, final String accessSound, final int speed) {
         this.fileSystem = fileSystem;
@@ -157,19 +161,22 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     @Callback(direct = true, doc = "function(path:string[,mode:string='r']):userdata -- Opens a file handle.")
     public Object[] open(final Context context, final Arguments arguments) throws java.io.FileNotFoundException {
         final int handle = fileSystem.open(clean(arguments.checkString(0)), parseMode(arguments.optString(1, "r")));
+        rememberOwner(context, handle);
         return new Object[]{new FileHandleValue(this, handle)};
     }
 
     @Callback(direct = true, doc = "function(handle:userdata) -- Closes an open file handle.")
     public Object[] close(final Context context, final Arguments arguments) throws IOException {
-        close(checkHandle(arguments, 0));
+        close(context, checkHandle(arguments, 0));
         return null;
     }
 
     @Callback(direct = true, doc = "function(handle:userdata,count:number):string -- Reads up to count bytes from a file handle.")
     public Object[] read(final Context context, final Arguments arguments) throws IOException {
         consumeCallBudget(context, READ_COSTS[speed - 1]);
-        final Handle handle = getHandle(checkHandle(arguments, 0));
+        final int handleId = checkHandle(arguments, 0);
+        checkOwner(context, handleId);
+        final Handle handle = getHandle(handleId);
         final byte[] buffer = new byte[Math.max(0, arguments.checkInteger(1))];
         final int read = handle.read(buffer);
         if (read < 0) {
@@ -186,7 +193,9 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     @Callback(direct = true, doc = "function(handle:userdata,whence:string,offset:number):number -- Seeks in a file handle.")
     public Object[] seek(final Context context, final Arguments arguments) throws IOException {
         consumeCallBudget(context, SEEK_COSTS[speed - 1]);
-        final Handle handle = getHandle(checkHandle(arguments, 0));
+        final int handleId = checkHandle(arguments, 0);
+        checkOwner(context, handleId);
+        final Handle handle = getHandle(handleId);
         final String whence = arguments.checkString(1);
         final long offset = arguments.checkLong(2);
         final long position = switch (whence) {
@@ -201,21 +210,31 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     @Callback(direct = true, doc = "function(handle:userdata,value:string):boolean -- Writes bytes to a file handle.")
     public Object[] write(final Context context, final Arguments arguments) throws IOException {
         consumeCallBudget(context, WRITE_COSTS[speed - 1]);
-        getHandle(checkHandle(arguments, 0)).write(arguments.checkByteArray(1));
+        final int handleId = checkHandle(arguments, 0);
+        checkOwner(context, handleId);
+        getHandle(handleId).write(arguments.checkByteArray(1));
         return new Object[]{true};
     }
 
     @Override
     public void onDisconnect(final Node node) {
         if (node == node()) {
+            owners.clear();
             fileSystem.close();
+        } else {
+            closeOwner(node);
         }
     }
 
     @Override
     public void onMessage(final Message message) {
         if ("computer.stopped".equals(message.name()) || "computer.started".equals(message.name())) {
-            fileSystem.close();
+            if (message.source() == null) {
+                owners.clear();
+                fileSystem.close();
+            } else {
+                closeOwner(message.source());
+            }
         }
     }
 
@@ -320,8 +339,65 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         return file;
     }
 
-    private void close(final int handle) throws IOException {
+    private void close(final Context context, final int handle) throws IOException {
+        checkOwner(context, handle);
         getHandle(handle).close();
+        forgetOwner(context, handle);
+    }
+
+    private void rememberOwner(final Context context, final int handle) {
+        final String address = ownerAddress(context);
+        if (address != null) {
+            owners.computeIfAbsent(address, ignored -> new LinkedHashSet<>()).add(handle);
+        }
+    }
+
+    private void forgetOwner(final Context context, final int handle) {
+        final String address = ownerAddress(context);
+        if (address == null) {
+            return;
+        }
+        final Set<Integer> handles = owners.get(address);
+        if (handles != null) {
+            handles.remove(handle);
+            if (handles.isEmpty()) {
+                owners.remove(address);
+            }
+        }
+    }
+
+    private void checkOwner(final Context context, final int handle) throws IOException {
+        final String address = ownerAddress(context);
+        if (address == null) {
+            return;
+        }
+        final Set<Integer> handles = owners.get(address);
+        if (handles == null || !handles.contains(handle)) {
+            throw new IOException("bad file descriptor");
+        }
+    }
+
+    private void closeOwner(final Node node) {
+        if (node == null || node.address() == null) {
+            return;
+        }
+        final Set<Integer> handles = owners.remove(node.address());
+        if (handles == null) {
+            return;
+        }
+        for (int handle : handles) {
+            final Handle file = fileSystem.getHandle(handle);
+            if (file != null) {
+                file.close();
+            }
+        }
+    }
+
+    private static String ownerAddress(final Context context) {
+        if (context == null || context.node() == null) {
+            return null;
+        }
+        return context.node().address();
     }
 
     private static void consumeCallBudget(final Context context, final double cost) {
@@ -350,7 +426,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         @Override
         public void dispose(final Context context) {
             try {
-                owner.close(handle);
+                owner.close(context, handle);
             } catch (IOException ignored) {
                 // Already closed.
             }
