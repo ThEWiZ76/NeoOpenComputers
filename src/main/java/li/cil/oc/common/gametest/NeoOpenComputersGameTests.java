@@ -14,16 +14,22 @@ import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 
 @GameTestHolder(NeoOpenComputers.MODID)
@@ -142,6 +148,31 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void screenBlockClickSignalsReachComputer(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        helper.assertTrue(screen.node().network() == computer.node().network(), "Screen and computer are not on the same network");
+
+        final BlockState state = helper.getBlockState(screenPos);
+        final BlockPos absoluteScreenPos = helper.absolutePos(screenPos);
+        final Vec3 hitLocation = new Vec3(absoluteScreenPos.getX() + 0.25D, absoluteScreenPos.getY() + 0.75D, absoluteScreenPos.getZ());
+        final BlockHitResult hit = new BlockHitResult(hitLocation, Direction.NORTH, absoluteScreenPos, false);
+        helper.assertTrue(invokeUseWithoutItem(state, helper, screenPos, hit) == InteractionResult.CONSUME, "Screen click was not consumed");
+
+        helper.runAtTickTime(5, () -> {
+            assertNextSignal(helper, computer, "touch", 11, 5, 0);
+            assertNextSignal(helper, computer, "drop", 11, 5, 0);
+            helper.succeed();
+        });
+    }
+
     private static ItemStack luaBiosEepromStack() {
         final ItemStack stack = new ItemStack(ModItems.EEPROM.get());
         final CompoundTag data = new CompoundTag();
@@ -231,6 +262,22 @@ public final class NeoOpenComputersGameTests {
             }
         }
         helper.fail("Expected signal " + name + " but it was not in the next 16 queued signals");
+    }
+
+    private static InteractionResult invokeUseWithoutItem(final BlockState state, final GameTestHelper helper, final BlockPos pos, final BlockHitResult hit) {
+        try {
+            final Method useWithoutItem = state.getBlock().getClass().getDeclaredMethod(
+                "useWithoutItem",
+                BlockState.class,
+                net.minecraft.world.level.Level.class,
+                BlockPos.class,
+                net.minecraft.world.entity.player.Player.class,
+                BlockHitResult.class);
+            useWithoutItem.setAccessible(true);
+            return (InteractionResult) useWithoutItem.invoke(state.getBlock(), state, helper.getLevel(), helper.absolutePos(pos), null, hit);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Could not invoke screen useWithoutItem", e);
+        }
     }
 
     private static void assertSignal(final GameTestHelper helper, final Signal signal, final String name, final Object... args) {
