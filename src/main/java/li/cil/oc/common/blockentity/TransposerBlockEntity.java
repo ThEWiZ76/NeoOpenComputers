@@ -2,9 +2,11 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.internal.Database;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
@@ -125,6 +127,15 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
         return new Object[]{slotA == slotB || InventoryComparison.sameItem(container.getItem(slotA), container.getItem(slotB), args.optBoolean(3, false))};
     }
 
+    @Callback(doc = "function(side:number, slot:number, dbAddress:string, dbSlot:number[, checkNBT:boolean=false]):boolean -- Compare an item in the specified inventory slot with one in the database with the specified address.")
+    public Object[] compareStackToDatabase(final Context context, final Arguments args) {
+        final Container container = container(args.checkInteger(0));
+        final int slot = checkSlot(container, args.checkInteger(1));
+        final Database database = database(args.checkString(2));
+        final int databaseSlot = checkSlot(database, args.checkInteger(3));
+        return new Object[]{InventoryComparison.sameItem(container.getItem(slot), database.getStackInSlot(databaseSlot), args.optBoolean(4, false))};
+    }
+
     @Callback(doc = "function(side:number, slotA:number, slotB:number):boolean -- Check whether two stacks share an item tag.")
     public Object[] areStacksEquivalent(final Context context, final Arguments args) {
         final Container container = container(args.checkInteger(0));
@@ -154,6 +165,17 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
         final BlockEntity blockEntity = blockEntity(args.checkInteger(0));
         final var key = BuiltInRegistries.BLOCK.getKey(blockEntity.getBlockState().getBlock());
         return new Object[]{key == null ? "unknown" : key.toString()};
+    }
+
+    @Callback(doc = "function(side:number, slot:number, dbAddress:string, dbSlot:number):boolean -- Store an item stack description in the specified database slot.")
+    public Object[] store(final Context context, final Arguments args) {
+        final Container container = container(args.checkInteger(0));
+        final ItemStack stack = container.getItem(checkSlot(container, args.checkInteger(1)));
+        final Database database = database(args.checkString(2));
+        final int databaseSlot = checkSlot(database, args.checkInteger(3));
+        final boolean overwritten = !database.getStackInSlot(databaseSlot).isEmpty();
+        database.setStackInSlot(databaseSlot, stack.copy());
+        return new Object[]{overwritten};
     }
 
     @Callback(doc = "function(sourceSide:number, sinkSide:number[, count:number[, sourceSlot:number[, sinkSlot:number]]]):boolean -- Transfer items between adjacent inventories.")
@@ -408,6 +430,27 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
             throw new IllegalArgumentException("slot index out of bounds");
         }
         return index;
+    }
+
+    private static int checkSlot(final Database database, final int slot) {
+        final int index = slot - 1;
+        if (index < 0 || index >= database.size()) {
+            throw new IllegalArgumentException("slot index out of bounds");
+        }
+        return index;
+    }
+
+    private Database database(final String address) {
+        if (node() == null || node().network() == null) {
+            throw new IllegalArgumentException("no such component");
+        }
+        if (!(node().network().node(address) instanceof Component component)) {
+            throw new IllegalArgumentException("no such component");
+        }
+        if (!(component.host() instanceof Database database)) {
+            throw new IllegalArgumentException("not a database");
+        }
+        return database;
     }
 
     private static int checkTank(final IFluidHandler handler, final int tank) {

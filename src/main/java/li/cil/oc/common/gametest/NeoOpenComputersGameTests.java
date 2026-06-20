@@ -371,6 +371,41 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void transposerStoresStacksInDatabase(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final int side = Direction.WEST.get3DDataValue();
+        helper.setBlock(pos, ModBlocks.TRANSPOSER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.CHEST);
+        final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) transposer.node();
+
+        final net.minecraft.world.Container chest = helper.getBlockEntity(pos.relative(Direction.WEST));
+        chest.setItem(0, new ItemStack(Items.DIAMOND, 5));
+
+        final DriverItem databaseDriver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
+        helper.assertTrue(databaseDriver != null, "No driver for database upgrade");
+        final ManagedEnvironment databaseEnvironment = databaseDriver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        helper.assertTrue(databaseEnvironment instanceof li.cil.oc.api.internal.Database, "Database upgrade did not create database environment");
+        final li.cil.oc.api.internal.Database database = (li.cil.oc.api.internal.Database) databaseEnvironment;
+        database.setStackInSlot(0, new ItemStack(Items.GOLD_INGOT));
+        Network.joinNewNetwork(databaseEnvironment.node());
+        databaseEnvironment.node().connect(transposer.node());
+
+        final String databaseAddress = databaseEnvironment.node().address();
+        final Object[] store = invokeComponent(helper, component, "store", side, 1, databaseAddress, 1);
+        final ItemStack stored = database.getStackInSlot(0);
+        final Object[] matching = invokeComponent(helper, component, "compareStackToDatabase", side, 1, databaseAddress, 1);
+        database.setStackInSlot(0, new ItemStack(Items.DIRT));
+        final Object[] mismatching = invokeComponent(helper, component, "compareStackToDatabase", side, 1, databaseAddress, 1);
+
+        helper.assertTrue(Boolean.TRUE.equals(store[0]), "Transposer store did not report overwritten database slot");
+        helper.assertTrue(stored.is(Items.DIAMOND) && stored.getCount() == 5, "Transposer did not store stack in database");
+        helper.assertTrue(Boolean.TRUE.equals(matching[0]), "Transposer did not match stored database stack");
+        helper.assertTrue(Boolean.FALSE.equals(mismatching[0]), "Transposer matched different database stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tankControllerInspectsAdjacentFluidTanks(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(1, 1, 1);
         final int side = Direction.WEST.get3DDataValue();
