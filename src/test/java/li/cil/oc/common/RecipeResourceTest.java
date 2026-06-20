@@ -120,6 +120,16 @@ final class RecipeResourceTest {
         assertEquals("neoopencomputers:" + ModContentIds.ANALYZER, keys.getAsJsonObject("A").get("item").getAsString());
     }
 
+    @Test
+    void analyzerRecipeUsesMaterialParts() throws IOException {
+        JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.ANALYZER + ".json"));
+        JsonObject keys = json.getAsJsonObject("key");
+
+        assertEquals("neoopencomputers:" + ModContentIds.TRANSISTOR, keys.getAsJsonObject("T").get("item").getAsString());
+        assertEquals("neoopencomputers:" + ModContentIds.MICROCHIP_TIER1, keys.getAsJsonObject("C").get("item").getAsString());
+        assertEquals("neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD, keys.getAsJsonObject("B").get("item").getAsString());
+    }
+
     private static JsonObject readJson(final Path path) throws IOException {
         try (Reader reader = Files.newBufferedReader(path)) {
             JsonElement element = JsonParser.parseReader(reader);
