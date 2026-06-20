@@ -34,6 +34,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
 @GameTestHolder(NeoOpenComputers.MODID)
@@ -263,6 +264,30 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void computerBootsLuaBiosFromInternalHardDisk(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final ItemStack bootDisk = bootableHardDiskStack(helper);
+        helper.assertTrue(computer.canPlaceItem(ComputerCaseBlockEntity.SLOT_HDD, bootDisk), "Computer case rejected bootable hard disk");
+
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootDisk);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.machine().components().containsValue("filesystem"), "Internal hard disk filesystem is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.toggleMachine(), "Computer did not start with bootable hard disk");
+        helper.runAtTickTime(80, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Computer stopped while booting from hard disk: " + computer.machine().lastError());
+            assertNextSignal(helper, computer, "hdd_booted", "ok");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void screenKeyboardSignalsReachComputer(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
@@ -335,6 +360,25 @@ public final class NeoOpenComputersGameTests {
         data.putBoolean(ItemRegistry.FLOPPY_RECIPE_CYCLING_TAG, true);
         stack.set(DataComponents.CUSTOM_NAME, Component.literal("OpenOS (Operating System)"));
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+        return stack;
+    }
+
+    private static ItemStack bootableHardDiskStack(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.HDD_TIER1.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "Hard disk has no item driver");
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment != null, "Hard disk driver did not create an environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Hard disk environment has no filesystem component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        try {
+            final Object handle = component.invoke("open", null, "init.lua", "w")[0];
+            component.invoke("write", null, handle, "computer.pushSignal('hdd_booted', 'ok')".getBytes(StandardCharsets.UTF_8));
+            component.invoke("close", null, handle);
+            environment.save(new CompoundTag());
+        } catch (Exception e) {
+            helper.fail("Failed to prepare bootable hard disk: " + e.getMessage());
+        }
         return stack;
     }
 
