@@ -2,6 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "A": {
+      "item": "neoopencomputers:analyzer"
+    },
     "C": {
       "tag": "c:ingots/copper"
     },
@@ -10,14 +13,11 @@
     },
     "R": {
       "item": "minecraft:redstone"
-    },
-    "S": {
-      "item": "minecraft:stone"
     }
   },
   "pattern": [
     "CRC",
-    "GSG",
+    "GAG",
     "CRC"
   ],
   "result": {
