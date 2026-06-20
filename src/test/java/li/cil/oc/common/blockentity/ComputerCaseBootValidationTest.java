@@ -25,19 +25,29 @@ final class ComputerCaseBootValidationTest {
     }
 
     @Test
+    void tierOneCaseCanBootWithoutHardDiskForExternalBootMedia() {
+        assertTrue(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.Memory, Slot.None, EEPROM));
+    }
+
+    @Test
+    void tierOneCaseCanBootWithOneMemoryStick() {
+        assertTrue(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.None, Slot.HDD, EEPROM));
+        assertTrue(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.None, Slot.Memory, Slot.HDD, EEPROM));
+    }
+
+    @Test
     void tierOneCaseCannotBootWithoutCpu() {
         assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.None, Slot.Memory, Slot.Memory, Slot.HDD, EEPROM));
     }
 
     @Test
-    void tierOneCaseCannotBootWithoutBothMemorySticks() {
-        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.None, Slot.HDD, EEPROM));
-        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.None, Slot.Memory, Slot.HDD, EEPROM));
+    void tierOneCaseCannotBootWithoutAnyMemoryStick() {
+        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.None, Slot.None, Slot.HDD, EEPROM));
     }
 
     @Test
-    void tierOneCaseCannotBootWithoutHardDiskDrive() {
-        assertFalse(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.Memory, Slot.None, EEPROM));
+    void tierOneCaseDoesNotRequireInternalHardDiskDrive() {
+        assertTrue(ComputerCaseBlockEntity.hasRequiredComponents(Slot.CPU, Slot.Memory, Slot.Memory, Slot.None, EEPROM));
     }
 
     @Test

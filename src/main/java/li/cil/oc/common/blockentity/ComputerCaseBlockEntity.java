@@ -232,9 +232,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     static boolean hasRequiredComponents(final String cpuSlot, final String memorySlot0, final String memorySlot1, final String hddSlot, final String eepromSlot) {
         return Slot.CPU.equals(cpuSlot)
-            && Slot.Memory.equals(memorySlot0)
-            && Slot.Memory.equals(memorySlot1)
-            && Slot.HDD.equals(hddSlot)
+            && (Slot.Memory.equals(memorySlot0) || Slot.Memory.equals(memorySlot1))
             && SLOT_TYPE_EEPROM.equals(eepromSlot);
     }
 
