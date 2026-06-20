@@ -422,6 +422,38 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void screenRecipesUseHardmodeProgression() throws IOException {
+        JsonObject tier1 = readJson(RECIPE_ROOT.resolve(ModContentIds.SCREEN_TIER1 + ".json"));
+        JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.SCREEN_TIER2 + ".json"));
+        JsonObject tier3 = readJson(RECIPE_ROOT.resolve(ModContentIds.SCREEN_TIER3 + ".json"));
+        JsonObject tier1Keys = tier1.getAsJsonObject("key");
+        JsonObject tier2Keys = tier2.getAsJsonObject("key");
+        JsonObject tier3Keys = tier3.getAsJsonObject("key");
+
+        assertPattern(tier1, "IIG", "RTG", "IIG");
+        assertTag(tier1Keys, "I", "c:ingots/iron");
+        assertItem(tier1Keys, "G", "minecraft:glass");
+        assertItem(tier1Keys, "R", "minecraft:redstone");
+        assertItem(tier1Keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+
+        assertPattern(tier2, "IRI", "CGS", "IBI");
+        assertTag(tier2Keys, "I", "c:ingots/gold");
+        assertItem(tier2Keys, "R", "minecraft:red_dye");
+        assertItem(tier2Keys, "G", "minecraft:green_dye");
+        assertItem(tier2Keys, "B", "minecraft:blue_dye");
+        assertItem(tier2Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier2Keys, "S", "neoopencomputers:" + ModContentIds.SCREEN_TIER1);
+
+        assertPattern(tier3, "OBC", "RQS", "OBC");
+        assertItem(tier3Keys, "O", "minecraft:obsidian");
+        assertItem(tier3Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier3Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier3Keys, "R", "minecraft:blaze_rod");
+        assertItem(tier3Keys, "Q", "minecraft:quartz");
+        assertItem(tier3Keys, "S", "neoopencomputers:" + ModContentIds.SCREEN_TIER2);
+    }
+
+    @Test
     void inputDeviceRecipesUseMaterialParts() throws IOException {
         JsonObject manual = readJson(RECIPE_ROOT.resolve(ModContentIds.MANUAL + ".json"));
         JsonObject buttonGroup = readJson(RECIPE_ROOT.resolve(ModContentIds.BUTTON_GROUP + ".json"));

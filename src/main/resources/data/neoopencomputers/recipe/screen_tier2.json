@@ -2,23 +2,29 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "B": {
+      "item": "minecraft:blue_dye"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
     "G": {
-      "item": "minecraft:glass_pane"
+      "item": "minecraft:green_dye"
+    },
+    "I": {
+      "tag": "c:ingots/gold"
     },
     "R": {
-      "item": "minecraft:redstone"
+      "item": "minecraft:red_dye"
     },
     "S": {
       "item": "neoopencomputers:screen_tier1"
-    },
-    "X": {
-      "item": "minecraft:gold_ingot"
     }
   },
   "pattern": [
-    "GGG",
-    "RSR",
-    "XXX"
+    "IRI",
+    "CGS",
+    "IBI"
   ],
   "result": {
     "count": 1,

@@ -2,23 +2,29 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "G": {
-      "item": "minecraft:glass_pane"
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "Q": {
+      "item": "minecraft:quartz"
     },
     "R": {
-      "item": "minecraft:redstone"
+      "item": "minecraft:blaze_rod"
     },
     "S": {
       "item": "neoopencomputers:screen_tier2"
-    },
-    "X": {
-      "item": "minecraft:diamond"
     }
   },
   "pattern": [
-    "GGG",
-    "RSR",
-    "XXX"
+    "OBC",
+    "RQS",
+    "OBC"
   ],
   "result": {
     "count": 1,
