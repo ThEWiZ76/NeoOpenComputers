@@ -8,6 +8,7 @@ import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class InternetCardEnvironmentTest {
@@ -91,6 +93,27 @@ final class InternetCardEnvironmentTest {
         }
 
         throw new AssertionError("expected invalid scheme to fail");
+    }
+
+    @Test
+    void limitsOpenConnectionsAndReleasesClosedHandles() throws Exception {
+        OpenComputersApi.initialize();
+        CompletableFuture<InternetCardEnvironment.HttpResponse> pending = new CompletableFuture<>();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> pending);
+        InternetCardEnvironment.HttpRequest[] handles = new InternetCardEnvironment.HttpRequest[4];
+
+        for (int i = 0; i < handles.length; i++) {
+            Object handle = card.request(null, new TestArguments("https://example.test/" + i))[0];
+            handles[i] = assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
+        }
+
+        IOException error = assertThrows(IOException.class, () -> card.request(null, new TestArguments("https://example.test/overflow")));
+        assertEquals("too many open connections", error.getMessage());
+
+        handles[0].close(null, new TestArguments());
+
+        Object handle = card.request(null, new TestArguments("https://example.test/reopened"))[0];
+        assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
     }
 
     @Test

@@ -19,10 +19,13 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -32,6 +35,7 @@ import java.util.concurrent.Executors;
 public class InternetCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "internet";
     private static final int MAX_READ_BUFFER = 8192;
+    private static final int MAX_CONNECTIONS = 4;
     private static final ExecutorService HTTP_EXECUTOR = Executors.newCachedThreadPool(runnable -> {
         final Thread thread = new Thread(runnable, "NeoOpenComputers Internet");
         thread.setDaemon(true);
@@ -45,6 +49,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     );
 
     private final HttpTransport transport;
+    private final Set<Object> connections = Collections.newSetFromMap(new IdentityHashMap<>());
 
     public InternetCardEnvironment() {
         this(InternetCardEnvironment::openUrl);
@@ -69,12 +74,15 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Callback(doc = "function(url:string[, postData:string[, headers:table[, method:string]]]):userdata -- Starts an HTTP request.")
-    public Object[] request(final Context context, final Arguments args) {
+    public synchronized Object[] request(final Context context, final Arguments args) throws IOException {
         final String url = checkHttpUrl(args.checkString(0));
         final byte[] postData = args.count() > 1 && args.checkAny(1) != null ? args.checkByteArray(1) : null;
         final Map<String, String> headers = args.isTable(2) ? headers(args.checkTable(2)) : Map.of();
         final String method = args.count() > 3 && args.checkAny(3) != null ? args.checkString(3) : (postData == null ? "GET" : "POST");
-        return new Object[]{new HttpRequest(transport.request(url, postData, headers, method))};
+        ensureConnectionSlot();
+        final HttpRequest request = new HttpRequest(transport.request(url, postData, headers, method), this);
+        connections.add(request);
+        return new Object[]{request};
     }
 
     @Callback(direct = true, doc = "function():boolean -- Returns whether TCP connections can be made.")
@@ -83,9 +91,22 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Callback(doc = "function(address:string[, port:number]):userdata -- Opens a new TCP connection.")
-    public Object[] connect(final Context context, final Arguments args) {
+    public synchronized Object[] connect(final Context context, final Arguments args) throws IOException {
         final TcpAddress address = checkTcpAddress(args.checkString(0), args.optInteger(1, -1));
-        return new Object[]{new TcpSocket(address.host(), address.port())};
+        ensureConnectionSlot();
+        final TcpSocket socket = new TcpSocket(address.host(), address.port(), this);
+        connections.add(socket);
+        return new Object[]{socket};
+    }
+
+    private void ensureConnectionSlot() throws IOException {
+        if (connections.size() >= MAX_CONNECTIONS) {
+            throw new IOException("too many open connections");
+        }
+    }
+
+    private synchronized void unregisterConnection(final Object connection) {
+        connections.remove(connection);
     }
 
     private static String checkHttpUrl(final String address) {
@@ -200,10 +221,12 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
     public static final class HttpRequest implements Value {
         private final CompletableFuture<HttpResponse> response;
+        private final InternetCardEnvironment owner;
         private int offset;
 
-        private HttpRequest(final CompletableFuture<HttpResponse> response) {
+        private HttpRequest(final CompletableFuture<HttpResponse> response, final InternetCardEnvironment owner) {
             this.response = response;
+            this.owner = owner;
         }
 
         @Callback(doc = "function():boolean -- Ensures a response is available.")
@@ -239,7 +262,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Callback(direct = true, doc = "function() -- Closes an open HTTP stream.")
         public Object[] close(final Context context, final Arguments args) {
-            response.cancel(true);
+            close();
             return null;
         }
 
@@ -259,7 +282,12 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Override
         public void dispose(final Context context) {
+            close();
+        }
+
+        private void close() {
             response.cancel(true);
+            owner.unregisterConnection(this);
         }
 
         @Override
@@ -274,8 +302,10 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     public static final class TcpSocket implements Value {
         private final UUID id = UUID.randomUUID();
         private final CompletableFuture<Socket> connection;
+        private final InternetCardEnvironment owner;
 
-        private TcpSocket(final String host, final int port) {
+        private TcpSocket(final String host, final int port, final InternetCardEnvironment owner) {
+            this.owner = owner;
             connection = CompletableFuture.supplyAsync(() -> {
                 try {
                     final Socket socket = new Socket();
@@ -351,6 +381,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
                 }
             });
             connection.cancel(true);
+            owner.unregisterConnection(this);
         }
 
         @Override
