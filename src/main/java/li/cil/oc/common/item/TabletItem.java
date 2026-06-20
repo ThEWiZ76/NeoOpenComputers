@@ -3,6 +3,7 @@ package li.cil.oc.common.item;
 import li.cil.oc.api.driver.item.Chargeable;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -35,6 +36,29 @@ public class TabletItem extends Item implements Chargeable {
             setCharge(stack, stored + accepted);
         }
         return accepted;
+    }
+
+    @Override
+    public boolean isBarVisible(final ItemStack stack) {
+        return canCharge(stack);
+    }
+
+    @Override
+    public int getBarWidth(final ItemStack stack) {
+        final double maxCharge = maxCharge(stack);
+        if (maxCharge <= 0D) {
+            return 0;
+        }
+        return Mth.clamp((int) Math.round(13D * getCharge(stack) / maxCharge), 0, 13);
+    }
+
+    @Override
+    public int getBarColor(final ItemStack stack) {
+        final double maxCharge = maxCharge(stack);
+        if (maxCharge <= 0D) {
+            return 0xFF0000;
+        }
+        return Mth.hsvToRgb(Math.max(0F, (float) (getCharge(stack) / maxCharge) / 3F), 1F, 1F);
     }
 
     public double getCharge(final ItemStack stack) {

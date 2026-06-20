@@ -208,6 +208,18 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tabletItemShowsEnergyBar(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.TABLET.get());
+        final TabletItem tablet = (TabletItem) stack.getItem();
+
+        tablet.setMaxCharge(stack, 1000D);
+        tablet.setCharge(stack, 250D);
+        helper.assertTrue(tablet.isBarVisible(stack), "Tablet energy bar should be visible");
+        helper.assertTrue(tablet.getBarWidth(stack) == 3, "Tablet energy bar should show current charge ratio");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredComponentItemsExposeTierCapabilities(final GameTestHelper helper) {
         assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER1.get()), 8);
         assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER2.get()), 12);
