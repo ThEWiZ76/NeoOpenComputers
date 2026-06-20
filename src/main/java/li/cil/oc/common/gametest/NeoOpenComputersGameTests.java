@@ -11,6 +11,7 @@ import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
@@ -87,6 +88,7 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
         helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
 
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
         final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
         final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
         final ItemStack openOsFloppy = openOsFloppyStack();
@@ -111,6 +113,7 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(computer.machine().components().containsValue("filesystem"), "OpenOS floppy filesystem is not visible");
             helper.assertTrue(computer.machine().components().containsValue("gpu"), "Graphics card component is not visible");
             helper.assertTrue(computer.machine().components().containsValue("screen"), "Screen component is not visible");
+            helper.assertTrue(screenHasNonBlankText(screen), "OpenOS did not write visible screen text:\n" + screenText(screen));
             helper.succeed();
         });
     }
@@ -168,6 +171,30 @@ public final class NeoOpenComputersGameTests {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static boolean screenHasNonBlankText(final ScreenBlockEntity screen) {
+        for (int y = 0; y < screen.getHeight(); y++) {
+            for (int x = 0; x < screen.getWidth(); x++) {
+                if (screen.getCodePoint(x, y) != ' ') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static String screenText(final ScreenBlockEntity screen) {
+        final StringBuilder builder = new StringBuilder();
+        for (int y = 0; y < screen.getHeight(); y++) {
+            if (y > 0) {
+                builder.append('\n');
+            }
+            for (int x = 0; x < screen.getWidth(); x++) {
+                builder.appendCodePoint(screen.getCodePoint(x, y));
+            }
+        }
+        return builder.toString();
     }
 
     private NeoOpenComputersGameTests() {

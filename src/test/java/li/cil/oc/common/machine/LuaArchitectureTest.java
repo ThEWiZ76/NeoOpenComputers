@@ -1155,6 +1155,7 @@ final class LuaArchitectureTest {
         }
 
         assertArrayEquals(new Object[]{screen.node().address()}, gpu.getScreen(null, null));
+        assertTrue(screen.hasNonBlankText(), screen.dump());
     }
 
     private static Machine machineWithUptime(final double uptime) {
@@ -1577,6 +1578,7 @@ final class LuaArchitectureTest {
         private int foreground = 0xFFFFFF;
         private int background;
         private ColorDepth depth = ColorDepth.OneBit;
+        private int[][] text = newText(width, height);
 
         private TestTextBuffer() {
             setNode(ScreenEnvironment.createNode(this));
@@ -1596,6 +1598,7 @@ final class LuaArchitectureTest {
             this.height = height;
             viewportWidth = Math.min(viewportWidth, width);
             viewportHeight = Math.min(viewportHeight, height);
+            text = newText(width, height);
             return true;
         }
         @Override public int getWidth() { return width; }
@@ -1624,18 +1627,69 @@ final class LuaArchitectureTest {
         @Override public void setBackgroundColor(final int color, final boolean isFromPalette) { background = color; }
         @Override public int getBackgroundColor() { return background; }
         @Override public boolean isBackgroundFromPalette() { return false; }
-        @Override public void copy(final int column, final int row, final int width, final int height, final int horizontalTranslation, final int verticalTranslation) {}
-        @Override public void fill(final int column, final int row, final int width, final int height, final char value) {}
-        @Override public void fill(final int column, final int row, final int width, final int height, final int value) {}
-        @Override public void set(final int column, final int row, final String value, final boolean vertical) {}
-        @Override public char get(final int column, final int row) { return ' '; }
-        @Override public int getCodePoint(final int column, final int row) { return ' '; }
+        @Override public void copy(final int column, final int row, final int width, final int height, final int horizontalTranslation, final int verticalTranslation) {
+            final int[][] snapshot = new int[Math.max(0, height)][Math.max(0, width)];
+            for (int y = 0; y < snapshot.length; y++) {
+                for (int x = 0; x < snapshot[y].length; x++) {
+                    snapshot[y][x] = getCodePoint(column + x, row + y);
+                }
+            }
+            for (int y = 0; y < snapshot.length; y++) {
+                for (int x = 0; x < snapshot[y].length; x++) {
+                    put(column + x + horizontalTranslation, row + y + verticalTranslation, snapshot[y][x]);
+                }
+            }
+        }
+        @Override public void fill(final int column, final int row, final int width, final int height, final char value) {
+            fill(column, row, width, height, (int) value);
+        }
+        @Override public void fill(final int column, final int row, final int width, final int height, final int value) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    put(column + x, row + y, value);
+                }
+            }
+        }
+        @Override public void set(final int column, final int row, final String value, final boolean vertical) {
+            if (value == null) {
+                return;
+            }
+            int offset = 0;
+            for (int index = 0; index < value.length(); ) {
+                final int codePoint = value.codePointAt(index);
+                put(column + (vertical ? 0 : offset), row + (vertical ? offset : 0), codePoint);
+                offset++;
+                index += Character.charCount(codePoint);
+            }
+        }
+        @Override public char get(final int column, final int row) { return (char) getCodePoint(column, row); }
+        @Override public int getCodePoint(final int column, final int row) {
+            return isInside(column, row) ? text[row][column] : ' ';
+        }
         @Override public int getForegroundColor(final int column, final int row) { return foreground; }
         @Override public boolean isForegroundFromPalette(final int column, final int row) { return false; }
         @Override public int getBackgroundColor(final int column, final int row) { return background; }
         @Override public boolean isBackgroundFromPalette(final int column, final int row) { return false; }
-        @Override public void rawSetText(final int column, final int row, final char[][] text) {}
-        @Override public void rawSetText(final int column, final int row, final int[][] text) {}
+        @Override public void rawSetText(final int column, final int row, final char[][] text) {
+            if (text == null) {
+                return;
+            }
+            for (int y = 0; y < text.length; y++) {
+                for (int x = 0; x < text[y].length; x++) {
+                    put(column + x, row + y, text[y][x]);
+                }
+            }
+        }
+        @Override public void rawSetText(final int column, final int row, final int[][] text) {
+            if (text == null) {
+                return;
+            }
+            for (int y = 0; y < text.length; y++) {
+                for (int x = 0; x < text[y].length; x++) {
+                    put(column + x, row + y, text[y][x]);
+                }
+            }
+        }
         @Override public void rawSetForeground(final int column, final int row, final int[][] color) {}
         @Override public void rawSetBackground(final int column, final int row, final int[][] color) {}
         @Override public boolean renderText() { return true; }
@@ -1650,6 +1704,48 @@ final class LuaArchitectureTest {
         @Override public void mouseDrag(final double x, final double y, final int button, final Player player) {}
         @Override public void mouseUp(final double x, final double y, final int button, final Player player) {}
         @Override public void mouseScroll(final double x, final double y, final int delta, final Player player) {}
+
+        private boolean hasNonBlankText() {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    if (text[y][x] != ' ') {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private String dump() {
+            final StringBuilder builder = new StringBuilder();
+            for (int y = 0; y < height; y++) {
+                if (y > 0) {
+                    builder.append('\n');
+                }
+                for (int x = 0; x < width; x++) {
+                    builder.appendCodePoint(text[y][x]);
+                }
+            }
+            return builder.toString();
+        }
+
+        private void put(final int column, final int row, final int value) {
+            if (isInside(column, row)) {
+                text[row][column] = value;
+            }
+        }
+
+        private boolean isInside(final int column, final int row) {
+            return column >= 0 && row >= 0 && column < width && row < height;
+        }
+
+        private static int[][] newText(final int width, final int height) {
+            final int[][] value = new int[Math.max(1, height)][Math.max(1, width)];
+            for (int y = 0; y < value.length; y++) {
+                Arrays.fill(value[y], ' ');
+            }
+            return value;
+        }
     }
 
     private static Object defaultValue(final Class<?> type) {
