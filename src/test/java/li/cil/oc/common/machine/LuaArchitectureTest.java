@@ -8,6 +8,7 @@ import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.fs.Mode;
+import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
@@ -28,7 +29,10 @@ import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.EepromEnvironment;
+import li.cil.oc.common.component.GraphicsCardEnvironment;
+import li.cil.oc.common.component.ScreenEnvironment;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.AfterEach;
@@ -1124,6 +1128,35 @@ final class LuaArchitectureTest {
         }
     }
 
+    @Test
+    void bundledOpenOsStartsWithGpuAndScreenWithoutRuntimeError() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        CompoundTag eepromData = new CompoundTag();
+        eepromData.putByteArray(ItemRegistry.EEPROM_CODE_TAG, ModEeproms.luaBiosCode());
+        EepromEnvironment eeprom = new EepromEnvironment(eepromData);
+        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(ModLootDisks.openOsFileSystem(), "OpenOS", null, null, 1);
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        TestTextBuffer screen = new TestTextBuffer();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(eeprom.node());
+        machine.node().connect(fileSystemEnvironment.node());
+        machine.node().connect(gpu.node());
+        machine.node().connect(screen.node());
+        LuaArchitecture architecture = new LuaArchitecture(new String(ModEeproms.luaBiosCode(), StandardCharsets.UTF_8));
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        for (int tick = 0; tick < 64; tick++) {
+            ExecutionResult result = architecture.runThreaded(false);
+            if (result instanceof ExecutionResult.Error error) {
+                fail(error.message);
+            }
+        }
+
+        assertArrayEquals(new Object[]{screen.node().address()}, gpu.getScreen(null, null));
+    }
+
     private static Machine machineWithUptime(final double uptime) {
         return machine(new ArrayDeque<>(), uptime);
     }
@@ -1534,6 +1567,89 @@ final class LuaArchitectureTest {
                 case "toString" -> "test-node";
                 default -> defaultValue(method.getReturnType());
             });
+    }
+
+    private static final class TestTextBuffer extends AbstractManagedEnvironment implements TextBuffer {
+        private int width = 40;
+        private int height = 16;
+        private int viewportWidth = 40;
+        private int viewportHeight = 16;
+        private int foreground = 0xFFFFFF;
+        private int background;
+        private ColorDepth depth = ColorDepth.OneBit;
+
+        private TestTextBuffer() {
+            setNode(ScreenEnvironment.createNode(this));
+        }
+
+        @Override public void setEnergyCostPerTick(final double value) {}
+        @Override public double getEnergyCostPerTick() { return 0; }
+        @Override public void setPowerState(final boolean value) {}
+        @Override public boolean getPowerState() { return true; }
+        @Override public void setMaximumResolution(final int width, final int height) {}
+        @Override public int getMaximumWidth() { return 80; }
+        @Override public int getMaximumHeight() { return 25; }
+        @Override public void setAspectRatio(final double width, final double height) {}
+        @Override public double getAspectRatio() { return 1; }
+        @Override public boolean setResolution(final int width, final int height) {
+            this.width = width;
+            this.height = height;
+            viewportWidth = Math.min(viewportWidth, width);
+            viewportHeight = Math.min(viewportHeight, height);
+            return true;
+        }
+        @Override public int getWidth() { return width; }
+        @Override public int getHeight() { return height; }
+        @Override public boolean setViewport(final int width, final int height) {
+            viewportWidth = width;
+            viewportHeight = height;
+            return true;
+        }
+        @Override public int getViewportWidth() { return viewportWidth; }
+        @Override public int getViewportHeight() { return viewportHeight; }
+        @Override public void setMaximumColorDepth(final ColorDepth depth) {}
+        @Override public ColorDepth getMaximumColorDepth() { return ColorDepth.OneBit; }
+        @Override public boolean setColorDepth(final ColorDepth depth) {
+            this.depth = depth;
+            return true;
+        }
+        @Override public ColorDepth getColorDepth() { return depth; }
+        @Override public void setPaletteColor(final int index, final int color) {}
+        @Override public int getPaletteColor(final int index) { return 0; }
+        @Override public void setForegroundColor(final int color) { foreground = color; }
+        @Override public void setForegroundColor(final int color, final boolean isFromPalette) { foreground = color; }
+        @Override public int getForegroundColor() { return foreground; }
+        @Override public boolean isForegroundFromPalette() { return false; }
+        @Override public void setBackgroundColor(final int color) { background = color; }
+        @Override public void setBackgroundColor(final int color, final boolean isFromPalette) { background = color; }
+        @Override public int getBackgroundColor() { return background; }
+        @Override public boolean isBackgroundFromPalette() { return false; }
+        @Override public void copy(final int column, final int row, final int width, final int height, final int horizontalTranslation, final int verticalTranslation) {}
+        @Override public void fill(final int column, final int row, final int width, final int height, final char value) {}
+        @Override public void fill(final int column, final int row, final int width, final int height, final int value) {}
+        @Override public void set(final int column, final int row, final String value, final boolean vertical) {}
+        @Override public char get(final int column, final int row) { return ' '; }
+        @Override public int getCodePoint(final int column, final int row) { return ' '; }
+        @Override public int getForegroundColor(final int column, final int row) { return foreground; }
+        @Override public boolean isForegroundFromPalette(final int column, final int row) { return false; }
+        @Override public int getBackgroundColor(final int column, final int row) { return background; }
+        @Override public boolean isBackgroundFromPalette(final int column, final int row) { return false; }
+        @Override public void rawSetText(final int column, final int row, final char[][] text) {}
+        @Override public void rawSetText(final int column, final int row, final int[][] text) {}
+        @Override public void rawSetForeground(final int column, final int row, final int[][] color) {}
+        @Override public void rawSetBackground(final int column, final int row, final int[][] color) {}
+        @Override public boolean renderText() { return true; }
+        @Override public int renderWidth() { return viewportWidth; }
+        @Override public int renderHeight() { return viewportHeight; }
+        @Override public void setRenderingEnabled(final boolean enabled) {}
+        @Override public boolean isRenderingEnabled() { return true; }
+        @Override public void keyDown(final char character, final int code, final Player player) {}
+        @Override public void keyUp(final char character, final int code, final Player player) {}
+        @Override public void clipboard(final String value, final Player player) {}
+        @Override public void mouseDown(final double x, final double y, final int button, final Player player) {}
+        @Override public void mouseDrag(final double x, final double y, final int button, final Player player) {}
+        @Override public void mouseUp(final double x, final double y, final int button, final Player player) {}
+        @Override public void mouseScroll(final double x, final double y, final int delta, final Player player) {}
     }
 
     private static Object defaultValue(final Class<?> type) {
