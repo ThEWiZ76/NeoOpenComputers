@@ -13,10 +13,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.PushReaction;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class PistonUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "piston";
@@ -69,20 +73,20 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
         final Direction direction = direction(arguments);
         final BlockPos hostPos = hostPosition();
         final BlockPos sourcePos = extending ? hostPos.relative(direction) : hostPos.relative(direction).relative(direction);
-        final BlockPos targetPos = extending ? sourcePos.relative(direction) : hostPos.relative(direction);
         final BlockState sourceState = level.getBlockState(sourcePos);
         if (sourceState.isAir()) {
             return new Object[]{false, "move failed"};
         }
-        if (!level.getBlockState(targetPos).isAir()) {
-            return new Object[]{false, "path is obstructed"};
-        }
-        if (!isMovable(sourceState)) {
+        final Direction moveDirection = extending ? direction : direction.getOpposite();
+        if (!PistonBaseBlock.isPushable(sourceState, level, sourcePos, moveDirection, extending, direction)) {
             return new Object[]{false, "move failed"};
         }
+        final PistonStructureResolver resolver = new PistonStructureResolver(level, hostPos, direction, extending);
+        if (!resolver.resolve()) {
+            return new Object[]{false, "path is obstructed"};
+        }
 
-        level.setBlock(targetPos, sourceState, 3);
-        level.setBlock(sourcePos, Blocks.AIR.defaultBlockState(), 3);
+        moveBlocks(level, resolver, moveDirection);
         host.markChanged();
         if (context != null) {
             context.pause(1D / 20D);
@@ -101,8 +105,27 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
         return BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition());
     }
 
-    private static boolean isMovable(final BlockState state) {
-        final PushReaction reaction = state.getPistonPushReaction();
-        return reaction == PushReaction.NORMAL || reaction == PushReaction.PUSH_ONLY;
+    private static void moveBlocks(final Level level, final PistonStructureResolver resolver, final Direction moveDirection) {
+        final List<BlockPos> toDestroy = resolver.getToDestroy();
+        for (int index = toDestroy.size() - 1; index >= 0; index--) {
+            level.destroyBlock(toDestroy.get(index), true);
+        }
+
+        final List<BlockPos> toPush = resolver.getToPush();
+        final BlockState[] states = new BlockState[toPush.size()];
+        final Set<BlockPos> targets = new HashSet<>();
+        for (int index = 0; index < toPush.size(); index++) {
+            final BlockPos source = toPush.get(index);
+            states[index] = level.getBlockState(source);
+            targets.add(source.relative(moveDirection));
+        }
+        for (int index = toPush.size() - 1; index >= 0; index--) {
+            level.setBlock(toPush.get(index).relative(moveDirection), states[index], 3);
+        }
+        for (final BlockPos source : toPush) {
+            if (!targets.contains(source)) {
+                level.setBlock(source, Blocks.AIR.defaultBlockState(), 3);
+            }
+        }
     }
 }
