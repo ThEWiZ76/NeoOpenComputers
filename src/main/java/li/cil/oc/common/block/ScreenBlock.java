@@ -4,6 +4,8 @@ import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -15,7 +17,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.phys.BlockHitResult;
 
+@SuppressWarnings("deprecation")
 public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlock {
     public static final MapCodec<ScreenBlock> CODEC = simpleCodec(ScreenBlock::new);
 
@@ -44,6 +48,28 @@ public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlo
     protected void neighborChanged(final BlockState state, final Level level, final BlockPos pos, final Block block, final BlockPos fromPos, final boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         BlockNetworkConnector.joinIfServer(level, pos);
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final BlockHitResult hitResult) {
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        if (level.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
+            final ScreenHitMapper.ScreenClick click = ScreenHitMapper.screenCoordinates(state.getValue(FACING), pos, hitResult, screen.renderWidth(), screen.renderHeight());
+            if (click == null) {
+                return InteractionResult.PASS;
+            }
+            screen.mouseDown(click.x(), click.y(), 0, player);
+            screen.mouseUp(click.x(), click.y(), 0, player);
+            return InteractionResult.CONSUME;
+        }
+        return InteractionResult.PASS;
     }
 
     @Override
