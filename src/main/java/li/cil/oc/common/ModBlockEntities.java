@@ -18,7 +18,11 @@ public final class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ComputerCaseBlockEntity>> COMPUTER_CASE =
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.COMPUTER_CASE_BLOCK_ENTITY,
-            () -> BlockEntityType.Builder.of(ComputerCaseBlockEntity::new, ModBlocks.COMPUTER_CASE_TIER1.get()).build(null));
+            () -> BlockEntityType.Builder.of(
+                ComputerCaseBlockEntity::new,
+                ModBlocks.COMPUTER_CASE_TIER1.get(),
+                ModBlocks.COMPUTER_CASE_TIER2.get(),
+                ModBlocks.COMPUTER_CASE_TIER3.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DiskDriveBlockEntity>> DISK_DRIVE =
         BLOCK_ENTITY_TYPES.register(

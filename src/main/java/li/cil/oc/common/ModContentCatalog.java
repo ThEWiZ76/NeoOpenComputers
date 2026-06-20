@@ -6,6 +6,8 @@ import net.minecraft.world.level.block.Block;
 
 public final class ModContentCatalog {
     public static final String COMPAT_COMPUTER_CASE_TIER1 = "case1";
+    public static final String COMPAT_COMPUTER_CASE_TIER2 = "case2";
+    public static final String COMPAT_COMPUTER_CASE_TIER3 = "case3";
     public static final String COMPAT_CPU_TIER1 = "cpu1";
     public static final String COMPAT_CPU_TIER2 = "cpu2";
     public static final String COMPAT_CPU_TIER3 = "cpu3";
@@ -29,6 +31,10 @@ public final class ModContentCatalog {
                 registry,
                 ModBlocks.COMPUTER_CASE_TIER1.get(),
                 ModItems.COMPUTER_CASE_TIER1.get(),
+                ModBlocks.COMPUTER_CASE_TIER2.get(),
+                ModItems.COMPUTER_CASE_TIER2.get(),
+                ModBlocks.COMPUTER_CASE_TIER3.get(),
+                ModItems.COMPUTER_CASE_TIER3.get(),
                 ModBlocks.DISK_DRIVE.get(),
                 ModItems.DISK_DRIVE.get(),
                 ModBlocks.SCREEN_TIER1.get(),
@@ -62,6 +68,10 @@ public final class ModContentCatalog {
         final ItemRegistry registry,
         final Block computerCaseTier1,
         final Item computerCaseTier1Item,
+        final Block computerCaseTier2,
+        final Item computerCaseTier2Item,
+        final Block computerCaseTier3,
+        final Item computerCaseTier3Item,
         final Block diskDrive,
         final Item diskDriveItem,
         final Block screenTier1,
@@ -90,7 +100,11 @@ public final class ModContentCatalog {
         final Item networkCardItem) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
+        registry.register(ModContentIds.COMPUTER_CASE_TIER2, computerCaseTier2, computerCaseTier2Item);
+        registry.register(ModContentIds.COMPUTER_CASE_TIER3, computerCaseTier3, computerCaseTier3Item);
         registry.register(COMPAT_COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
+        registry.register(COMPAT_COMPUTER_CASE_TIER2, computerCaseTier2, computerCaseTier2Item);
+        registry.register(COMPAT_COMPUTER_CASE_TIER3, computerCaseTier3, computerCaseTier3Item);
         registry.register(ModContentIds.DISK_DRIVE, diskDrive, diskDriveItem);
         registry.register(ModContentIds.SCREEN_TIER1, screenTier1, screenTier1Item);
         registry.register(ModContentIds.SCREEN_TIER2, screenTier2, screenTier2Item);

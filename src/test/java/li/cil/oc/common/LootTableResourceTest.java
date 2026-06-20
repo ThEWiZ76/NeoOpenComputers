@@ -21,6 +21,8 @@ final class LootTableResourceTest {
     void registeredBlocksHaveSelfDropLootTables() throws IOException {
         List<String> ids = List.of(
             ModContentIds.COMPUTER_CASE_TIER1,
+            ModContentIds.COMPUTER_CASE_TIER2,
+            ModContentIds.COMPUTER_CASE_TIER3,
             ModContentIds.DISK_DRIVE,
             ModContentIds.KEYBOARD,
             ModContentIds.SCREEN_TIER1,

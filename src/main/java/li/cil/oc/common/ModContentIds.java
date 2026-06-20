@@ -4,6 +4,8 @@ public final class ModContentIds {
     public static final String COMPUTER_CASE_BLOCK_ENTITY = "computer_case";
     public static final String COMPUTER_CASE_MENU = "computer_case";
     public static final String COMPUTER_CASE_TIER1 = "computer_case_tier1";
+    public static final String COMPUTER_CASE_TIER2 = "computer_case_tier2";
+    public static final String COMPUTER_CASE_TIER3 = "computer_case_tier3";
     public static final String CPU_TIER1 = "cpu_tier1";
     public static final String CPU_TIER2 = "cpu_tier2";
     public static final String CPU_TIER3 = "cpu_tier3";

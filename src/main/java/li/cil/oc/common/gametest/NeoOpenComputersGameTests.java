@@ -42,6 +42,8 @@ public final class NeoOpenComputersGameTests {
     @GameTest(template = "empty")
     public static void registeredContentAvailable(final GameTestHelper helper) {
         ModBlocks.COMPUTER_CASE_TIER1.get();
+        ModBlocks.COMPUTER_CASE_TIER2.get();
+        ModBlocks.COMPUTER_CASE_TIER3.get();
         ModBlocks.DISK_DRIVE.get();
         ModBlocks.SCREEN_TIER1.get();
         ModBlocks.SCREEN_TIER2.get();
@@ -93,6 +95,22 @@ public final class NeoOpenComputersGameTests {
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER1.get()), 1024L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER2.get()), 2048L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER3.get()), 4096L * 1024L);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tieredComputerCasesReportTheirTier(final GameTestHelper helper) {
+        final BlockPos tier1Pos = new BlockPos(0, 1, 0);
+        final BlockPos tier2Pos = new BlockPos(1, 1, 0);
+        final BlockPos tier3Pos = new BlockPos(2, 1, 0);
+
+        helper.setBlock(tier1Pos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(tier2Pos, ModBlocks.COMPUTER_CASE_TIER2.get());
+        helper.setBlock(tier3Pos, ModBlocks.COMPUTER_CASE_TIER3.get());
+
+        assertComputerCaseTier(helper, helper.getBlockEntity(tier1Pos), 0);
+        assertComputerCaseTier(helper, helper.getBlockEntity(tier2Pos), 1);
+        assertComputerCaseTier(helper, helper.getBlockEntity(tier3Pos), 2);
         helper.succeed();
     }
 
@@ -327,6 +345,10 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(screen.getWidth() == width, "Expected screen width " + width + " but got " + screen.getWidth());
         helper.assertTrue(screen.getHeight() == height, "Expected screen height " + height + " but got " + screen.getHeight());
         helper.assertTrue(screen.getMaximumColorDepth() == depth, "Expected screen depth " + depth + " but got " + screen.getMaximumColorDepth());
+    }
+
+    private static void assertComputerCaseTier(final GameTestHelper helper, final ComputerCaseBlockEntity computerCase, final int tier) {
+        helper.assertTrue(computerCase.tier() == tier, "Expected computer case tier " + tier + " but got " + computerCase.tier());
     }
 
     private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method) {

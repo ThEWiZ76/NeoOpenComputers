@@ -17,7 +17,15 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> COMPUTER_CASE_TIER1 = BLOCKS.register(
         ModContentIds.COMPUTER_CASE_TIER1,
-        () -> new ComputerCaseBlock(computerCaseProperties()));
+        () -> new ComputerCaseBlock(computerCaseProperties(), 0));
+
+    public static final DeferredBlock<Block> COMPUTER_CASE_TIER2 = BLOCKS.register(
+        ModContentIds.COMPUTER_CASE_TIER2,
+        () -> new ComputerCaseBlock(computerCaseProperties(), 1));
+
+    public static final DeferredBlock<Block> COMPUTER_CASE_TIER3 = BLOCKS.register(
+        ModContentIds.COMPUTER_CASE_TIER3,
+        () -> new ComputerCaseBlock(computerCaseProperties(), 2));
 
     public static final DeferredBlock<Block> DISK_DRIVE = BLOCKS.register(
         ModContentIds.DISK_DRIVE,

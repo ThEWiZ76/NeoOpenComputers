@@ -52,10 +52,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private int pendingComponentSlot = -1;
+    private int tier;
     private int color;
 
     public ComputerCaseBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.COMPUTER_CASE.get(), pos, blockState);
+        tier = tierFromBlockState(blockState);
         OpenComputersApi.initialize();
         machine = li.cil.oc.api.Machine.create(this);
     }
@@ -77,7 +79,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("block.neoopencomputers.computer_case_tier1");
+        return Component.translatable("block.neoopencomputers.computer_case_tier" + (tier + 1));
     }
 
     @Override
@@ -292,7 +294,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public int tier() {
-        return 0;
+        return tier;
     }
 
     @Override
@@ -442,5 +444,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     private static boolean isValidSlot(final int slot) {
         return slot >= 0 && slot < CONTAINER_SIZE;
+    }
+
+    private static int tierFromBlockState(final BlockState blockState) {
+        if (blockState != null && blockState.getBlock() instanceof ComputerCaseBlock computerCaseBlock) {
+            return computerCaseBlock.tier();
+        }
+        return 0;
     }
 }

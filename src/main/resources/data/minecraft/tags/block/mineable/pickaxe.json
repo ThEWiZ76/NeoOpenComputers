@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "neoopencomputers:computer_case_tier1",
+    "neoopencomputers:computer_case_tier2",
+    "neoopencomputers:computer_case_tier3",
     "neoopencomputers:disk_drive",
     "neoopencomputers:keyboard",
     "neoopencomputers:screen_tier1",

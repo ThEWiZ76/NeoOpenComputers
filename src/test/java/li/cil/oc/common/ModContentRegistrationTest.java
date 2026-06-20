@@ -21,6 +21,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void computerCaseTier2BlockIdIsStable() {
+        assertEquals("computer_case_tier2", ModContentIds.COMPUTER_CASE_TIER2);
+    }
+
+    @Test
+    void computerCaseTier3BlockIdIsStable() {
+        assertEquals("computer_case_tier3", ModContentIds.COMPUTER_CASE_TIER3);
+    }
+
+    @Test
     void computerCaseBlockEntityIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_BLOCK_ENTITY);
     }

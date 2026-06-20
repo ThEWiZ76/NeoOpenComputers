@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "neoopencomputers:computer_case_tier2"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "neoopencomputers:blocks/computer_case_tier2"
+}

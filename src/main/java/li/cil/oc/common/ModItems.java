@@ -21,6 +21,14 @@ public final class ModItems {
         ModContentIds.COMPUTER_CASE_TIER1,
         ModBlocks.COMPUTER_CASE_TIER1);
 
+    public static final DeferredItem<BlockItem> COMPUTER_CASE_TIER2 = ITEMS.registerSimpleBlockItem(
+        ModContentIds.COMPUTER_CASE_TIER2,
+        ModBlocks.COMPUTER_CASE_TIER2);
+
+    public static final DeferredItem<BlockItem> COMPUTER_CASE_TIER3 = ITEMS.registerSimpleBlockItem(
+        ModContentIds.COMPUTER_CASE_TIER3,
+        ModBlocks.COMPUTER_CASE_TIER3);
+
     public static final DeferredItem<BlockItem> DISK_DRIVE = ITEMS.registerSimpleBlockItem(
         ModContentIds.DISK_DRIVE,
         ModBlocks.DISK_DRIVE);
