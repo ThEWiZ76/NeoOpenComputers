@@ -15,6 +15,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -208,10 +209,14 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     }
 
     private void receivePacket(final Message message) {
-        if (message.data().length == 0 || !(message.data()[0] instanceof Packet packet) || !openPorts.contains(packet.port())) {
+        if (message.data().length == 0 || !(message.data()[0] instanceof Packet packet)) {
             return;
         }
-        if (!(host instanceof MachineHost machineHost) || machineHost.machine() == null || node() == null) {
+        if (!(host instanceof MachineHost machineHost) || node() == null) {
+            return;
+        }
+        final var machine = machineHost.machine();
+        if (machine == null) {
             return;
         }
         final String localAddress = node().address();
@@ -219,13 +224,34 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             (packet.destination() != null && (localAddress == null || !localAddress.equals(packet.destination())))) {
             return;
         }
-        final Object[] signalArgs = new Object[4 + packet.data().length];
-        signalArgs[0] = node().address();
-        signalArgs[1] = packet.source();
-        signalArgs[2] = packet.port();
-        signalArgs[3] = 0D;
-        System.arraycopy(packet.data(), 0, signalArgs, 4, packet.data().length);
-        machineHost.machine().signal(MODEM_MESSAGE_SIGNAL, signalArgs);
+
+        final Object[] packetData = packet.data();
+        if (openPorts.contains(packet.port())) {
+            final Object[] signalArgs = new Object[4 + packetData.length];
+            signalArgs[0] = node().address();
+            signalArgs[1] = packet.source();
+            signalArgs[2] = packet.port();
+            signalArgs[3] = 0D;
+            System.arraycopy(packetData, 0, signalArgs, 4, packetData.length);
+            machine.signal(MODEM_MESSAGE_SIGNAL, signalArgs);
+        }
+        if (isWakePacket(packetData)) {
+            machine.start();
+        }
+    }
+
+    private boolean isWakePacket(final Object[] packetData) {
+        if (wakeMessage == null || packetData.length == 0 || (!wakeMessageFuzzy && packetData.length != 1)) {
+            return false;
+        }
+        final Object message = packetData[0];
+        if (message instanceof String value) {
+            return wakeMessage.equals(value);
+        }
+        if (message instanceof byte[] value) {
+            return wakeMessage.equals(new String(value, StandardCharsets.UTF_8));
+        }
+        return false;
     }
 
     private static Object[] remaining(final Arguments args, final int offset) {

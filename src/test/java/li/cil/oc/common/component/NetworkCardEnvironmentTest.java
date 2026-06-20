@@ -18,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.lang.reflect.Method;
@@ -102,6 +103,52 @@ final class NetworkCardEnvironmentTest {
         loaded.load(tag);
 
         assertArrayEquals(new Object[]{"boot", true}, loaded.getWakeMessage(null, new TestArguments()));
+    }
+
+    @Test
+    void wakeMessageStartsMachineEvenWhenPortClosed() {
+        OpenComputersApi.initialize();
+        TestMachineHost host = new TestMachineHost();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(host);
+        Network.joinNewNetwork(card.node());
+        card.setWakeMessage(null, new TestArguments("boot", false));
+
+        card.onMessage(new TestMessage(null, "network.message", new Object[]{
+            new TestPacket("remote", card.node().address(), 123, new Object[]{"boot"})
+        }));
+
+        assertEquals(1, host.machine.starts);
+        assertEquals(List.of(), host.signals);
+    }
+
+    @Test
+    void fuzzyWakeMessageAllowsAdditionalPacketData() {
+        OpenComputersApi.initialize();
+        TestMachineHost host = new TestMachineHost();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(host);
+        Network.joinNewNetwork(card.node());
+        card.setWakeMessage(null, new TestArguments("boot", true));
+
+        card.onMessage(new TestMessage(null, "network.message", new Object[]{
+            new TestPacket("remote", card.node().address(), 123, new Object[]{"boot", "extra"})
+        }));
+
+        assertEquals(1, host.machine.starts);
+    }
+
+    @Test
+    void wakeMessageAcceptsUtf8ByteArrayPayload() {
+        OpenComputersApi.initialize();
+        TestMachineHost host = new TestMachineHost();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(host);
+        Network.joinNewNetwork(card.node());
+        card.setWakeMessage(null, new TestArguments("boot", false));
+
+        card.onMessage(new TestMessage(null, "network.message", new Object[]{
+            new TestPacket("remote", card.node().address(), 123, new Object[]{"boot".getBytes(StandardCharsets.UTF_8)})
+        }));
+
+        assertEquals(1, host.machine.starts);
     }
 
     @Test
@@ -244,7 +291,7 @@ final class NetworkCardEnvironmentTest {
 
     private static final class TestMachineHost extends TestHost implements MachineHost {
         private final List<List<Object>> signals = new ArrayList<>();
-        private final Machine machine = new TestMachine(signals);
+        private final TestMachine machine = new TestMachine(signals);
 
         @Override
         public Machine machine() {
@@ -272,6 +319,7 @@ final class NetworkCardEnvironmentTest {
 
     private static final class TestMachine implements Machine {
         private final List<List<Object>> signals;
+        private int starts;
 
         private TestMachine(final List<List<Object>> signals) {
             this.signals = signals;
@@ -310,7 +358,10 @@ final class NetworkCardEnvironmentTest {
         @Override public boolean canInteract(final String player) { return true; }
         @Override public boolean isRunning() { return false; }
         @Override public boolean isPaused() { return false; }
-        @Override public boolean start() { return false; }
+        @Override public boolean start() {
+            starts++;
+            return true;
+        }
         @Override public boolean pause(final double seconds) { return false; }
         @Override public boolean stop() { return false; }
         @Override public void consumeCallBudget(final double callCost) {}
