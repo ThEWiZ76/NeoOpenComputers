@@ -1,29 +1,33 @@
 {
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
-  "pattern": [
-    "RGB",
-    "GEG",
-    "III"
-  ],
   "key": {
-    "R": {
-      "item": "minecraft:red_stained_glass"
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "D": {
+      "item": "minecraft:diamond_block"
+    },
+    "F": {
+      "item": "minecraft:blaze_powder"
     },
     "G": {
-      "item": "minecraft:green_stained_glass"
+      "item": "minecraft:glass"
     },
-    "B": {
-      "item": "minecraft:blue_stained_glass"
-    },
-    "E": {
-      "item": "neoopencomputers:hologram_tier1"
-    },
-    "I": {
-      "item": "minecraft:gold_ingot"
+    "O": {
+      "item": "minecraft:obsidian"
     }
   },
+  "pattern": [
+    "CGC",
+    "BDB",
+    "OFO"
+  ],
   "result": {
+    "count": 1,
     "id": "neoopencomputers:hologram_tier2"
   }
 }

@@ -367,6 +367,30 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void hologramRecipesUseMaterialProgression() throws IOException {
+        JsonObject tier1 = readJson(RECIPE_ROOT.resolve(ModContentIds.HOLOGRAM_TIER1 + ".json"));
+        JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.HOLOGRAM_TIER2 + ".json"));
+        JsonObject tier1Keys = tier1.getAsJsonObject("key");
+        JsonObject tier2Keys = tier2.getAsJsonObject("key");
+
+        assertPattern(tier1, "CGC", "BDB", "OYO");
+        assertItem(tier1Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier1Keys, "G", "minecraft:glass_pane");
+        assertItem(tier1Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier1Keys, "D", "minecraft:diamond");
+        assertItem(tier1Keys, "O", "minecraft:obsidian");
+        assertItem(tier1Keys, "Y", "minecraft:glowstone_dust");
+
+        assertPattern(tier2, "CGC", "BDB", "OFO");
+        assertItem(tier2Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier2Keys, "G", "minecraft:glass");
+        assertItem(tier2Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier2Keys, "D", "minecraft:diamond_block");
+        assertItem(tier2Keys, "O", "minecraft:obsidian");
+        assertItem(tier2Keys, "F", "minecraft:blaze_powder");
+    }
+
+    @Test
     void inputDeviceRecipesUseMaterialParts() throws IOException {
         JsonObject manual = readJson(RECIPE_ROOT.resolve(ModContentIds.MANUAL + ".json"));
         JsonObject buttonGroup = readJson(RECIPE_ROOT.resolve(ModContentIds.BUTTON_GROUP + ".json"));
