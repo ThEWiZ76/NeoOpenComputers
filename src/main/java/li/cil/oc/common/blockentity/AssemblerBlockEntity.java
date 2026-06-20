@@ -6,6 +6,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -42,8 +43,11 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
 
     private static final String COMPONENT_NAME = "assembler";
     private static final String TAG_NODE = "node";
+    private static final String TAG_OUTPUT = "output";
     private static final String TAG_TOTAL_ENERGY = "totalEnergy";
     private static final String TAG_REMAINING_ENERGY = "remainingEnergy";
+    private static final double BUFFER_SIZE = 32D;
+    private static final double ENERGY_PER_TICK = 1D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Assembler",
@@ -53,6 +57,7 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private Node node;
+    private ItemStack pendingOutput = ItemStack.EMPTY;
     private double totalRequiredEnergy;
     private double requiredEnergy;
 
@@ -89,11 +94,22 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
         final ItemStack output = template.assemble(this);
         final double energyRequired = template.energyRequired(this);
         clearContent();
-        items.set(SLOT_TEMPLATE, output);
-        totalRequiredEnergy = finishImmediately ? 0D : energyRequired;
-        requiredEnergy = 0D;
+        if (finishImmediately) {
+            items.set(SLOT_TEMPLATE, output);
+            pendingOutput = ItemStack.EMPTY;
+            totalRequiredEnergy = 0D;
+            requiredEnergy = 0D;
+        } else {
+            pendingOutput = output;
+            totalRequiredEnergy = Math.max(1D, energyRequired);
+            requiredEnergy = totalRequiredEnergy;
+        }
         setChanged();
         return true;
+    }
+
+    public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final AssemblerBlockEntity assembler) {
+        assembler.tickAssembly();
     }
 
     @Callback(doc = "function():string, number or boolean -- The current state of the assembler.")
@@ -150,11 +166,12 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
 
     @Override
     public boolean canUpdate() {
-        return false;
+        return true;
     }
 
     @Override
     public void update() {
+        tickAssembly();
     }
 
     @Override
@@ -293,6 +310,9 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         ContainerHelper.loadAllItems(tag, items, registries);
+        pendingOutput = tag.contains(TAG_OUTPUT)
+            ? ItemStack.OPTIONAL_CODEC.parse(registries.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), tag.get(TAG_OUTPUT)).result().orElse(ItemStack.EMPTY)
+            : ItemStack.EMPTY;
         load(tag);
     }
 
@@ -300,6 +320,11 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         ContainerHelper.saveAllItems(tag, items, registries);
+        if (!pendingOutput.isEmpty()) {
+            ItemStack.OPTIONAL_CODEC.encodeStart(registries.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), pendingOutput)
+                .result()
+                .ifPresent(outputTag -> tag.put(TAG_OUTPUT, outputTag));
+        }
         save(tag);
     }
 
@@ -319,13 +344,32 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
         return AssemblerTemplates.select(items.get(SLOT_TEMPLATE));
     }
 
+    private void tickAssembly() {
+        if (!isAssembling() || pendingOutput.isEmpty() || !(node() instanceof ComponentConnector connector)) {
+            return;
+        }
+        final double want = Math.min(requiredEnergy, ENERGY_PER_TICK);
+        final double missing = connector.changeBuffer(-want);
+        final double consumed = want - missing;
+        if (consumed <= 0D) {
+            return;
+        }
+        requiredEnergy = Math.max(0D, requiredEnergy - consumed);
+        if (requiredEnergy <= 0D) {
+            items.set(SLOT_TEMPLATE, pendingOutput);
+            pendingOutput = ItemStack.EMPTY;
+            totalRequiredEnergy = 0D;
+        }
+        setChanged();
+    }
+
     private static boolean isValidSlot(final int slot) {
         return slot >= 0 && slot < CONTAINER_SIZE;
     }
 
     private static Node createNode(final ManagedEnvironment host) {
         final var builder = Network.newNode(host, Visibility.Network);
-        return builder == null ? null : builder.withComponent(COMPONENT_NAME, Visibility.Network).create();
+        return builder == null ? null : builder.withComponent(COMPONENT_NAME, Visibility.Network).withConnector(BUFFER_SIZE).create();
     }
 
     private void removeNode() {

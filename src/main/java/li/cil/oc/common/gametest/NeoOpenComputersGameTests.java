@@ -18,6 +18,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
@@ -357,6 +358,62 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(assembler.canAssemble(), "Custom assembler template did not validate");
             helper.assertTrue(assembler.start(true), "Custom assembler template did not start");
             helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).is(Items.EMERALD), "Custom assembler template did not produce output");
+            helper.succeed();
+        }
+    }
+
+    @GameTest(template = "empty")
+    public static void assemblerComponentAssemblyProgressesOverTicks(final GameTestHelper helper) {
+        try (AssemblerTemplates.Registration ignored = AssemblerTemplates.register(new AssemblerTemplate() {
+            @Override
+            public String name() {
+                return "slow_test";
+            }
+
+            @Override
+            public boolean matches(final ItemStack stack) {
+                return stack.is(Items.DIAMOND);
+            }
+
+            @Override
+            public boolean validate(final AssemblerBlockEntity assembler) {
+                return true;
+            }
+
+            @Override
+            public boolean canPlaceItem(final AssemblerBlockEntity assembler, final int slot, final ItemStack stack) {
+                return slot == AssemblerBlockEntity.SLOT_TEMPLATE && matches(stack);
+            }
+
+            @Override
+            public ItemStack assemble(final AssemblerBlockEntity assembler) {
+                return new ItemStack(Items.EMERALD);
+            }
+
+            @Override
+            public double energyRequired(final AssemblerBlockEntity assembler) {
+                return 2D;
+            }
+        })) {
+            final BlockPos pos = new BlockPos(1, 1, 1);
+            helper.setBlock(pos, ModBlocks.ASSEMBLER.get());
+            final AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
+            assembler.setItem(AssemblerBlockEntity.SLOT_TEMPLATE, new ItemStack(Items.DIAMOND));
+
+            final Object[] startResult = assembler.start(null, null);
+            helper.assertTrue(startResult.length == 1 && Boolean.TRUE.equals(startResult[0]), "Assembler component start returned false");
+            helper.assertTrue(assembler.isAssembling(), "Assembler did not enter busy state");
+            helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).isEmpty(), "Assembler output appeared before work completed");
+            helper.assertTrue(assembler.node() instanceof ComponentConnector, "Assembler node is not a component connector");
+
+            final ComponentConnector connector = (ComponentConnector) assembler.node();
+            connector.changeBuffer(2D);
+            AssemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), assembler);
+            helper.assertTrue(assembler.isAssembling(), "Assembler finished after partial energy");
+            AssemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), assembler);
+
+            helper.assertTrue(!assembler.isAssembling(), "Assembler did not finish after required energy");
+            helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).is(Items.EMERALD), "Assembler did not install pending output");
             helper.succeed();
         }
     }
