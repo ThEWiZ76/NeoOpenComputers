@@ -24,6 +24,8 @@ import li.cil.oc.common.machine.MachineBoundArchitecture;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -270,6 +272,13 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public Map<String, Callback> methods(final Object value) {
+        if (value instanceof Value) {
+            final Map<String, Callback> methods = new LinkedHashMap<>();
+            for (Map.Entry<String, Method> entry : discoverCallbacks(value).entrySet()) {
+                methods.put(entry.getKey(), entry.getValue().getAnnotation(Callback.class));
+            }
+            return methods;
+        }
         if (!(value instanceof String address) || node() == null || node().network() == null) {
             return Map.of();
         }
@@ -309,7 +318,29 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public Object[] invoke(final Value value, final String method, final Object[] args) throws Exception {
-        return value.call(this, new MachineArguments(args == null ? new Object[0] : args));
+        final Method callback = discoverCallbacks(value).get(method);
+        if (callback == null) {
+            throw new NoSuchMethodException(method);
+        }
+        try {
+            final Object result = callback.invoke(value, this, new MachineArguments(args == null ? new Object[0] : args));
+            if (result == null) {
+                return null;
+            }
+            if (result instanceof Object[] values) {
+                return values;
+            }
+            return new Object[]{result};
+        } catch (InvocationTargetException e) {
+            final Throwable cause = e.getCause();
+            if (cause instanceof Exception exception) {
+                throw exception;
+            }
+            if (cause instanceof Error error) {
+                throw error;
+            }
+            throw new RuntimeException(cause);
+        }
     }
 
     @Override
@@ -530,6 +561,23 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         }
     }
 
+    private static Map<String, Method> discoverCallbacks(final Object value) {
+        final Map<String, Method> discovered = new LinkedHashMap<>();
+        Class<?> type = value.getClass();
+        while (type != null) {
+            for (Method method : type.getDeclaredMethods()) {
+                final Callback callback = method.getAnnotation(Callback.class);
+                if (callback != null) {
+                    method.setAccessible(true);
+                    final String name = callback.value().isEmpty() ? method.getName() : callback.value();
+                    discovered.putIfAbsent(name, method);
+                }
+            }
+            type = type.getSuperclass();
+        }
+        return discovered;
+    }
+
     private record MachineArguments(Object[] values) implements Arguments {
         @Override public int count() { return values.length; }
         @Override public Object checkAny(final int index) {
@@ -540,7 +588,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         @Override public int checkInteger(final int index) { return ((Number) checkAny(index)).intValue(); }
         @Override public long checkLong(final int index) { return ((Number) checkAny(index)).longValue(); }
         @Override public double checkDouble(final int index) { return ((Number) checkAny(index)).doubleValue(); }
-        @Override public String checkString(final int index) { return (String) checkAny(index); }
+        @Override public String checkString(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof String string) return string;
+            if (value instanceof byte[] bytes) return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (string expected)");
+        }
         @Override public byte[] checkByteArray(final int index) {
             final Object value = checkAny(index);
             if (value instanceof byte[] bytes) return bytes;
@@ -562,7 +615,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         @Override public boolean isInteger(final int index) { return index >= 0 && index < values.length && values[index] instanceof Integer; }
         @Override public boolean isLong(final int index) { return index >= 0 && index < values.length && values[index] instanceof Long; }
         @Override public boolean isDouble(final int index) { return index >= 0 && index < values.length && values[index] instanceof Double; }
-        @Override public boolean isString(final int index) { return index >= 0 && index < values.length && values[index] instanceof String; }
+        @Override public boolean isString(final int index) { return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]); }
         @Override public boolean isByteArray(final int index) { return index >= 0 && index < values.length && values[index] instanceof byte[]; }
         @Override public boolean isTable(final int index) { return index >= 0 && index < values.length && values[index] instanceof Map; }
         @Override public boolean isItemStack(final int index) { return index >= 0 && index < values.length && values[index] instanceof ItemStack; }

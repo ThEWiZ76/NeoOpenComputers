@@ -28,6 +28,7 @@ import li.cil.oc.common.MachineRegistry;
 import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.component.DataCardEnvironment;
 import li.cil.oc.common.component.EepromEnvironment;
 import li.cil.oc.common.component.GraphicsCardEnvironment;
 import li.cil.oc.common.component.ScreenEnvironment;
@@ -1170,6 +1171,40 @@ final class LuaArchitectureTest {
 
         assertArrayEquals(new Object[]{screen.node().address()}, gpu.getScreen(null, null));
         assertTrue(screen.hasNonBlankText(), screen.dump());
+    }
+
+    @Test
+    void luaCanUseDataCardEcKeyMethodsAndPassKeysBackToComponent() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        DataCardEnvironment dataCard = new DataCardEnvironment(2);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(dataCard.node());
+        LuaArchitecture architecture = new LuaArchitecture("""
+            local address = component.list('data')()
+            local data = component.proxy(address)
+            local publicKey, privateKey = data.generateKeyPair(256)
+            publicType = publicKey:keyType()
+            publicFlag = publicKey:isPublic()
+            privateFlag = privateKey:isPublic()
+            local serialized = publicKey:serialize()
+            local signature = data.ecdsa('payload', privateKey)
+            verified = data.ecdsa('payload', publicKey, signature)
+            local restored = data.deserializeKey(serialized, publicType)
+            restoredVerified = data.ecdsa('payload', restored, signature)
+            """);
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        ExecutionResult result = architecture.runThreaded(false);
+        if (result instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+        assertEquals("ec-public", architecture.globalString("publicType"));
+        assertEquals(true, architecture.globalBoolean("publicFlag"));
+        assertEquals(false, architecture.globalBoolean("privateFlag"));
+        assertEquals(true, architecture.globalBoolean("verified"));
+        assertEquals(true, architecture.globalBoolean("restoredVerified"));
     }
 
     private static Machine machineWithUptime(final double uptime) {

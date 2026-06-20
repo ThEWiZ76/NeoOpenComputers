@@ -13,6 +13,7 @@ import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Node;
@@ -22,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaError;
+import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
@@ -41,6 +43,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,6 +60,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String BOOT_ADDRESS_TAG = "bootAddress";
     private static final String MEMORY_TAG = "memory";
     private static final String PULL_SIGNAL_MARKER = "\u0000oc.pullSignal";
+    private static final String VALUE_MARKER = "\u0000oc.value";
     private static final boolean DEFAULT_ALLOW_BYTECODE = false;
     private static final boolean DEFAULT_ALLOW_GC = false;
     private static final double DEFAULT_TIMEOUT = 5D;
@@ -1140,7 +1144,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return machine == null ? 0D : machine.upTime();
     }
 
-    private static Varargs signalToLuaValues(final Signal signal) {
+    private Varargs signalToLuaValues(final Signal signal) {
         final Object[] signalArgs = signal.args();
         final LuaValue[] values = new LuaValue[signalArgs.length + 1];
         values[0] = LuaValue.valueOf(signal.name());
@@ -1200,6 +1204,22 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         }
     }
 
+    private Varargs invokeValue(final Value value, final String method, final Object[] javaArgs) {
+        try {
+            return toLuaValues(machine.invoke(value, method, javaArgs));
+        } catch (IllegalArgumentException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "bad argument" : e.getMessage()));
+        } catch (IndexOutOfBoundsException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("index out of bounds"));
+        } catch (NoSuchMethodException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such method"));
+        } catch (SecurityException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("access denied"));
+        } catch (Exception e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
+        }
+    }
+
     private Connector machineConnector() {
         if (machine == null || !(machine.node() instanceof Connector connector)) {
             return null;
@@ -1235,7 +1255,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return devices;
     }
 
-    private static void addDeviceInfo(final LuaTable devices, final String address, final Map<String, String> info) {
+    private void addDeviceInfo(final LuaTable devices, final String address, final Map<String, String> info) {
         if (address != null && info != null) {
             devices.set(address, toLuaValue(info));
         }
@@ -1300,9 +1320,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return defaultValue;
     }
 
-    private static LuaValue toLuaValue(final Object value) {
+    private LuaValue toLuaValue(final Object value) {
         if (value == null) {
             return LuaValue.NIL;
+        }
+        if (value instanceof Value machineValue) {
+            return valueProxy(machineValue);
         }
         if (value instanceof Boolean booleanValue) {
             return LuaValue.valueOf(booleanValue);
@@ -1311,7 +1334,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.valueOf(numberValue.doubleValue());
         }
         if (value instanceof byte[] bytes) {
-            return LuaValue.valueOf(new String(bytes, StandardCharsets.UTF_8));
+            return LuaString.valueOf(bytes);
         }
         if (value instanceof Map<?, ?> mapValue) {
             final LuaTable table = new LuaTable();
@@ -1345,7 +1368,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return LuaValue.userdataOf(value);
     }
 
-    private static Varargs toLuaValues(final Object[] values) {
+    private Varargs toLuaValues(final Object[] values) {
         if (values == null || values.length == 0) {
             return LuaValue.NIL;
         }
@@ -1354,6 +1377,26 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             luaValues[index] = toLuaValue(values[index]);
         }
         return LuaValue.varargsOf(luaValues);
+    }
+
+    private LuaTable valueProxy(final Value value) {
+        final LuaTable table = new LuaTable();
+        table.set(VALUE_MARKER, LuaValue.userdataOf(value));
+        final Map<String, Callback> methods = machine == null ? Map.of() : machine.methods(value);
+        for (String methodName : methods.keySet()) {
+            table.set(methodName, new VarArgFunction() {
+                @Override
+                public Varargs invoke(final Varargs args) {
+                    final int offset = args.narg() > 0 && args.arg(1) == table ? 2 : 1;
+                    final Object[] javaArgs = new Object[Math.max(0, args.narg() - offset + 1)];
+                    for (int index = 0; index < javaArgs.length; index++) {
+                        javaArgs[index] = toJavaValue(args.arg(index + offset));
+                    }
+                    return invokeValue(value, methodName, javaArgs);
+                }
+            });
+        }
+        return table;
     }
 
     private static Object toJavaValue(final LuaValue value) {
@@ -1366,7 +1409,17 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (value.isnumber()) {
             return value.todouble();
         }
+        if (value instanceof LuaString string) {
+            if (string.isValidUtf8()) {
+                return string.tojstring();
+            }
+            return Arrays.copyOfRange(string.m_bytes, string.m_offset, string.m_offset + string.m_length);
+        }
         if (value instanceof LuaTable table) {
+            final LuaValue rawValue = table.get(VALUE_MARKER);
+            if (rawValue.isuserdata()) {
+                return rawValue.touserdata();
+            }
             final Map<Object, Object> values = new LinkedHashMap<>();
             LuaValue key = LuaValue.NIL;
             while (true) {

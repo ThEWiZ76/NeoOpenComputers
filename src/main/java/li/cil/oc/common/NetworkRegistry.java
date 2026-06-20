@@ -1030,6 +1030,9 @@ final class NetworkRegistry implements NetworkAPI {
             if (value instanceof String typedValue) {
                 return typedValue;
             }
+            if (value instanceof byte[] typedValue) {
+                return new String(typedValue, java.nio.charset.StandardCharsets.UTF_8);
+            }
             throw new IllegalArgumentException("bad argument #" + (index + 1) + " (string expected)");
         }
 
@@ -1130,7 +1133,7 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public boolean isString(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof String;
+            return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]);
         }
 
         @Override
