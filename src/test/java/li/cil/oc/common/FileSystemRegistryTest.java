@@ -20,10 +20,13 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -36,6 +39,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class FileSystemRegistryTest {
+    @TempDir
+    private Path tempDir;
+
     @AfterEach
     void resetApi() {
         API.fileSystem = null;
@@ -142,8 +148,37 @@ final class FileSystemRegistryTest {
         FileSystemRegistry registry = new FileSystemRegistry();
 
         assertNull(registry.fromClass(getClass(), "neoopencomputers", "manual"));
-        assertNull(registry.fromSaveDirectory("drive", 1024, true));
         assertNull(registry.asManagedEnvironment(null, "label", null, null, 1));
+    }
+
+    @Test
+    void saveDirectoryFileSystemPersistsFilesOnDisk() throws IOException {
+        FileSystemRegistry registry = new FileSystemRegistry();
+        FileSystem fileSystem = registry.fromSaveDirectory(tempDir.toString(), 128, true);
+
+        assertNotNull(fileSystem);
+        assertFalse(fileSystem.isReadOnly());
+        assertEquals(128, fileSystem.spaceTotal());
+        assertTrue(fileSystem.makeDirectory("tmp"));
+        int outputHandle = fileSystem.open("tmp/data.txt", Mode.Write);
+        fileSystem.getHandle(outputHandle).write("hello".getBytes(StandardCharsets.UTF_8));
+        fileSystem.getHandle(outputHandle).close();
+
+        assertEquals("hello", Files.readString(tempDir.resolve("tmp").resolve("data.txt")));
+        FileSystem reloaded = registry.fromSaveDirectory(tempDir.toString(), 128, true);
+        int inputHandle = reloaded.open("tmp/data.txt", Mode.Read);
+        byte[] buffer = new byte[5];
+        assertEquals(5, reloaded.getHandle(inputHandle).read(buffer));
+        reloaded.getHandle(inputHandle).close();
+        assertArrayEquals("hello".getBytes(StandardCharsets.UTF_8), buffer);
+    }
+
+    @Test
+    void saveDirectoryFileSystemRejectsPathEscape() {
+        FileSystem fileSystem = new FileSystemRegistry().fromSaveDirectory(tempDir.toString(), 128, true);
+
+        assertThrows(IllegalArgumentException.class, () -> fileSystem.exists("../outside.txt"));
+        assertThrows(IllegalArgumentException.class, () -> fileSystem.open("tmp/../outside.txt", Mode.Write));
     }
 
     @Test
