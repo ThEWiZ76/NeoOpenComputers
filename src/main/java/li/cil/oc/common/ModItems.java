@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.item.CpuItem;
+import li.cil.oc.common.item.DataCardItem;
 import li.cil.oc.common.item.DatabaseUpgradeItem;
 import li.cil.oc.common.item.EepromItem;
 import li.cil.oc.common.item.FloppyItem;
@@ -57,6 +58,14 @@ public final class ModItems {
     public static final DeferredItem<CpuItem> CPU_TIER3 = ITEMS.register(
         ModContentIds.CPU_TIER3,
         () -> new CpuItem(new Item.Properties(), 2));
+
+    public static final DeferredItem<DataCardItem> DATA_CARD_TIER1 = ITEMS.register(
+        ModContentIds.DATA_CARD_TIER1,
+        () -> new DataCardItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<DataCardItem> DATA_CARD_TIER2 = ITEMS.register(
+        ModContentIds.DATA_CARD_TIER2,
+        () -> new DataCardItem(new Item.Properties(), 1));
 
     public static final DeferredItem<DatabaseUpgradeItem> DATABASE_UPGRADE_TIER1 = ITEMS.register(
         ModContentIds.DATABASE_UPGRADE_TIER1,
