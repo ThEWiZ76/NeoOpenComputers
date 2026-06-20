@@ -1013,6 +1013,50 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
+    public static void inventoryControllerStoresStacksInDatabase(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos chestPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(chestPos, Blocks.CHEST);
+
+        final li.cil.oc.common.blockentity.AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+        adapter.setItem(0, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get()));
+
+        final net.minecraft.world.Container chest = helper.getBlockEntity(chestPos);
+        chest.setItem(0, new ItemStack(Items.DIAMOND, 4));
+
+        final DriverItem databaseDriver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
+        helper.assertTrue(databaseDriver != null, "No driver for database upgrade");
+        final ManagedEnvironment databaseEnvironment = databaseDriver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        helper.assertTrue(databaseEnvironment instanceof li.cil.oc.api.internal.Database, "Database upgrade did not create database environment");
+        final li.cil.oc.api.internal.Database database = (li.cil.oc.api.internal.Database) databaseEnvironment;
+        database.setStackInSlot(0, new ItemStack(Items.GOLD_INGOT));
+        Network.joinNewNetwork(databaseEnvironment.node());
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            databaseEnvironment.node().connect(computer.node());
+            final String address = componentAddress(computer, "inventory_controller");
+            helper.assertTrue(address != null, "Adapter did not expose inventory controller upgrade: " + computer.machine().components());
+            try {
+                final int east = Direction.EAST.get3DDataValue();
+                final String databaseAddress = databaseEnvironment.node().address();
+                assertInvokeResult(helper, computer, address, "store", new Object[]{east, 1, databaseAddress, 1}, true);
+                final ItemStack stored = database.getStackInSlot(0);
+                helper.assertTrue(stored.is(Items.DIAMOND) && stored.getCount() == 4, "Inventory controller did not store stack in database");
+                assertInvokeResult(helper, computer, address, "compareStackToDatabase", new Object[]{east, 1, databaseAddress, 1}, true);
+                database.setStackInSlot(0, new ItemStack(Items.DIRT));
+                assertInvokeResult(helper, computer, address, "compareStackToDatabase", new Object[]{east, 1, databaseAddress, 1}, false);
+            } catch (Exception e) {
+                helper.fail("Inventory controller database invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
     public static void adapterExposesChestInventory(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
