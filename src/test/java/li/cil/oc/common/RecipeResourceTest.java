@@ -83,6 +83,7 @@ final class RecipeResourceTest {
             ModContentIds.INVENTORY_CONTROLLER_UPGRADE,
             ModContentIds.INVENTORY_UPGRADE,
             ModContentIds.CRAFTING_UPGRADE,
+            ModContentIds.EXPERIENCE_UPGRADE,
             ModContentIds.KEYBOARD,
             ModContentIds.LINKED_CARD,
             ModContentIds.MANUAL,
@@ -592,6 +593,8 @@ final class RecipeResourceTest {
         JsonObject waypoint = recipeKeys(ModContentIds.WAYPOINT);
         JsonObject craftingRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.CRAFTING_UPGRADE + ".json"));
         JsonObject crafting = craftingRecipe.getAsJsonObject("key");
+        JsonObject experienceRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.EXPERIENCE_UPGRADE + ".json"));
+        JsonObject experience = experienceRecipe.getAsJsonObject("key");
         JsonObject solarRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SOLAR_GENERATOR_UPGRADE + ".json"));
         JsonObject solar = solarRecipe.getAsJsonObject("key");
         JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
@@ -608,6 +611,13 @@ final class RecipeResourceTest {
         assertItem(crafting, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(crafting, "T", "minecraft:crafting_table");
         assertItem(crafting, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(experienceRecipe, "GAG", "CEC", "GBG");
+        assertTag(experience, "G", "c:ingots/gold");
+        assertItem(experience, "A", "neoopencomputers:" + ModContentIds.ANALYZER);
+        assertItem(experience, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(experience, "E", "minecraft:emerald");
+        assertItem(experience, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
 
         assertPattern(solarRecipe, "GGG", "CUC");
         assertItem(solar, "G", "minecraft:glass");

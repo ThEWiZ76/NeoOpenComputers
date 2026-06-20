@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "A": {
+      "item": "neoopencomputers:analyzer"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "E": {
+      "item": "minecraft:emerald"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "pattern": [
+    "GAG",
+    "CEC",
+    "GBG"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:experience_upgrade"
+  }
+}

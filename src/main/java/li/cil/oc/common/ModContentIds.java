@@ -51,6 +51,7 @@ public final class ModContentIds {
     public static final String DISK_DRIVE_BLOCK_ENTITY = "disk_drive";
     public static final String DISK_DRIVE_MENU = "disk_drive";
     public static final String EEPROM = "eeprom";
+    public static final String EXPERIENCE_UPGRADE = "experience_upgrade";
     public static final String FLOPPY = "floppy";
     public static final String GEOLYZER = "geolyzer";
     public static final String GEOLYZER_BLOCK_ENTITY = "geolyzer";

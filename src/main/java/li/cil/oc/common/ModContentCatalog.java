@@ -45,6 +45,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_HDD_TIER2 = "hdd2";
     public static final String COMPAT_HDD_TIER3 = "hdd3";
     public static final String COMPAT_CRAFTING_UPGRADE = "craftingUpgrade";
+    public static final String COMPAT_EXPERIENCE_UPGRADE = "experienceUpgrade";
     public static final String COMPAT_INVENTORY_UPGRADE = "inventoryUpgrade";
     public static final String COMPAT_INTERNET_CARD = "internetcard";
     public static final String COMPAT_LINKED_CARD = "linkedcard";
@@ -158,6 +159,7 @@ public final class ModContentCatalog {
                 ModItems.LINKED_CARD.get(),
                 ModItems.NAVIGATION_UPGRADE.get(),
                 ModItems.EEPROM.get(),
+                ModItems.EXPERIENCE_UPGRADE.get(),
                 ModItems.FLOPPY.get(),
                 ModItems.GRAPHICS_CARD_TIER1.get(),
                 ModItems.GRAPHICS_CARD_TIER2.get(),
@@ -342,6 +344,7 @@ public final class ModContentCatalog {
         final Item linkedCardItem,
         final Item navigationUpgradeItem,
         final Item eepromItem,
+        final Item experienceUpgradeItem,
         final Item floppyItem,
         final Item graphicsCardTier1Item,
         final Item graphicsCardTier2Item,
@@ -418,6 +421,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.LINKED_CARD, null, linkedCardItem);
         registry.register(ModContentIds.NAVIGATION_UPGRADE, null, navigationUpgradeItem);
         registry.register(ModContentIds.EEPROM, null, eepromItem);
+        registry.register(ModContentIds.EXPERIENCE_UPGRADE, null, experienceUpgradeItem);
         registry.register(ModContentIds.FLOPPY, null, floppyItem);
         registry.register(ModContentIds.GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
         registry.register(ModContentIds.GRAPHICS_CARD_TIER2, null, graphicsCardTier2Item);
@@ -465,6 +469,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_INTERNET_CARD, null, internetCardItem);
         registry.register(COMPAT_LINKED_CARD, null, linkedCardItem);
         registry.register(COMPAT_NAVIGATION_UPGRADE, null, navigationUpgradeItem);
+        registry.register(COMPAT_EXPERIENCE_UPGRADE, null, experienceUpgradeItem);
         registry.register(COMPAT_GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER2, null, graphicsCardTier2Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER3, null, graphicsCardTier3Item);

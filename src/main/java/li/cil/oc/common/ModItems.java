@@ -9,6 +9,7 @@ import li.cil.oc.common.item.CpuItem;
 import li.cil.oc.common.item.DataCardItem;
 import li.cil.oc.common.item.DatabaseUpgradeItem;
 import li.cil.oc.common.item.EepromItem;
+import li.cil.oc.common.item.ExperienceUpgradeItem;
 import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.GeneratorUpgradeItem;
 import li.cil.oc.common.item.GraphicsCardItem;
@@ -187,6 +188,10 @@ public final class ModItems {
     public static final DeferredItem<EepromItem> EEPROM = ITEMS.register(
         ModContentIds.EEPROM,
         () -> new EepromItem(new Item.Properties()));
+
+    public static final DeferredItem<ExperienceUpgradeItem> EXPERIENCE_UPGRADE = ITEMS.register(
+        ModContentIds.EXPERIENCE_UPGRADE,
+        () -> new ExperienceUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<FloppyItem> FLOPPY = ITEMS.register(
         ModContentIds.FLOPPY,

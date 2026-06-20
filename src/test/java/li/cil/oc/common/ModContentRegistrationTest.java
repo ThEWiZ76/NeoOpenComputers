@@ -301,6 +301,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void experienceUpgradeItemIdIsStable() {
+        assertEquals("experience_upgrade", ModContentIds.EXPERIENCE_UPGRADE);
+    }
+
+    @Test
     void tankUpgradeItemIdIsStable() {
         assertEquals("tank_upgrade", ModContentIds.TANK_UPGRADE);
     }

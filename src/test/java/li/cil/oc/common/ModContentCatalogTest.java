@@ -76,7 +76,7 @@ final class ModContentCatalogTest {
             null, null,
             null, null,
             null, null,
-            null, null,
+            null, null, null,
             null,
             null,
             null, null, null,
@@ -168,6 +168,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.BATTERY_UPGRADE_TIER3));
         assertNotNull(registry.get(ModContentIds.INVENTORY_UPGRADE));
         assertNotNull(registry.get(ModContentIds.CRAFTING_UPGRADE));
+        assertNotNull(registry.get(ModContentIds.EXPERIENCE_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3));
@@ -217,6 +218,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_HDD_TIER3));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_INVENTORY_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CRAFTING_UPGRADE));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_EXPERIENCE_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TANK_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TANK_CONTROLLER_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_INTERNET_CARD));
@@ -292,6 +294,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.BATTERY_UPGRADE_TIER3, registry.get(ModContentIds.BATTERY_UPGRADE_TIER3).name());
         assertEquals(ModContentIds.INVENTORY_UPGRADE, registry.get(ModContentIds.INVENTORY_UPGRADE).name());
         assertEquals(ModContentIds.CRAFTING_UPGRADE, registry.get(ModContentIds.CRAFTING_UPGRADE).name());
+        assertEquals(ModContentIds.EXPERIENCE_UPGRADE, registry.get(ModContentIds.EXPERIENCE_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER1, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3).name());
@@ -341,6 +344,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_HDD_TIER3, registry.get(ModContentCatalog.COMPAT_HDD_TIER3).name());
         assertEquals(ModContentCatalog.COMPAT_INVENTORY_UPGRADE, registry.get(ModContentCatalog.COMPAT_INVENTORY_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_CRAFTING_UPGRADE, registry.get(ModContentCatalog.COMPAT_CRAFTING_UPGRADE).name());
+        assertEquals(ModContentCatalog.COMPAT_EXPERIENCE_UPGRADE, registry.get(ModContentCatalog.COMPAT_EXPERIENCE_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_TANK_UPGRADE, registry.get(ModContentCatalog.COMPAT_TANK_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_TANK_CONTROLLER_UPGRADE, registry.get(ModContentCatalog.COMPAT_TANK_CONTROLLER_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_INTERNET_CARD, registry.get(ModContentCatalog.COMPAT_INTERNET_CARD).name());
