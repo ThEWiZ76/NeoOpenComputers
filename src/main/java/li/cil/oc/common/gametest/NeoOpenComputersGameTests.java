@@ -102,6 +102,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.HDD_TIER2.get();
         ModItems.HDD_TIER3.get();
         ModItems.INVENTORY_CONTROLLER_UPGRADE.get();
+        ModItems.INVENTORY_UPGRADE.get();
         ModItems.INTERNET_CARD.get();
         ModItems.LINKED_CARD.get();
         ModItems.MEMORY_TIER1.get();
@@ -142,6 +143,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.INTERNET_CARD.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
@@ -166,6 +168,7 @@ public final class NeoOpenComputersGameTests {
         assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER1.get()), 10000D);
         assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER2.get()), 15000D);
         assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER3.get()), 20000D);
+        assertInventoryCapacity(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()), 16);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), false, 16D);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), true, 400D);
         helper.succeed();
@@ -1058,6 +1061,13 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(chargeable.charge(stack, capacity, true) == capacity * 0.25D, "Battery simulation did not report remaining capacity");
         helper.assertTrue(chargeable.charge(stack, capacity, false) == capacity * 0.25D, "Battery did not cap at max charge");
         helper.assertTrue(chargeable.charge(stack, 1D, false) == 0D, "Full battery accepted extra charge");
+    }
+
+    private static void assertInventoryCapacity(final GameTestHelper helper, final ItemStack stack, final int capacity) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver instanceof li.cil.oc.api.driver.item.Inventory, "Expected inventory driver for " + stack);
+        final li.cil.oc.api.driver.item.Inventory inventory = (li.cil.oc.api.driver.item.Inventory) driver;
+        helper.assertTrue(inventory.inventoryCapacity(stack) == capacity, "Expected " + stack + " inventory capacity " + capacity + " but got " + inventory.inventoryCapacity(stack));
     }
 
     private static void assertWirelessModem(final GameTestHelper helper, final ItemStack stack, final boolean wired, final double strength) {

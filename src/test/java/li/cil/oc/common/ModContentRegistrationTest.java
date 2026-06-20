@@ -176,6 +176,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void inventoryUpgradeItemIdIsStable() {
+        assertEquals("inventory_upgrade", ModContentIds.INVENTORY_UPGRADE);
+    }
+
+    @Test
     void networkCardItemIdIsStable() {
         assertEquals("network_card", ModContentIds.NETWORK_CARD);
     }

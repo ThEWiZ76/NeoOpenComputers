@@ -2,6 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Chargeable;
+import li.cil.oc.api.driver.item.Inventory;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.DriverItem;
@@ -182,6 +183,16 @@ final class ComponentItemShapeTest {
         assertTrue(HostAware.class.isAssignableFrom(BatteryUpgradeItem.class));
         assertTrue(Chargeable.class.isAssignableFrom(BatteryUpgradeItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void inventoryUpgradeItemIsInventoryHostAwareUpgradeDriver() throws NoSuchMethodException {
+        final Constructor<InventoryUpgradeItem> constructor = InventoryUpgradeItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(InventoryUpgradeItem.class));
+        assertTrue(HostAware.class.isAssignableFrom(InventoryUpgradeItem.class));
+        assertTrue(Inventory.class.isAssignableFrom(InventoryUpgradeItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
     }
 
     @Test
