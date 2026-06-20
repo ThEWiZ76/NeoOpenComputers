@@ -51,6 +51,37 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         return new Object[]{stack.isEmpty() ? 0 : stack.getCount()};
     }
 
+    @Callback(doc = "function(side:number, slot:number):number -- Get the maximum stack size of the item stack in the specified inventory slot.")
+    public Object[] getSlotMaxStackSize(final Context context, final Arguments arguments) {
+        final Container container = container(arguments.checkInteger(0));
+        final ItemStack stack = container.getItem(checkSlot(container, arguments.checkInteger(1)));
+        return new Object[]{stack.isEmpty() ? container.getMaxStackSize() : Math.min(container.getMaxStackSize(), stack.getMaxStackSize())};
+    }
+
+    @Callback(doc = "function(side:number, slotA:number, slotB:number):boolean -- Compare two item stacks in the specified inventory.")
+    public Object[] compareStacks(final Context context, final Arguments arguments) {
+        final Container container = container(arguments.checkInteger(0));
+        final int slotA = checkSlot(container, arguments.checkInteger(1));
+        final int slotB = checkSlot(container, arguments.checkInteger(2));
+        return new Object[]{slotA == slotB || ItemStack.isSameItemSameComponents(container.getItem(slotA), container.getItem(slotB))};
+    }
+
+    @Callback(doc = "function(side:number, slot:number):table -- Get the raw item stack in the specified inventory slot.")
+    public Object[] getStackInSlot(final Context context, final Arguments arguments) {
+        final Container container = container(arguments.checkInteger(0));
+        return new Object[]{container.getItem(checkSlot(container, arguments.checkInteger(1)))};
+    }
+
+    @Callback(doc = "function(side:number):table -- Get raw item stacks for all slots in the specified inventory.")
+    public Object[] getAllStacks(final Context context, final Arguments arguments) {
+        final Container container = container(arguments.checkInteger(0));
+        final ItemStack[] stacks = new ItemStack[container.getContainerSize()];
+        for (int slot = 0; slot < stacks.length; slot++) {
+            stacks[slot] = container.getItem(slot).copy();
+        }
+        return new Object[]{stacks};
+    }
+
     private Container container(final int side) {
         if (side < 0 || side > 5) {
             throw new IllegalArgumentException("invalid side");
