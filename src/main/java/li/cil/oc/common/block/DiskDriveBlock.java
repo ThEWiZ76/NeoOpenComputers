@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
@@ -56,6 +57,9 @@ public class DiskDriveBlock extends HorizontalDirectionalBlock implements Entity
 
     @Override
     protected void onRemove(final BlockState state, final Level level, final BlockPos pos, final BlockState newState, final boolean movedByPiston) {
+        if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof DiskDriveBlockEntity diskDrive) {
+            diskDrive.save(new CompoundTag());
+        }
         Containers.dropContentsOnDestroy(state, newState, level, pos);
         super.onRemove(state, level, pos, newState, movedByPiston);
     }

@@ -5,6 +5,7 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
@@ -76,6 +77,9 @@ public class ComputerCaseBlock extends HorizontalDirectionalBlock implements Ent
 
     @Override
     protected void onRemove(final BlockState state, final Level level, final BlockPos pos, final BlockState newState, final boolean movedByPiston) {
+        if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof ComputerCaseBlockEntity computerCase) {
+            computerCase.machine().save(new CompoundTag());
+        }
         Containers.dropContentsOnDestroy(state, newState, level, pos);
         super.onRemove(state, level, pos, newState, movedByPiston);
     }

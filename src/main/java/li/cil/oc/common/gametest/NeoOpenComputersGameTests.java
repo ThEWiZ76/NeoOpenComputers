@@ -357,6 +357,27 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void brokenComputerCaseDropsFlushedHardDiskData(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.killAllEntities();
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootableHardDiskStack(helper, "computer.pushSignal('booted')"));
+
+        final String filesystemAddress = componentAddress(computer, "filesystem");
+        helper.assertTrue(filesystemAddress != null, "Computer has no filesystem component: " + computer.machine().components());
+        writeFile(helper, computer, filesystemAddress, "saved.txt", "persisted");
+
+        helper.getLevel().destroyBlock(helper.absolutePos(computerPos), true);
+        helper.runAtTickTime(1, () -> {
+            assertHardDiskContainsFile(helper, droppedItemStack(helper, ModItems.HDD_TIER1.get()), "saved.txt");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void screenKeyboardSignalsReachComputer(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
@@ -562,12 +583,41 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static void assertDroppedItem(final GameTestHelper helper, final Item item) {
+        droppedItemStack(helper, item);
+    }
+
+    private static ItemStack droppedItemStack(final GameTestHelper helper, final Item item) {
         for (ItemEntity entity : helper.getEntities(EntityType.ITEM)) {
             if (entity.getItem().is(item)) {
-                return;
+                return entity.getItem();
             }
         }
         helper.fail("Expected dropped item " + item);
+        return ItemStack.EMPTY;
+    }
+
+    private static void writeFile(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final String filesystemAddress, final String path, final String data) {
+        try {
+            final Object handle = computer.machine().invoke(filesystemAddress, "open", new Object[]{path, "w"})[0];
+            computer.machine().invoke(filesystemAddress, "write", new Object[]{handle, data.getBytes(StandardCharsets.UTF_8)});
+            computer.machine().invoke(filesystemAddress, "close", new Object[]{handle});
+        } catch (Exception e) {
+            helper.fail("Failed to write file " + path + ": " + e.getMessage());
+        }
+    }
+
+    private static void assertHardDiskContainsFile(final GameTestHelper helper, final ItemStack stack, final String path) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "Dropped hard disk has no item driver");
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment != null && environment.node() instanceof li.cil.oc.api.network.Component, "Dropped hard disk has no filesystem component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        try {
+            final Object[] result = component.invoke("exists", null, path);
+            helper.assertTrue(result.length == 1 && Boolean.TRUE.equals(result[0]), "Dropped hard disk is missing " + path);
+        } catch (Exception e) {
+            helper.fail("Failed to inspect dropped hard disk: " + e.getMessage());
+        }
     }
 
     private static boolean screenHasNonBlankText(final ScreenBlockEntity screen) {
