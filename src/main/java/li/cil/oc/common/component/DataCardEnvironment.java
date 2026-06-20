@@ -6,6 +6,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.Value;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
@@ -39,7 +40,16 @@ import java.util.zip.InflaterInputStream;
 
 public class DataCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "data";
-    private static final int LIMIT = 8192;
+    private static final int HARD_LIMIT = 1_048_576;
+    private static final int SOFT_LIMIT = 8192;
+    private static final double SOFT_LIMIT_PAUSE = 1.0D;
+    private static final double TRIVIAL_COST = 0.2D;
+    private static final double TRIVIAL_BYTE_COST = 0.005D;
+    private static final double SIMPLE_COST = 1.0D;
+    private static final double SIMPLE_BYTE_COST = 0.01D;
+    private static final double COMPLEX_COST = 6.0D;
+    private static final double COMPLEX_BYTE_COST = 0.1D;
+    private static final double ASYMMETRIC_COST = 10.0D;
     private static final int MAX_RANDOM_SIZE = 1024;
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final Map<String, String> TIER1_DEVICE_INFO = Map.of(
@@ -47,21 +57,21 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         DeviceInfo.DeviceAttribute.Description, "Data processor card",
         DeviceInfo.DeviceAttribute.Vendor, "S.C. Ltd.",
         DeviceInfo.DeviceAttribute.Product, "SC01D H45h3r",
-        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(LIMIT)
+        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(HARD_LIMIT)
     );
     private static final Map<String, String> TIER2_DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Processor,
         DeviceInfo.DeviceAttribute.Description, "Data processor card",
         DeviceInfo.DeviceAttribute.Vendor, "S.C. Ltd.",
         DeviceInfo.DeviceAttribute.Product, "SC02D Cryptic",
-        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(LIMIT)
+        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(HARD_LIMIT)
     );
     private static final Map<String, String> TIER3_DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Processor,
         DeviceInfo.DeviceAttribute.Description, "Data processor card",
         DeviceInfo.DeviceAttribute.Vendor, "S.C. Ltd.",
         DeviceInfo.DeviceAttribute.Product, "SC03D Signer",
-        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(LIMIT)
+        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(HARD_LIMIT)
     );
 
     private final int tier;
@@ -70,7 +80,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         this.tier = Math.max(0, Math.min(2, tier));
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
-            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create());
+            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
         }
     }
 
@@ -85,25 +95,26 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
 
     @Callback(direct = true, doc = "function():number -- Gets the maximum input size in bytes.")
     public Object[] getLimit(final Context context, final Arguments args) {
-        return new Object[]{LIMIT};
+        return new Object[]{HARD_LIMIT};
     }
 
     @Callback(direct = true, doc = "function(data:string):string -- Encodes bytes as base64.")
-    public Object[] encode64(final Context context, final Arguments args) {
-        return new Object[]{Base64.getEncoder().encode(checkData(args, 0))};
+    public Object[] encode64(final Context context, final Arguments args) throws Exception {
+        return new Object[]{Base64.getEncoder().encode(costedData(context, args, TRIVIAL_COST, TRIVIAL_BYTE_COST))};
     }
 
     @Callback(direct = true, doc = "function(data:string):string -- Decodes base64 bytes.")
-    public Object[] decode64(final Context context, final Arguments args) {
-        return new Object[]{Base64.getDecoder().decode(checkData(args, 0))};
+    public Object[] decode64(final Context context, final Arguments args) throws Exception {
+        return new Object[]{Base64.getDecoder().decode(costedData(context, args, TRIVIAL_COST, TRIVIAL_BYTE_COST))};
     }
 
     @Callback(doc = "function(data:string):string -- Compresses bytes using zlib deflate.")
-    public Object[] deflate(final Context context, final Arguments args) {
+    public Object[] deflate(final Context context, final Arguments args) throws Exception {
+        final byte[] data = costedData(context, args, COMPLEX_COST, COMPLEX_BYTE_COST);
         try {
             final ByteArrayOutputStream out = new ByteArrayOutputStream();
             try (DeflaterOutputStream deflater = new DeflaterOutputStream(out)) {
-                deflater.write(checkData(args, 0));
+                deflater.write(data);
             }
             return new Object[]{out.toByteArray()};
         } catch (Exception e) {
@@ -112,8 +123,9 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     }
 
     @Callback(doc = "function(data:string):string -- Decompresses zlib deflate bytes.")
-    public Object[] inflate(final Context context, final Arguments args) {
-        try (InflaterInputStream inflater = new InflaterInputStream(new ByteArrayInputStream(checkData(args, 0)))) {
+    public Object[] inflate(final Context context, final Arguments args) throws Exception {
+        final byte[] data = costedData(context, args, COMPLEX_COST, COMPLEX_BYTE_COST);
+        try (InflaterInputStream inflater = new InflaterInputStream(new ByteArrayInputStream(data))) {
             return new Object[]{inflater.readAllBytes()};
         } catch (Exception e) {
             throw new IllegalArgumentException("invalid deflate stream", e);
@@ -121,9 +133,9 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     }
 
     @Callback(direct = true, doc = "function(data:string):string -- Computes CRC32.")
-    public Object[] crc32(final Context context, final Arguments args) {
+    public Object[] crc32(final Context context, final Arguments args) throws Exception {
         final CRC32 crc = new CRC32();
-        crc.update(checkData(args, 0));
+        crc.update(costedData(context, args, TRIVIAL_COST, TRIVIAL_BYTE_COST));
         final long value = crc.getValue();
         return new Object[]{new byte[]{
             (byte) ((value >>> 24) & 0xFF),
@@ -134,39 +146,44 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     }
 
     @Callback(direct = true, doc = "function(data:string[, key:string]):string -- Computes MD5 or HMAC-MD5.")
-    public Object[] md5(final Context context, final Arguments args) {
-        return new Object[]{hash("MD5", "HmacMD5", args)};
+    public Object[] md5(final Context context, final Arguments args) throws Exception {
+        return new Object[]{hash("MD5", "HmacMD5", context, args, SIMPLE_COST, SIMPLE_BYTE_COST)};
     }
 
     @Callback(direct = true, doc = "function(data:string[, key:string]):string -- Computes SHA-256 or HMAC-SHA256.")
-    public Object[] sha256(final Context context, final Arguments args) {
-        return new Object[]{hash("SHA-256", "HmacSHA256", args)};
+    public Object[] sha256(final Context context, final Arguments args) throws Exception {
+        return new Object[]{hash("SHA-256", "HmacSHA256", context, args, COMPLEX_COST, COMPLEX_BYTE_COST)};
     }
 
     @Callback(doc = "function(data:string, key:string, iv:string):string -- Encrypts bytes using AES/CBC/PKCS5Padding.")
-    public Object[] encrypt(final Context context, final Arguments args) {
+    public Object[] encrypt(final Context context, final Arguments args) throws Exception {
         requireTier(1);
-        return new Object[]{aes(Cipher.ENCRYPT_MODE, args)};
+        return new Object[]{aes(Cipher.ENCRYPT_MODE, context, args)};
     }
 
     @Callback(doc = "function(data:string, key:string, iv:string):string -- Decrypts bytes using AES/CBC/PKCS5Padding.")
-    public Object[] decrypt(final Context context, final Arguments args) {
+    public Object[] decrypt(final Context context, final Arguments args) throws Exception {
         requireTier(1);
-        return new Object[]{aes(Cipher.DECRYPT_MODE, args)};
+        return new Object[]{aes(Cipher.DECRYPT_MODE, context, args)};
     }
 
     @Callback(direct = true, doc = "function(length:number):string -- Returns cryptographically random bytes.")
-    public Object[] random(final Context context, final Arguments args) {
+    public Object[] random(final Context context, final Arguments args) throws Exception {
         requireTier(1);
-        final int length = Math.max(0, Math.min(MAX_RANDOM_SIZE, args.checkInteger(0)));
+        final int length = args.checkInteger(0);
+        if (length <= 0 || length > MAX_RANDOM_SIZE) {
+            throw new IllegalArgumentException("length must be in range [1..1024]");
+        }
+        consumeEnergy(context, COMPLEX_COST + COMPLEX_BYTE_COST * length);
         final byte[] data = new byte[length];
         RANDOM.nextBytes(data);
         return new Object[]{data};
     }
 
     @Callback(direct = true, doc = "function([bits:number]):userdata, userdata -- Generates an EC public/private key pair.")
-    public Object[] generateKeyPair(final Context context, final Arguments args) {
+    public Object[] generateKeyPair(final Context context, final Arguments args) throws Exception {
         requireTier(2);
+        consumeEnergy(context, ASYMMETRIC_COST);
         final int bits = args.optInteger(0, 384);
         if (bits != 256 && bits != 384) {
             throw new IllegalArgumentException("invalid key length, must be 256 or 384");
@@ -182,14 +199,15 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     }
 
     @Callback(direct = true, doc = "function(data:string, type:string):userdata -- Restores an EC key from its binary representation.")
-    public Object[] deserializeKey(final Context context, final Arguments args) {
+    public Object[] deserializeKey(final Context context, final Arguments args) throws Exception {
         requireTier(2);
-        return new Object[]{new ECKey(deserializeKey(args.checkString(1), checkData(args, 0)))};
+        return new Object[]{new ECKey(deserializeKey(args.checkString(1), costedData(context, args, SIMPLE_COST, SIMPLE_BYTE_COST)))};
     }
 
     @Callback(direct = true, doc = "function(private:userdata, public:userdata):string -- Generates an ECDH shared secret.")
-    public Object[] ecdh(final Context context, final Arguments args) {
+    public Object[] ecdh(final Context context, final Arguments args) throws Exception {
         requireTier(2);
+        consumeEnergy(context, ASYMMETRIC_COST);
         final PrivateKey privateKey = checkKey(args, 0, false).privateKey();
         final PublicKey publicKey = checkKey(args, 1, true).publicKey();
         try {
@@ -203,9 +221,9 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     }
 
     @Callback(direct = true, doc = "function(data:string, key:userdata[, signature:string]):string or boolean -- Signs or verifies data using ECDSA.")
-    public Object[] ecdsa(final Context context, final Arguments args) {
+    public Object[] ecdsa(final Context context, final Arguments args) throws Exception {
         requireTier(2);
-        final byte[] data = checkData(args, 0);
+        final byte[] data = costedData(context, args, ASYMMETRIC_COST, COMPLEX_BYTE_COST);
         final ECKey key = checkKey(args, 1, null);
         final byte[] signatureBytes = args.optByteArray(2, null);
         try {
@@ -223,8 +241,8 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         }
     }
 
-    private byte[] hash(final String digestAlgorithm, final String hmacAlgorithm, final Arguments args) {
-        final byte[] data = checkData(args, 0);
+    private byte[] hash(final String digestAlgorithm, final String hmacAlgorithm, final Context context, final Arguments args, final double baseCost, final double byteCost) throws Exception {
+        final byte[] data = costedData(context, args, baseCost, byteCost);
         try {
             if (args.count() > 1) {
                 requireTier(1);
@@ -240,22 +258,38 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         }
     }
 
-    private byte[] aes(final int mode, final Arguments args) {
+    private byte[] aes(final int mode, final Context context, final Arguments args) throws Exception {
         try {
+            final byte[] data = costedData(context, args, SIMPLE_COST, SIMPLE_BYTE_COST);
             final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(mode, new SecretKeySpec(checkData(args, 1), "AES"), new IvParameterSpec(checkData(args, 2)));
-            return cipher.doFinal(checkData(args, 0));
+            return cipher.doFinal(data);
         } catch (GeneralSecurityException e) {
             throw new IllegalArgumentException("invalid aes input", e);
         }
     }
 
+    private byte[] costedData(final Context context, final Arguments args, final double baseCost, final double byteCost) throws Exception {
+        final byte[] data = checkData(args, 0);
+        consumeEnergy(context, baseCost + data.length * byteCost);
+        if (context != null && data.length > SOFT_LIMIT) {
+            context.pause(SOFT_LIMIT_PAUSE);
+        }
+        return data;
+    }
+
     private byte[] checkData(final Arguments args, final int index) {
         final byte[] data = args.checkByteArray(index);
-        if (data.length > LIMIT) {
+        if (data.length > HARD_LIMIT) {
             throw new IllegalArgumentException("data size limit exceeded");
         }
         return data;
+    }
+
+    private static void consumeEnergy(final Context context, final double cost) throws Exception {
+        if (context != null && context.node() instanceof Connector connector && !connector.tryChangeBuffer(-cost)) {
+            throw new Exception("not enough energy");
+        }
     }
 
     private void requireTier(final int minimumTier) {

@@ -3,6 +3,9 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.ComponentConnector;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,7 @@ import java.util.zip.CRC32;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class DataCardEnvironmentTest {
@@ -67,6 +71,28 @@ final class DataCardEnvironmentTest {
         assertArrayEquals(crc32(data), (byte[]) card.crc32(null, new TestArguments(data))[0]);
         assertArrayEquals(MessageDigest.getInstance("MD5").digest(data), (byte[]) card.md5(null, new TestArguments(data))[0]);
         assertArrayEquals(MessageDigest.getInstance("SHA-256").digest(data), (byte[]) card.sha256(null, new TestArguments(data))[0]);
+    }
+
+    @Test
+    void operationsConsumeEnergyAndPauseAboveSoftLimit() throws Exception {
+        OpenComputersApi.initialize();
+        DataCardEnvironment card = new DataCardEnvironment(0);
+        ComponentConnector connector = assertInstanceOf(ComponentConnector.class, card.node());
+        connector.setLocalBufferSize(100);
+        RecordingContext context = new RecordingContext(card.node());
+
+        Exception error = assertThrows(Exception.class, () -> card.encode64(context, new TestArguments("hello")));
+        assertEquals("not enough energy", error.getMessage());
+        error = assertThrows(Exception.class, () -> card.deflate(context, new TestArguments("hello")));
+        assertEquals("not enough energy", error.getMessage());
+
+        connector.changeBuffer(50);
+        byte[] large = new byte[8193];
+        Arrays.fill(large, (byte) 'x');
+        assertArrayEquals(Base64.getEncoder().encode(large), (byte[]) card.encode64(context, new TestArguments(large))[0]);
+        assertEquals(1.0D, context.pauseSeconds, 0.000_001D);
+        assertEquals(8.835D, connector.localBuffer(), 0.000_001D);
+        assertArrayEquals(new Object[]{1048576}, card.getLimit(null, new TestArguments()));
     }
 
     @Test
@@ -152,6 +178,25 @@ final class DataCardEnvironmentTest {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(mode, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
         return cipher.doFinal(data);
+    }
+
+    private static final class RecordingContext implements Context {
+        private final Node node;
+        private double pauseSeconds = -1D;
+
+        private RecordingContext(final Node node) {
+            this.node = node;
+        }
+
+        @Override public Node node() { return node; }
+        @Override public boolean canInteract(final String player) { return true; }
+        @Override public boolean isRunning() { return true; }
+        @Override public boolean isPaused() { return false; }
+        @Override public boolean start() { return true; }
+        @Override public boolean pause(final double seconds) { pauseSeconds = seconds; return true; }
+        @Override public boolean stop() { return true; }
+        @Override public void consumeCallBudget(final double callCost) { }
+        @Override public boolean signal(final String name, final Object... args) { return true; }
     }
 
     private record TestArguments(Object... values) implements Arguments {
