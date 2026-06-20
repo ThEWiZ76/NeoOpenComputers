@@ -51,9 +51,11 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -75,6 +77,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 @GameTestHolder(NeoOpenComputers.MODID)
@@ -856,6 +859,30 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(secondEnvironment instanceof li.cil.oc.api.internal.Database, "Database upgrade did not recreate database environment");
         final ItemStack restored = ((li.cil.oc.api.internal.Database) secondEnvironment).getStackInSlot(0);
         helper.assertTrue(restored.is(Items.DIAMOND) && restored.getCount() == 3, "Database stack did not persist");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void generatorUpgradeBurnsQueuedFuel(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for generator upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        host.mainInventory().setItem(0, new ItemStack(Items.COAL, 2));
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.GENERATOR_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Generator upgrade did not create generator environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Generator node is not a component connector");
+        final ComponentConnector connector = (ComponentConnector) environment.node();
+        helper.assertTrue("generator".equals(connector.name()), "Generator component name mismatch");
+
+        final Object[] insert = connector.invoke("insert", null, 1);
+        helper.assertTrue(Boolean.TRUE.equals(insert[0]) && Integer.valueOf(1).equals(insert[1]), "Generator did not queue one fuel item");
+        helper.assertTrue(host.mainInventory().getItem(0).getCount() == 1, "Generator did not consume selected fuel");
+        final Object[] count = connector.invoke("count", null);
+        helper.assertTrue(Integer.valueOf(1).equals(count[0]), "Generator queue count mismatch");
+
+        environment.update();
+        helper.assertTrue(connector.localBuffer() > 0D, "Generator did not produce energy while burning");
         helper.succeed();
     }
 
@@ -2246,6 +2273,137 @@ public final class NeoOpenComputersGameTests {
 
         @Override
         public void markChanged() {
+        }
+    }
+
+    private static final class AgentTestHost implements li.cil.oc.api.internal.Agent {
+        private final GameTestHelper helper;
+        private final SimpleContainer mainInventory = new SimpleContainer(9);
+        private final SimpleContainer equipmentInventory = new SimpleContainer(4);
+        private int selectedSlot;
+
+        private AgentTestHost(final GameTestHelper helper) {
+            this.helper = helper;
+        }
+
+        @Override
+        public SimpleContainer equipmentInventory() {
+            return equipmentInventory;
+        }
+
+        @Override
+        public SimpleContainer mainInventory() {
+            return mainInventory;
+        }
+
+        @Override
+        public li.cil.oc.api.internal.MultiTank tank() {
+            return null;
+        }
+
+        @Override
+        public int selectedSlot() {
+            return selectedSlot;
+        }
+
+        @Override
+        public void setSelectedSlot(final int index) {
+            selectedSlot = index;
+        }
+
+        @Override
+        public int selectedTank() {
+            return 0;
+        }
+
+        @Override
+        public void setSelectedTank(final int index) {
+        }
+
+        @Override
+        public Player player() {
+            return null;
+        }
+
+        @Override
+        public String name() {
+            return "test";
+        }
+
+        @Override
+        public void setName(final String name) {
+        }
+
+        @Override
+        public String ownerName() {
+            return "test";
+        }
+
+        @Override
+        public UUID ownerUUID() {
+            return new UUID(0L, 0L);
+        }
+
+        @Override
+        public li.cil.oc.api.machine.Machine machine() {
+            return null;
+        }
+
+        @Override
+        public Iterable<ItemStack> internalComponents() {
+            return java.util.List.of();
+        }
+
+        @Override
+        public int componentSlot(final String address) {
+            return -1;
+        }
+
+        @Override
+        public void onMachineConnect(final Node node) {
+        }
+
+        @Override
+        public void onMachineDisconnect(final Node node) {
+        }
+
+        @Override
+        public net.minecraft.world.level.Level world() {
+            return helper.getLevel();
+        }
+
+        @Override
+        public double xPosition() {
+            return helper.absolutePos(BlockPos.ZERO).getX();
+        }
+
+        @Override
+        public double yPosition() {
+            return helper.absolutePos(BlockPos.ZERO).getY();
+        }
+
+        @Override
+        public double zPosition() {
+            return helper.absolutePos(BlockPos.ZERO).getZ();
+        }
+
+        @Override
+        public void markChanged() {
+        }
+
+        @Override
+        public Direction facing() {
+            return Direction.NORTH;
+        }
+
+        @Override
+        public Direction toGlobal(final Direction value) {
+            return value;
+        }
+
+        @Override
+        public Direction toLocal(final Direction value) {
+            return value;
         }
     }
 

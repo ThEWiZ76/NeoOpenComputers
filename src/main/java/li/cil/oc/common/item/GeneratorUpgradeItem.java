@@ -1,9 +1,11 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.item.HostAware;
+import li.cil.oc.api.internal.Agent;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.common.component.GeneratorUpgradeEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -25,7 +27,7 @@ public class GeneratorUpgradeItem extends Item implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return null;
+        return host instanceof Agent agent ? new GeneratorUpgradeEnvironment(agent) : null;
     }
 
     @Override
@@ -35,7 +37,7 @@ public class GeneratorUpgradeItem extends Item implements HostAware {
 
     @Override
     public int tier(final ItemStack stack) {
-        return 0;
+        return 1;
     }
 
     @Override
