@@ -2,14 +2,11 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "B": {
-      "item": "neoopencomputers:circuit_board"
-    },
     "D": {
       "item": "neoopencomputers:disk_platter"
     },
     "I": {
-      "item": "minecraft:iron_nugget"
+      "tag": "c:nuggets/iron"
     },
     "L": {
       "item": "minecraft:lever"
@@ -20,7 +17,7 @@
   },
   "pattern": [
     "ILI",
-    "BDB",
+    "PDP",
     "IPI"
   ],
   "result": {

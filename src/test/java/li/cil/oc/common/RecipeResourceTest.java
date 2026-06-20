@@ -271,8 +271,11 @@ final class RecipeResourceTest {
         assertItem(eeprom, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
         assertItem(eeprom, "X", "minecraft:redstone_torch");
         assertTag(eeprom, "G", "c:nuggets/gold");
-        assertItem(floppy, "B", "neoopencomputers:" + ModContentIds.CIRCUIT_BOARD);
+        assertPattern(readJson(RECIPE_ROOT.resolve(ModContentIds.FLOPPY + ".json")), "ILI", "PDP", "IPI");
         assertItem(floppy, "D", "neoopencomputers:" + ModContentIds.DISK_PLATTER);
+        assertItem(floppy, "L", "minecraft:lever");
+        assertItem(floppy, "P", "minecraft:paper");
+        assertTag(floppy, "I", "c:nuggets/iron");
         assertItem(drive, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(drive, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(drive, "P", "minecraft:piston");
