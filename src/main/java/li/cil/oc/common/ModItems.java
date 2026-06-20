@@ -38,6 +38,8 @@ public final class ModItems {
         ModContentIds.ADAPTER,
         ModBlocks.ADAPTER);
 
+    public static final DeferredItem<Item> ANALYZER = ITEMS.registerSimpleItem(ModContentIds.ANALYZER, new Item.Properties());
+
     public static final DeferredItem<BlockItem> ASSEMBLER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ASSEMBLER,
         ModBlocks.ASSEMBLER);

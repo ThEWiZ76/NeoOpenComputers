@@ -98,6 +98,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.TRANSPOSER.get();
         ModBlocks.WAYPOINT.get();
         ModItems.ADAPTER.get();
+        ModItems.ANALYZER.get();
         ModItems.ASSEMBLER.get();
         ModItems.BATTERY_UPGRADE_TIER1.get();
         ModItems.BATTERY_UPGRADE_TIER2.get();

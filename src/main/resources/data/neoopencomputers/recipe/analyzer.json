@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "tools",
+  "key": {
+    "B": {
+      "item": "minecraft:paper"
+    },
+    "G": {
+      "tag": "c:nuggets/gold"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "T": {
+      "item": "minecraft:redstone_torch"
+    }
+  },
+  "pattern": [
+    " T ",
+    "RRG",
+    "RBG"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:analyzer"
+  }
+}

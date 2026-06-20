@@ -101,6 +101,7 @@ public final class ModContentCatalog {
                 ModBlocks.WAYPOINT.get(),
                 ModItems.WAYPOINT.get(),
                 ModItems.MANUAL.get(),
+                ModItems.ANALYZER.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
                 ModItems.CPU_TIER3.get(),
@@ -191,6 +192,7 @@ public final class ModContentCatalog {
         final Block waypoint,
         final Item waypointItem,
         final Item manualItem,
+        final Item analyzerItem,
         final Item cpuTier1Item,
         final Item cpuTier2Item,
         final Item cpuTier3Item,
@@ -238,6 +240,7 @@ public final class ModContentCatalog {
         final Item upgradeContainerTier2Item,
         final Item upgradeContainerTier3Item) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
+        registry.register(ModContentIds.ANALYZER, null, analyzerItem);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.ASSEMBLER, assembler, assemblerItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);

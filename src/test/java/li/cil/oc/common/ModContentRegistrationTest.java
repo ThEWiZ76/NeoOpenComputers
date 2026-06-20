@@ -36,6 +36,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void analyzerItemIdIsStable() {
+        assertEquals("analyzer", ModContentIds.ANALYZER);
+    }
+
+    @Test
     void computerCaseBlockIdIsStable() {
         assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
     }
