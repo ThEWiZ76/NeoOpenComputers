@@ -501,6 +501,30 @@ final class RecipeResourceTest {
         assertTag(transposer, "G", "c:ingots/iron");
     }
 
+    @Test
+    void assemblerAndDisassemblerRecipesUseMaterialProgression() throws IOException {
+        JsonObject assembler = readJson(RECIPE_ROOT.resolve(ModContentIds.ASSEMBLER + ".json"));
+        JsonObject disassembler = readJson(RECIPE_ROOT.resolve(ModContentIds.DISASSEMBLER + ".json"));
+        JsonObject assemblerKeys = assembler.getAsJsonObject("key");
+        JsonObject disassemblerKeys = disassembler.getAsJsonObject("key");
+
+        assertPattern(assembler, "ITI", "PCP", "IBI");
+        assertTag(assemblerKeys, "I", "c:ingots/iron");
+        assertItem(assemblerKeys, "T", "minecraft:crafting_table");
+        assertItem(assemblerKeys, "P", "minecraft:piston");
+        assertItem(assemblerKeys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(assemblerKeys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(disassembler, "CGA", "P O", "ILI");
+        assertItem(disassemblerKeys, "C", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
+        assertItem(disassemblerKeys, "G", "minecraft:glass_pane");
+        assertItem(disassemblerKeys, "A", "neoopencomputers:" + ModContentIds.ANALYZER);
+        assertItem(disassemblerKeys, "P", "minecraft:piston");
+        assertItem(disassemblerKeys, "O", "minecraft:obsidian");
+        assertTag(disassemblerKeys, "I", "c:ingots/iron");
+        assertItem(disassemblerKeys, "L", "minecraft:lava_bucket");
+    }
+
     private static JsonObject readJson(final Path path) throws IOException {
         try (Reader reader = Files.newBufferedReader(path)) {
             JsonElement element = JsonParser.parseReader(reader);

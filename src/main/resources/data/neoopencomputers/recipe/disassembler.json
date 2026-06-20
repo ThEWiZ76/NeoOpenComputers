@@ -2,23 +2,32 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "C": {
-      "tag": "c:chests/wooden"
+    "A": {
+      "item": "neoopencomputers:analyzer"
     },
-    "T": {
-      "item": "minecraft:crafting_table"
+    "C": {
+      "item": "neoopencomputers:control_unit"
+    },
+    "G": {
+      "item": "minecraft:glass_pane"
     },
     "I": {
       "tag": "c:ingots/iron"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "L": {
+      "item": "minecraft:lava_bucket"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "P": {
+      "item": "minecraft:piston"
     }
   },
   "pattern": [
-    "IRI",
-    "ITI",
-    "ICR"
+    "CGA",
+    "P O",
+    "ILI"
   ],
   "result": {
     "count": 1,
