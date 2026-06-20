@@ -8,6 +8,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Component;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
@@ -34,6 +35,7 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
     private static final String TAG_NODE = "node";
     private static final int RANGE = 32;
     private static final int MAX_VOLUME = 64;
+    private static final double SCAN_COST = 10D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Geolyzer",
@@ -119,6 +121,9 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
         if (bounds.outOfRange()) {
             throw new IllegalArgumentException("location out of bounds");
         }
+        if (!consumeEnergy()) {
+            return noEnergy();
+        }
         final Map<?, ?> options = scanOptions(args, bounds.optionsIndex());
         final GeolyzerEvent.Scan event = new GeolyzerEvent.Scan(this, options, bounds.minX(), bounds.minY(), bounds.minZ(), bounds.maxX(), bounds.maxY(), bounds.maxZ());
         fillScan(event, includeReplaceable(options));
@@ -133,6 +138,9 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
     public Object[] analyze(final Context context, final Arguments args) {
         final BlockPos target = relativeBlock(args.checkInteger(0));
         final Map<?, ?> options = args.optTable(1, Map.of());
+        if (!consumeEnergy()) {
+            return noEnergy();
+        }
         final GeolyzerEvent.Analyze event = new GeolyzerEvent.Analyze(this, options, target);
         fillAnalyze(event);
         NeoForge.EVENT_BUS.post(event);
@@ -145,6 +153,9 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
     @Callback(doc = "function(side:number, dbAddress:string, dbSlot:number):boolean -- Store an item stack representation of the block on the specified side in a database component.")
     public Object[] store(final Context context, final Arguments args) {
         final BlockPos target = relativeBlock(args.checkInteger(0));
+        if (!consumeEnergy()) {
+            return noEnergy();
+        }
         if (level == null) {
             throw new IllegalStateException("no world");
         }
@@ -160,6 +171,14 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
         final boolean overwritten = !database.getStackInSlot(slot).isEmpty();
         database.setStackInSlot(slot, stack);
         return new Object[]{overwritten};
+    }
+
+    private boolean consumeEnergy() {
+        return node() instanceof Connector connector && connector.tryChangeBuffer(-SCAN_COST);
+    }
+
+    private static Object[] noEnergy() {
+        return new Object[]{null, "not enough energy"};
     }
 
     @Override

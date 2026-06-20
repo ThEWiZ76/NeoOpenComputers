@@ -30,6 +30,7 @@ import li.cil.oc.common.blockentity.AdapterBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
+import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
@@ -431,6 +432,41 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(stored.is(Items.DIAMOND) && stored.getCount() == 5, "Transposer did not store stack in database");
         helper.assertTrue(Boolean.TRUE.equals(matching[0]), "Transposer did not match stored database stack");
         helper.assertTrue(Boolean.FALSE.equals(mismatching[0]), "Transposer matched different database stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void geolyzerScanConsumesEnergy(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.GEOLYZER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.STONE);
+        final GeolyzerBlockEntity geolyzer = helper.getBlockEntity(pos);
+        final ComponentConnector component = (ComponentConnector) geolyzer.node();
+        component.setLocalBufferSize(10D);
+        component.changeBuffer(10D);
+
+        final Object[] result = invokeComponent(helper, component, "scan", -1, 0, 0, 1, 1, 1);
+
+        helper.assertTrue(result.length == 1 && result[0] instanceof float[], "Geolyzer scan did not return data");
+        helper.assertTrue(Double.compare(0D, component.localBuffer()) == 0, "Geolyzer scan did not consume energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void geolyzerOperationsReturnNoEnergyWhenUnderpowered(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.GEOLYZER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.STONE);
+        final GeolyzerBlockEntity geolyzer = helper.getBlockEntity(pos);
+        final ComponentConnector component = (ComponentConnector) geolyzer.node();
+
+        final Object[] scan = invokeComponent(helper, component, "scan", -1, 0, 0, 1, 1, 1);
+        final Object[] analyze = invokeComponent(helper, component, "analyze", Direction.WEST.get3DDataValue());
+        final Object[] store = invokeComponent(helper, component, "store", Direction.WEST.get3DDataValue(), "missing", 1);
+
+        assertNoEnergy(helper, scan, "Geolyzer scan");
+        assertNoEnergy(helper, analyze, "Geolyzer analyze");
+        assertNoEnergy(helper, store, "Geolyzer store");
         helper.succeed();
     }
 
@@ -1865,6 +1901,10 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("minecraft:water".equals(tank[0]), name + " did not report water in all tank descriptions");
         helper.assertTrue(Integer.valueOf(1000).equals(tank[1]), name + " did not report water amount in all tank descriptions");
         helper.assertTrue(Integer.valueOf(1000).equals(tank[2]), name + " did not report water capacity in all tank descriptions");
+    }
+
+    private static void assertNoEnergy(final GameTestHelper helper, final Object[] result, final String name) {
+        helper.assertTrue(result.length == 2 && result[0] == null && "not enough energy".equals(result[1]), name + " did not report missing energy");
     }
 
     private static boolean modemPortOpen(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final int port) {
