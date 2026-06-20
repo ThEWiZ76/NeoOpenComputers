@@ -5,11 +5,14 @@ import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.HostAware;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.OpenComputersApi;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 
@@ -77,6 +80,25 @@ final class ComponentItemShapeTest {
         assertTrue(Item.class.isAssignableFrom(HardDiskDriveItem.class));
         assertTrue(DriverItem.class.isAssignableFrom(HardDiskDriveItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void hardDiskDrivePersistsFilesystemDataInStack() throws Exception {
+        OpenComputersApi.initialize();
+        CompoundTag stackData = new CompoundTag();
+        ManagedEnvironment first = HardDiskDriveItem.createEnvironment(stackData, saved -> stackData.put("disk", saved.copy()), null);
+        Component firstComponent = assertInstanceOf(Component.class, first.node());
+        Object handle = firstComponent.invoke("open", null, "boot.txt", "w")[0];
+        firstComponent.invoke("write", null, handle, "ready".getBytes(StandardCharsets.UTF_8));
+        firstComponent.invoke("close", null, handle);
+
+        first.save(new CompoundTag());
+        ManagedEnvironment second = HardDiskDriveItem.createEnvironment(stackData.getCompound("disk"), saved -> {}, null);
+        Component secondComponent = assertInstanceOf(Component.class, second.node());
+        Object readHandle = secondComponent.invoke("open", null, "boot.txt", "r")[0];
+        byte[] data = (byte[]) secondComponent.invoke("read", null, readHandle, 16)[0];
+
+        assertEquals("ready", new String(data, StandardCharsets.UTF_8));
     }
 
     @Test
