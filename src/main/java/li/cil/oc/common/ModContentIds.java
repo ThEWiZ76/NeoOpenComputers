@@ -30,6 +30,7 @@ public final class ModContentIds {
     public static final String HDD_TIER1 = "hdd_tier1";
     public static final String HDD_TIER2 = "hdd_tier2";
     public static final String HDD_TIER3 = "hdd_tier3";
+    public static final String INTERNET_CARD = "internet_card";
     public static final String INVENTORY_CONTROLLER_UPGRADE = "inventory_controller_upgrade";
     public static final String KEYBOARD = "keyboard";
     public static final String KEYBOARD_BLOCK_ENTITY = "keyboard";

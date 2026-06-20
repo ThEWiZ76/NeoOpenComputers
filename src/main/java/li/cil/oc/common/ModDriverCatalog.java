@@ -19,7 +19,7 @@ public final class ModDriverCatalog {
                 ModItems.DATABASE_UPGRADE_TIER1.get(), ModItems.DATABASE_UPGRADE_TIER2.get(), ModItems.DATABASE_UPGRADE_TIER3.get(),
                 ModItems.MEMORY_TIER1.get(), ModItems.MEMORY_TIER2.get(), ModItems.MEMORY_TIER3.get(),
                 ModItems.HDD_TIER1.get(), ModItems.HDD_TIER2.get(), ModItems.HDD_TIER3.get(),
-                ModItems.INVENTORY_CONTROLLER_UPGRADE.get(), ModItems.LINKED_CARD.get(),
+                ModItems.INVENTORY_CONTROLLER_UPGRADE.get(), ModItems.INTERNET_CARD.get(), ModItems.LINKED_CARD.get(),
                 ModItems.EEPROM.get(), ModItems.FLOPPY.get(),
                 ModItems.GRAPHICS_CARD_TIER1.get(), ModItems.GRAPHICS_CARD_TIER2.get(), ModItems.GRAPHICS_CARD_TIER3.get(),
                 ModItems.NETWORK_CARD.get(), ModItems.WIRELESS_NETWORK_CARD_TIER1.get(), ModItems.WIRELESS_NETWORK_CARD_TIER2.get(), ModItems.REDSTONE_CARD.get());

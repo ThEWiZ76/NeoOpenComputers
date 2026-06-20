@@ -156,6 +156,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void internetCardItemIdIsStable() {
+        assertEquals("internet_card", ModContentIds.INTERNET_CARD);
+    }
+
+    @Test
     void networkCardItemIdIsStable() {
         assertEquals("network_card", ModContentIds.NETWORK_CARD);
     }

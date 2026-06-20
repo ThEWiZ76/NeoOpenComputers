@@ -31,6 +31,7 @@ final class ModContentCatalogTest {
             null,
             null,
             null,
+            null,
             null, null, null,
             null, null,
             null, null,
@@ -73,6 +74,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3));
         assertNotNull(registry.get(ModContentIds.INVENTORY_CONTROLLER_UPGRADE));
+        assertNotNull(registry.get(ModContentIds.INTERNET_CARD));
         assertNotNull(registry.get(ModContentIds.LINKED_CARD));
         assertNotNull(registry.get(ModContentIds.EEPROM));
         assertNotNull(registry.get(ModContentIds.FLOPPY));
@@ -96,6 +98,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_HDD_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_HDD_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_HDD_TIER3));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_INTERNET_CARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_LINKED_CARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER2));
@@ -141,6 +144,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3).name());
         assertEquals(ModContentIds.INVENTORY_CONTROLLER_UPGRADE, registry.get(ModContentIds.INVENTORY_CONTROLLER_UPGRADE).name());
+        assertEquals(ModContentIds.INTERNET_CARD, registry.get(ModContentIds.INTERNET_CARD).name());
         assertEquals(ModContentIds.LINKED_CARD, registry.get(ModContentIds.LINKED_CARD).name());
         assertEquals(ModContentIds.EEPROM, registry.get(ModContentIds.EEPROM).name());
         assertEquals(ModContentIds.FLOPPY, registry.get(ModContentIds.FLOPPY).name());
@@ -164,6 +168,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_HDD_TIER1, registry.get(ModContentCatalog.COMPAT_HDD_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_HDD_TIER2, registry.get(ModContentCatalog.COMPAT_HDD_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_HDD_TIER3, registry.get(ModContentCatalog.COMPAT_HDD_TIER3).name());
+        assertEquals(ModContentCatalog.COMPAT_INTERNET_CARD, registry.get(ModContentCatalog.COMPAT_INTERNET_CARD).name());
         assertEquals(ModContentCatalog.COMPAT_LINKED_CARD, registry.get(ModContentCatalog.COMPAT_LINKED_CARD).name());
         assertEquals(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER1, registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER2, registry.get(ModContentCatalog.COMPAT_GRAPHICS_CARD_TIER2).name());

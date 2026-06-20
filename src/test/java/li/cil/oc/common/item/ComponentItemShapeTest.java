@@ -129,6 +129,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void internetCardItemIsCardDriver() throws NoSuchMethodException {
+        final Constructor<InternetCardItem> constructor = InternetCardItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(InternetCardItem.class));
+        assertTrue(DriverItem.class.isAssignableFrom(InternetCardItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void networkCardItemIsHostAwareCardDriver() throws NoSuchMethodException {
         final Constructor<NetworkCardItem> constructor = NetworkCardItem.class.getConstructor(Item.Properties.class);
 

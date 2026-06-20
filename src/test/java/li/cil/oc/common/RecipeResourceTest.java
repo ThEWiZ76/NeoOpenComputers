@@ -43,6 +43,7 @@ final class RecipeResourceTest {
             ModContentIds.HDD_TIER1,
             ModContentIds.HDD_TIER2,
             ModContentIds.HDD_TIER3,
+            ModContentIds.INTERNET_CARD,
             ModContentIds.KEYBOARD,
             ModContentIds.LINKED_CARD,
             ModContentIds.MANUAL,
