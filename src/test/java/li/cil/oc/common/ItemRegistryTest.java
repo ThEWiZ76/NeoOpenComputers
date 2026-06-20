@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.api.API;
 import li.cil.oc.api.detail.ItemInfo;
+import li.cil.oc.api.fs.FileSystem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -56,7 +58,7 @@ final class ItemRegistryTest {
     void floppyFactoryLookupHandlesMissingStacks() {
         ItemRegistry registry = new ItemRegistry();
 
-        assertNull(registry.floppyFactory(null));
+        assertNull(registry.floppyFactory((ItemStack) null));
     }
 
     @Test
@@ -80,6 +82,18 @@ final class ItemRegistryTest {
         assertEquals("lime", tag.getString(ItemRegistry.FLOPPY_COLOR_TAG));
         assertEquals(true, tag.getBoolean(ItemRegistry.FLOPPY_RECIPE_CYCLING_TAG));
         assertEquals("factory-id", tag.getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG));
+    }
+
+    @Test
+    void stableFloppyFactoryIdsCanBeRegisteredWithoutItemStackCreation() {
+        ItemRegistry registry = new ItemRegistry();
+        Callable<FileSystem> factory = () -> null;
+
+        registry.registerFloppyFactory("neoopencomputers:loot/openos", factory);
+
+        assertSame(factory, registry.floppyFactory("neoopencomputers:loot/openos"));
+        assertNull(registry.floppyFactory(""));
+        assertNull(registry.floppyFactory((String) null));
     }
 
     @Test

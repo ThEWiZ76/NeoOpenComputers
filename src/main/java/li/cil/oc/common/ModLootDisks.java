@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Items;
+import li.cil.oc.api.detail.ItemAPI;
 import li.cil.oc.api.fs.FileSystem;
 import net.minecraft.world.item.DyeColor;
 
@@ -22,7 +23,7 @@ public final class ModLootDisks {
     public static void registerDefaults() {
         for (Descriptor descriptor : bundledDescriptors()) {
             final Callable<FileSystem> factory = () -> bundledFileSystem(descriptor.path());
-            Items.registerFloppy(descriptor.label(), descriptor.color(), factory, true);
+            registerBundledFloppy(descriptor, factory);
         }
     }
 
@@ -47,6 +48,19 @@ public final class ModLootDisks {
             descriptors.add(parseDescriptor(path, properties.getProperty(path)));
         }
         return List.copyOf(descriptors);
+    }
+
+    static String factoryId(final String path) {
+        return NeoOpenComputers.MODID + ":" + LOOT_ROOT + "/" + path;
+    }
+
+    private static void registerBundledFloppy(final Descriptor descriptor, final Callable<FileSystem> factory) {
+        final ItemAPI items = API.items;
+        if (items instanceof ItemRegistry registry) {
+            registry.registerFloppy(descriptor.label(), descriptor.color(), factoryId(descriptor.path()), factory, true);
+        } else {
+            Items.registerFloppy(descriptor.label(), descriptor.color(), factory, true);
+        }
     }
 
     static Descriptor parseDescriptor(final String path, final String value) {

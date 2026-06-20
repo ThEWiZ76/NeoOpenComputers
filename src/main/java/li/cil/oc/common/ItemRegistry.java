@@ -61,9 +61,14 @@ public final class ItemRegistry implements ItemAPI {
 
     @Override
     public ItemStack registerFloppy(final String name, final DyeColor color, final Callable<li.cil.oc.api.fs.FileSystem> factory, final boolean doRecipeCycling) {
+        return registerFloppy(name, color, UUID.randomUUID().toString(), factory, doRecipeCycling);
+    }
+
+    ItemStack registerFloppy(final String name, final DyeColor color, final String factoryId, final Callable<li.cil.oc.api.fs.FileSystem> factory, final boolean doRecipeCycling) {
         if (factory == null) {
             return null;
         }
+        registerFloppyFactory(factoryId, factory);
         final ItemInfo info = get(ModContentIds.FLOPPY);
         if (info == null) {
             return null;
@@ -72,8 +77,6 @@ public final class ItemRegistry implements ItemAPI {
         if (stack == null) {
             return null;
         }
-        final String factoryId = UUID.randomUUID().toString();
-        floppyFactoriesById.put(factoryId, factory);
         final CompoundTag floppyData = createFloppyData(name, color, factoryId, doRecipeCycling);
         if (name != null) {
             stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
@@ -135,7 +138,17 @@ public final class ItemRegistry implements ItemAPI {
             return null;
         }
         final String factoryId = data.copyTag().getString(FLOPPY_FACTORY_ID_TAG);
-        return factoryId.isEmpty() ? null : floppyFactoriesById.get(factoryId);
+        return floppyFactory(factoryId);
+    }
+
+    void registerFloppyFactory(final String factoryId, final Callable<FileSystem> factory) {
+        if (factoryId != null && !factoryId.isEmpty() && factory != null) {
+            floppyFactoriesById.put(factoryId, factory);
+        }
+    }
+
+    Callable<FileSystem> floppyFactory(final String factoryId) {
+        return factoryId == null || factoryId.isEmpty() ? null : floppyFactoriesById.get(factoryId);
     }
 
     static CompoundTag createFloppyData(final String name, final DyeColor color, final String factoryId, final boolean doRecipeCycling) {
