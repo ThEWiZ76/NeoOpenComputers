@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NetworkRegistryTest {
@@ -54,6 +55,26 @@ final class NetworkRegistryTest {
         assertArrayEquals(new Object[]{"ping", 7, true, new byte[]{1, 2}}, loaded.data());
         assertEquals(packet.ttl() - 1, packet.hop().ttl());
         assertTrue(packet.size() > 0);
+    }
+
+    @Test
+    void rejectsPacketsWithTooManyDataParts() {
+        NetworkRegistry registry = new NetworkRegistry();
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -> registry.newPacket("node-1", "node-2", 42, new Object[]{1, 2, 3, 4, 5, 6, 7, 8, 9}));
+
+        assertEquals("packet has too many parts", exception.getMessage());
+    }
+
+    @Test
+    void rejectsPacketsOverMaximumPayloadSize() {
+        NetworkRegistry registry = new NetworkRegistry();
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -> registry.newPacket("node-1", "node-2", 42, new Object[]{"x".repeat(8191)}));
+
+        assertEquals("packet too big (max 8192)", exception.getMessage());
     }
 
     @Test

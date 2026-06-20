@@ -47,6 +47,8 @@ import java.util.Set;
 
 final class NetworkRegistry implements NetworkAPI {
     private static final int INITIAL_PACKET_TTL = 32;
+    private static final int MAX_PACKET_SIZE = 8192;
+    private static final int MAX_PACKET_PARTS = 8;
 
     private int nextNodeId = 1;
 
@@ -92,7 +94,11 @@ final class NetworkRegistry implements NetworkAPI {
 
     @Override
     public Packet newPacket(final String source, final String destination, final int port, final Object[] data) {
-        return new PacketImpl(source, destination, port, data, INITIAL_PACKET_TTL);
+        final Packet packet = new PacketImpl(source, destination, port, data, INITIAL_PACKET_TTL);
+        if (packet.size() > MAX_PACKET_SIZE) {
+            throw new IllegalArgumentException("packet too big (max " + MAX_PACKET_SIZE + ")");
+        }
+        return packet;
     }
 
     @Override
@@ -881,6 +887,9 @@ final class NetworkRegistry implements NetworkAPI {
         }
 
         private static int computeSize(final Object[] data) {
+            if (data.length > MAX_PACKET_PARTS) {
+                throw new IllegalArgumentException("packet has too many parts");
+            }
             int computedSize = data.length * 2;
             for (Object value : data) {
                 computedSize += switch (value) {
