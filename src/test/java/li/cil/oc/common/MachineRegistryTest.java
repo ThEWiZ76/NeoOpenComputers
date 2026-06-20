@@ -75,6 +75,19 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void createdMachineExposesTemporaryFilesystemAddress() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        Network.joinNewNetwork(machine.node());
+
+        String tmpAddress = machine.tmpAddress();
+
+        assertNotNull(tmpAddress);
+        assertEquals("filesystem", machine.components().get(tmpAddress));
+        assertTrue(machine.methods(tmpAddress).containsKey("makeDirectory"));
+    }
+
+    @Test
     void registersArchitecturesInOrder() {
         MachineRegistry registry = new MachineRegistry();
 

@@ -18,6 +18,7 @@ import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.DriverRegistry;
@@ -384,7 +385,7 @@ final class LuaArchitectureTest {
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("machine-address", architecture.globalString("address"));
-        assertEquals("nil", architecture.globalString("tmp"));
+        assertEquals("machine-address", architecture.globalString("tmp"));
     }
 
     @Test
@@ -1115,7 +1116,7 @@ final class LuaArchitectureTest {
         architecture.bind(machine);
 
         assertTrue(architecture.initialize());
-        for (int tick = 0; tick < 16; tick++) {
+        for (int tick = 0; tick < 64; tick++) {
             ExecutionResult result = architecture.runThreaded(false);
             if (result instanceof ExecutionResult.Error error) {
                 fail(error.message);
@@ -1478,6 +1479,7 @@ final class LuaArchitectureTest {
             (proxy, method, args) -> switch (method.getName()) {
                 case "upTime" -> uptime;
                 case "popSignal" -> signals.poll();
+                case "node" -> address == null ? null : nodeWithAddress(address);
                 case "tmpAddress" -> address;
                 case "host" -> host;
                 case "components" -> components;
@@ -1514,6 +1516,22 @@ final class LuaArchitectureTest {
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
                 case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Node nodeWithAddress(final String address) {
+        return (Node) Proxy.newProxyInstance(
+            Node.class.getClassLoader(),
+            new Class<?>[]{Node.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "address" -> address;
+                case "reachability" -> Visibility.Network;
+                case "neighbors", "reachableNodes" -> List.of();
+                case "isNeighborOf", "canBeReachedFrom" -> false;
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-node";
                 default -> defaultValue(method.getReturnType());
             });
     }

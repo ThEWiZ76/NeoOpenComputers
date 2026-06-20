@@ -444,7 +444,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("tmpAddress", new ZeroArgFunction() {
             @Override
             public LuaValue call() {
-                return LuaValue.NIL;
+                return machineTmpAddress();
             }
         });
         computer.set("shutdown", new VarArgFunction() {
@@ -1137,6 +1137,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private LuaValue machineAddress() {
+        if (machine == null || machine.node() == null || machine.node().address() == null) {
+            return LuaValue.NIL;
+        }
+        return LuaValue.valueOf(machine.node().address());
+    }
+
+    private LuaValue machineTmpAddress() {
         if (machine == null || machine.tmpAddress() == null) {
             return LuaValue.NIL;
         }

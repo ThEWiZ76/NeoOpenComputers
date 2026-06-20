@@ -36,6 +36,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private static final double NANOS_PER_SECOND = 1_000_000_000D;
     private static final long NANOS_PER_TICK = 50_000_000L;
     private static final double DEFAULT_BOOT_ENERGY_BUFFER = 1_000D;
+    private static final int DEFAULT_TEMPORARY_FILESYSTEM_CAPACITY = 1_024 * 1_024;
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
     private static final String ARCHITECTURE_TAG = "architecture";
@@ -49,6 +50,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
     private final Set<String> users = new LinkedHashSet<>();
     private final Set<ManagedEnvironment> componentEnvironments = new LinkedHashSet<>();
+    private final ManagedEnvironment temporaryFileSystemEnvironment;
     private Architecture architecture;
     private boolean running;
     private boolean paused;
@@ -74,6 +76,15 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             .create();
         connector.changeBuffer(DEFAULT_BOOT_ENERGY_BUFFER);
         setNode(connector);
+        if (API.fileSystem == null) {
+            API.fileSystem = new FileSystemRegistry();
+        }
+        temporaryFileSystemEnvironment = API.fileSystem.asManagedEnvironment(
+            API.fileSystem.fromMemory(DEFAULT_TEMPORARY_FILESYSTEM_CAPACITY),
+            "tmp",
+            null,
+            null,
+            1);
     }
 
     @Override
@@ -180,7 +191,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public String tmpAddress() {
-        return node() == null ? null : node().address();
+        connectTemporaryFileSystem();
+        return temporaryFileSystemEnvironment == null || temporaryFileSystemEnvironment.node() == null
+            ? null
+            : temporaryFileSystemEnvironment.node().address();
     }
 
     @Override
@@ -465,6 +479,18 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private void sendLifecycleMessage(final String name) {
         if (node() != null) {
             node().sendToReachable(name);
+        }
+    }
+
+    private void connectTemporaryFileSystem() {
+        if (node() == null || temporaryFileSystemEnvironment == null || temporaryFileSystemEnvironment.node() == null) {
+            return;
+        }
+        if (node().network() == null) {
+            Network.joinNewNetwork(node());
+        }
+        if (temporaryFileSystemEnvironment.node().network() != node().network()) {
+            node().connect(temporaryFileSystemEnvironment.node());
         }
     }
 
