@@ -100,7 +100,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         }
         for (ManagedEnvironment environment : componentEnvironments) {
             if (environment.node() != null) {
-                environment.save(new CompoundTag());
+                saveComponentEnvironment(environment);
                 host.onMachineDisconnect(environment.node());
                 environment.node().remove();
             }
@@ -449,6 +449,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     @Override
     public void save(final CompoundTag nbt) {
         super.save(nbt);
+        for (ManagedEnvironment environment : componentEnvironments) {
+            saveComponentEnvironment(environment);
+        }
         nbt.putBoolean(RUNNING_TAG, running);
         nbt.putLong(CPU_TIME_NANOS_TAG, cpuTimeNanos);
         if (lastError != null) {
@@ -462,6 +465,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     }
 
     private record SimpleSignal(String name, Object[] args) implements Signal {
+    }
+
+    private static void saveComponentEnvironment(final ManagedEnvironment environment) {
+        if (environment != null) {
+            environment.save(new CompoundTag());
+        }
     }
 
     private static Architecture instantiate(final Class<? extends Architecture> type) {

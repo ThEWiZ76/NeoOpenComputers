@@ -202,6 +202,22 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void savePersistsComponentEnvironments() {
+        OpenComputersApi.initialize();
+        SavingDriver driver = new SavingDriver();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(driver);
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        machine.onHostChanged();
+        SavingEnvironment environment = driver.environments.getFirst();
+
+        machine.save(new CompoundTag());
+
+        assertEquals(1, environment.saves);
+    }
+
+    @Test
     void hostChangedSelectsProcessorArchitectureAndStartInitializesIt() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();
