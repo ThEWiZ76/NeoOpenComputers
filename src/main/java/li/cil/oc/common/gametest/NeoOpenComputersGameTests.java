@@ -104,6 +104,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.MEMORY_TIER2.get();
         ModItems.MEMORY_TIER3.get();
         ModItems.MOTION_SENSOR.get();
+        ModItems.NAVIGATION_UPGRADE.get();
         ModItems.NETWORK_CARD.get();
         ModItems.REDSTONE_IO.get();
         ModItems.TRANSPOSER.get();

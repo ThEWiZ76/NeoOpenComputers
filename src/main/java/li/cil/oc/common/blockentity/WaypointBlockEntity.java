@@ -83,6 +83,10 @@ public class WaypointBlockEntity extends BlockEntity implements Environment, Env
         return new Object[]{label};
     }
 
+    public String label() {
+        return label;
+    }
+
     @Callback(doc = "function(value:string) -- Set the waypoint label.")
     public Object[] setLabel(final Context context, final Arguments args) {
         final String value = args.checkString(0);

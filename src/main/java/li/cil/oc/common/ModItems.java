@@ -12,6 +12,7 @@ import li.cil.oc.common.item.InventoryControllerUpgradeItem;
 import li.cil.oc.common.item.InternetCardItem;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.MemoryItem;
+import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.RedstoneCardItem;
 import li.cil.oc.common.item.WirelessNetworkCardItem;
@@ -153,6 +154,10 @@ public final class ModItems {
     public static final DeferredItem<MemoryItem> MEMORY_TIER3 = ITEMS.register(
         ModContentIds.MEMORY_TIER3,
         () -> new MemoryItem(new Item.Properties(), 2));
+
+    public static final DeferredItem<NavigationUpgradeItem> NAVIGATION_UPGRADE = ITEMS.register(
+        ModContentIds.NAVIGATION_UPGRADE,
+        () -> new NavigationUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<NetworkCardItem> NETWORK_CARD = ITEMS.register(
         ModContentIds.NETWORK_CARD,

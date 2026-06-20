@@ -47,6 +47,7 @@ public final class ModContentIds {
     public static final String MEMORY_TIER3 = "memory_tier3";
     public static final String MOTION_SENSOR = "motion_sensor";
     public static final String MOTION_SENSOR_BLOCK_ENTITY = "motion_sensor";
+    public static final String NAVIGATION_UPGRADE = "navigation_upgrade";
     public static final String NETWORK_CARD = "network_card";
     public static final String REDSTONE_CARD = "redstone_card";
     public static final String REDSTONE_IO = "redstone";

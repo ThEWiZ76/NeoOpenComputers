@@ -221,6 +221,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void navigationUpgradeItemIdIsStable() {
+        assertEquals("navigation_upgrade", ModContentIds.NAVIGATION_UPGRADE);
+    }
+
+    @Test
     void geolyzerBlockIdIsStable() {
         assertEquals("geolyzer", ModContentIds.GEOLYZER);
     }

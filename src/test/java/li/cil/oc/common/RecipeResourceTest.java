@@ -54,6 +54,7 @@ final class RecipeResourceTest {
             ModContentIds.MEMORY_TIER2,
             ModContentIds.MEMORY_TIER3,
             ModContentIds.MOTION_SENSOR,
+            ModContentIds.NAVIGATION_UPGRADE,
             ModContentIds.NETWORK_CARD,
             ModContentIds.REDSTONE_IO,
             ModContentIds.TRANSPOSER,
