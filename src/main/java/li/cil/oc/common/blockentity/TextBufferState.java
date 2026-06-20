@@ -7,7 +7,9 @@ import net.minecraft.nbt.ListTag;
 final class TextBufferState {
     private static final String TAG_HEIGHT = "height";
     private static final String TAG_BACKGROUND = "background";
+    private static final String TAG_BACKGROUND_PALETTE = "backgroundPalette";
     private static final String TAG_FOREGROUND = "foreground";
+    private static final String TAG_FOREGROUND_PALETTE = "foregroundPalette";
     private static final String TAG_ROWS = "rows";
     private static final String TAG_WIDTH = "width";
 
@@ -16,6 +18,8 @@ final class TextBufferState {
     private int[][] text;
     private int[][] foreground;
     private int[][] background;
+    private boolean[][] foregroundPalette;
+    private boolean[][] backgroundPalette;
 
     TextBufferState(final int width, final int height) {
         resize(width, height);
@@ -27,32 +31,62 @@ final class TextBufferState {
         text = new int[this.height][this.width];
         foreground = new int[this.height][this.width];
         background = new int[this.height][this.width];
-        fill(0, 0, this.width, this.height, ' ');
+        foregroundPalette = new boolean[this.height][this.width];
+        backgroundPalette = new boolean[this.height][this.width];
+        fill(0, 0, this.width, this.height, ' ', 0xFFFFFF, false, 0x000000, false);
     }
 
     void copy(final int column, final int row, final int width, final int height, final int horizontalTranslation, final int verticalTranslation) {
-        final int[][] snapshot = new int[Math.max(0, height)][Math.max(0, width)];
-        for (int y = 0; y < snapshot.length; y++) {
-            for (int x = 0; x < snapshot[y].length; x++) {
-                snapshot[y][x] = getCodePoint(column + x, row + y);
+        final int rows = Math.max(0, height);
+        final int columns = Math.max(0, width);
+        final int[][] textSnapshot = new int[rows][columns];
+        final int[][] foregroundSnapshot = new int[rows][columns];
+        final int[][] backgroundSnapshot = new int[rows][columns];
+        final boolean[][] foregroundPaletteSnapshot = new boolean[rows][columns];
+        final boolean[][] backgroundPaletteSnapshot = new boolean[rows][columns];
+        for (int y = 0; y < textSnapshot.length; y++) {
+            for (int x = 0; x < textSnapshot[y].length; x++) {
+                final int sourceColumn = column + x;
+                final int sourceRow = row + y;
+                textSnapshot[y][x] = getCodePoint(sourceColumn, sourceRow);
+                foregroundSnapshot[y][x] = getForegroundColor(sourceColumn, sourceRow);
+                backgroundSnapshot[y][x] = getBackgroundColor(sourceColumn, sourceRow);
+                foregroundPaletteSnapshot[y][x] = isForegroundFromPalette(sourceColumn, sourceRow);
+                backgroundPaletteSnapshot[y][x] = isBackgroundFromPalette(sourceColumn, sourceRow);
             }
         }
-        for (int y = 0; y < snapshot.length; y++) {
-            for (int x = 0; x < snapshot[y].length; x++) {
-                put(column + x + horizontalTranslation, row + y + verticalTranslation, snapshot[y][x]);
+        for (int y = 0; y < textSnapshot.length; y++) {
+            for (int x = 0; x < textSnapshot[y].length; x++) {
+                put(
+                    column + x + horizontalTranslation,
+                    row + y + verticalTranslation,
+                    textSnapshot[y][x],
+                    foregroundSnapshot[y][x],
+                    foregroundPaletteSnapshot[y][x],
+                    backgroundSnapshot[y][x],
+                    backgroundPaletteSnapshot[y][x]
+                );
             }
         }
     }
 
     void fill(final int column, final int row, final int width, final int height, final int value) {
+        fill(column, row, width, height, value, 0xFFFFFF, false, 0x000000, false);
+    }
+
+    void fill(final int column, final int row, final int width, final int height, final int value, final int foregroundColor, final boolean foregroundFromPalette, final int backgroundColor, final boolean backgroundFromPalette) {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                put(column + x, row + y, value);
+                put(column + x, row + y, value, foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
             }
         }
     }
 
     void set(final int column, final int row, final String value, final boolean vertical) {
+        set(column, row, value, vertical, 0xFFFFFF, false, 0x000000, false);
+    }
+
+    void set(final int column, final int row, final String value, final boolean vertical, final int foregroundColor, final boolean foregroundFromPalette, final int backgroundColor, final boolean backgroundFromPalette) {
         if (value == null) {
             return;
         }
@@ -60,7 +94,7 @@ final class TextBufferState {
         for (int index = 0; index < codePoints.length; index++) {
             final int x = vertical ? column : column + index;
             final int y = vertical ? row + index : row;
-            put(x, y, codePoints[index]);
+            put(x, y, codePoints[index], foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
         }
     }
 
@@ -77,7 +111,7 @@ final class TextBufferState {
         }
         for (int y = 0; y < text.length; y++) {
             for (int x = 0; x < text[y].length; x++) {
-                put(column + x, row + y, text[y][x]);
+                putText(column + x, row + y, text[y][x]);
             }
         }
     }
@@ -88,25 +122,33 @@ final class TextBufferState {
         }
         for (int y = 0; y < text.length; y++) {
             for (int x = 0; x < text[y].length; x++) {
-                put(column + x, row + y, text[y][x]);
+                putText(column + x, row + y, text[y][x]);
             }
         }
     }
 
     void rawSetForeground(final int column, final int row, final int[][] color) {
-        rawSetColor(foreground, column, row, color);
+        rawSetColor(foreground, foregroundPalette, column, row, color);
     }
 
     void rawSetBackground(final int column, final int row, final int[][] color) {
-        rawSetColor(background, column, row, color);
+        rawSetColor(background, backgroundPalette, column, row, color);
     }
 
     int getForegroundColor(final int column, final int row) {
         return isInside(column, row) ? foreground[row][column] : 0;
     }
 
+    boolean isForegroundFromPalette(final int column, final int row) {
+        return isInside(column, row) && foregroundPalette[row][column];
+    }
+
     int getBackgroundColor(final int column, final int row) {
         return isInside(column, row) ? background[row][column] : 0;
+    }
+
+    boolean isBackgroundFromPalette(final int column, final int row) {
+        return isInside(column, row) && backgroundPalette[row][column];
     }
 
     void load(final CompoundTag tag) {
@@ -117,6 +159,8 @@ final class TextBufferState {
         loadRows(rows, text);
         loadRows(tag.getList(TAG_FOREGROUND, IntArrayTag.TAG_INT_ARRAY), foreground);
         loadRows(tag.getList(TAG_BACKGROUND, IntArrayTag.TAG_INT_ARRAY), background);
+        loadBooleanRows(tag.getList(TAG_FOREGROUND_PALETTE, IntArrayTag.TAG_INT_ARRAY), foregroundPalette);
+        loadBooleanRows(tag.getList(TAG_BACKGROUND_PALETTE, IntArrayTag.TAG_INT_ARRAY), backgroundPalette);
     }
 
     void save(final CompoundTag tag) {
@@ -125,15 +169,31 @@ final class TextBufferState {
         tag.put(TAG_ROWS, saveRows(text));
         tag.put(TAG_FOREGROUND, saveRows(foreground));
         tag.put(TAG_BACKGROUND, saveRows(background));
+        tag.put(TAG_FOREGROUND_PALETTE, saveBooleanRows(foregroundPalette));
+        tag.put(TAG_BACKGROUND_PALETTE, saveBooleanRows(backgroundPalette));
     }
 
     private void put(final int column, final int row, final int value) {
+        put(column, row, value, 0xFFFFFF, false, 0x000000, false);
+    }
+
+    private void put(final int column, final int row, final int value, final int foregroundColor, final boolean foregroundFromPalette, final int backgroundColor, final boolean backgroundFromPalette) {
+        if (isInside(column, row)) {
+            text[row][column] = value;
+            foreground[row][column] = foregroundColor;
+            this.foregroundPalette[row][column] = foregroundFromPalette;
+            background[row][column] = backgroundColor;
+            this.backgroundPalette[row][column] = backgroundFromPalette;
+        }
+    }
+
+    private void putText(final int column, final int row, final int value) {
         if (isInside(column, row)) {
             text[row][column] = value;
         }
     }
 
-    private void rawSetColor(final int[][] target, final int column, final int row, final int[][] color) {
+    private void rawSetColor(final int[][] target, final boolean[][] paletteTarget, final int column, final int row, final int[][] color) {
         if (color == null) {
             return;
         }
@@ -143,6 +203,7 @@ final class TextBufferState {
                 final int targetY = row + y;
                 if (isInside(targetX, targetY)) {
                     target[targetY][targetX] = color[y][x];
+                    paletteTarget[targetY][targetX] = false;
                 }
             }
         }
@@ -157,10 +218,31 @@ final class TextBufferState {
         }
     }
 
+    private void loadBooleanRows(final ListTag rows, final boolean[][] target) {
+        for (int y = 0; y < Math.min(rows.size(), height); y++) {
+            final int[] row = rows.getIntArray(y);
+            for (int x = 0; x < Math.min(row.length, width); x++) {
+                target[y][x] = row[x] != 0;
+            }
+        }
+    }
+
     private ListTag saveRows(final int[][] source) {
         final ListTag rows = new ListTag();
         for (int y = 0; y < height; y++) {
             rows.add(new IntArrayTag(source[y]));
+        }
+        return rows;
+    }
+
+    private ListTag saveBooleanRows(final boolean[][] source) {
+        final ListTag rows = new ListTag();
+        for (int y = 0; y < height; y++) {
+            final int[] row = new int[width];
+            for (int x = 0; x < width; x++) {
+                row[x] = source[y][x] ? 1 : 0;
+            }
+            rows.add(new IntArrayTag(row));
         }
         return rows;
     }

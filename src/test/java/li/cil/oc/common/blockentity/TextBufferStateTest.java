@@ -10,30 +10,42 @@ final class TextBufferStateTest {
     void setWritesTextHorizontallyAndVertically() {
         TextBufferState buffer = new TextBufferState(4, 3);
 
-        buffer.set(0, 0, "ab", false);
-        buffer.set(3, 0, "xy", true);
+        buffer.set(0, 0, "ab", false, 0x112233, false, 0x445566, false);
+        buffer.set(3, 0, "xy", true, 0x778899, true, 0xAABBCC, true);
 
         assertEquals('a', buffer.getCodePoint(0, 0));
         assertEquals('b', buffer.getCodePoint(1, 0));
         assertEquals('x', buffer.getCodePoint(3, 0));
         assertEquals('y', buffer.getCodePoint(3, 1));
+        assertEquals(0x112233, buffer.getForegroundColor(0, 0));
+        assertEquals(0x445566, buffer.getBackgroundColor(1, 0));
+        assertEquals(0x778899, buffer.getForegroundColor(3, 0));
+        assertEquals(0xAABBCC, buffer.getBackgroundColor(3, 1));
+        assertEquals(false, buffer.isForegroundFromPalette(0, 0));
+        assertEquals(true, buffer.isForegroundFromPalette(3, 1));
+        assertEquals(false, buffer.isBackgroundFromPalette(1, 0));
+        assertEquals(true, buffer.isBackgroundFromPalette(3, 0));
     }
 
     @Test
     void fillWritesRectWithinBounds() {
         TextBufferState buffer = new TextBufferState(4, 3);
 
-        buffer.fill(1, 1, 5, 5, 'z');
+        buffer.fill(1, 1, 5, 5, 'z', 0x112233, true, 0x445566, false);
 
         assertEquals(' ', buffer.getCodePoint(0, 0));
         assertEquals('z', buffer.getCodePoint(1, 1));
         assertEquals('z', buffer.getCodePoint(3, 2));
+        assertEquals(0x112233, buffer.getForegroundColor(1, 1));
+        assertEquals(0x445566, buffer.getBackgroundColor(3, 2));
+        assertEquals(true, buffer.isForegroundFromPalette(3, 2));
+        assertEquals(false, buffer.isBackgroundFromPalette(1, 1));
     }
 
     @Test
     void copyMovesRectWithOverlap() {
         TextBufferState buffer = new TextBufferState(5, 1);
-        buffer.set(0, 0, "abcd", false);
+        buffer.set(0, 0, "abcd", false, 0x112233, true, 0x445566, false);
 
         buffer.copy(0, 0, 4, 1, 1, 0);
 
@@ -41,13 +53,17 @@ final class TextBufferStateTest {
         assertEquals('b', buffer.getCodePoint(2, 0));
         assertEquals('c', buffer.getCodePoint(3, 0));
         assertEquals('d', buffer.getCodePoint(4, 0));
+        assertEquals(0x112233, buffer.getForegroundColor(4, 0));
+        assertEquals(0x445566, buffer.getBackgroundColor(4, 0));
+        assertEquals(true, buffer.isForegroundFromPalette(4, 0));
+        assertEquals(false, buffer.isBackgroundFromPalette(4, 0));
     }
 
     @Test
     void saveAndLoadPreservesText() {
         TextBufferState saved = new TextBufferState(3, 2);
-        saved.set(0, 0, "abc", false);
-        saved.set(0, 1, "xy", false);
+        saved.set(0, 0, "abc", false, 0xFFFFFF, false, 0x000000, false);
+        saved.set(0, 1, "xy", false, 0xFFFFFF, false, 0x000000, false);
         CompoundTag tag = new CompoundTag();
 
         saved.save(tag);

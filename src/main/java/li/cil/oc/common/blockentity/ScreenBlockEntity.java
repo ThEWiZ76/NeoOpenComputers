@@ -243,13 +243,13 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Override
     public void fill(final int column, final int row, final int width, final int height, final int value) {
-        buffer.fill(column, row, width, height, value);
+        buffer.fill(column, row, width, height, value, foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
         setChanged();
     }
 
     @Override
     public void set(final int column, final int row, final String value, final boolean vertical) {
-        buffer.set(column, row, value, vertical);
+        buffer.set(column, row, value, vertical, foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
         setChanged();
     }
 
@@ -265,24 +265,22 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Override
     public int getForegroundColor(final int column, final int row) {
-        final int cellColor = buffer.getForegroundColor(column, row);
-        return cellColor == 0 ? foregroundColor : cellColor;
+        return buffer.getForegroundColor(column, row);
     }
 
     @Override
     public boolean isForegroundFromPalette(final int column, final int row) {
-        return foregroundFromPalette;
+        return buffer.isForegroundFromPalette(column, row);
     }
 
     @Override
     public int getBackgroundColor(final int column, final int row) {
-        final int cellColor = buffer.getBackgroundColor(column, row);
-        return cellColor == 0 ? backgroundColor : cellColor;
+        return buffer.getBackgroundColor(column, row);
     }
 
     @Override
     public boolean isBackgroundFromPalette(final int column, final int row) {
-        return backgroundFromPalette;
+        return buffer.isBackgroundFromPalette(column, row);
     }
 
     @Override
