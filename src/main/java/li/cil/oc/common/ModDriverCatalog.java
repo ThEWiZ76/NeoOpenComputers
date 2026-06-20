@@ -5,6 +5,7 @@ import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.common.driver.ComputerCaseBlockDriver;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
+import li.cil.oc.common.driver.DiskDriveContainerDriver;
 import li.cil.oc.common.driver.InventoryBlockDriver;
 import li.cil.oc.common.driver.ScreenBlockDriver;
 
@@ -19,6 +20,7 @@ public final class ModDriverCatalog {
                 ModItems.BATTERY_UPGRADE_TIER1.get(), ModItems.BATTERY_UPGRADE_TIER2.get(), ModItems.BATTERY_UPGRADE_TIER3.get(),
                 ModItems.DATA_CARD_TIER1.get(), ModItems.DATA_CARD_TIER2.get(), ModItems.DATA_CARD_TIER3.get(),
                 ModItems.DATABASE_UPGRADE_TIER1.get(), ModItems.DATABASE_UPGRADE_TIER2.get(), ModItems.DATABASE_UPGRADE_TIER3.get(),
+                new DiskDriveContainerDriver(),
                 ModItems.MEMORY_TIER1.get(), ModItems.MEMORY_TIER2.get(), ModItems.MEMORY_TIER3.get(),
                 ModItems.HDD_TIER1.get(), ModItems.HDD_TIER2.get(), ModItems.HDD_TIER3.get(),
                 ModItems.HOVER_UPGRADE_TIER1.get(), ModItems.HOVER_UPGRADE_TIER2.get(),

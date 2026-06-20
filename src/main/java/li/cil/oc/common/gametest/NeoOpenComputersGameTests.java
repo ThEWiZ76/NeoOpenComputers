@@ -191,6 +191,7 @@ public final class NeoOpenComputersGameTests {
         assertContainerCapability(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER1.get()), li.cil.oc.api.driver.item.Slot.Card, 0);
         assertContainerCapability(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER2.get()), li.cil.oc.api.driver.item.Slot.Card, 1);
         assertContainerCapability(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER3.get()), li.cil.oc.api.driver.item.Slot.Card, 2);
+        assertContainerCapability(helper, new ItemStack(ModItems.DISK_DRIVE.get()), li.cil.oc.api.driver.item.Slot.Floppy, Integer.MAX_VALUE);
         assertContainerCapability(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER1.get()), li.cil.oc.api.driver.item.Slot.Upgrade, 0);
         assertContainerCapability(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER2.get()), li.cil.oc.api.driver.item.Slot.Upgrade, 1);
         assertContainerCapability(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER3.get()), li.cil.oc.api.driver.item.Slot.Upgrade, 2);
