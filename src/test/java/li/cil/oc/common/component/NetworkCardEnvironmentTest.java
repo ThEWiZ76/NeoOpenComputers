@@ -20,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -126,6 +127,18 @@ final class NetworkCardEnvironmentTest {
         assertArrayEquals(new Object[]{16D}, card.getStrength(null, new TestArguments()));
         assertArrayEquals(new Object[]{8D}, card.setStrength(null, new TestArguments(8D)));
         assertArrayEquals(new Object[]{16D}, card.setStrength(null, new TestArguments(900D)));
+    }
+
+    @Test
+    void tierOneWirelessCardAllowsOnlyOneOpenPort() throws Exception {
+        OpenComputersApi.initialize();
+        WirelessNetworkCardEnvironment card = new WirelessNetworkCardEnvironment(new TestHost(), 0);
+
+        assertArrayEquals(new Object[]{true}, card.open(null, new TestArguments(100)));
+        IOException error = assertThrows(IOException.class, () -> card.open(null, new TestArguments(101)));
+
+        assertEquals("too many open ports", error.getMessage());
+        assertEquals("1", card.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Size));
     }
 
     @Test

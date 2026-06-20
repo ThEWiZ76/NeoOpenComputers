@@ -28,7 +28,7 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
         DeviceInfo.DeviceAttribute.Product, "39i110 (LPPW-01)",
         DeviceInfo.DeviceAttribute.Version, "1.0",
         DeviceInfo.DeviceAttribute.Capacity, "8192",
-        DeviceInfo.DeviceAttribute.Size, "16",
+        DeviceInfo.DeviceAttribute.Size, "1",
         DeviceInfo.DeviceAttribute.Width, "16.0"
     );
     private static final Map<String, String> TIER2_DEVICE_INFO = Map.of(
@@ -108,6 +108,11 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
     @Override
     public Object[] isWired(final Context context, final Arguments args) {
         return new Object[]{isWiredTier()};
+    }
+
+    @Override
+    protected int maxOpenPorts() {
+        return tier == 0 ? 1 : 16;
     }
 
     @Override

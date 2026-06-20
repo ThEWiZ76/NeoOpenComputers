@@ -68,7 +68,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         if (openPorts.contains(port)) {
             return new Object[]{false};
         }
-        if (openPorts.size() >= MAX_OPEN_PORTS) {
+        if (openPorts.size() >= maxOpenPorts()) {
             throw new IOException("too many open ports");
         }
         openPorts.add(port);
@@ -206,6 +206,10 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         if (host != null) {
             host.markChanged();
         }
+    }
+
+    protected int maxOpenPorts() {
+        return MAX_OPEN_PORTS;
     }
 
     private boolean isOwnComputerMessage(final Message message) {
