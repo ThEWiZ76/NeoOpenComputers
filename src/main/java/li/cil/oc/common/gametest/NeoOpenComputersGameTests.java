@@ -240,6 +240,30 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tabletItemAssemblesFromCaseAndComponents(final GameTestHelper helper) {
+        final TabletItem tablet = ModItems.TABLET.get();
+        final ItemStack container = new ItemStack(ModItems.CARD_CONTAINER_TIER1.get());
+        final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
+        final ItemStack memory = new ItemStack(ModItems.MEMORY_TIER1.get());
+
+        final ItemStack stack = tablet.assembleFromCase(
+            new ItemStack(ModItems.TABLET_CASE_TIER2.get()),
+            container,
+            cpu,
+            memory);
+
+        helper.assertTrue(stack.is(ModItems.TABLET.get()), "Assembler did not create tablet item");
+        helper.assertTrue(tablet.tier(stack) == 1, "Assembled tablet tier did not match case");
+        helper.assertTrue(tablet.maxCharge(stack) > 0D, "Assembled tablet has no energy capacity");
+        helper.assertTrue(tablet.getCharge(stack) == tablet.maxCharge(stack), "Assembled tablet should start fully charged");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(container, tablet.getContainer(stack)), "Assembled tablet container missing");
+        helper.assertTrue(tablet.getComponent(stack, 0).is(ModItems.SCREEN_TIER1.get()), "Assembled tablet screen missing");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(cpu, tablet.getComponent(stack, 1)), "Assembled tablet CPU missing");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(memory, tablet.getComponent(stack, 2)), "Assembled tablet memory missing");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredComponentItemsExposeTierCapabilities(final GameTestHelper helper) {
         assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER1.get()), 8);
         assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER2.get()), 12);

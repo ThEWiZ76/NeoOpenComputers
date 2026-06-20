@@ -1,6 +1,8 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.item.Chargeable;
+import li.cil.oc.api.internal.Tiered;
+import li.cil.oc.common.ModItems;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -13,6 +15,7 @@ import net.minecraft.world.item.component.CustomData;
 
 public class TabletItem extends Item implements Chargeable {
     public static final int COMPONENT_SLOTS = 32;
+    public static final double DEFAULT_MAX_CHARGE = 10000D;
 
     private static final String DATA_TAG = "oc:tablet";
     private static final String ENERGY_TAG = "energy";
@@ -92,6 +95,21 @@ public class TabletItem extends Item implements Chargeable {
         data.putDouble(MAX_ENERGY_TAG, maxCharge);
         data.putDouble(ENERGY_TAG, Math.max(0D, Math.min(data.getDouble(ENERGY_TAG), maxCharge)));
         writeData(stack, data);
+    }
+
+    public ItemStack assembleFromCase(final ItemStack caseStack, final ItemStack container, final ItemStack... components) {
+        final ItemStack stack = new ItemStack(this);
+        setTier(stack, caseTier(caseStack));
+        setContainer(stack, container);
+        setMaxCharge(stack, DEFAULT_MAX_CHARGE);
+        setCharge(stack, DEFAULT_MAX_CHARGE);
+        setComponent(stack, 0, new ItemStack(ModItems.SCREEN_TIER1.get()));
+        if (components != null) {
+            for (int index = 0; index < components.length && index + 1 < COMPONENT_SLOTS; index++) {
+                setComponent(stack, index + 1, components[index]);
+            }
+        }
+        return stack;
     }
 
     public int tier(final ItemStack stack) {
@@ -203,5 +221,12 @@ public class TabletItem extends Item implements Chargeable {
             return ItemStack.EMPTY;
         }
         return ItemStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, tag).result().orElse(ItemStack.EMPTY);
+    }
+
+    private static int caseTier(final ItemStack caseStack) {
+        if (caseStack != null && caseStack.getItem() instanceof Tiered tiered) {
+            return tiered.tier();
+        }
+        return 0;
     }
 }
