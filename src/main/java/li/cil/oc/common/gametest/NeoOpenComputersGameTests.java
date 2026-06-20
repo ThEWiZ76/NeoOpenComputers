@@ -1612,6 +1612,24 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void tabletItemAnalyzesBlockWithInstalledNavigationUpgrade(final GameTestHelper helper) {
+        final BlockPos targetPos = new BlockPos(3, 2, 4);
+        final BlockPos absoluteTargetPos = helper.absolutePos(targetPos);
+        helper.setBlock(targetPos, Blocks.STONE);
+
+        final TabletItem tablet = ModItems.TABLET.get();
+        final ItemStack stack = new ItemStack(tablet);
+        tablet.setRunning(stack, true);
+        tablet.setComponent(stack, 1, new ItemStack(ModItems.NAVIGATION_UPGRADE.get()));
+
+        final CompoundTag result = tablet.analyzeBlock(stack, helper.getLevel(), null, absoluteTargetPos, Direction.NORTH, 0.5F, 0.5F, 0.5F);
+        helper.assertTrue(result.getInt("posX") == absoluteTargetPos.getX(), "Tablet navigation analysis did not collect target X");
+        helper.assertTrue(result.getInt("posY") == absoluteTargetPos.getY(), "Tablet navigation analysis did not collect target Y");
+        helper.assertTrue(result.getInt("posZ") == absoluteTargetPos.getZ(), "Tablet navigation analysis did not collect target Z");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void inventoryControllerStoresStacksInDatabase(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);

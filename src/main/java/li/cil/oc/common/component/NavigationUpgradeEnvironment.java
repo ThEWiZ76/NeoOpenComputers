@@ -8,11 +8,13 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.blockentity.WaypointBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -46,6 +48,21 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
     @Override
     public Map<String, String> getDeviceInfo() {
         return DEVICE_INFO;
+    }
+
+    @Override
+    public void onMessage(final Message message) {
+        super.onMessage(message);
+        if (message == null || !"tablet.use".equals(message.name())) {
+            return;
+        }
+        final Object[] data = message.data();
+        if (data.length < 4 || !(data[0] instanceof CompoundTag nbt) || !(data[3] instanceof BlockPos blockPos)) {
+            return;
+        }
+        nbt.putInt("posX", blockPos.getX());
+        nbt.putInt("posY", blockPos.getY());
+        nbt.putInt("posZ", blockPos.getZ());
     }
 
     @Callback(direct = true, doc = "function():number, number, number -- Returns the current absolute position.")
