@@ -12,6 +12,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.AbstractValue;
@@ -34,6 +35,8 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     private static final String HANDLES_TAG = "handles";
     private static final int MAX_OPEN_HANDLES = 16;
     private static final int MAX_READ_BUFFER = 2048;
+    private static final double HDD_READ_COST = 0.1D / 1024.0D;
+    private static final double HDD_WRITE_COST = 0.25D / 1024.0D;
     private static final double[] READ_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
     private static final double[] SEEK_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
     private static final double[] WRITE_COSTS = {1.0D / 1.0D, 1.0D / 2.0D, 1.0D / 3.0D, 1.0D / 4.0D, 1.0D / 5.0D, 1.0D / 6.0D};
@@ -193,6 +196,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         if (read < 0) {
             return new Object[]{null};
         }
+        consumeEnergy(context, HDD_READ_COST * read);
         if (read == buffer.length) {
             return new Object[]{buffer};
         }
@@ -223,7 +227,9 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         consumeCallBudget(context, WRITE_COSTS[speed - 1]);
         final int handleId = checkHandle(arguments, 0);
         checkOwner(context, handleId);
-        getHandle(handleId).write(arguments.checkByteArray(1));
+        final byte[] value = arguments.checkByteArray(1);
+        consumeEnergy(context, HDD_WRITE_COST * value.length);
+        getHandle(handleId).write(value);
         return new Object[]{true};
     }
 
@@ -467,6 +473,12 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     private static void consumeCallBudget(final Context context, final double cost) {
         if (context != null) {
             context.consumeCallBudget(cost);
+        }
+    }
+
+    private static void consumeEnergy(final Context context, final double cost) throws IOException {
+        if (context != null && context.node() instanceof Connector connector && !connector.tryChangeBuffer(-cost)) {
+            throw new IOException("not enough energy");
         }
     }
 

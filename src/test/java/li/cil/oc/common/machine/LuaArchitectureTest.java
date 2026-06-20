@@ -931,6 +931,8 @@ final class LuaArchitectureTest {
     void invokesRealFilesystemComponentFromLua() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
+        ((Connector) machine.node()).setLocalBufferSize(1);
+        ((Connector) machine.node()).changeBuffer(1);
         FileSystem fileSystem = API.fileSystem.fromMemory(512);
         ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Network.joinNewNetwork(machine.node());

@@ -3,7 +3,10 @@ package li.cil.oc.common;
 import li.cil.oc.api.API;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.Component;
+import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.fs.FileSystem;
@@ -274,6 +277,29 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentConsumesEnergyForIo() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+        RecordingEnvironment contextEnvironment = new RecordingEnvironment();
+        Connector connector = (Connector) API.network.newNode(contextEnvironment, Visibility.Network).withConnector(1).create();
+        contextEnvironment.node = connector;
+        connector.changeBuffer(1);
+        RecordingContext context = new RecordingContext(connector);
+        byte[] data = new byte[1024];
+        java.util.Arrays.fill(data, (byte) 'x');
+
+        Object writeHandle = component.invoke("open", context, "data.txt", "w")[0];
+        assertArrayEquals(new Object[]{true}, component.invoke("write", context, writeHandle, data));
+        component.invoke("close", context, writeHandle);
+        Object readHandle = component.invoke("open", context, "data.txt", "r")[0];
+        component.invoke("read", context, readHandle, data.length);
+
+        assertEquals(0.65D, connector.localBuffer(), 0.000_001D);
+    }
+
+    @Test
     void managedFileSystemEnvironmentRejectsHandlesOwnedByAnotherContext() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(256);
@@ -403,11 +429,15 @@ final class FileSystemRegistryTest {
         private final Node node;
 
         private RecordingContext() {
-            this(null);
+            this((Node) null);
         }
 
         private RecordingContext(final String address) {
-            this.node = address == null ? null : TestNodes.node(address);
+            this(address == null ? null : TestNodes.node(address));
+        }
+
+        private RecordingContext(final Node node) {
+            this.node = node;
         }
 
         @Override
@@ -453,6 +483,27 @@ final class FileSystemRegistryTest {
         @Override
         public boolean signal(final String name, final Object... args) {
             return true;
+        }
+    }
+
+    private static final class RecordingEnvironment implements Environment {
+        private Node node;
+
+        @Override
+        public Node node() {
+            return node;
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
         }
     }
 }
