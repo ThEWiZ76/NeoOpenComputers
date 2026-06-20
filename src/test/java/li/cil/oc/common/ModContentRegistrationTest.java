@@ -176,6 +176,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void linkedCardItemIdIsStable() {
+        assertEquals("linked_card", ModContentIds.LINKED_CARD);
+    }
+
+    @Test
     void computerCaseMenuIdIsStable() {
         assertEquals("computer_case", ModContentIds.COMPUTER_CASE_MENU);
     }

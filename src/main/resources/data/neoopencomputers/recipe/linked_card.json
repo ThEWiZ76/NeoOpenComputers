@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
+    },
+    "N": {
+      "item": "neoopencomputers:network_card"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "DND",
+    "RER",
+    "DND"
+  ],
+  "result": {
+    "count": 2,
+    "id": "neoopencomputers:linked_card"
+  }
+}

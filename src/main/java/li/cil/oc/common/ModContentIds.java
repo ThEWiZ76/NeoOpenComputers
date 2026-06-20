@@ -30,6 +30,7 @@ public final class ModContentIds {
     public static final String INVENTORY_CONTROLLER_UPGRADE = "inventory_controller_upgrade";
     public static final String KEYBOARD = "keyboard";
     public static final String KEYBOARD_BLOCK_ENTITY = "keyboard";
+    public static final String LINKED_CARD = "linked_card";
     public static final String MAIN_CREATIVE_TAB = "main";
     public static final String MANUAL = "manual";
     public static final String MEMORY_TIER1 = "memory_tier1";

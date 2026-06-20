@@ -8,6 +8,7 @@ import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
 import li.cil.oc.common.item.InventoryControllerUpgradeItem;
+import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.RedstoneCardItem;
@@ -104,6 +105,10 @@ public final class ModItems {
     public static final DeferredItem<InventoryControllerUpgradeItem> INVENTORY_CONTROLLER_UPGRADE = ITEMS.register(
         ModContentIds.INVENTORY_CONTROLLER_UPGRADE,
         () -> new InventoryControllerUpgradeItem(new Item.Properties()));
+
+    public static final DeferredItem<LinkedCardItem> LINKED_CARD = ITEMS.register(
+        ModContentIds.LINKED_CARD,
+        () -> new LinkedCardItem(new Item.Properties()));
 
     public static final DeferredItem<Item> MANUAL = ITEMS.registerSimpleItem(ModContentIds.MANUAL, new Item.Properties());
 
