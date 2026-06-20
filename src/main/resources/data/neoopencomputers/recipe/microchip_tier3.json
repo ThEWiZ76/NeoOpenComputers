@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "D": {
+      "tag": "c:gems/diamond"
+    }
+  },
+  "pattern": [
+    "DCD",
+    "CBC",
+    "DCD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:microchip_tier3"
+  }
+}

@@ -83,6 +83,24 @@ public final class ModItems {
         ModContentIds.HOLOGRAM_TIER2,
         ModBlocks.HOLOGRAM_TIER2);
 
+    public static final DeferredItem<Item> CUTTING_WIRE = ITEMS.registerSimpleItem(ModContentIds.CUTTING_WIRE, new Item.Properties());
+    public static final DeferredItem<Item> ACID = ITEMS.registerSimpleItem(ModContentIds.ACID, new Item.Properties());
+    public static final DeferredItem<Item> RAW_CIRCUIT_BOARD = ITEMS.registerSimpleItem(ModContentIds.RAW_CIRCUIT_BOARD, new Item.Properties());
+    public static final DeferredItem<Item> CIRCUIT_BOARD = ITEMS.registerSimpleItem(ModContentIds.CIRCUIT_BOARD, new Item.Properties());
+    public static final DeferredItem<Item> PRINTED_CIRCUIT_BOARD = ITEMS.registerSimpleItem(ModContentIds.PRINTED_CIRCUIT_BOARD, new Item.Properties());
+    public static final DeferredItem<Item> CARD = ITEMS.registerSimpleItem(ModContentIds.CARD, new Item.Properties());
+    public static final DeferredItem<Item> TRANSISTOR = ITEMS.registerSimpleItem(ModContentIds.TRANSISTOR, new Item.Properties());
+    public static final DeferredItem<Item> MICROCHIP_TIER1 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER1, new Item.Properties());
+    public static final DeferredItem<Item> MICROCHIP_TIER2 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER2, new Item.Properties());
+    public static final DeferredItem<Item> MICROCHIP_TIER3 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER3, new Item.Properties());
+    public static final DeferredItem<Item> ALU = ITEMS.registerSimpleItem(ModContentIds.ALU, new Item.Properties());
+    public static final DeferredItem<Item> CONTROL_UNIT = ITEMS.registerSimpleItem(ModContentIds.CONTROL_UNIT, new Item.Properties());
+    public static final DeferredItem<Item> DISK_PLATTER = ITEMS.registerSimpleItem(ModContentIds.DISK_PLATTER, new Item.Properties());
+    public static final DeferredItem<Item> INTERWEB = ITEMS.registerSimpleItem(ModContentIds.INTERWEB, new Item.Properties());
+    public static final DeferredItem<Item> BUTTON_GROUP = ITEMS.registerSimpleItem(ModContentIds.BUTTON_GROUP, new Item.Properties());
+    public static final DeferredItem<Item> ARROW_KEYS = ITEMS.registerSimpleItem(ModContentIds.ARROW_KEYS, new Item.Properties());
+    public static final DeferredItem<Item> NUM_PAD = ITEMS.registerSimpleItem(ModContentIds.NUM_PAD, new Item.Properties());
+
     public static final DeferredItem<BatteryUpgradeItem> BATTERY_UPGRADE_TIER1 = ITEMS.register(
         ModContentIds.BATTERY_UPGRADE_TIER1,
         () -> new BatteryUpgradeItem(new Item.Properties(), 0));

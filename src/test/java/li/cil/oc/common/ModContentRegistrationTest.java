@@ -2,6 +2,8 @@ package li.cil.oc.common;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class ModContentRegistrationTest {
@@ -33,6 +35,30 @@ final class ModContentRegistrationTest {
     @Test
     void assemblerBlockEntityIdIsStable() {
         assertEquals("assembler", ModContentIds.ASSEMBLER_BLOCK_ENTITY);
+    }
+
+    @Test
+    void materialItemIdsAreStable() {
+        Map<String, String> ids = Map.ofEntries(
+            Map.entry("cutting_wire", ModContentIds.CUTTING_WIRE),
+            Map.entry("acid", ModContentIds.ACID),
+            Map.entry("raw_circuit_board", ModContentIds.RAW_CIRCUIT_BOARD),
+            Map.entry("circuit_board", ModContentIds.CIRCUIT_BOARD),
+            Map.entry("printed_circuit_board", ModContentIds.PRINTED_CIRCUIT_BOARD),
+            Map.entry("card", ModContentIds.CARD),
+            Map.entry("transistor", ModContentIds.TRANSISTOR),
+            Map.entry("microchip_tier1", ModContentIds.MICROCHIP_TIER1),
+            Map.entry("microchip_tier2", ModContentIds.MICROCHIP_TIER2),
+            Map.entry("microchip_tier3", ModContentIds.MICROCHIP_TIER3),
+            Map.entry("alu", ModContentIds.ALU),
+            Map.entry("control_unit", ModContentIds.CONTROL_UNIT),
+            Map.entry("disk_platter", ModContentIds.DISK_PLATTER),
+            Map.entry("interweb", ModContentIds.INTERWEB),
+            Map.entry("button_group", ModContentIds.BUTTON_GROUP),
+            Map.entry("arrow_keys", ModContentIds.ARROW_KEYS),
+            Map.entry("num_pad", ModContentIds.NUM_PAD));
+
+        ids.forEach((expected, actual) -> assertEquals(expected, actual));
     }
 
     @Test

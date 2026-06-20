@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "T": {
+      "item": "neoopencomputers:transistor"
+    }
+  },
+  "pattern": [
+    "TRT",
+    "RBR",
+    "TRT"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:microchip_tier1"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "G": {
+      "tag": "c:nuggets/gold"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "RGR",
+    "GCG",
+    "RGR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:alu"
+  }
+}

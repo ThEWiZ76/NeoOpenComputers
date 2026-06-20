@@ -7,6 +7,40 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 final class ModContentCatalogTest {
     @Test
+    void registersMaterialApiItemNames() {
+        final ItemRegistry registry = new ItemRegistry();
+
+        ModContentCatalog.registerMaterialItems(
+            registry,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+
+        assertNotNull(registry.get(ModContentIds.TRANSISTOR));
+        assertNotNull(registry.get(ModContentIds.PRINTED_CIRCUIT_BOARD));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_MATERIAL_CARD));
+        assertEquals(ModContentIds.TRANSISTOR, registry.get(ModContentIds.TRANSISTOR).name());
+        assertEquals(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR, registry.get(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR).name());
+        assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1).name());
+    }
+
+    @Test
     void registersInitialApiItemNames() {
         final ItemRegistry registry = new ItemRegistry();
 

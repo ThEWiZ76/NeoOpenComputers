@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": {
+      "tag": "c:nuggets/gold"
+    },
+    "I": {
+      "tag": "c:nuggets/iron"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    " R ",
+    "GIG",
+    " I "
+  ],
+  "result": {
+    "count": 2,
+    "id": "neoopencomputers:transistor"
+  }
+}

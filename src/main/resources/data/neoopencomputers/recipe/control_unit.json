@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "A": {
+      "item": "neoopencomputers:alu"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "CRC",
+    "RAR",
+    "CRC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:control_unit"
+  }
+}

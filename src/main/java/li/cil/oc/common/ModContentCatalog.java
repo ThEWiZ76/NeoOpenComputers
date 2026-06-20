@@ -8,6 +8,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_BATTERY_UPGRADE_TIER1 = "batteryUpgrade1";
     public static final String COMPAT_BATTERY_UPGRADE_TIER2 = "batteryUpgrade2";
     public static final String COMPAT_BATTERY_UPGRADE_TIER3 = "batteryUpgrade3";
+    public static final String COMPAT_CIRCUIT_CHIP_TIER1 = "circuitChip1";
+    public static final String COMPAT_CIRCUIT_CHIP_TIER2 = "circuitChip2";
+    public static final String COMPAT_CIRCUIT_CHIP_TIER3 = "circuitChip3";
     public static final String COMPAT_CARD_CONTAINER_TIER1 = "cardcontainer1";
     public static final String COMPAT_CARD_CONTAINER_TIER2 = "cardcontainer2";
     public static final String COMPAT_CARD_CONTAINER_TIER3 = "cardcontainer3";
@@ -57,6 +60,20 @@ public final class ModContentCatalog {
     public static final String COMPAT_SCREEN_TIER1 = "screen1";
     public static final String COMPAT_SCREEN_TIER2 = "screen2";
     public static final String COMPAT_SCREEN_TIER3 = "screen3";
+    public static final String COMPAT_MATERIAL_ACID = "materialAcid";
+    public static final String COMPAT_MATERIAL_ALU = "materialALU";
+    public static final String COMPAT_MATERIAL_ARROW_KEY = "materialArrowKey";
+    public static final String COMPAT_MATERIAL_BUTTON_GROUP = "materialButtonGroup";
+    public static final String COMPAT_MATERIAL_CARD = "materialCard";
+    public static final String COMPAT_MATERIAL_CIRCUIT_BOARD = "materialCircuitBoard";
+    public static final String COMPAT_MATERIAL_CIRCUIT_BOARD_PRINTED = "materialCircuitBoardPrinted";
+    public static final String COMPAT_MATERIAL_CIRCUIT_BOARD_RAW = "materialCircuitBoardRaw";
+    public static final String COMPAT_MATERIAL_CONTROL_UNIT = "materialCU";
+    public static final String COMPAT_MATERIAL_CUTTING_WIRE = "materialCuttingWire";
+    public static final String COMPAT_MATERIAL_DISK = "materialDisk";
+    public static final String COMPAT_MATERIAL_INTERWEB = "materialInterweb";
+    public static final String COMPAT_MATERIAL_NUM_PAD = "materialNumPad";
+    public static final String COMPAT_MATERIAL_TRANSISTOR = "materialTransistor";
 
     public static void registerDefaults() {
         if (API.items instanceof ItemRegistry registry) {
@@ -148,7 +165,81 @@ public final class ModContentCatalog {
                 ModItems.UPGRADE_CONTAINER_TIER1.get(),
                 ModItems.UPGRADE_CONTAINER_TIER2.get(),
                 ModItems.UPGRADE_CONTAINER_TIER3.get());
+            registerMaterialItems(
+                registry,
+                ModItems.CUTTING_WIRE.get(),
+                ModItems.ACID.get(),
+                ModItems.RAW_CIRCUIT_BOARD.get(),
+                ModItems.CIRCUIT_BOARD.get(),
+                ModItems.PRINTED_CIRCUIT_BOARD.get(),
+                ModItems.CARD.get(),
+                ModItems.TRANSISTOR.get(),
+                ModItems.MICROCHIP_TIER1.get(),
+                ModItems.MICROCHIP_TIER2.get(),
+                ModItems.MICROCHIP_TIER3.get(),
+                ModItems.ALU.get(),
+                ModItems.CONTROL_UNIT.get(),
+                ModItems.DISK_PLATTER.get(),
+                ModItems.INTERWEB.get(),
+                ModItems.BUTTON_GROUP.get(),
+                ModItems.ARROW_KEYS.get(),
+                ModItems.NUM_PAD.get());
         }
+    }
+
+    static void registerMaterialItems(
+        final ItemRegistry registry,
+        final Item cuttingWireItem,
+        final Item acidItem,
+        final Item rawCircuitBoardItem,
+        final Item circuitBoardItem,
+        final Item printedCircuitBoardItem,
+        final Item cardItem,
+        final Item transistorItem,
+        final Item microchipTier1Item,
+        final Item microchipTier2Item,
+        final Item microchipTier3Item,
+        final Item aluItem,
+        final Item controlUnitItem,
+        final Item diskPlatterItem,
+        final Item interwebItem,
+        final Item buttonGroupItem,
+        final Item arrowKeysItem,
+        final Item numPadItem) {
+        registry.register(ModContentIds.CUTTING_WIRE, null, cuttingWireItem);
+        registry.register(ModContentIds.ACID, null, acidItem);
+        registry.register(ModContentIds.RAW_CIRCUIT_BOARD, null, rawCircuitBoardItem);
+        registry.register(ModContentIds.CIRCUIT_BOARD, null, circuitBoardItem);
+        registry.register(ModContentIds.PRINTED_CIRCUIT_BOARD, null, printedCircuitBoardItem);
+        registry.register(ModContentIds.CARD, null, cardItem);
+        registry.register(ModContentIds.TRANSISTOR, null, transistorItem);
+        registry.register(ModContentIds.MICROCHIP_TIER1, null, microchipTier1Item);
+        registry.register(ModContentIds.MICROCHIP_TIER2, null, microchipTier2Item);
+        registry.register(ModContentIds.MICROCHIP_TIER3, null, microchipTier3Item);
+        registry.register(ModContentIds.ALU, null, aluItem);
+        registry.register(ModContentIds.CONTROL_UNIT, null, controlUnitItem);
+        registry.register(ModContentIds.DISK_PLATTER, null, diskPlatterItem);
+        registry.register(ModContentIds.INTERWEB, null, interwebItem);
+        registry.register(ModContentIds.BUTTON_GROUP, null, buttonGroupItem);
+        registry.register(ModContentIds.ARROW_KEYS, null, arrowKeysItem);
+        registry.register(ModContentIds.NUM_PAD, null, numPadItem);
+        registry.register(COMPAT_MATERIAL_CUTTING_WIRE, null, cuttingWireItem);
+        registry.register(COMPAT_MATERIAL_ACID, null, acidItem);
+        registry.register(COMPAT_MATERIAL_CIRCUIT_BOARD_RAW, null, rawCircuitBoardItem);
+        registry.register(COMPAT_MATERIAL_CIRCUIT_BOARD, null, circuitBoardItem);
+        registry.register(COMPAT_MATERIAL_CIRCUIT_BOARD_PRINTED, null, printedCircuitBoardItem);
+        registry.register(COMPAT_MATERIAL_CARD, null, cardItem);
+        registry.register(COMPAT_MATERIAL_TRANSISTOR, null, transistorItem);
+        registry.register(COMPAT_CIRCUIT_CHIP_TIER1, null, microchipTier1Item);
+        registry.register(COMPAT_CIRCUIT_CHIP_TIER2, null, microchipTier2Item);
+        registry.register(COMPAT_CIRCUIT_CHIP_TIER3, null, microchipTier3Item);
+        registry.register(COMPAT_MATERIAL_ALU, null, aluItem);
+        registry.register(COMPAT_MATERIAL_CONTROL_UNIT, null, controlUnitItem);
+        registry.register(COMPAT_MATERIAL_DISK, null, diskPlatterItem);
+        registry.register(COMPAT_MATERIAL_INTERWEB, null, interwebItem);
+        registry.register(COMPAT_MATERIAL_BUTTON_GROUP, null, buttonGroupItem);
+        registry.register(COMPAT_MATERIAL_ARROW_KEY, null, arrowKeysItem);
+        registry.register(COMPAT_MATERIAL_NUM_PAD, null, numPadItem);
     }
 
     static void register(
