@@ -16,6 +16,7 @@ import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
@@ -118,6 +119,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.NAVIGATION_UPGRADE.get();
         ModItems.NETWORK_CARD.get();
         ModItems.REDSTONE_IO.get();
+        ModItems.SOLAR_GENERATOR_UPGRADE.get();
         ModItems.TANK_UPGRADE.get();
         ModItems.TRANSPOSER.get();
         ModItems.WAYPOINT.get();
@@ -154,6 +156,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.INTERNET_CARD.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.SOLAR_GENERATOR_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
@@ -179,6 +182,7 @@ public final class NeoOpenComputersGameTests {
         assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER2.get()), 15000D);
         assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER3.get()), 20000D);
         assertInventoryCapacity(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()), 16);
+        assertSolarGenerator(helper, new ItemStack(ModItems.SOLAR_GENERATOR_UPGRADE.get()));
         assertTankCapacity(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 16000);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), false, 16D);
         assertWirelessModem(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), true, 400D);
@@ -1081,6 +1085,20 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(inventory.inventoryCapacity(stack) == capacity, "Expected " + stack + " inventory capacity " + capacity + " but got " + inventory.inventoryCapacity(stack));
     }
 
+    private static void assertSolarGenerator(final GameTestHelper helper, final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticEnvironmentHost(helper));
+        helper.assertTrue(environment != null, "No solar generator environment for " + stack);
+        helper.assertTrue(environment.canUpdate(), "Solar generator cannot update");
+        helper.assertTrue(environment.node() instanceof Connector, "Solar generator has no connector");
+        final Connector connector = (Connector) environment.node();
+        helper.assertTrue(connector.localBufferSize() == 1D, "Solar generator connector capacity mismatch");
+        helper.getLevel().setDayTime(6000);
+        environment.update();
+        helper.assertTrue(connector.localBuffer() > 0D, "Solar generator did not produce energy in daylight");
+    }
+
     private static void assertTankCapacity(final GameTestHelper helper, final ItemStack stack, final int capacity) {
         final DriverItem driver = Driver.driverFor(stack);
         helper.assertTrue(driver != null, "No driver for " + stack);
@@ -1340,6 +1358,32 @@ public final class NeoOpenComputersGameTests {
         @Override
         public boolean signal(final String name, final Object... args) {
             return true;
+        }
+    }
+
+    private record StaticEnvironmentHost(GameTestHelper helper) implements li.cil.oc.api.network.EnvironmentHost {
+        @Override
+        public net.minecraft.world.level.Level world() {
+            return helper.getLevel();
+        }
+
+        @Override
+        public double xPosition() {
+            return helper.absolutePos(BlockPos.ZERO).getX();
+        }
+
+        @Override
+        public double yPosition() {
+            return helper.absolutePos(BlockPos.ZERO).getY();
+        }
+
+        @Override
+        public double zPosition() {
+            return helper.absolutePos(BlockPos.ZERO).getZ();
+        }
+
+        @Override
+        public void markChanged() {
         }
     }
 

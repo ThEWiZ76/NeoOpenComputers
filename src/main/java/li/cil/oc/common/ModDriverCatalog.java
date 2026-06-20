@@ -24,7 +24,8 @@ public final class ModDriverCatalog {
                 ModItems.INVENTORY_CONTROLLER_UPGRADE.get(), ModItems.INVENTORY_UPGRADE.get(), ModItems.INTERNET_CARD.get(), ModItems.LINKED_CARD.get(), ModItems.NAVIGATION_UPGRADE.get(),
                 ModItems.EEPROM.get(), ModItems.FLOPPY.get(),
                 ModItems.GRAPHICS_CARD_TIER1.get(), ModItems.GRAPHICS_CARD_TIER2.get(), ModItems.GRAPHICS_CARD_TIER3.get(),
-                ModItems.NETWORK_CARD.get(), ModItems.WIRELESS_NETWORK_CARD_TIER1.get(), ModItems.WIRELESS_NETWORK_CARD_TIER2.get(), ModItems.REDSTONE_CARD.get(), ModItems.TANK_UPGRADE.get());
+                ModItems.NETWORK_CARD.get(), ModItems.WIRELESS_NETWORK_CARD_TIER1.get(), ModItems.WIRELESS_NETWORK_CARD_TIER2.get(), ModItems.REDSTONE_CARD.get(),
+                ModItems.SOLAR_GENERATOR_UPGRADE.get(), ModItems.TANK_UPGRADE.get());
         }
     }
 

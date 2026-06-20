@@ -71,7 +71,8 @@ final class RecipeResourceTest {
             ModContentIds.REDSTONE_CARD,
             ModContentIds.SCREEN_TIER1,
             ModContentIds.SCREEN_TIER2,
-            ModContentIds.SCREEN_TIER3);
+            ModContentIds.SCREEN_TIER3,
+            ModContentIds.SOLAR_GENERATOR_UPGRADE);
 
         for (String id : ids) {
             Path recipe = RECIPE_ROOT.resolve(id + ".json");

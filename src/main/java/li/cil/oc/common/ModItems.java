@@ -18,6 +18,7 @@ import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.RedstoneCardItem;
+import li.cil.oc.common.item.SolarGeneratorUpgradeItem;
 import li.cil.oc.common.item.TankUpgradeItem;
 import li.cil.oc.common.item.WirelessNetworkCardItem;
 import net.minecraft.world.item.BlockItem;
@@ -202,6 +203,10 @@ public final class ModItems {
     public static final DeferredItem<RedstoneCardItem> REDSTONE_CARD = ITEMS.register(
         ModContentIds.REDSTONE_CARD,
         () -> new RedstoneCardItem(new Item.Properties()));
+
+    public static final DeferredItem<SolarGeneratorUpgradeItem> SOLAR_GENERATOR_UPGRADE = ITEMS.register(
+        ModContentIds.SOLAR_GENERATOR_UPGRADE,
+        () -> new SolarGeneratorUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<TankUpgradeItem> TANK_UPGRADE = ITEMS.register(
         ModContentIds.TANK_UPGRADE,

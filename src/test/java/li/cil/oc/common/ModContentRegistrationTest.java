@@ -196,6 +196,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void solarGeneratorUpgradeItemIdIsStable() {
+        assertEquals("solar_generator_upgrade", ModContentIds.SOLAR_GENERATOR_UPGRADE);
+    }
+
+    @Test
     void networkCardItemIdIsStable() {
         assertEquals("network_card", ModContentIds.NETWORK_CARD);
     }
