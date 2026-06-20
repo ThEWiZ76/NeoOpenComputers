@@ -2,20 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "D": {
-      "item": "minecraft:daylight_detector"
-    },
     "G": {
-      "item": "minecraft:gold_ingot"
+      "item": "minecraft:glass"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "L": {
+      "item": "minecraft:lapis_block"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "pattern": [
     "GGG",
-    "RDR",
-    "GGG"
+    "CLC",
+    "IBI"
   ],
   "result": {
     "count": 1,

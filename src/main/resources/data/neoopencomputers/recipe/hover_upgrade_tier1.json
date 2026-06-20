@@ -2,20 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "minecraft:iron_boots"
-    },
     "F": {
       "item": "minecraft:feather"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "I": {
+      "tag": "c:nuggets/iron"
+    },
+    "L": {
+      "item": "minecraft:leather"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "pattern": [
-    " F ",
-    "RBR",
-    " F "
+    "FCF",
+    "ILI",
+    "FBF"
   ],
   "result": {
     "count": 1,

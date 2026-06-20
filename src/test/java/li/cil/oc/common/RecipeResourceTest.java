@@ -344,6 +344,29 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void utilityUpgradeRecipesUsePortedMaterials() throws IOException {
+        JsonObject waypoint = recipeKeys(ModContentIds.WAYPOINT);
+        JsonObject solar = recipeKeys(ModContentIds.SOLAR_GENERATOR_UPGRADE);
+        JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
+
+        assertTag(waypoint, "I", "c:ingots/iron");
+        assertItem(waypoint, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(waypoint, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(waypoint, "W", "neoopencomputers:" + ModContentIds.INTERWEB);
+        assertItem(waypoint, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(solar, "G", "minecraft:glass");
+        assertItem(solar, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(solar, "L", "minecraft:lapis_block");
+        assertTag(solar, "I", "c:ingots/iron");
+        assertItem(solar, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(hover1, "F", "minecraft:feather");
+        assertItem(hover1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertTag(hover1, "I", "c:nuggets/iron");
+        assertItem(hover1, "L", "minecraft:leather");
+        assertItem(hover1, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
     void blockDeviceRecipesUseMaterialProgression() throws IOException {
         JsonObject adapter = recipeKeys(ModContentIds.ADAPTER);
         JsonObject redstone = recipeKeys(ModContentIds.REDSTONE_IO);
