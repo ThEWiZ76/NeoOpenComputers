@@ -263,6 +263,35 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterExposesChestInventory(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos chestPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(chestPos, Blocks.CHEST);
+
+        final net.minecraft.world.Container chest = helper.getBlockEntity(chestPos);
+        chest.setItem(0, new ItemStack(net.minecraft.world.item.Items.DIAMOND, 3));
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final String address = componentAddress(computer, "inventory");
+            helper.assertTrue(address != null, "Adapter did not expose chest inventory: " + computer.machine().components());
+            try {
+                assertInvokeResult(helper, computer, address, "getInventorySize", new Object[]{}, 27);
+                assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{1}, 3);
+                assertInvokeResult(helper, computer, address, "transferStack", new Object[]{1, 2, 2}, true);
+                assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{1}, 1);
+                assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{2}, 2);
+            } catch (Exception e) {
+                helper.fail("Chest inventory invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
     @GameTest(template = "empty")
     public static void computerCaseStartsWithCoreComponents(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(1, 1, 1);
@@ -849,6 +878,17 @@ public final class NeoOpenComputersGameTests {
 
     private static void assertDroppedItem(final GameTestHelper helper, final Item item) {
         droppedItemStack(helper, item);
+    }
+
+    private static void assertInvokeResult(
+        final GameTestHelper helper,
+        final ComputerCaseBlockEntity computer,
+        final String address,
+        final String method,
+        final Object[] args,
+        final Object expected) throws Exception {
+        final Object[] result = computer.machine().invoke(address, method, args);
+        helper.assertTrue(result.length == 1 && expected.equals(result[0]), "Expected " + method + " to return " + expected + " but got " + (result.length == 0 ? "<empty>" : result[0]));
     }
 
     private static ItemStack droppedItemStack(final GameTestHelper helper, final Item item) {

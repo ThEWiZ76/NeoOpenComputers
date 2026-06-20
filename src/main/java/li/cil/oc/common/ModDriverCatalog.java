@@ -5,12 +5,13 @@ import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.common.driver.ComputerCaseBlockDriver;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
+import li.cil.oc.common.driver.InventoryBlockDriver;
 import li.cil.oc.common.driver.ScreenBlockDriver;
 
 public final class ModDriverCatalog {
     public static void registerDefaults() {
         if (API.driver instanceof DriverRegistry registry) {
-            registerBlocks(registry, new ComputerCaseBlockDriver(), new DiskDriveBlockDriver(), new ScreenBlockDriver());
+            registerBlocks(registry, new ComputerCaseBlockDriver(), new DiskDriveBlockDriver(), new InventoryBlockDriver(), new ScreenBlockDriver());
             register(
                 registry,
                 ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(),
