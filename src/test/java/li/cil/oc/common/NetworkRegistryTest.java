@@ -103,6 +103,24 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void nodeJoinsAndConnectsAdjacentNeighborNodes() {
+        NetworkRegistry registry = new NetworkRegistry();
+        TestEnvironment hostA = new TestEnvironment();
+        TestEnvironment hostB = new TestEnvironment();
+        TestEnvironment hostC = new TestEnvironment();
+        Node nodeA = registry.newNode(hostA, Visibility.Network).create();
+        Node nodeB = registry.newNode(hostB, Visibility.Network).create();
+        Node nodeC = registry.newNode(hostC, Visibility.Network).create();
+
+        registry.joinOrCreateNetwork(nodeA, List.of(nodeB, nodeC));
+
+        assertSame(nodeA.network(), nodeB.network());
+        assertSame(nodeA.network(), nodeC.network());
+        assertTrue(nodeA.isNeighborOf(nodeB));
+        assertTrue(nodeA.isNeighborOf(nodeC));
+    }
+
+    @Test
     void componentsExposeCallbackMethods() throws Exception {
         NetworkRegistry registry = new NetworkRegistry();
         TestEnvironment host = new TestEnvironment();

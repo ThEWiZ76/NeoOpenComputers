@@ -5,6 +5,7 @@ import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -31,6 +32,18 @@ public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlo
     @Override
     public BlockEntity newBlockEntity(final BlockPos pos, final BlockState state) {
         return new ScreenBlockEntity(pos, state);
+    }
+
+    @Override
+    protected void onPlace(final BlockState state, final Level level, final BlockPos pos, final BlockState oldState, final boolean movedByPiston) {
+        super.onPlace(state, level, pos, oldState, movedByPiston);
+        BlockNetworkConnector.joinIfServer(level, pos);
+    }
+
+    @Override
+    protected void neighborChanged(final BlockState state, final Level level, final BlockPos pos, final Block block, final BlockPos fromPos, final boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        BlockNetworkConnector.joinIfServer(level, pos);
     }
 
     @Override

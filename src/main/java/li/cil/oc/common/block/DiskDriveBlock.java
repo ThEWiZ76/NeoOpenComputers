@@ -39,6 +39,18 @@ public class DiskDriveBlock extends HorizontalDirectionalBlock implements Entity
     }
 
     @Override
+    protected void onPlace(final BlockState state, final Level level, final BlockPos pos, final BlockState oldState, final boolean movedByPiston) {
+        super.onPlace(state, level, pos, oldState, movedByPiston);
+        BlockNetworkConnector.joinIfServer(level, pos);
+    }
+
+    @Override
+    protected void neighborChanged(final BlockState state, final Level level, final BlockPos pos, final Block block, final BlockPos fromPos, final boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        BlockNetworkConnector.joinIfServer(level, pos);
+    }
+
+    @Override
     protected InteractionResult useWithoutItem(
         final BlockState state,
         final Level level,

@@ -15,6 +15,7 @@ import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.WirelessEndpoint;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.ByteArrayTag;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
@@ -54,10 +55,33 @@ final class NetworkRegistry implements NetworkAPI {
 
     @Override
     public void joinOrCreateNetwork(final BlockEntity blockEntity) {
+        if (blockEntity != null) {
+            joinOrCreateNetwork(blockEntity.getLevel(), blockEntity.getBlockPos());
+        }
     }
 
     @Override
     public void joinOrCreateNetwork(final BlockGetter world, final BlockPos pos) {
+        if (world == null || pos == null || !(world.getBlockEntity(pos) instanceof Environment environment)) {
+            return;
+        }
+        joinOrCreateNetwork(environment.node(), adjacentNodes(world, pos));
+    }
+
+    void joinOrCreateNetwork(final Node node, final Iterable<Node> adjacentNodes) {
+        if (node == null) {
+            return;
+        }
+        if (node.network() == null) {
+            joinNewNetwork(node);
+        }
+        if (adjacentNodes != null) {
+            for (Node adjacentNode : adjacentNodes) {
+                if (adjacentNode != null) {
+                    node.connect(adjacentNode);
+                }
+            }
+        }
     }
 
     @Override
@@ -138,6 +162,16 @@ final class NetworkRegistry implements NetworkAPI {
             address = "node-" + nextNodeId++;
         } while (network.nodesByAddress.containsKey(address));
         return address;
+    }
+
+    private static Iterable<Node> adjacentNodes(final BlockGetter world, final BlockPos pos) {
+        final List<Node> nodes = new ArrayList<>();
+        for (Direction direction : Direction.values()) {
+            if (world.getBlockEntity(pos.relative(direction)) instanceof Environment environment) {
+                nodes.add(environment.node());
+            }
+        }
+        return nodes;
     }
 
     private final class NodeBuilder implements Builder.NodeBuilder {
