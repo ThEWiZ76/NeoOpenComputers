@@ -19,6 +19,7 @@ import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
+import li.cil.oc.common.block.ComputerCaseBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -436,6 +437,36 @@ public final class NeoOpenComputersGameTests {
         helper.runAtTickTime(100, () -> {
             helper.assertTrue(computer.machine().isRunning(), "Computer stopped while reading redstone input: " + computer.machine().lastError());
             assertNextSignal(helper, computer, "redstone_input", 15D);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 160)
+    public static void redstoneCardUsesComputerLocalSides(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState().setValue(ComputerCaseBlock.FACING, Direction.EAST));
+        helper.setBlock(computerPos.east(), Blocks.REDSTONE_BLOCK);
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final ItemStack bootDisk = bootableHardDiskStack(helper, """
+            local redstone = component.proxy(component.list('redstone')())
+            local input = redstone.getInput(2)
+            redstone.setOutput(2, 15)
+            computer.pushSignal('redstone_local_side', input, redstone.getOutput(2))
+            """);
+
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.REDSTONE_CARD.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootDisk);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.toggleMachine(), "Computer did not start with redstone card");
+        helper.runAtTickTime(100, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Computer stopped while mapping redstone side: " + computer.machine().lastError());
+            assertNextSignal(helper, computer, "redstone_local_side", 15D, 15D);
+            helper.assertTrue(helper.getLevel().getSignal(helper.absolutePos(computerPos), Direction.EAST) == 15, "Local back side did not emit east redstone signal");
             helper.succeed();
         });
     }
