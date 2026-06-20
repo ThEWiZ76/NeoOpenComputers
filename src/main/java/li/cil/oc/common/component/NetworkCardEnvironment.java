@@ -105,7 +105,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     public Object[] send(final Context context, final Arguments args) {
         final String address = args.checkString(0);
         final int port = checkPort(args.checkInteger(1));
-        if (!openPorts.contains(port) || node() == null) {
+        if (node() == null) {
             return new Object[]{false};
         }
 
@@ -121,7 +121,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     @Callback(doc = "function(port:number, ...):boolean -- Broadcasts a packet on the specified port.")
     public Object[] broadcast(final Context context, final Arguments args) {
         final int port = checkPort(args.checkInteger(0));
-        if (!openPorts.contains(port) || node() == null) {
+        if (node() == null) {
             return new Object[]{false};
         }
 

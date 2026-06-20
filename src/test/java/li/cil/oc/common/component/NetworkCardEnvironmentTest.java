@@ -112,6 +112,21 @@ final class NetworkCardEnvironmentTest {
         assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
     }
 
+    @Test
+    void sendDoesNotRequireSenderPortToBeOpen() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost receiverHost = new TestMachineHost();
+        NetworkCardEnvironment sender = new NetworkCardEnvironment(new TestMachineHost());
+        NetworkCardEnvironment receiver = new NetworkCardEnvironment(receiverHost);
+        Network.joinNewNetwork(sender.node());
+        sender.node().connect(receiver.node());
+        receiver.open(null, new TestArguments(123));
+
+        assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments(receiver.node().address(), 123, "payload")));
+
+        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = NetworkCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
