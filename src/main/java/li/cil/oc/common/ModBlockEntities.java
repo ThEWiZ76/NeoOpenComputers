@@ -10,6 +10,7 @@ import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
+import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
@@ -72,6 +73,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.REDSTONE_IO_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(RedstoneIoBlockEntity::new, ModBlocks.REDSTONE_IO.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TransposerBlockEntity>> TRANSPOSER =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.TRANSPOSER_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(TransposerBlockEntity::new, ModBlocks.TRANSPOSER.get()).build(null));
 
     public static void register(final IEventBus modEventBus) {
         BLOCK_ENTITY_TYPES.register(modEventBus);

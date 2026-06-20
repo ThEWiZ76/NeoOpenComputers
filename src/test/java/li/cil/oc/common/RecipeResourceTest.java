@@ -54,6 +54,7 @@ final class RecipeResourceTest {
             ModContentIds.MOTION_SENSOR,
             ModContentIds.NETWORK_CARD,
             ModContentIds.REDSTONE_IO,
+            ModContentIds.TRANSPOSER,
             ModContentIds.WIRELESS_NETWORK_CARD_TIER1,
             ModContentIds.WIRELESS_NETWORK_CARD_TIER2,
             ModContentIds.REDSTONE_CARD,

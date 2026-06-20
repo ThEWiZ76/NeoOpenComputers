@@ -10,6 +10,7 @@ import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.ScreenBlock;
+import li.cil.oc.common.block.TransposerBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -72,6 +73,10 @@ public final class ModBlocks {
         ModContentIds.REDSTONE_IO,
         () -> new RedstoneIoBlock(redstoneIoProperties()));
 
+    public static final DeferredBlock<Block> TRANSPOSER = BLOCKS.register(
+        ModContentIds.TRANSPOSER,
+        () -> new TransposerBlock(transposerProperties()));
+
     public static void register(final IEventBus modEventBus) {
         BLOCKS.register(modEventBus);
     }
@@ -130,6 +135,12 @@ public final class ModBlocks {
     private static BlockBehaviour.Properties redstoneIoProperties() {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_RED)
+            .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties transposerProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);
     }
 }

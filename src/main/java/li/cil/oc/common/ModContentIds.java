@@ -54,6 +54,8 @@ public final class ModContentIds {
     public static final String SCREEN_TIER2 = "screen_tier2";
     public static final String SCREEN_TIER3 = "screen_tier3";
     public static final String SCREEN_BLOCK_ENTITY = "screen";
+    public static final String TRANSPOSER = "transposer";
+    public static final String TRANSPOSER_BLOCK_ENTITY = "transposer";
 
     private ModContentIds() {
     }

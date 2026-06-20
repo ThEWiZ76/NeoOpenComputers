@@ -186,6 +186,10 @@ public final class ModItems {
         ModContentIds.REDSTONE_IO,
         ModBlocks.REDSTONE_IO);
 
+    public static final DeferredItem<BlockItem> TRANSPOSER = ITEMS.registerSimpleBlockItem(
+        ModContentIds.TRANSPOSER,
+        ModBlocks.TRANSPOSER);
+
     public static void register(final IEventBus modEventBus) {
         ITEMS.register(modEventBus);
     }

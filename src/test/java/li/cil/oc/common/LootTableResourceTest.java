@@ -32,7 +32,8 @@ final class LootTableResourceTest {
             ModContentIds.REDSTONE_IO,
             ModContentIds.SCREEN_TIER1,
             ModContentIds.SCREEN_TIER2,
-            ModContentIds.SCREEN_TIER3);
+            ModContentIds.SCREEN_TIER3,
+            ModContentIds.TRANSPOSER);
 
         for (String id : ids) {
             Path lootTable = LOOT_ROOT.resolve(id + ".json");

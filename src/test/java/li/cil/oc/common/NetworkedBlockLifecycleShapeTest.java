@@ -6,6 +6,7 @@ import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.ScreenBlock;
+import li.cil.oc.common.block.TransposerBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
@@ -30,6 +31,7 @@ final class NetworkedBlockLifecycleShapeTest {
         assertNetworkLifecycleHooks(KeyboardBlock.class);
         assertNetworkLifecycleHooks(MotionSensorBlock.class);
         assertNetworkLifecycleHooks(RedstoneIoBlock.class);
+        assertNetworkLifecycleHooks(TransposerBlock.class);
     }
 
     @Test
