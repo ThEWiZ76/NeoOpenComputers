@@ -3,22 +3,24 @@
   "category": "redstone",
   "key": {
     "C": {
-      "tag": "c:ingots/copper"
+      "item": "neoopencomputers:microchip_tier3"
     },
-    "E": {
-      "item": "minecraft:ender_eye"
+    "I": {
+      "item": "neoopencomputers:interweb"
     },
-    "G": {
-      "tag": "c:glass_blocks"
+    "O": {
+      "item": "minecraft:obsidian"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "T": {
+      "item": "minecraft:redstone_torch"
+    },
+    "W": {
+      "item": "neoopencomputers:wireless_network_card_tier2"
     }
   },
   "pattern": [
-    "CRC",
-    "GEG",
-    "CRC"
+    "ICT",
+    " WO"
   ],
   "result": {
     "count": 1,

@@ -2,20 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "C": {
-      "tag": "c:ingots/copper"
+    "B": {
+      "item": "neoopencomputers:card"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
     },
     "T": {
       "item": "minecraft:redstone_torch"
     }
   },
   "pattern": [
-    "CRC",
-    "RTR",
-    "CRC"
+    "TC ",
+    " B "
   ],
   "result": {
     "count": 1,

@@ -125,10 +125,10 @@ final class RecipeResourceTest {
         JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.GEOLYZER + ".json"));
         JsonObject keys = json.getAsJsonObject("key");
 
-        assertEquals("neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD, keys.getAsJsonObject("B").get("item").getAsString());
-        assertEquals("neoopencomputers:" + ModContentIds.MICROCHIP_TIER2, keys.getAsJsonObject("M").get("item").getAsString());
-        assertEquals("minecraft:ender_eye", keys.getAsJsonObject("E").get("item").getAsString());
-        assertEquals("c:ingots/gold", keys.getAsJsonObject("G").get("tag").getAsString());
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(keys, "M", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(keys, "E", "minecraft:ender_eye");
+        assertTag(keys, "G", "c:ingots/gold");
     }
 
     @Test
@@ -136,9 +136,48 @@ final class RecipeResourceTest {
         JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.ANALYZER + ".json"));
         JsonObject keys = json.getAsJsonObject("key");
 
-        assertEquals("neoopencomputers:" + ModContentIds.TRANSISTOR, keys.getAsJsonObject("T").get("item").getAsString());
-        assertEquals("neoopencomputers:" + ModContentIds.MICROCHIP_TIER1, keys.getAsJsonObject("C").get("item").getAsString());
-        assertEquals("neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD, keys.getAsJsonObject("B").get("item").getAsString());
+        assertItem(keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
+    void networkCardRecipeUsesMaterialParts() throws IOException {
+        JsonObject keys = recipeKeys(ModContentIds.NETWORK_CARD);
+
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.CARD);
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(keys, "L", "neoopencomputers:" + ModContentIds.CABLE);
+    }
+
+    @Test
+    void wirelessCardRecipesUseCardProgression() throws IOException {
+        JsonObject tier1 = recipeKeys(ModContentIds.WIRELESS_NETWORK_CARD_TIER1);
+        JsonObject tier2 = recipeKeys(ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+
+        assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(tier1, "N", "neoopencomputers:" + ModContentIds.NETWORK_CARD);
+        assertItem(tier1, "T", "minecraft:redstone_torch");
+        assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier2, "N", "neoopencomputers:" + ModContentIds.NETWORK_CARD);
+        assertItem(tier2, "P", "minecraft:ender_pearl");
+    }
+
+    @Test
+    void communicationCardRecipesUseMaterialParts() throws IOException {
+        JsonObject redstone = recipeKeys(ModContentIds.REDSTONE_CARD);
+        JsonObject internet = recipeKeys(ModContentIds.INTERNET_CARD);
+        JsonObject linked = recipeKeys(ModContentIds.LINKED_CARD);
+
+        assertItem(redstone, "B", "neoopencomputers:" + ModContentIds.CARD);
+        assertItem(redstone, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(redstone, "T", "minecraft:redstone_torch");
+        assertItem(internet, "I", "neoopencomputers:" + ModContentIds.INTERWEB);
+        assertItem(internet, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(internet, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+        assertItem(linked, "I", "neoopencomputers:" + ModContentIds.INTERWEB);
+        assertItem(linked, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(linked, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
     }
 
     private static JsonObject readJson(final Path path) throws IOException {
@@ -146,5 +185,18 @@ final class RecipeResourceTest {
             JsonElement element = JsonParser.parseReader(reader);
             return element.getAsJsonObject();
         }
+    }
+
+    private static JsonObject recipeKeys(final String id) throws IOException {
+        JsonObject json = readJson(RECIPE_ROOT.resolve(id + ".json"));
+        return json.getAsJsonObject("key");
+    }
+
+    private static void assertItem(final JsonObject keys, final String key, final String item) {
+        assertEquals(item, keys.getAsJsonObject(key).get("item").getAsString());
+    }
+
+    private static void assertTag(final JsonObject keys, final String key, final String tag) {
+        assertEquals(tag, keys.getAsJsonObject(key).get("tag").getAsString());
     }
 }

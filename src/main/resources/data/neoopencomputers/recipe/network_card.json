@@ -2,20 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "B": {
+      "item": "neoopencomputers:card"
+    },
     "C": {
-      "tag": "c:ingots/copper"
+      "item": "neoopencomputers:microchip_tier1"
     },
-    "E": {
-      "item": "minecraft:ender_pearl"
-    },
-    "R": {
-      "item": "minecraft:redstone"
+    "L": {
+      "item": "neoopencomputers:cable"
     }
   },
   "pattern": [
-    "CRC",
-    "RER",
-    "CRC"
+    "LC ",
+    " B "
   ],
   "result": {
     "count": 1,

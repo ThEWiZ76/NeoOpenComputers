@@ -2,20 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "E": {
-      "item": "minecraft:ender_pearl"
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
     },
     "N": {
       "item": "neoopencomputers:network_card"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "T": {
+      "item": "minecraft:redstone_torch"
     }
   },
   "pattern": [
-    " R ",
-    "ENE",
-    " R "
+    "TCT",
+    " N "
   ],
   "result": {
     "count": 1,

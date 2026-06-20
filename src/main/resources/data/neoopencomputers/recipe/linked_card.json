@@ -2,23 +2,23 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "D": {
-      "item": "minecraft:diamond"
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
     },
     "E": {
       "item": "minecraft:ender_eye"
     },
-    "N": {
-      "item": "neoopencomputers:network_card"
+    "I": {
+      "item": "neoopencomputers:interweb"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "W": {
+      "item": "neoopencomputers:wireless_network_card_tier2"
     }
   },
   "pattern": [
-    "DND",
-    "RER",
-    "DND"
+    "E E",
+    "WIW",
+    "C C"
   ],
   "result": {
     "count": 2,

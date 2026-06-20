@@ -2,20 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "D": {
-      "item": "minecraft:diamond"
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "N": {
+      "item": "neoopencomputers:network_card"
     },
-    "W": {
-      "item": "neoopencomputers:wireless_network_card_tier1"
+    "P": {
+      "item": "minecraft:ender_pearl"
     }
   },
   "pattern": [
-    "DRD",
-    "RWR",
-    "DRD"
+    "PC ",
+    " N "
   ],
   "result": {
     "count": 1,
