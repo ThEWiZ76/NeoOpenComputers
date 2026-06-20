@@ -186,6 +186,22 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void hostChangedSavesComponentEnvironmentsBeforeRemovingThem() {
+        OpenComputersApi.initialize();
+        SavingDriver driver = new SavingDriver();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(driver);
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        machine.onHostChanged();
+        SavingEnvironment firstEnvironment = driver.environments.getFirst();
+
+        machine.onHostChanged();
+
+        assertEquals(1, firstEnvironment.saves);
+    }
+
+    @Test
     void hostChangedSelectsProcessorArchitectureAndStartInitializesIt() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();
@@ -662,6 +678,33 @@ final class MachineRegistryTest {
         @Override
         public void onMessage(final Message message) {
             messages.add(message.name());
+        }
+    }
+
+    private static final class SavingDriver extends TestDriver {
+        private final List<SavingEnvironment> environments = new ArrayList<>();
+
+        @Override
+        public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+            final SavingEnvironment environment = new SavingEnvironment();
+            environments.add(environment);
+            return environment;
+        }
+    }
+
+    private static final class SavingEnvironment extends AbstractManagedEnvironment {
+        private int saves;
+
+        private SavingEnvironment() {
+            setNode(Network.newNode(this, Visibility.Network)
+                .withComponent("saving_component", Visibility.Network)
+                .create());
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+            super.save(nbt);
+            saves++;
         }
     }
 
