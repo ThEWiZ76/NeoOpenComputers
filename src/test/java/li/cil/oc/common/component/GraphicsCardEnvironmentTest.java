@@ -5,6 +5,7 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -139,6 +140,44 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void screenMutationsConsumeCallBudget() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        FakeTextBuffer screen = new FakeTextBuffer();
+        RecordingContext context = new RecordingContext();
+        Network.joinNewNetwork(gpu.node());
+        gpu.node().connect(screen.node());
+        gpu.bind(null, new TestArguments(screen.node().address(), true));
+
+        gpu.setBackground(context, new TestArguments(0x111111));
+        gpu.setForeground(context, new TestArguments(0x222222));
+        gpu.setPaletteColor(context, new TestArguments(2, 0x333333));
+        gpu.set(context, new TestArguments(1, 1, "ABC"));
+        gpu.copy(context, new TestArguments(1, 1, 2, 3, 1, 0));
+        gpu.fill(context, new TestArguments(1, 1, 4, 5, " "));
+
+        assertEquals(0.671875D, context.callBudget, 0.0000001D);
+    }
+
+    @Test
+    void videoBufferMutationsDoNotConsumeScreenCallBudget() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        RecordingContext context = new RecordingContext();
+        gpu.allocateBuffer(null, new TestArguments(4, 2));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+
+        gpu.setBackground(context, new TestArguments(0x111111));
+        gpu.setForeground(context, new TestArguments(0x222222));
+        gpu.setPaletteColor(context, new TestArguments(2, 0x333333));
+        gpu.set(context, new TestArguments(1, 1, "ABC"));
+        gpu.copy(context, new TestArguments(1, 1, 2, 1, 1, 0));
+        gpu.fill(context, new TestArguments(1, 1, 2, 1, " "));
+
+        assertEquals(0D, context.callBudget, 0.0000001D);
+    }
+
+    @Test
     void colorSettersReturnPreviousColorAndPaletteIndex() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
@@ -256,6 +295,20 @@ final class GraphicsCardEnvironmentTest {
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = GraphicsCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static final class RecordingContext implements Context {
+        private double callBudget;
+
+        @Override public Node node() { return null; }
+        @Override public boolean canInteract(final String player) { return true; }
+        @Override public boolean isRunning() { return true; }
+        @Override public boolean isPaused() { return false; }
+        @Override public boolean start() { return true; }
+        @Override public boolean pause(final double seconds) { return true; }
+        @Override public boolean stop() { return true; }
+        @Override public void consumeCallBudget(final double callCost) { callBudget += callCost; }
+        @Override public boolean signal(final String name, final Object... args) { return true; }
     }
 
     private static final class FakeTextBuffer extends AbstractManagedEnvironment implements TextBuffer {

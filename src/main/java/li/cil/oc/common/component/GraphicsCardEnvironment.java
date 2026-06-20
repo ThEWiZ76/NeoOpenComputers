@@ -28,6 +28,12 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     private static final String PAGE_INDEX_TAG = "pageIndex";
     private static final String PAGE_DATA_TAG = "pageData";
     private static final int SCREEN_INDEX = 0;
+    private static final double[] SET_BACKGROUND_COSTS = {1.0D / 32.0D, 1.0D / 64.0D, 1.0D / 128.0D};
+    private static final double[] SET_FOREGROUND_COSTS = {1.0D / 32.0D, 1.0D / 64.0D, 1.0D / 128.0D};
+    private static final double[] SET_PALETTE_COLOR_COSTS = {1.0D / 2.0D, 1.0D / 8.0D, 1.0D / 16.0D};
+    private static final double[] SET_COSTS = {1.0D / 64.0D, 1.0D / 128.0D, 1.0D / 256.0D};
+    private static final double[] COPY_COSTS = {1.0D / 16.0D, 1.0D / 32.0D, 1.0D / 64.0D};
+    private static final double[] FILL_COSTS = {1.0D / 32.0D, 1.0D / 64.0D, 1.0D / 128.0D};
 
     private final int tier;
     private final int maxWidth;
@@ -157,6 +163,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     public Object[] setBackground(final Context context, final Arguments args) {
         final int color = args.checkInteger(0);
         final boolean palette = args.optBoolean(1, false);
+        consumeScreenCallBudget(context, SET_BACKGROUND_COSTS[tier]);
         return withActiveBuffer(buffer -> {
             final int previous = buffer.getBackgroundColor();
             final boolean wasPalette = buffer.isBackgroundFromPalette();
@@ -175,6 +182,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     public Object[] setForeground(final Context context, final Arguments args) {
         final int color = args.checkInteger(0);
         final boolean palette = args.optBoolean(1, false);
+        consumeScreenCallBudget(context, SET_FOREGROUND_COSTS[tier]);
         return withActiveBuffer(buffer -> {
             final int previous = buffer.getForegroundColor();
             final boolean wasPalette = buffer.isForegroundFromPalette();
@@ -196,6 +204,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final int index = args.checkInteger(0);
         final int color = args.checkInteger(1);
         checkPaletteIndex(index);
+        consumeScreenCallBudget(context, SET_PALETTE_COLOR_COSTS[tier]);
         return withActiveBuffer(buffer -> {
             final int previous = buffer.getPaletteColor(index);
             buffer.setPaletteColor(index, color);
@@ -324,6 +333,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final int y = args.checkInteger(1) - 1;
         final String value = args.checkString(2);
         final boolean vertical = args.optBoolean(3, false);
+        consumeScreenCallBudget(context, SET_COSTS[tier]);
         return withActiveBuffer(buffer -> {
             buffer.set(x, y, value, vertical);
             return new Object[]{true};
@@ -338,6 +348,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final int height = Math.max(0, args.checkInteger(3));
         final int tx = args.checkInteger(4);
         final int ty = args.checkInteger(5);
+        consumeScreenCallBudget(context, COPY_COSTS[tier]);
         return withActiveBuffer(buffer -> {
             buffer.copy(x, y, width, height, tx, ty);
             return new Object[]{true};
@@ -354,6 +365,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         if (value.codePointCount(0, value.length()) != 1) {
             throw new IllegalArgumentException("invalid fill value");
         }
+        consumeScreenCallBudget(context, FILL_COSTS[tier]);
         return withActiveBuffer(buffer -> {
             buffer.fill(x, y, width, height, value.codePointAt(0));
             return new Object[]{true};
@@ -478,6 +490,12 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     private static Object[] invalidBufferIndex() {
         return new Object[]{null, "invalid buffer index"};
+    }
+
+    private void consumeScreenCallBudget(final Context context, final double cost) {
+        if (context != null && activeBufferIndex == SCREEN_INDEX) {
+            context.consumeCallBudget(cost);
+        }
     }
 
     private static Object[] previousColorResult(final TextBuffer buffer, final int previous, final boolean wasPalette) {
