@@ -232,6 +232,37 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void tier3ComputerBootsOpenOsFromInternalFloppy(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER3.get());
+
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final ItemStack openOsFloppy = openOsFloppyStack();
+        helper.assertTrue(computer.canPlaceItem(7, openOsFloppy), "Tier 3 internal floppy slot rejected OpenOS floppy");
+
+        computer.setItem(0, new ItemStack(ModItems.GRAPHICS_CARD_TIER3.get()));
+        computer.setItem(3, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        computer.setItem(7, openOsFloppy);
+        computer.setItem(8, new ItemStack(ModItems.CPU_TIER3.get()));
+        computer.setItem(9, luaBiosEepromStack());
+
+        helper.assertTrue(computer.machine().components().containsValue("filesystem"), "Internal OpenOS floppy filesystem is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.toggleMachine(), "Tier 3 computer did not start with internal OpenOS floppy");
+        helper.runAtTickTime(80, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Computer stopped while booting from internal OpenOS floppy: " + computer.machine().lastError());
+            helper.assertTrue(computer.machine().components().containsValue("filesystem"), "Internal OpenOS floppy filesystem is not visible");
+            helper.assertTrue(computer.machine().components().containsValue("gpu"), "Graphics card component is not visible");
+            helper.assertTrue(computer.machine().components().containsValue("screen"), "Screen component is not visible");
+            helper.assertTrue(screenHasNonBlankText(screen), "OpenOS did not write visible screen text from internal floppy:\n" + screenText(screen));
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void screenKeyboardSignalsReachComputer(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
