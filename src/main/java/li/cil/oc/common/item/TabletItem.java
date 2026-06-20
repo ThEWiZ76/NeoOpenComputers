@@ -3,21 +3,31 @@ package li.cil.oc.common.item;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Chargeable;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.internal.Tablet;
 import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModItems;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class TabletItem extends Item implements Chargeable, DriverItem {
     public static final int COMPONENT_SLOTS = 32;
@@ -159,6 +169,57 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
         return readData(stack);
     }
 
+    public CompoundTag analyzeBlock(
+        final ItemStack stack,
+        final Level level,
+        final Player player,
+        final BlockPos pos,
+        final Direction side,
+        final float hitX,
+        final float hitY,
+        final float hitZ) {
+        final CompoundTag data = new CompoundTag();
+        if (!isRunning(stack) || level == null || pos == null || side == null) {
+            return data;
+        }
+
+        final TabletAnalysisHost host = new TabletAnalysisHost(stack, level, player, pos, side);
+        final li.cil.oc.api.machine.Machine machine = host.machine();
+        if (machine == null || machine.node() == null) {
+            return data;
+        }
+
+        machine.onHostChanged();
+        machine.node().sendToReachable(
+            "tablet.use",
+            data,
+            stack,
+            player,
+            pos,
+            side,
+            Float.valueOf(hitX),
+            Float.valueOf(hitY),
+            Float.valueOf(hitZ));
+        machine.node().remove();
+        return data;
+    }
+
+    @Override
+    public InteractionResult useOn(final UseOnContext context) {
+        final BlockPos pos = context.getClickedPos();
+        final Vec3 hit = context.getClickLocation();
+        final CompoundTag data = analyzeBlock(
+            context.getItemInHand(),
+            context.getLevel(),
+            context.getPlayer(),
+            pos,
+            context.getClickedFace(),
+            (float) (hit.x - pos.getX()),
+            (float) (hit.y - pos.getY()),
+            (float) (hit.z - pos.getZ()));
+        return data.isEmpty() ? InteractionResult.PASS : InteractionResult.CONSUME;
+    }
+
     public void setTier(final ItemStack stack, final int tier) {
         final CompoundTag data = readData(stack);
         data.putInt(TIER_TAG, Math.max(0, tier));
@@ -281,5 +342,97 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
             return new ItemStack(ModItems.TABLET_CASE_TIER2.get());
         }
         return new ItemStack(ModItems.TABLET_CASE_TIER1.get());
+    }
+
+    private final class TabletAnalysisHost implements Tablet {
+        private final ItemStack stack;
+        private final Level level;
+        private final Player player;
+        private final BlockPos pos;
+        private final Direction facing;
+        private final li.cil.oc.api.machine.Machine machine;
+
+        private TabletAnalysisHost(final ItemStack stack, final Level level, final Player player, final BlockPos pos, final Direction facing) {
+            this.stack = stack;
+            this.level = level;
+            this.player = player;
+            this.pos = pos;
+            this.facing = facing;
+            machine = li.cil.oc.api.Machine.create(this);
+        }
+
+        @Override
+        public Player player() {
+            return player;
+        }
+
+        @Override
+        public Direction facing() {
+            return facing;
+        }
+
+        @Override
+        public Direction toGlobal(final Direction value) {
+            return value;
+        }
+
+        @Override
+        public Direction toLocal(final Direction value) {
+            return value;
+        }
+
+        @Override
+        public li.cil.oc.api.machine.Machine machine() {
+            return machine;
+        }
+
+        @Override
+        public Iterable<ItemStack> internalComponents() {
+            final List<ItemStack> components = new ArrayList<>();
+            for (int slot = 0; slot < COMPONENT_SLOTS; slot++) {
+                final ItemStack component = getComponent(stack, slot);
+                if (!component.isEmpty()) {
+                    components.add(component);
+                }
+            }
+            return components;
+        }
+
+        @Override
+        public int componentSlot(final String address) {
+            return -1;
+        }
+
+        @Override
+        public void onMachineConnect(final Node node) {
+        }
+
+        @Override
+        public void onMachineDisconnect(final Node node) {
+        }
+
+        @Override
+        public Level world() {
+            return level;
+        }
+
+        @Override
+        public double xPosition() {
+            return player == null ? pos.getX() + 0.5D : player.getX();
+        }
+
+        @Override
+        public double yPosition() {
+            return player == null ? pos.getY() + 0.5D : player.getEyeY();
+        }
+
+        @Override
+        public double zPosition() {
+            return player == null ? pos.getZ() + 0.5D : player.getZ();
+        }
+
+        @Override
+        public void markChanged() {
+        }
     }
 }

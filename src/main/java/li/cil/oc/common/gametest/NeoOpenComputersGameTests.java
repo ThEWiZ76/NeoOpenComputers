@@ -1514,6 +1514,26 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void tabletItemAnalyzesBlockWithInstalledSignUpgrade(final GameTestHelper helper) {
+        final BlockPos signPos = new BlockPos(1, 1, 1);
+        helper.setBlock(signPos, Blocks.OAK_SIGN);
+        final SignBlockEntity sign = helper.getBlockEntity(signPos);
+        SignText text = sign.getFrontText();
+        text = text.setMessage(0, Component.literal("tablet"));
+        text = text.setMessage(1, Component.literal("scan"));
+        sign.setText(text, true);
+
+        final TabletItem tablet = ModItems.TABLET.get();
+        final ItemStack stack = new ItemStack(tablet);
+        tablet.setRunning(stack, true);
+        tablet.setComponent(stack, 1, new ItemStack(ModItems.SIGN_UPGRADE.get()));
+
+        final CompoundTag result = tablet.analyzeBlock(stack, helper.getLevel(), null, helper.absolutePos(signPos), Direction.NORTH, 0.5F, 0.5F, 0.5F);
+        helper.assertTrue("tablet\nscan\n\n".equals(result.getString("signText")), "Tablet analysis did not collect sign text");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void inventoryControllerStoresStacksInDatabase(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);
