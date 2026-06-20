@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.BatteryUpgradeItem;
 import li.cil.oc.common.item.CardContainerItem;
 import li.cil.oc.common.item.CpuItem;
@@ -38,7 +39,9 @@ public final class ModItems {
         ModContentIds.ADAPTER,
         ModBlocks.ADAPTER);
 
-    public static final DeferredItem<Item> ANALYZER = ITEMS.registerSimpleItem(ModContentIds.ANALYZER, new Item.Properties());
+    public static final DeferredItem<AnalyzerItem> ANALYZER = ITEMS.register(
+        ModContentIds.ANALYZER,
+        () -> new AnalyzerItem(new Item.Properties()));
 
     public static final DeferredItem<BlockItem> ASSEMBLER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ASSEMBLER,
