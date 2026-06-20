@@ -50,6 +50,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_NETWORK_CARD = "lancard";
     public static final String COMPAT_REDSTONE_CARD = "redstone";
     public static final String COMPAT_SOLAR_GENERATOR_UPGRADE = "solarGeneratorUpgrade";
+    public static final String COMPAT_TANK_CONTROLLER_UPGRADE = "tankControllerUpgrade";
     public static final String COMPAT_TANK_UPGRADE = "tankUpgrade";
     public static final String COMPAT_UPGRADE_CONTAINER_TIER1 = "upgradecontainer1";
     public static final String COMPAT_UPGRADE_CONTAINER_TIER2 = "upgradecontainer2";
@@ -162,6 +163,7 @@ public final class ModContentCatalog {
                 ModItems.REDSTONE_CARD.get(),
                 ModItems.SOLAR_GENERATOR_UPGRADE.get(),
                 ModItems.TANK_UPGRADE.get(),
+                ModItems.TANK_CONTROLLER_UPGRADE.get(),
                 ModItems.UPGRADE_CONTAINER_TIER1.get(),
                 ModItems.UPGRADE_CONTAINER_TIER2.get(),
                 ModItems.UPGRADE_CONTAINER_TIER3.get());
@@ -327,6 +329,7 @@ public final class ModContentCatalog {
         final Item redstoneCardItem,
         final Item solarGeneratorUpgradeItem,
         final Item tankUpgradeItem,
+        final Item tankControllerUpgradeItem,
         final Item upgradeContainerTier1Item,
         final Item upgradeContainerTier2Item,
         final Item upgradeContainerTier3Item) {
@@ -400,6 +403,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.REDSTONE_CARD, null, redstoneCardItem);
         registry.register(ModContentIds.SOLAR_GENERATOR_UPGRADE, null, solarGeneratorUpgradeItem);
         registry.register(ModContentIds.TANK_UPGRADE, null, tankUpgradeItem);
+        registry.register(ModContentIds.TANK_CONTROLLER_UPGRADE, null, tankControllerUpgradeItem);
         registry.register(ModContentIds.UPGRADE_CONTAINER_TIER1, null, upgradeContainerTier1Item);
         registry.register(ModContentIds.UPGRADE_CONTAINER_TIER2, null, upgradeContainerTier2Item);
         registry.register(ModContentIds.UPGRADE_CONTAINER_TIER3, null, upgradeContainerTier3Item);
@@ -446,6 +450,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_REDSTONE_CARD, null, redstoneCardItem);
         registry.register(COMPAT_SOLAR_GENERATOR_UPGRADE, null, solarGeneratorUpgradeItem);
         registry.register(COMPAT_TANK_UPGRADE, null, tankUpgradeItem);
+        registry.register(COMPAT_TANK_CONTROLLER_UPGRADE, null, tankControllerUpgradeItem);
         registry.register(COMPAT_UPGRADE_CONTAINER_TIER1, null, upgradeContainerTier1Item);
         registry.register(COMPAT_UPGRADE_CONTAINER_TIER2, null, upgradeContainerTier2Item);
         registry.register(COMPAT_UPGRADE_CONTAINER_TIER3, null, upgradeContainerTier3Item);

@@ -297,6 +297,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void tankControllerUpgradeItemIdIsStable() {
+        assertEquals("tank_controller_upgrade", ModContentIds.TANK_CONTROLLER_UPGRADE);
+    }
+
+    @Test
     void solarGeneratorUpgradeItemIdIsStable() {
         assertEquals("solar_generator_upgrade", ModContentIds.SOLAR_GENERATOR_UPGRADE);
     }

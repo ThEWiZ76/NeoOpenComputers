@@ -21,6 +21,7 @@ import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.RedstoneCardItem;
 import li.cil.oc.common.item.SolarGeneratorUpgradeItem;
+import li.cil.oc.common.item.TankControllerUpgradeItem;
 import li.cil.oc.common.item.TankUpgradeItem;
 import li.cil.oc.common.item.TabletCaseItem;
 import li.cil.oc.common.item.TabletItem;
@@ -274,6 +275,10 @@ public final class ModItems {
     public static final DeferredItem<TankUpgradeItem> TANK_UPGRADE = ITEMS.register(
         ModContentIds.TANK_UPGRADE,
         () -> new TankUpgradeItem(new Item.Properties()));
+
+    public static final DeferredItem<TankControllerUpgradeItem> TANK_CONTROLLER_UPGRADE = ITEMS.register(
+        ModContentIds.TANK_CONTROLLER_UPGRADE,
+        () -> new TankControllerUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<UpgradeContainerItem> UPGRADE_CONTAINER_TIER1 = ITEMS.register(
         ModContentIds.UPGRADE_CONTAINER_TIER1,

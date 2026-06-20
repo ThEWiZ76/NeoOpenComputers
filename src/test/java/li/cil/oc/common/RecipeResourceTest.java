@@ -87,6 +87,7 @@ final class RecipeResourceTest {
             ModContentIds.NETWORK_CARD,
             ModContentIds.REDSTONE_IO,
             ModContentIds.TANK_UPGRADE,
+            ModContentIds.TANK_CONTROLLER_UPGRADE,
             ModContentIds.TRANSPOSER,
             ModContentIds.UPGRADE_CONTAINER_TIER1,
             ModContentIds.UPGRADE_CONTAINER_TIER2,

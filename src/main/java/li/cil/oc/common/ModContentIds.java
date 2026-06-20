@@ -86,6 +86,7 @@ public final class ModContentIds {
     public static final String REDSTONE_IO = "redstone";
     public static final String REDSTONE_IO_BLOCK_ENTITY = "redstone";
     public static final String SOLAR_GENERATOR_UPGRADE = "solar_generator_upgrade";
+    public static final String TANK_CONTROLLER_UPGRADE = "tank_controller_upgrade";
     public static final String TANK_UPGRADE = "tank_upgrade";
     public static final String TRANSISTOR = "transistor";
     public static final String CUTTING_WIRE = "cutting_wire";

@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": {
+      "item": "minecraft:glass_bottle"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "D": {
+      "item": "minecraft:dispenser"
+    },
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "R": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "pattern": [
+    "GBG",
+    "DCP",
+    "GRG"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:tank_controller_upgrade"
+  }
+}
