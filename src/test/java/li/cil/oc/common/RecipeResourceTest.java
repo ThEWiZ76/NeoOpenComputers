@@ -457,6 +457,19 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void navigationUpgradeRecipeUsesUpstreamShape() throws IOException {
+        JsonObject navigation = readJson(RECIPE_ROOT.resolve(ModContentIds.NAVIGATION_UPGRADE + ".json"));
+        JsonObject keys = navigation.getAsJsonObject("key");
+
+        assertPattern(navigation, "GCG", "MFM", "GPG");
+        assertTag(keys, "G", "c:ingots/gold");
+        assertItem(keys, "C", "minecraft:compass");
+        assertItem(keys, "M", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(keys, "F", "minecraft:filled_map");
+        assertItem(keys, "P", "minecraft:potion");
+    }
+
+    @Test
     void hologramRecipesUseMaterialProgression() throws IOException {
         JsonObject tier1 = readJson(RECIPE_ROOT.resolve(ModContentIds.HOLOGRAM_TIER1 + ".json"));
         JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.HOLOGRAM_TIER2 + ".json"));

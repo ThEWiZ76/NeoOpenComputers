@@ -5,20 +5,23 @@
     "C": {
       "item": "minecraft:compass"
     },
+    "F": {
+      "item": "minecraft:filled_map"
+    },
     "G": {
-      "item": "minecraft:gold_ingot"
+      "tag": "c:ingots/gold"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "M": {
+      "item": "neoopencomputers:microchip_tier2"
     },
-    "W": {
-      "item": "neoopencomputers:waypoint"
+    "P": {
+      "item": "minecraft:potion"
     }
   },
   "pattern": [
-    " R ",
-    "CWC",
-    " G "
+    "GCG",
+    "MFM",
+    "GPG"
   ],
   "result": {
     "count": 1,
