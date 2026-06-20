@@ -13,25 +13,47 @@ import net.minecraft.nbt.Tag;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.net.JarURLConnection;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
-import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 final class FileSystemRegistry implements FileSystemAPI {
     @Override
     public FileSystem fromClass(final Class<?> clazz, final String domain, final String root) {
-        return null;
+        final ClassLoader classLoader = clazz.getClassLoader();
+        final String resourceRoot = "assets/" + domain + "/" + cleanRoot(root);
+        final URL resource = classLoader == null
+            ? ClassLoader.getSystemResource(resourceRoot)
+            : classLoader.getResource(resourceRoot);
+        if (resource == null) {
+            return null;
+        }
+        try {
+            return switch (resource.getProtocol()) {
+                case "file" -> ResourceFileSystem.fromDirectory(Path.of(resource.toURI()));
+                case "jar" -> ResourceFileSystem.fromJar(resource);
+                default -> null;
+            };
+        } catch (IOException | URISyntaxException | IllegalArgumentException e) {
+            return null;
+        }
     }
 
     @Override
@@ -63,6 +85,39 @@ final class FileSystemRegistry implements FileSystemAPI {
     @Override
     public ManagedEnvironment asManagedEnvironment(final FileSystem fileSystem, final String label, final EnvironmentHost host, final String accessSound, final int speed) {
         return asManagedEnvironment(fileSystem, new ReadOnlyLabel(label), host, accessSound, speed);
+    }
+
+    private static String cleanRoot(final String root) {
+        if (root == null) {
+            return "";
+        }
+        String clean = root.trim().replace('\\', '/');
+        while (clean.startsWith("/")) {
+            clean = clean.substring(1);
+        }
+        while (clean.endsWith("/")) {
+            clean = clean.substring(0, clean.length() - 1);
+        }
+        return clean;
+    }
+
+    private static String[] pathSegments(final String path) {
+        if (path == null || path.isEmpty()) {
+            return new String[0];
+        }
+        if (path.indexOf('\\') >= 0 || path.indexOf(':') >= 0 || path.indexOf('*') >= 0 ||
+            path.indexOf('?') >= 0 || path.indexOf('"') >= 0 || path.indexOf('<') >= 0 ||
+            path.indexOf('>') >= 0 || path.indexOf('|') >= 0) {
+            throw new IllegalArgumentException("path contains invalid characters");
+        }
+        return Arrays.stream(path.split("/"))
+            .filter(segment -> !segment.isEmpty())
+            .peek(segment -> {
+                if (".".equals(segment) || "..".equals(segment)) {
+                    throw new IllegalArgumentException("path contains invalid segments");
+                }
+            })
+            .toArray(String[]::new);
     }
 
     private static final class ReadOnlyLabel implements Label {
@@ -189,6 +244,344 @@ final class FileSystemRegistry implements FileSystemAPI {
         @Override
         public void save(final CompoundTag nbt) {
             inner.save(nbt);
+        }
+    }
+
+    private static final class ResourceFileSystem implements FileSystem {
+        private static final String INPUT_TAG = "input";
+        private static final String HANDLE_TAG = "handle";
+        private static final String PATH_TAG = "path";
+        private static final String POSITION_TAG = "position";
+
+        private final ResourceDirectory root = new ResourceDirectory(0);
+        private final Map<Integer, ResourceHandle> handles = new LinkedHashMap<>();
+        private int nextHandle = 1;
+
+        private static ResourceFileSystem fromDirectory(final Path rootPath) throws IOException {
+            if (!Files.isDirectory(rootPath)) {
+                return null;
+            }
+            final ResourceFileSystem fileSystem = new ResourceFileSystem();
+            try (Stream<Path> stream = Files.walk(rootPath)) {
+                for (Path path : stream.filter(path -> !path.equals(rootPath)).toList()) {
+                    final String relativePath = rootPath.relativize(path).toString().replace('\\', '/');
+                    if (Files.isDirectory(path)) {
+                        fileSystem.addDirectory(relativePath, Files.getLastModifiedTime(path).toMillis());
+                    } else if (Files.isRegularFile(path)) {
+                        fileSystem.addFile(relativePath, Files.readAllBytes(path), Files.getLastModifiedTime(path).toMillis());
+                    }
+                }
+            }
+            return fileSystem;
+        }
+
+        private static ResourceFileSystem fromJar(final URL resource) throws IOException {
+            final JarURLConnection connection = (JarURLConnection) resource.openConnection();
+            connection.setUseCaches(false);
+            final String rootEntry = connection.getEntryName().replace('\\', '/').replaceAll("/+$", "") + "/";
+            final ResourceFileSystem fileSystem = new ResourceFileSystem();
+            try (JarFile jarFile = connection.getJarFile()) {
+                final java.util.Enumeration<JarEntry> entries = jarFile.entries();
+                while (entries.hasMoreElements()) {
+                    final JarEntry entry = entries.nextElement();
+                    final String entryName = entry.getName().replace('\\', '/');
+                    if (!entryName.startsWith(rootEntry) || entryName.equals(rootEntry)) {
+                        continue;
+                    }
+                    final String relativePath = entryName.substring(rootEntry.length()).replaceAll("/+$", "");
+                    if (relativePath.isEmpty()) {
+                        continue;
+                    }
+                    if (entry.isDirectory()) {
+                        fileSystem.addDirectory(relativePath, entry.getTime());
+                    } else {
+                        try (InputStream input = jarFile.getInputStream(entry)) {
+                            fileSystem.addFile(relativePath, input.readAllBytes(), entry.getTime());
+                        }
+                    }
+                }
+            }
+            return fileSystem;
+        }
+
+        @Override
+        public boolean isReadOnly() {
+            return true;
+        }
+
+        @Override
+        public long spaceTotal() {
+            return spaceUsed();
+        }
+
+        @Override
+        public long spaceUsed() {
+            return root.spaceUsed();
+        }
+
+        @Override
+        public boolean exists(final String path) {
+            return find(path) != null;
+        }
+
+        @Override
+        public long size(final String path) {
+            final ResourceEntry entry = find(path);
+            return entry instanceof ResourceFile file ? file.data.length : 0;
+        }
+
+        @Override
+        public boolean isDirectory(final String path) {
+            return find(path) instanceof ResourceDirectory;
+        }
+
+        @Override
+        public long lastModified(final String path) {
+            final ResourceEntry entry = find(path);
+            return entry == null ? 0 : entry.lastModified;
+        }
+
+        @Override
+        public String[] list(final String path) {
+            final ResourceEntry entry = find(path);
+            if (!(entry instanceof ResourceDirectory directory)) {
+                return null;
+            }
+            return directory.children.entrySet().stream()
+                .map(child -> child.getValue() instanceof ResourceDirectory ? child.getKey() + "/" : child.getKey())
+                .sorted()
+                .toArray(String[]::new);
+        }
+
+        @Override
+        public boolean delete(final String path) {
+            return false;
+        }
+
+        @Override
+        public boolean makeDirectory(final String path) {
+            return false;
+        }
+
+        @Override
+        public boolean rename(final String from, final String to) {
+            return false;
+        }
+
+        @Override
+        public boolean setLastModified(final String path, final long time) {
+            return false;
+        }
+
+        @Override
+        public int open(final String path, final Mode mode) throws FileNotFoundException {
+            if (mode != Mode.Read) {
+                throw new FileNotFoundException("read-only filesystem; cannot open for " + mode.name().toLowerCase() + ": " + path);
+            }
+            final ResourceEntry entry = find(path);
+            if (!(entry instanceof ResourceFile file)) {
+                throw new FileNotFoundException(path);
+            }
+            final int id = newHandleId();
+            handles.put(id, new ResourceHandle(id, path, file.data));
+            return id;
+        }
+
+        @Override
+        public Handle getHandle(final int handle) {
+            return handles.get(handle);
+        }
+
+        @Override
+        public void close() {
+            for (ResourceHandle handle : handles.values().toArray(ResourceHandle[]::new)) {
+                handle.close();
+            }
+            handles.clear();
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+            handles.clear();
+            nextHandle = 1;
+            final ListTag savedHandles = nbt.getList(INPUT_TAG, Tag.TAG_COMPOUND);
+            for (int index = 0; index < savedHandles.size(); index++) {
+                final CompoundTag savedHandle = savedHandles.getCompound(index);
+                final ResourceEntry entry = find(savedHandle.getString(PATH_TAG));
+                if (entry instanceof ResourceFile file) {
+                    final int handle = savedHandle.getInt(HANDLE_TAG);
+                    final ResourceHandle loadedHandle = new ResourceHandle(handle, savedHandle.getString(PATH_TAG), file.data);
+                    loadedHandle.position = Math.min(savedHandle.getLong(POSITION_TAG), file.data.length);
+                    handles.put(handle, loadedHandle);
+                    nextHandle = Math.max(nextHandle, handle + 1);
+                }
+            }
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+            final ListTag savedHandles = new ListTag();
+            for (ResourceHandle handle : handles.values()) {
+                if (!handle.closed) {
+                    final CompoundTag savedHandle = new CompoundTag();
+                    savedHandle.putInt(HANDLE_TAG, handle.id);
+                    savedHandle.putString(PATH_TAG, handle.path);
+                    savedHandle.putLong(POSITION_TAG, handle.position);
+                    savedHandles.add(savedHandle);
+                }
+            }
+            nbt.put(INPUT_TAG, savedHandles);
+        }
+
+        private ResourceEntry find(final String path) {
+            ResourceEntry current = root;
+            for (String segment : pathSegments(path)) {
+                if (!(current instanceof ResourceDirectory directory)) {
+                    return null;
+                }
+                current = directory.children.get(segment);
+                if (current == null) {
+                    return null;
+                }
+            }
+            return current;
+        }
+
+        private void addDirectory(final String path, final long lastModified) {
+            directory(pathSegments(path), lastModified);
+        }
+
+        private void addFile(final String path, final byte[] data, final long lastModified) {
+            final String[] segments = pathSegments(path);
+            if (segments.length == 0) {
+                return;
+            }
+            final ResourceDirectory parent = directory(Arrays.copyOf(segments, segments.length - 1), lastModified);
+            parent.children.put(segments[segments.length - 1], new ResourceFile(data, lastModified));
+        }
+
+        private ResourceDirectory directory(final String[] segments, final long lastModified) {
+            ResourceDirectory current = root;
+            for (String segment : segments) {
+                final ResourceEntry child = current.children.get(segment);
+                if (child instanceof ResourceDirectory childDirectory) {
+                    current = childDirectory;
+                } else {
+                    final ResourceDirectory directory = new ResourceDirectory(lastModified);
+                    current.children.put(segment, directory);
+                    current = directory;
+                }
+            }
+            return current;
+        }
+
+        private int newHandleId() {
+            while (handles.containsKey(nextHandle)) {
+                nextHandle++;
+            }
+            return nextHandle++;
+        }
+
+        private abstract static class ResourceEntry {
+            private final long lastModified;
+
+            private ResourceEntry(final long lastModified) {
+                this.lastModified = lastModified;
+            }
+
+            abstract long spaceUsed();
+        }
+
+        private static final class ResourceDirectory extends ResourceEntry {
+            private final Map<String, ResourceEntry> children = new LinkedHashMap<>();
+
+            private ResourceDirectory(final long lastModified) {
+                super(lastModified);
+            }
+
+            @Override
+            long spaceUsed() {
+                return children.values().stream().mapToLong(ResourceEntry::spaceUsed).sum();
+            }
+        }
+
+        private static final class ResourceFile extends ResourceEntry {
+            private final byte[] data;
+
+            private ResourceFile(final byte[] data, final long lastModified) {
+                super(lastModified);
+                this.data = data;
+            }
+
+            @Override
+            long spaceUsed() {
+                return data.length;
+            }
+        }
+
+        private final class ResourceHandle implements Handle {
+            private final int id;
+            private final String path;
+            private final byte[] data;
+            private boolean closed;
+            private long position;
+
+            private ResourceHandle(final int id, final String path, final byte[] data) {
+                this.id = id;
+                this.path = path;
+                this.data = data;
+            }
+
+            @Override
+            public long position() {
+                return position;
+            }
+
+            @Override
+            public long length() {
+                return data.length;
+            }
+
+            @Override
+            public void close() {
+                if (!closed) {
+                    closed = true;
+                    handles.remove(id);
+                }
+            }
+
+            @Override
+            public int read(final byte[] into) throws IOException {
+                checkOpen();
+                if (position >= data.length) {
+                    return -1;
+                }
+                final int count = Math.min(into.length, data.length - (int) position);
+                System.arraycopy(data, (int) position, into, 0, count);
+                position += count;
+                return count;
+            }
+
+            @Override
+            public long seek(final long to) throws IOException {
+                checkOpen();
+                if (to < 0) {
+                    throw new IOException("invalid offset");
+                }
+                position = Math.min(to, data.length);
+                return position;
+            }
+
+            @Override
+            public void write(final byte[] value) throws IOException {
+                throw new IOException("bad file descriptor");
+            }
+
+            private void checkOpen() throws IOException {
+                if (closed) {
+                    throw new IOException("file is closed");
+                }
+            }
         }
     }
 
@@ -443,7 +836,7 @@ final class FileSystemRegistry implements FileSystemAPI {
 
         private Path resolve(final String path) {
             Path resolved = root;
-            for (String segment : segments(path)) {
+            for (String segment : pathSegments(path)) {
                 resolved = resolved.resolve(segment);
             }
             resolved = resolved.normalize();
@@ -451,25 +844,6 @@ final class FileSystemRegistry implements FileSystemAPI {
                 throw new IllegalArgumentException("path escapes filesystem root");
             }
             return resolved;
-        }
-
-        private String[] segments(final String path) {
-            if (path == null || path.isEmpty()) {
-                return new String[0];
-            }
-            if (path.indexOf('\\') >= 0 || path.indexOf(':') >= 0 || path.indexOf('*') >= 0 ||
-                path.indexOf('?') >= 0 || path.indexOf('"') >= 0 || path.indexOf('<') >= 0 ||
-                path.indexOf('>') >= 0 || path.indexOf('|') >= 0) {
-                throw new IllegalArgumentException("path contains invalid characters");
-            }
-            return Arrays.stream(path.split("/"))
-                .filter(segment -> !segment.isEmpty())
-                .peek(segment -> {
-                    if (".".equals(segment) || "..".equals(segment)) {
-                        throw new IllegalArgumentException("path contains invalid segments");
-                    }
-                })
-                .toArray(String[]::new);
         }
 
         private final class DirectoryHandle implements Handle {

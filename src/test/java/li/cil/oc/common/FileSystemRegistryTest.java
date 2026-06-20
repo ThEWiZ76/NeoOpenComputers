@@ -147,8 +147,34 @@ final class FileSystemRegistryTest {
     void deferredFileSystemSourcesReturnNull() {
         FileSystemRegistry registry = new FileSystemRegistry();
 
-        assertNull(registry.fromClass(getClass(), "neoopencomputers", "manual"));
         assertNull(registry.asManagedEnvironment(null, "label", null, null, 1));
+    }
+
+    @Test
+    void classpathFileSystemReadsBundledResources() throws IOException {
+        FileSystem fileSystem = new FileSystemRegistry().fromClass(getClass(), "neoopencomputers", "classpathfs");
+
+        assertNotNull(fileSystem);
+        assertTrue(fileSystem.isReadOnly());
+        assertTrue(fileSystem.exists("data.txt"));
+        assertTrue(fileSystem.isDirectory("sub"));
+        assertArrayEquals(new String[]{"data.txt", "sub/"}, fileSystem.list(""));
+        assertThrows(FileNotFoundException.class, () -> fileSystem.open("data.txt", Mode.Write));
+
+        int inputHandle = fileSystem.open("data.txt", Mode.Read);
+        byte[] buffer = new byte[64];
+        int read = fileSystem.getHandle(inputHandle).read(buffer);
+        fileSystem.getHandle(inputHandle).close();
+
+        assertEquals("hello resource\n", new String(buffer, 0, read, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void classpathFileSystemRejectsPathEscape() {
+        FileSystem fileSystem = new FileSystemRegistry().fromClass(getClass(), "neoopencomputers", "classpathfs");
+
+        assertNotNull(fileSystem);
+        assertThrows(IllegalArgumentException.class, () -> fileSystem.exists("../outside.txt"));
     }
 
     @Test
