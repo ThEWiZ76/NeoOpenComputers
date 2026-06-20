@@ -13,12 +13,17 @@ import net.minecraft.world.item.component.CustomData;
 import java.util.function.Consumer;
 
 public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.DriverItem {
-    private static final int TIER = 0;
-    private static final int SLOTS = 9;
+    private static final int[] SLOTS_BY_TIER = {9, 25, 81};
     private static final String DATABASE_DATA_TAG = "oc:database";
+    private final int tier;
 
     public DatabaseUpgradeItem(final Properties properties) {
+        this(properties, 0);
+    }
+
+    public DatabaseUpgradeItem(final Properties properties, final int tier) {
         super(properties);
+        this.tier = Math.max(0, Math.min(SLOTS_BY_TIER.length - 1, tier));
     }
 
     @Override
@@ -28,11 +33,15 @@ public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.Dr
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return createEnvironment(dataTag(stack), saved -> writeDataTag(stack, saved), host);
+        return createEnvironment(tier(stack), dataTag(stack), saved -> writeDataTag(stack, saved), host);
     }
 
     static ManagedEnvironment createEnvironment(final CompoundTag data, final Consumer<CompoundTag> saveData, final EnvironmentHost host) {
-        final DatabaseEnvironment environment = new DatabaseEnvironment(SLOTS, saveData);
+        return createEnvironment(0, data, saveData, host);
+    }
+
+    static ManagedEnvironment createEnvironment(final int tier, final CompoundTag data, final Consumer<CompoundTag> saveData, final EnvironmentHost host) {
+        final DatabaseEnvironment environment = new DatabaseEnvironment(slotsForTier(tier), saveData);
         if (data != null && !data.isEmpty()) {
             environment.load(data);
         }
@@ -46,7 +55,7 @@ public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.Dr
 
     @Override
     public int tier(final ItemStack stack) {
-        return TIER;
+        return tier;
     }
 
     @Override
@@ -69,5 +78,10 @@ public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.Dr
         final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
         root.put(DATABASE_DATA_TAG, data.copy());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    private static int slotsForTier(final int tier) {
+        final int clampedTier = Math.max(0, Math.min(SLOTS_BY_TIER.length - 1, tier));
+        return SLOTS_BY_TIER[clampedTier];
     }
 }

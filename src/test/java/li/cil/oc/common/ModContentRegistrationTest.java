@@ -101,6 +101,21 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void databaseUpgradeTier1ItemIdIsStable() {
+        assertEquals("database_upgrade_tier1", ModContentIds.DATABASE_UPGRADE_TIER1);
+    }
+
+    @Test
+    void databaseUpgradeTier2ItemIdIsStable() {
+        assertEquals("database_upgrade_tier2", ModContentIds.DATABASE_UPGRADE_TIER2);
+    }
+
+    @Test
+    void databaseUpgradeTier3ItemIdIsStable() {
+        assertEquals("database_upgrade_tier3", ModContentIds.DATABASE_UPGRADE_TIER3);
+    }
+
+    @Test
     void eepromItemIdIsStable() {
         assertEquals("eeprom", ModContentIds.EEPROM);
     }

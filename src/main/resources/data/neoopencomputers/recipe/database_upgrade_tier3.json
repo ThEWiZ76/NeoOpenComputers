@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "U": {
+      "item": "neoopencomputers:database_upgrade_tier2"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "DDD",
+    "RUR",
+    "DDD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:database_upgrade_tier3"
+  }
+}

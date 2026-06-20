@@ -74,6 +74,8 @@ public final class NeoOpenComputersGameTests {
         ModItems.CPU_TIER2.get();
         ModItems.CPU_TIER3.get();
         ModItems.DATABASE_UPGRADE_TIER1.get();
+        ModItems.DATABASE_UPGRADE_TIER2.get();
+        ModItems.DATABASE_UPGRADE_TIER3.get();
         ModItems.EEPROM.get();
         ModItems.FLOPPY.get();
         ModItems.GRAPHICS_CARD_TIER1.get();
@@ -97,6 +99,8 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.CPU_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.CPU_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER2.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 2);
@@ -120,6 +124,9 @@ public final class NeoOpenComputersGameTests {
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER1.get()), 1024L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER2.get()), 2048L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER3.get()), 4096L * 1024L);
+        assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), 9);
+        assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER2.get()), 25);
+        assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER3.get()), 81);
         helper.succeed();
     }
 
@@ -991,6 +998,15 @@ public final class NeoOpenComputersGameTests {
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         final Object[] result = invokeComponent(helper, component, "spaceTotal");
         helper.assertTrue(result.length == 1 && result[0].equals(capacity), "Expected " + stack + " capacity " + capacity + " but got " + (result.length == 0 ? "<empty>" : result[0]));
+    }
+
+    private static void assertDatabaseCapacity(final GameTestHelper helper, final ItemStack stack, final int capacity) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment instanceof li.cil.oc.api.internal.Database, "No database environment for " + stack);
+        final li.cil.oc.api.internal.Database database = (li.cil.oc.api.internal.Database) environment;
+        helper.assertTrue(database.size() == capacity, "Expected " + stack + " to have " + capacity + " database slots but got " + database.size());
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {

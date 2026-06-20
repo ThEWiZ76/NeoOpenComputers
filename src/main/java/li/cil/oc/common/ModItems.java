@@ -58,7 +58,15 @@ public final class ModItems {
 
     public static final DeferredItem<DatabaseUpgradeItem> DATABASE_UPGRADE_TIER1 = ITEMS.register(
         ModContentIds.DATABASE_UPGRADE_TIER1,
-        () -> new DatabaseUpgradeItem(new Item.Properties()));
+        () -> new DatabaseUpgradeItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<DatabaseUpgradeItem> DATABASE_UPGRADE_TIER2 = ITEMS.register(
+        ModContentIds.DATABASE_UPGRADE_TIER2,
+        () -> new DatabaseUpgradeItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<DatabaseUpgradeItem> DATABASE_UPGRADE_TIER3 = ITEMS.register(
+        ModContentIds.DATABASE_UPGRADE_TIER3,
+        () -> new DatabaseUpgradeItem(new Item.Properties(), 2));
 
     public static final DeferredItem<EepromItem> EEPROM = ITEMS.register(
         ModContentIds.EEPROM,
