@@ -45,17 +45,34 @@ public class TankControllerEnvironment extends AbstractManagedEnvironment implem
         return new Object[]{handler(arguments.checkInteger(0)).getTanks()};
     }
 
-    @Callback(doc = "function(side:number, tank:number):number -- Get the fluid amount in the specified tank.")
+    @Callback(doc = "function(side:number[, tank:number]):number -- Get the fluid amount in the specified tank, or the total amount in all tanks.")
     public Object[] getTankLevel(final Context context, final Arguments arguments) {
         final IFluidHandler handler = handler(arguments.checkInteger(0));
-        final FluidStack stack = handler.getFluidInTank(checkTank(handler, arguments.checkInteger(1)));
-        return new Object[]{stack.isEmpty() ? 0 : stack.getAmount()};
+        if (arguments.count() > 1 && arguments.checkAny(1) != null) {
+            final FluidStack stack = handler.getFluidInTank(checkTank(handler, arguments.checkInteger(1)));
+            return new Object[]{stack.isEmpty() ? 0 : stack.getAmount()};
+        }
+        int amount = 0;
+        for (int tank = 0; tank < handler.getTanks(); tank++) {
+            final FluidStack stack = handler.getFluidInTank(tank);
+            if (!stack.isEmpty()) {
+                amount += stack.getAmount();
+            }
+        }
+        return new Object[]{amount};
     }
 
-    @Callback(doc = "function(side:number, tank:number):number -- Get the capacity of the specified tank.")
+    @Callback(doc = "function(side:number[, tank:number]):number -- Get the capacity of the specified tank, or the maximum capacity on the side.")
     public Object[] getTankCapacity(final Context context, final Arguments arguments) {
         final IFluidHandler handler = handler(arguments.checkInteger(0));
-        return new Object[]{handler.getTankCapacity(checkTank(handler, arguments.checkInteger(1)))};
+        if (arguments.count() > 1 && arguments.checkAny(1) != null) {
+            return new Object[]{handler.getTankCapacity(checkTank(handler, arguments.checkInteger(1)))};
+        }
+        int capacity = 0;
+        for (int tank = 0; tank < handler.getTanks(); tank++) {
+            capacity = Math.max(capacity, handler.getTankCapacity(tank));
+        }
+        return new Object[]{capacity};
     }
 
     @Callback(doc = "function(side:number, tank:number):string, number, number -- Get fluid id, amount, and capacity for the specified tank.")

@@ -26,6 +26,7 @@ import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.api.Network;
 import li.cil.oc.common.blockentity.CableBlockEntity;
+import li.cil.oc.common.blockentity.AdapterBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
@@ -366,6 +367,30 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Integer.valueOf(1000).equals(result[1]), "Transposer reported wrong transferred amount");
         helper.assertTrue(helper.getBlockState(pos.relative(Direction.WEST)).is(Blocks.CAULDRON), "Source cauldron was not drained");
         helper.assertTrue(helper.getBlockState(pos.relative(Direction.EAST)).is(Blocks.WATER_CAULDRON), "Sink cauldron was not filled");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tankControllerInspectsAdjacentFluidTanks(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final int side = Direction.WEST.get3DDataValue();
+        helper.setBlock(pos, ModBlocks.ADAPTER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), AdapterBlockEntity.class);
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), new StaticPositionEnvironmentHost(helper, pos));
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        final Object[] count = invokeComponent(helper, component, "getTankCount", side);
+        final Object[] level = invokeComponent(helper, component, "getTankLevel", side);
+        final Object[] capacity = invokeComponent(helper, component, "getTankCapacity", side);
+        final Object[] fluid = invokeComponent(helper, component, "getFluidInTank", side, 1);
+
+        helper.assertTrue(Integer.valueOf(1).equals(count[0]), "Tank controller did not see adjacent tank");
+        helper.assertTrue(Integer.valueOf(1000).equals(level[0]), "Tank controller did not sum tank level");
+        helper.assertTrue(Integer.valueOf(1000).equals(capacity[0]), "Tank controller did not report max tank capacity");
+        helper.assertTrue("minecraft:water".equals(fluid[0]), "Tank controller did not report water fluid id");
+        helper.assertTrue(Integer.valueOf(1000).equals(fluid[1]), "Tank controller did not report fluid amount");
+        helper.assertTrue(Integer.valueOf(1000).equals(fluid[2]), "Tank controller did not report fluid capacity");
         helper.succeed();
     }
 
@@ -1949,6 +1974,32 @@ public final class NeoOpenComputersGameTests {
         @Override
         public double zPosition() {
             return helper.absolutePos(BlockPos.ZERO).getZ();
+        }
+
+        @Override
+        public void markChanged() {
+        }
+    }
+
+    private record StaticPositionEnvironmentHost(GameTestHelper helper, BlockPos pos) implements li.cil.oc.api.network.EnvironmentHost {
+        @Override
+        public net.minecraft.world.level.Level world() {
+            return helper.getLevel();
+        }
+
+        @Override
+        public double xPosition() {
+            return helper.absolutePos(pos).getX() + 0.5D;
+        }
+
+        @Override
+        public double yPosition() {
+            return helper.absolutePos(pos).getY() + 0.5D;
+        }
+
+        @Override
+        public double zPosition() {
+            return helper.absolutePos(pos).getZ() + 0.5D;
         }
 
         @Override
