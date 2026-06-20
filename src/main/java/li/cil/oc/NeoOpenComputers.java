@@ -12,6 +12,7 @@ import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.machine.ProgramLocationImc;
+import li.cil.oc.common.template.AssemblerTemplateImc;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.InterModComms;
 import net.neoforged.fml.ModContainer;
@@ -49,6 +50,10 @@ public final class NeoOpenComputers {
     }
 
     private void onInterModProcess(final InterModProcessEvent event) {
-        event.enqueueWork(() -> ProgramLocationImc.process(InterModComms.getMessages(MODID)));
+        event.enqueueWork(() -> {
+            final var messages = InterModComms.getMessages(MODID).toList();
+            ProgramLocationImc.process(messages.stream());
+            AssemblerTemplateImc.process(messages.stream());
+        });
     }
 }

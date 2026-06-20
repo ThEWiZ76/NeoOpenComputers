@@ -34,7 +34,9 @@ import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.template.AssemblerTemplate;
+import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.AssemblerTemplates;
+import net.neoforged.fml.InterModComms;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -414,6 +416,32 @@ public final class NeoOpenComputersGameTests {
 
             helper.assertTrue(!assembler.isAssembling(), "Assembler did not finish after required energy");
             helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).is(Items.EMERALD), "Assembler did not install pending output");
+            helper.succeed();
+        }
+    }
+
+    @GameTest(template = "empty")
+    public static void assemblerProcessesImcTemplates(final GameTestHelper helper) {
+        final CompoundTag payload = new CompoundTag();
+        payload.putString("name", "imc_test");
+        payload.putString("select", NeoOpenComputersGameTests.class.getName() + ".selectDiamondTemplate");
+        payload.putString("validate", NeoOpenComputersGameTests.class.getName() + ".validateImcAssemblerTemplate");
+        payload.putString("assemble", NeoOpenComputersGameTests.class.getName() + ".assembleEmeraldTemplate");
+        final InterModComms.IMCMessage message = new InterModComms.IMCMessage(
+            "addon",
+            NeoOpenComputers.MODID,
+            li.cil.oc.api.IMC.REGISTER_ASSEMBLER_TEMPLATE,
+            () -> payload);
+
+        try (AssemblerTemplates.Registration ignored = AssemblerTemplateImc.process(java.util.stream.Stream.of(message)).getFirst()) {
+            final BlockPos pos = new BlockPos(1, 1, 1);
+            helper.setBlock(pos, ModBlocks.ASSEMBLER.get());
+            final AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
+            assembler.setItem(AssemblerBlockEntity.SLOT_TEMPLATE, new ItemStack(Items.DIAMOND));
+
+            helper.assertTrue(assembler.canAssemble(), "IMC assembler template did not validate");
+            helper.assertTrue(assembler.start(true), "IMC assembler template did not start");
+            helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).is(Items.EMERALD), "IMC assembler template did not produce output");
             helper.succeed();
         }
     }
@@ -1587,6 +1615,18 @@ public final class NeoOpenComputersGameTests {
         for (int index = 0; index < args.length; index++) {
             helper.assertTrue(args[index].equals(signal.args()[index]), "Expected signal " + name + " argument " + index + " to be " + args[index] + " but got " + signal.args()[index]);
         }
+    }
+
+    public static boolean selectDiamondTemplate(final ItemStack stack) {
+        return stack.is(Items.DIAMOND);
+    }
+
+    public static Object[] validateImcAssemblerTemplate(final net.minecraft.world.Container inventory) {
+        return new Object[]{true};
+    }
+
+    public static Object[] assembleEmeraldTemplate(final net.minecraft.world.Container inventory) {
+        return new Object[]{new ItemStack(Items.EMERALD), 1D};
     }
 
     private record DatabaseCloneContext(Node node, double[] pauseSeconds) implements Context {
