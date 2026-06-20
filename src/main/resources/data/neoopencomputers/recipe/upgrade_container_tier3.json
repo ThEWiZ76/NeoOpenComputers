@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "neoopencomputers:upgrade_container_tier2"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "L": {
+      "item": "minecraft:lapis_lazuli"
+    }
+  },
+  "pattern": [
+    "DLD",
+    "LCL",
+    "DLD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:upgrade_container_tier3"
+  }
+}

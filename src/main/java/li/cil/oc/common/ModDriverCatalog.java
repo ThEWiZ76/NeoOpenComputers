@@ -15,6 +15,7 @@ public final class ModDriverCatalog {
             register(
                 registry,
                 ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(),
+                ModItems.CARD_CONTAINER_TIER1.get(), ModItems.CARD_CONTAINER_TIER2.get(), ModItems.CARD_CONTAINER_TIER3.get(),
                 ModItems.BATTERY_UPGRADE_TIER1.get(), ModItems.BATTERY_UPGRADE_TIER2.get(), ModItems.BATTERY_UPGRADE_TIER3.get(),
                 ModItems.DATA_CARD_TIER1.get(), ModItems.DATA_CARD_TIER2.get(), ModItems.DATA_CARD_TIER3.get(),
                 ModItems.DATABASE_UPGRADE_TIER1.get(), ModItems.DATABASE_UPGRADE_TIER2.get(), ModItems.DATABASE_UPGRADE_TIER3.get(),
@@ -25,7 +26,8 @@ public final class ModDriverCatalog {
                 ModItems.EEPROM.get(), ModItems.FLOPPY.get(),
                 ModItems.GRAPHICS_CARD_TIER1.get(), ModItems.GRAPHICS_CARD_TIER2.get(), ModItems.GRAPHICS_CARD_TIER3.get(),
                 ModItems.NETWORK_CARD.get(), ModItems.WIRELESS_NETWORK_CARD_TIER1.get(), ModItems.WIRELESS_NETWORK_CARD_TIER2.get(), ModItems.REDSTONE_CARD.get(),
-                ModItems.SOLAR_GENERATOR_UPGRADE.get(), ModItems.TANK_UPGRADE.get());
+                ModItems.SOLAR_GENERATOR_UPGRADE.get(), ModItems.TANK_UPGRADE.get(),
+                ModItems.UPGRADE_CONTAINER_TIER1.get(), ModItems.UPGRADE_CONTAINER_TIER2.get(), ModItems.UPGRADE_CONTAINER_TIER3.get());
         }
     }
 

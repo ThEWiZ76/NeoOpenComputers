@@ -49,6 +49,12 @@ final class ModContentCatalogTest {
             null,
             null,
             null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
             null);
 
         assertNotNull(registry.get(ModContentIds.ADAPTER));
@@ -80,6 +86,9 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.CPU_TIER1));
         assertNotNull(registry.get(ModContentIds.CPU_TIER2));
         assertNotNull(registry.get(ModContentIds.CPU_TIER3));
+        assertNotNull(registry.get(ModContentIds.CARD_CONTAINER_TIER1));
+        assertNotNull(registry.get(ModContentIds.CARD_CONTAINER_TIER2));
+        assertNotNull(registry.get(ModContentIds.CARD_CONTAINER_TIER3));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER1));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER2));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER3));
@@ -119,9 +128,15 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.WIRELESS_NETWORK_CARD_TIER2));
         assertNotNull(registry.get(ModContentIds.REDSTONE_CARD));
         assertNotNull(registry.get(ModContentIds.SOLAR_GENERATOR_UPGRADE));
+        assertNotNull(registry.get(ModContentIds.UPGRADE_CONTAINER_TIER1));
+        assertNotNull(registry.get(ModContentIds.UPGRADE_CONTAINER_TIER2));
+        assertNotNull(registry.get(ModContentIds.UPGRADE_CONTAINER_TIER3));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CPU_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CPU_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CPU_TIER3));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CARD_CONTAINER_TIER1));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CARD_CONTAINER_TIER2));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CARD_CONTAINER_TIER3));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER3));
@@ -148,6 +163,9 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_REDSTONE_CARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_SOLAR_GENERATOR_UPGRADE));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER1));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER2));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER3));
         assertEquals(ModContentIds.ADAPTER, registry.get(ModContentIds.ADAPTER).name());
         assertEquals(ModContentIds.MANUAL, registry.get(ModContentIds.MANUAL).name());
         assertEquals(ModContentIds.CABLE, registry.get(ModContentIds.CABLE).name());
@@ -177,6 +195,9 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.CPU_TIER1, registry.get(ModContentIds.CPU_TIER1).name());
         assertEquals(ModContentIds.CPU_TIER2, registry.get(ModContentIds.CPU_TIER2).name());
         assertEquals(ModContentIds.CPU_TIER3, registry.get(ModContentIds.CPU_TIER3).name());
+        assertEquals(ModContentIds.CARD_CONTAINER_TIER1, registry.get(ModContentIds.CARD_CONTAINER_TIER1).name());
+        assertEquals(ModContentIds.CARD_CONTAINER_TIER2, registry.get(ModContentIds.CARD_CONTAINER_TIER2).name());
+        assertEquals(ModContentIds.CARD_CONTAINER_TIER3, registry.get(ModContentIds.CARD_CONTAINER_TIER3).name());
         assertEquals(ModContentIds.DATA_CARD_TIER1, registry.get(ModContentIds.DATA_CARD_TIER1).name());
         assertEquals(ModContentIds.DATA_CARD_TIER2, registry.get(ModContentIds.DATA_CARD_TIER2).name());
         assertEquals(ModContentIds.DATA_CARD_TIER3, registry.get(ModContentIds.DATA_CARD_TIER3).name());
@@ -216,9 +237,15 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, registry.get(ModContentIds.WIRELESS_NETWORK_CARD_TIER2).name());
         assertEquals(ModContentIds.REDSTONE_CARD, registry.get(ModContentIds.REDSTONE_CARD).name());
         assertEquals(ModContentIds.SOLAR_GENERATOR_UPGRADE, registry.get(ModContentIds.SOLAR_GENERATOR_UPGRADE).name());
+        assertEquals(ModContentIds.UPGRADE_CONTAINER_TIER1, registry.get(ModContentIds.UPGRADE_CONTAINER_TIER1).name());
+        assertEquals(ModContentIds.UPGRADE_CONTAINER_TIER2, registry.get(ModContentIds.UPGRADE_CONTAINER_TIER2).name());
+        assertEquals(ModContentIds.UPGRADE_CONTAINER_TIER3, registry.get(ModContentIds.UPGRADE_CONTAINER_TIER3).name());
         assertEquals(ModContentCatalog.COMPAT_CPU_TIER1, registry.get(ModContentCatalog.COMPAT_CPU_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_CPU_TIER2, registry.get(ModContentCatalog.COMPAT_CPU_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_CPU_TIER3, registry.get(ModContentCatalog.COMPAT_CPU_TIER3).name());
+        assertEquals(ModContentCatalog.COMPAT_CARD_CONTAINER_TIER1, registry.get(ModContentCatalog.COMPAT_CARD_CONTAINER_TIER1).name());
+        assertEquals(ModContentCatalog.COMPAT_CARD_CONTAINER_TIER2, registry.get(ModContentCatalog.COMPAT_CARD_CONTAINER_TIER2).name());
+        assertEquals(ModContentCatalog.COMPAT_CARD_CONTAINER_TIER3, registry.get(ModContentCatalog.COMPAT_CARD_CONTAINER_TIER3).name());
         assertEquals(ModContentCatalog.COMPAT_DATA_CARD_TIER1, registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_DATA_CARD_TIER2, registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_DATA_CARD_TIER3, registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER3).name());
@@ -245,5 +272,8 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD, registry.get(ModContentCatalog.COMPAT_WIRELESS_NETWORK_CARD).name());
         assertEquals(ModContentCatalog.COMPAT_REDSTONE_CARD, registry.get(ModContentCatalog.COMPAT_REDSTONE_CARD).name());
         assertEquals(ModContentCatalog.COMPAT_SOLAR_GENERATOR_UPGRADE, registry.get(ModContentCatalog.COMPAT_SOLAR_GENERATOR_UPGRADE).name());
+        assertEquals(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER1, registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER1).name());
+        assertEquals(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER2, registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER2).name());
+        assertEquals(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER3, registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER3).name());
     }
 }

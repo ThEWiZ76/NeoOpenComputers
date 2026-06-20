@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "neoopencomputers:card_container_tier2"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "DRD",
+    "RCR",
+    "DRD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:card_container_tier3"
+  }
+}

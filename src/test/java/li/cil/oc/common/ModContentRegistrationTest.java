@@ -71,6 +71,36 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void cardContainerTier1ItemIdIsStable() {
+        assertEquals("card_container_tier1", ModContentIds.CARD_CONTAINER_TIER1);
+    }
+
+    @Test
+    void cardContainerTier2ItemIdIsStable() {
+        assertEquals("card_container_tier2", ModContentIds.CARD_CONTAINER_TIER2);
+    }
+
+    @Test
+    void cardContainerTier3ItemIdIsStable() {
+        assertEquals("card_container_tier3", ModContentIds.CARD_CONTAINER_TIER3);
+    }
+
+    @Test
+    void upgradeContainerTier1ItemIdIsStable() {
+        assertEquals("upgrade_container_tier1", ModContentIds.UPGRADE_CONTAINER_TIER1);
+    }
+
+    @Test
+    void upgradeContainerTier2ItemIdIsStable() {
+        assertEquals("upgrade_container_tier2", ModContentIds.UPGRADE_CONTAINER_TIER2);
+    }
+
+    @Test
+    void upgradeContainerTier3ItemIdIsStable() {
+        assertEquals("upgrade_container_tier3", ModContentIds.UPGRADE_CONTAINER_TIER3);
+    }
+
+    @Test
     void memoryTier1ItemIdIsStable() {
         assertEquals("memory_tier1", ModContentIds.MEMORY_TIER1);
     }

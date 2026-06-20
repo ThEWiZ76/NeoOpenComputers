@@ -2,6 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Chargeable;
+import li.cil.oc.api.driver.item.Container;
 import li.cil.oc.api.driver.item.Inventory;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
@@ -119,6 +120,24 @@ final class ComponentItemShapeTest {
         assertTrue(Item.class.isAssignableFrom(FloppyItem.class));
         assertTrue(DriverItem.class.isAssignableFrom(FloppyItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void cardContainerItemIsContainerDriver() throws NoSuchMethodException {
+        final Constructor<CardContainerItem> constructor = CardContainerItem.class.getConstructor(Item.Properties.class, int.class);
+
+        assertTrue(Item.class.isAssignableFrom(CardContainerItem.class));
+        assertTrue(Container.class.isAssignableFrom(CardContainerItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void upgradeContainerItemIsContainerDriver() throws NoSuchMethodException {
+        final Constructor<UpgradeContainerItem> constructor = UpgradeContainerItem.class.getConstructor(Item.Properties.class, int.class);
+
+        assertTrue(Item.class.isAssignableFrom(UpgradeContainerItem.class));
+        assertTrue(Container.class.isAssignableFrom(UpgradeContainerItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
     }
 
     @Test

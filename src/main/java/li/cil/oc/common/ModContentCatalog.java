@@ -8,6 +8,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_BATTERY_UPGRADE_TIER1 = "batteryUpgrade1";
     public static final String COMPAT_BATTERY_UPGRADE_TIER2 = "batteryUpgrade2";
     public static final String COMPAT_BATTERY_UPGRADE_TIER3 = "batteryUpgrade3";
+    public static final String COMPAT_CARD_CONTAINER_TIER1 = "cardcontainer1";
+    public static final String COMPAT_CARD_CONTAINER_TIER2 = "cardcontainer2";
+    public static final String COMPAT_CARD_CONTAINER_TIER3 = "cardcontainer3";
     public static final String COMPAT_COMPUTER_CASE_TIER1 = "case1";
     public static final String COMPAT_COMPUTER_CASE_TIER2 = "case2";
     public static final String COMPAT_COMPUTER_CASE_TIER3 = "case3";
@@ -42,6 +45,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_REDSTONE_CARD = "redstone";
     public static final String COMPAT_SOLAR_GENERATOR_UPGRADE = "solarGeneratorUpgrade";
     public static final String COMPAT_TANK_UPGRADE = "tankUpgrade";
+    public static final String COMPAT_UPGRADE_CONTAINER_TIER1 = "upgradecontainer1";
+    public static final String COMPAT_UPGRADE_CONTAINER_TIER2 = "upgradecontainer2";
+    public static final String COMPAT_UPGRADE_CONTAINER_TIER3 = "upgradecontainer3";
     public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER1 = "wlancard1";
     public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER2 = "wlancard2";
     public static final String COMPAT_WIRELESS_NETWORK_CARD = "wlancard";
@@ -91,6 +97,9 @@ public final class ModContentCatalog {
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
                 ModItems.CPU_TIER3.get(),
+                ModItems.CARD_CONTAINER_TIER1.get(),
+                ModItems.CARD_CONTAINER_TIER2.get(),
+                ModItems.CARD_CONTAINER_TIER3.get(),
                 ModItems.DATA_CARD_TIER1.get(),
                 ModItems.DATA_CARD_TIER2.get(),
                 ModItems.DATA_CARD_TIER3.get(),
@@ -123,7 +132,10 @@ public final class ModContentCatalog {
                 ModItems.WIRELESS_NETWORK_CARD_TIER2.get(),
                 ModItems.REDSTONE_CARD.get(),
                 ModItems.SOLAR_GENERATOR_UPGRADE.get(),
-                ModItems.TANK_UPGRADE.get());
+                ModItems.TANK_UPGRADE.get(),
+                ModItems.UPGRADE_CONTAINER_TIER1.get(),
+                ModItems.UPGRADE_CONTAINER_TIER2.get(),
+                ModItems.UPGRADE_CONTAINER_TIER3.get());
         }
     }
 
@@ -167,6 +179,9 @@ public final class ModContentCatalog {
         final Item cpuTier1Item,
         final Item cpuTier2Item,
         final Item cpuTier3Item,
+        final Item cardContainerTier1Item,
+        final Item cardContainerTier2Item,
+        final Item cardContainerTier3Item,
         final Item dataCardTier1Item,
         final Item dataCardTier2Item,
         final Item dataCardTier3Item,
@@ -199,7 +214,10 @@ public final class ModContentCatalog {
         final Item wirelessNetworkCardTier2Item,
         final Item redstoneCardItem,
         final Item solarGeneratorUpgradeItem,
-        final Item tankUpgradeItem) {
+        final Item tankUpgradeItem,
+        final Item upgradeContainerTier1Item,
+        final Item upgradeContainerTier2Item,
+        final Item upgradeContainerTier3Item) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);
@@ -227,6 +245,9 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.CPU_TIER1, null, cpuTier1Item);
         registry.register(ModContentIds.CPU_TIER2, null, cpuTier2Item);
         registry.register(ModContentIds.CPU_TIER3, null, cpuTier3Item);
+        registry.register(ModContentIds.CARD_CONTAINER_TIER1, null, cardContainerTier1Item);
+        registry.register(ModContentIds.CARD_CONTAINER_TIER2, null, cardContainerTier2Item);
+        registry.register(ModContentIds.CARD_CONTAINER_TIER3, null, cardContainerTier3Item);
         registry.register(ModContentIds.DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(ModContentIds.DATA_CARD_TIER2, null, dataCardTier2Item);
         registry.register(ModContentIds.DATA_CARD_TIER3, null, dataCardTier3Item);
@@ -260,9 +281,15 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.REDSTONE_CARD, null, redstoneCardItem);
         registry.register(ModContentIds.SOLAR_GENERATOR_UPGRADE, null, solarGeneratorUpgradeItem);
         registry.register(ModContentIds.TANK_UPGRADE, null, tankUpgradeItem);
+        registry.register(ModContentIds.UPGRADE_CONTAINER_TIER1, null, upgradeContainerTier1Item);
+        registry.register(ModContentIds.UPGRADE_CONTAINER_TIER2, null, upgradeContainerTier2Item);
+        registry.register(ModContentIds.UPGRADE_CONTAINER_TIER3, null, upgradeContainerTier3Item);
         registry.register(COMPAT_CPU_TIER1, null, cpuTier1Item);
         registry.register(COMPAT_CPU_TIER2, null, cpuTier2Item);
         registry.register(COMPAT_CPU_TIER3, null, cpuTier3Item);
+        registry.register(COMPAT_CARD_CONTAINER_TIER1, null, cardContainerTier1Item);
+        registry.register(COMPAT_CARD_CONTAINER_TIER2, null, cardContainerTier2Item);
+        registry.register(COMPAT_CARD_CONTAINER_TIER3, null, cardContainerTier3Item);
         registry.register(COMPAT_DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(COMPAT_DATA_CARD_TIER2, null, dataCardTier2Item);
         registry.register(COMPAT_DATA_CARD_TIER3, null, dataCardTier3Item);
@@ -297,6 +324,9 @@ public final class ModContentCatalog {
         registry.register(COMPAT_REDSTONE_CARD, null, redstoneCardItem);
         registry.register(COMPAT_SOLAR_GENERATOR_UPGRADE, null, solarGeneratorUpgradeItem);
         registry.register(COMPAT_TANK_UPGRADE, null, tankUpgradeItem);
+        registry.register(COMPAT_UPGRADE_CONTAINER_TIER1, null, upgradeContainerTier1Item);
+        registry.register(COMPAT_UPGRADE_CONTAINER_TIER2, null, upgradeContainerTier2Item);
+        registry.register(COMPAT_UPGRADE_CONTAINER_TIER3, null, upgradeContainerTier3Item);
     }
 
     private ModContentCatalog() {

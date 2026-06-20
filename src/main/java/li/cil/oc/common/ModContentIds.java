@@ -8,6 +8,9 @@ public final class ModContentIds {
     public static final String BATTERY_UPGRADE_TIER3 = "battery_upgrade_tier3";
     public static final String CABLE = "cable";
     public static final String CABLE_BLOCK_ENTITY = "cable";
+    public static final String CARD_CONTAINER_TIER1 = "card_container_tier1";
+    public static final String CARD_CONTAINER_TIER2 = "card_container_tier2";
+    public static final String CARD_CONTAINER_TIER3 = "card_container_tier3";
     public static final String COMPUTER_CASE_BLOCK_ENTITY = "computer_case";
     public static final String COMPUTER_CASE_MENU = "computer_case";
     public static final String COMPUTER_CASE_TIER1 = "computer_case_tier1";
@@ -68,6 +71,9 @@ public final class ModContentIds {
     public static final String SCREEN_BLOCK_ENTITY = "screen";
     public static final String TRANSPOSER = "transposer";
     public static final String TRANSPOSER_BLOCK_ENTITY = "transposer";
+    public static final String UPGRADE_CONTAINER_TIER1 = "upgrade_container_tier1";
+    public static final String UPGRADE_CONTAINER_TIER2 = "upgrade_container_tier2";
+    public static final String UPGRADE_CONTAINER_TIER3 = "upgrade_container_tier3";
     public static final String WAYPOINT = "waypoint";
     public static final String WAYPOINT_BLOCK_ENTITY = "waypoint";
 

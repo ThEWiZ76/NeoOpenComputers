@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "minecraft:chest"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "L": {
+      "item": "minecraft:lapis_lazuli"
+    }
+  },
+  "pattern": [
+    "ILI",
+    "LCL",
+    "ILI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:upgrade_container_tier1"
+  }
+}

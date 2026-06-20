@@ -6,6 +6,7 @@ import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Chargeable;
+import li.cil.oc.api.driver.item.Container;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Arguments;
@@ -86,6 +87,9 @@ public final class NeoOpenComputersGameTests {
         ModItems.BATTERY_UPGRADE_TIER2.get();
         ModItems.BATTERY_UPGRADE_TIER3.get();
         ModItems.CABLE.get();
+        ModItems.CARD_CONTAINER_TIER1.get();
+        ModItems.CARD_CONTAINER_TIER2.get();
+        ModItems.CARD_CONTAINER_TIER3.get();
         ModItems.CPU_TIER1.get();
         ModItems.CPU_TIER2.get();
         ModItems.CPU_TIER3.get();
@@ -122,6 +126,9 @@ public final class NeoOpenComputersGameTests {
         ModItems.SOLAR_GENERATOR_UPGRADE.get();
         ModItems.TANK_UPGRADE.get();
         ModItems.TRANSPOSER.get();
+        ModItems.UPGRADE_CONTAINER_TIER1.get();
+        ModItems.UPGRADE_CONTAINER_TIER2.get();
+        ModItems.UPGRADE_CONTAINER_TIER3.get();
         ModItems.WAYPOINT.get();
         ModItems.WIRELESS_NETWORK_CARD_TIER1.get();
         ModItems.WIRELESS_NETWORK_CARD_TIER2.get();
@@ -143,6 +150,9 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER2.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 2);
@@ -158,6 +168,9 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.INTERNET_CARD.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.SOLAR_GENERATOR_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER1.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER2.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.LINKED_CARD.get()), 1);
@@ -175,6 +188,12 @@ public final class NeoOpenComputersGameTests {
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER1.get()), 1024L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER2.get()), 2048L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER3.get()), 4096L * 1024L);
+        assertContainerCapability(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER1.get()), li.cil.oc.api.driver.item.Slot.Card, 0);
+        assertContainerCapability(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER2.get()), li.cil.oc.api.driver.item.Slot.Card, 1);
+        assertContainerCapability(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER3.get()), li.cil.oc.api.driver.item.Slot.Card, 2);
+        assertContainerCapability(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER1.get()), li.cil.oc.api.driver.item.Slot.Upgrade, 0);
+        assertContainerCapability(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER2.get()), li.cil.oc.api.driver.item.Slot.Upgrade, 1);
+        assertContainerCapability(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER3.get()), li.cil.oc.api.driver.item.Slot.Upgrade, 2);
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), 9);
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER2.get()), 25);
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER3.get()), 81);
@@ -1057,6 +1076,15 @@ public final class NeoOpenComputersGameTests {
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         final Object[] result = invokeComponent(helper, component, "spaceTotal");
         helper.assertTrue(result.length == 1 && result[0].equals(capacity), "Expected " + stack + " capacity " + capacity + " but got " + (result.length == 0 ? "<empty>" : result[0]));
+    }
+
+    private static void assertContainerCapability(final GameTestHelper helper, final ItemStack stack, final String providedSlot, final int tier) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver instanceof Container, "Expected container driver for " + stack);
+        final Container container = (Container) driver;
+        helper.assertTrue(li.cil.oc.api.driver.item.Slot.Container.equals(container.slot(stack)), "Expected container slot for " + stack);
+        helper.assertTrue(providedSlot.equals(container.providedSlot(stack)), "Expected " + stack + " to provide " + providedSlot);
+        helper.assertTrue(container.providedTier(stack) == tier, "Expected " + stack + " to provide tier " + tier + " but got " + container.providedTier(stack));
     }
 
     private static void assertDatabaseCapacity(final GameTestHelper helper, final ItemStack stack, final int capacity) {
