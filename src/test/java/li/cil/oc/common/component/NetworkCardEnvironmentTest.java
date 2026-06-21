@@ -343,6 +343,40 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void rackNetworkCardSendDoesNotReachNonNeighborModems() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost receiverHost = new TestMachineHost();
+        NetworkCardEnvironment sender = new NetworkCardEnvironment(rackHost());
+        NetworkCardEnvironment receiver = new NetworkCardEnvironment(receiverHost);
+        Node bridge = Network.newNode(new BridgeEnvironment(), Visibility.Network).create();
+        Network.joinNewNetwork(sender.node());
+        sender.node().connect(bridge);
+        bridge.connect(receiver.node());
+        receiver.open(null, new TestArguments(123));
+
+        assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments(receiver.node().address(), 123, "payload")));
+
+        assertEquals(List.of(), receiverHost.signals);
+    }
+
+    @Test
+    void rackNetworkCardBroadcastDoesNotReachNonNeighborModems() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost receiverHost = new TestMachineHost();
+        NetworkCardEnvironment sender = new NetworkCardEnvironment(rackHost());
+        NetworkCardEnvironment receiver = new NetworkCardEnvironment(receiverHost);
+        Node bridge = Network.newNode(new BridgeEnvironment(), Visibility.Network).create();
+        Network.joinNewNetwork(sender.node());
+        sender.node().connect(bridge);
+        bridge.connect(receiver.node());
+        receiver.open(null, new TestArguments(123));
+
+        assertArrayEquals(new Object[]{true}, sender.broadcast(null, new TestArguments(123, "payload")));
+
+        assertEquals(List.of(), receiverHost.signals);
+    }
+
+    @Test
     void wirelessBroadcastDeliversWithinStrengthAndReportsDistance() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
@@ -553,6 +587,13 @@ final class NetworkCardEnvironmentTest {
         @Override public void onMessage(final Message message) {}
         @Override public void load(final CompoundTag nbt) {}
         @Override public void save(final CompoundTag nbt) {}
+    }
+
+    private static final class BridgeEnvironment implements li.cil.oc.api.network.Environment {
+        @Override public Node node() { return null; }
+        @Override public void onConnect(final Node node) {}
+        @Override public void onDisconnect(final Node node) {}
+        @Override public void onMessage(final Message message) {}
     }
 
     private record TestMessage(Node source, String name, Object[] data) implements Message {

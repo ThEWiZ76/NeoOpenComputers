@@ -226,11 +226,19 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     }
 
     protected void doSend(final Context context, final String address, final Packet packet) throws IOException {
-        node().sendToAddress(address, NETWORK_MESSAGE, packet);
+        if (node().reachability() == Visibility.Neighbors) {
+            node().sendToNeighbors(NETWORK_MESSAGE, packet);
+        } else {
+            node().sendToAddress(address, NETWORK_MESSAGE, packet);
+        }
     }
 
     protected void doBroadcast(final Context context, final Packet packet) throws IOException {
-        node().sendToReachable(NETWORK_MESSAGE, packet);
+        if (node().reachability() == Visibility.Neighbors) {
+            node().sendToNeighbors(NETWORK_MESSAGE, packet);
+        } else {
+            node().sendToReachable(NETWORK_MESSAGE, packet);
+        }
     }
 
     private void receiveWiredPacket(final Message message) {
