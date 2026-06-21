@@ -1,6 +1,7 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.DatabaseEnvironment;
@@ -12,7 +13,7 @@ import net.minecraft.world.item.component.CustomData;
 
 import java.util.function.Consumer;
 
-public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.DriverItem {
+public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.DriverItem, HostAware {
     private static final int[] SLOTS_BY_TIER = {9, 25, 81};
     private static final String DATABASE_DATA_TAG = "oc:database";
     private final int tier;
@@ -29,6 +30,11 @@ public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.Dr
     @Override
     public boolean worksWith(final ItemStack stack) {
         return stack != null && stack.getItem() == this;
+    }
+
+    @Override
+    public boolean worksWith(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
+        return worksWith(stack);
     }
 
     @Override
