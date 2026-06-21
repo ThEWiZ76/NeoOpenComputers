@@ -405,6 +405,36 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void mfuCreatesRemoteAdapterEnvironmentForTaggedTarget(final GameTestHelper helper) {
+        final BlockPos adapterPos = new BlockPos(0, 1, 0);
+        final ItemStack stack = new ItemStack(ModItems.MFU.get());
+        final DriverItem driver = Driver.driverFor(stack, AdapterBlockEntity.class);
+        helper.assertTrue(driver != null, "No MFU driver for adapter host");
+
+        driver.dataTag(stack).putIntArray("oc:coord", new int[]{
+            helper.absolutePos(adapterPos).getX(),
+            helper.absolutePos(adapterPos).getY(),
+            helper.absolutePos(adapterPos).getZ(),
+            Direction.NORTH.ordinal()
+        });
+        helper.assertTrue(driver.dataTag(stack).contains("oc:coord"), "MFU target data did not persist");
+
+        final AdapterBlockEntity adapter = new AdapterBlockEntity(helper.absolutePos(BlockPos.ZERO), ModBlocks.ADAPTER.get().defaultBlockState());
+        adapter.setLevel(helper.getLevel());
+        final ManagedEnvironment environment = driver.createEnvironment(stack, adapter);
+        helper.assertTrue(environment != null, "MFU did not create remote adapter environment");
+        helper.assertTrue(environment.node() instanceof Connector, "MFU node is not a connector");
+        helper.assertTrue(environment instanceof DeviceInfo, "MFU environment lacks device info");
+        final Map<String, String> info = ((DeviceInfo) environment).getDeviceInfo();
+        helper.assertTrue(DeviceInfo.DeviceClass.Bus.equals(info.get(DeviceInfo.DeviceAttribute.Class)), "MFU device class mismatch");
+        helper.assertTrue("Remote Adapter".equals(info.get(DeviceInfo.DeviceAttribute.Description)), "MFU description mismatch");
+        helper.assertTrue("Scummtech, Inc.".equals(info.get(DeviceInfo.DeviceAttribute.Vendor)), "MFU vendor mismatch");
+        helper.assertTrue("ERR NAME NOT FOUND".equals(info.get(DeviceInfo.DeviceAttribute.Product)), "MFU product mismatch");
+        helper.assertTrue(Driver.environmentFor(stack) != null, "MFU has no environment provider");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tabletCaseItemsReportAssemblyTier(final GameTestHelper helper) {
         helper.assertTrue(ModItems.TABLET_CASE_TIER1.get().tier() == 0, "Tier 1 tablet case did not report tier 0");
         helper.assertTrue(ModItems.TABLET_CASE_TIER2.get().tier() == 1, "Tier 2 tablet case did not report tier 1");

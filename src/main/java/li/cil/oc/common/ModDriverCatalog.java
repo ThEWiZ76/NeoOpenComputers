@@ -20,6 +20,7 @@ import li.cil.oc.common.component.InternetCardEnvironment;
 import li.cil.oc.common.component.InventoryControllerEnvironment;
 import li.cil.oc.common.component.KeyboardItemEnvironment;
 import li.cil.oc.common.component.LinkedCardEnvironment;
+import li.cil.oc.common.component.MfuEnvironment;
 import li.cil.oc.common.component.MotionSensorEnvironment;
 import li.cil.oc.common.component.NavigationUpgradeEnvironment;
 import li.cil.oc.common.component.NetworkCardEnvironment;
@@ -111,6 +112,7 @@ public final class ModDriverCatalog {
                 providerFor(ModItems.TRACTOR_BEAM_UPGRADE.get(), TractorBeamUpgradeEnvironment.class),
                 providerFor(ModItems.ANGEL_UPGRADE.get(), AngelUpgradeEnvironment.class),
                 providerFor(ModItems.CHUNKLOADER_UPGRADE.get(), ChunkloaderUpgradeEnvironment.class),
+                providerFor(ModItems.MFU.get(), MfuEnvironment.class),
                 providerFor(ModItems.GENERATOR_UPGRADE.get(), GeneratorUpgradeEnvironment.class),
                 providerFor(ModItems.SOLAR_GENERATOR_UPGRADE.get(), SolarGeneratorUpgradeEnvironment.class),
                 providerFor(ModItems.TANK_UPGRADE.get(), TankUpgradeEnvironment.class),
