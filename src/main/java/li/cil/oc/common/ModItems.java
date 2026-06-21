@@ -40,6 +40,7 @@ import li.cil.oc.common.item.TradingUpgradeItem;
 import li.cil.oc.common.item.TractorBeamUpgradeItem;
 import li.cil.oc.common.item.UpgradeContainerItem;
 import li.cil.oc.common.item.WirelessNetworkCardItem;
+import li.cil.oc.common.item.WrenchItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
@@ -56,6 +57,10 @@ public final class ModItems {
     public static final DeferredItem<AnalyzerItem> ANALYZER = ITEMS.register(
         ModContentIds.ANALYZER,
         () -> new AnalyzerItem(new Item.Properties()));
+
+    public static final DeferredItem<WrenchItem> WRENCH = ITEMS.register(
+        ModContentIds.WRENCH,
+        () -> new WrenchItem(new Item.Properties()));
 
     public static final DeferredItem<BlockItem> ASSEMBLER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ASSEMBLER,

@@ -43,6 +43,7 @@ import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.TabletItem;
+import li.cil.oc.common.item.WrenchItem;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.AssemblerTemplates;
@@ -122,6 +123,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.WAYPOINT.get();
         ModItems.ADAPTER.get();
         ModItems.ANALYZER.get();
+        ModItems.WRENCH.get();
         ModItems.ASSEMBLER.get();
         ModItems.BATTERY_UPGRADE_TIER1.get();
         ModItems.BATTERY_UPGRADE_TIER2.get();
@@ -208,6 +210,21 @@ public final class NeoOpenComputersGameTests {
         ModItems.WIRELESS_NETWORK_CARD_TIER1.get();
         ModItems.WIRELESS_NETWORK_CARD_TIER2.get();
         ModItems.REDSTONE_CARD.get();
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void wrenchRotatesComputerCase(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState().setValue(ComputerCaseBlock.FACING, Direction.NORTH));
+
+        final boolean simulated = WrenchItem.rotateBlock(helper.getLevel(), helper.absolutePos(pos), true);
+        helper.assertTrue(simulated, "Wrench did not accept computer case in simulation");
+        helper.assertTrue(helper.getBlockState(pos).getValue(ComputerCaseBlock.FACING) == Direction.NORTH, "Simulated wrench changed computer case");
+
+        final boolean rotated = WrenchItem.rotateBlock(helper.getLevel(), helper.absolutePos(pos), false);
+        helper.assertTrue(rotated, "Wrench did not rotate computer case");
+        helper.assertTrue(helper.getBlockState(pos).getValue(ComputerCaseBlock.FACING) == Direction.EAST, "Wrench did not rotate computer case clockwise");
         helper.succeed();
     }
 

@@ -12,8 +12,12 @@ import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.OpenComputersApi;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.LevelReader;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -219,6 +223,22 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(InkCartridgeItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class, Item.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void wrenchItemIsInternalWrenchTool() throws NoSuchMethodException {
+        final Constructor<WrenchItem> constructor = WrenchItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(WrenchItem.class));
+        assertTrue(li.cil.oc.api.internal.Wrench.class.isAssignableFrom(WrenchItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void wrenchItemDeclaresSneakBypassHook() throws NoSuchMethodException {
+        assertArrayEquals(
+            new Class<?>[]{ItemStack.class, LevelReader.class, BlockPos.class, Player.class},
+            WrenchItem.class.getDeclaredMethod("doesSneakBypassUse", ItemStack.class, LevelReader.class, BlockPos.class, Player.class).getParameterTypes());
     }
 
     @Test

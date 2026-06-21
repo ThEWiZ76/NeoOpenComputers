@@ -74,6 +74,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void wrenchItemIdIsStable() {
+        assertEquals("wrench", ModContentIds.WRENCH);
+    }
+
+    @Test
     void computerCaseBlockIdIsStable() {
         assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
     }

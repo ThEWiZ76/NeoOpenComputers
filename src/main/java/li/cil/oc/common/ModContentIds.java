@@ -122,6 +122,7 @@ public final class ModContentIds {
     public static final String UPGRADE_CONTAINER_TIER3 = "upgrade_container_tier3";
     public static final String WAYPOINT = "waypoint";
     public static final String WAYPOINT_BLOCK_ENTITY = "waypoint";
+    public static final String WRENCH = "wrench";
 
     private ModContentIds() {
     }

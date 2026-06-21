@@ -46,6 +46,7 @@ final class RecipeResourceTest {
             ModContentIds.ARROW_KEYS,
             ModContentIds.NUM_PAD,
             ModContentIds.ANALYZER,
+            ModContentIds.WRENCH,
             ModContentIds.ASSEMBLER,
             ModContentIds.BATTERY_UPGRADE_TIER1,
             ModContentIds.BATTERY_UPGRADE_TIER2,
@@ -160,6 +161,16 @@ final class RecipeResourceTest {
         assertItem(keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
         assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
+    void wrenchRecipeUsesUpstreamShape() throws IOException {
+        JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.WRENCH + ".json"));
+        JsonObject keys = json.getAsJsonObject("key");
+
+        assertPattern(json, "I I", " C ", " I ");
+        assertTag(keys, "I", "c:ingots/iron");
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
     }
 
     @Test

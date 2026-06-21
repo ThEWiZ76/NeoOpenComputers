@@ -73,6 +73,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER1 = "wlancard1";
     public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER2 = "wlancard2";
     public static final String COMPAT_WIRELESS_NETWORK_CARD = "wlancard";
+    public static final String COMPAT_WRENCH = "wrench";
     public static final String COMPAT_SCREEN_TIER1 = "screen1";
     public static final String COMPAT_SCREEN_TIER2 = "screen2";
     public static final String COMPAT_SCREEN_TIER3 = "screen3";
@@ -139,6 +140,7 @@ public final class ModContentCatalog {
                 ModItems.WAYPOINT.get(),
                 ModItems.MANUAL.get(),
                 ModItems.ANALYZER.get(),
+                ModItems.WRENCH.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
                 ModItems.CPU_TIER3.get(),
@@ -345,6 +347,7 @@ public final class ModContentCatalog {
         final Item waypointItem,
         final Item manualItem,
         final Item analyzerItem,
+        final Item wrenchItem,
         final Item cpuTier1Item,
         final Item cpuTier2Item,
         final Item cpuTier3Item,
@@ -406,6 +409,8 @@ public final class ModContentCatalog {
         final Item generatorUpgradeItem) {
         registry.register(ModContentIds.MANUAL, null, manualItem);
         registry.register(ModContentIds.ANALYZER, null, analyzerItem);
+        registry.register(ModContentIds.WRENCH, null, wrenchItem);
+        registry.register(COMPAT_WRENCH, null, wrenchItem);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.ASSEMBLER, assembler, assemblerItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);
