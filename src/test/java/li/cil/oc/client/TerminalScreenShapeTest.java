@@ -97,6 +97,28 @@ final class TerminalScreenShapeTest {
         assertEquals(0, payload.buttonOrDelta());
     }
 
+    @Test
+    void terminalScreenBuildsBoundedMousePayloadForSnapshot() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
+
+        final TerminalMousePayload payload = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 45, 47, 0, 10, 20, snapshot);
+
+        assertEquals(12, payload.containerId());
+        assertEquals(4.0D, payload.x());
+        assertEquals(1.0D, payload.y());
+    }
+
+    @Test
+    void terminalScreenDropsMousePayloadOutsideSnapshot() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
+
+        assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 9, 30, 0, 10, 20, snapshot));
+        assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 47, 30, 0, 10, 20, snapshot));
+        assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 20, 40, 0, 10, 20, new TerminalScreenSnapshot(0, 0, new String[0])));
+    }
+
     private static TerminalMenu allocateMenu(final int containerId) throws ReflectiveOperationException {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);

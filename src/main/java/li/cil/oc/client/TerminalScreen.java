@@ -144,6 +144,17 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         return new TerminalMousePayload(menu.containerId, kind, column, row, buttonOrDelta);
     }
 
+    static TerminalMousePayload mousePayload(final TerminalMenu menu, final int kind, final double mouseX, final double mouseY, final int buttonOrDelta, final int left, final int top, final TerminalScreenSnapshot snapshot) {
+        if (snapshot == null || snapshot.width() <= 0 || snapshot.height() <= 0) {
+            return null;
+        }
+        final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, left, top);
+        if (payload.x() < 1 || payload.y() < 1 || payload.x() > snapshot.width() || payload.y() > snapshot.height()) {
+            return null;
+        }
+        return payload;
+    }
+
     private void sendKeyInput(final boolean pressed, final char character, final int keyCode) {
         PacketDistributor.sendToServer(keyPayload(menu, pressed, character, keyCode));
     }
@@ -155,6 +166,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     private void sendMouseInput(final int kind, final double mouseX, final double mouseY, final int buttonOrDelta) {
-        PacketDistributor.sendToServer(mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, leftPos, topPos));
+        final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, leftPos, topPos, menu.snapshot());
+        if (payload != null) {
+            PacketDistributor.sendToServer(payload);
+        }
     }
 }
