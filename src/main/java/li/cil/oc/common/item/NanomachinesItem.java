@@ -33,7 +33,9 @@ public class NanomachinesItem extends Item {
 
     @Override
     public ItemStack finishUsingItem(final ItemStack stack, final Level level, final LivingEntity livingEntity) {
-        if (livingEntity instanceof Player && !level.isClientSide) {
+        if (livingEntity instanceof Player player && !level.isClientSide) {
+            li.cil.oc.api.Nanomachines.uninstallController(player);
+            li.cil.oc.api.Nanomachines.installController(player);
             stack.shrink(1);
         }
         return stack;

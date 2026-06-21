@@ -7,9 +7,14 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 public final class NanomachinesRegistry implements NanomachinesAPI {
+    private static final String TAG_HAS_NANOMACHINES = "oc:hasNanomachines";
+
     private final List<BehaviorProvider> providers = new ArrayList<>();
+    private final Map<Player, SimpleNanomachineController> controllers = new WeakHashMap<>();
 
     @Override
     public void addProvider(final BehaviorProvider provider) {
@@ -23,20 +28,35 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
 
     @Override
     public boolean hasController(final Player player) {
-        return false;
+        return player != null && player.getPersistentData().getBoolean(TAG_HAS_NANOMACHINES);
     }
 
     @Override
     public Controller getController(final Player player) {
-        return null;
+        if (!hasController(player)) {
+            return null;
+        }
+        return controllers.computeIfAbsent(player, ignored -> new SimpleNanomachineController(player, this));
     }
 
     @Override
     public Controller installController(final Player player) {
-        return null;
+        if (player == null) {
+            return null;
+        }
+        player.getPersistentData().putBoolean(TAG_HAS_NANOMACHINES, true);
+        return getController(player);
     }
 
     @Override
     public void uninstallController(final Player player) {
+        if (player == null) {
+            return;
+        }
+        final SimpleNanomachineController controller = controllers.remove(player);
+        if (controller != null) {
+            controller.dispose();
+        }
+        player.getPersistentData().remove(TAG_HAS_NANOMACHINES);
     }
 }
