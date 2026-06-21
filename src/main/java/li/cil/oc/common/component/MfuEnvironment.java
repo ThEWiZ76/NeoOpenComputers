@@ -19,6 +19,7 @@ import java.util.Map;
 public final class MfuEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     public static final int LEGACY_TARGET_TAG_LENGTH = 4;
     public static final int TARGET_TAG_LENGTH = 5;
+    public static final double DEFAULT_RANGE = 3D;
 
     private static final String TARGET_TAG = "oc:target";
     private static final String SIDE_TAG = "oc:side";
@@ -126,6 +127,10 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         }
 
         final Level world = host.world();
+        if (!targetInRange()) {
+            removeTargetEnvironment();
+            return;
+        }
         final DriverBlock driver = li.cil.oc.api.Driver.driverFor(world, target, side);
         if (driver == null) {
             removeTargetEnvironment();
@@ -170,6 +175,13 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         }
         targetEnvironment = null;
         targetDriver = null;
+    }
+
+    private boolean targetInRange() {
+        final double dx = target.getX() - host.xPosition();
+        final double dy = target.getY() - host.yPosition();
+        final double dz = target.getZ() - host.zPosition();
+        return dx * dx + dy * dy + dz * dz <= DEFAULT_RANGE * DEFAULT_RANGE;
     }
 
     private void saveTargetEnvironment(final CompoundTag tag) {
