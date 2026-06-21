@@ -37,7 +37,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     private static final String TAG_KIND = "kind";
     private static final String TAG_MACHINE = "machine";
     private static final String TAG_TIER = "tier";
-    private static final String SLOT_TYPE_EEPROM = "eeprom";
+    public static final String SLOT_TYPE_EEPROM = "eeprom";
     private static final int TIER_ANY = Integer.MAX_VALUE;
     private static final ServerSlot[][] SLOT_LAYOUTS = {
         {
@@ -431,14 +431,38 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         return slot >= 0 && slot < items.size();
     }
 
-    private String slotType(final int slot) {
+    public String slotTypeName(final int slot) {
+        return slotTypeName(tier, slot);
+    }
+
+    public int slotTierLimit(final int slot) {
+        return slotTierLimit(tier, slot);
+    }
+
+    public static int maxSlotCount() {
+        return slotLayout(SLOT_LAYOUTS.length - 1).length;
+    }
+
+    public static int slotCountForTier(final int tier) {
+        return slotCount(tier);
+    }
+
+    public static String slotTypeName(final int tier, final int slot) {
         final ServerSlot[] layout = slotLayout(tier);
         return slot >= 0 && slot < layout.length ? layout[slot].type() : Slot.None;
     }
 
-    private int slotTier(final int slot) {
+    public static int slotTierLimit(final int tier, final int slot) {
         final ServerSlot[] layout = slotLayout(tier);
         return slot >= 0 && slot < layout.length ? layout[slot].tier() : -1;
+    }
+
+    private String slotType(final int slot) {
+        return slotTypeName(slot);
+    }
+
+    private int slotTier(final int slot) {
+        return slotTierLimit(slot);
     }
 
     private static int slotCount(final int tier) {

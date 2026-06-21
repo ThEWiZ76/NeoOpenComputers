@@ -1,11 +1,14 @@
 package li.cil.oc.common.menu;
 
+import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.ModMenus;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -13,6 +16,15 @@ public class ServerRackMenu extends AbstractContainerMenu {
     public static final int SERVER_SLOT_COUNT = 17;
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int TOTAL_SLOT_COUNT = SERVER_SLOT_COUNT + PLAYER_SLOT_COUNT;
+    public static final int SERVER_DATA_COUNT = SERVER_SLOT_COUNT;
+
+    public static final int SLOT_KIND_NONE = 0;
+    public static final int SLOT_KIND_CARD = 1;
+    public static final int SLOT_KIND_CPU = 2;
+    public static final int SLOT_KIND_COMPONENT_BUS = 3;
+    public static final int SLOT_KIND_MEMORY = 4;
+    public static final int SLOT_KIND_HDD = 5;
+    public static final int SLOT_KIND_EEPROM = 6;
 
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 84;
@@ -21,15 +33,22 @@ public class ServerRackMenu extends AbstractContainerMenu {
     private static final int FIRST_SERVER_SLOT_Y = 18;
 
     private final Container serverInventory;
+    private final ContainerData serverData;
 
     public ServerRackMenu(final int containerId, final Inventory playerInventory) {
-        this(containerId, playerInventory, new SimpleContainer(SERVER_SLOT_COUNT));
+        this(containerId, playerInventory, new SimpleContainer(SERVER_SLOT_COUNT), new SimpleContainerData(SERVER_DATA_COUNT));
     }
 
     public ServerRackMenu(final int containerId, final Inventory playerInventory, final Container serverInventory) {
+        this(containerId, playerInventory, serverInventory, serverData(serverInventory));
+    }
+
+    public ServerRackMenu(final int containerId, final Inventory playerInventory, final Container serverInventory, final ContainerData serverData) {
         super(ModMenus.SERVER_RACK.get(), containerId);
         this.serverInventory = serverInventory;
+        this.serverData = serverData;
         serverInventory.startOpen(playerInventory.player);
+        addDataSlots(serverData);
 
         for (int slot = 0; slot < SERVER_SLOT_COUNT; slot++) {
             addSlot(new ServerRackSlot(serverInventory, slot, FIRST_SERVER_SLOT_X + (slot % 9) * 18, FIRST_SERVER_SLOT_Y + (slot / 9) * 18));
@@ -70,10 +89,52 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return serverInventory;
     }
 
+    public int slotKind(final int slot) {
+        return slot >= 0 && slot < SERVER_DATA_COUNT ? serverData.get(slot) : SLOT_KIND_NONE;
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
         serverInventory.stopOpen(player);
+    }
+
+    public static int slotKindFor(final Container serverInventory, final int slot) {
+        return serverInventory instanceof ServerRackMountableEnvironment server ? slotKindCode(server.slotTypeName(slot)) : SLOT_KIND_NONE;
+    }
+
+    public static int slotKindForTier(final int tier, final int slot) {
+        return slotKindCode(ServerRackMountableEnvironment.slotTypeName(tier, slot));
+    }
+
+    public static int slotKindCode(final String type) {
+        return switch (type) {
+            case li.cil.oc.api.driver.item.Slot.Card -> SLOT_KIND_CARD;
+            case li.cil.oc.api.driver.item.Slot.CPU -> SLOT_KIND_CPU;
+            case li.cil.oc.api.driver.item.Slot.ComponentBus -> SLOT_KIND_COMPONENT_BUS;
+            case li.cil.oc.api.driver.item.Slot.Memory -> SLOT_KIND_MEMORY;
+            case li.cil.oc.api.driver.item.Slot.HDD -> SLOT_KIND_HDD;
+            case ServerRackMountableEnvironment.SLOT_TYPE_EEPROM -> SLOT_KIND_EEPROM;
+            default -> SLOT_KIND_NONE;
+        };
+    }
+
+    private static ContainerData serverData(final Container serverInventory) {
+        return new ContainerData() {
+            @Override
+            public int get(final int index) {
+                return slotKindFor(serverInventory, index);
+            }
+
+            @Override
+            public void set(final int index, final int value) {
+            }
+
+            @Override
+            public int getCount() {
+                return SERVER_DATA_COUNT;
+            }
+        };
     }
 
     private void addPlayerInventory(final Inventory playerInventory) {
