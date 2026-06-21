@@ -8,8 +8,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
 public class MfuItem extends BasicUpgradeItem {
@@ -17,6 +20,29 @@ public class MfuItem extends BasicUpgradeItem {
 
     public MfuItem(final Properties properties) {
         super(properties, 2);
+    }
+
+    @Override
+    public InteractionResult useOn(final UseOnContext context) {
+        final Player player = context.getPlayer();
+        if (player == null || !player.isShiftKeyDown()) {
+            return InteractionResult.PASS;
+        }
+        final Integer dimension = legacyDimensionId(context.getLevel());
+        if (dimension == null) {
+            return InteractionResult.PASS;
+        }
+        if (!context.getLevel().isClientSide()) {
+            final BlockPos target = context.getClickedPos();
+            dataTag(context.getItemInHand()).putIntArray(COORD_TAG, new int[]{
+                target.getX(),
+                target.getY(),
+                target.getZ(),
+                dimension,
+                context.getClickedFace().ordinal()
+            });
+        }
+        return InteractionResult.sidedSuccess(context.getLevel().isClientSide());
     }
 
     @Override
@@ -64,18 +90,23 @@ public class MfuItem extends BasicUpgradeItem {
     }
 
     private static boolean matchesLegacyDimension(final Level level, final int dimension) {
+        final Integer currentDimension = legacyDimensionId(level);
+        return currentDimension != null && currentDimension == dimension;
+    }
+
+    private static Integer legacyDimensionId(final Level level) {
         if (level == null) {
-            return false;
+            return null;
         }
         if (level.dimension().equals(Level.OVERWORLD)) {
-            return dimension == 0;
+            return 0;
         }
         if (level.dimension().equals(Level.NETHER)) {
-            return dimension == -1;
+            return -1;
         }
         if (level.dimension().equals(Level.END)) {
-            return dimension == 1;
+            return 1;
         }
-        return false;
+        return null;
     }
 }

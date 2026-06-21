@@ -76,8 +76,10 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.npc.Villager;
@@ -86,6 +88,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
@@ -576,6 +579,31 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment != null, "MFU did not create environment for range check");
         Network.joinNewNetwork(environment.node());
         helper.assertFalse(reachableComponent(environment.node(), "inventory"), "MFU linked target outside upstream default range");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void mfuShiftUseStoresUpstreamTargetTag(final GameTestHelper helper) {
+        final BlockPos targetPos = new BlockPos(2, 1, 0);
+        helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
+
+        final ItemStack stack = new ItemStack(ModItems.MFU.get());
+        final Player player = helper.makeMockPlayer(GameType.CREATIVE);
+        player.setShiftKeyDown(true);
+        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+        final BlockPos absoluteTarget = helper.absolutePos(targetPos);
+        final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absoluteTarget), Direction.SOUTH, absoluteTarget, false);
+
+        final InteractionResult result = stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+        helper.assertTrue(result.consumesAction(), "MFU shift-use did not consume target link action");
+
+        final int[] coord = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getIntArray("oc:coord");
+        helper.assertTrue(coord.length == 5, "MFU shift-use did not write upstream 5-int target tag");
+        helper.assertTrue(coord[0] == absoluteTarget.getX(), "MFU stored wrong target x");
+        helper.assertTrue(coord[1] == absoluteTarget.getY(), "MFU stored wrong target y");
+        helper.assertTrue(coord[2] == absoluteTarget.getZ(), "MFU stored wrong target z");
+        helper.assertTrue(coord[3] == 0, "MFU stored wrong target dimension");
+        helper.assertTrue(coord[4] == Direction.SOUTH.ordinal(), "MFU stored wrong target side");
         helper.succeed();
     }
 
