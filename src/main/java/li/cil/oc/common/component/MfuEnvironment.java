@@ -17,7 +17,8 @@ import net.minecraft.world.level.Level;
 import java.util.Map;
 
 public final class MfuEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
-    public static final int TARGET_TAG_LENGTH = 4;
+    public static final int LEGACY_TARGET_TAG_LENGTH = 4;
+    public static final int TARGET_TAG_LENGTH = 5;
 
     private static final String TARGET_TAG = "oc:target";
     private static final String SIDE_TAG = "oc:side";

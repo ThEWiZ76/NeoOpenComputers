@@ -58,6 +58,7 @@ import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.component.LinkedCardEnvironment;
+import li.cil.oc.common.component.MfuEnvironment;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.template.AssemblerTemplate;
@@ -495,6 +496,59 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(targetPos, Blocks.AIR.defaultBlockState());
         environment.update();
         helper.assertFalse(reachableComponent(environment.node(), "inventory"), "MFU kept stale remote inventory component");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void mfuReadsUpstreamFiveIntTargetTag(final GameTestHelper helper) {
+        final BlockPos adapterPos = new BlockPos(0, 1, 0);
+        final BlockPos targetPos = new BlockPos(3, 1, 0);
+        helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
+
+        final ItemStack stack = new ItemStack(ModItems.MFU.get());
+        final DriverItem driver = Driver.driverFor(stack, AdapterBlockEntity.class);
+        helper.assertTrue(driver != null, "No MFU driver for adapter host");
+        final BlockPos absoluteTarget = helper.absolutePos(targetPos);
+        driver.dataTag(stack).putIntArray("oc:coord", new int[]{
+            absoluteTarget.getX(),
+            absoluteTarget.getY(),
+            absoluteTarget.getZ(),
+            0,
+            Direction.NORTH.ordinal()
+        });
+
+        final AdapterBlockEntity adapter = new AdapterBlockEntity(helper.absolutePos(adapterPos), ModBlocks.ADAPTER.get().defaultBlockState());
+        adapter.setLevel(helper.getLevel());
+        final ManagedEnvironment environment = driver.createEnvironment(stack, adapter);
+        helper.assertTrue(environment instanceof MfuEnvironment, "MFU did not read upstream 5-int target tag");
+        final MfuEnvironment mfu = (MfuEnvironment) environment;
+        helper.assertTrue(mfu.side() == Direction.NORTH, "MFU read dimension as side for upstream target tag");
+        Network.joinNewNetwork(mfu.node());
+        helper.assertTrue(reachableComponent(mfu.node(), "inventory"), "MFU did not link remote inventory from upstream target tag");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void mfuRejectsWrongDimensionTargetTag(final GameTestHelper helper) {
+        final BlockPos adapterPos = new BlockPos(0, 1, 0);
+        final BlockPos targetPos = new BlockPos(3, 1, 0);
+        helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
+
+        final ItemStack stack = new ItemStack(ModItems.MFU.get());
+        final DriverItem driver = Driver.driverFor(stack, AdapterBlockEntity.class);
+        helper.assertTrue(driver != null, "No MFU driver for adapter host");
+        final BlockPos absoluteTarget = helper.absolutePos(targetPos);
+        driver.dataTag(stack).putIntArray("oc:coord", new int[]{
+            absoluteTarget.getX(),
+            absoluteTarget.getY(),
+            absoluteTarget.getZ(),
+            -1,
+            Direction.NORTH.ordinal()
+        });
+
+        final AdapterBlockEntity adapter = new AdapterBlockEntity(helper.absolutePos(adapterPos), ModBlocks.ADAPTER.get().defaultBlockState());
+        adapter.setLevel(helper.getLevel());
+        helper.assertTrue(driver.createEnvironment(stack, adapter) == null, "MFU accepted upstream tag for wrong dimension");
         helper.succeed();
     }
 
