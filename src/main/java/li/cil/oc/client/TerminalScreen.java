@@ -130,6 +130,10 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         return hasVisibleText(snapshot) ? null : Component.translatable("gui.neoopencomputers.terminal.blank_screen");
     }
 
+    static boolean acceptsInput(final TerminalScreenSnapshot snapshot) {
+        return snapshot != null && snapshot.width() > 0 && snapshot.height() > 0;
+    }
+
     static TerminalKeyPayload keyPayload(final TerminalMenu menu, final boolean pressed, final char character, final int keyCode) {
         return new TerminalKeyPayload(menu.containerId, pressed, character, keyCode);
     }
@@ -145,7 +149,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static TerminalMousePayload mousePayload(final TerminalMenu menu, final int kind, final double mouseX, final double mouseY, final int buttonOrDelta, final int left, final int top, final TerminalScreenSnapshot snapshot) {
-        if (snapshot == null || snapshot.width() <= 0 || snapshot.height() <= 0) {
+        if (!acceptsInput(snapshot)) {
             return null;
         }
         final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, left, top);
@@ -156,11 +160,13 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     private void sendKeyInput(final boolean pressed, final char character, final int keyCode) {
-        PacketDistributor.sendToServer(keyPayload(menu, pressed, character, keyCode));
+        if (acceptsInput(menu.snapshot())) {
+            PacketDistributor.sendToServer(keyPayload(menu, pressed, character, keyCode));
+        }
     }
 
     private void sendClipboardInput(final String value) {
-        if (value != null && !value.isEmpty()) {
+        if (acceptsInput(menu.snapshot()) && value != null && !value.isEmpty()) {
             PacketDistributor.sendToServer(clipboardPayload(menu, value));
         }
     }

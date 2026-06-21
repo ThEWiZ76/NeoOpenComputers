@@ -43,9 +43,11 @@ final class TerminalScreenShapeTest {
     void terminalScreenExposesSnapshotStatusHelpers() throws NoSuchMethodException {
         final Method hasVisibleText = TerminalScreen.class.getDeclaredMethod("hasVisibleText", TerminalScreenSnapshot.class);
         final Method statusLabel = TerminalScreen.class.getDeclaredMethod("statusLabel", TerminalScreenSnapshot.class);
+        final Method acceptsInput = TerminalScreen.class.getDeclaredMethod("acceptsInput", TerminalScreenSnapshot.class);
 
         assertEquals(boolean.class, hasVisibleText.getReturnType());
         assertEquals(Component.class, statusLabel.getReturnType());
+        assertEquals(boolean.class, acceptsInput.getReturnType());
     }
 
     @Test
@@ -60,6 +62,13 @@ final class TerminalScreenShapeTest {
         assertTranslationKey("gui.neoopencomputers.terminal.no_screen_data", TerminalScreen.statusLabel(missing));
         assertTranslationKey("gui.neoopencomputers.terminal.blank_screen", TerminalScreen.statusLabel(blank));
         assertEquals(null, TerminalScreen.statusLabel(visible));
+    }
+
+    @Test
+    void terminalScreenAcceptsInputOnlyWithScreenDimensions() {
+        assertEquals(false, TerminalScreen.acceptsInput(null));
+        assertEquals(false, TerminalScreen.acceptsInput(new TerminalScreenSnapshot(0, 0, new String[0])));
+        assertEquals(true, TerminalScreen.acceptsInput(new TerminalScreenSnapshot(4, 2, new String[]{"", ""})));
     }
 
     @Test
