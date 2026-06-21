@@ -1662,6 +1662,27 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void generatorUpgradeDropsQueuedFuelOnDisconnect(final GameTestHelper helper) throws Exception {
+        helper.killAllEntities();
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for generator upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        host.mainInventory().setItem(0, new ItemStack(Items.COAL, 1));
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.GENERATOR_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Generator upgrade did not create generator environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Generator node is not a component connector");
+
+        final ComponentConnector connector = (ComponentConnector) environment.node();
+        final Object[] insert = connector.invoke("insert", null, 1);
+        helper.assertTrue(Boolean.TRUE.equals(insert[0]) && Integer.valueOf(1).equals(insert[1]), "Generator did not queue fuel");
+
+        environment.onDisconnect(environment.node());
+
+        helper.succeedWhen(() -> helper.assertTrue(droppedItemCount(helper, Items.COAL, BlockPos.ZERO, 2D) == 1, "Generator did not drop queued fuel on disconnect"));
+    }
+
+    @GameTest(template = "empty")
     public static void craftingUpgradeRejectsNonRobotAgentHost(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.CRAFTING_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for crafting upgrade");
@@ -4683,6 +4704,16 @@ public final class NeoOpenComputersGameTests {
     private static int droppedItemCount(final GameTestHelper helper, final Item item) {
         int count = 0;
         for (ItemEntity entity : helper.getEntities(EntityType.ITEM)) {
+            if (entity.getItem().is(item)) {
+                count += entity.getItem().getCount();
+            }
+        }
+        return count;
+    }
+
+    private static int droppedItemCount(final GameTestHelper helper, final Item item, final BlockPos pos, final double radius) {
+        int count = 0;
+        for (ItemEntity entity : helper.getEntities(EntityType.ITEM, pos, radius)) {
             if (entity.getItem().is(item)) {
                 count += entity.getItem().getCount();
             }

@@ -13,6 +13,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
@@ -156,6 +157,12 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
     public void onDisconnect(final Node node) {
         super.onDisconnect(node);
         if (node == node()) {
+            if (!queuedFuel.isEmpty() && host.world() != null) {
+                final ItemEntity entity = new ItemEntity(host.world(), host.xPosition(), host.yPosition(), host.zPosition(), queuedFuel.copy());
+                entity.setDeltaMovement(0D, 0.04D, 0D);
+                entity.setPickUpDelay(5);
+                host.world().addFreshEntity(entity);
+            }
             queuedFuel = ItemStack.EMPTY;
             remainingTicks = 0;
         }
