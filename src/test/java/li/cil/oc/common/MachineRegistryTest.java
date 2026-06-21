@@ -752,6 +752,18 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void computerStartNetworkMessageDoesNotResumePausedMachine() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        assertTrue(machine.start());
+        assertTrue(machine.pause(1D));
+
+        machine.onMessage(new TestMessage(null, "computer.start", new Object[0]));
+
+        assertTrue(machine.isPaused());
+    }
+
+    @Test
     void hostChangedWhileRunningNotifiesReachableComponentsStopped() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);

@@ -378,7 +378,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         } else if (COMPUTER_SIGNAL_MESSAGE.equals(message.name())) {
             queueNetworkSignal(message);
         } else if (COMPUTER_START_MESSAGE.equals(message.name())) {
-            start();
+            if (!isPaused()) {
+                start();
+            }
         } else if (COMPUTER_STOP_MESSAGE.equals(message.name())) {
             stop();
         }
