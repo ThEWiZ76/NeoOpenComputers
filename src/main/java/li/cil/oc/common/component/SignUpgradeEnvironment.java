@@ -35,17 +35,28 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
 
     private final EnvironmentHost host;
     private final Rotatable rotatable;
+    private final boolean adapterMode;
 
     public SignUpgradeEnvironment(final EnvironmentHost host) {
-        this(host, null);
+        this(host, null, false);
     }
 
     public SignUpgradeEnvironment(final EnvironmentHost host, final Rotatable rotatable) {
+        this(host, rotatable, false);
+    }
+
+    public SignUpgradeEnvironment(final EnvironmentHost host, final boolean adapterMode) {
+        this(host, null, adapterMode);
+    }
+
+    private SignUpgradeEnvironment(final EnvironmentHost host, final Rotatable rotatable, final boolean adapterMode) {
         this.host = host;
         this.rotatable = rotatable;
+        this.adapterMode = adapterMode;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
-            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Network).withConnector().create());
+            final Visibility componentVisibility = adapterMode ? Visibility.Network : Visibility.Neighbors;
+            setNode(builder.withComponent(COMPONENT_NAME, componentVisibility).withConnector().create());
         }
     }
 
@@ -69,23 +80,23 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
         }
     }
 
-    @Callback(doc = "function():string -- Get the text on the sign in front of the host.")
+    @Callback(doc = "function([side:number]):string -- Get sign text. Adapter hosts require a side; rotatable hosts use the front side.")
     public Object[] getValue(final Context context, final Arguments arguments) {
-        final SignBlockEntity sign = findSign();
+        final SignBlockEntity sign = adapterMode ? findSign(Direction.from3DDataValue(arguments.checkInteger(0))) : findSign();
         if (sign == null) {
             return new Object[]{null, "no sign"};
         }
         return new Object[]{text(sign)};
     }
 
-    @Callback(doc = "function(value:string):string -- Set the text on the sign in front of the host.")
+    @Callback(doc = "function([side:number,] value:string):string -- Set sign text. Adapter hosts require a side; rotatable hosts use the front side.")
     public Object[] setValue(final Context context, final Arguments arguments) {
-        final SignBlockEntity sign = findSign();
+        final SignBlockEntity sign = adapterMode ? findSign(Direction.from3DDataValue(arguments.checkInteger(0))) : findSign();
         if (sign == null) {
             return new Object[]{null, "no sign"};
         }
 
-        final String[] lines = normalizedLines(arguments.checkString(0));
+        final String[] lines = normalizedLines(arguments.checkString(adapterMode ? 1 : 0));
         final SignChangeEvent.Pre pre = new SignChangeEvent.Pre(sign, lines);
         NeoForge.EVENT_BUS.post(pre);
         if (pre.isCanceled()) {
@@ -119,6 +130,15 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
                     return sign;
                 }
             }
+        }
+        return null;
+    }
+
+    private SignBlockEntity findSign(final Direction side) {
+        final BlockPos hostPos = hostPosition();
+        final BlockPos signPos = hostPos.relative(side);
+        if (host.world().getBlockEntity(signPos) instanceof SignBlockEntity sign) {
+            return sign;
         }
         return null;
     }

@@ -2,6 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.internal.Adapter;
 import li.cil.oc.api.internal.Rotatable;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -29,6 +30,9 @@ public class SignUpgradeItem extends Item implements HostAware {
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
         if (host == null) {
             return null;
+        }
+        if (host instanceof Adapter) {
+            return new SignUpgradeEnvironment(host, true);
         }
         return host instanceof Rotatable rotatable ? new SignUpgradeEnvironment(host, rotatable) : new SignUpgradeEnvironment(host);
     }

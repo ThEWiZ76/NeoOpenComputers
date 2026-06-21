@@ -2819,9 +2819,18 @@ public final class NeoOpenComputersGameTests {
             final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
             final String address = componentAddress(computer, "sign");
             helper.assertTrue(address != null, "Adapter did not expose sign upgrade: " + computer.machine().components());
+            ComponentConnector signComponent = null;
+            for (final Node node : adapter.onAnalyze(null, Direction.WEST, 0.5F, 0.5F, 0.5F)) {
+                if (node instanceof ComponentConnector component && "sign".equals(component.name())) {
+                    signComponent = component;
+                }
+            }
+            helper.assertTrue(signComponent != null, "Analyzer did not expose sign upgrade node");
+            helper.assertTrue(signComponent.visibility() == Visibility.Network, "Adapter sign upgrade component should be network-visible");
             try {
-                assertInvokeResult(helper, computer, address, "setValue", new Object[]{"adapter\nsign"}, "adapter\nsign\n\n");
-                assertInvokeResult(helper, computer, address, "getValue", new Object[0], "adapter\nsign\n\n");
+                final int east = Direction.EAST.get3DDataValue();
+                assertInvokeResult(helper, computer, address, "setValue", new Object[]{east, "adapter\nsign"}, "adapter\nsign\n\n");
+                assertInvokeResult(helper, computer, address, "getValue", new Object[]{east}, "adapter\nsign\n\n");
             } catch (Exception e) {
                 helper.fail("Sign upgrade invocation failed: " + e.getMessage());
             }
@@ -2856,6 +2865,19 @@ public final class NeoOpenComputersGameTests {
         }));
 
         helper.assertTrue("alpha\nbeta\n\n".equals(tabletData.getString("signText")), "Sign upgrade did not add sign text to tablet use data");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void signUpgradeForRotatableHostIsNeighborVisible(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.SIGN_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for sign upgrade");
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.SIGN_UPGRADE.get()), new AgentTestHost(helper));
+        helper.assertTrue(environment != null, "No sign upgrade environment for rotatable host");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Sign upgrade has no connector component node");
+        final ComponentConnector component = (ComponentConnector) environment.node();
+        helper.assertTrue("sign".equals(component.name()), "Sign upgrade component name mismatch");
+        helper.assertTrue(component.visibility() == Visibility.Neighbors, "Rotatable sign upgrade component should be neighbor-visible");
         helper.succeed();
     }
 
