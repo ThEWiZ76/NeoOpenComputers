@@ -1834,6 +1834,20 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void analyzerReportsAdapterInstalledUpgradeNode(final GameTestHelper helper) {
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        final AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+        adapter.setItem(0, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get()));
+
+        final List<Component> lines = AnalyzerItem.describe(adapter, Direction.NORTH);
+        final String analysis = lines.stream().map(Component::getString).collect(java.util.stream.Collectors.joining("\n"));
+
+        helper.assertTrue(analysis.contains("Component: inventory_controller"), "Analyzer did not report adapter installed upgrade:\n" + analysis);
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void computerRunsWithLuaBiosAndOpenOsFloppy(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);

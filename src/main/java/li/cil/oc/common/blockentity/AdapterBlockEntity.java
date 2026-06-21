@@ -6,6 +6,7 @@ import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Adapter;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
@@ -26,9 +27,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
-public class AdapterBlockEntity extends BlockEntity implements Adapter, EnvironmentHost {
+public class AdapterBlockEntity extends BlockEntity implements Adapter, EnvironmentHost, Analyzable {
     private static final String TAG_NODE = "node";
     private static final String TAG_BLOCKS = "oc:adapter.blocks";
     private static final String TAG_ITEMS = "oc:items";
@@ -77,6 +79,20 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
 
     @Override
     public void onMessage(final Message message) {
+    }
+
+    @Override
+    public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
+        final ArrayList<Node> nodes = new ArrayList<>();
+        for (ManagedEnvironment environment : blockEnvironments) {
+            if (environment != null && environment.node() != null) {
+                nodes.add(environment.node());
+            }
+        }
+        if (itemEnvironment != null && itemEnvironment.node() != null) {
+            nodes.add(itemEnvironment.node());
+        }
+        return nodes.toArray(Node[]::new);
     }
 
     @Override
