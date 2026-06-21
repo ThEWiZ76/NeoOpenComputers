@@ -298,7 +298,14 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public int componentCount() {
-        return components().size();
+        double count = 0D;
+        for (Map.Entry<String, String> component : components().entrySet()) {
+            if (node() != null && component.getKey().equals(node().address())) {
+                continue;
+            }
+            count += "filesystem".equals(component.getValue()) ? 0.25D : 1D;
+        }
+        return (int) count;
     }
 
     @Override

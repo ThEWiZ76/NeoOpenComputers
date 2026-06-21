@@ -152,9 +152,28 @@ final class MachineRegistryTest {
         machine.node().connect(fileSystemEnvironment.node());
 
         assertEquals("filesystem", machine.components().get(fileSystemEnvironment.node().address()));
-        assertEquals(1, machine.componentCount());
+        assertEquals(0, machine.componentCount());
         assertTrue(machine.methods(fileSystemEnvironment.node().address()).containsKey("isReadOnly"));
         assertArrayEquals(new Object[]{false}, machine.invoke(fileSystemEnvironment.node().address(), "isReadOnly", new Object[0]));
+    }
+
+    @Test
+    void componentCountWeightsFilesystemsLikeUpstream() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        Network.joinNewNetwork(machine.node());
+
+        for (int i = 0; i < 4; i++) {
+            ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(
+                API.fileSystem.fromMemory(128),
+                "fs" + i,
+                null,
+                null,
+                1);
+            machine.node().connect(environment.node());
+        }
+
+        assertEquals(1, machine.componentCount());
     }
 
     @Test
