@@ -105,6 +105,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
@@ -2895,6 +2896,34 @@ public final class NeoOpenComputersGameTests {
             } catch (Exception e) {
                 helper.fail("Chest inventory invocation failed: " + e.getMessage());
             }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterChestHotplugSignalsReachComputer(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos chestPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        computer.machine().popSignal();
+
+        final AtomicReference<String> address = new AtomicReference<>();
+        helper.setBlock(chestPos, Blocks.CHEST);
+        final net.minecraft.world.Container chest = helper.getBlockEntity(chestPos);
+        chest.setItem(0, new ItemStack(Items.DIAMOND, 2));
+
+        helper.runAtTickTime(2, () -> {
+            address.set(componentAddress(computer, "inventory"));
+            helper.assertTrue(address.get() != null, "Adapter did not expose hotplugged chest inventory: " + computer.machine().components());
+            assertNextSignal(helper, computer, "component_added", address.get(), "inventory");
+            helper.setBlock(chestPos, Blocks.AIR);
+        });
+        helper.runAtTickTime(4, () -> {
+            assertNextSignal(helper, computer, "component_removed", address.get(), "inventory");
+            helper.succeed();
         });
     }
 
