@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.api.detail.NanomachinesAPI;
 import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.Controller;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.WeakHashMap;
 
 public final class NanomachinesRegistry implements NanomachinesAPI {
     private static final String TAG_HAS_NANOMACHINES = "oc:hasNanomachines";
+    static final String TAG_CONTROLLER = "oc:nanomachines";
 
     private final List<BehaviorProvider> providers = new ArrayList<>();
     private final Map<Player, SimpleNanomachineController> controllers = new WeakHashMap<>();
@@ -36,7 +38,14 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
         if (!hasController(player)) {
             return null;
         }
-        return controllers.computeIfAbsent(player, ignored -> new SimpleNanomachineController(player, this));
+        return controllers.computeIfAbsent(player, ignored -> {
+            final SimpleNanomachineController controller = new SimpleNanomachineController(player, this);
+            final CompoundTag persistentData = player.getPersistentData();
+            if (persistentData.contains(TAG_CONTROLLER)) {
+                controller.load(persistentData.getCompound(TAG_CONTROLLER));
+            }
+            return controller;
+        });
     }
 
     @Override

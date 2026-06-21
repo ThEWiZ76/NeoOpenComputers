@@ -652,6 +652,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesControllerStatePersistsAcrossRegistryReload(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.common.NanomachinesRegistry firstRegistry = new li.cil.oc.common.NanomachinesRegistry();
+        final li.cil.oc.api.nanomachines.Controller firstController = firstRegistry.installController(player);
+        firstController.setInput(0, true);
+        firstController.changeBuffer(-1234D);
+
+        final li.cil.oc.common.NanomachinesRegistry reloadedRegistry = new li.cil.oc.common.NanomachinesRegistry();
+        final li.cil.oc.api.nanomachines.Controller reloadedController = reloadedRegistry.getController(player);
+
+        helper.assertTrue(reloadedController != null, "Nanomachines controller did not reload");
+        helper.assertTrue(reloadedController.getInput(0), "Nanomachines controller did not persist active input");
+        helper.assertTrue(Math.abs(reloadedController.getLocalBuffer() - firstController.getLocalBuffer()) < 0.001D, "Nanomachines controller did not persist energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void mfuLinksRemoteSidedTileEnvironment(final GameTestHelper helper) {
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(2, 1, 0);

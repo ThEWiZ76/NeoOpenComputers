@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.nanomachines.DisableReason;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ final class SimpleNanomachineController implements Controller {
     private static final double BUFFER_SIZE = 100_000D;
     private static final int SAFE_ACTIVE_INPUTS = 2;
     private static final int MAX_ACTIVE_INPUTS = 4;
+    private static final String TAG_ENERGY = "energy";
+    private static final String TAG_ACTIVE_INPUTS = "activeInputs";
 
     private final Player player;
     private final NanomachinesRegistry registry;
@@ -74,6 +77,7 @@ final class SimpleNanomachineController implements Controller {
             activeBehaviorsDirty = true;
         }
         inputs[index] = value;
+        saveState();
         return true;
     }
 
@@ -102,11 +106,33 @@ final class SimpleNanomachineController implements Controller {
     public double changeBuffer(final double delta) {
         final double requested = buffer + delta;
         buffer = Math.clamp(requested, 0D, BUFFER_SIZE);
+        saveState();
         return requested - buffer;
     }
 
     void dispose() {
         disableActive(DisableReason.Default);
+    }
+
+    void save(final CompoundTag tag) {
+        tag.putDouble(TAG_ENERGY, buffer);
+        tag.putIntArray(TAG_ACTIVE_INPUTS, activeInputs());
+    }
+
+    void load(final CompoundTag tag) {
+        if (tag.contains(TAG_ENERGY)) {
+            buffer = Math.clamp(tag.getDouble(TAG_ENERGY), 0D, BUFFER_SIZE);
+        }
+        final int[] activeInputs = tag.getIntArray(TAG_ACTIVE_INPUTS);
+        for (int i = 0; i < inputs.length; i++) {
+            inputs[i] = false;
+        }
+        for (final int activeInput : activeInputs) {
+            if (activeInput >= 0 && activeInput < inputs.length) {
+                inputs[activeInput] = true;
+            }
+        }
+        activeBehaviorsDirty = true;
     }
 
     private int activeInputCount() {
@@ -117,6 +143,23 @@ final class SimpleNanomachineController implements Controller {
             }
         }
         return active;
+    }
+
+    private int[] activeInputs() {
+        final int[] activeInputs = new int[activeInputCount()];
+        int activeIndex = 0;
+        for (int i = 0; i < inputs.length; i++) {
+            if (inputs[i]) {
+                activeInputs[activeIndex++] = i;
+            }
+        }
+        return activeInputs;
+    }
+
+    private void saveState() {
+        final CompoundTag tag = new CompoundTag();
+        save(tag);
+        player.getPersistentData().put(NanomachinesRegistry.TAG_CONTROLLER, tag);
     }
 
     private void cleanActiveBehaviors(final DisableReason reason) {
