@@ -40,7 +40,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
             DeviceInfo.DeviceAttribute.Description, "Inventory controller",
             DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-            DeviceInfo.DeviceAttribute.Product, "Inventory Controller Upgrade"
+            DeviceInfo.DeviceAttribute.Product, "Item Cataloguer R1"
         );
     }
 

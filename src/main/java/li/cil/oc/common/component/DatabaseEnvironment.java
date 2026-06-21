@@ -50,7 +50,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
             DeviceInfo.DeviceAttribute.Description, "Object catalogue",
             DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-            DeviceInfo.DeviceAttribute.Product, "iCatalogue",
+            DeviceInfo.DeviceAttribute.Product, "iCatalogue (patent pending)",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(size())
         );
     }
