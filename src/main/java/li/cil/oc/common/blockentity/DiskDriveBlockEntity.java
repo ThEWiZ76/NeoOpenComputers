@@ -45,9 +45,9 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     private static final String TAG_DISK = "disk";
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Disk,
-        DeviceInfo.DeviceAttribute.Description, "Disk drive",
+        DeviceInfo.DeviceAttribute.Description, "Floppy disk drive",
         DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "OpenFloppy 21"
+        DeviceInfo.DeviceAttribute.Product, "Spinner 520p1"
     );
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);

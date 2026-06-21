@@ -3144,6 +3144,10 @@ public final class NeoOpenComputersGameTests {
         final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
         helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
         final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        final Map<String, String> metadata = diskDrive.getDeviceInfo();
+        helper.assertTrue(DeviceInfo.DeviceClass.Disk.equals(metadata.get(DeviceInfo.DeviceAttribute.Class)), "Disk drive device class mismatch");
+        helper.assertTrue("Floppy disk drive".equals(metadata.get(DeviceInfo.DeviceAttribute.Description)), "Disk drive description mismatch");
+        helper.assertTrue("Spinner 520p1".equals(metadata.get(DeviceInfo.DeviceAttribute.Product)), "Disk drive product mismatch");
 
         helper.assertTrue(diskDrive.node() instanceof li.cil.oc.api.network.Component, "Disk drive has no component node");
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) diskDrive.node();
