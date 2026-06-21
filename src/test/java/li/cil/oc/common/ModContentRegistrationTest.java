@@ -538,4 +538,9 @@ final class ModContentRegistrationTest {
     void relayMenuIdIsStable() {
         assertEquals("relay", ModContentIds.RELAY_MENU);
     }
+
+    @Test
+    void terminalMenuIdIsStable() {
+        assertEquals("terminal", ModContentIds.TERMINAL_MENU);
+    }
 }

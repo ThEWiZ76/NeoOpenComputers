@@ -29,6 +29,7 @@ public final class NeoOpenComputersClient {
         event.register(ModMenus.RACK.get(), RackScreen::new);
         event.register(ModMenus.RAID.get(), RaidScreen::new);
         event.register(ModMenus.RELAY.get(), RelayScreen::new);
+        event.register(ModMenus.TERMINAL.get(), TerminalScreen::new);
     }
 
     @SubscribeEvent

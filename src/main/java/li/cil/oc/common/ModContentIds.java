@@ -123,6 +123,7 @@ public final class ModContentIds {
     public static final String TANK_CONTROLLER_UPGRADE = "tank_controller_upgrade";
     public static final String TANK_UPGRADE = "tank_upgrade";
     public static final String TERMINAL = "terminal";
+    public static final String TERMINAL_MENU = "terminal";
     public static final String TERMINAL_SERVER = "terminal_server";
     public static final String TEXTURE_PICKER = "texture_picker";
     public static final String TRANSISTOR = "transistor";

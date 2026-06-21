@@ -6,13 +6,19 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
+import li.cil.oc.common.menu.TerminalMenu;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class TerminalItem extends Item {
@@ -33,6 +39,20 @@ public class TerminalItem extends Item {
             return InteractionResult.PASS;
         }
         return bindToFirstTerminalServer(context.getItemInHand(), rack) ? InteractionResult.CONSUME : InteractionResult.PASS;
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(final Level level, final Player player, final InteractionHand hand) {
+        final ItemStack terminal = player.getItemInHand(hand);
+        if (findBoundTerminalServer(terminal) == null) {
+            return InteractionResultHolder.pass(terminal);
+        }
+        if (!level.isClientSide) {
+            player.openMenu(new SimpleMenuProvider(
+                (containerId, playerInventory, menuPlayer) -> new TerminalMenu(containerId, playerInventory),
+                net.minecraft.network.chat.Component.translatable("item.neoopencomputers.terminal")));
+        }
+        return InteractionResultHolder.sidedSuccess(terminal, level.isClientSide);
     }
 
     public static boolean bindToTerminalServer(final ItemStack terminal, final RackBlockEntity rack, final int slot) {
