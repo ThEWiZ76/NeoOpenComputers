@@ -285,6 +285,7 @@ final class MachineRegistryTest {
         Machine machine = API.machine.create(null);
         TestEnvironment environment = new TestEnvironment();
         Network.joinNewNetwork(machine.node());
+        assertTrue(machine.start());
 
         machine.node().connect(environment.node());
 
@@ -300,6 +301,7 @@ final class MachineRegistryTest {
         TestEnvironment bridge = new TestEnvironment();
         TestEnvironment environment = new TestEnvironment();
         Network.joinNewNetwork(machine.node());
+        assertTrue(machine.start());
         machine.node().connect(bridge.node());
         machine.popSignal();
 
@@ -317,6 +319,7 @@ final class MachineRegistryTest {
         Machine machine = API.machine.create(null);
         TestEnvironment environment = new TestEnvironment();
         Network.joinNewNetwork(machine.node());
+        assertTrue(machine.start());
         machine.node().connect(environment.node());
         machine.popSignal();
 
@@ -334,6 +337,7 @@ final class MachineRegistryTest {
         TestEnvironment bridge = new TestEnvironment();
         TestEnvironment environment = new TestEnvironment();
         Network.joinNewNetwork(machine.node());
+        assertTrue(machine.start());
         machine.node().connect(bridge.node());
         machine.popSignal();
         bridge.node().connect(environment.node());
@@ -495,7 +499,8 @@ final class MachineRegistryTest {
     void savesAndLoadsQueuedSignals() {
         OpenComputersApi.initialize();
         Machine saved = API.machine.create(null);
-        saved.signal("boot", "disk", 1, true, null);
+        assertTrue(saved.start());
+        assertTrue(saved.signal("boot", "disk", 1, true, null));
         CompoundTag tag = new CompoundTag();
 
         saved.save(tag);
@@ -507,6 +512,33 @@ final class MachineRegistryTest {
         assertEquals("boot", signal.name());
         assertArrayEquals(new Object[]{"disk", 1, true, null}, signal.args());
         assertNull(loaded.popSignal());
+    }
+
+    @Test
+    void rejectsSignalsWhileStopped() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+
+        assertFalse(machine.signal("boot"));
+        assertNull(machine.popSignal());
+    }
+
+    @Test
+    void rejectsSignalsWhenQueueIsFull() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        assertTrue(machine.start());
+
+        for (int i = 0; i < 256; i++) {
+            assertTrue(machine.signal("event", i), "signal " + i);
+        }
+        assertFalse(machine.signal("overflow"));
+
+        int count = 0;
+        while (machine.popSignal() != null) {
+            count++;
+        }
+        assertEquals(256, count);
     }
 
     @Test
@@ -655,6 +687,7 @@ final class MachineRegistryTest {
     @Test
     void checkedSignalNetworkMessagesQueueMachineSignals() {
         Machine machine = new MachineRegistry().create(null);
+        assertTrue(machine.start());
 
         machine.onMessage(new TestMessage(null, "computer.checked_signal", new Object[]{"key_down", 'a', 30}));
         machine.onMessage(new TestMessage(null, "computer.checked_signal", new Object[]{null, "touch", 2, 3, 0}));
@@ -672,6 +705,7 @@ final class MachineRegistryTest {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
         TestEnvironment source = new TestEnvironment();
+        assertTrue(machine.start());
 
         machine.onMessage(new TestMessage(source.node(), "computer.signal", new Object[]{"modem_message", 123}));
 

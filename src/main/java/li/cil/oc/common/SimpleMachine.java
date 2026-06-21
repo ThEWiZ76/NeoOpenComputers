@@ -42,6 +42,7 @@ import java.util.function.LongSupplier;
 final class SimpleMachine extends AbstractManagedEnvironment implements Machine, DeviceInfo {
     private static final double NANOS_PER_SECOND = 1_000_000_000D;
     private static final long NANOS_PER_TICK = 50_000_000L;
+    private static final int MAX_SIGNAL_QUEUE_SIZE = 256;
     private static final double DEFAULT_BOOT_ENERGY_BUFFER = 1_000D;
     private static final int DEFAULT_TEMPORARY_FILESYSTEM_CAPACITY = 1_024 * 1_024;
     private static final String RUNNING_TAG = "running";
@@ -626,6 +627,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public boolean signal(final String name, final Object... args) {
+        if (!running || signals.size() >= MAX_SIGNAL_QUEUE_SIZE) {
+            return false;
+        }
         signals.addLast(new SimpleSignal(name, args == null ? new Object[0] : Arrays.copyOf(args, args.length)));
         sleepUntilNanos = -1L;
         if (running && architecture != null) {

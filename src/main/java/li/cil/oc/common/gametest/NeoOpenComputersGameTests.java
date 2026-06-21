@@ -2992,6 +2992,7 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
         helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
         final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        startSignalComputer(helper, computer);
         computer.machine().popSignal();
 
         final AtomicReference<String> address = new AtomicReference<>();
@@ -3108,6 +3109,7 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
         final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
         final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        startSignalComputer(helper, computer);
         computer.machine().popSignal();
 
         diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
@@ -3600,6 +3602,7 @@ public final class NeoOpenComputersGameTests {
         final KeyboardBlockEntity keyboard = helper.getBlockEntity(keyboardPos);
         final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
         helper.assertTrue(screen.node().network() == computer.node().network(), "Screen and computer are not on the same network");
+        startSignalComputer(helper, computer);
         screen.keyDown('a', 30, null);
         screen.keyUp('a', 30, null);
 
@@ -3621,6 +3624,7 @@ public final class NeoOpenComputersGameTests {
         final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
         final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
         helper.assertTrue(screen.node().network() == computer.node().network(), "Screen and computer are not on the same network");
+        startSignalComputer(helper, computer);
 
         final BlockState state = helper.getBlockState(screenPos);
         final BlockPos absoluteScreenPos = helper.absolutePos(screenPos);
@@ -3660,6 +3664,13 @@ public final class NeoOpenComputersGameTests {
         stack.set(DataComponents.CUSTOM_NAME, Component.literal("OpenOS (Operating System)"));
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
         return stack;
+    }
+
+    private static void startSignalComputer(final GameTestHelper helper, final ComputerCaseBlockEntity computer) {
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, new ItemStack(ModItems.EEPROM.get()));
+        helper.assertTrue(computer.toggleMachine(), "Computer did not start with CPU, memory, and EEPROM");
     }
 
     private static void installBootComputer(final ComputerCaseBlockEntity computer, final ItemStack bootDisk) {
