@@ -197,6 +197,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.LEASH_UPGRADE.get();
         ModItems.ANGEL_UPGRADE.get();
         ModItems.CHUNKLOADER_UPGRADE.get();
+        ModItems.MFU.get();
         ModItems.TRANSPOSER.get();
         ModItems.UPGRADE_CONTAINER_TIER1.get();
         ModItems.UPGRADE_CONTAINER_TIER2.get();
@@ -249,6 +250,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.LEASH_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.ANGEL_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.CHUNKLOADER_UPGRADE.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.MFU.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.SOLAR_GENERATOR_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), 1);
@@ -258,6 +260,15 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.LINKED_CARD.get()), 1);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void mfuDriverIsAdapterOnly(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.MFU.get());
+
+        helper.assertTrue(Driver.driverFor(stack, AdapterBlockEntity.class) != null, "No MFU driver for adapter host");
+        helper.assertTrue(Driver.driverFor(stack, AgentTestHost.class) == null, "MFU driver accepted non-adapter host");
         helper.succeed();
     }
 

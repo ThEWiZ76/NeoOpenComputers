@@ -86,6 +86,7 @@ public final class ModContentIds {
     public static final String MICROCHIP_TIER1 = "microchip_tier1";
     public static final String MICROCHIP_TIER2 = "microchip_tier2";
     public static final String MICROCHIP_TIER3 = "microchip_tier3";
+    public static final String MFU = "mfu";
     public static final String MOTION_SENSOR = "motion_sensor";
     public static final String MOTION_SENSOR_BLOCK_ENTITY = "motion_sensor";
     public static final String NAVIGATION_UPGRADE = "navigation_upgrade";

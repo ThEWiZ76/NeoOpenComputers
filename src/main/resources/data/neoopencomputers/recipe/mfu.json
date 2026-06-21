@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": {
+      "item": "neoopencomputers:chamelium"
+    },
+    "L": {
+      "item": "minecraft:lapis_lazuli"
+    },
+    "T": {
+      "item": "neoopencomputers:linked_card"
+    },
+    "A": {
+      "item": "neoopencomputers:adapter"
+    }
+  },
+  "pattern": [
+    "CLC",
+    "TAT",
+    "CLC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:mfu"
+  }
+}

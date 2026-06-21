@@ -42,7 +42,7 @@ public final class ModDriverCatalog {
                 new TransposerItemDriver(),
                 ModItems.GRAPHICS_CARD_TIER1.get(), ModItems.GRAPHICS_CARD_TIER2.get(), ModItems.GRAPHICS_CARD_TIER3.get(),
                 ModItems.NETWORK_CARD.get(), ModItems.WIRELESS_NETWORK_CARD_TIER1.get(), ModItems.WIRELESS_NETWORK_CARD_TIER2.get(), ModItems.REDSTONE_CARD.get(),
-                ModItems.PISTON_UPGRADE.get(), ModItems.STICKY_PISTON_UPGRADE.get(), ModItems.SIGN_UPGRADE.get(), ModItems.TRADING_UPGRADE.get(), ModItems.TRACTOR_BEAM_UPGRADE.get(), ModItems.LEASH_UPGRADE.get(), ModItems.ANGEL_UPGRADE.get(), ModItems.CHUNKLOADER_UPGRADE.get(),
+                ModItems.PISTON_UPGRADE.get(), ModItems.STICKY_PISTON_UPGRADE.get(), ModItems.SIGN_UPGRADE.get(), ModItems.TRADING_UPGRADE.get(), ModItems.TRACTOR_BEAM_UPGRADE.get(), ModItems.LEASH_UPGRADE.get(), ModItems.ANGEL_UPGRADE.get(), ModItems.CHUNKLOADER_UPGRADE.get(), ModItems.MFU.get(),
                 ModItems.GENERATOR_UPGRADE.get(), ModItems.SOLAR_GENERATOR_UPGRADE.get(), ModItems.TANK_UPGRADE.get(), ModItems.TANK_CONTROLLER_UPGRADE.get(),
                 ModItems.UPGRADE_CONTAINER_TIER1.get(), ModItems.UPGRADE_CONTAINER_TIER2.get(), ModItems.UPGRADE_CONTAINER_TIER3.get());
         }

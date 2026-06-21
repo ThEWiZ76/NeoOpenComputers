@@ -55,6 +55,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_MEMORY_TIER1 = "ram1";
     public static final String COMPAT_MEMORY_TIER2 = "ram2";
     public static final String COMPAT_MEMORY_TIER3 = "ram3";
+    public static final String COMPAT_MFU = "mfu";
     public static final String COMPAT_NAVIGATION_UPGRADE = "navigationUpgrade";
     public static final String COMPAT_NETWORK_CARD = "lancard";
     public static final String COMPAT_PISTON_UPGRADE = "pistonUpgrade";
@@ -184,6 +185,7 @@ public final class ModContentCatalog {
                 ModItems.LEASH_UPGRADE.get(),
                 ModItems.ANGEL_UPGRADE.get(),
                 ModItems.CHUNKLOADER_UPGRADE.get(),
+                ModItems.MFU.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER1.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER2.get(),
                 ModItems.REDSTONE_CARD.get(),
@@ -381,6 +383,7 @@ public final class ModContentCatalog {
         final Item leashUpgradeItem,
         final Item angelUpgradeItem,
         final Item chunkloaderUpgradeItem,
+        final Item mfuItem,
         final Item wirelessNetworkCardTier1Item,
         final Item wirelessNetworkCardTier2Item,
         final Item redstoneCardItem,
@@ -466,6 +469,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.LEASH_UPGRADE, null, leashUpgradeItem);
         registry.register(ModContentIds.ANGEL_UPGRADE, null, angelUpgradeItem);
         registry.register(ModContentIds.CHUNKLOADER_UPGRADE, null, chunkloaderUpgradeItem);
+        registry.register(ModContentIds.MFU, null, mfuItem);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(ModContentIds.REDSTONE_CARD, null, redstoneCardItem);
@@ -523,6 +527,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_LEASH_UPGRADE, null, leashUpgradeItem);
         registry.register(COMPAT_ANGEL_UPGRADE, null, angelUpgradeItem);
         registry.register(COMPAT_CHUNKLOADER_UPGRADE, null, chunkloaderUpgradeItem);
+        registry.register(COMPAT_MFU, null, mfuItem);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD, null, wirelessNetworkCardTier2Item);

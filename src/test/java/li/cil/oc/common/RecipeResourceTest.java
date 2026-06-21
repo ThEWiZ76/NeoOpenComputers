@@ -93,6 +93,7 @@ final class RecipeResourceTest {
             ModContentIds.LEASH_UPGRADE,
             ModContentIds.ANGEL_UPGRADE,
             ModContentIds.CHUNKLOADER_UPGRADE,
+            ModContentIds.MFU,
             ModContentIds.KEYBOARD,
             ModContentIds.LINKED_CARD,
             ModContentIds.MANUAL,
@@ -632,6 +633,8 @@ final class RecipeResourceTest {
         JsonObject angel = angelRecipe.getAsJsonObject("key");
         JsonObject chunkloaderRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.CHUNKLOADER_UPGRADE + ".json"));
         JsonObject chunkloader = chunkloaderRecipe.getAsJsonObject("key");
+        JsonObject mfuRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.MFU + ".json"));
+        JsonObject mfu = mfuRecipe.getAsJsonObject("key");
         JsonObject solarRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SOLAR_GENERATOR_UPGRADE + ".json"));
         JsonObject solar = solarRecipe.getAsJsonObject("key");
         JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
@@ -709,6 +712,12 @@ final class RecipeResourceTest {
         assertItem(chunkloader, "E", "minecraft:ender_eye");
         assertItem(chunkloader, "O", "minecraft:obsidian");
         assertItem(chunkloader, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(mfuRecipe, "CLC", "TAT", "CLC");
+        assertItem(mfu, "C", "neoopencomputers:" + ModContentIds.CHAMELIUM);
+        assertItem(mfu, "L", "minecraft:lapis_lazuli");
+        assertItem(mfu, "T", "neoopencomputers:" + ModContentIds.LINKED_CARD);
+        assertItem(mfu, "A", "neoopencomputers:" + ModContentIds.ADAPTER);
 
         assertPattern(solarRecipe, "GGG", "CUC");
         assertItem(solar, "G", "minecraft:glass");

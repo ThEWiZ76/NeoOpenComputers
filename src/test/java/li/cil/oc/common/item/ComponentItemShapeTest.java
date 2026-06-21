@@ -297,6 +297,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void mfuItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
+        final Constructor<MfuItem> constructor = MfuItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(MfuItem.class));
+        assertTrue(HostAware.class.isAssignableFrom(MfuItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void solarGeneratorUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<SolarGeneratorUpgradeItem> constructor = SolarGeneratorUpgradeItem.class.getConstructor(Item.Properties.class);
 

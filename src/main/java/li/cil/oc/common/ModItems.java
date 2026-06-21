@@ -23,6 +23,7 @@ import li.cil.oc.common.item.InternetCardItem;
 import li.cil.oc.common.item.LeashUpgradeItem;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.MemoryItem;
+import li.cil.oc.common.item.MfuItem;
 import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.PistonUpgradeItem;
@@ -315,6 +316,10 @@ public final class ModItems {
     public static final DeferredItem<ChunkloaderUpgradeItem> CHUNKLOADER_UPGRADE = ITEMS.register(
         ModContentIds.CHUNKLOADER_UPGRADE,
         () -> new ChunkloaderUpgradeItem(new Item.Properties()));
+
+    public static final DeferredItem<MfuItem> MFU = ITEMS.register(
+        ModContentIds.MFU,
+        () -> new MfuItem(new Item.Properties()));
 
     public static final DeferredItem<WirelessNetworkCardItem> WIRELESS_NETWORK_CARD_TIER1 = ITEMS.register(
         ModContentIds.WIRELESS_NETWORK_CARD_TIER1,
