@@ -1,6 +1,7 @@
 package li.cil.oc.common.item;
 
-import li.cil.oc.api.internal.Agent;
+import li.cil.oc.api.internal.Drone;
+import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.TractorBeamUpgradeEnvironment;
@@ -13,6 +14,12 @@ public class TractorBeamUpgradeItem extends BasicUpgradeItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return host instanceof Agent agent ? new TractorBeamUpgradeEnvironment(agent) : null;
+        if (host instanceof Robot robot) {
+            return new TractorBeamUpgradeEnvironment(robot);
+        }
+        if (host instanceof Drone drone) {
+            return new TractorBeamUpgradeEnvironment(drone);
+        }
+        return null;
     }
 }

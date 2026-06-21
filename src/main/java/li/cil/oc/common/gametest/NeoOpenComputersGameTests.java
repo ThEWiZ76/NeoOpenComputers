@@ -1324,11 +1324,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tractorBeamUpgradeRejectsNonRobotAgentHost(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for tractor beam upgrade");
+
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()), new AgentTestHost(helper));
+        helper.assertTrue(environment == null, "Tractor beam upgrade created environment for non-robot agent host");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tractorBeamUpgradeSucksNearbyItemStack(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for tractor beam upgrade");
 
-        final AgentTestHost host = new AgentTestHost(helper);
+        final RobotTestHost host = new RobotTestHost(helper);
         host.setSelectedSlot(3);
         final ItemEntity drop = new ItemEntity(
             helper.getLevel(),
