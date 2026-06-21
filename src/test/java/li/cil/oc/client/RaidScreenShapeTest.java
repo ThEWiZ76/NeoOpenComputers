@@ -34,11 +34,19 @@ final class RaidScreenShapeTest {
 
     @Test
     void raidScreenStatusTooltipIncludesCapacity() {
-        final List<Component> tooltip = RaidScreen.statusTooltip(RaidMenu.STATE_READY, 7 * 1024 * 1024);
+        final List<Component> tooltip = RaidScreen.statusTooltip(RaidMenu.STATE_READY, 7 * 1024 * 1024, 3);
 
         assertTranslationKey("gui.neoopencomputers.raid.status", tooltip.getFirst());
         assertTranslationKey("gui.neoopencomputers.raid.state.ready", tooltip.get(1));
-        assertTranslationKey("gui.neoopencomputers.raid.capacity", tooltip.get(2));
+        assertTranslationKey("gui.neoopencomputers.raid.disks", tooltip.get(2));
+        assertTranslationKey("gui.neoopencomputers.raid.capacity", tooltip.get(3));
+    }
+
+    @Test
+    void raidScreenStatusTooltipShowsPartialDiskCount() {
+        final List<Component> tooltip = RaidScreen.statusTooltip(RaidMenu.STATE_INCOMPLETE, 1024 * 1024, 1);
+
+        assertTranslationKey("gui.neoopencomputers.raid.disks", tooltip.get(2));
     }
 
     private static void assertTranslationKey(final String expectedKey, final Component component) {

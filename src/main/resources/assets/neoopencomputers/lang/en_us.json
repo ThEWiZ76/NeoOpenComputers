@@ -149,6 +149,7 @@
   "gui.neoopencomputers.rack.state.ready": "Ready",
   "gui.neoopencomputers.rack.state.running": "Running",
   "gui.neoopencomputers.raid.capacity": "Capacity %s",
+  "gui.neoopencomputers.raid.disks": "Disks %s/%s",
   "gui.neoopencomputers.raid.status": "RAID status",
   "gui.neoopencomputers.raid.state.empty": "No disks",
   "gui.neoopencomputers.raid.state.incomplete": "Incomplete array",

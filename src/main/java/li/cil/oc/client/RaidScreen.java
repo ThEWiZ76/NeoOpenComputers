@@ -44,7 +44,7 @@ public class RaidScreen extends AbstractContainerScreen<RaidMenu> {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
         if (isHovering(STATUS_X, STATUS_Y, STATUS_WIDTH, STATUS_HEIGHT, mouseX, mouseY)) {
-            guiGraphics.renderComponentTooltip(font, statusTooltip(menu.raidState(), menu.raidCapacity()), mouseX, mouseY);
+            guiGraphics.renderComponentTooltip(font, statusTooltip(menu.raidState(), menu.raidCapacity(), menu.raidDiskCount()), mouseX, mouseY);
         }
     }
 
@@ -57,9 +57,14 @@ public class RaidScreen extends AbstractContainerScreen<RaidMenu> {
     }
 
     public static List<Component> statusTooltip(final int state, final int capacity) {
+        return statusTooltip(state, capacity, 0);
+    }
+
+    public static List<Component> statusTooltip(final int state, final int capacity, final int diskCount) {
         final List<Component> tooltip = new ArrayList<>();
         tooltip.add(Component.translatable("gui.neoopencomputers.raid.status"));
         tooltip.add(statusLabel(state));
+        tooltip.add(Component.translatable("gui.neoopencomputers.raid.disks", diskCount, RaidMenu.RAID_SLOT_COUNT));
         if (capacity > 0) {
             tooltip.add(Component.translatable("gui.neoopencomputers.raid.capacity", capacityLabel(capacity)));
         }

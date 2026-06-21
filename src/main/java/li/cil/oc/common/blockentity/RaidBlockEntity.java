@@ -266,6 +266,16 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         return true;
     }
 
+    public int diskCount() {
+        int count = 0;
+        for (final ItemStack stack : items) {
+            if (!stack.isEmpty() && canPlaceItem(0, stack)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public int capacity() {
         return (int) Math.min(Integer.MAX_VALUE, totalCapacity());
     }

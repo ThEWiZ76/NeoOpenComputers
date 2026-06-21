@@ -33,7 +33,8 @@ final class RaidMenuShapeTest {
         assertEquals(39, RaidMenu.TOTAL_SLOT_COUNT);
         assertEquals(0, RaidMenu.RAID_STATUS_INDEX);
         assertEquals(1, RaidMenu.RAID_CAPACITY_INDEX);
-        assertEquals(2, RaidMenu.RAID_DATA_COUNT);
+        assertEquals(2, RaidMenu.RAID_DISK_COUNT_INDEX);
+        assertEquals(3, RaidMenu.RAID_DATA_COUNT);
         assertEquals(0, RaidMenu.STATE_EMPTY);
         assertEquals(1, RaidMenu.STATE_INCOMPLETE);
         assertEquals(2, RaidMenu.STATE_READY);
@@ -43,18 +44,23 @@ final class RaidMenuShapeTest {
     void raidMenuExposesStatusAccess() throws NoSuchMethodException {
         final Method state = RaidMenu.class.getMethod("raidState");
         final Method capacity = RaidMenu.class.getMethod("raidCapacity");
+        final Method diskCount = RaidMenu.class.getMethod("raidDiskCount");
         final Method stateFor = RaidMenu.class.getMethod("raidStateFor", Container.class);
         final Method capacityFor = RaidMenu.class.getMethod("raidCapacityFor", Container.class);
+        final Method diskCountFor = RaidMenu.class.getMethod("raidDiskCountFor", Container.class);
 
         assertEquals(int.class, state.getReturnType());
         assertEquals(int.class, capacity.getReturnType());
+        assertEquals(int.class, diskCount.getReturnType());
         assertEquals(int.class, stateFor.getReturnType());
         assertEquals(int.class, capacityFor.getReturnType());
+        assertEquals(int.class, diskCountFor.getReturnType());
     }
 
     @Test
     void nonRaidInventoryReportsEmptyStatus() {
         assertEquals(RaidMenu.STATE_EMPTY, RaidMenu.raidStateFor(null));
         assertEquals(0, RaidMenu.raidCapacityFor(null));
+        assertEquals(0, RaidMenu.raidDiskCountFor(null));
     }
 }

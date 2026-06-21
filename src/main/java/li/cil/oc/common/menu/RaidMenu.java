@@ -18,7 +18,8 @@ public class RaidMenu extends AbstractContainerMenu {
     public static final int TOTAL_SLOT_COUNT = RAID_SLOT_COUNT + PLAYER_SLOT_COUNT;
     public static final int RAID_STATUS_INDEX = 0;
     public static final int RAID_CAPACITY_INDEX = 1;
-    public static final int RAID_DATA_COUNT = 2;
+    public static final int RAID_DISK_COUNT_INDEX = 2;
+    public static final int RAID_DATA_COUNT = 3;
 
     public static final int STATE_EMPTY = 0;
     public static final int STATE_INCOMPLETE = 1;
@@ -91,6 +92,10 @@ public class RaidMenu extends AbstractContainerMenu {
         return raidData.get(RAID_CAPACITY_INDEX);
     }
 
+    public int raidDiskCount() {
+        return raidData.get(RAID_DISK_COUNT_INDEX);
+    }
+
     public static int raidStateFor(final Container raidInventory) {
         if (!(raidInventory instanceof RaidBlockEntity raid) || raid.isEmpty()) {
             return STATE_EMPTY;
@@ -100,6 +105,10 @@ public class RaidMenu extends AbstractContainerMenu {
 
     public static int raidCapacityFor(final Container raidInventory) {
         return raidInventory instanceof RaidBlockEntity raid ? raid.capacity() : 0;
+    }
+
+    public static int raidDiskCountFor(final Container raidInventory) {
+        return raidInventory instanceof RaidBlockEntity raid ? raid.diskCount() : 0;
     }
 
     @Override
@@ -127,6 +136,7 @@ public class RaidMenu extends AbstractContainerMenu {
                 return switch (index) {
                     case RAID_STATUS_INDEX -> raidStateFor(raidInventory);
                     case RAID_CAPACITY_INDEX -> raidCapacityFor(raidInventory);
+                    case RAID_DISK_COUNT_INDEX -> raidDiskCountFor(raidInventory);
                     default -> 0;
                 };
             }
