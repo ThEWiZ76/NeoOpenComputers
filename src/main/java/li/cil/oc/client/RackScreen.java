@@ -2,6 +2,7 @@ package li.cil.oc.client;
 
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.network.RackControlPayload;
+import li.cil.oc.common.network.RackOpenServerPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -54,11 +55,19 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             PacketDistributor.sendToServer(controlPayload(menu, slot, RackControlPayload.TOGGLE));
             return true;
         }
+        if (button == 1 && slot >= 0) {
+            PacketDistributor.sendToServer(openServerPayload(menu, slot));
+            return true;
+        }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     static RackControlPayload controlPayload(final RackMenu menu, final int slot, final int action) {
         return new RackControlPayload(menu.containerId, slot, action);
+    }
+
+    static RackOpenServerPayload openServerPayload(final RackMenu menu, final int slot) {
+        return new RackOpenServerPayload(menu.containerId, slot);
     }
 
     static int controlSlotAt(final double mouseX, final double mouseY, final int left, final int top) {

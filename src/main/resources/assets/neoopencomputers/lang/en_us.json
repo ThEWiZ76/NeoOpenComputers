@@ -123,6 +123,7 @@
   "item.neoopencomputers.wrench": "Wrench",
   "itemGroup.neoopencomputers": "NeoOpenComputers",
   "mod.neoopencomputers": "NeoOpenComputers",
+  "gui.neoopencomputers.server_rack": "Rack Server",
   "gui.neoopencomputers.rack.control": "Server power",
   "gui.neoopencomputers.rack.missing.cpu": "Missing CPU",
   "gui.neoopencomputers.rack.missing.eeprom": "Missing EEPROM",

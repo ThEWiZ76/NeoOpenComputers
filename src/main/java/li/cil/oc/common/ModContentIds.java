@@ -117,6 +117,7 @@ public final class ModContentIds {
     public static final String SERVER_TIER1 = "server_tier1";
     public static final String SERVER_TIER2 = "server_tier2";
     public static final String SERVER_TIER3 = "server_tier3";
+    public static final String SERVER_RACK_MENU = "server_rack";
     public static final String SIGN_UPGRADE = "sign_upgrade";
     public static final String SOLAR_GENERATOR_UPGRADE = "solar_generator_upgrade";
     public static final String STICKY_PISTON_UPGRADE = "sticky_piston_upgrade";

@@ -2,6 +2,7 @@ package li.cil.oc.client;
 
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.network.RackControlPayload;
+import li.cil.oc.common.network.RackOpenServerPayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -38,6 +39,16 @@ final class RackScreenShapeTest {
         assertEquals(14, payload.containerId());
         assertEquals(2, payload.slot());
         assertEquals(RackControlPayload.TOGGLE, payload.action());
+    }
+
+    @Test
+    void rackScreenBuildsOpenServerPayloadForMenu() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14);
+
+        final RackOpenServerPayload payload = RackScreen.openServerPayload(menu, 3);
+
+        assertEquals(14, payload.containerId());
+        assertEquals(3, payload.slot());
     }
 
     @Test
