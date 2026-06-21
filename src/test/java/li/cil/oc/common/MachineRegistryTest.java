@@ -542,6 +542,30 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void stopClearsQueuedSignals() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        assertTrue(machine.start());
+        assertTrue(machine.signal("event"));
+
+        assertTrue(machine.stop());
+
+        assertNull(machine.popSignal());
+    }
+
+    @Test
+    void crashClearsQueuedSignals() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        assertTrue(machine.start());
+        assertTrue(machine.signal("event"));
+
+        assertTrue(machine.crash("failed"));
+
+        assertNull(machine.popSignal());
+    }
+
+    @Test
     void hostChangedDropsArchitectureWhenProcessorRemoved() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();

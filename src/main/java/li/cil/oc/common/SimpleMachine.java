@@ -402,6 +402,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (architecture != null) {
             architecture.close();
         }
+        signals.clear();
         startedAtNanos = -1L;
         sleepUntilNanos = -1L;
         pauseUntilNanos = -1L;
@@ -574,6 +575,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (architecture != null && !architecture.isInitialized() && !architecture.initialize()) {
             return false;
         }
+        if (!wasRunning) {
+            signals.clear();
+        }
         running = true;
         paused = false;
         pauseUntilNanos = -1L;
@@ -611,6 +615,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (architecture != null) {
             architecture.close();
         }
+        signals.clear();
         startedAtNanos = -1L;
         sleepUntilNanos = -1L;
         pauseUntilNanos = -1L;
