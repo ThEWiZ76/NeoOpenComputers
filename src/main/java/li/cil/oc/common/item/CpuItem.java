@@ -1,6 +1,7 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.driver.item.CallBudget;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.machine.Architecture;
@@ -13,7 +14,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
 
-public class CpuItem extends Item implements Processor {
+public class CpuItem extends Item implements Processor, CallBudget {
     private final int tier;
 
     public CpuItem(final Properties properties) {
@@ -64,6 +65,11 @@ public class CpuItem extends Item implements Processor {
         return li.cil.oc.api.Machine.LuaArchitecture;
     }
 
+    @Override
+    public double getCallBudget(final ItemStack stack) {
+        return callBudget(tier(stack));
+    }
+
     static ManagedEnvironment createDeviceInfoEnvironment(final int tier) {
         return new PassiveDeviceInfoEnvironment(deviceInfo(tier));
     }
@@ -84,6 +90,14 @@ public class CpuItem extends Item implements Processor {
             case 0 -> "500";
             case 1 -> "1000";
             default -> "1500";
+        };
+    }
+
+    static double callBudget(final int tier) {
+        return switch (Math.max(0, Math.min(2, tier))) {
+            case 0 -> 0.5D;
+            case 1 -> 1.0D;
+            default -> 1.5D;
         };
     }
 }

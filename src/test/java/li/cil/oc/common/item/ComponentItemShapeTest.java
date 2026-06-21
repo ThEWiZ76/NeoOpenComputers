@@ -1,6 +1,7 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.driver.item.CallBudget;
 import li.cil.oc.api.driver.item.Chargeable;
 import li.cil.oc.api.driver.item.Container;
 import li.cil.oc.api.driver.item.Inventory;
@@ -37,7 +38,17 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(CpuItem.class));
         assertTrue(Processor.class.isAssignableFrom(CpuItem.class));
+        assertTrue(CallBudget.class.isAssignableFrom(CpuItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void cpuItemExposesUpstreamCallBudgets() throws Exception {
+        final var budgetMethod = CpuItem.class.getDeclaredMethod("callBudget", int.class);
+
+        assertEquals(0.5D, budgetMethod.invoke(null, 0));
+        assertEquals(1.0D, budgetMethod.invoke(null, 1));
+        assertEquals(1.5D, budgetMethod.invoke(null, 2));
     }
 
     @Test
