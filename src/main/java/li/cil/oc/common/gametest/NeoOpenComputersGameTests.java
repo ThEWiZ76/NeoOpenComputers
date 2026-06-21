@@ -1764,6 +1764,38 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void brokenRackDropsStatefulServerItem(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.killAllEntities();
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+        final li.cil.oc.api.internal.Server rackServer = (li.cil.oc.api.internal.Server) rack.getMountable(0);
+        final net.minecraft.world.Container serverInventory = (net.minecraft.world.Container) rackServer;
+        serverInventory.setItem(2, new ItemStack(ModItems.CPU_TIER3.get()));
+        serverInventory.setItem(5, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        serverInventory.setItem(8, new ItemStack(ModItems.HDD_TIER3.get()));
+        serverInventory.setItem(12, luaBiosEepromStack());
+
+        helper.getLevel().destroyBlock(helper.absolutePos(rackPos), true);
+        helper.runAtTickTime(1, () -> {
+            helper.assertTrue(droppedItemCount(helper, ModItems.SERVER_TIER2.get()) == 1, "Broken rack did not drop exactly one tier 2 server item");
+            final ItemStack dropped = droppedItemStack(helper, ModItems.SERVER_TIER2.get());
+            final BlockPos loadedPos = new BlockPos(3, 1, 1);
+            helper.setBlock(loadedPos, ModBlocks.RACK.get());
+            final RackBlockEntity loadedRack = helper.getBlockEntity(loadedPos);
+            loadedRack.setItem(0, dropped);
+            final li.cil.oc.api.internal.Server loadedServer = (li.cil.oc.api.internal.Server) loadedRack.getMountable(0);
+            final net.minecraft.world.Container loadedInventory = (net.minecraft.world.Container) loadedServer;
+            helper.assertTrue(loadedInventory.getItem(2).is(ModItems.CPU_TIER3.get()), "Dropped rack server missing CPU");
+            helper.assertTrue(loadedInventory.getItem(5).is(ModItems.MEMORY_TIER3.get()), "Dropped rack server missing memory");
+            helper.assertTrue(loadedInventory.getItem(8).is(ModItems.HDD_TIER3.get()), "Dropped rack server missing hard disk");
+            helper.assertTrue(loadedInventory.getItem(12).is(ModItems.EEPROM.get()), "Dropped rack server missing EEPROM");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty")
     public static void terminalServerExposesVirtualScreenAndKeyboard(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);

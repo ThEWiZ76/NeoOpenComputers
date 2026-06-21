@@ -15,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
@@ -24,18 +25,22 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.RackMenu;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, Analyzable {
     public static final int CONTAINER_SIZE = 4;
 
     private static final String TAG_MOUNTABLE_DATA = "oc:mountableData";
+    private static final String STACK_MOUNTABLE_DATA_TAG = "oc:rackMountable";
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final CompoundTag[] mountableData = new CompoundTag[CONTAINER_SIZE];
@@ -55,6 +60,18 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
     public static boolean acceptsDriverSlot(final String slot) {
         return Slot.RackMountable.equals(slot);
+    }
+
+    public List<ItemStack> stacksForDrop() {
+        saveMountableData();
+        final List<ItemStack> stacks = new ArrayList<>();
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            final ItemStack stack = items.get(slot);
+            if (!stack.isEmpty()) {
+                stacks.add(stackWithMountableData(slot, stack.copy()));
+            }
+        }
+        return stacks;
     }
 
     @Override
@@ -188,8 +205,10 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         if (!isValidSlot(slot)) {
             return ItemStack.EMPTY;
         }
+        saveMountableData(slot);
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
+            writeMountableData(removed, mountableData[slot]);
             removeMountable(slot);
             setChanged();
         }
@@ -201,8 +220,10 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         if (!isValidSlot(slot)) {
             return ItemStack.EMPTY;
         }
+        saveMountableData(slot);
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
+            writeMountableData(removed, mountableData[slot]);
             removeMountable(slot);
         }
         return removed;
@@ -219,6 +240,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             stored.setCount(getMaxStackSize());
         }
         items.set(slot, stored);
+        mountableData[slot] = readMountableData(stored);
         refreshMountable(slot);
         setChanged();
     }
@@ -294,6 +316,31 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         }
         final DriverItem driver = Driver.driverFor(stack);
         return driver != null && acceptsDriverSlot(driver.slot(stack));
+    }
+
+    private ItemStack stackWithMountableData(final int slot, final ItemStack stack) {
+        if (isValidSlot(slot)) {
+            writeMountableData(stack, mountableData[slot]);
+        }
+        return stack;
+    }
+
+    private static CompoundTag readMountableData(final ItemStack stack) {
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return new CompoundTag();
+        }
+        return customData.copyTag().getCompound(STACK_MOUNTABLE_DATA_TAG).copy();
+    }
+
+    private static void writeMountableData(final ItemStack stack, final CompoundTag data) {
+        if (stack.isEmpty() || data == null || data.isEmpty()) {
+            return;
+        }
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
+        root.put(STACK_MOUNTABLE_DATA_TAG, data.copy());
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 
     private void tickServer() {

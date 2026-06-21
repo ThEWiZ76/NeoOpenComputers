@@ -5,9 +5,9 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -82,7 +82,11 @@ public class RackBlock extends HorizontalDirectionalBlock implements EntityBlock
 
     @Override
     protected void onRemove(final BlockState state, final Level level, final BlockPos pos, final BlockState newState, final boolean movedByPiston) {
-        Containers.dropContentsOnDestroy(state, newState, level, pos);
+        if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof RackBlockEntity rack && !level.isClientSide) {
+            for (final ItemStack stack : rack.stacksForDrop()) {
+                popResource(level, pos, stack);
+            }
+        }
         super.onRemove(state, level, pos, newState, movedByPiston);
     }
 
