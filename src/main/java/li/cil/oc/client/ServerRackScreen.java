@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
@@ -34,6 +35,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
                 guiGraphics.drawString(font, label, left + SERVER_SLOT_LEFT + (slot % SERVER_SLOT_COLUMNS) * SERVER_SLOT_STRIDE + 2, top + SERVER_SLOT_TOP + (slot / SERVER_SLOT_COLUMNS) * SERVER_SLOT_STRIDE + 4, 0xFFD8DEE9, false);
             }
         }
+        guiGraphics.drawString(font, statusLabel(menu.serverState()), left + 8, top + 62, 0xFFD8DEE9, false);
     }
 
     @Override
@@ -44,6 +46,8 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         final int slot = serverSlotAt(mouseX, mouseY, leftPos, topPos);
         if (slot >= 0) {
             guiGraphics.renderComponentTooltip(font, slotTooltip(menu.slotKind(slot), menu.slotTierLimit(slot)), mouseX, mouseY);
+        } else if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
+            guiGraphics.renderComponentTooltip(font, statusTooltip(menu.serverState(), menu.missingRequirements()), mouseX, mouseY);
         }
     }
 
@@ -71,6 +75,31 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
 
     public static List<Component> slotTooltip(final int kind, final int tier) {
         return List.of(slotLabel(kind), slotTierLabel(tier));
+    }
+
+    public static Component statusLabel(final int state) {
+        return Component.translatable(switch (state) {
+            case ServerRackMenu.STATE_READY -> "gui.neoopencomputers.server_rack.state.ready";
+            case ServerRackMenu.STATE_RUNNING -> "gui.neoopencomputers.server_rack.state.running";
+            case ServerRackMenu.STATE_INCOMPLETE -> "gui.neoopencomputers.server_rack.state.incomplete";
+            default -> "gui.neoopencomputers.server_rack.state.empty";
+        });
+    }
+
+    public static List<Component> statusTooltip(final int state, final int missingRequirements) {
+        final List<Component> tooltip = new ArrayList<>();
+        tooltip.add(Component.translatable("gui.neoopencomputers.server_rack.status"));
+        tooltip.add(statusLabel(state));
+        if ((missingRequirements & ServerRackMenu.MISSING_CPU) != 0) {
+            tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.cpu"));
+        }
+        if ((missingRequirements & ServerRackMenu.MISSING_MEMORY) != 0) {
+            tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.memory"));
+        }
+        if ((missingRequirements & ServerRackMenu.MISSING_EEPROM) != 0) {
+            tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.eeprom"));
+        }
+        return tooltip;
     }
 
     public static int serverSlotAt(final int mouseX, final int mouseY, final int left, final int top) {

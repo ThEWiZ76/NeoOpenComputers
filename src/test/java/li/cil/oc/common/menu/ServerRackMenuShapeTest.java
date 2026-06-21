@@ -33,7 +33,14 @@ final class ServerRackMenuShapeTest {
         assertEquals(17, ServerRackMenu.SERVER_SLOT_COUNT);
         assertEquals(36, ServerRackMenu.PLAYER_SLOT_COUNT);
         assertEquals(53, ServerRackMenu.TOTAL_SLOT_COUNT);
-        assertEquals(34, ServerRackMenu.SERVER_DATA_COUNT);
+        assertEquals(36, ServerRackMenu.SERVER_DATA_COUNT);
+        assertEquals(0, ServerRackMenu.STATE_EMPTY);
+        assertEquals(1, ServerRackMenu.STATE_READY);
+        assertEquals(2, ServerRackMenu.STATE_RUNNING);
+        assertEquals(3, ServerRackMenu.STATE_INCOMPLETE);
+        assertEquals(ServerRackMountableEnvironment.MISSING_CPU, ServerRackMenu.MISSING_CPU);
+        assertEquals(ServerRackMountableEnvironment.MISSING_MEMORY, ServerRackMenu.MISSING_MEMORY);
+        assertEquals(ServerRackMountableEnvironment.MISSING_EEPROM, ServerRackMenu.MISSING_EEPROM);
     }
 
     @Test
@@ -45,9 +52,23 @@ final class ServerRackMenuShapeTest {
     void serverRackMenuExposesSlotKindAccess() throws NoSuchMethodException {
         final Method kind = ServerRackMenu.class.getMethod("slotKind", int.class);
         final Method tier = ServerRackMenu.class.getMethod("slotTierLimit", int.class);
+        final Method state = ServerRackMenu.class.getMethod("serverState");
+        final Method missing = ServerRackMenu.class.getMethod("missingRequirements");
+        final Method stateFor = ServerRackMenu.class.getMethod("serverStateFor", Container.class);
+        final Method missingFor = ServerRackMenu.class.getMethod("missingRequirementsFor", Container.class);
 
         assertEquals(int.class, kind.getReturnType());
         assertEquals(int.class, tier.getReturnType());
+        assertEquals(int.class, state.getReturnType());
+        assertEquals(int.class, missing.getReturnType());
+        assertEquals(int.class, stateFor.getReturnType());
+        assertEquals(int.class, missingFor.getReturnType());
+    }
+
+    @Test
+    void nonServerInventoryReportsEmptyStatus() {
+        assertEquals(ServerRackMenu.STATE_EMPTY, ServerRackMenu.serverStateFor(null));
+        assertEquals(0, ServerRackMenu.missingRequirementsFor(null));
     }
 
     @Test

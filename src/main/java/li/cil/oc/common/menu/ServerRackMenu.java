@@ -2,6 +2,7 @@ package li.cil.oc.common.menu;
 
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.ModMenus;
+import li.cil.oc.api.util.StateAware;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -16,7 +17,17 @@ public class ServerRackMenu extends AbstractContainerMenu {
     public static final int SERVER_SLOT_COUNT = 17;
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int TOTAL_SLOT_COUNT = SERVER_SLOT_COUNT + PLAYER_SLOT_COUNT;
-    public static final int SERVER_DATA_COUNT = SERVER_SLOT_COUNT * 2;
+    public static final int SERVER_STATUS_INDEX = SERVER_SLOT_COUNT * 2;
+    public static final int SERVER_MISSING_REQUIREMENTS_INDEX = SERVER_STATUS_INDEX + 1;
+    public static final int SERVER_DATA_COUNT = SERVER_MISSING_REQUIREMENTS_INDEX + 1;
+
+    public static final int STATE_EMPTY = 0;
+    public static final int STATE_READY = 1;
+    public static final int STATE_RUNNING = 2;
+    public static final int STATE_INCOMPLETE = 3;
+    public static final int MISSING_CPU = ServerRackMountableEnvironment.MISSING_CPU;
+    public static final int MISSING_MEMORY = ServerRackMountableEnvironment.MISSING_MEMORY;
+    public static final int MISSING_EEPROM = ServerRackMountableEnvironment.MISSING_EEPROM;
 
     public static final int SLOT_KIND_NONE = 0;
     public static final int SLOT_KIND_CARD = 1;
@@ -97,6 +108,14 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return slot >= 0 && slot < SERVER_SLOT_COUNT ? serverData.get(SERVER_SLOT_COUNT + slot) : -1;
     }
 
+    public int serverState() {
+        return serverData.get(SERVER_STATUS_INDEX);
+    }
+
+    public int missingRequirements() {
+        return serverData.get(SERVER_MISSING_REQUIREMENTS_INDEX);
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -117,6 +136,24 @@ public class ServerRackMenu extends AbstractContainerMenu {
 
     public static int slotTierLimitForTier(final int tier, final int slot) {
         return ServerRackMountableEnvironment.slotTierLimit(tier, slot);
+    }
+
+    public static int serverStateFor(final Container serverInventory) {
+        if (!(serverInventory instanceof ServerRackMountableEnvironment server)) {
+            return STATE_EMPTY;
+        }
+        final var states = server.getCurrentState();
+        if (server.machine().isRunning() || server.machine().isPaused() || states.contains(StateAware.State.IsWorking)) {
+            return STATE_RUNNING;
+        }
+        if (states.contains(StateAware.State.CanWork)) {
+            return STATE_READY;
+        }
+        return STATE_INCOMPLETE;
+    }
+
+    public static int missingRequirementsFor(final Container serverInventory) {
+        return serverInventory instanceof ServerRackMountableEnvironment server ? server.missingRequiredComponents() : 0;
     }
 
     public static int slotKindCode(final String type) {
@@ -141,7 +178,13 @@ public class ServerRackMenu extends AbstractContainerMenu {
                 if (index < SERVER_SLOT_COUNT) {
                     return slotKindFor(serverInventory, index);
                 }
-                return slotTierLimitFor(serverInventory, index - SERVER_SLOT_COUNT);
+                if (index < SERVER_STATUS_INDEX) {
+                    return slotTierLimitFor(serverInventory, index - SERVER_SLOT_COUNT);
+                }
+                if (index == SERVER_STATUS_INDEX) {
+                    return serverStateFor(serverInventory);
+                }
+                return missingRequirementsFor(serverInventory);
             }
 
             @Override

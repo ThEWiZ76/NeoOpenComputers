@@ -3,6 +3,7 @@ package li.cil.oc.client;
 import li.cil.oc.common.menu.ServerRackMenu;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Inventory;
 import org.junit.jupiter.api.Test;
 
@@ -31,11 +32,15 @@ final class ServerRackScreenShapeTest {
         final Method label = ServerRackScreen.class.getMethod("slotLabel", int.class);
         final Method tierLabel = ServerRackScreen.class.getMethod("slotTierLabel", int.class);
         final Method tooltip = ServerRackScreen.class.getMethod("slotTooltip", int.class, int.class);
+        final Method statusLabel = ServerRackScreen.class.getMethod("statusLabel", int.class);
+        final Method statusTooltip = ServerRackScreen.class.getMethod("statusTooltip", int.class, int.class);
         final Method slotAt = ServerRackScreen.class.getMethod("serverSlotAt", int.class, int.class, int.class, int.class);
 
         assertEquals(Component.class, label.getReturnType());
         assertEquals(Component.class, tierLabel.getReturnType());
         assertEquals(List.class, tooltip.getReturnType());
+        assertEquals(Component.class, statusLabel.getReturnType());
+        assertEquals(List.class, statusTooltip.getReturnType());
         assertEquals(int.class, slotAt.getReturnType());
     }
 
@@ -61,5 +66,29 @@ final class ServerRackScreenShapeTest {
         assertEquals("gui.neoopencomputers.server_rack.slot.max_tier", ServerRackScreen.slotTierLabel(2).getString());
         assertEquals("gui.neoopencomputers.server_rack.slot.any_tier", ServerRackScreen.slotTierLabel(Integer.MAX_VALUE).getString());
         assertEquals("gui.neoopencomputers.server_rack.slot.unavailable", ServerRackScreen.slotTierLabel(-1).getString());
+    }
+
+    @Test
+    void serverRackStatusTooltipShowsStateAndMissingRequirements() {
+        assertTranslationKey("gui.neoopencomputers.server_rack.state.empty", ServerRackScreen.statusLabel(ServerRackMenu.STATE_EMPTY));
+        assertTranslationKey("gui.neoopencomputers.server_rack.state.ready", ServerRackScreen.statusLabel(ServerRackMenu.STATE_READY));
+        assertTranslationKey("gui.neoopencomputers.server_rack.state.running", ServerRackScreen.statusLabel(ServerRackMenu.STATE_RUNNING));
+        assertTranslationKey("gui.neoopencomputers.server_rack.state.incomplete", ServerRackScreen.statusLabel(ServerRackMenu.STATE_INCOMPLETE));
+
+        final List<Component> tooltip = ServerRackScreen.statusTooltip(
+            ServerRackMenu.STATE_INCOMPLETE,
+            ServerRackMenu.MISSING_CPU | ServerRackMenu.MISSING_MEMORY | ServerRackMenu.MISSING_EEPROM);
+
+        assertEquals(5, tooltip.size());
+        assertTranslationKey("gui.neoopencomputers.server_rack.status", tooltip.get(0));
+        assertTranslationKey("gui.neoopencomputers.server_rack.state.incomplete", tooltip.get(1));
+        assertTranslationKey("gui.neoopencomputers.rack.missing.cpu", tooltip.get(2));
+        assertTranslationKey("gui.neoopencomputers.rack.missing.memory", tooltip.get(3));
+        assertTranslationKey("gui.neoopencomputers.rack.missing.eeprom", tooltip.get(4));
+    }
+
+    private static void assertTranslationKey(final String expected, final Component component) {
+        assertTrue(component.getContents() instanceof TranslatableContents);
+        assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());
     }
 }
