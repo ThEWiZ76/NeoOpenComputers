@@ -1938,6 +1938,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tractorBeamUpgradeSucksNearbyItemStackIntoTabletPlayerInventory(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for tractor beam upgrade");
+
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.moveTo(helper.absolutePos(BlockPos.ZERO).getX() + 0.5D, helper.absolutePos(BlockPos.ZERO).getY() + 1D, helper.absolutePos(BlockPos.ZERO).getZ() + 0.5D);
+        final TabletTestHost host = new TabletTestHost(helper, player);
+        final ItemEntity drop = new ItemEntity(
+            helper.getLevel(),
+            host.xPosition(),
+            host.yPosition(),
+            host.zPosition(),
+            new ItemStack(Items.DIAMOND, 2));
+        helper.getLevel().addFreshEntity(drop);
+
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Tractor beam upgrade did not create tablet environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Tractor beam node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        final Object[] suck = component.invoke("suck", null);
+        helper.assertTrue(Boolean.TRUE.equals(suck[0]), "Tractor beam did not suck nearby item for tablet");
+        helper.assertTrue(containsStack(player.getInventory(), Items.DIAMOND, 2), "Tractor beam did not insert item stack into tablet player inventory");
+        helper.assertTrue(drop.isRemoved() || drop.getItem().isEmpty(), "Tractor beam left tablet-sucked item in world");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void experienceUpgradeConsumesExperienceBottle(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for experience upgrade");
@@ -5545,6 +5573,83 @@ public final class NeoOpenComputersGameTests {
         @Override
         public boolean canTakeItemThroughFace(final int slot, final ItemStack stack, final Direction side) {
             return true;
+        }
+    }
+
+    private static final class TabletTestHost implements li.cil.oc.api.internal.Tablet {
+        private final GameTestHelper helper;
+        private final Player player;
+
+        private TabletTestHost(final GameTestHelper helper, final Player player) {
+            this.helper = helper;
+            this.player = player;
+        }
+
+        @Override
+        public Player player() {
+            return player;
+        }
+
+        @Override
+        public li.cil.oc.api.machine.Machine machine() {
+            return null;
+        }
+
+        @Override
+        public Iterable<ItemStack> internalComponents() {
+            return List.of();
+        }
+
+        @Override
+        public int componentSlot(final String address) {
+            return -1;
+        }
+
+        @Override
+        public void onMachineConnect(final Node node) {
+        }
+
+        @Override
+        public void onMachineDisconnect(final Node node) {
+        }
+
+        @Override
+        public net.minecraft.world.level.Level world() {
+            return helper.getLevel();
+        }
+
+        @Override
+        public double xPosition() {
+            return player.getX();
+        }
+
+        @Override
+        public double yPosition() {
+            return player.getY();
+        }
+
+        @Override
+        public double zPosition() {
+            return player.getZ();
+        }
+
+        @Override
+        public void markChanged() {
+        }
+
+        @Override
+        public Direction facing() {
+            return Direction.NORTH;
+        }
+
+        @Override
+        public Direction toGlobal(final Direction value) {
+            return value;
+        }
+
+        @Override
+        public Direction toLocal(final Direction value) {
+            return value;
         }
     }
 

@@ -3,13 +3,16 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Agent;
+import li.cil.oc.api.internal.Tablet;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LevelEvent;
@@ -29,10 +32,20 @@ public class TractorBeamUpgradeEnvironment extends AbstractManagedEnvironment im
         DeviceInfo.DeviceAttribute.Product, "T313-K1N.3515"
     );
 
-    private final Agent host;
+    private final EnvironmentHost host;
+    private final PickupStrategy pickupStrategy;
 
     public TractorBeamUpgradeEnvironment(final Agent host) {
+        this(host, new AgentInventoryPickupStrategy(host));
+    }
+
+    public TractorBeamUpgradeEnvironment(final Tablet host) {
+        this(host, item -> pickupByPlayer(host.player(), item));
+    }
+
+    private TractorBeamUpgradeEnvironment(final EnvironmentHost host, final PickupStrategy pickupStrategy) {
         this.host = host;
+        this.pickupStrategy = pickupStrategy;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create());
@@ -62,11 +75,14 @@ public class TractorBeamUpgradeEnvironment extends AbstractManagedEnvironment im
         }
 
         final ItemEntity item = items.get(level.random.nextInt(items.size()));
-        if (insertIntoInventory(item)) {
+        final int originalCount = item.getItem().getCount();
+        pickupStrategy.pickup(item);
+        if (item.isRemoved() || item.getItem().isEmpty() || item.getItem().getCount() < originalCount) {
             if (context != null) {
                 context.pause(SUCK_DELAY);
             }
             level.levelEvent(LevelEvent.PARTICLES_EYE_OF_ENDER_DEATH, item.blockPosition(), 0);
+            host.markChanged();
             return new Object[]{true};
         }
         return new Object[]{false};
@@ -82,55 +98,71 @@ public class TractorBeamUpgradeEnvironment extends AbstractManagedEnvironment im
             host.zPosition() + PICKUP_RADIUS);
     }
 
-    private boolean insertIntoInventory(final ItemEntity entity) {
-        final ItemStack stack = entity.getItem();
-        final int originalCount = stack.getCount();
-        final int remaining = insertIntoInventory(host.mainInventory(), stack);
-        if (remaining == originalCount) {
-            return false;
+    private static void pickupByPlayer(final Player player, final ItemEntity entity) {
+        if (player != null) {
+            entity.playerTouch(player);
         }
-
-        stack.setCount(remaining);
-        if (remaining <= 0) {
-            entity.discard();
-        } else {
-            entity.setItem(stack);
-        }
-        host.markChanged();
-        return true;
     }
 
-    private int insertIntoInventory(final Container inventory, final ItemStack stack) {
-        int remaining = stack.getCount();
-        final int size = inventory.getContainerSize();
-        final int selectedSlot = host.selectedSlot();
-        final int startSlot = selectedSlot >= 0 && selectedSlot < size ? selectedSlot : 0;
-        for (int offset = 0; offset < size && remaining > 0; offset++) {
-            final int slot = (startSlot + offset) % size;
-            final ItemStack existing = inventory.getItem(slot);
-            if (existing.isEmpty() || !ItemStack.isSameItemSameComponents(existing, stack)) {
-                continue;
-            }
-            final int limit = Math.min(existing.getMaxStackSize(), inventory.getMaxStackSize());
-            final int inserted = Math.min(remaining, limit - existing.getCount());
-            if (inserted > 0 && inventory.canPlaceItem(slot, stack)) {
-                existing.grow(inserted);
-                remaining -= inserted;
+    private interface PickupStrategy {
+        void pickup(ItemEntity entity);
+    }
+
+    private static final class AgentInventoryPickupStrategy implements PickupStrategy {
+        private final Agent host;
+
+        private AgentInventoryPickupStrategy(final Agent host) {
+            this.host = host;
+        }
+
+        @Override
+        public void pickup(final ItemEntity entity) {
+            insertIntoInventory(entity);
+        }
+
+        private void insertIntoInventory(final ItemEntity entity) {
+            final ItemStack stack = entity.getItem();
+            final int remaining = insertIntoInventory(host.mainInventory(), stack);
+            stack.setCount(remaining);
+            if (remaining <= 0) {
+                entity.discard();
+            } else {
+                entity.setItem(stack);
             }
         }
-        for (int offset = 0; offset < size && remaining > 0; offset++) {
-            final int slot = (startSlot + offset) % size;
-            if (!inventory.getItem(slot).isEmpty()) {
-                continue;
+
+        private int insertIntoInventory(final Container inventory, final ItemStack stack) {
+            int remaining = stack.getCount();
+            final int size = inventory.getContainerSize();
+            final int selectedSlot = host.selectedSlot();
+            final int startSlot = selectedSlot >= 0 && selectedSlot < size ? selectedSlot : 0;
+            for (int offset = 0; offset < size && remaining > 0; offset++) {
+                final int slot = (startSlot + offset) % size;
+                final ItemStack existing = inventory.getItem(slot);
+                if (existing.isEmpty() || !ItemStack.isSameItemSameComponents(existing, stack)) {
+                    continue;
+                }
+                final int limit = Math.min(existing.getMaxStackSize(), inventory.getMaxStackSize());
+                final int inserted = Math.min(remaining, limit - existing.getCount());
+                if (inserted > 0 && inventory.canPlaceItem(slot, stack)) {
+                    existing.grow(inserted);
+                    remaining -= inserted;
+                }
             }
-            final int inserted = Math.min(remaining, Math.min(stack.getMaxStackSize(), inventory.getMaxStackSize()));
-            final ItemStack insertedStack = stack.copy();
-            insertedStack.setCount(inserted);
-            if (inventory.canPlaceItem(slot, insertedStack)) {
-                inventory.setItem(slot, insertedStack);
-                remaining -= inserted;
+            for (int offset = 0; offset < size && remaining > 0; offset++) {
+                final int slot = (startSlot + offset) % size;
+                if (!inventory.getItem(slot).isEmpty()) {
+                    continue;
+                }
+                final int inserted = Math.min(remaining, Math.min(stack.getMaxStackSize(), inventory.getMaxStackSize()));
+                final ItemStack insertedStack = stack.copy();
+                insertedStack.setCount(inserted);
+                if (inventory.canPlaceItem(slot, insertedStack)) {
+                    inventory.setItem(slot, insertedStack);
+                    remaining -= inserted;
+                }
             }
+            return remaining;
         }
-        return remaining;
     }
 }

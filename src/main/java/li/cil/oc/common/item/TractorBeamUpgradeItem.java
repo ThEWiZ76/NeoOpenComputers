@@ -2,6 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.internal.Drone;
 import li.cil.oc.api.internal.Robot;
+import li.cil.oc.api.internal.Tablet;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.TractorBeamUpgradeEnvironment;
@@ -19,6 +20,9 @@ public class TractorBeamUpgradeItem extends BasicUpgradeItem {
         }
         if (host instanceof Drone drone) {
             return new TractorBeamUpgradeEnvironment(drone);
+        }
+        if (host instanceof Tablet tablet) {
+            return new TractorBeamUpgradeEnvironment(tablet);
         }
         return null;
     }
