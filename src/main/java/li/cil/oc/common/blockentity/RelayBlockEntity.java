@@ -213,8 +213,16 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         return relayAmount;
     }
 
+    public int queuedPackets() {
+        return queue.size();
+    }
+
     public boolean isWirelessEnabled() {
         return wirelessEnabled;
+    }
+
+    public boolean isLinkedEnabled() {
+        return linkedEnabled;
     }
 
     @Override

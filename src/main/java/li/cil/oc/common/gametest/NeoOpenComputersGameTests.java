@@ -2134,6 +2134,25 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void relayMenuReportsRuntimeStatus(final GameTestHelper helper) {
+        final BlockPos relayPos = new BlockPos(1, 1, 1);
+        helper.setBlock(relayPos, ModBlocks.RELAY.get());
+        final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayModeFor(relay) == li.cil.oc.common.menu.RelayMenu.MODE_WIRED, "Empty relay did not report wired mode");
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayDelayFor(relay) == relay.relayDelay(), "Relay delay status mismatch");
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayMaxQueueSizeFor(relay) == relay.maxQueueSize(), "Relay max queue status mismatch");
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayQueueSizeFor(relay) == 0, "Empty relay reported queued packets");
+
+        relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()));
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayModeFor(relay) == li.cil.oc.common.menu.RelayMenu.MODE_WIRELESS, "Wireless relay did not report wireless mode");
+
+        relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.LINKED_CARD.get()));
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayModeFor(relay) == li.cil.oc.common.menu.RelayMenu.MODE_LINKED, "Linked relay did not report linked mode");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void brokenRelayDropsInstalledUpgradeItems(final GameTestHelper helper) {
         final BlockPos relayPos = new BlockPos(1, 1, 1);
