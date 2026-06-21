@@ -8,12 +8,14 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.internal.Server;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.OpenComputersApi;
+import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
@@ -29,7 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public final class ServerRackMountableEnvironment extends AbstractManagedEnvironment implements Server, Container, DeviceInfo {
+public final class ServerRackMountableEnvironment extends AbstractManagedEnvironment implements Server, Container, DeviceInfo, Analyzable {
     public static final int MISSING_CPU = 1;
     public static final int MISSING_MEMORY = 2;
     public static final int MISSING_EEPROM = 4;
@@ -309,6 +311,11 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
             DeviceInfo.DeviceAttribute.Product, "Server Tier " + (tier + 1),
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(getContainerSize())
         );
+    }
+
+    @Override
+    public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
+        return machine == null || machine.node() == null ? new Node[0] : new Node[]{machine.node()};
     }
 
     @Override

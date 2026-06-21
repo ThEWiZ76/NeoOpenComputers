@@ -149,6 +149,17 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
         final LinkedHashSet<Node> nodes = new LinkedHashSet<>();
         for (final RackMountable mountable : mountables) {
+            if (mountable instanceof Analyzable analyzable) {
+                final Node[] analyzedNodes = analyzable.onAnalyze(player, side, hitX, hitY, hitZ);
+                if (analyzedNodes != null) {
+                    for (final Node node : analyzedNodes) {
+                        if (node != null) {
+                            nodes.add(node);
+                        }
+                    }
+                }
+                continue;
+            }
             if (mountable == null || mountable.node() == null) {
                 continue;
             }

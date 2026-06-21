@@ -2345,6 +2345,20 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void analyzerReportsRackServerMachineNode(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+
+        final List<Component> lines = AnalyzerItem.describe(rack, Direction.NORTH);
+        final String analysis = lines.stream().map(Component::getString).collect(java.util.stream.Collectors.joining("\n"));
+
+        helper.assertTrue(analysis.contains("Component: computer"), "Analyzer did not report rack server machine node:\n" + analysis);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void raidCreatesFilesystemWhenFilledWithHardDisks(final GameTestHelper helper) {
         final BlockPos raidPos = new BlockPos(1, 1, 1);
         helper.setBlock(raidPos, ModBlocks.RAID.get());
