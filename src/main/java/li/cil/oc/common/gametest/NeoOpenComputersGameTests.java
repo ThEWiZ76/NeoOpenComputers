@@ -2988,6 +2988,29 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void diskDriveMediaHotplugSignalsReachComputer(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+        final BlockPos diskDrivePos = new BlockPos(2, 1, 1);
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        computer.machine().popSignal();
+
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+        final Object[] media = invokeComponent(helper, (li.cil.oc.api.network.Component) diskDrive.node(), "media");
+        helper.assertTrue(media.length == 1 && media[0] instanceof String address && !address.isEmpty(), "Disk drive did not report inserted media address");
+        final String mediaAddress = (String) media[0];
+
+        assertNextSignal(helper, computer, "component_added", mediaAddress, "filesystem");
+
+        invokeComponent(helper, (li.cil.oc.api.network.Component) diskDrive.node(), "eject", 0D);
+
+        assertNextSignal(helper, computer, "component_removed", mediaAddress, "filesystem");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void analyzerReportsAdapterInstalledUpgradeNode(final GameTestHelper helper) {
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
         helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
