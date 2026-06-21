@@ -2914,6 +2914,10 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(result.length == 1 && result[0] instanceof Map[], "Navigation upgrade did not return waypoint list");
         final Map[] waypoints = (Map[]) result[0];
         helper.assertTrue(waypoints.length == 1, "Navigation upgrade did not find exactly one waypoint");
+        final Object[] position = (Object[]) waypoints[0].get("position");
+        helper.assertTrue(Double.valueOf(2D).equals(position[0]), "Navigation waypoint X target mismatch: " + java.util.Arrays.toString(position));
+        helper.assertTrue(Double.valueOf(0D).equals(position[1]), "Navigation waypoint Y target mismatch: " + java.util.Arrays.toString(position));
+        helper.assertTrue(Double.valueOf(-1D).equals(position[2]), "Navigation waypoint Z target mismatch: " + java.util.Arrays.toString(position));
         helper.assertTrue(Integer.valueOf(15).equals(waypoints[0].get("redstone")), "Navigation waypoint redstone mismatch: " + waypoints[0]);
         helper.succeed();
     }

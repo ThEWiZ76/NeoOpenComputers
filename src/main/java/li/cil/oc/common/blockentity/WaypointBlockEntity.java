@@ -11,7 +11,9 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.block.WaypointBlock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
@@ -89,6 +91,27 @@ public class WaypointBlockEntity extends BlockEntity implements Environment, Env
 
     public int redstoneInput() {
         return level == null ? 0 : level.getBestNeighborSignal(worldPosition);
+    }
+
+    public double targetXPosition() {
+        return targetPosition().getX() + 0.5D;
+    }
+
+    public double targetYPosition() {
+        return targetPosition().getY() + 0.5D;
+    }
+
+    public double targetZPosition() {
+        return targetPosition().getZ() + 0.5D;
+    }
+
+    private BlockPos targetPosition() {
+        return getBlockPos().relative(facing());
+    }
+
+    private Direction facing() {
+        final BlockState state = getBlockState();
+        return state.hasProperty(WaypointBlock.FACING) ? state.getValue(WaypointBlock.FACING) : Direction.NORTH;
     }
 
     @Callback(doc = "function(value:string) -- Set the waypoint label.")

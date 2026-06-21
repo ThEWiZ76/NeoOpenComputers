@@ -116,9 +116,9 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
             if (!(blockEntity instanceof WaypointBlockEntity waypoint)) {
                 continue;
             }
-            final double dx = waypoint.xPosition() - host.xPosition();
-            final double dy = waypoint.yPosition() - host.yPosition();
-            final double dz = waypoint.zPosition() - host.zPosition();
+            final double dx = waypoint.targetXPosition() - host.xPosition();
+            final double dy = waypoint.targetYPosition() - host.yPosition();
+            final double dz = waypoint.targetZPosition() - host.zPosition();
             if (dx * dx + dy * dy + dz * dz > rangeSquared) {
                 continue;
             }
