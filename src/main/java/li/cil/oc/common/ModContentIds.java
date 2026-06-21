@@ -99,6 +99,7 @@ public final class ModContentIds {
     public static final String NUM_PAD = "num_pad";
     public static final String PISTON_UPGRADE = "piston_upgrade";
     public static final String POWER_DISTRIBUTOR = "power_distributor";
+    public static final String POWER_DISTRIBUTOR_BLOCK_ENTITY = "power_distributor";
     public static final String RACK = "rack";
     public static final String RACK_BLOCK_ENTITY = "rack";
     public static final String RACK_MENU = "rack";

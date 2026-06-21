@@ -39,6 +39,7 @@ import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
+import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
@@ -1828,6 +1829,27 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void powerDistributorBalancesSidedConnectorBuffers(final GameTestHelper helper) {
+        final BlockPos distributorPos = new BlockPos(1, 1, 1);
+        helper.setBlock(distributorPos, ModBlocks.POWER_DISTRIBUTOR.get());
+        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(distributorPos));
+        final PowerDistributorBlockEntity distributor = helper.getBlockEntity(distributorPos);
+
+        final Connector east = (Connector) distributor.sidedNode(Direction.EAST);
+        final Connector west = (Connector) distributor.sidedNode(Direction.WEST);
+        helper.assertTrue(east != null && west != null, "Power distributor did not expose sided connectors");
+        helper.assertTrue(Double.compare(PowerDistributorBlockEntity.CONNECTOR_BUFFER_SIZE, east.localBufferSize()) == 0, "Power distributor connector capacity mismatch");
+        east.changeBuffer(PowerDistributorBlockEntity.CONNECTOR_BUFFER_SIZE);
+
+        PowerDistributorBlockEntity.serverTick(helper.getLevel(), distributorPos, helper.getBlockState(distributorPos), distributor);
+
+        final double expected = PowerDistributorBlockEntity.CONNECTOR_BUFFER_SIZE / Direction.values().length;
+        assertClose(helper, east.localBuffer(), expected, "Power distributor east buffer");
+        assertClose(helper, west.localBuffer(), expected, "Power distributor west buffer");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void terminalServerExposesVirtualScreenAndKeyboard(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
@@ -3237,6 +3259,10 @@ public final class NeoOpenComputersGameTests {
 
     private static void assertNoEnergy(final GameTestHelper helper, final Object[] result, final String name) {
         helper.assertTrue(result.length == 2 && result[0] == null && "not enough energy".equals(result[1]), name + " did not report missing energy");
+    }
+
+    private static void assertClose(final GameTestHelper helper, final double actual, final double expected, final String name) {
+        helper.assertTrue(Math.abs(actual - expected) < 0.0001D, name + " expected " + expected + " but got " + actual);
     }
 
     private static void assertSingleResult(final GameTestHelper helper, final Object[] result, final Object expected, final String name) {

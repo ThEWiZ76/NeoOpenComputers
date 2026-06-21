@@ -11,6 +11,7 @@ import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
+import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
@@ -92,6 +93,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.MOTION_SENSOR_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(MotionSensorBlockEntity::new, ModBlocks.MOTION_SENSOR.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PowerDistributorBlockEntity>> POWER_DISTRIBUTOR =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.POWER_DISTRIBUTOR_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(PowerDistributorBlockEntity::new, ModBlocks.POWER_DISTRIBUTOR.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RackBlockEntity>> RACK =
         BLOCK_ENTITY_TYPES.register(

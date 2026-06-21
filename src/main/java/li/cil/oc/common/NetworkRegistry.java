@@ -14,6 +14,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.WirelessEndpoint;
+import li.cil.oc.api.network.SidedEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.ByteArrayTag;
@@ -63,10 +64,21 @@ final class NetworkRegistry implements NetworkAPI {
 
     @Override
     public void joinOrCreateNetwork(final BlockGetter world, final BlockPos pos) {
-        if (world == null || pos == null || !(world.getBlockEntity(pos) instanceof Environment environment)) {
+        if (world == null || pos == null) {
             return;
         }
-        joinOrCreateNetwork(environment.node(), adjacentNodes(world, pos));
+        if (world.getBlockEntity(pos) instanceof SidedEnvironment sidedEnvironment) {
+            for (final Direction direction : Direction.values()) {
+                if (sidedEnvironment.canConnect(direction)) {
+                    final Node adjacentNode = adjacentNode(world, pos, direction);
+                    joinOrCreateNetwork(sidedEnvironment.sidedNode(direction), adjacentNode == null ? List.of() : List.of(adjacentNode));
+                }
+            }
+            return;
+        }
+        if (world.getBlockEntity(pos) instanceof Environment environment) {
+            joinOrCreateNetwork(environment.node(), adjacentNodes(world, pos));
+        }
     }
 
     void joinOrCreateNetwork(final Node node, final Iterable<Node> adjacentNodes) {
@@ -190,11 +202,22 @@ final class NetworkRegistry implements NetworkAPI {
     private static Iterable<Node> adjacentNodes(final BlockGetter world, final BlockPos pos) {
         final List<Node> nodes = new ArrayList<>();
         for (Direction direction : Direction.values()) {
-            if (world.getBlockEntity(pos.relative(direction)) instanceof Environment environment) {
-                nodes.add(environment.node());
+            final Node node = adjacentNode(world, pos, direction);
+            if (node != null) {
+                nodes.add(node);
             }
         }
         return nodes;
+    }
+
+    private static Node adjacentNode(final BlockGetter world, final BlockPos pos, final Direction direction) {
+        if (world.getBlockEntity(pos.relative(direction)) instanceof SidedEnvironment sidedEnvironment && sidedEnvironment.canConnect(direction.getOpposite())) {
+            return sidedEnvironment.sidedNode(direction.getOpposite());
+        }
+        if (world.getBlockEntity(pos.relative(direction)) instanceof Environment environment) {
+            return environment.node();
+        }
+        return null;
     }
 
     private static double wirelessDistance(final WirelessEndpoint source, final WirelessEndpoint target) {
