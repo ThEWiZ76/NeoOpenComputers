@@ -43,6 +43,7 @@ import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.TabletItem;
+import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
 import li.cil.oc.common.template.AssemblerTemplate;
@@ -126,6 +127,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.ANALYZER.get();
         ModItems.WRENCH.get();
         ModItems.TEXTURE_PICKER.get();
+        ModItems.TERMINAL.get();
         ModItems.ASSEMBLER.get();
         ModItems.BATTERY_UPGRADE_TIER1.get();
         ModItems.BATTERY_UPGRADE_TIER2.get();

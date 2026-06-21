@@ -65,6 +65,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_STICKY_PISTON_UPGRADE = "stickyPistonUpgrade";
     public static final String COMPAT_TANK_CONTROLLER_UPGRADE = "tankControllerUpgrade";
     public static final String COMPAT_TANK_UPGRADE = "tankUpgrade";
+    public static final String COMPAT_TERMINAL = "terminal";
     public static final String COMPAT_TEXTURE_PICKER = "texturePicker";
     public static final String COMPAT_TRADING_UPGRADE = "tradingUpgrade";
     public static final String COMPAT_TRACTOR_BEAM_UPGRADE = "tractorBeamUpgrade";
@@ -143,6 +144,7 @@ public final class ModContentCatalog {
                 ModItems.ANALYZER.get(),
                 ModItems.WRENCH.get(),
                 ModItems.TEXTURE_PICKER.get(),
+                ModItems.TERMINAL.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
                 ModItems.CPU_TIER3.get(),
@@ -351,6 +353,7 @@ public final class ModContentCatalog {
         final Item analyzerItem,
         final Item wrenchItem,
         final Item texturePickerItem,
+        final Item terminalItem,
         final Item cpuTier1Item,
         final Item cpuTier2Item,
         final Item cpuTier3Item,
@@ -416,6 +419,8 @@ public final class ModContentCatalog {
         registry.register(COMPAT_WRENCH, null, wrenchItem);
         registry.register(ModContentIds.TEXTURE_PICKER, null, texturePickerItem);
         registry.register(COMPAT_TEXTURE_PICKER, null, texturePickerItem);
+        registry.register(ModContentIds.TERMINAL, null, terminalItem);
+        registry.register(COMPAT_TERMINAL, null, terminalItem);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.ASSEMBLER, assembler, assemblerItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);

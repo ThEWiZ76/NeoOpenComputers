@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "tools",
+  "key": {
+    "I": {
+      "tag": "c:nuggets/iron"
+    },
+    "S": {
+      "item": "neoopencomputers:solar_generator_upgrade"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "M": {
+      "item": "neoopencomputers:screen_tier2"
+    },
+    "W": {
+      "item": "neoopencomputers:wireless_network_card_tier2"
+    },
+    "K": {
+      "item": "neoopencomputers:keyboard"
+    }
+  },
+  "pattern": [
+    "ISI",
+    "CMW",
+    "IKI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:terminal"
+  }
+}

@@ -48,6 +48,7 @@ final class RecipeResourceTest {
             ModContentIds.ANALYZER,
             ModContentIds.WRENCH,
             ModContentIds.TEXTURE_PICKER,
+            ModContentIds.TERMINAL,
             ModContentIds.ASSEMBLER,
             ModContentIds.BATTERY_UPGRADE_TIER1,
             ModContentIds.BATTERY_UPGRADE_TIER2,
@@ -189,6 +190,20 @@ final class RecipeResourceTest {
         assertItem(keys, "Y", "minecraft:yellow_dye");
         assertItem(keys, "M", "minecraft:magenta_dye");
         assertItem(keys, "W", "minecraft:white_dye");
+    }
+
+    @Test
+    void terminalRecipeUsesUpstreamShape() throws IOException {
+        JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.TERMINAL + ".json"));
+        JsonObject keys = json.getAsJsonObject("key");
+
+        assertPattern(json, "ISI", "CMW", "IKI");
+        assertTag(keys, "I", "c:nuggets/iron");
+        assertItem(keys, "S", "neoopencomputers:" + ModContentIds.SOLAR_GENERATOR_UPGRADE);
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(keys, "M", "neoopencomputers:" + ModContentIds.SCREEN_TIER2);
+        assertItem(keys, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+        assertItem(keys, "K", "neoopencomputers:" + ModContentIds.KEYBOARD);
     }
 
     @Test
