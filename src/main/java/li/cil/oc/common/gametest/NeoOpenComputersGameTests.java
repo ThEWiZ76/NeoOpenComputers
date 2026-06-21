@@ -1684,6 +1684,28 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void navigationFindWaypointsReportsWaypointRedstone(final GameTestHelper helper) {
+        final BlockPos hostPos = new BlockPos(1, 1, 1);
+        final BlockPos waypointPos = new BlockPos(3, 1, 1);
+        helper.setBlock(hostPos, Blocks.STONE);
+        helper.setBlock(waypointPos, ModBlocks.WAYPOINT.get());
+        helper.setBlock(waypointPos.relative(Direction.EAST), Blocks.REDSTONE_BLOCK);
+
+        final ItemStack stack = new ItemStack(ModItems.NAVIGATION_UPGRADE.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for navigation upgrade");
+        final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticPositionEnvironmentHost(helper, hostPos));
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Navigation upgrade has no component node");
+
+        final Object[] result = invokeComponent(helper, (li.cil.oc.api.network.Component) environment.node(), "findWaypoints", 8D);
+        helper.assertTrue(result.length == 1 && result[0] instanceof Map[], "Navigation upgrade did not return waypoint list");
+        final Map[] waypoints = (Map[]) result[0];
+        helper.assertTrue(waypoints.length == 1, "Navigation upgrade did not find exactly one waypoint");
+        helper.assertTrue(Integer.valueOf(15).equals(waypoints[0].get("redstone")), "Navigation waypoint redstone mismatch: " + waypoints[0]);
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void inventoryControllerStoresStacksInDatabase(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);

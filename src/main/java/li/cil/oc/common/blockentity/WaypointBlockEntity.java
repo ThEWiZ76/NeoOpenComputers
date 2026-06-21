@@ -87,6 +87,10 @@ public class WaypointBlockEntity extends BlockEntity implements Environment, Env
         return label;
     }
 
+    public int redstoneInput() {
+        return level == null ? 0 : level.getBestNeighborSignal(worldPosition);
+    }
+
     @Callback(doc = "function(value:string) -- Set the waypoint label.")
     public Object[] setLabel(final Context context, final Arguments args) {
         final String value = args.checkString(0);

@@ -124,7 +124,7 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
             }
             final Map<String, Object> entry = new LinkedHashMap<>();
             entry.put("position", new Object[]{dx, dy, dz});
-            entry.put("redstone", 0);
+            entry.put("redstone", waypoint.redstoneInput());
             entry.put("label", waypoint.label());
             entry.put("address", waypoint.node() == null ? null : waypoint.node().address());
             waypoints.add(entry);
