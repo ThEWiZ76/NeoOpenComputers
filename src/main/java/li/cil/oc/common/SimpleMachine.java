@@ -204,6 +204,22 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         return new Object[]{node() instanceof Connector connector ? connector.globalBufferSize() : 0D};
     }
 
+    @Callback(direct = true, doc = "function():string... -- Returns the list of users allowed to interact with the computer.")
+    public Object[] users(final Context context, final Arguments arguments) {
+        return new Object[]{users()};
+    }
+
+    @Callback(doc = "function(name:string):boolean -- Adds a user to the list of users allowed to interact with the computer.")
+    public Object[] addUser(final Context context, final Arguments arguments) throws Exception {
+        addUser(arguments.checkString(0));
+        return new Object[]{true};
+    }
+
+    @Callback(doc = "function(name:string):boolean -- Removes a user from the list of users allowed to interact with the computer.")
+    public Object[] removeUser(final Context context, final Arguments arguments) {
+        return new Object[]{removeUser(arguments.checkString(0))};
+    }
+
     @Callback(doc = "function([frequency:string or number[, duration:number]]) -- Plays a tone, useful to alert users via audible feedback.")
     public Object[] beep(final Context context, final Arguments arguments) {
         if (arguments != null && arguments.count() == 1 && arguments.isString(0)) {

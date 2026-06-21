@@ -221,6 +221,25 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void computerCallbacksExposeUserManagement() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        Network.joinNewNetwork(machine.node());
+        String address = machine.node().address();
+
+        assertTrue(machine.methods(address).containsKey("users"));
+        assertTrue(machine.methods(address).containsKey("addUser"));
+        assertTrue(machine.methods(address).containsKey("removeUser"));
+        assertArrayEquals(new Object[]{true}, machine.invoke(address, "addUser", new Object[]{"alice"}));
+        assertArrayEquals(new Object[]{true}, machine.invoke(address, "addUser", new Object[]{"bob"}));
+        Object[] usersResult = machine.invoke(address, "users", new Object[0]);
+        assertArrayEquals(new String[]{"alice", "bob"}, assertInstanceOf(String[].class, usersResult[0]));
+        assertArrayEquals(new Object[]{true}, machine.invoke(address, "removeUser", new Object[]{"alice"}));
+        assertArrayEquals(new Object[]{false}, machine.invoke(address, "removeUser", new Object[]{"carol"}));
+        assertArrayEquals(new String[]{"bob"}, machine.users());
+    }
+
+    @Test
     void computerBeepCallbackMatchesUpstreamDurationSemantics() throws Exception {
         OpenComputersApi.initialize();
         SimpleMachine machine = assertInstanceOf(SimpleMachine.class, API.machine.create(null));
