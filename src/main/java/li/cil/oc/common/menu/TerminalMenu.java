@@ -2,6 +2,7 @@ package li.cil.oc.common.menu;
 
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.component.TerminalScreenSnapshot;
+import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -74,6 +75,10 @@ public class TerminalMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(final Player player) {
-        return true;
+        if (terminalServer == null) {
+            return true;
+        }
+        return terminalServer.node() != null
+            && TerminalServerRegistry.find(terminalServer.node().address()) == terminalServer;
     }
 }

@@ -2338,6 +2338,25 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalMenuInvalidatesWhenTerminalServerIsRemoved(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+
+        helper.assertTrue(TerminalItem.bindToTerminalServer(terminal, rack, 0), "Terminal did not bind to terminal server");
+        final li.cil.oc.common.menu.TerminalMenu menu = TerminalItem.createMenuForBoundTerminal(1, null, terminal);
+        helper.assertTrue(menu != null, "Terminal item did not create menu for bound terminal");
+        helper.assertTrue(menu.stillValid(null), "Fresh terminal menu was not valid");
+
+        terminalServer.removeVirtualNodes();
+        helper.assertTrue(!menu.stillValid(null), "Removed terminal server menu stayed valid");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void terminalItemCreatesScreenSnapshotPayloadForBoundTerminal(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
