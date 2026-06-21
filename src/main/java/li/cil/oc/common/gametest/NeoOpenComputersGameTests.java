@@ -1905,6 +1905,46 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void relayComponentCallbacksConfigureWirelessForwarding(final GameTestHelper helper) throws Exception {
+        final BlockPos relayPos = new BlockPos(1, 1, 1);
+        helper.setBlock(relayPos, ModBlocks.RELAY.get());
+        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(relayPos));
+        final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+        relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()));
+        helper.assertTrue(relay.sidedNode(Direction.WEST) instanceof li.cil.oc.api.network.Component, "Relay side did not expose relay component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) relay.sidedNode(Direction.WEST);
+
+        helper.assertTrue(component.methods().contains("getStrength"), "Relay component missing getStrength callback");
+        helper.assertTrue(component.methods().contains("setStrength"), "Relay component missing setStrength callback");
+        helper.assertTrue(component.methods().contains("isRepeater"), "Relay component missing isRepeater callback");
+        helper.assertTrue(component.methods().contains("setRepeater"), "Relay component missing setRepeater callback");
+        helper.assertTrue((Boolean) component.invoke("isRepeater", null)[0], "Relay repeater default mismatch");
+        helper.assertTrue(Double.valueOf(2D).equals(component.invoke("setStrength", null, 2D)[0]), "Relay setStrength returned wrong value");
+        helper.assertTrue(Double.valueOf(2D).equals(component.invoke("getStrength", null)[0]), "Relay getStrength returned wrong value");
+        helper.assertTrue(Boolean.FALSE.equals(component.invoke("setRepeater", null, false)[0]), "Relay setRepeater returned wrong value");
+        helper.assertTrue(Boolean.FALSE.equals(component.invoke("isRepeater", null)[0]), "Relay repeater setting did not persist");
+
+        final RecordingNetworkEnvironment source = new RecordingNetworkEnvironment();
+        final RecordingWirelessEndpoint receiver = new RecordingWirelessEndpoint(helper.getLevel(), helper.absolutePos(new BlockPos(4, 1, 1)));
+        Network.joinNewNetwork(source.node());
+        Network.joinWirelessNetwork(receiver);
+        source.node().connect(relay.sidedNode(Direction.WEST));
+        ((Connector) relay.sidedNode(Direction.WEST)).changeBuffer(10);
+
+        source.node().sendToReachable("network.message", Network.newPacket(source.node().address(), null, 223, new Object[]{"short"}));
+        RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+        helper.assertTrue(receiver.lastPacket == null, "Relay ignored configured low wireless strength");
+
+        component.invoke("setStrength", null, 4D);
+        source.node().sendToReachable("network.message", Network.newPacket(source.node().address(), null, 224, new Object[]{"long"}));
+        RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+        helper.assertTrue(receiver.lastPacket != null, "Relay did not use configured wireless strength");
+        helper.assertTrue("long".equals(receiver.lastPacket.data()[0]), "Relay sent wrong configured wireless payload");
+        Network.leaveWirelessNetwork(receiver);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void connectedConnectorNodesShareGlobalEnergy(final GameTestHelper helper) {
         final RecordingConnectorEnvironment source = new RecordingConnectorEnvironment(10);
         final RecordingConnectorEnvironment sink = new RecordingConnectorEnvironment(10);

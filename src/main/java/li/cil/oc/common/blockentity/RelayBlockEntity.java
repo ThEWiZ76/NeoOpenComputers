@@ -4,6 +4,9 @@ import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
@@ -64,6 +67,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private int relayDelay = DEFAULT_RELAY_DELAY;
     private int relayAmount = DEFAULT_RELAY_AMOUNT;
     private boolean wirelessEnabled;
+    private double wirelessMaxRange;
     private double wirelessStrength;
     private boolean isRepeater = true;
 
@@ -371,15 +375,18 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private static Node createNode(final Environment environment) {
         return Network.newNode(environment, Visibility.Network)
             .withConnector(CONNECTOR_BUFFER_SIZE)
+            .withComponent("relay", Visibility.Network)
             .create();
     }
 
     private void updateLimits() {
         final boolean wasWirelessEnabled = wirelessEnabled;
+        final double oldWirelessStrength = wirelessStrength;
         relayDelay = DEFAULT_RELAY_DELAY;
         relayAmount = DEFAULT_RELAY_AMOUNT;
         maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
         wirelessEnabled = false;
+        wirelessMaxRange = 0D;
         wirelessStrength = 0D;
 
         final DriverItem cpu = driverFor(CPU_SLOT);
@@ -394,8 +401,11 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         if (hdd != null) {
             maxQueueSize = DEFAULT_MAX_QUEUE_SIZE + (hdd.tier(items.get(HDD_SLOT)) + 1) * 10;
         }
-        wirelessStrength = wirelessRange(items.get(CARD_SLOT));
-        wirelessEnabled = wirelessStrength > 0D;
+        wirelessMaxRange = wirelessRange(items.get(CARD_SLOT));
+        wirelessEnabled = wirelessMaxRange > 0D;
+        if (wirelessEnabled) {
+            wirelessStrength = wasWirelessEnabled ? Math.min(oldWirelessStrength, wirelessMaxRange) : wirelessMaxRange;
+        }
         if (level != null && wirelessEnabled != wasWirelessEnabled) {
             if (wirelessEnabled) {
                 Network.joinWirelessNetwork(this);
@@ -439,6 +449,18 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         return 0D;
     }
 
+    private double setWirelessStrength(final double value) {
+        wirelessStrength = Math.max(0D, Math.min(value, wirelessMaxRange));
+        setChanged();
+        return wirelessStrength;
+    }
+
+    private boolean setRepeater(final boolean value) {
+        isRepeater = value;
+        setChanged();
+        return isRepeater;
+    }
+
     private static Direction readQueuedSide(final CompoundTag tag) {
         if (!tag.contains(TAG_SIDE)) {
             return Direction.from3DDataValue(0);
@@ -480,6 +502,26 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
             if (message.data().length == 1 && message.data()[0] instanceof Packet packet) {
                 enqueue(side, packet);
             }
+        }
+
+        @Callback(direct = true, doc = "function():number -- Get the signal strength (range) used when relaying messages.")
+        public Object[] getStrength(final Context context, final Arguments args) {
+            return new Object[]{wirelessStrength};
+        }
+
+        @Callback(doc = "function(strength:number):number -- Set the signal strength (range) used when relaying messages.")
+        public Object[] setStrength(final Context context, final Arguments args) {
+            return new Object[]{setWirelessStrength(args.checkDouble(0))};
+        }
+
+        @Callback(direct = true, doc = "function():boolean -- Get whether the relay repeats received wireless packets wirelessly.")
+        public Object[] isRepeater(final Context context, final Arguments args) {
+            return new Object[]{isRepeater};
+        }
+
+        @Callback(doc = "function(enabled:boolean):boolean -- Set whether the relay repeats received wireless packets wirelessly.")
+        public Object[] setRepeater(final Context context, final Arguments args) {
+            return new Object[]{RelayBlockEntity.this.setRepeater(args.checkBoolean(0))};
         }
     }
 }
