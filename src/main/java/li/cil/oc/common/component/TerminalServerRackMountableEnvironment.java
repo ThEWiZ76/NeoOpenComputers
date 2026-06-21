@@ -46,6 +46,7 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
+        TerminalServerRegistry.remove(this);
         if (nbt.contains(TAG_SCREEN)) {
             screen.load(nbt.getCompound(TAG_SCREEN));
         }
@@ -67,6 +68,7 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     }
 
     public void removeVirtualNodes() {
+        TerminalServerRegistry.remove(this);
         if (screen.node() != null) {
             screen.node().remove();
         }
@@ -118,5 +120,6 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         if (keyboard.node() != null && !keyboard.node().isNeighborOf(node())) {
             node().connect(keyboard.node());
         }
+        TerminalServerRegistry.add(this);
     }
 }

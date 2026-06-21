@@ -50,6 +50,7 @@ import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
+import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.AssemblerTemplates;
@@ -2160,6 +2161,24 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(data.contains("terminalServer"), "Terminal binding missing terminal server address");
         helper.assertTrue(data.contains("screen"), "Terminal binding missing screen address");
         helper.assertTrue(data.contains("keyboard"), "Terminal binding missing keyboard address");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void terminalServerRegistryTracksLiveMountables(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+
+        helper.assertTrue(TerminalItem.bindToTerminalServer(terminal, rack, 0), "Terminal did not bind to terminal server");
+        final CompoundTag data = terminal.get(DataComponents.CUSTOM_DATA).copyTag().getCompound(TerminalItem.DATA_TAG);
+        final String address = data.getString(TerminalItem.TERMINAL_SERVER_TAG);
+
+        helper.assertTrue(TerminalServerRegistry.find(address) == rack.getMountable(0), "Terminal server registry did not resolve live mountable");
+        rack.removeItemNoUpdate(0);
+        helper.assertTrue(TerminalServerRegistry.find(address) == null, "Terminal server registry kept removed mountable");
         helper.succeed();
     }
 
