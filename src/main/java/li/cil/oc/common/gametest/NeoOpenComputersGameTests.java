@@ -561,6 +561,32 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void geolyzerItemAnalyzesRotatedHostSide(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.GEOLYZER.get()));
+        helper.assertTrue(driver != null, "No driver for geolyzer upgrade");
+
+        final BlockPos hostPos = new BlockPos(2, 1, 2);
+        helper.setBlock(hostPos.relative(Direction.NORTH), Blocks.STONE);
+        helper.setBlock(hostPos.relative(Direction.EAST), Blocks.DIAMOND_BLOCK);
+        final ManagedEnvironment environment = driver.createEnvironment(
+            new ItemStack(ModItems.GEOLYZER.get()),
+            new RotatedPositionEnvironmentHost(helper, hostPos, Direction.EAST)
+        );
+        helper.assertTrue(environment != null, "Geolyzer upgrade did not create environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Geolyzer upgrade node is not a connector");
+        final ComponentConnector component = (ComponentConnector) environment.node();
+        component.setLocalBufferSize(10D);
+        component.changeBuffer(10D);
+
+        final Object[] analyze = invokeComponent(helper, component, "analyze", Direction.NORTH.get3DDataValue());
+
+        helper.assertTrue(analyze.length == 1 && analyze[0] instanceof Map<?, ?>, "Geolyzer analyze did not return block data");
+        final Map<?, ?> data = (Map<?, ?>) analyze[0];
+        helper.assertTrue("minecraft:diamond_block".equals(data.get("name")), "Geolyzer analyze did not use rotated host side");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tankControllerInspectsAdjacentFluidTanks(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(1, 1, 1);
         final int side = Direction.WEST.get3DDataValue();
@@ -2682,6 +2708,26 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(result.length == 1 && expected.equals(result[0]), name + " expected " + expected + " but got " + (result.length == 0 ? "<empty>" : result[0]));
     }
 
+    private static Direction rotateHorizontal(final Direction value, final int steps) {
+        if (value.getAxis().isVertical()) {
+            return value;
+        }
+        Direction result = value;
+        for (int index = 0; index < steps; index++) {
+            result = result.getClockWise();
+        }
+        return result;
+    }
+
+    private static int horizontalSteps(final Direction facing) {
+        return switch (facing) {
+            case EAST -> 1;
+            case SOUTH -> 2;
+            case WEST -> 3;
+            default -> 0;
+        };
+    }
+
     private static boolean modemPortOpen(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final int port) {
         final String modemAddress = componentAddress(computer, "modem");
         helper.assertTrue(modemAddress != null, "Computer has no modem component: " + computer.machine().components());
@@ -3064,6 +3110,43 @@ public final class NeoOpenComputersGameTests {
         @Override
         public Direction toLocal(final Direction value) {
             return value;
+        }
+    }
+
+    private record RotatedPositionEnvironmentHost(GameTestHelper helper, BlockPos pos, Direction facing)
+        implements li.cil.oc.api.network.EnvironmentHost, li.cil.oc.api.internal.Rotatable {
+        @Override
+        public net.minecraft.world.level.Level world() {
+            return helper.getLevel();
+        }
+
+        @Override
+        public double xPosition() {
+            return helper.absolutePos(pos).getX() + 0.5D;
+        }
+
+        @Override
+        public double yPosition() {
+            return helper.absolutePos(pos).getY() + 0.5D;
+        }
+
+        @Override
+        public double zPosition() {
+            return helper.absolutePos(pos).getZ() + 0.5D;
+        }
+
+        @Override
+        public void markChanged() {
+        }
+
+        @Override
+        public Direction toGlobal(final Direction value) {
+            return rotateHorizontal(value, horizontalSteps(facing));
+        }
+
+        @Override
+        public Direction toLocal(final Direction value) {
+            return rotateHorizontal(value, (4 - horizontalSteps(facing)) % 4);
         }
     }
 

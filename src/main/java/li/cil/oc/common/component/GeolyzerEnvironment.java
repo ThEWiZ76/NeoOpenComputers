@@ -4,6 +4,7 @@ import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.event.GeolyzerEvent;
 import li.cil.oc.api.internal.Database;
+import li.cil.oc.api.internal.Rotatable;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -207,10 +208,18 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
     }
 
     private BlockPos relativeBlock(final int side) {
+        return hostPos().relative(globalSide(side));
+    }
+
+    private Direction globalSide(final int side) {
         if (side < 0 || side > 5) {
             throw new IllegalArgumentException("invalid side");
         }
-        return hostPos().relative(Direction.from3DDataValue(side));
+        final Direction localSide = Direction.from3DDataValue(side);
+        if (host instanceof Rotatable rotatable) {
+            return rotatable.toGlobal(localSide);
+        }
+        return localSide;
     }
 
     private Database database(final String address) {
