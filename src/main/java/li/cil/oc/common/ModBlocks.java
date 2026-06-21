@@ -11,6 +11,7 @@ import li.cil.oc.common.block.GeolyzerBlock;
 import li.cil.oc.common.block.HologramBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
+import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.TransposerBlock;
@@ -95,7 +96,7 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> RACK = BLOCKS.register(
         ModContentIds.RACK,
-        () -> new Block(rackProperties()));
+        () -> new RackBlock(rackProperties()));
 
     public static final DeferredBlock<Block> RAID = BLOCKS.register(
         ModContentIds.RAID,

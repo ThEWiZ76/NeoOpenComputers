@@ -162,6 +162,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void rackBlockEntityIdIsStable() {
+        assertEquals("rack", ModContentIds.RACK_BLOCK_ENTITY);
+    }
+
+    @Test
     void raidBlockIdIsStable() {
         assertEquals("raid", ModContentIds.RAID);
     }

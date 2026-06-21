@@ -5,6 +5,7 @@ import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.HologramBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
+import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.TransposerBlock;
@@ -35,6 +36,7 @@ final class NetworkedBlockLifecycleShapeTest {
         assertNetworkLifecycleHooks(KeyboardBlock.class);
         assertNetworkLifecycleHooks(HologramBlock.class);
         assertNetworkLifecycleHooks(MotionSensorBlock.class);
+        assertNetworkLifecycleHooks(RackBlock.class);
         assertNetworkLifecycleHooks(RedstoneIoBlock.class);
         assertNetworkLifecycleHooks(TransposerBlock.class);
         assertNetworkLifecycleHooks(WaypointBlock.class);

@@ -37,6 +37,7 @@ import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
+import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
@@ -1656,6 +1657,25 @@ public final class NeoOpenComputersGameTests {
         tier1.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
         tier1.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
         helper.assertTrue(!tier1.toggleMachine(), "Tier 1 case started with an installed tier 2 CPU");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void rackStoresOnlyRackMountableItems(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+
+        helper.assertTrue(rack.getContainerSize() == RackBlockEntity.CONTAINER_SIZE, "Rack slot count mismatch");
+        helper.assertTrue(rack.canPlaceItem(0, new ItemStack(ModItems.SERVER_TIER1.get())), "Rack rejected tier 1 server");
+        helper.assertTrue(rack.canPlaceItem(1, new ItemStack(ModItems.SERVER_TIER3.get())), "Rack rejected tier 3 server");
+        helper.assertTrue(rack.canPlaceItem(2, new ItemStack(ModItems.TERMINAL_SERVER.get())), "Rack rejected terminal server");
+        helper.assertTrue(!rack.canPlaceItem(3, new ItemStack(ModItems.CPU_TIER1.get())), "Rack accepted CPU");
+        helper.assertTrue(!rack.canPlaceItem(RackBlockEntity.CONTAINER_SIZE, new ItemStack(ModItems.SERVER_TIER1.get())), "Rack accepted invalid slot");
+
+        final ItemStack server = new ItemStack(ModItems.SERVER_TIER2.get());
+        rack.setItem(0, server.copy());
+        helper.assertTrue(rack.getItem(0).is(ModItems.SERVER_TIER2.get()), "Rack did not store server");
         helper.succeed();
     }
 

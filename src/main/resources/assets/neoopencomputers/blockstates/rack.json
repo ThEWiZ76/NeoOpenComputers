@@ -1,7 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "neoopencomputers:block/rack"
-    }
+    "facing=north": { "model": "neoopencomputers:block/rack" },
+    "facing=east": { "model": "neoopencomputers:block/rack", "y": 90 },
+    "facing=south": { "model": "neoopencomputers:block/rack", "y": 180 },
+    "facing=west": { "model": "neoopencomputers:block/rack", "y": 270 }
   }
 }
