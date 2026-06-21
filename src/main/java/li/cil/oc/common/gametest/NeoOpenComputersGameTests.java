@@ -1808,6 +1808,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void analyzerReportsRackTerminalServerVirtualNodes(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+
+        final List<Component> lines = AnalyzerItem.describe(rack, Direction.NORTH);
+        final String analysis = lines.stream().map(Component::getString).collect(java.util.stream.Collectors.joining("\n"));
+
+        helper.assertTrue(analysis.contains("Component: screen"), "Analyzer did not report rack terminal screen:\n" + analysis);
+        helper.assertTrue(analysis.contains("Component: keyboard"), "Analyzer did not report rack terminal keyboard:\n" + analysis);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredScreensExposeTierCapabilities(final GameTestHelper helper) {
         final BlockPos tier1Pos = new BlockPos(0, 1, 0);
         final BlockPos tier2Pos = new BlockPos(1, 1, 0);

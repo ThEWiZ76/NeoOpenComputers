@@ -5,6 +5,7 @@ import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Rack;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
@@ -24,7 +25,9 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class RackBlockEntity extends BlockEntity implements Rack {
+import java.util.LinkedHashSet;
+
+public class RackBlockEntity extends BlockEntity implements Rack, Analyzable {
     public static final int CONTAINER_SIZE = 4;
 
     private static final String TAG_MOUNTABLE_DATA = "oc:mountableData";
@@ -85,6 +88,21 @@ public class RackBlockEntity extends BlockEntity implements Rack {
     @Override
     public boolean canConnect(final Direction side) {
         return false;
+    }
+
+    @Override
+    public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
+        final LinkedHashSet<Node> nodes = new LinkedHashSet<>();
+        for (final RackMountable mountable : mountables) {
+            if (mountable == null || mountable.node() == null) {
+                continue;
+            }
+            nodes.add(mountable.node());
+            for (final Node neighbor : mountable.node().neighbors()) {
+                nodes.add(neighbor);
+            }
+        }
+        return nodes.toArray(Node[]::new);
     }
 
     @Override
