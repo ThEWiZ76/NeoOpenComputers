@@ -321,6 +321,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.CRAFTING_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.INTERNET_CARD.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.MOTION_SENSOR.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.PISTON_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.STICKY_PISTON_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.SIGN_UPGRADE.get()), 0);
@@ -3985,7 +3986,7 @@ public final class NeoOpenComputersGameTests {
         final DriverItem driver = Driver.driverFor(stack);
         helper.assertTrue(driver != null, "No driver for " + stack);
         helper.assertTrue(Slot.Upgrade.equals(driver.slot(stack)), "Expected motion sensor item upgrade slot for " + stack);
-        helper.assertTrue(driver.tier(stack) == 2, "Expected motion sensor tier 2 for " + stack + " but got " + driver.tier(stack));
+        helper.assertTrue(driver.tier(stack) == 1, "Expected motion sensor tier 1 for " + stack + " but got " + driver.tier(stack));
         final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticEnvironmentHost(helper));
         helper.assertTrue(environment != null, "Motion sensor item did not create environment for " + stack);
         helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Motion sensor item has no component node for " + stack);

@@ -32,7 +32,7 @@ public final class MotionSensorItemDriver implements HostAware {
 
     @Override
     public int tier(final ItemStack stack) {
-        return 2;
+        return 1;
     }
 
     @Override
