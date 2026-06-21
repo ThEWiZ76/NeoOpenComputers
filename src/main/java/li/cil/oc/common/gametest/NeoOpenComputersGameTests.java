@@ -1764,6 +1764,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalServerExposesVirtualScreenAndKeyboard(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final li.cil.oc.api.component.RackMountable terminalServer = rack.getMountable(0);
+        helper.assertTrue(terminalServer != null, "Rack did not create terminal server mountable");
+        boolean sawScreen = false;
+        boolean sawKeyboard = false;
+        for (final Node node : terminalServer.node().neighbors()) {
+            if (node instanceof li.cil.oc.api.network.Component component && "screen".equals(component.name()) && node.host() instanceof li.cil.oc.api.internal.TextBuffer) {
+                sawScreen = true;
+            }
+            if (node instanceof li.cil.oc.api.network.Component component && "keyboard".equals(component.name()) && node.host() instanceof li.cil.oc.api.internal.Keyboard) {
+                sawKeyboard = true;
+            }
+        }
+
+        helper.assertTrue(sawScreen, "Terminal server did not expose virtual screen");
+        helper.assertTrue(sawKeyboard, "Terminal server did not expose virtual keyboard");
+        final CompoundTag data = terminalServer.getData();
+        terminalServer.save(data);
+        helper.assertTrue(data.contains("screen") && data.contains("keyboard"), "Terminal server did not persist virtual terminal state");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredScreensExposeTierCapabilities(final GameTestHelper helper) {
         final BlockPos tier1Pos = new BlockPos(0, 1, 0);
         final BlockPos tier2Pos = new BlockPos(1, 1, 0);

@@ -9,6 +9,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -302,6 +303,9 @@ public class RackBlockEntity extends BlockEntity implements Rack {
         }
         saveMountableData(slot);
         final RackMountable mountable = mountables[slot];
+        if (mountable instanceof TerminalServerRackMountableEnvironment terminalServer) {
+            terminalServer.removeVirtualNodes();
+        }
         if (mountable != null && mountable.node() != null) {
             mountable.node().remove();
         }
