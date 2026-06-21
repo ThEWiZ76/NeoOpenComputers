@@ -93,7 +93,7 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
         if (range <= 0D) {
             return new Object[]{new Map[0]};
         }
-        if (!consumeEnergy(context, range * WAYPOINT_COST_PER_RANGE)) {
+        if (!consumeEnergy(range * WAYPOINT_COST_PER_RANGE)) {
             return new Object[]{null, "not enough energy"};
         }
         if (context != null) {
@@ -134,7 +134,7 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
         return new Object[]{waypoints.toArray(new Map[0])};
     }
 
-    private static boolean consumeEnergy(final Context context, final double cost) {
-        return context == null || !(context.node() instanceof Connector connector) || connector.tryChangeBuffer(-cost);
+    private boolean consumeEnergy(final double cost) {
+        return !(node() instanceof Connector connector) || connector.tryChangeBuffer(-cost);
     }
 }

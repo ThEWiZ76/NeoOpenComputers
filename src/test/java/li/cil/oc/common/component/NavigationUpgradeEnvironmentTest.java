@@ -1,10 +1,13 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ComponentConnector;
+import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -51,7 +54,11 @@ final class NavigationUpgradeEnvironmentTest {
         NavigationUpgradeEnvironment navigation = new NavigationUpgradeEnvironment(new TestHost());
         ComponentConnector connector = assertInstanceOf(ComponentConnector.class, navigation.node());
         connector.setLocalBufferSize(1D);
-        RecordingContext context = new RecordingContext(navigation.node());
+        TestEnvironment machineEnvironment = new TestEnvironment();
+        Node machineNode = Network.newNode(machineEnvironment, li.cil.oc.api.network.Visibility.None).withConnector(1D).create();
+        machineEnvironment.node = machineNode;
+        Connector machineConnector = assertInstanceOf(Connector.class, machineNode);
+        RecordingContext context = new RecordingContext(machineNode);
 
         assertArrayEquals(new Object[]{null, "not enough energy"}, navigation.findWaypoints(context, new TestArguments(8D)));
         assertEquals(-1D, context.pauseSeconds, 0.000_001D);
@@ -62,6 +69,7 @@ final class NavigationUpgradeEnvironmentTest {
         assertEquals(0, ((Map[]) result[0]).length);
         assertEquals(0.5D, context.pauseSeconds, 0.000_001D);
         assertEquals(0.9D, connector.localBuffer(), 0.000_001D);
+        assertEquals(0D, machineConnector.localBuffer(), 0.000_001D);
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
@@ -86,6 +94,15 @@ final class NavigationUpgradeEnvironmentTest {
         @Override public boolean stop() { return true; }
         @Override public void consumeCallBudget(final double callCost) { }
         @Override public boolean signal(final String name, final Object... args) { return true; }
+    }
+
+    private static final class TestEnvironment implements Environment {
+        private Node node;
+
+        @Override public Node node() { return node; }
+        @Override public void onConnect(final Node node) { }
+        @Override public void onDisconnect(final Node node) { }
+        @Override public void onMessage(final Message message) { }
     }
 
     private static final class TestHost implements EnvironmentHost, li.cil.oc.api.internal.Rotatable {

@@ -3529,6 +3529,10 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(driver != null, "No driver for navigation upgrade");
         final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticPositionEnvironmentHost(helper, hostPos));
         helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Navigation upgrade has no component node");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Navigation upgrade has no connector node");
+        final ComponentConnector connector = (ComponentConnector) environment.node();
+        connector.setLocalBufferSize(1D);
+        connector.changeBuffer(1D);
 
         final Object[] result = invokeComponent(helper, (li.cil.oc.api.network.Component) environment.node(), "findWaypoints", 8D);
         helper.assertTrue(result.length == 1 && result[0] instanceof Map[], "Navigation upgrade did not return waypoint list");
