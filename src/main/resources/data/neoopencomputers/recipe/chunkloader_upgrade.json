@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "L": {
+      "item": "minecraft:glass"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "pattern": [
+    "GLG",
+    "CEC",
+    "OBO"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:chunkloader_upgrade"
+  }
+}

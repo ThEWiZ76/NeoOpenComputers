@@ -5,6 +5,7 @@ import li.cil.oc.common.item.AngelUpgradeItem;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.BatteryUpgradeItem;
 import li.cil.oc.common.item.CardContainerItem;
+import li.cil.oc.common.item.ChunkloaderUpgradeItem;
 import li.cil.oc.common.item.CraftingUpgradeItem;
 import li.cil.oc.common.item.CpuItem;
 import li.cil.oc.common.item.DataCardItem;
@@ -309,6 +310,10 @@ public final class ModItems {
     public static final DeferredItem<AngelUpgradeItem> ANGEL_UPGRADE = ITEMS.register(
         ModContentIds.ANGEL_UPGRADE,
         () -> new AngelUpgradeItem(new Item.Properties()));
+
+    public static final DeferredItem<ChunkloaderUpgradeItem> CHUNKLOADER_UPGRADE = ITEMS.register(
+        ModContentIds.CHUNKLOADER_UPGRADE,
+        () -> new ChunkloaderUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<WirelessNetworkCardItem> WIRELESS_NETWORK_CARD_TIER1 = ITEMS.register(
         ModContentIds.WIRELESS_NETWORK_CARD_TIER1,

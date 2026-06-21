@@ -9,6 +9,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_BATTERY_UPGRADE_TIER2 = "batteryUpgrade2";
     public static final String COMPAT_BATTERY_UPGRADE_TIER3 = "batteryUpgrade3";
     public static final String COMPAT_ANGEL_UPGRADE = "angelUpgrade";
+    public static final String COMPAT_CHUNKLOADER_UPGRADE = "chunkloaderUpgrade";
     public static final String COMPAT_CIRCUIT_CHIP_TIER1 = "circuitChip1";
     public static final String COMPAT_CIRCUIT_CHIP_TIER2 = "circuitChip2";
     public static final String COMPAT_CIRCUIT_CHIP_TIER3 = "circuitChip3";
@@ -181,6 +182,7 @@ public final class ModContentCatalog {
                 ModItems.TRACTOR_BEAM_UPGRADE.get(),
                 ModItems.LEASH_UPGRADE.get(),
                 ModItems.ANGEL_UPGRADE.get(),
+                ModItems.CHUNKLOADER_UPGRADE.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER1.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER2.get(),
                 ModItems.REDSTONE_CARD.get(),
@@ -373,6 +375,7 @@ public final class ModContentCatalog {
         final Item tractorBeamUpgradeItem,
         final Item leashUpgradeItem,
         final Item angelUpgradeItem,
+        final Item chunkloaderUpgradeItem,
         final Item wirelessNetworkCardTier1Item,
         final Item wirelessNetworkCardTier2Item,
         final Item redstoneCardItem,
@@ -457,6 +460,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.TRACTOR_BEAM_UPGRADE, null, tractorBeamUpgradeItem);
         registry.register(ModContentIds.LEASH_UPGRADE, null, leashUpgradeItem);
         registry.register(ModContentIds.ANGEL_UPGRADE, null, angelUpgradeItem);
+        registry.register(ModContentIds.CHUNKLOADER_UPGRADE, null, chunkloaderUpgradeItem);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(ModContentIds.REDSTONE_CARD, null, redstoneCardItem);
@@ -513,6 +517,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_TRACTOR_BEAM_UPGRADE, null, tractorBeamUpgradeItem);
         registry.register(COMPAT_LEASH_UPGRADE, null, leashUpgradeItem);
         registry.register(COMPAT_ANGEL_UPGRADE, null, angelUpgradeItem);
+        registry.register(COMPAT_CHUNKLOADER_UPGRADE, null, chunkloaderUpgradeItem);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD, null, wirelessNetworkCardTier2Item);

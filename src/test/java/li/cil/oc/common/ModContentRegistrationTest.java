@@ -314,6 +314,7 @@ final class ModContentRegistrationTest {
         assertEquals("tractor_beam_upgrade", ModContentIds.TRACTOR_BEAM_UPGRADE);
         assertEquals("leash_upgrade", ModContentIds.LEASH_UPGRADE);
         assertEquals("angel_upgrade", ModContentIds.ANGEL_UPGRADE);
+        assertEquals("chunkloader_upgrade", ModContentIds.CHUNKLOADER_UPGRADE);
     }
 
     @Test
