@@ -2,20 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
+    "E": {
+      "item": "minecraft:end_stone"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "G": {
+      "tag": "c:nuggets/gold"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
     "B": {
-      "item": "minecraft:golden_boots"
-    },
-    "F": {
-      "item": "minecraft:phantom_membrane"
-    },
-    "R": {
-      "item": "minecraft:redstone"
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "pattern": [
-    " F ",
-    "RBR",
-    " F "
+    "ECE",
+    "GIG",
+    "EBE"
   ],
   "result": {
     "count": 1,

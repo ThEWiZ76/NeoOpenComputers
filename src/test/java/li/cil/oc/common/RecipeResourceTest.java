@@ -609,6 +609,8 @@ final class RecipeResourceTest {
         JsonObject solarRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SOLAR_GENERATOR_UPGRADE + ".json"));
         JsonObject solar = solarRecipe.getAsJsonObject("key");
         JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
+        JsonObject hover2Recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.HOVER_UPGRADE_TIER2 + ".json"));
+        JsonObject hover2 = hover2Recipe.getAsJsonObject("key");
 
         assertTag(waypoint, "I", "c:ingots/iron");
         assertItem(waypoint, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
@@ -666,6 +668,13 @@ final class RecipeResourceTest {
         assertTag(hover1, "I", "c:nuggets/iron");
         assertItem(hover1, "L", "minecraft:leather");
         assertItem(hover1, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(hover2Recipe, "ECE", "GIG", "EBE");
+        assertItem(hover2, "E", "minecraft:end_stone");
+        assertItem(hover2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertTag(hover2, "G", "c:nuggets/gold");
+        assertTag(hover2, "I", "c:ingots/iron");
+        assertItem(hover2, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
     @Test
