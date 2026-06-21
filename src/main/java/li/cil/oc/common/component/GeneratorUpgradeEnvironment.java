@@ -131,17 +131,51 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
             return new Object[]{false, "no player inventory available"};
         }
 
-        final ItemStack removed = queuedFuel.split(Math.min(count, queuedFuel.getCount()));
+        final ItemStack requiredContainer = queuedFuel.getCraftingRemainingItem();
+        final ItemStack previousSelectedItem = host.mainInventory().getItem(host.selectedSlot()).copy();
+        int removeLimit = Math.min(count, queuedFuel.getCount());
+        if (!requiredContainer.isEmpty()) {
+            if (previousSelectedItem.isEmpty() || !ItemStack.isSameItemSameComponents(previousSelectedItem, requiredContainer)) {
+                return new Object[]{false, "removing this fuel requires the appropriate container in the selected slot"};
+            }
+            removeLimit = Math.min(removeLimit, previousSelectedItem.getCount() / Math.max(1, requiredContainer.getCount()));
+        }
+        if (removeLimit <= 0) {
+            return new Object[]{false, "removing this fuel requires the appropriate container in the selected slot"};
+        }
+
+        final ItemStack previousQueue = queuedFuel.copy();
+        final ItemStack removed = queuedFuel.split(removeLimit);
         final int removedCount = removed.getCount();
+        if (!requiredContainer.isEmpty()) {
+            final ItemStack selectedStack = host.mainInventory().getItem(host.selectedSlot());
+            selectedStack.shrink(removeLimit * Math.max(1, requiredContainer.getCount()));
+            if (selectedStack.isEmpty()) {
+                host.mainInventory().setItem(host.selectedSlot(), ItemStack.EMPTY);
+            }
+        }
         if (!host.player().getInventory().add(removed)) {
-            queuedFuel.grow(removedCount);
+            queuedFuel = previousQueue;
+            host.mainInventory().setItem(host.selectedSlot(), previousSelectedItem);
             return new Object[]{false, "no inventory space available for fuel"};
+        }
+        final int actualRemoval = removedCount - removed.getCount();
+        if (actualRemoval < removedCount) {
+            queuedFuel.grow(removed.getCount());
+            if (!requiredContainer.isEmpty()) {
+                final ItemStack selectedStack = host.mainInventory().getItem(host.selectedSlot());
+                if (selectedStack.isEmpty()) {
+                    host.mainInventory().setItem(host.selectedSlot(), requiredContainer.copyWithCount(removed.getCount()));
+                } else {
+                    selectedStack.grow(removed.getCount() * Math.max(1, requiredContainer.getCount()));
+                }
+            }
         }
         if (queuedFuel.isEmpty()) {
             queuedFuel = ItemStack.EMPTY;
         }
         host.markChanged();
-        return new Object[]{true, removedCount - removed.getCount()};
+        return new Object[]{true, actualRemoval};
     }
 
     @Override

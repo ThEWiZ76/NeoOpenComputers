@@ -1776,6 +1776,31 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void generatorUpgradeConsumesFuelContainerOnRemove(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for generator upgrade");
+
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final AgentTestHost host = new AgentTestHost(helper, player);
+        host.mainInventory().setItem(0, new ItemStack(Items.LAVA_BUCKET, 1));
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.GENERATOR_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Generator upgrade did not create generator environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Generator node is not a component connector");
+
+        final ComponentConnector connector = (ComponentConnector) environment.node();
+        final Object[] insert = connector.invoke("insert", null, 1);
+        helper.assertTrue(Boolean.TRUE.equals(insert[0]) && Integer.valueOf(1).equals(insert[1]), "Generator did not queue lava bucket fuel");
+
+        host.mainInventory().setItem(0, new ItemStack(Items.BUCKET, 1));
+        final Object[] remove = connector.invoke("remove", null, 1);
+
+        helper.assertTrue(Boolean.TRUE.equals(remove[0]) && Integer.valueOf(1).equals(remove[1]), "Generator did not remove lava bucket fuel");
+        helper.assertTrue(host.mainInventory().getItem(0).isEmpty(), "Generator did not consume required fuel container");
+        helper.assertTrue(containsStack(player.getInventory(), Items.LAVA_BUCKET, 1), "Generator did not return removed fuel");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void craftingUpgradeRejectsNonRobotAgentHost(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.CRAFTING_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for crafting upgrade");
