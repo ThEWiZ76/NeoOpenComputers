@@ -8,6 +8,7 @@ import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -74,6 +75,15 @@ final class MachineRegistryTest {
         Connector connector = assertInstanceOf(Connector.class, machine.node());
         assertTrue(connector.localBufferSize() > 0);
         assertTrue(connector.localBuffer() > 0);
+    }
+
+    @Test
+    void computerComponentIsNeighborVisibleLikeUpstream() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+
+        Component computer = assertInstanceOf(Component.class, machine.node());
+        assertEquals(Visibility.Neighbors, computer.visibility());
     }
 
     @Test

@@ -78,7 +78,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             API.network = new NetworkRegistry();
         }
         final Connector connector = Network.newNode(this, Visibility.Network)
-            .withComponent("computer", Visibility.Network)
+            .withComponent("computer", Visibility.Neighbors)
             .withConnector(DEFAULT_BOOT_ENERGY_BUFFER)
             .create();
         connector.changeBuffer(DEFAULT_BOOT_ENERGY_BUFFER);
@@ -343,7 +343,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             return null;
         }
         final Node target = node().network().node(address);
-        if (target instanceof Component component && component.canBeSeenFrom(node())) {
+        if (target instanceof Component component && (target == node() || component.canBeSeenFrom(node()))) {
             return component;
         }
         return null;
