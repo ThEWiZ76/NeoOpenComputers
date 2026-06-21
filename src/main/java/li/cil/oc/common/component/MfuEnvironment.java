@@ -3,16 +3,19 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverBlock;
+import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.Map;
 
@@ -38,6 +41,7 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
     private final Direction side;
     private ManagedEnvironment targetEnvironment;
     private DriverBlock targetDriver;
+    private Node targetNode;
     private String targetEnvironmentName;
     private CompoundTag targetEnvironmentData;
 
@@ -91,8 +95,11 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         if (targetEnvironment != null && node == targetEnvironment.node()) {
             targetEnvironment = null;
             targetDriver = null;
+        } else if (targetNode != null && node == targetNode) {
+            targetNode = null;
         } else if (node == node()) {
             removeTargetEnvironment();
+            disconnectTargetNode();
         }
     }
 
@@ -129,8 +136,29 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         final Level world = host.world();
         if (!targetInRange()) {
             removeTargetEnvironment();
+            disconnectTargetNode();
             return;
         }
+
+        final BlockEntity blockEntity = world.getBlockEntity(target);
+        if (blockEntity instanceof final Environment tileEnvironment) {
+            final Node tileNode = tileNode(tileEnvironment);
+            removeTargetEnvironment();
+            if (tileNode == null) {
+                disconnectTargetNode();
+                return;
+            }
+            if (targetNode != null && targetNode != tileNode) {
+                disconnectTargetNode();
+            }
+            targetNode = tileNode;
+            if (tileNode.network() != node().network()) {
+                node().connect(tileNode);
+            }
+            return;
+        }
+
+        disconnectTargetNode();
         final DriverBlock driver = li.cil.oc.api.Driver.driverFor(world, target, side);
         if (driver == null) {
             removeTargetEnvironment();
@@ -175,6 +203,21 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         }
         targetEnvironment = null;
         targetDriver = null;
+    }
+
+    private void disconnectTargetNode() {
+        final Node remoteNode = targetNode;
+        if (remoteNode != null && node() != null) {
+            node().disconnect(remoteNode);
+        }
+        targetNode = null;
+    }
+
+    private Node tileNode(final Environment environment) {
+        if (environment instanceof final SidedEnvironment sidedEnvironment) {
+            return sidedEnvironment.sidedNode(side);
+        }
+        return environment.node();
     }
 
     private boolean targetInRange() {
