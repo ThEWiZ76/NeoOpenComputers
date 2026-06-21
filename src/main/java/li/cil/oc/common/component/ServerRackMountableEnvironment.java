@@ -401,7 +401,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public boolean stillValid(final Player player) {
-        return rack instanceof Container container && container.stillValid(player);
+        return rack instanceof Container container && container.stillValid(player) && rack.getMountable(slot) == this;
     }
 
     @Override
