@@ -4,7 +4,35 @@ import li.cil.oc.api.API;
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.EnvironmentProvider;
+import li.cil.oc.common.blockentity.ScreenItemEnvironment;
+import li.cil.oc.common.component.AngelUpgradeEnvironment;
+import li.cil.oc.common.component.BatteryUpgradeEnvironment;
+import li.cil.oc.common.component.CraftingUpgradeEnvironment;
 import li.cil.oc.common.component.DatabaseEnvironment;
+import li.cil.oc.common.component.DataCardEnvironment;
+import li.cil.oc.common.component.EepromEnvironment;
+import li.cil.oc.common.component.ExperienceUpgradeEnvironment;
+import li.cil.oc.common.component.GeneratorUpgradeEnvironment;
+import li.cil.oc.common.component.GeolyzerEnvironment;
+import li.cil.oc.common.component.GraphicsCardEnvironment;
+import li.cil.oc.common.component.InternetCardEnvironment;
+import li.cil.oc.common.component.InventoryControllerEnvironment;
+import li.cil.oc.common.component.KeyboardItemEnvironment;
+import li.cil.oc.common.component.LinkedCardEnvironment;
+import li.cil.oc.common.component.MotionSensorEnvironment;
+import li.cil.oc.common.component.NavigationUpgradeEnvironment;
+import li.cil.oc.common.component.NetworkCardEnvironment;
+import li.cil.oc.common.component.PistonUpgradeEnvironment;
+import li.cil.oc.common.component.RedstoneCardEnvironment;
+import li.cil.oc.common.component.SignUpgradeEnvironment;
+import li.cil.oc.common.component.SolarGeneratorUpgradeEnvironment;
+import li.cil.oc.common.component.StickyPistonUpgradeEnvironment;
+import li.cil.oc.common.component.TankControllerEnvironment;
+import li.cil.oc.common.component.TankUpgradeEnvironment;
+import li.cil.oc.common.component.TractorBeamUpgradeEnvironment;
+import li.cil.oc.common.component.TradingUpgradeEnvironment;
+import li.cil.oc.common.component.TransposerEnvironment;
+import li.cil.oc.common.component.WirelessNetworkCardEnvironment;
 import li.cil.oc.common.driver.ComputerCaseBlockDriver;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
 import li.cil.oc.common.driver.DiskDriveContainerDriver;
@@ -52,9 +80,48 @@ public final class ModDriverCatalog {
                 ModItems.UPGRADE_CONTAINER_TIER1.get(), ModItems.UPGRADE_CONTAINER_TIER2.get(), ModItems.UPGRADE_CONTAINER_TIER3.get());
             registerEnvironmentProviders(
                 registry,
+                providerFor(ModItems.APU_TIER1.get(), GraphicsCardEnvironment.class),
+                providerFor(ModItems.APU_TIER2.get(), GraphicsCardEnvironment.class),
+                providerFor(ModItems.BATTERY_UPGRADE_TIER1.get(), BatteryUpgradeEnvironment.class),
+                providerFor(ModItems.BATTERY_UPGRADE_TIER2.get(), BatteryUpgradeEnvironment.class),
+                providerFor(ModItems.BATTERY_UPGRADE_TIER3.get(), BatteryUpgradeEnvironment.class),
+                providerFor(ModItems.DATA_CARD_TIER1.get(), DataCardEnvironment.class),
+                providerFor(ModItems.DATA_CARD_TIER2.get(), DataCardEnvironment.class),
+                providerFor(ModItems.DATA_CARD_TIER3.get(), DataCardEnvironment.class),
                 providerFor(ModItems.DATABASE_UPGRADE_TIER1.get(), DatabaseEnvironment.class),
                 providerFor(ModItems.DATABASE_UPGRADE_TIER2.get(), DatabaseEnvironment.class),
-                providerFor(ModItems.DATABASE_UPGRADE_TIER3.get(), DatabaseEnvironment.class));
+                providerFor(ModItems.DATABASE_UPGRADE_TIER3.get(), DatabaseEnvironment.class),
+                providerFor(ModItems.EEPROM.get(), EepromEnvironment.class),
+                providerFor(ModItems.EXPERIENCE_UPGRADE.get(), ExperienceUpgradeEnvironment.class),
+                providerFor(new GeolyzerItemDriver(), GeolyzerEnvironment.class),
+                providerFor(ModItems.GRAPHICS_CARD_TIER1.get(), GraphicsCardEnvironment.class),
+                providerFor(ModItems.GRAPHICS_CARD_TIER2.get(), GraphicsCardEnvironment.class),
+                providerFor(ModItems.GRAPHICS_CARD_TIER3.get(), GraphicsCardEnvironment.class),
+                providerFor(ModItems.INVENTORY_CONTROLLER_UPGRADE.get(), InventoryControllerEnvironment.class),
+                providerFor(ModItems.CRAFTING_UPGRADE.get(), CraftingUpgradeEnvironment.class),
+                providerFor(ModItems.INTERNET_CARD.get(), InternetCardEnvironment.class),
+                providerFor(ModItems.LINKED_CARD.get(), LinkedCardEnvironment.class),
+                providerFor(ModItems.NAVIGATION_UPGRADE.get(), NavigationUpgradeEnvironment.class),
+                providerFor(ModItems.NETWORK_CARD.get(), NetworkCardEnvironment.class),
+                providerFor(ModItems.PISTON_UPGRADE.get(), PistonUpgradeEnvironment.class),
+                providerFor(ModItems.STICKY_PISTON_UPGRADE.get(), StickyPistonUpgradeEnvironment.class),
+                providerFor(ModItems.SIGN_UPGRADE.get(), SignUpgradeEnvironment.class),
+                providerFor(ModItems.TRADING_UPGRADE.get(), TradingUpgradeEnvironment.class),
+                providerFor(ModItems.TRACTOR_BEAM_UPGRADE.get(), TractorBeamUpgradeEnvironment.class),
+                providerFor(ModItems.ANGEL_UPGRADE.get(), AngelUpgradeEnvironment.class),
+                providerFor(ModItems.GENERATOR_UPGRADE.get(), GeneratorUpgradeEnvironment.class),
+                providerFor(ModItems.SOLAR_GENERATOR_UPGRADE.get(), SolarGeneratorUpgradeEnvironment.class),
+                providerFor(ModItems.TANK_UPGRADE.get(), TankUpgradeEnvironment.class),
+                providerFor(ModItems.TANK_CONTROLLER_UPGRADE.get(), TankControllerEnvironment.class),
+                providerFor(ModItems.WIRELESS_NETWORK_CARD_TIER1.get(), WirelessNetworkCardEnvironment.class),
+                providerFor(ModItems.WIRELESS_NETWORK_CARD_TIER2.get(), WirelessNetworkCardEnvironment.class),
+                providerFor(ModItems.REDSTONE_CARD.get(), RedstoneCardEnvironment.class),
+                providerFor(new ScreenItemDriver(ModItems.SCREEN_TIER1.get(), 0), ScreenItemEnvironment.class),
+                providerFor(new ScreenItemDriver(ModItems.SCREEN_TIER2.get(), 1), ScreenItemEnvironment.class),
+                providerFor(new ScreenItemDriver(ModItems.SCREEN_TIER3.get(), 2), ScreenItemEnvironment.class),
+                providerFor(new KeyboardItemDriver(), KeyboardItemEnvironment.class),
+                providerFor(new MotionSensorItemDriver(), MotionSensorEnvironment.class),
+                providerFor(new TransposerItemDriver(), TransposerEnvironment.class));
         }
     }
 

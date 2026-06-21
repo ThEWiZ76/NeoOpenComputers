@@ -682,11 +682,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void databaseUpgradeProvidesEnvironmentClass(final GameTestHelper helper) {
-        final ItemStack stack = new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get());
-        final Class<?> environment = Driver.environmentFor(stack);
-
-        helper.assertTrue(li.cil.oc.common.component.DatabaseEnvironment.class.equals(environment), "Database upgrade did not provide database environment class");
+    public static void componentItemsProvideEnvironmentClasses(final GameTestHelper helper) {
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), li.cil.oc.common.component.DatabaseEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.DATA_CARD_TIER2.get()), li.cil.oc.common.component.DataCardEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.EEPROM.get()), li.cil.oc.common.component.EepromEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER3.get()), li.cil.oc.common.component.GraphicsCardEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.INTERNET_CARD.get()), li.cil.oc.common.component.InternetCardEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.NETWORK_CARD.get()), li.cil.oc.common.component.NetworkCardEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), li.cil.oc.common.component.WirelessNetworkCardEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.REDSTONE_CARD.get()), li.cil.oc.common.component.RedstoneCardEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.NAVIGATION_UPGRADE.get()), li.cil.oc.common.component.NavigationUpgradeEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.ANGEL_UPGRADE.get()), li.cil.oc.common.component.AngelUpgradeEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.MOTION_SENSOR.get()), li.cil.oc.common.component.MotionSensorEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.TRANSPOSER.get()), li.cil.oc.common.component.TransposerEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.SCREEN_TIER2.get()), li.cil.oc.common.blockentity.ScreenItemEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.KEYBOARD.get()), li.cil.oc.common.component.KeyboardItemEnvironment.class);
         helper.succeed();
     }
 
@@ -3884,6 +3894,11 @@ public final class NeoOpenComputersGameTests {
         final DriverItem driver = Driver.driverFor(stack);
         helper.assertTrue(driver != null, "No driver for " + stack);
         helper.assertTrue(driver.tier(stack) == tier, "Expected " + stack + " to report tier " + tier + " but got " + driver.tier(stack));
+    }
+
+    private static void assertEnvironmentProvider(final GameTestHelper helper, final ItemStack stack, final Class<?> expectedEnvironment) {
+        final Class<?> environment = Driver.environmentFor(stack);
+        helper.assertTrue(expectedEnvironment.equals(environment), "Expected " + stack + " to provide " + expectedEnvironment.getSimpleName() + " but got " + environment);
     }
 
     private static boolean containsStack(final net.minecraft.world.Container inventory, final Item item, final int count) {
