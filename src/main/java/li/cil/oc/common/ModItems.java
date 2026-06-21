@@ -149,6 +149,10 @@ public final class ModItems {
         ModContentIds.POWER_DISTRIBUTOR,
         ModBlocks.POWER_DISTRIBUTOR);
 
+    public static final DeferredItem<BlockItem> RACK = ITEMS.registerSimpleBlockItem(
+        ModContentIds.RACK,
+        ModBlocks.RACK);
+
     public static final DeferredItem<BlockItem> RELAY = ITEMS.registerSimpleBlockItem(
         ModContentIds.RELAY,
         ModBlocks.RELAY);

@@ -40,6 +40,7 @@ final class RecipeResourceTest {
             ModContentIds.DISK_PLATTER,
             ModContentIds.INTERWEB,
             ModContentIds.POWER_DISTRIBUTOR,
+            ModContentIds.RACK,
             ModContentIds.RELAY,
             ModContentIds.INK_CARTRIDGE_EMPTY,
             ModContentIds.INK_CARTRIDGE,
@@ -287,6 +288,21 @@ final class RecipeResourceTest {
         assertItem(relayKeys, "C", "neoopencomputers:" + ModContentIds.CABLE);
         assertItem(relayKeys, "N", "neoopencomputers:" + ModContentIds.NETWORK_CARD);
         assertItem(relayKeys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
+    void rackRecipeUsesUpstreamNetworkRackShape() throws IOException {
+        JsonObject rack = readJson(RECIPE_ROOT.resolve(ModContentIds.RACK + ".json"));
+
+        assertPattern(rack, "DWD", "FHF", "RBP");
+        JsonObject keys = rack.getAsJsonObject("key");
+        assertItem(keys, "D", "minecraft:diamond");
+        assertItem(keys, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+        assertItem(keys, "F", "minecraft:iron_bars");
+        assertItem(keys, "H", "minecraft:chest");
+        assertItem(keys, "R", "neoopencomputers:" + ModContentIds.RELAY);
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(keys, "P", "neoopencomputers:" + ModContentIds.POWER_DISTRIBUTOR);
     }
 
     @Test

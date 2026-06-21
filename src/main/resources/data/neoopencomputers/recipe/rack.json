@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DWD",
+    "FHF",
+    "RBP"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "W": {
+      "item": "neoopencomputers:wireless_network_card_tier2"
+    },
+    "F": {
+      "item": "minecraft:iron_bars"
+    },
+    "H": {
+      "item": "minecraft:chest"
+    },
+    "R": {
+      "item": "neoopencomputers:relay"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "P": {
+      "item": "neoopencomputers:power_distributor"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:rack"
+  }
+}
