@@ -62,7 +62,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_NAVIGATION_UPGRADE = "navigationUpgrade";
     public static final String COMPAT_NETWORK_CARD = "lancard";
     public static final String COMPAT_PISTON_UPGRADE = "pistonUpgrade";
+    public static final String COMPAT_POWER_DISTRIBUTOR = "powerDistributor";
     public static final String COMPAT_REDSTONE_CARD = "redstone";
+    public static final String COMPAT_RELAY = "relay";
     public static final String COMPAT_SERVER_TIER1 = "server1";
     public static final String COMPAT_SERVER_TIER2 = "server2";
     public static final String COMPAT_SERVER_TIER3 = "server3";
@@ -137,8 +139,12 @@ public final class ModContentCatalog {
                 ModItems.KEYBOARD.get(),
                 ModBlocks.MOTION_SENSOR.get(),
                 ModItems.MOTION_SENSOR.get(),
+                ModBlocks.POWER_DISTRIBUTOR.get(),
+                ModItems.POWER_DISTRIBUTOR.get(),
                 ModBlocks.REDSTONE_IO.get(),
                 ModItems.REDSTONE_IO.get(),
+                ModBlocks.RELAY.get(),
+                ModItems.RELAY.get(),
                 ModBlocks.TRANSPOSER.get(),
                 ModItems.TRANSPOSER.get(),
                 ModBlocks.HOLOGRAM_TIER1.get(),
@@ -353,8 +359,12 @@ public final class ModContentCatalog {
         final Item keyboardItem,
         final Block motionSensor,
         final Item motionSensorItem,
+        final Block powerDistributor,
+        final Item powerDistributorItem,
         final Block redstoneIo,
         final Item redstoneIoItem,
+        final Block relay,
+        final Item relayItem,
         final Block transposer,
         final Item transposerItem,
         final Block hologramTier1,
@@ -476,7 +486,11 @@ public final class ModContentCatalog {
         registry.register(COMPAT_SCREEN_TIER3, screenTier3, screenTier3Item);
         registry.register(ModContentIds.KEYBOARD, keyboard, keyboardItem);
         registry.register(ModContentIds.MOTION_SENSOR, motionSensor, motionSensorItem);
+        registry.register(ModContentIds.POWER_DISTRIBUTOR, powerDistributor, powerDistributorItem);
+        registry.register(COMPAT_POWER_DISTRIBUTOR, powerDistributor, powerDistributorItem);
         registry.register(ModContentIds.REDSTONE_IO, redstoneIo, redstoneIoItem);
+        registry.register(ModContentIds.RELAY, relay, relayItem);
+        registry.register(COMPAT_RELAY, relay, relayItem);
         registry.register(ModContentIds.TRANSPOSER, transposer, transposerItem);
         registry.register(ModContentIds.HOLOGRAM_TIER1, hologramTier1, hologramTier1Item);
         registry.register(ModContentIds.HOLOGRAM_TIER2, hologramTier2, hologramTier2Item);

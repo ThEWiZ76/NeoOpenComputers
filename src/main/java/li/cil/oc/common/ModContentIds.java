@@ -98,11 +98,13 @@ public final class ModContentIds {
     public static final String NETWORK_CARD = "network_card";
     public static final String NUM_PAD = "num_pad";
     public static final String PISTON_UPGRADE = "piston_upgrade";
+    public static final String POWER_DISTRIBUTOR = "power_distributor";
     public static final String PRINTED_CIRCUIT_BOARD = "printed_circuit_board";
     public static final String RAW_CIRCUIT_BOARD = "raw_circuit_board";
     public static final String REDSTONE_CARD = "redstone_card";
     public static final String REDSTONE_IO = "redstone";
     public static final String REDSTONE_IO_BLOCK_ENTITY = "redstone";
+    public static final String RELAY = "relay";
     public static final String SERVER_TIER1 = "server_tier1";
     public static final String SERVER_TIER2 = "server_tier2";
     public static final String SERVER_TIER3 = "server_tier3";

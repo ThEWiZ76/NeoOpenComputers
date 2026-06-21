@@ -89,9 +89,17 @@ public final class ModBlocks {
         ModContentIds.MOTION_SENSOR,
         () -> new MotionSensorBlock(motionSensorProperties()));
 
+    public static final DeferredBlock<Block> POWER_DISTRIBUTOR = BLOCKS.register(
+        ModContentIds.POWER_DISTRIBUTOR,
+        () -> new Block(networkInfrastructureProperties()));
+
     public static final DeferredBlock<Block> REDSTONE_IO = BLOCKS.register(
         ModContentIds.REDSTONE_IO,
         () -> new RedstoneIoBlock(redstoneIoProperties()));
+
+    public static final DeferredBlock<Block> RELAY = BLOCKS.register(
+        ModContentIds.RELAY,
+        () -> new Block(networkInfrastructureProperties()));
 
     public static final DeferredBlock<Block> TRANSPOSER = BLOCKS.register(
         ModContentIds.TRANSPOSER,
@@ -180,6 +188,12 @@ public final class ModBlocks {
     private static BlockBehaviour.Properties redstoneIoProperties() {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_RED)
+            .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties networkInfrastructureProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);
     }
 

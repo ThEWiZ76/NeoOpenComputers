@@ -152,6 +152,16 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void powerDistributorBlockIdIsStable() {
+        assertEquals("power_distributor", ModContentIds.POWER_DISTRIBUTOR);
+    }
+
+    @Test
+    void relayBlockIdIsStable() {
+        assertEquals("relay", ModContentIds.RELAY);
+    }
+
+    @Test
     void cpuTier1ItemIdIsStable() {
         assertEquals("cpu_tier1", ModContentIds.CPU_TIER1);
     }

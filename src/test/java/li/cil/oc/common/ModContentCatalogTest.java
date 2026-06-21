@@ -119,7 +119,11 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.GEOLYZER));
         assertNotNull(registry.get(ModContentIds.KEYBOARD));
         assertNotNull(registry.get(ModContentIds.MOTION_SENSOR));
+        assertNotNull(registry.get(ModContentIds.POWER_DISTRIBUTOR));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR));
         assertNotNull(registry.get(ModContentIds.REDSTONE_IO));
+        assertNotNull(registry.get(ModContentIds.RELAY));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_RELAY));
         assertNotNull(registry.get(ModContentIds.TRANSPOSER));
         assertNotNull(registry.get(ModContentIds.HOLOGRAM_TIER1));
         assertNotNull(registry.get(ModContentIds.HOLOGRAM_TIER2));
@@ -283,7 +287,11 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.GEOLYZER, registry.get(ModContentIds.GEOLYZER).name());
         assertEquals(ModContentIds.KEYBOARD, registry.get(ModContentIds.KEYBOARD).name());
         assertEquals(ModContentIds.MOTION_SENSOR, registry.get(ModContentIds.MOTION_SENSOR).name());
+        assertEquals(ModContentIds.POWER_DISTRIBUTOR, registry.get(ModContentIds.POWER_DISTRIBUTOR).name());
+        assertEquals(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR, registry.get(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR).name());
         assertEquals(ModContentIds.REDSTONE_IO, registry.get(ModContentIds.REDSTONE_IO).name());
+        assertEquals(ModContentIds.RELAY, registry.get(ModContentIds.RELAY).name());
+        assertEquals(ModContentCatalog.COMPAT_RELAY, registry.get(ModContentCatalog.COMPAT_RELAY).name());
         assertEquals(ModContentIds.TRANSPOSER, registry.get(ModContentIds.TRANSPOSER).name());
         assertEquals(ModContentIds.HOLOGRAM_TIER1, registry.get(ModContentIds.HOLOGRAM_TIER1).name());
         assertEquals(ModContentIds.HOLOGRAM_TIER2, registry.get(ModContentIds.HOLOGRAM_TIER2).name());

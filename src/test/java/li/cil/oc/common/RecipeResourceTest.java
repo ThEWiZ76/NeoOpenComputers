@@ -39,6 +39,8 @@ final class RecipeResourceTest {
             ModContentIds.CONTROL_UNIT,
             ModContentIds.DISK_PLATTER,
             ModContentIds.INTERWEB,
+            ModContentIds.POWER_DISTRIBUTOR,
+            ModContentIds.RELAY,
             ModContentIds.INK_CARTRIDGE_EMPTY,
             ModContentIds.INK_CARTRIDGE,
             ModContentIds.BUTTON_GROUP,
@@ -264,6 +266,27 @@ final class RecipeResourceTest {
 
         assertApuRecipe(tier1, true, ModContentIds.MICROCHIP_TIER1, ModContentIds.CPU_TIER2, ModContentIds.COMPONENT_BUS_TIER1, ModContentIds.GRAPHICS_CARD_TIER1);
         assertApuRecipe(tier2, false, ModContentIds.MICROCHIP_TIER2, ModContentIds.CPU_TIER3, ModContentIds.COMPONENT_BUS_TIER2, ModContentIds.GRAPHICS_CARD_TIER2);
+    }
+
+    @Test
+    void networkInfrastructureRecipesUseUpstreamMaterials() throws IOException {
+        JsonObject powerDistributor = readJson(RECIPE_ROOT.resolve(ModContentIds.POWER_DISTRIBUTOR + ".json"));
+        JsonObject relay = readJson(RECIPE_ROOT.resolve(ModContentIds.RELAY + ".json"));
+
+        assertPattern(powerDistributor, "IGI", "CMC", "IBI");
+        JsonObject distributorKeys = powerDistributor.getAsJsonObject("key");
+        assertTag(distributorKeys, "I", "c:ingots/iron");
+        assertTag(distributorKeys, "G", "c:ingots/gold");
+        assertItem(distributorKeys, "C", "neoopencomputers:" + ModContentIds.CABLE);
+        assertItem(distributorKeys, "M", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(distributorKeys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(relay, "ICI", "CNC", "IBI");
+        JsonObject relayKeys = relay.getAsJsonObject("key");
+        assertTag(relayKeys, "I", "c:ingots/iron");
+        assertItem(relayKeys, "C", "neoopencomputers:" + ModContentIds.CABLE);
+        assertItem(relayKeys, "N", "neoopencomputers:" + ModContentIds.NETWORK_CARD);
+        assertItem(relayKeys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
     @Test

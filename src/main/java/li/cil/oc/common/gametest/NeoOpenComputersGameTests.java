@@ -120,7 +120,9 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.SCREEN_TIER3.get();
         ModBlocks.KEYBOARD.get();
         ModBlocks.MOTION_SENSOR.get();
+        ModBlocks.POWER_DISTRIBUTOR.get();
         ModBlocks.REDSTONE_IO.get();
+        ModBlocks.RELAY.get();
         ModBlocks.TRANSPOSER.get();
         ModBlocks.WAYPOINT.get();
         ModItems.ADAPTER.get();
@@ -158,7 +160,9 @@ public final class NeoOpenComputersGameTests {
         ModItems.BUTTON_GROUP.get();
         ModItems.ARROW_KEYS.get();
         ModItems.NUM_PAD.get();
+        ModItems.POWER_DISTRIBUTOR.get();
         ModItems.CABLE.get();
+        ModItems.RELAY.get();
         ModItems.CARD_CONTAINER_TIER1.get();
         ModItems.CARD_CONTAINER_TIER2.get();
         ModItems.CARD_CONTAINER_TIER3.get();

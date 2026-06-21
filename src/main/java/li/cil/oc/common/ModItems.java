@@ -145,6 +145,14 @@ public final class ModItems {
         ModContentIds.HOLOGRAM_TIER2,
         ModBlocks.HOLOGRAM_TIER2);
 
+    public static final DeferredItem<BlockItem> POWER_DISTRIBUTOR = ITEMS.registerSimpleBlockItem(
+        ModContentIds.POWER_DISTRIBUTOR,
+        ModBlocks.POWER_DISTRIBUTOR);
+
+    public static final DeferredItem<BlockItem> RELAY = ITEMS.registerSimpleBlockItem(
+        ModContentIds.RELAY,
+        ModBlocks.RELAY);
+
     public static final DeferredItem<Item> CUTTING_WIRE = ITEMS.registerSimpleItem(ModContentIds.CUTTING_WIRE, new Item.Properties());
     public static final DeferredItem<Item> ACID = ITEMS.registerSimpleItem(ModContentIds.ACID, new Item.Properties());
     public static final DeferredItem<Item> RAW_CIRCUIT_BOARD = ITEMS.registerSimpleItem(ModContentIds.RAW_CIRCUIT_BOARD, new Item.Properties());
