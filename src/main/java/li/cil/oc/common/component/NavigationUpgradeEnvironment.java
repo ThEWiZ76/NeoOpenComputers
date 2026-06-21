@@ -24,7 +24,8 @@ import java.util.Map;
 
 public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "navigation";
-    private static final double RANGE = 16.0D;
+    private static final int DEFAULT_MAP_SIZE = 128;
+    private static final double RANGE = DEFAULT_MAP_SIZE / 2.0D;
     private static final double MAX_WAYPOINT_RANGE = 400.0D;
     private static final double WAYPOINT_COST_PER_RANGE = 0.05D * 0.25D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
@@ -32,7 +33,7 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
         DeviceInfo.DeviceAttribute.Description, "Navigation upgrade",
         DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
         DeviceInfo.DeviceAttribute.Product, "PathFinder v3",
-        DeviceInfo.DeviceAttribute.Capacity, Integer.toString((int) RANGE)
+        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(DEFAULT_MAP_SIZE)
     );
 
     private final EnvironmentHost host;

@@ -39,9 +39,10 @@ final class NavigationUpgradeEnvironmentTest {
 
         assertArrayEquals(new Object[]{10.5D, 64.0D, -4.5D}, navigation.getPosition(null, new TestArguments()));
         assertArrayEquals(new Object[]{Direction.EAST.get3DDataValue()}, navigation.getFacing(null, new TestArguments()));
-        assertArrayEquals(new Object[]{16.0D}, navigation.getRange(null, new TestArguments()));
+        assertArrayEquals(new Object[]{64.0D}, navigation.getRange(null, new TestArguments()));
         DeviceInfo info = (DeviceInfo) navigation;
         assertEquals("PathFinder v3", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("128", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Capacity));
     }
 
     @Test
