@@ -15,12 +15,9 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
-public class LinkedCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public class LinkedCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo, LinkedNetwork.Endpoint {
     private static final String COMPONENT_NAME = "tunnel";
     private static final String TUNNEL_TAG = "oc:tunnel";
     private static final String WAKE_MESSAGE_TAG = "wakeMessage";
@@ -29,7 +26,6 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
     private static final int MAX_PACKET_SIZE = 8192;
     private static final int MAX_PACKET_PARTS = 8;
     private static final double LINKED_CARD_BASE_COST = 0.05D * 400D * 5D;
-    private static final Map<String, List<LinkedCardEnvironment>> CHANNELS = new LinkedHashMap<>();
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
         DeviceInfo.DeviceAttribute.Description, "Quantumnet controller",
@@ -46,7 +42,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
 
     public LinkedCardEnvironment(final EnvironmentHost host, final String channel) {
         this.host = host;
-        this.channel = normalizeChannel(channel);
+        this.channel = LinkedNetwork.normalizeChannel(channel);
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
@@ -70,11 +66,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         if (!consumeEnergy(context, packet)) {
             return new Object[]{null, "not enough energy"};
         }
-        for (LinkedCardEnvironment endpoint : List.copyOf(CHANNELS.getOrDefault(channel, List.of()))) {
-            if (endpoint != this) {
-                endpoint.receivePacket(packet);
-            }
-        }
+        LinkedNetwork.send(channel, this, packet);
         return new Object[]{true};
     }
 
@@ -116,30 +108,30 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
     @Override
     public void onConnect(final Node node) {
         if (node == node()) {
-            CHANNELS.computeIfAbsent(channel, ignored -> new ArrayList<>()).add(this);
+            LinkedNetwork.add(this);
         }
     }
 
     @Override
     public void onDisconnect(final Node node) {
         if (node == node()) {
-            removeFromChannel();
+            LinkedNetwork.remove(this);
         }
     }
 
     @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
-        removeFromChannel();
+        LinkedNetwork.remove(this);
         if (nbt.contains(TUNNEL_TAG)) {
-            channel = normalizeChannel(nbt.getString(TUNNEL_TAG));
+            channel = LinkedNetwork.normalizeChannel(nbt.getString(TUNNEL_TAG));
         }
         if (nbt.contains(WAKE_MESSAGE_TAG)) {
             wakeMessage = nbt.getString(WAKE_MESSAGE_TAG);
         }
         wakeMessageFuzzy = nbt.getBoolean(WAKE_MESSAGE_FUZZY_TAG);
         if (node() != null && node().network() != null) {
-            CHANNELS.computeIfAbsent(channel, ignored -> new ArrayList<>()).add(this);
+            LinkedNetwork.add(this);
         }
     }
 
@@ -153,7 +145,13 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         nbt.putBoolean(WAKE_MESSAGE_FUZZY_TAG, wakeMessageFuzzy);
     }
 
-    private void receivePacket(final Packet packet) {
+    @Override
+    public String linkedChannel() {
+        return channel;
+    }
+
+    @Override
+    public void receiveLinkedPacket(final Packet packet) {
         if (!(host instanceof MachineHost machineHost) || machineHost.machine() == null || node() == null) {
             return;
         }
@@ -184,19 +182,5 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
             return wakeMessage.equals(new String(value, StandardCharsets.UTF_8));
         }
         return false;
-    }
-
-    private void removeFromChannel() {
-        final List<LinkedCardEnvironment> endpoints = CHANNELS.get(channel);
-        if (endpoints != null) {
-            endpoints.remove(this);
-            if (endpoints.isEmpty()) {
-                CHANNELS.remove(channel);
-            }
-        }
-    }
-
-    private static String normalizeChannel(final String value) {
-        return value == null || value.isBlank() ? "creative" : value;
     }
 }

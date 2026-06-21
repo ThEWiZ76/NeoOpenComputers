@@ -1905,6 +1905,39 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void relayLinkedCardRelaysPacketsBetweenRelays(final GameTestHelper helper) {
+        final BlockPos firstRelayPos = new BlockPos(1, 1, 1);
+        final BlockPos secondRelayPos = new BlockPos(5, 1, 1);
+        helper.setBlock(firstRelayPos, ModBlocks.RELAY.get());
+        helper.setBlock(secondRelayPos, ModBlocks.RELAY.get());
+        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(firstRelayPos));
+        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(secondRelayPos));
+        final RelayBlockEntity firstRelay = helper.getBlockEntity(firstRelayPos);
+        final RelayBlockEntity secondRelay = helper.getBlockEntity(secondRelayPos);
+        firstRelay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.LINKED_CARD.get()));
+        secondRelay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.LINKED_CARD.get()));
+
+        final RecordingNetworkEnvironment source = new RecordingNetworkEnvironment();
+        final RecordingNetworkEnvironment receiver = new RecordingNetworkEnvironment();
+        Network.joinNewNetwork(source.node());
+        Network.joinNewNetwork(receiver.node());
+        source.node().connect(firstRelay.sidedNode(Direction.WEST));
+        receiver.node().connect(secondRelay.sidedNode(Direction.EAST));
+        ((Connector) firstRelay.sidedNode(Direction.WEST)).changeBuffer(RelayBlockEntity.CONNECTOR_BUFFER_SIZE);
+
+        final li.cil.oc.api.network.Packet packet = Network.newPacket(source.node().address(), null, 225, new Object[]{"linked"});
+        source.node().sendToReachable("network.message", packet);
+        RelayBlockEntity.serverTick(helper.getLevel(), firstRelayPos, helper.getBlockState(firstRelayPos), firstRelay);
+        RelayBlockEntity.serverTick(helper.getLevel(), secondRelayPos, helper.getBlockState(secondRelayPos), secondRelay);
+
+        helper.assertTrue(receiver.lastPacket != null, "Relay linked card did not forward packet");
+        helper.assertTrue(receiver.lastPacket.port() == 225, "Relay linked card forwarded wrong port");
+        helper.assertTrue(receiver.lastPacket.ttl() == packet.ttl() - 2, "Relay linked card did not count both relay hops");
+        helper.assertTrue("linked".equals(receiver.lastPacket.data()[0]), "Relay linked card forwarded wrong payload");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void relayComponentCallbacksConfigureWirelessForwarding(final GameTestHelper helper) throws Exception {
         final BlockPos relayPos = new BlockPos(1, 1, 1);
         helper.setBlock(relayPos, ModBlocks.RELAY.get());
