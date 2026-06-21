@@ -1792,6 +1792,22 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalItemBindsToTerminalServer(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+
+        helper.assertTrue(TerminalItem.bindToTerminalServer(terminal, rack, 0), "Terminal did not bind to terminal server");
+        final CompoundTag data = terminal.get(DataComponents.CUSTOM_DATA).copyTag().getCompound("oc:terminal");
+        helper.assertTrue(data.contains("terminalServer"), "Terminal binding missing terminal server address");
+        helper.assertTrue(data.contains("screen"), "Terminal binding missing screen address");
+        helper.assertTrue(data.contains("keyboard"), "Terminal binding missing keyboard address");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredScreensExposeTierCapabilities(final GameTestHelper helper) {
         final BlockPos tier1Pos = new BlockPos(0, 1, 0);
         final BlockPos tier2Pos = new BlockPos(1, 1, 0);
