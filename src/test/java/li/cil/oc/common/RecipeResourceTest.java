@@ -41,6 +41,7 @@ final class RecipeResourceTest {
             ModContentIds.INTERWEB,
             ModContentIds.POWER_DISTRIBUTOR,
             ModContentIds.RACK,
+            ModContentIds.RAID,
             ModContentIds.RELAY,
             ModContentIds.INK_CARTRIDGE_EMPTY,
             ModContentIds.INK_CARTRIDGE,
@@ -303,6 +304,19 @@ final class RecipeResourceTest {
         assertItem(keys, "R", "neoopencomputers:" + ModContentIds.RELAY);
         assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(keys, "P", "neoopencomputers:" + ModContentIds.POWER_DISTRIBUTOR);
+    }
+
+    @Test
+    void raidRecipeUsesUpstreamDiskArrayShape() throws IOException {
+        JsonObject raid = readJson(RECIPE_ROOT.resolve(ModContentIds.RAID + ".json"));
+
+        assertPattern(raid, "ICI", "MDM", "IHI");
+        JsonObject keys = raid.getAsJsonObject("key");
+        assertTag(keys, "I", "c:nuggets/iron");
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.CPU_TIER3);
+        assertItem(keys, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
+        assertItem(keys, "D", "neoopencomputers:" + ModContentIds.DISK_DRIVE);
+        assertItem(keys, "H", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
     }
 
     @Test

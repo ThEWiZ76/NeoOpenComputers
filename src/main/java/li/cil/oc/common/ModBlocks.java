@@ -97,6 +97,10 @@ public final class ModBlocks {
         ModContentIds.RACK,
         () -> new Block(rackProperties()));
 
+    public static final DeferredBlock<Block> RAID = BLOCKS.register(
+        ModContentIds.RAID,
+        () -> new Block(raidProperties()));
+
     public static final DeferredBlock<Block> REDSTONE_IO = BLOCKS.register(
         ModContentIds.REDSTONE_IO,
         () -> new RedstoneIoBlock(redstoneIoProperties()));
@@ -205,6 +209,12 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(2.0F, 6.0F);
+    }
+
+    private static BlockBehaviour.Properties raidProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
+            .strength(1.5F, 4.0F);
     }
 
     private static BlockBehaviour.Properties transposerProperties() {

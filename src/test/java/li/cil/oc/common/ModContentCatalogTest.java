@@ -123,6 +123,8 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR));
         assertNotNull(registry.get(ModContentIds.RACK));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_RACK));
+        assertNotNull(registry.get(ModContentIds.RAID));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_RAID));
         assertNotNull(registry.get(ModContentIds.REDSTONE_IO));
         assertNotNull(registry.get(ModContentIds.RELAY));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_RELAY));
@@ -293,6 +295,8 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR, registry.get(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR).name());
         assertEquals(ModContentIds.RACK, registry.get(ModContentIds.RACK).name());
         assertEquals(ModContentCatalog.COMPAT_RACK, registry.get(ModContentCatalog.COMPAT_RACK).name());
+        assertEquals(ModContentIds.RAID, registry.get(ModContentIds.RAID).name());
+        assertEquals(ModContentCatalog.COMPAT_RAID, registry.get(ModContentCatalog.COMPAT_RAID).name());
         assertEquals(ModContentIds.REDSTONE_IO, registry.get(ModContentIds.REDSTONE_IO).name());
         assertEquals(ModContentIds.RELAY, registry.get(ModContentIds.RELAY).name());
         assertEquals(ModContentCatalog.COMPAT_RELAY, registry.get(ModContentCatalog.COMPAT_RELAY).name());

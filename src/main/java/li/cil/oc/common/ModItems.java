@@ -153,6 +153,10 @@ public final class ModItems {
         ModContentIds.RACK,
         ModBlocks.RACK);
 
+    public static final DeferredItem<BlockItem> RAID = ITEMS.registerSimpleBlockItem(
+        ModContentIds.RAID,
+        ModBlocks.RAID);
+
     public static final DeferredItem<BlockItem> RELAY = ITEMS.registerSimpleBlockItem(
         ModContentIds.RELAY,
         ModBlocks.RELAY);

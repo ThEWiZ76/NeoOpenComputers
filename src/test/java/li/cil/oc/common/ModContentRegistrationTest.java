@@ -162,6 +162,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void raidBlockIdIsStable() {
+        assertEquals("raid", ModContentIds.RAID);
+    }
+
+    @Test
     void relayBlockIdIsStable() {
         assertEquals("relay", ModContentIds.RELAY);
     }

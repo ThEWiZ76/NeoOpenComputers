@@ -89,6 +89,8 @@
   "item.neoopencomputers.power_distributor": "Power Distributor",
   "block.neoopencomputers.rack": "Server Rack",
   "item.neoopencomputers.rack": "Server Rack",
+  "block.neoopencomputers.raid": "RAID",
+  "item.neoopencomputers.raid": "RAID",
   "item.neoopencomputers.printed_circuit_board": "Printed Circuit Board",
   "item.neoopencomputers.raw_circuit_board": "Raw Circuit Board",
   "item.neoopencomputers.redstone_card": "Redstone Card",

@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ICI",
+    "MDM",
+    "IHI"
+  ],
+  "key": {
+    "I": {
+      "tag": "c:nuggets/iron"
+    },
+    "C": {
+      "item": "neoopencomputers:cpu_tier3"
+    },
+    "M": {
+      "item": "neoopencomputers:memory_tier1"
+    },
+    "D": {
+      "item": "neoopencomputers:disk_drive"
+    },
+    "H": {
+      "item": "neoopencomputers:microchip_tier2"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:raid"
+  }
+}

@@ -64,6 +64,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_PISTON_UPGRADE = "pistonUpgrade";
     public static final String COMPAT_POWER_DISTRIBUTOR = "powerDistributor";
     public static final String COMPAT_RACK = "rack";
+    public static final String COMPAT_RAID = "raid";
     public static final String COMPAT_REDSTONE_CARD = "redstone";
     public static final String COMPAT_RELAY = "relay";
     public static final String COMPAT_SERVER_TIER1 = "server1";
@@ -144,6 +145,8 @@ public final class ModContentCatalog {
                 ModItems.POWER_DISTRIBUTOR.get(),
                 ModBlocks.RACK.get(),
                 ModItems.RACK.get(),
+                ModBlocks.RAID.get(),
+                ModItems.RAID.get(),
                 ModBlocks.REDSTONE_IO.get(),
                 ModItems.REDSTONE_IO.get(),
                 ModBlocks.RELAY.get(),
@@ -366,6 +369,8 @@ public final class ModContentCatalog {
         final Item powerDistributorItem,
         final Block rack,
         final Item rackItem,
+        final Block raid,
+        final Item raidItem,
         final Block redstoneIo,
         final Item redstoneIoItem,
         final Block relay,
@@ -495,6 +500,8 @@ public final class ModContentCatalog {
         registry.register(COMPAT_POWER_DISTRIBUTOR, powerDistributor, powerDistributorItem);
         registry.register(ModContentIds.RACK, rack, rackItem);
         registry.register(COMPAT_RACK, rack, rackItem);
+        registry.register(ModContentIds.RAID, raid, raidItem);
+        registry.register(COMPAT_RAID, raid, raidItem);
         registry.register(ModContentIds.REDSTONE_IO, redstoneIo, redstoneIoItem);
         registry.register(ModContentIds.RELAY, relay, relayItem);
         registry.register(COMPAT_RELAY, relay, relayItem);
