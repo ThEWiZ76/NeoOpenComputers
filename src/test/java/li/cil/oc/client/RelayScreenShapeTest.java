@@ -34,12 +34,21 @@ final class RelayScreenShapeTest {
 
     @Test
     void relayScreenStatusTooltipIncludesDelayAndQueue() {
-        final List<Component> tooltip = RelayScreen.statusTooltip(RelayMenu.MODE_WIRELESS, 3, 2, 20);
+        final List<Component> tooltip = RelayScreen.statusTooltip(RelayMenu.MODE_WIRELESS, 3, 2, 20, 16, 1);
 
         assertTranslationKey("gui.neoopencomputers.relay.status", tooltip.getFirst());
         assertTranslationKey("gui.neoopencomputers.relay.mode.wireless", tooltip.get(1));
         assertTranslationKey("gui.neoopencomputers.relay.delay", tooltip.get(2));
         assertTranslationKey("gui.neoopencomputers.relay.queue", tooltip.get(3));
+        assertTranslationKey("gui.neoopencomputers.relay.strength", tooltip.get(4));
+        assertTranslationKey("gui.neoopencomputers.relay.repeater.enabled", tooltip.get(5));
+    }
+
+    @Test
+    void relayScreenStatusTooltipOmitsWirelessControlsForWiredRelay() {
+        final List<Component> tooltip = RelayScreen.statusTooltip(RelayMenu.MODE_WIRED, 3, 2, 20, 0, 0);
+
+        assertEquals(4, tooltip.size());
     }
 
     private static void assertTranslationKey(final String expectedKey, final Component component) {

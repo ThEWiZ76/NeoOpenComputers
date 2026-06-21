@@ -35,7 +35,9 @@ final class RelayMenuShapeTest {
         assertEquals(1, RelayMenu.RELAY_DELAY_INDEX);
         assertEquals(2, RelayMenu.RELAY_QUEUE_SIZE_INDEX);
         assertEquals(3, RelayMenu.RELAY_MAX_QUEUE_SIZE_INDEX);
-        assertEquals(4, RelayMenu.RELAY_DATA_COUNT);
+        assertEquals(4, RelayMenu.RELAY_STRENGTH_INDEX);
+        assertEquals(5, RelayMenu.RELAY_REPEATER_INDEX);
+        assertEquals(6, RelayMenu.RELAY_DATA_COUNT);
         assertEquals(0, RelayMenu.MODE_WIRED);
         assertEquals(1, RelayMenu.MODE_WIRELESS);
         assertEquals(2, RelayMenu.MODE_LINKED);
@@ -47,19 +49,27 @@ final class RelayMenuShapeTest {
         final Method delay = RelayMenu.class.getMethod("relayDelay");
         final Method queueSize = RelayMenu.class.getMethod("relayQueueSize");
         final Method maxQueueSize = RelayMenu.class.getMethod("relayMaxQueueSize");
+        final Method strength = RelayMenu.class.getMethod("relayStrength");
+        final Method repeater = RelayMenu.class.getMethod("relayRepeater");
         final Method modeFor = RelayMenu.class.getMethod("relayModeFor", Container.class);
         final Method delayFor = RelayMenu.class.getMethod("relayDelayFor", Container.class);
         final Method queueSizeFor = RelayMenu.class.getMethod("relayQueueSizeFor", Container.class);
         final Method maxQueueSizeFor = RelayMenu.class.getMethod("relayMaxQueueSizeFor", Container.class);
+        final Method strengthFor = RelayMenu.class.getMethod("relayStrengthFor", Container.class);
+        final Method repeaterFor = RelayMenu.class.getMethod("relayRepeaterFor", Container.class);
 
         assertEquals(int.class, mode.getReturnType());
         assertEquals(int.class, delay.getReturnType());
         assertEquals(int.class, queueSize.getReturnType());
         assertEquals(int.class, maxQueueSize.getReturnType());
+        assertEquals(int.class, strength.getReturnType());
+        assertEquals(int.class, repeater.getReturnType());
         assertEquals(int.class, modeFor.getReturnType());
         assertEquals(int.class, delayFor.getReturnType());
         assertEquals(int.class, queueSizeFor.getReturnType());
         assertEquals(int.class, maxQueueSizeFor.getReturnType());
+        assertEquals(int.class, strengthFor.getReturnType());
+        assertEquals(int.class, repeaterFor.getReturnType());
     }
 
     @Test
@@ -68,5 +78,7 @@ final class RelayMenuShapeTest {
         assertEquals(0, RelayMenu.relayDelayFor(null));
         assertEquals(0, RelayMenu.relayQueueSizeFor(null));
         assertEquals(0, RelayMenu.relayMaxQueueSizeFor(null));
+        assertEquals(0, RelayMenu.relayStrengthFor(null));
+        assertEquals(0, RelayMenu.relayRepeaterFor(null));
     }
 }

@@ -158,7 +158,10 @@
   "gui.neoopencomputers.relay.mode.wired": "Wired relay",
   "gui.neoopencomputers.relay.mode.wireless": "Wireless relay",
   "gui.neoopencomputers.relay.queue": "Queue %s/%s",
+  "gui.neoopencomputers.relay.repeater.disabled": "Repeater disabled",
+  "gui.neoopencomputers.relay.repeater.enabled": "Repeater enabled",
   "gui.neoopencomputers.relay.status": "Relay status",
+  "gui.neoopencomputers.relay.strength": "Wireless strength %s",
   "gui.neoopencomputers.terminal.blank_screen": "Blank terminal screen",
   "gui.neoopencomputers.terminal.no_screen_data": "Waiting for terminal screen data"
 }

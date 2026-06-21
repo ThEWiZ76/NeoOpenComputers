@@ -45,7 +45,7 @@ public class RelayScreen extends AbstractContainerScreen<RelayMenu> {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
         if (isHovering(STATUS_X, STATUS_Y, STATUS_WIDTH, STATUS_HEIGHT, mouseX, mouseY)) {
-            guiGraphics.renderComponentTooltip(font, statusTooltip(menu.relayMode(), menu.relayDelay(), menu.relayQueueSize(), menu.relayMaxQueueSize()), mouseX, mouseY);
+            guiGraphics.renderComponentTooltip(font, statusTooltip(menu.relayMode(), menu.relayDelay(), menu.relayQueueSize(), menu.relayMaxQueueSize(), menu.relayStrength(), menu.relayRepeater()), mouseX, mouseY);
         }
     }
 
@@ -58,6 +58,10 @@ public class RelayScreen extends AbstractContainerScreen<RelayMenu> {
     }
 
     public static List<Component> statusTooltip(final int mode, final int delay, final int queueSize, final int maxQueueSize) {
+        return statusTooltip(mode, delay, queueSize, maxQueueSize, 0, 0);
+    }
+
+    public static List<Component> statusTooltip(final int mode, final int delay, final int queueSize, final int maxQueueSize, final int strength, final int repeater) {
         final List<Component> tooltip = new ArrayList<>();
         tooltip.add(Component.translatable("gui.neoopencomputers.relay.status"));
         tooltip.add(statusLabel(mode));
@@ -66,6 +70,10 @@ public class RelayScreen extends AbstractContainerScreen<RelayMenu> {
         }
         if (maxQueueSize > 0) {
             tooltip.add(Component.translatable("gui.neoopencomputers.relay.queue", queueSize, maxQueueSize));
+        }
+        if (mode == RelayMenu.MODE_WIRELESS || strength > 0) {
+            tooltip.add(Component.translatable("gui.neoopencomputers.relay.strength", strength));
+            tooltip.add(Component.translatable(repeater != 0 ? "gui.neoopencomputers.relay.repeater.enabled" : "gui.neoopencomputers.relay.repeater.disabled"));
         }
         return tooltip;
     }

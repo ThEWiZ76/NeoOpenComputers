@@ -2135,7 +2135,7 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void relayMenuReportsRuntimeStatus(final GameTestHelper helper) {
+    public static void relayMenuReportsRuntimeStatus(final GameTestHelper helper) throws Exception {
         final BlockPos relayPos = new BlockPos(1, 1, 1);
         helper.setBlock(relayPos, ModBlocks.RELAY.get());
         final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
@@ -2144,9 +2144,17 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayDelayFor(relay) == relay.relayDelay(), "Relay delay status mismatch");
         helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayMaxQueueSizeFor(relay) == relay.maxQueueSize(), "Relay max queue status mismatch");
         helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayQueueSizeFor(relay) == 0, "Empty relay reported queued packets");
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayStrengthFor(relay) == 0, "Empty relay reported wireless strength");
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayRepeaterFor(relay) == 1, "Relay repeater default status mismatch");
 
         relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()));
         helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayModeFor(relay) == li.cil.oc.common.menu.RelayMenu.MODE_WIRELESS, "Wireless relay did not report wireless mode");
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayStrengthFor(relay) == 400, "Wireless relay did not report max strength");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) relay.sidedNode(Direction.WEST);
+        component.invoke("setStrength", null, 12D);
+        component.invoke("setRepeater", null, false);
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayStrengthFor(relay) == 12, "Wireless relay did not report configured strength");
+        helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayRepeaterFor(relay) == 0, "Wireless relay did not report repeater state");
 
         relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.LINKED_CARD.get()));
         helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayModeFor(relay) == li.cil.oc.common.menu.RelayMenu.MODE_LINKED, "Linked relay did not report linked mode");

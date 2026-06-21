@@ -225,6 +225,14 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         return linkedEnabled;
     }
 
+    public int wirelessStrength() {
+        return (int) Math.round(wirelessStrength);
+    }
+
+    public boolean isRepeaterEnabled() {
+        return isRepeater;
+    }
+
     @Override
     public int x() {
         return worldPosition.getX();

@@ -20,7 +20,9 @@ public class RelayMenu extends AbstractContainerMenu {
     public static final int RELAY_DELAY_INDEX = 1;
     public static final int RELAY_QUEUE_SIZE_INDEX = 2;
     public static final int RELAY_MAX_QUEUE_SIZE_INDEX = 3;
-    public static final int RELAY_DATA_COUNT = 4;
+    public static final int RELAY_STRENGTH_INDEX = 4;
+    public static final int RELAY_REPEATER_INDEX = 5;
+    public static final int RELAY_DATA_COUNT = 6;
 
     public static final int MODE_WIRED = 0;
     public static final int MODE_WIRELESS = 1;
@@ -102,6 +104,14 @@ public class RelayMenu extends AbstractContainerMenu {
         return relayData.get(RELAY_MAX_QUEUE_SIZE_INDEX);
     }
 
+    public int relayStrength() {
+        return relayData.get(RELAY_STRENGTH_INDEX);
+    }
+
+    public int relayRepeater() {
+        return relayData.get(RELAY_REPEATER_INDEX);
+    }
+
     public static int relayModeFor(final Container relayInventory) {
         if (!(relayInventory instanceof RelayBlockEntity relay)) {
             return MODE_WIRED;
@@ -122,6 +132,14 @@ public class RelayMenu extends AbstractContainerMenu {
 
     public static int relayMaxQueueSizeFor(final Container relayInventory) {
         return relayInventory instanceof RelayBlockEntity relay ? relay.maxQueueSize() : 0;
+    }
+
+    public static int relayStrengthFor(final Container relayInventory) {
+        return relayInventory instanceof RelayBlockEntity relay ? relay.wirelessStrength() : 0;
+    }
+
+    public static int relayRepeaterFor(final Container relayInventory) {
+        return relayInventory instanceof RelayBlockEntity relay && relay.isRepeaterEnabled() ? 1 : 0;
     }
 
     @Override
@@ -151,6 +169,8 @@ public class RelayMenu extends AbstractContainerMenu {
                     case RELAY_DELAY_INDEX -> relayDelayFor(relayInventory);
                     case RELAY_QUEUE_SIZE_INDEX -> relayQueueSizeFor(relayInventory);
                     case RELAY_MAX_QUEUE_SIZE_INDEX -> relayMaxQueueSizeFor(relayInventory);
+                    case RELAY_STRENGTH_INDEX -> relayStrengthFor(relayInventory);
+                    case RELAY_REPEATER_INDEX -> relayRepeaterFor(relayInventory);
                     default -> 0;
                 };
             }
