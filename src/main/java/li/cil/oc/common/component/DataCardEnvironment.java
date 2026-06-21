@@ -261,9 +261,19 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     private byte[] aes(final int mode, final Context context, final Arguments args) throws Exception {
         try {
             final byte[] data = costedData(context, args, SIMPLE_COST, SIMPLE_BYTE_COST);
+            final byte[] key = checkData(args, 1);
+            if (key.length != 16) {
+                throw new IllegalArgumentException("expected a 128-bit AES key");
+            }
+            final byte[] iv = checkData(args, 2);
+            if (iv.length != 16) {
+                throw new IllegalArgumentException("expected a 128-bit AES IV");
+            }
             final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(mode, new SecretKeySpec(checkData(args, 1), "AES"), new IvParameterSpec(checkData(args, 2)));
+            cipher.init(mode, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
             return cipher.doFinal(data);
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (GeneralSecurityException e) {
             throw new IllegalArgumentException("invalid aes input", e);
         }

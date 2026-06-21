@@ -112,6 +112,23 @@ final class DataCardEnvironmentTest {
     }
 
     @Test
+    void tierTwoRejectsInvalidAesKeyAndIvLengths() {
+        OpenComputersApi.initialize();
+        DataCardEnvironment card = new DataCardEnvironment(1);
+        byte[] data = "hello world".getBytes(StandardCharsets.UTF_8);
+        byte[] key = "too short".getBytes(StandardCharsets.UTF_8);
+        byte[] iv = "abcdef0123456789".getBytes(StandardCharsets.UTF_8);
+
+        IllegalArgumentException keyError = assertThrows(IllegalArgumentException.class, () -> card.encrypt(null, new TestArguments(data, key, iv)));
+        assertEquals("expected a 128-bit AES key", keyError.getMessage());
+
+        byte[] validKey = "0123456789abcdef".getBytes(StandardCharsets.UTF_8);
+        byte[] shortIv = "short".getBytes(StandardCharsets.UTF_8);
+        IllegalArgumentException ivError = assertThrows(IllegalArgumentException.class, () -> card.encrypt(null, new TestArguments(data, validKey, shortIv)));
+        assertEquals("expected a 128-bit AES IV", ivError.getMessage());
+    }
+
+    @Test
     void exposesTierThreeCallbacks() throws NoSuchMethodException {
         assertCallback("generateKeyPair");
         assertCallback("deserializeKey");
