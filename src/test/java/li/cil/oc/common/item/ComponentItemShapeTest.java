@@ -271,6 +271,7 @@ final class ComponentItemShapeTest {
         final Constructor<TerminalServerItem> constructor = TerminalServerItem.class.getConstructor(Item.Properties.class);
 
         assertTrue(Item.class.isAssignableFrom(TerminalServerItem.class));
+        assertTrue(li.cil.oc.api.driver.DriverItem.class.isAssignableFrom(TerminalServerItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
     }
 
@@ -291,6 +292,7 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(ServerItem.class));
         assertTrue(Tiered.class.isAssignableFrom(ServerItem.class));
+        assertTrue(li.cil.oc.api.driver.DriverItem.class.isAssignableFrom(ServerItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
         assertArrayEquals(new Class<?>[0], ServerItem.class.getDeclaredMethod("tier").getParameterTypes());
     }

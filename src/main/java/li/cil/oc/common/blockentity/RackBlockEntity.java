@@ -5,11 +5,10 @@ import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Rack;
+import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModBlockEntities;
-import li.cil.oc.common.ModItems;
-import li.cil.oc.common.item.ServerItem;
-import li.cil.oc.common.item.TerminalServerItem;
+import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -31,9 +30,11 @@ public class RackBlockEntity extends BlockEntity implements Rack {
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final CompoundTag[] mountableData = new CompoundTag[CONTAINER_SIZE];
+    private final RackMountable[] mountables = new RackMountable[CONTAINER_SIZE];
 
     public RackBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.RACK.get(), pos, blockState);
+        OpenComputersApi.initialize();
         for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
             mountableData[slot] = new CompoundTag();
         }
@@ -45,12 +46,17 @@ public class RackBlockEntity extends BlockEntity implements Rack {
 
     @Override
     public int indexOfMountable(final RackMountable mountable) {
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            if (mountables[slot] == mountable) {
+                return slot;
+            }
+        }
         return -1;
     }
 
     @Override
     public RackMountable getMountable(final int slot) {
-        return null;
+        return isValidSlot(slot) ? mountables[slot] : null;
     }
 
     @Override
@@ -61,6 +67,7 @@ public class RackBlockEntity extends BlockEntity implements Rack {
     @Override
     public void markChanged(final int slot) {
         if (isValidSlot(slot)) {
+            saveMountableData(slot);
             setChanged();
         }
     }
@@ -145,6 +152,7 @@ public class RackBlockEntity extends BlockEntity implements Rack {
         }
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
+            removeMountable(slot);
             setChanged();
         }
         return removed;
@@ -152,7 +160,14 @@ public class RackBlockEntity extends BlockEntity implements Rack {
 
     @Override
     public ItemStack removeItemNoUpdate(final int slot) {
-        return isValidSlot(slot) ? ContainerHelper.takeItem(items, slot) : ItemStack.EMPTY;
+        if (!isValidSlot(slot)) {
+            return ItemStack.EMPTY;
+        }
+        final ItemStack removed = ContainerHelper.takeItem(items, slot);
+        if (!removed.isEmpty()) {
+            removeMountable(slot);
+        }
+        return removed;
     }
 
     @Override
@@ -160,11 +175,13 @@ public class RackBlockEntity extends BlockEntity implements Rack {
         if (!isValidSlot(slot) || (!stack.isEmpty() && !canPlaceItem(slot, stack))) {
             return;
         }
+        removeMountable(slot);
         final ItemStack stored = stack.copy();
         if (!stored.isEmpty() && stored.getCount() > getMaxStackSize()) {
             stored.setCount(getMaxStackSize());
         }
         items.set(slot, stored);
+        refreshMountable(slot);
         setChanged();
     }
 
@@ -186,6 +203,7 @@ public class RackBlockEntity extends BlockEntity implements Rack {
     @Override
     public void clearContent() {
         for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            removeMountable(slot);
             items.set(slot, ItemStack.EMPTY);
         }
         setChanged();
@@ -201,17 +219,31 @@ public class RackBlockEntity extends BlockEntity implements Rack {
                 mountableData[slot] = data.getCompound(slot);
             }
         }
+        refreshMountables();
     }
 
     @Override
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
+        saveMountableData();
         ContainerHelper.saveAllItems(tag, items, registries);
         final ListTag data = new ListTag();
         for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
             data.add(mountableData[slot] == null ? new CompoundTag() : mountableData[slot]);
         }
         tag.put(TAG_MOUNTABLE_DATA, data);
+    }
+
+    @Override
+    public void onChunkUnloaded() {
+        super.onChunkUnloaded();
+        removeMountables();
+    }
+
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        removeMountables();
     }
 
     private static boolean isValidSlot(final int slot) {
@@ -222,13 +254,60 @@ public class RackBlockEntity extends BlockEntity implements Rack {
         if (stack.isEmpty()) {
             return false;
         }
-        if (stack.getItem() instanceof ServerItem || stack.getItem() instanceof TerminalServerItem) {
-            return true;
-        }
-        if (stack.is(ModItems.TERMINAL_SERVER.get())) {
-            return true;
-        }
         final DriverItem driver = Driver.driverFor(stack);
         return driver != null && acceptsDriverSlot(driver.slot(stack));
+    }
+
+    private void refreshMountables() {
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            refreshMountable(slot);
+        }
+    }
+
+    private void refreshMountable(final int slot) {
+        removeMountable(slot);
+        final ItemStack stack = items.get(slot);
+        final DriverItem driver = Driver.driverFor(stack);
+        if (driver == null || !acceptsDriverSlot(driver.slot(stack))) {
+            return;
+        }
+        final ManagedEnvironment environment = driver.createEnvironment(stack, this);
+        if (environment instanceof RackMountable rackMountable) {
+            rackMountable.load(mountableData[slot]);
+            mountables[slot] = rackMountable;
+        }
+    }
+
+    private void removeMountables() {
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            removeMountable(slot);
+        }
+    }
+
+    private void removeMountable(final int slot) {
+        if (!isValidSlot(slot)) {
+            return;
+        }
+        saveMountableData(slot);
+        final RackMountable mountable = mountables[slot];
+        if (mountable != null && mountable.node() != null) {
+            mountable.node().remove();
+        }
+        mountables[slot] = null;
+    }
+
+    private void saveMountableData() {
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            saveMountableData(slot);
+        }
+    }
+
+    private void saveMountableData(final int slot) {
+        if (!isValidSlot(slot) || mountables[slot] == null) {
+            return;
+        }
+        final CompoundTag data = mountables[slot].getData();
+        mountables[slot].save(data);
+        mountableData[slot] = data;
     }
 }

@@ -1129,6 +1129,9 @@ public final class NeoOpenComputersGameTests {
         assertMotionSensorItemDriver(helper, new ItemStack(ModItems.MOTION_SENSOR.get()));
         assertGeolyzerItemDriver(helper, new ItemStack(ModItems.GEOLYZER.get()));
         assertTransposerItemDriver(helper, new ItemStack(ModItems.TRANSPOSER.get()));
+        assertRackMountableDriver(helper, new ItemStack(ModItems.SERVER_TIER1.get()), 0);
+        assertRackMountableDriver(helper, new ItemStack(ModItems.SERVER_TIER3.get()), 2);
+        assertRackMountableDriver(helper, new ItemStack(ModItems.TERMINAL_SERVER.get()), 0);
         helper.succeed();
     }
 
@@ -1676,6 +1679,10 @@ public final class NeoOpenComputersGameTests {
         final ItemStack server = new ItemStack(ModItems.SERVER_TIER2.get());
         rack.setItem(0, server.copy());
         helper.assertTrue(rack.getItem(0).is(ModItems.SERVER_TIER2.get()), "Rack did not store server");
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        helper.assertTrue(mountable != null, "Rack did not create server mountable");
+        helper.assertTrue(mountable.node() != null, "Rack mountable has no node");
+        helper.assertTrue(rack.indexOfMountable(mountable) == 0, "Rack mountable index mismatch");
         helper.succeed();
     }
 
@@ -2882,6 +2889,16 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("transposer".equals(component.name()), "Transposer item component name mismatch for " + stack);
         final Object[] size = invokeComponent(helper, component, "getInventorySize", Direction.EAST.get3DDataValue());
         helper.assertTrue(size.length == 1 && Integer.valueOf(27).equals(size[0]), "Transposer item did not inspect adjacent chest");
+    }
+
+    private static void assertRackMountableDriver(final GameTestHelper helper, final ItemStack stack, final int tier) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No rack mountable driver for " + stack);
+        helper.assertTrue(Slot.RackMountable.equals(driver.slot(stack)), "Expected rack mountable slot for " + stack);
+        helper.assertTrue(driver.tier(stack) == tier, "Expected rack mountable tier " + tier + " for " + stack + " but got " + driver.tier(stack));
+        final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticEnvironmentHost(helper));
+        helper.assertTrue(environment instanceof li.cil.oc.api.component.RackMountable, "Driver did not create rack mountable for " + stack);
+        helper.assertTrue(environment.node() != null, "Rack mountable has no node for " + stack);
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {

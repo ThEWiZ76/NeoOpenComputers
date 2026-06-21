@@ -23,6 +23,7 @@ public final class ModDriverCatalog {
                 ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(), ModItems.APU_TIER1.get(), ModItems.APU_TIER2.get(),
                 ModItems.CARD_CONTAINER_TIER1.get(), ModItems.CARD_CONTAINER_TIER2.get(), ModItems.CARD_CONTAINER_TIER3.get(),
                 ModItems.TABLET.get(),
+                ModItems.SERVER_TIER1.get(), ModItems.SERVER_TIER2.get(), ModItems.SERVER_TIER3.get(), ModItems.TERMINAL_SERVER.get(),
                 ModItems.BATTERY_UPGRADE_TIER1.get(), ModItems.BATTERY_UPGRADE_TIER2.get(), ModItems.BATTERY_UPGRADE_TIER3.get(),
                 ModItems.DATA_CARD_TIER1.get(), ModItems.DATA_CARD_TIER2.get(), ModItems.DATA_CARD_TIER3.get(),
                 ModItems.DATABASE_UPGRADE_TIER1.get(), ModItems.DATABASE_UPGRADE_TIER2.get(), ModItems.DATABASE_UPGRADE_TIER3.get(),
