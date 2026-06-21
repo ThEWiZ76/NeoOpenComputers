@@ -474,6 +474,24 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void savesAndLoadsMachineUsers() throws Exception {
+        OpenComputersApi.initialize();
+        Machine saved = API.machine.create(null);
+        saved.addUser("alice");
+        saved.addUser("bob");
+        CompoundTag tag = new CompoundTag();
+
+        saved.save(tag);
+
+        Machine loaded = API.machine.create(null);
+        loaded.load(tag);
+
+        assertArrayEquals(new String[]{"alice", "bob"}, loaded.users());
+        assertTrue(loaded.canInteract("alice"));
+        assertFalse(loaded.canInteract("carol"));
+    }
+
+    @Test
     void hostChangedDropsArchitectureWhenProcessorRemoved() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();

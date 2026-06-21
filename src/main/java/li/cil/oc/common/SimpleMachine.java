@@ -25,6 +25,8 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.machine.MachineBoundArchitecture;
 import li.cil.oc.common.machine.ProgramLocations;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.world.item.ItemStack;
 
 import java.lang.reflect.InvocationTargetException;
@@ -44,6 +46,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private static final int DEFAULT_TEMPORARY_FILESYSTEM_CAPACITY = 1_024 * 1_024;
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
+    private static final String USERS_TAG = "users";
     private static final String ARCHITECTURE_TAG = "architecture";
     private static final String CPU_TIME_NANOS_TAG = "cpuTimeNanos";
     private static final String CHECKED_SIGNAL_MESSAGE = "computer.checked_signal";
@@ -632,6 +635,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         startedAtNanos = running ? nanoTime.getAsLong() : -1L;
         cpuTimeNanos = nbt.getLong(CPU_TIME_NANOS_TAG);
         lastError = nbt.contains(LAST_ERROR_TAG) ? nbt.getString(LAST_ERROR_TAG) : null;
+        users.clear();
+        final ListTag userTags = nbt.getList(USERS_TAG, StringTag.TAG_STRING);
+        for (int i = 0; i < userTags.size(); i++) {
+            users.add(userTags.getString(i));
+        }
         if (architecture != null && nbt.contains(ARCHITECTURE_TAG)) {
             architecture.load(nbt.getCompound(ARCHITECTURE_TAG));
         }
@@ -648,6 +656,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (lastError != null) {
             nbt.putString(LAST_ERROR_TAG, lastError);
         }
+        final ListTag userTags = new ListTag();
+        for (String user : users) {
+            userTags.add(StringTag.valueOf(user));
+        }
+        nbt.put(USERS_TAG, userTags);
         if (architecture != null) {
             final CompoundTag architectureTag = new CompoundTag();
             architecture.save(architectureTag);
