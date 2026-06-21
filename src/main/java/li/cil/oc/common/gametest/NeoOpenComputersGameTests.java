@@ -1294,11 +1294,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void craftingUpgradeRejectsNonRobotAgentHost(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.CRAFTING_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for crafting upgrade");
+
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.CRAFTING_UPGRADE.get()), new AgentTestHost(helper));
+        helper.assertTrue(environment == null, "Crafting upgrade created environment for non-robot agent host");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void craftingUpgradeCraftsTopLeftInventoryGrid(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.CRAFTING_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for crafting upgrade");
 
-        final AgentTestHost host = new AgentTestHost(helper);
+        final RobotTestHost host = new RobotTestHost(helper);
         host.mainInventory().setItem(0, new ItemStack(Items.OAK_LOG));
         final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.CRAFTING_UPGRADE.get()), host);
         helper.assertTrue(environment != null, "Crafting upgrade did not create crafting environment");
@@ -4654,7 +4664,7 @@ public final class NeoOpenComputersGameTests {
         }
     }
 
-    private static final class AgentTestHost implements li.cil.oc.api.internal.Agent {
+    private static class AgentTestHost implements li.cil.oc.api.internal.Agent {
         private final GameTestHelper helper;
         private final SimpleContainer mainInventory = new SimpleContainer(9);
         private final SimpleContainer equipmentInventory = new SimpleContainer(4);
@@ -4782,6 +4792,117 @@ public final class NeoOpenComputersGameTests {
         @Override
         public Direction toLocal(final Direction value) {
             return value;
+        }
+    }
+
+    private static final class RobotTestHost extends AgentTestHost implements li.cil.oc.api.internal.Robot {
+        private RobotTestHost(final GameTestHelper helper) {
+            super(helper);
+        }
+
+        @Override
+        public Node node() {
+            return null;
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
+        }
+
+        @Override
+        public int tier() {
+            return 0;
+        }
+
+        @Override
+        public int componentCount() {
+            return 0;
+        }
+
+        @Override
+        public li.cil.oc.api.network.Environment getComponentInSlot(final int index) {
+            return null;
+        }
+
+        @Override
+        public void synchronizeSlot(final int slot) {
+        }
+
+        @Override
+        public boolean shouldAnimate() {
+            return false;
+        }
+
+        @Override
+        public int getContainerSize() {
+            return mainInventory().getContainerSize();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return mainInventory().isEmpty();
+        }
+
+        @Override
+        public ItemStack getItem(final int slot) {
+            return mainInventory().getItem(slot);
+        }
+
+        @Override
+        public ItemStack removeItem(final int slot, final int amount) {
+            return mainInventory().removeItem(slot, amount);
+        }
+
+        @Override
+        public ItemStack removeItemNoUpdate(final int slot) {
+            return mainInventory().removeItemNoUpdate(slot);
+        }
+
+        @Override
+        public void setItem(final int slot, final ItemStack stack) {
+            mainInventory().setItem(slot, stack);
+        }
+
+        @Override
+        public void setChanged() {
+            mainInventory().setChanged();
+        }
+
+        @Override
+        public boolean stillValid(final Player player) {
+            return true;
+        }
+
+        @Override
+        public void clearContent() {
+            mainInventory().clearContent();
+        }
+
+        @Override
+        public int[] getSlotsForFace(final Direction side) {
+            final int[] slots = new int[getContainerSize()];
+            for (int slot = 0; slot < slots.length; slot++) {
+                slots[slot] = slot;
+            }
+            return slots;
+        }
+
+        @Override
+        public boolean canPlaceItemThroughFace(final int slot, final ItemStack stack, final Direction side) {
+            return true;
+        }
+
+        @Override
+        public boolean canTakeItemThroughFace(final int slot, final ItemStack stack, final Direction side) {
+            return true;
         }
     }
 

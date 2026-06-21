@@ -2,7 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.driver.item.Slot;
-import li.cil.oc.api.internal.Agent;
+import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.CraftingUpgradeEnvironment;
@@ -27,7 +27,7 @@ public class CraftingUpgradeItem extends Item implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return host instanceof Agent agent ? new CraftingUpgradeEnvironment(agent) : null;
+        return host instanceof Robot robot ? new CraftingUpgradeEnvironment(robot) : null;
     }
 
     @Override
