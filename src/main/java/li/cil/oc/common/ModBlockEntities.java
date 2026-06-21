@@ -12,6 +12,7 @@ import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
+import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
@@ -96,6 +97,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.RACK_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(RackBlockEntity::new, ModBlocks.RACK.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RaidBlockEntity>> RAID =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.RAID_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(RaidBlockEntity::new, ModBlocks.RAID.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RedstoneIoBlockEntity>> REDSTONE_IO =
         BLOCK_ENTITY_TYPES.register(

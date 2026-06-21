@@ -12,6 +12,7 @@ import li.cil.oc.common.block.HologramBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
 import li.cil.oc.common.block.RackBlock;
+import li.cil.oc.common.block.RaidBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.TransposerBlock;
@@ -100,7 +101,7 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> RAID = BLOCKS.register(
         ModContentIds.RAID,
-        () -> new Block(raidProperties()));
+        () -> new RaidBlock(raidProperties()));
 
     public static final DeferredBlock<Block> REDSTONE_IO = BLOCKS.register(
         ModContentIds.REDSTONE_IO,

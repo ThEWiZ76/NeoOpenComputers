@@ -38,6 +38,7 @@ import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
+import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
@@ -1819,6 +1820,35 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(analysis.contains("Component: screen"), "Analyzer did not report rack terminal screen:\n" + analysis);
         helper.assertTrue(analysis.contains("Component: keyboard"), "Analyzer did not report rack terminal keyboard:\n" + analysis);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void raidCreatesFilesystemWhenFilledWithHardDisks(final GameTestHelper helper) {
+        final BlockPos raidPos = new BlockPos(1, 1, 1);
+        helper.setBlock(raidPos, ModBlocks.RAID.get());
+        final RaidBlockEntity raid = helper.getBlockEntity(raidPos);
+
+        helper.assertTrue(raid.getContainerSize() == RaidBlockEntity.CONTAINER_SIZE, "RAID slot count mismatch");
+        helper.assertTrue(raid.canPlaceItem(0, new ItemStack(ModItems.HDD_TIER1.get())), "RAID rejected tier 1 hard disk");
+        helper.assertTrue(raid.canPlaceItem(1, new ItemStack(ModItems.HDD_TIER2.get())), "RAID rejected tier 2 hard disk");
+        helper.assertTrue(raid.canPlaceItem(2, new ItemStack(ModItems.HDD_TIER3.get())), "RAID rejected tier 3 hard disk");
+        helper.assertTrue(!raid.canPlaceItem(0, new ItemStack(ModItems.FLOPPY.get())), "RAID accepted a floppy");
+
+        raid.setItem(0, new ItemStack(ModItems.HDD_TIER1.get()));
+        raid.setItem(1, new ItemStack(ModItems.HDD_TIER2.get()));
+        helper.assertTrue(AnalyzerItem.describe(raid, Direction.NORTH).isEmpty(), "Partial RAID exposed a filesystem");
+
+        raid.setItem(2, new ItemStack(ModItems.HDD_TIER3.get()));
+        final Node[] nodes = raid.onAnalyze(null, Direction.NORTH, 0, 0, 0);
+        helper.assertTrue(nodes.length == 1 && nodes[0] instanceof li.cil.oc.api.network.Component, "Full RAID did not expose one filesystem node");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) nodes[0];
+        helper.assertTrue("filesystem".equals(component.name()), "RAID component mismatch: " + component.name());
+        assertSingleResult(helper, invokeComponent(helper, component, "spaceTotal"), 7L * 1024L * 1024L, "RAID filesystem capacity");
+
+        final List<Component> lines = AnalyzerItem.describe(raid, Direction.NORTH);
+        final String analysis = lines.stream().map(Component::getString).collect(java.util.stream.Collectors.joining("\n"));
+        helper.assertTrue(analysis.contains("Component: filesystem"), "Analyzer did not report RAID filesystem:\n" + analysis);
         helper.succeed();
     }
 
