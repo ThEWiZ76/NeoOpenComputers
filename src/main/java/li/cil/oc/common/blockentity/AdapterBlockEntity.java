@@ -2,6 +2,7 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
@@ -29,8 +30,9 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
-public class AdapterBlockEntity extends BlockEntity implements Adapter, EnvironmentHost, Analyzable {
+public class AdapterBlockEntity extends BlockEntity implements Adapter, EnvironmentHost, Analyzable, DeviceInfo {
     private static final String TAG_NODE = "node";
     private static final String TAG_BLOCKS = "oc:adapter.blocks";
     private static final String TAG_ITEMS = "oc:items";
@@ -40,6 +42,12 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     private static final int SIDE_COUNT = 6;
     private static final int UPGRADE_SLOT = 0;
     private static final int CONTAINER_SIZE = 1;
+    private static final Map<String, String> DEVICE_INFO = Map.of(
+        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Bus,
+        DeviceInfo.DeviceAttribute.Description, "Adapter",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Product, "Multiplug Ext.1"
+    );
 
     private Node node;
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
@@ -195,6 +203,11 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     @Override
     public void markChanged() {
         setChanged();
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return DEVICE_INFO;
     }
 
     @Override
