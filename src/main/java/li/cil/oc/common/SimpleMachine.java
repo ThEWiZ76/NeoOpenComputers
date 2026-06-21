@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Architecture;
@@ -34,7 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.LongSupplier;
 
-final class SimpleMachine extends AbstractManagedEnvironment implements Machine {
+final class SimpleMachine extends AbstractManagedEnvironment implements Machine, DeviceInfo {
     private static final double NANOS_PER_SECOND = 1_000_000_000D;
     private static final long NANOS_PER_TICK = 50_000_000L;
     private static final double DEFAULT_BOOT_ENERGY_BUFFER = 1_000D;
@@ -166,6 +167,36 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     @Override
     public Architecture architecture() {
         return architecture;
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return host instanceof DeviceInfo deviceInfo ? deviceInfo.getDeviceInfo() : null;
+    }
+
+    @Callback(doc = "function():table -- Collect information on all connected devices.")
+    public Object[] getDeviceInfo(final li.cil.oc.api.machine.Context context, final Arguments arguments) {
+        if (context != null) {
+            context.pause(1);
+        }
+        if (node() == null || node().network() == null) {
+            return new Object[]{Map.of()};
+        }
+
+        final Map<String, Map<String, String>> devices = new LinkedHashMap<>();
+        for (li.cil.oc.api.network.Node reachable : node().network().nodes()) {
+            if (reachable.address() == null || !(reachable.host() instanceof DeviceInfo deviceInfo)) {
+                continue;
+            }
+            if (!canReportDeviceInfo(reachable)) {
+                continue;
+            }
+            final Map<String, String> info = deviceInfo.getDeviceInfo();
+            if (info != null) {
+                devices.put(reachable.address(), info);
+            }
+        }
+        return new Object[]{devices};
     }
 
     @Override
@@ -596,6 +627,13 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
         if (architecture instanceof MachineBoundArchitecture boundArchitecture) {
             boundArchitecture.bind(this);
         }
+    }
+
+    private boolean canReportDeviceInfo(final li.cil.oc.api.network.Node reachable) {
+        if (reachable instanceof Component component) {
+            return reachable == node() || component.canBeSeenFrom(node());
+        }
+        return reachable.canBeReachedFrom(node());
     }
 
     private static Map<String, Method> discoverCallbacks(final Object value) {

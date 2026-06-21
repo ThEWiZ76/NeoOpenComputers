@@ -14,6 +14,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.LongSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -139,6 +141,35 @@ final class MachineRegistryTest {
         assertEquals(1, machine.componentCount());
         assertTrue(machine.methods(fileSystemEnvironment.node().address()).containsKey("isReadOnly"));
         assertArrayEquals(new Object[]{false}, machine.invoke(fileSystemEnvironment.node().address(), "isReadOnly", new Object[0]));
+    }
+
+    @Test
+    void machineDelegatesDeviceInfoToHost() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(new TestHost());
+
+        assertTrue(machine instanceof DeviceInfo);
+        Map<String, String> metadata = ((DeviceInfo) machine).getDeviceInfo();
+        assertEquals(DeviceInfo.DeviceClass.System, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Test host", metadata.get(DeviceInfo.DeviceAttribute.Description));
+    }
+
+    @Test
+    void computerDeviceInfoCallbackReportsReachableDeviceInfo() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(new TestHost());
+        DeviceInfoEnvironment environment = new DeviceInfoEnvironment();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+
+        Object[] result = machine.invoke(machine.node().address(), "getDeviceInfo", new Object[0]);
+
+        assertEquals(1, result.length);
+        Map<?, ?> deviceInfo = assertInstanceOf(Map.class, result[0]);
+        assertTrue(deviceInfo.containsKey(machine.node().address()));
+        assertTrue(deviceInfo.containsKey(environment.node().address()));
+        Map<?, ?> environmentInfo = assertInstanceOf(Map.class, deviceInfo.get(environment.node().address()));
+        assertEquals("Test peripheral", environmentInfo.get(DeviceInfo.DeviceAttribute.Description));
     }
 
     @Test
@@ -781,6 +812,26 @@ final class MachineRegistryTest {
         }
     }
 
+    private static final class DeviceInfoEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+        private static final Map<String, String> DEVICE_INFO = Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
+            DeviceInfo.DeviceAttribute.Description, "Test peripheral",
+            DeviceInfo.DeviceAttribute.Vendor, "NeoOpenComputers",
+            DeviceInfo.DeviceAttribute.Product, "Test Device"
+        );
+
+        private DeviceInfoEnvironment() {
+            setNode(Network.newNode(this, Visibility.Network)
+                .withComponent("test_device", Visibility.Network)
+                .create());
+        }
+
+        @Override
+        public Map<String, String> getDeviceInfo() {
+            return DEVICE_INFO;
+        }
+    }
+
     private static final class SavingDriver extends TestDriver {
         private final List<SavingEnvironment> environments = new ArrayList<>();
 
@@ -814,7 +865,13 @@ final class MachineRegistryTest {
         }
     }
 
-    private static final class TestHost implements MachineHost {
+    private static final class TestHost implements MachineHost, DeviceInfo {
+        private static final Map<String, String> DEVICE_INFO = Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.System,
+            DeviceInfo.DeviceAttribute.Description, "Test host",
+            DeviceInfo.DeviceAttribute.Vendor, "NeoOpenComputers",
+            DeviceInfo.DeviceAttribute.Product, "Test Computer"
+        );
         private Iterable<ItemStack> components = Collections.singletonList(null);
 
         @Override
@@ -862,6 +919,11 @@ final class MachineRegistryTest {
 
         @Override
         public void markChanged() {
+        }
+
+        @Override
+        public Map<String, String> getDeviceInfo() {
+            return DEVICE_INFO;
         }
     }
 
