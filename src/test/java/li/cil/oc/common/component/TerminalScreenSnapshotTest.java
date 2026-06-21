@@ -30,4 +30,14 @@ final class TerminalScreenSnapshotTest {
         assertEquals("neo", loaded.line(0));
         assertEquals("oc", loaded.line(1));
     }
+
+    @Test
+    void comparesSnapshotContents() {
+        final TerminalScreenSnapshot first = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
+        final TerminalScreenSnapshot same = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
+        final TerminalScreenSnapshot different = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "open"});
+
+        assertEquals(true, first.contentEquals(same));
+        assertEquals(false, first.contentEquals(different));
+    }
 }

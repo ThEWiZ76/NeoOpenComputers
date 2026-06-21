@@ -31,6 +31,13 @@ public record TerminalScreenSnapshot(int width, int height, String[] lines) {
         return row >= 0 && row < lines.length ? lines[row] : "";
     }
 
+    public boolean contentEquals(final TerminalScreenSnapshot other) {
+        return other != null &&
+            width == other.width &&
+            height == other.height &&
+            Arrays.equals(lines, other.lines);
+    }
+
     public void save(final CompoundTag tag) {
         tag.putInt(TAG_WIDTH, width);
         tag.putInt(TAG_HEIGHT, height);

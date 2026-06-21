@@ -3,10 +3,13 @@ package li.cil.oc.common.menu;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
+import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class TerminalMenu extends AbstractContainerMenu {
     public static final int TERMINAL_SLOT_COUNT = 0;
@@ -14,6 +17,7 @@ public class TerminalMenu extends AbstractContainerMenu {
 
     private TerminalScreenSnapshot snapshot;
     private final TerminalServerRackMountableEnvironment terminalServer;
+    private final Player player;
 
     public TerminalMenu(final int containerId, final Inventory playerInventory) {
         this(containerId, playerInventory, new TerminalScreenSnapshot(0, 0, new String[0]));
@@ -27,6 +31,7 @@ public class TerminalMenu extends AbstractContainerMenu {
         super(ModMenus.TERMINAL.get(), containerId);
         this.snapshot = snapshot == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : snapshot;
         this.terminalServer = terminalServer;
+        this.player = playerInventory == null ? null : playerInventory.player;
     }
 
     public TerminalScreenSnapshot snapshot() {
@@ -39,6 +44,27 @@ public class TerminalMenu extends AbstractContainerMenu {
 
     public void updateSnapshot(final TerminalScreenSnapshot snapshot) {
         this.snapshot = snapshot == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : snapshot;
+    }
+
+    @Override
+    public void broadcastChanges() {
+        super.broadcastChanges();
+        final TerminalScreenSnapshotPayload payload = changedSnapshotPayload();
+        if (payload != null && player instanceof ServerPlayer serverPlayer) {
+            PacketDistributor.sendToPlayer(serverPlayer, payload);
+        }
+    }
+
+    TerminalScreenSnapshotPayload changedSnapshotPayload() {
+        if (terminalServer == null) {
+            return null;
+        }
+        final TerminalScreenSnapshot currentSnapshot = terminalServer.screenSnapshot();
+        if (snapshot.contentEquals(currentSnapshot)) {
+            return null;
+        }
+        updateSnapshot(currentSnapshot);
+        return new TerminalScreenSnapshotPayload(containerId, currentSnapshot);
     }
 
     @Override

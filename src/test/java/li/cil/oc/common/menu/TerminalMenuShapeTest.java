@@ -2,6 +2,7 @@ package li.cil.oc.common.menu;
 
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
+import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.junit.jupiter.api.Test;
@@ -55,6 +56,13 @@ final class TerminalMenuShapeTest {
     }
 
     @Test
+    void terminalMenuCanCreateChangedSnapshotPayload() throws NoSuchMethodException {
+        final Method method = TerminalMenu.class.getDeclaredMethod("changedSnapshotPayload");
+
+        assertEquals(TerminalScreenSnapshotPayload.class, method.getReturnType());
+    }
+
+    @Test
     void terminalMenuExposesTerminalServerTarget() throws NoSuchMethodException {
         final Method method = TerminalMenu.class.getMethod("terminalServer");
 
@@ -69,6 +77,13 @@ final class TerminalMenuShapeTest {
 
         assertEquals(3, menu.snapshot().width());
         assertEquals("new", menu.snapshot().line(0));
+    }
+
+    @Test
+    void terminalMenuDoesNotCreateChangedSnapshotPayloadWithoutServerTarget() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu();
+
+        assertEquals(null, menu.changedSnapshotPayload());
     }
 
     private static TerminalMenu allocateMenu() throws ReflectiveOperationException {
