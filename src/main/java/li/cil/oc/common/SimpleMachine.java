@@ -59,6 +59,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private boolean paused;
     private String lastError;
     private double costPerTick;
+    private int maxComponents;
     private long startedAtNanos = -1L;
     private long sleepUntilNanos = -1L;
     private long pauseUntilNanos = -1L;
@@ -111,6 +112,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
             }
         }
         componentEnvironments.clear();
+        maxComponents = 0;
         if (architecture != null) {
             architecture.close();
             architecture = null;
@@ -136,13 +138,16 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
                 continue;
             }
 
-            if (driver instanceof Processor processor && architecture == null) {
-                architecture = instantiate(processor.architecture(stack));
-                if (architecture != null) {
-                    bindArchitecture(architecture);
-                    if (!architecture.recomputeMemory(host.internalComponents())) {
-                        architecture.close();
-                        architecture = null;
+            if (driver instanceof Processor processor) {
+                maxComponents += Math.max(0, processor.supportedComponents(stack));
+                if (architecture == null) {
+                    architecture = instantiate(processor.architecture(stack));
+                    if (architecture != null) {
+                        bindArchitecture(architecture);
+                        if (!architecture.recomputeMemory(host.internalComponents())) {
+                            architecture.close();
+                            architecture = null;
+                        }
                     }
                 }
             }
@@ -184,7 +189,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
 
     @Override
     public int maxComponents() {
-        return 64;
+        return maxComponents;
     }
 
     @Override

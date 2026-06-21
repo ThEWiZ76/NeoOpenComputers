@@ -236,6 +236,19 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void maxComponentsComesFromInstalledProcessors() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+
+        machine.onHostChanged();
+
+        assertEquals(4, machine.maxComponents());
+    }
+
+    @Test
     void hostChangedRejectsArchitectureWhenMemoryRecomputeFails() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();
