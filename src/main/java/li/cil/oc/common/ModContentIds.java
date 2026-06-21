@@ -103,6 +103,7 @@ public final class ModContentIds {
     public static final String RACK_BLOCK_ENTITY = "rack";
     public static final String RAID = "raid";
     public static final String RAID_BLOCK_ENTITY = "raid";
+    public static final String RAID_MENU = "raid";
     public static final String PRINTED_CIRCUIT_BOARD = "printed_circuit_board";
     public static final String RAW_CIRCUIT_BOARD = "raw_circuit_board";
     public static final String REDSTONE_CARD = "redstone_card";

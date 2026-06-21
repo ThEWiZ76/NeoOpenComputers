@@ -21,18 +21,23 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import li.cil.oc.common.menu.RaidMenu;
 
 import java.util.Map;
 
-public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo, Analyzable {
+public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo, MenuProvider, Analyzable {
     public static final int CONTAINER_SIZE = 3;
     public static final String DATA_TAG = "oc:raid";
 
@@ -64,6 +69,16 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
 
     public static boolean acceptsDriverSlot(final String slot) {
         return Slot.HDD.equals(slot);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.raid");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new RaidMenu(containerId, playerInventory, this);
     }
 
     public void saveToStack(final ItemStack stack, final HolderLookup.Provider registries) {
