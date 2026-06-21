@@ -2409,6 +2409,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void raidMenuReportsFilesystemStatus(final GameTestHelper helper) {
+        final BlockPos raidPos = new BlockPos(1, 1, 1);
+        helper.setBlock(raidPos, ModBlocks.RAID.get());
+        final RaidBlockEntity raid = helper.getBlockEntity(raidPos);
+
+        helper.assertTrue(li.cil.oc.common.menu.RaidMenu.raidStateFor(raid) == li.cil.oc.common.menu.RaidMenu.STATE_EMPTY, "Empty RAID reported non-empty status");
+        helper.assertTrue(li.cil.oc.common.menu.RaidMenu.raidCapacityFor(raid) == 0, "Empty RAID reported capacity");
+
+        raid.setItem(0, new ItemStack(ModItems.HDD_TIER1.get()));
+        helper.assertTrue(li.cil.oc.common.menu.RaidMenu.raidStateFor(raid) == li.cil.oc.common.menu.RaidMenu.STATE_INCOMPLETE, "Partial RAID did not report incomplete status");
+        helper.assertTrue(li.cil.oc.common.menu.RaidMenu.raidCapacityFor(raid) == 1024 * 1024, "Partial RAID capacity mismatch");
+
+        raid.setItem(1, new ItemStack(ModItems.HDD_TIER2.get()));
+        raid.setItem(2, new ItemStack(ModItems.HDD_TIER3.get()));
+        helper.assertTrue(li.cil.oc.common.menu.RaidMenu.raidStateFor(raid) == li.cil.oc.common.menu.RaidMenu.STATE_READY, "Full RAID did not report ready status");
+        helper.assertTrue(li.cil.oc.common.menu.RaidMenu.raidCapacityFor(raid) == 7 * 1024 * 1024, "Full RAID capacity mismatch");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void raidBlockItemRetainsDisksAndFilesystem(final GameTestHelper helper) {
         final BlockPos raidPos = new BlockPos(1, 1, 1);
         helper.setBlock(raidPos, ModBlocks.RAID.get());

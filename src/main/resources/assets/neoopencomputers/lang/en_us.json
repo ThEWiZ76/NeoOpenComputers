@@ -148,6 +148,11 @@
   "gui.neoopencomputers.rack.state.incomplete": "Incomplete server",
   "gui.neoopencomputers.rack.state.ready": "Ready",
   "gui.neoopencomputers.rack.state.running": "Running",
+  "gui.neoopencomputers.raid.capacity": "Capacity %s",
+  "gui.neoopencomputers.raid.status": "RAID status",
+  "gui.neoopencomputers.raid.state.empty": "No disks",
+  "gui.neoopencomputers.raid.state.incomplete": "Incomplete array",
+  "gui.neoopencomputers.raid.state.ready": "Ready",
   "gui.neoopencomputers.terminal.blank_screen": "Blank terminal screen",
   "gui.neoopencomputers.terminal.no_screen_data": "Waiting for terminal screen data"
 }

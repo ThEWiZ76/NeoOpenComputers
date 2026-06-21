@@ -257,6 +257,19 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         setChanged();
     }
 
+    public boolean isComplete() {
+        for (final ItemStack stack : items) {
+            if (stack.isEmpty() || !canPlaceItem(0, stack)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public int capacity() {
+        return (int) Math.min(Integer.MAX_VALUE, totalCapacity());
+    }
+
     @Override
     public void load(final CompoundTag nbt) {
         if (nbt.contains(TAG_NODE) && node() != null) {
@@ -326,15 +339,6 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         if (isComplete()) {
             createFilesystem();
         }
-    }
-
-    private boolean isComplete() {
-        for (final ItemStack stack : items) {
-            if (stack.isEmpty() || !canPlaceItem(0, stack)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private void createFilesystem() {
