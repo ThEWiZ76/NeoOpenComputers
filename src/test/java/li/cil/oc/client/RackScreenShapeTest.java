@@ -4,12 +4,14 @@ import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.network.RackControlPayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Inventory;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,6 +47,19 @@ final class RackScreenShapeTest {
         assertEquals(0xFF88C0D0, RackScreen.controlColor(RackMenu.STATE_RUNNING));
     }
 
+    @Test
+    void rackScreenExposesStateTooltipKeys() {
+        assertTranslationKey("gui.neoopencomputers.rack.state.empty", RackScreen.stateLabel(RackMenu.STATE_EMPTY));
+        assertTranslationKey("gui.neoopencomputers.rack.state.ready", RackScreen.stateLabel(RackMenu.STATE_READY));
+        assertTranslationKey("gui.neoopencomputers.rack.state.running", RackScreen.stateLabel(RackMenu.STATE_RUNNING));
+
+        final List<Component> tooltip = RackScreen.controlTooltip(RackMenu.STATE_READY);
+
+        assertEquals(2, tooltip.size());
+        assertTranslationKey("gui.neoopencomputers.rack.control", tooltip.get(0));
+        assertTranslationKey("gui.neoopencomputers.rack.state.ready", tooltip.get(1));
+    }
+
     private static RackMenu allocateMenu(final int containerId) throws ReflectiveOperationException {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
@@ -53,5 +68,10 @@ final class RackScreenShapeTest {
         containerIdField.setAccessible(true);
         containerIdField.setInt(menu, containerId);
         return menu;
+    }
+
+    private static void assertTranslationKey(final String expected, final Component component) {
+        assertTrue(component.getContents() instanceof TranslatableContents);
+        assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());
     }
 }

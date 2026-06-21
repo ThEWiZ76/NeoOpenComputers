@@ -122,5 +122,9 @@
   "item.neoopencomputers.wireless_network_card_tier2": "Wireless Network Card (Tier 2)",
   "item.neoopencomputers.wrench": "Wrench",
   "itemGroup.neoopencomputers": "NeoOpenComputers",
-  "mod.neoopencomputers": "NeoOpenComputers"
+  "mod.neoopencomputers": "NeoOpenComputers",
+  "gui.neoopencomputers.rack.control": "Server power",
+  "gui.neoopencomputers.rack.state.empty": "No server installed",
+  "gui.neoopencomputers.rack.state.ready": "Ready",
+  "gui.neoopencomputers.rack.state.running": "Running"
 }

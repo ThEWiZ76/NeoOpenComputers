@@ -8,6 +8,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.List;
+
 public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int FIRST_SLOT_X = 53;
     private static final int SLOT_Y = 26;
@@ -38,6 +40,10 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
+        final int slot = controlSlotAt(mouseX, mouseY, leftPos, topPos);
+        if (slot >= 0) {
+            guiGraphics.renderComponentTooltip(font, controlTooltip(menu.rackState(slot)), mouseX, mouseY);
+        }
     }
 
     @Override
@@ -71,6 +77,20 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             case RackMenu.STATE_RUNNING -> 0xFF88C0D0;
             default -> 0xFF4C566A;
         };
+    }
+
+    static Component stateLabel(final int state) {
+        return switch (state) {
+            case RackMenu.STATE_READY -> Component.translatable("gui.neoopencomputers.rack.state.ready");
+            case RackMenu.STATE_RUNNING -> Component.translatable("gui.neoopencomputers.rack.state.running");
+            default -> Component.translatable("gui.neoopencomputers.rack.state.empty");
+        };
+    }
+
+    static List<Component> controlTooltip(final int state) {
+        return List.of(
+            Component.translatable("gui.neoopencomputers.rack.control"),
+            stateLabel(state));
     }
 
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
