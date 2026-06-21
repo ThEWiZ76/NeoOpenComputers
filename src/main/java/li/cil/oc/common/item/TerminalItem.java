@@ -8,8 +8,10 @@ import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.menu.TerminalMenu;
+import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -21,6 +23,9 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.neoforged.neoforge.network.PacketDistributor;
+
+import java.util.OptionalInt;
 
 public class TerminalItem extends Item {
     public static final String DATA_TAG = "oc:terminal";
@@ -49,9 +54,15 @@ public class TerminalItem extends Item {
             return InteractionResultHolder.pass(terminal);
         }
         if (!level.isClientSide) {
-            player.openMenu(new SimpleMenuProvider(
+            final OptionalInt openedContainerId = player.openMenu(new SimpleMenuProvider(
                 (containerId, playerInventory, menuPlayer) -> createMenuForBoundTerminal(containerId, playerInventory, terminal),
                 net.minecraft.network.chat.Component.translatable("item.neoopencomputers.terminal")));
+            if (openedContainerId.isPresent() && player instanceof ServerPlayer serverPlayer) {
+                final TerminalScreenSnapshotPayload payload = createScreenSnapshotPayloadForBoundTerminal(openedContainerId.getAsInt(), terminal);
+                if (payload != null) {
+                    PacketDistributor.sendToPlayer(serverPlayer, payload);
+                }
+            }
         }
         return InteractionResultHolder.sidedSuccess(terminal, level.isClientSide);
     }
@@ -115,6 +126,14 @@ public class TerminalItem extends Item {
         }
         final TerminalScreenSnapshot snapshot = terminalServer.screenSnapshot();
         return new TerminalMenu(containerId, playerInventory, snapshot);
+    }
+
+    public static TerminalScreenSnapshotPayload createScreenSnapshotPayloadForBoundTerminal(final int containerId, final ItemStack terminal) {
+        final TerminalServerRackMountableEnvironment terminalServer = findBoundTerminalServer(terminal);
+        if (terminalServer == null) {
+            return null;
+        }
+        return new TerminalScreenSnapshotPayload(containerId, terminalServer.screenSnapshot());
     }
 
     private static boolean bindToFirstTerminalServer(final ItemStack terminal, final RackBlockEntity rack) {

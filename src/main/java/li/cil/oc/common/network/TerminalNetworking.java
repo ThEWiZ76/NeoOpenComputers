@@ -1,5 +1,7 @@
 package li.cil.oc.common.network;
 
+import li.cil.oc.common.menu.TerminalMenu;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -14,7 +16,14 @@ public final class TerminalNetworking {
                 TerminalNetworking::handleScreenSnapshot);
     }
 
+    static void applyScreenSnapshot(final AbstractContainerMenu containerMenu, final TerminalScreenSnapshotPayload payload) {
+        if (containerMenu instanceof TerminalMenu menu && menu.containerId == payload.containerId()) {
+            menu.updateSnapshot(payload.snapshot());
+        }
+    }
+
     private static void handleScreenSnapshot(final TerminalScreenSnapshotPayload payload, final IPayloadContext context) {
+        applyScreenSnapshot(context.player().containerMenu, payload);
     }
 
     private TerminalNetworking() {

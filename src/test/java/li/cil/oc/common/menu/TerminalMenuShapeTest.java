@@ -4,7 +4,9 @@ import li.cil.oc.common.component.TerminalScreenSnapshot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.junit.jupiter.api.Test;
+import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
@@ -34,5 +36,28 @@ final class TerminalMenuShapeTest {
         final Method method = TerminalMenu.class.getMethod("snapshot");
 
         assertEquals(TerminalScreenSnapshot.class, method.getReturnType());
+    }
+
+    @Test
+    void terminalMenuCanUpdateScreenSnapshot() throws NoSuchMethodException {
+        final Method method = TerminalMenu.class.getMethod("updateSnapshot", TerminalScreenSnapshot.class);
+
+        assertEquals(void.class, method.getReturnType());
+    }
+
+    @Test
+    void terminalMenuStoresUpdatedScreenSnapshot() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu();
+
+        menu.updateSnapshot(new TerminalScreenSnapshot(3, 1, new String[]{"new"}));
+
+        assertEquals(3, menu.snapshot().width());
+        assertEquals("new", menu.snapshot().line(0));
+    }
+
+    private static TerminalMenu allocateMenu() throws ReflectiveOperationException {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        return (TerminalMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(TerminalMenu.class);
     }
 }

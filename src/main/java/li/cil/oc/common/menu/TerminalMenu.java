@@ -11,7 +11,7 @@ public class TerminalMenu extends AbstractContainerMenu {
     public static final int TERMINAL_SLOT_COUNT = 0;
     public static final int TOTAL_SLOT_COUNT = TERMINAL_SLOT_COUNT;
 
-    private final TerminalScreenSnapshot snapshot;
+    private TerminalScreenSnapshot snapshot;
 
     public TerminalMenu(final int containerId, final Inventory playerInventory) {
         this(containerId, playerInventory, new TerminalScreenSnapshot(0, 0, new String[0]));
@@ -24,6 +24,10 @@ public class TerminalMenu extends AbstractContainerMenu {
 
     public TerminalScreenSnapshot snapshot() {
         return snapshot;
+    }
+
+    public void updateSnapshot(final TerminalScreenSnapshot snapshot) {
+        this.snapshot = snapshot == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : snapshot;
     }
 
     @Override
