@@ -5,14 +5,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-final class ProgramLocations {
+public final class ProgramLocations {
     private static final Map<String, Map<String, String>> ARCHITECTURE_LOCATIONS = new LinkedHashMap<>();
     private static final Map<String, String> GLOBAL_LOCATIONS = new LinkedHashMap<>();
 
     private ProgramLocations() {
     }
 
-    static synchronized void addMapping(final String program, final String label, final String... architectures) {
+    public static synchronized void addMapping(final String program, final String label, final String... architectures) {
         if (program == null || label == null) {
             return;
         }
@@ -42,7 +42,16 @@ final class ProgramLocations {
         return mappings;
     }
 
-    static synchronized void clear() {
+    public static synchronized Map<String, String> mappingsByProgram(final String architecture) {
+        final Map<String, String> merged = new LinkedHashMap<>();
+        if (architecture != null) {
+            merged.putAll(ARCHITECTURE_LOCATIONS.getOrDefault(architecture, Map.of()));
+        }
+        merged.putAll(GLOBAL_LOCATIONS);
+        return Map.copyOf(merged);
+    }
+
+    public static synchronized void clear() {
         ARCHITECTURE_LOCATIONS.clear();
         GLOBAL_LOCATIONS.clear();
     }

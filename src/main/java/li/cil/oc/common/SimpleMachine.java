@@ -23,6 +23,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.machine.MachineBoundArchitecture;
+import li.cil.oc.common.machine.ProgramLocations;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
@@ -225,6 +226,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             }
         }
         return new Object[]{devices};
+    }
+
+    @Callback(doc = "function():table -- Returns a map of program name to disk label for known programs.")
+    public Object[] getProgramLocations(final Context context, final Arguments arguments) {
+        return new Object[]{ProgramLocations.mappingsByProgram(currentArchitectureName())};
     }
 
     @Override
@@ -662,6 +668,18 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             return reachable == node() || component.canBeSeenFrom(node());
         }
         return reachable.canBeReachedFrom(node());
+    }
+
+    private String currentArchitectureName() {
+        if (architecture == null) {
+            return null;
+        }
+        final String registeredName = li.cil.oc.api.Machine.getArchitectureName(architecture.getClass());
+        if (registeredName != null) {
+            return registeredName;
+        }
+        final Architecture.Name name = architecture.getClass().getAnnotation(Architecture.Name.class);
+        return name == null ? null : name.value();
     }
 
     private static Map<String, Method> discoverCallbacks(final Object value) {

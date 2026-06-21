@@ -20,6 +20,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.machine.ProgramLocations;
 import li.cil.oc.common.machine.MachineBoundArchitecture;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -49,6 +50,7 @@ final class MachineRegistryTest {
         API.network = null;
         li.cil.oc.api.Machine.LuaArchitecture = null;
         TimedArchitecture.clock = null;
+        ProgramLocations.clear();
     }
 
     @Test
@@ -198,6 +200,26 @@ final class MachineRegistryTest {
         assertArrayEquals(new Object[]{true}, machine.invoke(address, "isRunning", new Object[0]));
         assertArrayEquals(new Object[]{true}, machine.invoke(address, "stop", new Object[0]));
         assertArrayEquals(new Object[]{false}, machine.invoke(address, "isRunning", new Object[0]));
+    }
+
+    @Test
+    void computerCallbackReportsProgramLocations() throws Exception {
+        OpenComputersApi.initialize();
+        ProgramLocations.addMapping("edit", "OpenOS");
+        ProgramLocations.addMapping("dig", "Network", "TrackingArchitecture");
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        machine.onHostChanged();
+        Network.joinNewNetwork(machine.node());
+
+        Object[] result = machine.invoke(machine.node().address(), "getProgramLocations", new Object[0]);
+
+        assertEquals(1, result.length);
+        Map<?, ?> locations = assertInstanceOf(Map.class, result[0]);
+        assertEquals("Network", locations.get("dig"));
+        assertEquals("OpenOS", locations.get("edit"));
     }
 
     @Test
