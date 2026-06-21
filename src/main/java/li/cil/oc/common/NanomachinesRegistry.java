@@ -67,5 +67,6 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
             controller.dispose();
         }
         player.getPersistentData().remove(TAG_HAS_NANOMACHINES);
+        player.getPersistentData().remove(TAG_CONTROLLER);
     }
 }

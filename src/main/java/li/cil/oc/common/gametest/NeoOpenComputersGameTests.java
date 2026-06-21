@@ -669,6 +669,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesBlankItemReinstallResetsControllerState(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.api.nanomachines.Controller firstController = li.cil.oc.api.Nanomachines.installController(player);
+        firstController.setInput(0, true);
+        firstController.changeBuffer(-1234D);
+        final ItemStack stack = new ItemStack(ModItems.NANOMACHINES.get());
+
+        stack.getItem().finishUsingItem(stack, helper.getLevel(), player);
+        final li.cil.oc.api.nanomachines.Controller reinstalledController = li.cil.oc.api.Nanomachines.getController(player);
+
+        helper.assertTrue(reinstalledController != null, "Nanomachines reinstall did not install controller");
+        helper.assertFalse(reinstalledController.getInput(0), "Nanomachines blank reinstall kept stale active input");
+        helper.assertTrue(reinstalledController.getLocalBuffer() > firstController.getLocalBuffer(), "Nanomachines blank reinstall kept stale energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void mfuLinksRemoteSidedTileEnvironment(final GameTestHelper helper) {
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(2, 1, 0);
