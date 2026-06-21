@@ -1945,6 +1945,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void relayWirelessControlsPersistThroughNbt(final GameTestHelper helper) throws Exception {
+        final BlockPos relayPos = new BlockPos(1, 1, 1);
+        helper.setBlock(relayPos, ModBlocks.RELAY.get());
+        final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+        relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()));
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) relay.sidedNode(Direction.WEST);
+        component.invoke("setStrength", null, 5D);
+        component.invoke("setRepeater", null, false);
+
+        final CompoundTag saved = relay.saveWithFullMetadata(helper.getLevel().registryAccess());
+        final RelayBlockEntity loaded = new RelayBlockEntity(relayPos, helper.getBlockState(relayPos));
+        loaded.loadWithComponents(saved, helper.getLevel().registryAccess());
+        final li.cil.oc.api.network.Component loadedComponent = (li.cil.oc.api.network.Component) loaded.sidedNode(Direction.WEST);
+
+        helper.assertTrue(Double.valueOf(5D).equals(loadedComponent.invoke("getStrength", null)[0]), "Relay strength did not persist");
+        helper.assertTrue(Boolean.FALSE.equals(loadedComponent.invoke("isRepeater", null)[0]), "Relay repeater setting did not persist");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void connectedConnectorNodesShareGlobalEnergy(final GameTestHelper helper) {
         final RecordingConnectorEnvironment source = new RecordingConnectorEnvironment(10);
         final RecordingConnectorEnvironment sink = new RecordingConnectorEnvironment(10);

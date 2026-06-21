@@ -54,6 +54,8 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private static final String NETWORK_MESSAGE = "network.message";
     private static final String TAG_PLUGS = "oc:plugs";
     private static final String TAG_QUEUE = "oc:queue";
+    private static final String TAG_STRENGTH = "oc:strength";
+    private static final String TAG_REPEATER = "oc:isRepeater";
     private static final String TAG_SIDE = "side";
     private static final String TAG_PACKET = "packet";
     private static final int MAX_TIER = 2;
@@ -112,6 +114,12 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         }
         ContainerHelper.loadAllItems(tag, items, registries);
         updateLimits();
+        if (tag.contains(TAG_STRENGTH)) {
+            wirelessStrength = clampWirelessStrength(tag.getDouble(TAG_STRENGTH));
+        }
+        if (tag.contains(TAG_REPEATER)) {
+            isRepeater = tag.getBoolean(TAG_REPEATER);
+        }
         queue.clear();
         final ListTag queueTags = tag.getList(TAG_QUEUE, CompoundTag.TAG_COMPOUND);
         for (int index = 0; index < queueTags.size() && queue.size() < maxQueueSize; index++) {
@@ -126,6 +134,8 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         ContainerHelper.saveAllItems(tag, items, registries);
+        tag.putDouble(TAG_STRENGTH, wirelessStrength);
+        tag.putBoolean(TAG_REPEATER, isRepeater);
         final ListTag plugTags = new ListTag();
         for (final Plug plug : plugs) {
             final CompoundTag plugTag = new CompoundTag();
@@ -450,9 +460,13 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     }
 
     private double setWirelessStrength(final double value) {
-        wirelessStrength = Math.max(0D, Math.min(value, wirelessMaxRange));
+        wirelessStrength = clampWirelessStrength(value);
         setChanged();
         return wirelessStrength;
+    }
+
+    private double clampWirelessStrength(final double value) {
+        return Math.max(0D, Math.min(value, wirelessMaxRange));
     }
 
     private boolean setRepeater(final boolean value) {
