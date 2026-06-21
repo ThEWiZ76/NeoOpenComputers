@@ -2,7 +2,9 @@ package li.cil.oc.client;
 
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.menu.TerminalMenu;
+import li.cil.oc.common.network.TerminalClipboardPayload;
 import li.cil.oc.common.network.TerminalKeyPayload;
+import li.cil.oc.common.network.TerminalMousePayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -46,6 +48,29 @@ final class TerminalScreenShapeTest {
         assertEquals(true, payload.pressed());
         assertEquals((int) 'x', payload.character());
         assertEquals(45, payload.keyCode());
+    }
+
+    @Test
+    void terminalScreenBuildsClipboardPayloadForMenu() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+
+        final TerminalClipboardPayload payload = TerminalScreen.clipboardPayload(menu, "alpha");
+
+        assertEquals(12, payload.containerId());
+        assertEquals("alpha", payload.value());
+    }
+
+    @Test
+    void terminalScreenBuildsMousePayloadForMenuCoordinates() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+
+        final TerminalMousePayload payload = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 34, 60, 0, 10, 20);
+
+        assertEquals(12, payload.containerId());
+        assertEquals(TerminalMousePayload.MOUSE_DOWN, payload.kind());
+        assertEquals(3.0D, payload.x());
+        assertEquals(3.0D, payload.y());
+        assertEquals(0, payload.buttonOrDelta());
     }
 
     private static TerminalMenu allocateMenu(final int containerId) throws ReflectiveOperationException {

@@ -1,6 +1,7 @@
 package li.cil.oc.common.network;
 
 import li.cil.oc.common.menu.TerminalMenu;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -19,6 +20,16 @@ public final class TerminalNetworking {
                 TerminalKeyPayload.TYPE,
                 TerminalKeyPayload.STREAM_CODEC,
                 TerminalNetworking::handleTerminalKey);
+        event.registrar(NETWORK_VERSION)
+            .playToServer(
+                TerminalClipboardPayload.TYPE,
+                TerminalClipboardPayload.STREAM_CODEC,
+                TerminalNetworking::handleTerminalClipboard);
+        event.registrar(NETWORK_VERSION)
+            .playToServer(
+                TerminalMousePayload.TYPE,
+                TerminalMousePayload.STREAM_CODEC,
+                TerminalNetworking::handleTerminalMouse);
     }
 
     static void applyScreenSnapshot(final AbstractContainerMenu containerMenu, final TerminalScreenSnapshotPayload payload) {
@@ -27,7 +38,7 @@ public final class TerminalNetworking {
         }
     }
 
-    static void applyTerminalKey(final AbstractContainerMenu containerMenu, final TerminalKeyPayload payload, final net.minecraft.world.entity.player.Player player) {
+    static void applyTerminalKey(final AbstractContainerMenu containerMenu, final TerminalKeyPayload payload, final Player player) {
         if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId() || menu.terminalServer() == null) {
             return;
         }
@@ -38,12 +49,41 @@ public final class TerminalNetworking {
         }
     }
 
+    static void applyTerminalClipboard(final AbstractContainerMenu containerMenu, final TerminalClipboardPayload payload, final Player player) {
+        if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId() || menu.terminalServer() == null) {
+            return;
+        }
+        menu.terminalServer().screen().clipboard(payload.value(), player);
+    }
+
+    static void applyTerminalMouse(final AbstractContainerMenu containerMenu, final TerminalMousePayload payload, final Player player) {
+        if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId() || menu.terminalServer() == null) {
+            return;
+        }
+        switch (payload.kind()) {
+            case TerminalMousePayload.MOUSE_DOWN -> menu.terminalServer().screen().mouseDown(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+            case TerminalMousePayload.MOUSE_DRAG -> menu.terminalServer().screen().mouseDrag(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+            case TerminalMousePayload.MOUSE_UP -> menu.terminalServer().screen().mouseUp(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+            case TerminalMousePayload.MOUSE_SCROLL -> menu.terminalServer().screen().mouseScroll(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+            default -> {
+            }
+        }
+    }
+
     private static void handleScreenSnapshot(final TerminalScreenSnapshotPayload payload, final IPayloadContext context) {
         applyScreenSnapshot(context.player().containerMenu, payload);
     }
 
     private static void handleTerminalKey(final TerminalKeyPayload payload, final IPayloadContext context) {
         applyTerminalKey(context.player().containerMenu, payload, context.player());
+    }
+
+    private static void handleTerminalClipboard(final TerminalClipboardPayload payload, final IPayloadContext context) {
+        applyTerminalClipboard(context.player().containerMenu, payload, context.player());
+    }
+
+    private static void handleTerminalMouse(final TerminalMousePayload payload, final IPayloadContext context) {
+        applyTerminalMouse(context.player().containerMenu, payload, context.player());
     }
 
     private TerminalNetworking() {

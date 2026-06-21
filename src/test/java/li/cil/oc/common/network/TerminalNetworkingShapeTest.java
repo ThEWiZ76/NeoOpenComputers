@@ -25,4 +25,26 @@ final class TerminalNetworkingShapeTest {
 
         assertEquals(void.class, apply.getReturnType());
     }
+
+    @Test
+    void exposesTerminalClipboardApplyEntryPoint() throws NoSuchMethodException {
+        final Method apply = TerminalNetworking.class.getDeclaredMethod(
+            "applyTerminalClipboard",
+            net.minecraft.world.inventory.AbstractContainerMenu.class,
+            TerminalClipboardPayload.class,
+            net.minecraft.world.entity.player.Player.class);
+
+        assertEquals(void.class, apply.getReturnType());
+    }
+
+    @Test
+    void exposesTerminalMouseApplyEntryPoint() throws NoSuchMethodException {
+        final Method apply = TerminalNetworking.class.getDeclaredMethod(
+            "applyTerminalMouse",
+            net.minecraft.world.inventory.AbstractContainerMenu.class,
+            TerminalMousePayload.class,
+            net.minecraft.world.entity.player.Player.class);
+
+        assertEquals(void.class, apply.getReturnType());
+    }
 }
