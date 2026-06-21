@@ -60,6 +60,15 @@ final class RackScreenShapeTest {
         assertEquals(2, tooltip.size());
         assertTranslationKey("gui.neoopencomputers.rack.control", tooltip.get(0));
         assertTranslationKey("gui.neoopencomputers.rack.state.ready", tooltip.get(1));
+
+        final List<Component> missingTooltip = RackScreen.controlTooltip(
+            RackMenu.STATE_INCOMPLETE,
+            RackMenu.MISSING_CPU | RackMenu.MISSING_MEMORY | RackMenu.MISSING_EEPROM);
+
+        assertEquals(5, missingTooltip.size());
+        assertTranslationKey("gui.neoopencomputers.rack.missing.cpu", missingTooltip.get(2));
+        assertTranslationKey("gui.neoopencomputers.rack.missing.memory", missingTooltip.get(3));
+        assertTranslationKey("gui.neoopencomputers.rack.missing.eeprom", missingTooltip.get(4));
     }
 
     private static RackMenu allocateMenu(final int containerId) throws ReflectiveOperationException {

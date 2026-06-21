@@ -20,32 +20,36 @@ public class RackMenu extends AbstractContainerMenu {
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int TOTAL_SLOT_COUNT = RACK_SLOT_COUNT + PLAYER_SLOT_COUNT;
     public static final int RACK_STATE_COUNT = RACK_SLOT_COUNT;
+    public static final int RACK_DATA_COUNT = RACK_STATE_COUNT * 2;
     public static final int STATE_EMPTY = 0;
     public static final int STATE_READY = 1;
     public static final int STATE_RUNNING = 2;
     public static final int STATE_INCOMPLETE = 3;
+    public static final int MISSING_CPU = ServerRackMountableEnvironment.MISSING_CPU;
+    public static final int MISSING_MEMORY = ServerRackMountableEnvironment.MISSING_MEMORY;
+    public static final int MISSING_EEPROM = ServerRackMountableEnvironment.MISSING_EEPROM;
 
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 84;
     private static final int PLAYER_HOTBAR_Y = 142;
 
     private final Container rackInventory;
-    private final ContainerData rackStateData;
+    private final ContainerData rackData;
 
     public RackMenu(final int containerId, final Inventory playerInventory) {
-        this(containerId, playerInventory, new SimpleContainer(RACK_SLOT_COUNT), new SimpleContainerData(RACK_STATE_COUNT));
+        this(containerId, playerInventory, new SimpleContainer(RACK_SLOT_COUNT), new SimpleContainerData(RACK_DATA_COUNT));
     }
 
     public RackMenu(final int containerId, final Inventory playerInventory, final Container rackInventory) {
-        this(containerId, playerInventory, rackInventory, rackStateData(rackInventory));
+        this(containerId, playerInventory, rackInventory, rackData(rackInventory));
     }
 
-    public RackMenu(final int containerId, final Inventory playerInventory, final Container rackInventory, final ContainerData rackStateData) {
+    public RackMenu(final int containerId, final Inventory playerInventory, final Container rackInventory, final ContainerData rackData) {
         super(ModMenus.RACK.get(), containerId);
         checkContainerSize(rackInventory, RACK_SLOT_COUNT);
-        checkContainerDataCount(rackStateData, RACK_STATE_COUNT);
+        checkContainerDataCount(rackData, RACK_DATA_COUNT);
         this.rackInventory = rackInventory;
-        this.rackStateData = rackStateData;
+        this.rackData = rackData;
         rackInventory.startOpen(playerInventory.player);
 
         addSlot(new RackSlot(rackInventory, 0, 53, 26));
@@ -53,7 +57,7 @@ public class RackMenu extends AbstractContainerMenu {
         addSlot(new RackSlot(rackInventory, 2, 89, 26));
         addSlot(new RackSlot(rackInventory, 3, 107, 26));
         addPlayerInventory(playerInventory);
-        addDataSlots(rackStateData);
+        addDataSlots(rackData);
     }
 
     @Override
@@ -93,7 +97,14 @@ public class RackMenu extends AbstractContainerMenu {
         if (slot < 0 || slot >= RACK_STATE_COUNT) {
             return STATE_EMPTY;
         }
-        return rackStateData.get(slot);
+        return rackData.get(slot);
+    }
+
+    public int rackMissingRequirements(final int slot) {
+        if (slot < 0 || slot >= RACK_STATE_COUNT) {
+            return 0;
+        }
+        return rackData.get(RACK_STATE_COUNT + slot);
     }
 
     public static int rackStateFor(final Container rackInventory, final int slot) {
@@ -117,6 +128,13 @@ public class RackMenu extends AbstractContainerMenu {
         return STATE_INCOMPLETE;
     }
 
+    public static int rackMissingRequirementsFor(final Container rackInventory, final int slot) {
+        if (!(rackInventory instanceof RackBlockEntity rack) || slot < 0 || slot >= RACK_STATE_COUNT) {
+            return 0;
+        }
+        return rack.getMountable(slot) instanceof ServerRackMountableEnvironment server ? server.missingRequiredComponents() : 0;
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -135,15 +153,18 @@ public class RackMenu extends AbstractContainerMenu {
         }
     }
 
-    private static ContainerData rackStateData(final Container rackInventory) {
+    private static ContainerData rackData(final Container rackInventory) {
         if (!(rackInventory instanceof RackBlockEntity rack)) {
-            return new SimpleContainerData(RACK_STATE_COUNT);
+            return new SimpleContainerData(RACK_DATA_COUNT);
         }
 
         return new ContainerData() {
             @Override
             public int get(final int index) {
-                return rackStateFor(rack, index);
+                if (index < RACK_STATE_COUNT) {
+                    return rackStateFor(rack, index);
+                }
+                return rackMissingRequirementsFor(rack, index - RACK_STATE_COUNT);
             }
 
             @Override
@@ -152,7 +173,7 @@ public class RackMenu extends AbstractContainerMenu {
 
             @Override
             public int getCount() {
-                return RACK_STATE_COUNT;
+                return RACK_DATA_COUNT;
             }
         };
     }

@@ -30,6 +30,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 public final class ServerRackMountableEnvironment extends AbstractManagedEnvironment implements Server, Container, DeviceInfo {
+    public static final int MISSING_CPU = 1;
+    public static final int MISSING_MEMORY = 2;
+    public static final int MISSING_EEPROM = 4;
+
     private static final String TAG_KIND = "kind";
     private static final String TAG_MACHINE = "machine";
     private static final String TAG_TIER = "tier";
@@ -252,6 +256,37 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         return EnumSet.of(StateAware.State.None);
     }
 
+    public int missingRequiredComponents() {
+        boolean hasCpu = false;
+        boolean hasMemory = false;
+        boolean hasEeprom = false;
+        for (int index = 0; index < items.size(); index++) {
+            if (!canPlaceItem(index, items.get(index))) {
+                continue;
+            }
+            final String type = slotType(index);
+            if (Slot.CPU.equals(type)) {
+                hasCpu = true;
+            } else if (Slot.Memory.equals(type)) {
+                hasMemory = true;
+            } else if (SLOT_TYPE_EEPROM.equals(type)) {
+                hasEeprom = true;
+            }
+        }
+
+        int missing = 0;
+        if (!hasCpu) {
+            missing |= MISSING_CPU;
+        }
+        if (!hasMemory) {
+            missing |= MISSING_MEMORY;
+        }
+        if (!hasEeprom) {
+            missing |= MISSING_EEPROM;
+        }
+        return missing;
+    }
+
     @Override
     public boolean canUpdate() {
         return machine.canUpdate();
@@ -422,23 +457,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     }
 
     private boolean canStartMachine() {
-        boolean hasCpu = false;
-        boolean hasMemory = false;
-        boolean hasEeprom = false;
-        for (int index = 0; index < items.size(); index++) {
-            if (!canPlaceItem(index, items.get(index))) {
-                continue;
-            }
-            final String type = slotType(index);
-            if (Slot.CPU.equals(type)) {
-                hasCpu = true;
-            } else if (Slot.Memory.equals(type)) {
-                hasMemory = true;
-            } else if (SLOT_TYPE_EEPROM.equals(type)) {
-                hasEeprom = true;
-            }
-        }
-        return hasCpu && hasMemory && hasEeprom;
+        return missingRequiredComponents() == 0;
     }
 
     private boolean updateWorkingState() {

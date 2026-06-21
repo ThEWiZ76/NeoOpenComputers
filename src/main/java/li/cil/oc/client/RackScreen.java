@@ -8,6 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RackScreen extends AbstractContainerScreen<RackMenu> {
@@ -42,7 +43,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         renderTooltip(guiGraphics, mouseX, mouseY);
         final int slot = controlSlotAt(mouseX, mouseY, leftPos, topPos);
         if (slot >= 0) {
-            guiGraphics.renderComponentTooltip(font, controlTooltip(menu.rackState(slot)), mouseX, mouseY);
+            guiGraphics.renderComponentTooltip(font, controlTooltip(menu.rackState(slot), menu.rackMissingRequirements(slot)), mouseX, mouseY);
         }
     }
 
@@ -90,9 +91,23 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     }
 
     static List<Component> controlTooltip(final int state) {
-        return List.of(
-            Component.translatable("gui.neoopencomputers.rack.control"),
-            stateLabel(state));
+        return controlTooltip(state, 0);
+    }
+
+    static List<Component> controlTooltip(final int state, final int missingRequirements) {
+        final List<Component> tooltip = new ArrayList<>();
+        tooltip.add(Component.translatable("gui.neoopencomputers.rack.control"));
+        tooltip.add(stateLabel(state));
+        if ((missingRequirements & RackMenu.MISSING_CPU) != 0) {
+            tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.cpu"));
+        }
+        if ((missingRequirements & RackMenu.MISSING_MEMORY) != 0) {
+            tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.memory"));
+        }
+        if ((missingRequirements & RackMenu.MISSING_EEPROM) != 0) {
+            tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.eeprom"));
+        }
+        return tooltip;
     }
 
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {

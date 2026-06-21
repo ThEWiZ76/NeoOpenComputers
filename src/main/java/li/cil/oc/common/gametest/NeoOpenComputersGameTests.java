@@ -1760,10 +1760,12 @@ public final class NeoOpenComputersGameTests {
         final RackBlockEntity rack = helper.getBlockEntity(rackPos);
 
         helper.assertTrue(RackMenu.rackStateFor(rack, 0) == RackMenu.STATE_EMPTY, "Empty rack slot reported non-empty state");
+        helper.assertTrue(RackMenu.rackMissingRequirementsFor(rack, 0) == 0, "Empty rack slot reported missing components");
 
         rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
 
         helper.assertTrue(RackMenu.rackStateFor(rack, 0) == RackMenu.STATE_INCOMPLETE, "Incomplete server looked like an empty slot");
+        helper.assertTrue(RackMenu.rackMissingRequirementsFor(rack, 0) == (RackMenu.MISSING_CPU | RackMenu.MISSING_MEMORY | RackMenu.MISSING_EEPROM), "Incomplete server did not report all missing requirements");
         helper.succeed();
     }
 
