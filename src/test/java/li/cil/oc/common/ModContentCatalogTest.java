@@ -2,6 +2,8 @@ package li.cil.oc.common;
 
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -70,72 +72,10 @@ final class ModContentCatalogTest {
     }
 
     @Test
-    void registersInitialApiItemNames() {
+    void registersInitialApiItemNames() throws ReflectiveOperationException {
         final ItemRegistry registry = new ItemRegistry();
 
-        ModContentCatalog.register(registry,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null,
-            null, null, null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null, null, null,
-            null, null, null,
-            null, null, null,
-            null, null, null,
-            null, null, null,
-            null, null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null, null, null, null,
-            null,
-            null,
-            null, null, null,
-            null, null, null,
-            null, null,
-            null, null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null, null, null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null);
+        invokeRegister(registry);
 
         assertNotNull(registry.get(ModContentIds.ADAPTER));
         assertNotNull(registry.get(ModContentIds.ASSEMBLER));
@@ -149,6 +89,8 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TERMINAL));
         assertNotNull(registry.get(ModContentIds.TERMINAL_SERVER));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TERMINAL_SERVER));
+        assertNotNull(registry.get(ModContentIds.NANOMACHINES));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_NANOMACHINES));
         assertNotNull(registry.get(ModContentIds.CABLE));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER1));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER2));
@@ -302,6 +244,8 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_TERMINAL, registry.get(ModContentCatalog.COMPAT_TERMINAL).name());
         assertEquals(ModContentIds.TERMINAL_SERVER, registry.get(ModContentIds.TERMINAL_SERVER).name());
         assertEquals(ModContentCatalog.COMPAT_TERMINAL_SERVER, registry.get(ModContentCatalog.COMPAT_TERMINAL_SERVER).name());
+        assertEquals(ModContentIds.NANOMACHINES, registry.get(ModContentIds.NANOMACHINES).name());
+        assertEquals(ModContentCatalog.COMPAT_NANOMACHINES, registry.get(ModContentCatalog.COMPAT_NANOMACHINES).name());
         assertEquals(ModContentIds.CABLE, registry.get(ModContentIds.CABLE).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER1, registry.get(ModContentIds.COMPUTER_CASE_TIER1).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER2, registry.get(ModContentIds.COMPUTER_CASE_TIER2).name());
@@ -442,5 +386,19 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER1, registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER2, registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER3, registry.get(ModContentCatalog.COMPAT_UPGRADE_CONTAINER_TIER3).name());
+    }
+
+    private static void invokeRegister(final ItemRegistry registry) throws ReflectiveOperationException {
+        Method register = null;
+        for (Method method : ModContentCatalog.class.getDeclaredMethods()) {
+            if ("register".equals(method.getName()) && method.getParameterTypes()[0] == ItemRegistry.class) {
+                register = method;
+                break;
+            }
+        }
+        assertNotNull(register);
+        Object[] arguments = new Object[register.getParameterCount()];
+        arguments[0] = registry;
+        register.invoke(null, arguments);
     }
 }

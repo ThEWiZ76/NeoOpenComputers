@@ -50,6 +50,7 @@ final class RecipeResourceTest {
             ModContentIds.TEXTURE_PICKER,
             ModContentIds.TERMINAL,
             ModContentIds.TERMINAL_SERVER,
+            ModContentIds.NANOMACHINES,
             ModContentIds.ASSEMBLER,
             ModContentIds.BATTERY_UPGRADE_TIER1,
             ModContentIds.BATTERY_UPGRADE_TIER2,
@@ -218,6 +219,20 @@ final class RecipeResourceTest {
         assertItem(keys, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
         assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
         assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
+    void nanomachinesRecipeUsesUpstreamShape() throws IOException {
+        JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.NANOMACHINES + ".json"));
+        JsonObject keys = json.getAsJsonObject("key");
+
+        assertPattern(json, "CWC", "PAR", "CTC");
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.CHAMELIUM);
+        assertItem(keys, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+        assertItem(keys, "P", "neoopencomputers:" + ModContentIds.CPU_TIER2);
+        assertItem(keys, "A", "neoopencomputers:" + ModContentIds.ACID);
+        assertItem(keys, "R", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
+        assertItem(keys, "T", "neoopencomputers:" + ModContentIds.CAPACITOR);
     }
 
     @Test

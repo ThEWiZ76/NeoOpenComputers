@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CWC",
+    "PAR",
+    "CTC"
+  ],
+  "key": {
+    "C": {
+      "item": "neoopencomputers:chamelium"
+    },
+    "W": {
+      "item": "neoopencomputers:wireless_network_card_tier2"
+    },
+    "P": {
+      "item": "neoopencomputers:cpu_tier2"
+    },
+    "A": {
+      "item": "neoopencomputers:acid"
+    },
+    "R": {
+      "item": "neoopencomputers:memory_tier1"
+    },
+    "T": {
+      "item": "neoopencomputers:capacitor"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:nanomachines"
+  }
+}

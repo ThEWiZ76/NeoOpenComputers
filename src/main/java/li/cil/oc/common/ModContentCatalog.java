@@ -56,6 +56,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_MEMORY_TIER2 = "ram2";
     public static final String COMPAT_MEMORY_TIER3 = "ram3";
     public static final String COMPAT_MFU = "mfu";
+    public static final String COMPAT_NANOMACHINES = "nanomachines";
     public static final String COMPAT_NAVIGATION_UPGRADE = "navigationUpgrade";
     public static final String COMPAT_NETWORK_CARD = "lancard";
     public static final String COMPAT_PISTON_UPGRADE = "pistonUpgrade";
@@ -147,6 +148,7 @@ public final class ModContentCatalog {
                 ModItems.TEXTURE_PICKER.get(),
                 ModItems.TERMINAL.get(),
                 ModItems.TERMINAL_SERVER.get(),
+                ModItems.NANOMACHINES.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
                 ModItems.CPU_TIER3.get(),
@@ -357,6 +359,7 @@ public final class ModContentCatalog {
         final Item texturePickerItem,
         final Item terminalItem,
         final Item terminalServerItem,
+        final Item nanomachinesItem,
         final Item cpuTier1Item,
         final Item cpuTier2Item,
         final Item cpuTier3Item,
@@ -426,6 +429,8 @@ public final class ModContentCatalog {
         registry.register(COMPAT_TERMINAL, null, terminalItem);
         registry.register(ModContentIds.TERMINAL_SERVER, null, terminalServerItem);
         registry.register(COMPAT_TERMINAL_SERVER, null, terminalServerItem);
+        registry.register(ModContentIds.NANOMACHINES, null, nanomachinesItem);
+        registry.register(COMPAT_NANOMACHINES, null, nanomachinesItem);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.ASSEMBLER, assembler, assemblerItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);

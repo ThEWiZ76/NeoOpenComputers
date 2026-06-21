@@ -94,6 +94,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void nanomachinesItemIdIsStable() {
+        assertEquals("nanomachines", ModContentIds.NANOMACHINES);
+    }
+
+    @Test
     void computerCaseBlockIdIsStable() {
         assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
     }

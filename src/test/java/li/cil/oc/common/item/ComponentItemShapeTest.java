@@ -266,6 +266,17 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void nanomachinesItemUsesUpstreamConsumptionShape() throws NoSuchMethodException {
+        final Constructor<NanomachinesItem> constructor = NanomachinesItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(NanomachinesItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+        assertArrayEquals(
+            new Class<?>[]{ItemStack.class, net.minecraft.world.entity.LivingEntity.class},
+            NanomachinesItem.class.getDeclaredMethod("getUseDuration", ItemStack.class, net.minecraft.world.entity.LivingEntity.class).getParameterTypes());
+    }
+
+    @Test
     void navigationUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<NavigationUpgradeItem> constructor = NavigationUpgradeItem.class.getConstructor(Item.Properties.class);
 

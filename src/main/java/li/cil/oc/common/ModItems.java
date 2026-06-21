@@ -25,6 +25,7 @@ import li.cil.oc.common.item.LeashUpgradeItem;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.MfuItem;
+import li.cil.oc.common.item.NanomachinesItem;
 import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.PistonUpgradeItem;
@@ -46,6 +47,7 @@ import li.cil.oc.common.item.WirelessNetworkCardItem;
 import li.cil.oc.common.item.WrenchItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -76,6 +78,10 @@ public final class ModItems {
     public static final DeferredItem<TerminalServerItem> TERMINAL_SERVER = ITEMS.register(
         ModContentIds.TERMINAL_SERVER,
         () -> new TerminalServerItem(new Item.Properties()));
+
+    public static final DeferredItem<NanomachinesItem> NANOMACHINES = ITEMS.register(
+        ModContentIds.NANOMACHINES,
+        () -> new NanomachinesItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
 
     public static final DeferredItem<BlockItem> ASSEMBLER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ASSEMBLER,
