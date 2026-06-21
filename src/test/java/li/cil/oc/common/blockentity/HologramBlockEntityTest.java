@@ -43,7 +43,8 @@ final class HologramBlockEntityTest {
         assertArrayEquals(new Object[]{1}, tierOne.maxDepth(null, new TestArguments()));
         assertArrayEquals(new Object[]{2}, tierTwo.maxDepth(null, new TestArguments()));
         assertArrayEquals(new Object[]{0x00FF00}, tierOne.getPaletteColor(null, new TestArguments(1)));
-        assertArrayEquals(new Object[]{0x0000FF}, tierTwo.setPaletteColor(null, new TestArguments(1, 0x123456)));
+        assertArrayEquals(new Object[]{0xFF0000}, tierTwo.getPaletteColor(null, new TestArguments(1)));
+        assertArrayEquals(new Object[]{0xFF0000}, tierTwo.setPaletteColor(null, new TestArguments(1, 0x123456)));
         assertArrayEquals(new Object[]{0x123456}, tierTwo.getPaletteColor(null, new TestArguments(1)));
 
         tierOne.setScale(null, new TestArguments(8.0D));

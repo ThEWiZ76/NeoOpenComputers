@@ -294,16 +294,16 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
 
     @Callback(doc = "function(index:number):number -- Gets a palette color.")
     public Object[] getPaletteColor(final Context context, final Arguments args) {
-        return new Object[]{colors[checkPaletteIndex(args.checkInteger(0))]};
+        return new Object[]{convertColor(colors[checkPaletteIndex(args.checkInteger(0))])};
     }
 
     @Callback(doc = "function(index:number, value:number):number -- Sets a palette color and returns the old value.")
     public Object[] setPaletteColor(final Context context, final Arguments args) {
         final int index = checkPaletteIndex(args.checkInteger(0));
         final int oldValue = colors[index];
-        colors[index] = args.checkInteger(1) & 0xFFFFFF;
+        colors[index] = convertColor(args.checkInteger(1) & 0xFFFFFF);
         setChanged();
-        return new Object[]{oldValue};
+        return new Object[]{convertColor(oldValue)};
     }
 
     @Callback(doc = "function(angle:number, x:number, y:number, z:number):boolean -- Sets the tier-2 base rotation.")
@@ -511,6 +511,10 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
 
     private static int[] defaultColors(final int tier) {
         return tier == 0 ? new int[]{0x00FF00} : new int[]{0x0000FF, 0x00FF00, 0xFF0000};
+    }
+
+    private static int convertColor(final int value) {
+        return value & 0x00FF00 | (value & 0x0000FF) << 16 | (value & 0xFF0000) >>> 16;
     }
 
     private static void copyInto(final int[] source, final int[] target) {
