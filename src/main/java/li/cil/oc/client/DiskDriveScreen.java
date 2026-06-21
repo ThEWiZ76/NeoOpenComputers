@@ -6,6 +6,8 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
+import java.util.List;
+
 public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
     public DiskDriveScreen(final DiskDriveMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
@@ -20,6 +22,7 @@ public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
         guiGraphics.fill(left + 7, top + 16, left + 169, top + 76, 0xFF3B4252);
         drawSlot(guiGraphics, left + 79, top + 34);
+        guiGraphics.drawString(font, statusLabel(menu.mediaState()), left + 8, top + 62, 0xFFD8DEE9, false);
     }
 
     @Override
@@ -27,6 +30,19 @@ public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
+        if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
+            guiGraphics.renderComponentTooltip(font, statusTooltip(menu.mediaState()), mouseX, mouseY);
+        }
+    }
+
+    public static Component statusLabel(final int state) {
+        return Component.translatable(state == DiskDriveMenu.STATE_LOADED
+            ? "gui.neoopencomputers.disk_drive.state.loaded"
+            : "gui.neoopencomputers.disk_drive.state.empty");
+    }
+
+    public static List<Component> statusTooltip(final int state) {
+        return List.of(Component.translatable("gui.neoopencomputers.disk_drive.status"), statusLabel(state));
     }
 
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {

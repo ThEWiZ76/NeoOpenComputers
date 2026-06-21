@@ -51,6 +51,7 @@ import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
 import li.cil.oc.common.menu.ComputerCaseMenu;
+import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
@@ -3037,6 +3038,22 @@ public final class NeoOpenComputersGameTests {
         invokeComponent(helper, (li.cil.oc.api.network.Component) diskDrive.node(), "eject", 0D);
 
         assertNextSignal(helper, computer, "component_removed", mediaAddress, "filesystem");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void diskDriveMenuReportsMediaState(final GameTestHelper helper) {
+        final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+
+        helper.assertTrue(DiskDriveMenu.mediaStateFor(diskDrive) == DiskDriveMenu.STATE_EMPTY, "Empty disk drive did not report empty media state");
+
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+        helper.assertTrue(DiskDriveMenu.mediaStateFor(diskDrive) == DiskDriveMenu.STATE_LOADED, "Loaded disk drive did not report loaded media state");
+
+        diskDrive.removeItem(DiskDriveBlockEntity.SLOT_FLOPPY, 1);
+        helper.assertTrue(DiskDriveMenu.mediaStateFor(diskDrive) == DiskDriveMenu.STATE_EMPTY, "Ejected disk drive did not report empty media state");
         helper.succeed();
     }
 
