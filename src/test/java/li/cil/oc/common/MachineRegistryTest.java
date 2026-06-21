@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.LongSupplier;
@@ -515,6 +516,24 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void queuedSignalsNormalizeArgumentsLikeUpstream() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        assertTrue(machine.start());
+        Map<Object, Object> map = new LinkedHashMap<>();
+        map.put('a', 2.5F);
+        map.put("ignored", new Object());
+
+        assertTrue(machine.signal("event", 'x', 1.25F, new Object(), map));
+
+        Signal signal = machine.popSignal();
+        assertEquals("event", signal.name());
+        Map<?, ?> convertedMap = assertInstanceOf(Map.class, signal.args()[3]);
+        assertArrayEquals(new Object[]{120, 1.25D, null, convertedMap}, signal.args());
+        assertEquals(Map.of(97, 2.5D), convertedMap);
+    }
+
+    @Test
     void rejectsSignalsWhileStopped() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -720,7 +739,7 @@ final class MachineRegistryTest {
 
         Signal keySignal = machine.popSignal();
         assertEquals("key_down", keySignal.name());
-        assertArrayEquals(new Object[]{source.node().address(), 'a', 30}, keySignal.args());
+        assertArrayEquals(new Object[]{source.node().address(), (int) 'a', 30}, keySignal.args());
         Signal touchSignal = machine.popSignal();
         assertEquals("touch", touchSignal.name());
         assertArrayEquals(new Object[]{source.node().address(), 2, 3, 0}, touchSignal.args());

@@ -638,7 +638,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (!running || signals.size() >= MAX_SIGNAL_QUEUE_SIZE) {
             return false;
         }
-        signals.addLast(new SimpleSignal(name, args == null ? new Object[0] : Arrays.copyOf(args, args.length)));
+        signals.addLast(new SimpleSignal(name, normalizeSignalArgs(args)));
         sleepUntilNanos = -1L;
         if (running && architecture != null) {
             architecture.onSignal();
@@ -698,6 +698,52 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     }
 
     private record SimpleSignal(String name, Object[] args) implements Signal {
+    }
+
+    private static Object[] normalizeSignalArgs(final Object[] args) {
+        if (args == null) {
+            return new Object[0];
+        }
+        final Object[] normalized = new Object[args.length];
+        for (int i = 0; i < args.length; i++) {
+            normalized[i] = normalizeSignalArg(args[i]);
+        }
+        return normalized;
+    }
+
+    private static Object normalizeSignalArg(final Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Map<?, ?> map) {
+            final Map<Object, Object> normalized = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                final Object key = normalizeScalarSignalArg(entry.getKey());
+                final Object entryValue = normalizeScalarSignalArg(entry.getValue());
+                if (key != null && entryValue != null) {
+                    normalized.put(key, entryValue);
+                }
+            }
+            return normalized;
+        }
+        return normalizeScalarSignalArg(value);
+    }
+
+    private static Object normalizeScalarSignalArg(final Object value) {
+        return switch (value) {
+            case null -> null;
+            case Boolean typedValue -> typedValue;
+            case Character typedValue -> Integer.valueOf(typedValue);
+            case Byte typedValue -> typedValue;
+            case Short typedValue -> typedValue;
+            case Integer typedValue -> typedValue;
+            case Long typedValue -> typedValue;
+            case Number typedValue -> Double.valueOf(typedValue.doubleValue());
+            case String typedValue -> typedValue;
+            case byte[] typedValue -> typedValue;
+            case CompoundTag typedValue -> typedValue;
+            default -> null;
+        };
     }
 
     private static CompoundTag saveSignal(final Signal signal) {
