@@ -3,6 +3,8 @@ package li.cil.oc.common;
 import li.cil.oc.api.API;
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.EnvironmentProvider;
+import li.cil.oc.common.component.DatabaseEnvironment;
 import li.cil.oc.common.driver.ComputerCaseBlockDriver;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
 import li.cil.oc.common.driver.DiskDriveContainerDriver;
@@ -13,6 +15,7 @@ import li.cil.oc.common.driver.MotionSensorItemDriver;
 import li.cil.oc.common.driver.ScreenBlockDriver;
 import li.cil.oc.common.driver.ScreenItemDriver;
 import li.cil.oc.common.driver.TransposerItemDriver;
+import net.minecraft.world.item.ItemStack;
 
 public final class ModDriverCatalog {
     public static void registerDefaults() {
@@ -47,6 +50,11 @@ public final class ModDriverCatalog {
                 ModItems.PISTON_UPGRADE.get(), ModItems.STICKY_PISTON_UPGRADE.get(), ModItems.SIGN_UPGRADE.get(), ModItems.TRADING_UPGRADE.get(), ModItems.TRACTOR_BEAM_UPGRADE.get(), ModItems.LEASH_UPGRADE.get(), ModItems.ANGEL_UPGRADE.get(), ModItems.CHUNKLOADER_UPGRADE.get(), ModItems.MFU.get(),
                 ModItems.GENERATOR_UPGRADE.get(), ModItems.SOLAR_GENERATOR_UPGRADE.get(), ModItems.TANK_UPGRADE.get(), ModItems.TANK_CONTROLLER_UPGRADE.get(),
                 ModItems.UPGRADE_CONTAINER_TIER1.get(), ModItems.UPGRADE_CONTAINER_TIER2.get(), ModItems.UPGRADE_CONTAINER_TIER3.get());
+            registerEnvironmentProviders(
+                registry,
+                providerFor(ModItems.DATABASE_UPGRADE_TIER1.get(), DatabaseEnvironment.class),
+                providerFor(ModItems.DATABASE_UPGRADE_TIER2.get(), DatabaseEnvironment.class),
+                providerFor(ModItems.DATABASE_UPGRADE_TIER3.get(), DatabaseEnvironment.class));
         }
     }
 
@@ -60,6 +68,16 @@ public final class ModDriverCatalog {
         for (final DriverItem driver : drivers) {
             registry.add(driver);
         }
+    }
+
+    static void registerEnvironmentProviders(final DriverRegistry registry, final EnvironmentProvider... providers) {
+        for (final EnvironmentProvider provider : providers) {
+            registry.add(provider);
+        }
+    }
+
+    private static EnvironmentProvider providerFor(final DriverItem driver, final Class<?> environment) {
+        return (final ItemStack stack) -> driver.worksWith(stack) ? environment : null;
     }
 
     private ModDriverCatalog() {

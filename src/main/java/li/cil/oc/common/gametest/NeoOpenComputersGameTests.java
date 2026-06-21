@@ -682,6 +682,15 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void databaseUpgradeProvidesEnvironmentClass(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get());
+        final Class<?> environment = Driver.environmentFor(stack);
+
+        helper.assertTrue(li.cil.oc.common.component.DatabaseEnvironment.class.equals(environment), "Database upgrade did not provide database environment class");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void geolyzerScanConsumesEnergy(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.GEOLYZER.get());
