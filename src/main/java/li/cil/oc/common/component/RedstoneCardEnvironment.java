@@ -98,6 +98,19 @@ public class RedstoneCardEnvironment extends AbstractManagedEnvironment implemen
         return new Object[]{state.hasAnalogOutputSignal() ? state.getAnalogOutputSignal(level, target) : 0};
     }
 
+    @Callback(direct = true, doc = "function():number -- Gets the current wake-up threshold.")
+    public Object[] getWakeThreshold(final Context context, final Arguments args) {
+        return new Object[]{redstoneHost().wakeThreshold()};
+    }
+
+    @Callback(doc = "function(threshold:number):number -- Sets the wake-up threshold and returns the previous value.")
+    public Object[] setWakeThreshold(final Context context, final Arguments args) {
+        final RedstoneControllerHost redstone = redstoneHost();
+        final int oldValue = redstone.wakeThreshold();
+        redstone.setWakeThreshold(args.checkInteger(0));
+        return new Object[]{oldValue};
+    }
+
     private RedstoneControllerHost redstoneHost() {
         if (host instanceof RedstoneControllerHost redstone) {
             return redstone;

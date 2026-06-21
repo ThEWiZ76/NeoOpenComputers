@@ -11,4 +11,11 @@ public interface RedstoneControllerHost extends EnvironmentHost {
     void setRedstoneOutput(Direction direction, int value);
 
     Direction toGlobal(Direction direction);
+
+    default int wakeThreshold() {
+        return 0;
+    }
+
+    default void setWakeThreshold(final int value) {
+    }
 }

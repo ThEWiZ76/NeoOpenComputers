@@ -44,6 +44,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     private static final String ARCHITECTURE_TAG = "architecture";
     private static final String CPU_TIME_NANOS_TAG = "cpuTimeNanos";
     private static final String CHECKED_SIGNAL_MESSAGE = "computer.checked_signal";
+    private static final String COMPUTER_START_MESSAGE = "computer.start";
     private static final String COMPUTER_STARTED_MESSAGE = "computer.started";
     private static final String COMPUTER_STOPPED_MESSAGE = "computer.stopped";
 
@@ -239,6 +240,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine 
     public void onMessage(final Message message) {
         if (CHECKED_SIGNAL_MESSAGE.equals(message.name())) {
             queueCheckedSignal(message.data());
+        } else if (COMPUTER_START_MESSAGE.equals(message.name())) {
+            start();
         }
     }
 

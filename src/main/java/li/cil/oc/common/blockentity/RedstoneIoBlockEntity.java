@@ -26,6 +26,7 @@ import java.util.Map;
 public class RedstoneIoBlockEntity extends BlockEntity implements Environment, RedstoneControllerHost, DeviceInfo {
     private static final String TAG_NODE = "node";
     private static final String TAG_OUTPUTS = "oc:redstoneOutputs";
+    private static final String TAG_WAKE_THRESHOLD = "oc:wakeThreshold";
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Communication,
         DeviceInfo.DeviceAttribute.Description, "Redstone controller",
@@ -38,6 +39,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     private final int[] outputs = new int[6];
     private final int[] inputs = new int[6];
     private Node node;
+    private int wakeThreshold;
 
     public RedstoneIoBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.REDSTONE_IO.get(), pos, blockState);
@@ -125,6 +127,17 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     }
 
     @Override
+    public int wakeThreshold() {
+        return wakeThreshold;
+    }
+
+    @Override
+    public void setWakeThreshold(final int value) {
+        wakeThreshold = value;
+        setChanged();
+    }
+
+    @Override
     public Direction toGlobal(final Direction direction) {
         return direction;
     }
@@ -172,6 +185,18 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         return new Object[]{state.hasAnalogOutputSignal() ? state.getAnalogOutputSignal(level, target) : 0};
     }
 
+    @Callback(direct = true, doc = "function():number -- Gets the current wake-up threshold.")
+    public Object[] getWakeThreshold(final Context context, final Arguments args) {
+        return new Object[]{wakeThreshold};
+    }
+
+    @Callback(doc = "function(threshold:number):number -- Sets the wake-up threshold and returns the previous value.")
+    public Object[] setWakeThreshold(final Context context, final Arguments args) {
+        final int oldValue = wakeThreshold;
+        setWakeThreshold(args.checkInteger(0));
+        return new Object[]{oldValue};
+    }
+
     public void updateRedstoneInputs() {
         if (level == null) {
             return;
@@ -184,6 +209,9 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
                 inputs[index] = newValue;
                 if (node() != null) {
                     node().sendToReachable("computer.signal", "redstone_changed", node().address(), index, oldValue, newValue);
+                    if (oldValue < wakeThreshold && newValue >= wakeThreshold) {
+                        node().sendToNeighbors("computer.start");
+                    }
                 }
             }
         }
@@ -195,6 +223,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         if (tag.contains(TAG_NODE)) {
             node().load(tag.getCompound(TAG_NODE));
         }
+        wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
         final int[] saved = tag.getIntArray(TAG_OUTPUTS);
         for (int index = 0; index < outputs.length; index++) {
             outputs[index] = index < saved.length ? Math.clamp(saved[index], 0, 15) : 0;
@@ -205,6 +234,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         saveNode(tag);
+        tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_OUTPUTS, outputs);
     }
 

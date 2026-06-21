@@ -2170,6 +2170,36 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void redstoneWakeThresholdStartsComputer(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.REDSTONE_CARD.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootableHardDiskStack(helper, "while true do computer.pullSignal(1) end"));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        final String redstoneAddress = componentAddress(computer, "redstone");
+        helper.assertTrue(redstoneAddress != null, "Redstone component is not visible: " + computer.machine().components());
+        try {
+            assertSingleResult(helper, computer.machine().invoke(redstoneAddress, "setWakeThreshold", new Object[]{15}), 0, "setWakeThreshold");
+            assertSingleResult(helper, computer.machine().invoke(redstoneAddress, "getWakeThreshold", new Object[0]), 15, "getWakeThreshold");
+        } catch (Exception e) {
+            helper.fail("Failed to configure redstone wake threshold: " + e.getMessage());
+        }
+
+        helper.assertTrue(!computer.machine().isRunning(), "Computer started before redstone threshold crossing");
+        helper.runAtTickTime(20, () -> helper.setBlock(computerPos.east(), Blocks.REDSTONE_BLOCK));
+        helper.runAtTickTime(60, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Computer did not wake from redstone threshold crossing");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void installedNetworkCardsExchangeModemMessages(final GameTestHelper helper) {
         final BlockPos receiverPos = new BlockPos(1, 1, 1);

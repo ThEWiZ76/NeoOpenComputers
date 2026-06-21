@@ -48,6 +48,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private static final String TAG_COLOR = "oc:color";
     private static final String TAG_MACHINE = "oc:machine";
     private static final String TAG_REDSTONE_OUTPUTS = "oc:redstoneOutputs";
+    private static final String TAG_WAKE_THRESHOLD = "oc:wakeThreshold";
     private static final String SLOT_TYPE_EEPROM = "eeprom";
     private static final int TIER_ANY = Integer.MAX_VALUE;
     private static final CaseSlot[][] SLOT_LAYOUTS = {
@@ -91,6 +92,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private int pendingComponentSlot = -1;
     private int tier;
     private int color;
+    private int wakeThreshold;
     private final int[] redstoneOutputs = new int[6];
     private final int[] redstoneInputs = new int[6];
 
@@ -260,6 +262,17 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         }
 
         scheduleRedstoneUpdate(direction);
+    }
+
+    @Override
+    public int wakeThreshold() {
+        return wakeThreshold;
+    }
+
+    @Override
+    public void setWakeThreshold(final int value) {
+        wakeThreshold = value;
+        setChanged();
     }
 
     private void scheduleRedstoneUpdate(final Direction direction) {
@@ -484,6 +497,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         color = tag.getInt(TAG_COLOR);
+        wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
         loadRedstoneOutputs(tag);
         ContainerHelper.loadAllItems(tag, items, registries);
         notifyHardwareChanged(machine);
@@ -494,6 +508,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putInt(TAG_COLOR, color);
+        tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_REDSTONE_OUTPUTS, redstoneOutputs);
         ContainerHelper.saveAllItems(tag, items, registries);
         final CompoundTag machineTag = new CompoundTag();
@@ -557,6 +572,9 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
                 redstoneInputs[index] = newValue;
                 if (redstoneAddress != null && oldValue != newValue) {
                     machine.signal("redstone_changed", redstoneAddress, toLocal(direction).get3DDataValue(), oldValue, newValue);
+                    if (oldValue < wakeThreshold && newValue >= wakeThreshold) {
+                        machine.start();
+                    }
                 }
             }
         }
