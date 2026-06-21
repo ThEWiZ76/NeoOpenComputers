@@ -1,12 +1,20 @@
 package li.cil.oc.client;
 
 import li.cil.oc.common.menu.RackMenu;
+import li.cil.oc.common.network.RackControlPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class RackScreen extends AbstractContainerScreen<RackMenu> {
+    private static final int FIRST_SLOT_X = 53;
+    private static final int SLOT_Y = 26;
+    private static final int SLOT_SPACING = 18;
+    private static final int CONTROL_Y = 50;
+    private static final int CONTROL_SIZE = 10;
+
     public RackScreen(final RackMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
         imageHeight = 166;
@@ -19,10 +27,10 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         final int top = topPos;
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
         guiGraphics.fill(left + 7, top + 16, left + 169, top + 76, 0xFF3B4252);
-        drawSlot(guiGraphics, left + 52, top + 25);
-        drawSlot(guiGraphics, left + 70, top + 25);
-        drawSlot(guiGraphics, left + 88, top + 25);
-        drawSlot(guiGraphics, left + 106, top + 25);
+        for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
+            drawSlot(guiGraphics, left + FIRST_SLOT_X - 1 + slot * SLOT_SPACING, top + SLOT_Y - 1);
+            drawControl(guiGraphics, left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING, top + CONTROL_Y);
+        }
     }
 
     @Override
@@ -32,8 +40,40 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
+    @Override
+    public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
+        final int slot = controlSlotAt(mouseX, mouseY, leftPos, topPos);
+        if (button == 0 && slot >= 0) {
+            PacketDistributor.sendToServer(controlPayload(menu, slot, RackControlPayload.TOGGLE));
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    static RackControlPayload controlPayload(final RackMenu menu, final int slot, final int action) {
+        return new RackControlPayload(menu.containerId, slot, action);
+    }
+
+    static int controlSlotAt(final double mouseX, final double mouseY, final int left, final int top) {
+        for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
+            final int x = left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING;
+            final int y = top + CONTROL_Y;
+            if (mouseX >= x && mouseX < x + CONTROL_SIZE && mouseY >= y && mouseY < y + CONTROL_SIZE) {
+                return slot;
+            }
+        }
+        return -1;
+    }
+
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
         guiGraphics.fill(left - 1, top - 1, left + 17, top + 17, 0xFF1F232B);
         guiGraphics.fill(left, top, left + 16, top + 16, 0xFF4C566A);
+    }
+
+    private static void drawControl(final GuiGraphics guiGraphics, final int left, final int top) {
+        guiGraphics.fill(left, top, left + CONTROL_SIZE, top + CONTROL_SIZE, 0xFF1F232B);
+        guiGraphics.fill(left + 3, top + 2, left + 5, top + 8, 0xFF88C0D0);
+        guiGraphics.fill(left + 5, top + 3, left + 7, top + 7, 0xFF88C0D0);
+        guiGraphics.fill(left + 7, top + 4, left + 8, top + 6, 0xFF88C0D0);
     }
 }

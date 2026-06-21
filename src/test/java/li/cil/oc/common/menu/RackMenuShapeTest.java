@@ -28,4 +28,9 @@ final class RackMenuShapeTest {
         assertEquals(36, RackMenu.PLAYER_SLOT_COUNT);
         assertEquals(40, RackMenu.TOTAL_SLOT_COUNT);
     }
+
+    @Test
+    void rackMenuExposesServerRackInventoryTarget() throws NoSuchMethodException {
+        assertEquals(Container.class, RackMenu.class.getMethod("rackInventory").getReturnType());
+    }
 }

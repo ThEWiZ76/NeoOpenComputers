@@ -67,6 +67,10 @@ public class RackMenu extends AbstractContainerMenu {
         return rackInventory.stillValid(player);
     }
 
+    public Container rackInventory() {
+        return rackInventory;
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);

@@ -218,20 +218,27 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         if (player == null || !player.isShiftKeyDown()) {
             return false;
         }
+        return controlPower(li.cil.oc.common.network.RackControlPayload.TOGGLE);
+    }
+
+    public boolean controlPower(final int action) {
         final boolean changed;
-        if (machine.isRunning() || machine.isPaused()) {
+        if (action == li.cil.oc.common.network.RackControlPayload.STOP || (action == li.cil.oc.common.network.RackControlPayload.TOGGLE && (machine.isRunning() || machine.isPaused()))) {
             changed = machine.stop();
-        } else if (canStartMachine()) {
+        } else if (action == li.cil.oc.common.network.RackControlPayload.START || action == li.cil.oc.common.network.RackControlPayload.TOGGLE) {
+            if (!canStartMachine()) {
+                machine.crash("missing required components");
+                return false;
+            }
             changed = machine.start();
         } else {
-            machine.crash("missing required components");
-            changed = false;
+            return false;
         }
         if (changed) {
             updateWorkingState();
             markChanged();
         }
-        return true;
+        return changed;
     }
 
     @Override
