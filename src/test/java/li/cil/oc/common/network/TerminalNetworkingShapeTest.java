@@ -66,4 +66,14 @@ final class TerminalNetworkingShapeTest {
 
         assertEquals(boolean.class, helper.getReturnType());
     }
+
+    @Test
+    void exposesTerminalMenuReadinessHelper() throws NoSuchMethodException {
+        final Method helper = TerminalNetworking.class.getDeclaredMethod(
+            "acceptsTerminalMenu",
+            li.cil.oc.common.menu.TerminalMenu.class,
+            net.minecraft.world.entity.player.Player.class);
+
+        assertEquals(boolean.class, helper.getReturnType());
+    }
 }

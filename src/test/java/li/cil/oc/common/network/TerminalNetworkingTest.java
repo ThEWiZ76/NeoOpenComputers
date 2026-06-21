@@ -1,6 +1,7 @@
 package li.cil.oc.common.network;
 
 import li.cil.oc.common.component.TerminalScreenSnapshot;
+import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.menu.TerminalMenu;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
@@ -67,6 +68,19 @@ final class TerminalNetworkingTest {
         assertEquals(true, TerminalNetworking.acceptsTerminalInput(new TerminalScreenSnapshot(4, 2, new String[]{"", ""})));
     }
 
+    @Test
+    void rejectsStaleTerminalMenuForNetworkInput() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(3, new TerminalScreenSnapshot(1, 1, new String[]{""}));
+        final TerminalServerRackMountableEnvironment staleServer = allocateTerminalServer();
+        final Field terminalServerField = TerminalMenu.class.getDeclaredField("terminalServer");
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final Unsafe unsafe = (Unsafe) unsafeField.get(null);
+        unsafe.putObject(menu, unsafe.objectFieldOffset(terminalServerField), staleServer);
+
+        assertEquals(false, TerminalNetworking.acceptsTerminalMenu(menu, null));
+    }
+
     private static TerminalMenu allocateMenu(final int containerId, final TerminalScreenSnapshot snapshot) throws ReflectiveOperationException {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
@@ -86,6 +100,12 @@ final class TerminalNetworkingTest {
         containerIdField.setAccessible(true);
         containerIdField.setInt(menu, containerId);
         return menu;
+    }
+
+    private static TerminalServerRackMountableEnvironment allocateTerminalServer() throws ReflectiveOperationException {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        return (TerminalServerRackMountableEnvironment) ((Unsafe) unsafeField.get(null)).allocateInstance(TerminalServerRackMountableEnvironment.class);
     }
 
     private static final class TestMenu extends AbstractContainerMenu {
