@@ -52,7 +52,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         renderTooltip(guiGraphics, mouseX, mouseY);
         final int slot = serverSlotAt(mouseX, mouseY, leftPos, topPos);
         if (slot >= 0) {
-            guiGraphics.renderComponentTooltip(font, slotTooltip(menu.slotKind(slot), menu.slotTierLimit(slot)), mouseX, mouseY);
+            guiGraphics.renderComponentTooltip(font, slotTooltip(menu.slotKind(slot), menu.slotTierLimit(slot), menu.getSlot(slot).hasItem()), mouseX, mouseY);
         } else if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
             guiGraphics.renderComponentTooltip(font, statusTooltip(menu.serverState(), menu.missingRequirements(), menu.componentCount(), menu.maxComponents()), mouseX, mouseY);
         }
@@ -91,6 +91,13 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
 
     public static List<Component> slotTooltip(final int kind, final int tier) {
         return List.of(slotLabel(kind), slotTierLabel(tier));
+    }
+
+    public static List<Component> slotTooltip(final int kind, final int tier, final boolean occupied) {
+        return List.of(
+            slotLabel(kind),
+            slotTierLabel(tier),
+            Component.translatable(occupied ? "gui.neoopencomputers.server_rack.slot.installed" : "gui.neoopencomputers.server_rack.slot.empty_state"));
     }
 
     public static Component statusLabel(final int state) {

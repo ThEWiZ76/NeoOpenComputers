@@ -36,6 +36,7 @@ final class ServerRackScreenShapeTest {
         final Method label = ServerRackScreen.class.getMethod("slotLabel", int.class);
         final Method tierLabel = ServerRackScreen.class.getMethod("slotTierLabel", int.class);
         final Method tooltip = ServerRackScreen.class.getMethod("slotTooltip", int.class, int.class);
+        final Method occupiedTooltip = ServerRackScreen.class.getMethod("slotTooltip", int.class, int.class, boolean.class);
         final Method statusLabel = ServerRackScreen.class.getMethod("statusLabel", int.class);
         final Method statusTooltip = ServerRackScreen.class.getMethod("statusTooltip", int.class, int.class);
         final Method capacityStatusTooltip = ServerRackScreen.class.getMethod("statusTooltip", int.class, int.class, int.class, int.class);
@@ -46,6 +47,7 @@ final class ServerRackScreenShapeTest {
         assertEquals(Component.class, label.getReturnType());
         assertEquals(Component.class, tierLabel.getReturnType());
         assertEquals(List.class, tooltip.getReturnType());
+        assertEquals(List.class, occupiedTooltip.getReturnType());
         assertEquals(Component.class, statusLabel.getReturnType());
         assertEquals(List.class, statusTooltip.getReturnType());
         assertEquals(List.class, capacityStatusTooltip.getReturnType());
@@ -69,6 +71,15 @@ final class ServerRackScreenShapeTest {
 
         assertEquals(ServerRackScreen.slotLabel(ServerRackMenu.SLOT_KIND_CPU), tooltip.getFirst());
         assertEquals(ServerRackScreen.slotTierLabel(2), tooltip.get(1));
+    }
+
+    @Test
+    void serverRackSlotTooltipShowsOccupancy() {
+        final List<Component> occupied = ServerRackScreen.slotTooltip(ServerRackMenu.SLOT_KIND_CPU, 2, true);
+        final List<Component> empty = ServerRackScreen.slotTooltip(ServerRackMenu.SLOT_KIND_CPU, 2, false);
+
+        assertTranslationKey("gui.neoopencomputers.server_rack.slot.installed", occupied.get(2));
+        assertTranslationKey("gui.neoopencomputers.server_rack.slot.empty_state", empty.get(2));
     }
 
     @Test
