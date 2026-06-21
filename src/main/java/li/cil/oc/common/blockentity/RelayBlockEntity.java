@@ -7,6 +7,7 @@ import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
@@ -40,7 +41,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
-public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, Container, MenuProvider, WirelessEndpoint {
+public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, Container, MenuProvider, WirelessEndpoint, Analyzable {
     public static final double CONNECTOR_BUFFER_SIZE = 600D;
     public static final int CONTAINER_SIZE = 4;
     public static final int CPU_SLOT = 0;
@@ -103,6 +104,14 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     @Override
     public boolean canConnect(final Direction side) {
         return side != null;
+    }
+
+    @Override
+    public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
+        if (!wirelessEnabled || side == null) {
+            return null;
+        }
+        return new Node[]{sidedNode(side)};
     }
 
     @Override

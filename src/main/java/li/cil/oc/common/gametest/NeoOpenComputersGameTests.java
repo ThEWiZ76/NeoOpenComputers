@@ -1965,6 +1965,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void analyzerReportsRelayOnlyWhenWirelessEnabled(final GameTestHelper helper) {
+        final BlockPos relayPos = new BlockPos(1, 1, 1);
+        helper.setBlock(relayPos, ModBlocks.RELAY.get());
+        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(relayPos));
+        final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+
+        helper.assertTrue(AnalyzerItem.describe(relay, Direction.WEST).isEmpty(), "Analyzer reported relay without wireless card");
+
+        relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()));
+        final List<Component> lines = AnalyzerItem.describe(relay, Direction.WEST);
+        final String analysis = lines.stream().map(Component::getString).collect(java.util.stream.Collectors.joining("\n"));
+        helper.assertTrue(analysis.contains("Component: relay"), "Analyzer did not report wireless relay component:\n" + analysis);
+        helper.assertTrue(analysis.contains("Stored energy: 0.00/600.00"), "Analyzer did not report relay connector energy:\n" + analysis);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void connectedConnectorNodesShareGlobalEnergy(final GameTestHelper helper) {
         final RecordingConnectorEnvironment source = new RecordingConnectorEnvironment(10);
         final RecordingConnectorEnvironment sink = new RecordingConnectorEnvironment(10);
