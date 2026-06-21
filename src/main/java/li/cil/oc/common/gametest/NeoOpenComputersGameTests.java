@@ -246,7 +246,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.TRADING_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.LEASH_UPGRADE.get()), 0);
-        assertItemTier(helper, new ItemStack(ModItems.ANGEL_UPGRADE.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.ANGEL_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.SOLAR_GENERATOR_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), 1);
