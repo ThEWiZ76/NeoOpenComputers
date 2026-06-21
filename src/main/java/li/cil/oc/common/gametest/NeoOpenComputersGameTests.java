@@ -34,6 +34,7 @@ import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
+import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
@@ -522,6 +523,20 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(tabletData.contains("hardness"), "Geolyzer tablet analysis did not collect block hardness");
         helper.assertTrue(Double.compare(0D, component.localBuffer()) == 0, "Geolyzer tablet analysis did not consume energy");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void hologramConsumesEnergyForLitVoxels(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.HOLOGRAM_TIER1.get());
+        final HologramBlockEntity hologram = helper.getBlockEntity(pos);
+        helper.assertTrue(hologram.node() instanceof ComponentConnector, "Hologram node is not a component connector");
+        final ComponentConnector connector = (ComponentConnector) hologram.node();
+        connector.setLocalBufferSize(1D);
+        connector.changeBuffer(1D);
+        invokeComponent(helper, connector, "set", 1, 1, 1, 1);
+
+        helper.succeedWhen(() -> helper.assertTrue(connector.localBuffer() < 1D, "Hologram did not consume energy"));
     }
 
     @GameTest(template = "empty")

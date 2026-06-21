@@ -10,6 +10,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.HologramBlock;
@@ -44,6 +45,8 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
     private static final String TAG_ROTATION_SPEED_X = "oc:rotationSpeedX";
     private static final String TAG_ROTATION_SPEED_Y = "oc:rotationSpeedY";
     private static final String TAG_ROTATION_SPEED_Z = "oc:rotationSpeedZ";
+    private static final String TAG_HAS_POWER = "oc:hasPower";
+    private static final double HOLOGRAM_COST_PER_TICK = 0.2D;
     private static final double[] MAX_SCALE_BY_TIER = {3.0D, 4.0D};
     private static final double[] MAX_TRANSLATION_BY_TIER = {1.0D, 2.0D};
     private static final String COMPONENT_NAME = "hologram";
@@ -64,6 +67,7 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
     private float rotationSpeedX;
     private float rotationSpeedY;
     private float rotationSpeedZ;
+    private boolean hasPower = true;
 
     public HologramBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.HOLOGRAM.get(), pos, blockState);
@@ -71,6 +75,10 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
         tier = tierFromState(blockState);
         colors = defaultColors(tier);
         node = createNode(this);
+    }
+
+    public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final HologramBlockEntity hologram) {
+        hologram.updatePowerState();
     }
 
     @Override
@@ -103,6 +111,10 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(WIDTH * WIDTH * HEIGHT),
             DeviceInfo.DeviceAttribute.Width, Integer.toString(colors.length)
         );
+    }
+
+    public boolean hasPower() {
+        return hasPower;
     }
 
     @Override
@@ -351,6 +363,7 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
         rotationSpeedX = tag.getFloat(TAG_ROTATION_SPEED_X);
         rotationSpeedY = tag.getFloat(TAG_ROTATION_SPEED_Y);
         rotationSpeedZ = tag.getFloat(TAG_ROTATION_SPEED_Z);
+        hasPower = !tag.contains(TAG_HAS_POWER) || tag.getBoolean(TAG_HAS_POWER);
     }
 
     @Override
@@ -372,6 +385,7 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
         tag.putFloat(TAG_ROTATION_SPEED_X, rotationSpeedX);
         tag.putFloat(TAG_ROTATION_SPEED_Y, rotationSpeedY);
         tag.putFloat(TAG_ROTATION_SPEED_Z, rotationSpeedZ);
+        tag.putBoolean(TAG_HAS_POWER, hasPower);
     }
 
     @Override
@@ -396,6 +410,26 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
         final int lowBit = (volume[x + z * WIDTH] >>> y) & 1;
         final int highBit = (volume[x + z * WIDTH + WIDTH * WIDTH] >>> y) & 1;
         return lowBit | (highBit << 1);
+    }
+
+    private void updatePowerState() {
+        final double litRatio = litRatio();
+        final double cost = HOLOGRAM_COST_PER_TICK * litRatio * scale;
+        final boolean powered = cost <= 0D || node() instanceof Connector connector && connector.tryChangeBuffer(-cost);
+        if (hasPower != powered) {
+            hasPower = powered;
+            setChanged();
+        }
+    }
+
+    private double litRatio() {
+        int litColumns = 0;
+        for (int value : volume) {
+            if (value != 0) {
+                litColumns++;
+            }
+        }
+        return litColumns / (double) volume.length;
     }
 
     private void setColor(final int x, final int y, final int z, final int value) {

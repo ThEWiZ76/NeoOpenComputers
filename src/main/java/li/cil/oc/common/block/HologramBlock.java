@@ -1,6 +1,7 @@
 package li.cil.oc.common.block;
 
 import com.mojang.serialization.MapCodec;
+import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
@@ -8,6 +9,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -42,6 +45,15 @@ public class HologramBlock extends Block implements EntityBlock {
     @Override
     public BlockEntity newBlockEntity(final BlockPos pos, final BlockState state) {
         return new HologramBlockEntity(pos, state);
+    }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(final Level level, final BlockState state, final BlockEntityType<T> type) {
+        if (level.isClientSide || type != ModBlockEntities.HOLOGRAM.get()) {
+            return null;
+        }
+        return (tickerLevel, pos, blockState, blockEntity) ->
+            HologramBlockEntity.serverTick(tickerLevel, pos, blockState, (HologramBlockEntity) blockEntity);
     }
 
     @Override
