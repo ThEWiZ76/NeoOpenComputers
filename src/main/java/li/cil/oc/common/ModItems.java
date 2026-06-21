@@ -30,6 +30,7 @@ import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.PistonUpgradeItem;
 import li.cil.oc.common.item.RedstoneCardItem;
+import li.cil.oc.common.item.ServerItem;
 import li.cil.oc.common.item.SignUpgradeItem;
 import li.cil.oc.common.item.SolarGeneratorUpgradeItem;
 import li.cil.oc.common.item.StickyPistonUpgradeItem;
@@ -82,6 +83,18 @@ public final class ModItems {
     public static final DeferredItem<NanomachinesItem> NANOMACHINES = ITEMS.register(
         ModContentIds.NANOMACHINES,
         () -> new NanomachinesItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
+
+    public static final DeferredItem<ServerItem> SERVER_TIER1 = ITEMS.register(
+        ModContentIds.SERVER_TIER1,
+        () -> new ServerItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<ServerItem> SERVER_TIER2 = ITEMS.register(
+        ModContentIds.SERVER_TIER2,
+        () -> new ServerItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<ServerItem> SERVER_TIER3 = ITEMS.register(
+        ModContentIds.SERVER_TIER3,
+        () -> new ServerItem(new Item.Properties(), 2));
 
     public static final DeferredItem<BlockItem> ASSEMBLER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ASSEMBLER,

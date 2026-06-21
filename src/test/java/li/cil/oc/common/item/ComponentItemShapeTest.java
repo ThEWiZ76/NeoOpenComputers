@@ -277,6 +277,16 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void serverItemIsSingleStackTieredRackMountable() throws NoSuchMethodException {
+        final Constructor<ServerItem> constructor = ServerItem.class.getConstructor(Item.Properties.class, int.class);
+
+        assertTrue(Item.class.isAssignableFrom(ServerItem.class));
+        assertTrue(Tiered.class.isAssignableFrom(ServerItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
+        assertArrayEquals(new Class<?>[0], ServerItem.class.getDeclaredMethod("tier").getParameterTypes());
+    }
+
+    @Test
     void navigationUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<NavigationUpgradeItem> constructor = NavigationUpgradeItem.class.getConstructor(Item.Properties.class);
 

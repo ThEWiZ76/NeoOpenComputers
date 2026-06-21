@@ -99,6 +99,13 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void serverItemIdsAreStable() {
+        assertEquals("server_tier1", ModContentIds.SERVER_TIER1);
+        assertEquals("server_tier2", ModContentIds.SERVER_TIER2);
+        assertEquals("server_tier3", ModContentIds.SERVER_TIER3);
+    }
+
+    @Test
     void computerCaseBlockIdIsStable() {
         assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
     }

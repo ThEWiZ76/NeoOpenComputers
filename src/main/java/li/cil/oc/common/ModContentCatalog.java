@@ -61,6 +61,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_NETWORK_CARD = "lancard";
     public static final String COMPAT_PISTON_UPGRADE = "pistonUpgrade";
     public static final String COMPAT_REDSTONE_CARD = "redstone";
+    public static final String COMPAT_SERVER_TIER1 = "server1";
+    public static final String COMPAT_SERVER_TIER2 = "server2";
+    public static final String COMPAT_SERVER_TIER3 = "server3";
     public static final String COMPAT_SIGN_UPGRADE = "signUpgrade";
     public static final String COMPAT_SOLAR_GENERATOR_UPGRADE = "solarGeneratorUpgrade";
     public static final String COMPAT_STICKY_PISTON_UPGRADE = "stickyPistonUpgrade";
@@ -149,6 +152,9 @@ public final class ModContentCatalog {
                 ModItems.TERMINAL.get(),
                 ModItems.TERMINAL_SERVER.get(),
                 ModItems.NANOMACHINES.get(),
+                ModItems.SERVER_TIER1.get(),
+                ModItems.SERVER_TIER2.get(),
+                ModItems.SERVER_TIER3.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
                 ModItems.CPU_TIER3.get(),
@@ -360,6 +366,9 @@ public final class ModContentCatalog {
         final Item terminalItem,
         final Item terminalServerItem,
         final Item nanomachinesItem,
+        final Item serverTier1Item,
+        final Item serverTier2Item,
+        final Item serverTier3Item,
         final Item cpuTier1Item,
         final Item cpuTier2Item,
         final Item cpuTier3Item,
@@ -431,6 +440,12 @@ public final class ModContentCatalog {
         registry.register(COMPAT_TERMINAL_SERVER, null, terminalServerItem);
         registry.register(ModContentIds.NANOMACHINES, null, nanomachinesItem);
         registry.register(COMPAT_NANOMACHINES, null, nanomachinesItem);
+        registry.register(ModContentIds.SERVER_TIER1, null, serverTier1Item);
+        registry.register(ModContentIds.SERVER_TIER2, null, serverTier2Item);
+        registry.register(ModContentIds.SERVER_TIER3, null, serverTier3Item);
+        registry.register(COMPAT_SERVER_TIER1, null, serverTier1Item);
+        registry.register(COMPAT_SERVER_TIER2, null, serverTier2Item);
+        registry.register(COMPAT_SERVER_TIER3, null, serverTier3Item);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.ASSEMBLER, assembler, assemblerItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);

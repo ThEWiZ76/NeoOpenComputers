@@ -51,6 +51,9 @@ final class RecipeResourceTest {
             ModContentIds.TERMINAL,
             ModContentIds.TERMINAL_SERVER,
             ModContentIds.NANOMACHINES,
+            ModContentIds.SERVER_TIER1,
+            ModContentIds.SERVER_TIER2,
+            ModContentIds.SERVER_TIER3,
             ModContentIds.ASSEMBLER,
             ModContentIds.BATTERY_UPGRADE_TIER1,
             ModContentIds.BATTERY_UPGRADE_TIER2,
@@ -233,6 +236,23 @@ final class RecipeResourceTest {
         assertItem(keys, "A", "neoopencomputers:" + ModContentIds.ACID);
         assertItem(keys, "R", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
         assertItem(keys, "T", "neoopencomputers:" + ModContentIds.CAPACITOR);
+    }
+
+    @Test
+    void serverRecipesUseUpstreamRackMountableShape() throws IOException {
+        JsonObject tier1 = readJson(RECIPE_ROOT.resolve(ModContentIds.SERVER_TIER1 + ".json"));
+        JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.SERVER_TIER2 + ".json"));
+        JsonObject tier3 = readJson(RECIPE_ROOT.resolve(ModContentIds.SERVER_TIER3 + ".json"));
+
+        assertServerRecipe(tier1, "c:ingots/iron", ModContentIds.MEMORY_TIER1, ModContentIds.MICROCHIP_TIER1, ModContentIds.COMPONENT_BUS_TIER1);
+        assertServerRecipe(tier2, "c:ingots/gold", ModContentIds.MEMORY_TIER2, ModContentIds.MICROCHIP_TIER2, ModContentIds.COMPONENT_BUS_TIER2);
+        assertPattern(tier3, "IMI", "CUC", "OBO");
+        assertItem(tier3.getAsJsonObject("key"), "I", "minecraft:diamond");
+        assertItem(tier3.getAsJsonObject("key"), "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER3);
+        assertItem(tier3.getAsJsonObject("key"), "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier3.getAsJsonObject("key"), "U", "neoopencomputers:" + ModContentIds.COMPONENT_BUS_TIER3);
+        assertItem(tier3.getAsJsonObject("key"), "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier3.getAsJsonObject("key"), "O", "minecraft:obsidian");
     }
 
     @Test
@@ -1063,6 +1083,17 @@ final class RecipeResourceTest {
         assertItem(keys, "P", "minecraft:piston");
         assertItem(keys, "H", "minecraft:chest");
         assertItem(keys, "B", "neoopencomputers:" + base);
+    }
+
+    private static void assertServerRecipe(final JsonObject recipe, final String shellTag, final String memory, final String chip, final String bus) {
+        JsonObject keys = recipe.getAsJsonObject("key");
+        assertPattern(recipe, "IMI", "CUC", "OBO");
+        assertTag(keys, "I", shellTag);
+        assertItem(keys, "M", "neoopencomputers:" + memory);
+        assertItem(keys, "C", "neoopencomputers:" + chip);
+        assertItem(keys, "U", "neoopencomputers:" + bus);
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(keys, "O", "minecraft:obsidian");
     }
 
     private static void assertPattern(final JsonObject json, final String... expected) {

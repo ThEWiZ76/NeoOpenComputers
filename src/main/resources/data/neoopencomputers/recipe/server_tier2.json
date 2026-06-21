@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IMI",
+    "CUC",
+    "OBO"
+  ],
+  "key": {
+    "I": {
+      "tag": "c:ingots/gold"
+    },
+    "M": {
+      "item": "neoopencomputers:memory_tier2"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "U": {
+      "item": "neoopencomputers:component_bus_tier2"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:server_tier2"
+  }
+}

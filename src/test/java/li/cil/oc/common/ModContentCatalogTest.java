@@ -91,6 +91,12 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TERMINAL_SERVER));
         assertNotNull(registry.get(ModContentIds.NANOMACHINES));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_NANOMACHINES));
+        assertNotNull(registry.get(ModContentIds.SERVER_TIER1));
+        assertNotNull(registry.get(ModContentIds.SERVER_TIER2));
+        assertNotNull(registry.get(ModContentIds.SERVER_TIER3));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_SERVER_TIER1));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_SERVER_TIER2));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_SERVER_TIER3));
         assertNotNull(registry.get(ModContentIds.CABLE));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER1));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER2));
@@ -246,6 +252,12 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_TERMINAL_SERVER, registry.get(ModContentCatalog.COMPAT_TERMINAL_SERVER).name());
         assertEquals(ModContentIds.NANOMACHINES, registry.get(ModContentIds.NANOMACHINES).name());
         assertEquals(ModContentCatalog.COMPAT_NANOMACHINES, registry.get(ModContentCatalog.COMPAT_NANOMACHINES).name());
+        assertEquals(ModContentIds.SERVER_TIER1, registry.get(ModContentIds.SERVER_TIER1).name());
+        assertEquals(ModContentIds.SERVER_TIER2, registry.get(ModContentIds.SERVER_TIER2).name());
+        assertEquals(ModContentIds.SERVER_TIER3, registry.get(ModContentIds.SERVER_TIER3).name());
+        assertEquals(ModContentCatalog.COMPAT_SERVER_TIER1, registry.get(ModContentCatalog.COMPAT_SERVER_TIER1).name());
+        assertEquals(ModContentCatalog.COMPAT_SERVER_TIER2, registry.get(ModContentCatalog.COMPAT_SERVER_TIER2).name());
+        assertEquals(ModContentCatalog.COMPAT_SERVER_TIER3, registry.get(ModContentCatalog.COMPAT_SERVER_TIER3).name());
         assertEquals(ModContentIds.CABLE, registry.get(ModContentIds.CABLE).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER1, registry.get(ModContentIds.COMPUTER_CASE_TIER1).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER2, registry.get(ModContentIds.COMPUTER_CASE_TIER2).name());

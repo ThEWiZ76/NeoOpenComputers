@@ -130,6 +130,9 @@ public final class NeoOpenComputersGameTests {
         ModItems.TERMINAL.get();
         ModItems.TERMINAL_SERVER.get();
         ModItems.NANOMACHINES.get();
+        ModItems.SERVER_TIER1.get();
+        ModItems.SERVER_TIER2.get();
+        ModItems.SERVER_TIER3.get();
         ModItems.ASSEMBLER.get();
         ModItems.BATTERY_UPGRADE_TIER1.get();
         ModItems.BATTERY_UPGRADE_TIER2.get();
