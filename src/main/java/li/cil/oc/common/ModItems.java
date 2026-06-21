@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.item.AngelUpgradeItem;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.BatteryUpgradeItem;
 import li.cil.oc.common.item.CardContainerItem;
@@ -304,6 +305,10 @@ public final class ModItems {
     public static final DeferredItem<LeashUpgradeItem> LEASH_UPGRADE = ITEMS.register(
         ModContentIds.LEASH_UPGRADE,
         () -> new LeashUpgradeItem(new Item.Properties()));
+
+    public static final DeferredItem<AngelUpgradeItem> ANGEL_UPGRADE = ITEMS.register(
+        ModContentIds.ANGEL_UPGRADE,
+        () -> new AngelUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<WirelessNetworkCardItem> WIRELESS_NETWORK_CARD_TIER1 = ITEMS.register(
         ModContentIds.WIRELESS_NETWORK_CARD_TIER1,

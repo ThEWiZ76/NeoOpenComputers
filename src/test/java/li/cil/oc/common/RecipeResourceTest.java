@@ -90,6 +90,7 @@ final class RecipeResourceTest {
             ModContentIds.TRADING_UPGRADE,
             ModContentIds.TRACTOR_BEAM_UPGRADE,
             ModContentIds.LEASH_UPGRADE,
+            ModContentIds.ANGEL_UPGRADE,
             ModContentIds.KEYBOARD,
             ModContentIds.LINKED_CARD,
             ModContentIds.MANUAL,
@@ -612,6 +613,8 @@ final class RecipeResourceTest {
         JsonObject tractorBeam = tractorBeamRecipe.getAsJsonObject("key");
         JsonObject leashRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.LEASH_UPGRADE + ".json"));
         JsonObject leash = leashRecipe.getAsJsonObject("key");
+        JsonObject angelRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.ANGEL_UPGRADE + ".json"));
+        JsonObject angel = angelRecipe.getAsJsonObject("key");
         JsonObject solarRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SOLAR_GENERATOR_UPGRADE + ".json"));
         JsonObject solar = solarRecipe.getAsJsonObject("key");
         JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
@@ -675,6 +678,12 @@ final class RecipeResourceTest {
         assertTag(leash, "I", "c:ingots/iron");
         assertItem(leash, "L", "minecraft:lead");
         assertItem(leash, "C", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
+
+        assertPattern(angelRecipe, "IPI", "CSC", "IPI");
+        assertTag(angel, "I", "c:ingots/iron");
+        assertItem(angel, "P", "minecraft:ender_pearl");
+        assertItem(angel, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(angel, "S", "minecraft:sticky_piston");
 
         assertPattern(solarRecipe, "GGG", "CUC");
         assertItem(solar, "G", "minecraft:glass");

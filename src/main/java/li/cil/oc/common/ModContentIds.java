@@ -5,6 +5,7 @@ public final class ModContentIds {
     public static final String ADAPTER_BLOCK_ENTITY = "adapter";
     public static final String ANALYZER = "analyzer";
     public static final String ACID = "acid";
+    public static final String ANGEL_UPGRADE = "angel_upgrade";
     public static final String ALU = "alu";
     public static final String ARROW_KEYS = "arrow_keys";
     public static final String ASSEMBLER = "assembler";

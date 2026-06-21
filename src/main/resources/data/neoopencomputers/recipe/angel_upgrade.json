@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "P": {
+      "item": "minecraft:ender_pearl"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "S": {
+      "item": "minecraft:sticky_piston"
+    }
+  },
+  "pattern": [
+    "IPI",
+    "CSC",
+    "IPI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:angel_upgrade"
+  }
+}
