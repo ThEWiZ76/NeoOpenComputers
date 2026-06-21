@@ -5,6 +5,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
+import li.cil.oc.common.component.TerminalServerRegistry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
@@ -73,6 +74,19 @@ public class TerminalItem extends Item {
         return true;
     }
 
+    public static TerminalServerRackMountableEnvironment findBoundTerminalServer(final ItemStack terminal) {
+        final CompoundTag data = terminalData(terminal);
+        if (data == null) {
+            return null;
+        }
+        final String address = data.getString(TERMINAL_SERVER_TAG);
+        if (address.isBlank()) {
+            return null;
+        }
+        final TerminalServerRackMountableEnvironment terminalServer = TerminalServerRegistry.find(address);
+        return terminalServer != null && terminalServer.allowsTerminal(terminal) ? terminalServer : null;
+    }
+
     private static boolean bindToFirstTerminalServer(final ItemStack terminal, final RackBlockEntity rack) {
         for (int slot = 0; slot < rack.getContainerSize(); slot++) {
             if (bindToTerminalServer(terminal, rack, slot)) {
@@ -80,5 +94,16 @@ public class TerminalItem extends Item {
             }
         }
         return false;
+    }
+
+    private static CompoundTag terminalData(final ItemStack terminal) {
+        if (terminal == null || terminal.isEmpty()) {
+            return null;
+        }
+        final CustomData customData = terminal.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return null;
+        }
+        return customData.copyTag().getCompound(DATA_TAG);
     }
 }

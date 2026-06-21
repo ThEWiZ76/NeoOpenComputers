@@ -2226,6 +2226,22 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalItemResolvesOnlyAuthorizedLiveTerminalServer(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+
+        helper.assertTrue(TerminalItem.bindToTerminalServer(terminal, rack, 0), "Terminal did not bind to terminal server");
+        helper.assertTrue(TerminalItem.findBoundTerminalServer(terminal) == terminalServer, "Terminal did not resolve authorized terminal server");
+        terminalServer.removeVirtualNodes();
+        helper.assertTrue(TerminalItem.findBoundTerminalServer(terminal) == null, "Terminal resolved removed terminal server");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void analyzerReportsRackTerminalServerVirtualNodes(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
