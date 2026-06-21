@@ -3633,8 +3633,8 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(invokeUseWithoutItem(state, helper, screenPos, hit) == InteractionResult.CONSUME, "Screen click was not consumed");
 
         helper.runAtTickTime(5, () -> {
-            assertNextSignal(helper, computer, "touch", 13, 5, 0);
-            assertNextSignal(helper, computer, "drop", 13, 5, 0);
+            assertNextSignal(helper, computer, "touch", screen.node().address(), 13, 5, 0);
+            assertNextSignal(helper, computer, "drop", screen.node().address(), 13, 5, 0);
             helper.succeed();
         });
     }

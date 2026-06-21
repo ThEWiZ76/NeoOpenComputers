@@ -711,17 +711,19 @@ final class MachineRegistryTest {
     @Test
     void checkedSignalNetworkMessagesQueueMachineSignals() {
         Machine machine = new MachineRegistry().create(null);
+        TestEnvironment source = new TestEnvironment();
+        Network.joinNewNetwork(source.node());
         assertTrue(machine.start());
 
-        machine.onMessage(new TestMessage(null, "computer.checked_signal", new Object[]{"key_down", 'a', 30}));
-        machine.onMessage(new TestMessage(null, "computer.checked_signal", new Object[]{null, "touch", 2, 3, 0}));
+        machine.onMessage(new TestMessage(source.node(), "computer.checked_signal", new Object[]{null, "key_down", 'a', 30}));
+        machine.onMessage(new TestMessage(source.node(), "computer.checked_signal", new Object[]{null, "touch", 2, 3, 0}));
 
         Signal keySignal = machine.popSignal();
         assertEquals("key_down", keySignal.name());
-        assertArrayEquals(new Object[]{'a', 30}, keySignal.args());
+        assertArrayEquals(new Object[]{source.node().address(), 'a', 30}, keySignal.args());
         Signal touchSignal = machine.popSignal();
         assertEquals("touch", touchSignal.name());
-        assertArrayEquals(new Object[]{2, 3, 0}, touchSignal.args());
+        assertArrayEquals(new Object[]{source.node().address(), 2, 3, 0}, touchSignal.args());
     }
 
     @Test

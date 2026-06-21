@@ -27,6 +27,7 @@ import li.cil.oc.common.machine.ProgramLocations;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 import java.lang.reflect.InvocationTargetException;
@@ -373,7 +374,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     @Override
     public void onMessage(final Message message) {
         if (CHECKED_SIGNAL_MESSAGE.equals(message.name())) {
-            queueCheckedSignal(message.data());
+            queueCheckedSignal(message);
         } else if (COMPUTER_SIGNAL_MESSAGE.equals(message.name())) {
             queueNetworkSignal(message);
         } else if (COMPUTER_START_MESSAGE.equals(message.name())) {
@@ -849,7 +850,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         }
     }
 
-    private void queueCheckedSignal(final Object[] data) {
+    private void queueCheckedSignal(final Message message) {
+        final Object[] data = message.data();
         if (data.length == 0) {
             return;
         }
@@ -857,7 +859,19 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (data.length <= nameIndex || !(data[nameIndex] instanceof String signalName)) {
             return;
         }
-        signal(signalName, Arrays.copyOfRange(data, nameIndex + 1, data.length));
+        if (data[0] instanceof Player player && !canInteract(player.getGameProfile().getName())) {
+            return;
+        }
+        final Object[] rawArgs = Arrays.copyOfRange(data, nameIndex + 1, data.length);
+        final Node source = message.source();
+        if (source == null || source.address() == null) {
+            signal(signalName, rawArgs);
+            return;
+        }
+        final Object[] args = new Object[rawArgs.length + 1];
+        args[0] = source.address();
+        System.arraycopy(rawArgs, 0, args, 1, rawArgs.length);
+        signal(signalName, args);
     }
 
     private void queueNetworkSignal(final Message message) {
