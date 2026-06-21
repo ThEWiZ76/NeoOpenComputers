@@ -7,6 +7,7 @@ import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.common.blockentity.ScreenItemEnvironment;
 import li.cil.oc.common.component.AngelUpgradeEnvironment;
 import li.cil.oc.common.component.BatteryUpgradeEnvironment;
+import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.CraftingUpgradeEnvironment;
 import li.cil.oc.common.component.DatabaseEnvironment;
 import li.cil.oc.common.component.DataCardEnvironment;
@@ -109,6 +110,7 @@ public final class ModDriverCatalog {
                 providerFor(ModItems.TRADING_UPGRADE.get(), TradingUpgradeEnvironment.class),
                 providerFor(ModItems.TRACTOR_BEAM_UPGRADE.get(), TractorBeamUpgradeEnvironment.class),
                 providerFor(ModItems.ANGEL_UPGRADE.get(), AngelUpgradeEnvironment.class),
+                providerFor(ModItems.CHUNKLOADER_UPGRADE.get(), ChunkloaderUpgradeEnvironment.class),
                 providerFor(ModItems.GENERATOR_UPGRADE.get(), GeneratorUpgradeEnvironment.class),
                 providerFor(ModItems.SOLAR_GENERATOR_UPGRADE.get(), SolarGeneratorUpgradeEnvironment.class),
                 providerFor(ModItems.TANK_UPGRADE.get(), TankUpgradeEnvironment.class),

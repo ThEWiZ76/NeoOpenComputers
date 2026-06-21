@@ -1402,6 +1402,37 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chunkloaderUpgradeCreatesManagedComponent(final GameTestHelper helper) throws Exception {
+        final ItemStack stack = new ItemStack(ModItems.CHUNKLOADER_UPGRADE.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for chunkloader upgrade");
+        helper.assertTrue(driver.tier(stack) == 2, "Chunkloader tier mismatch");
+
+        final ManagedEnvironment environment = driver.createEnvironment(stack, new AgentTestHost(helper));
+        helper.assertTrue(environment != null, "Chunkloader upgrade did not create environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Chunkloader node is not a component connector");
+        final ComponentConnector component = (ComponentConnector) environment.node();
+        helper.assertTrue("chunkloader".equals(component.name()), "Chunkloader component name mismatch");
+        helper.assertTrue(environment instanceof DeviceInfo, "Chunkloader environment lacks device info");
+        final Map<String, String> info = ((DeviceInfo) environment).getDeviceInfo();
+        helper.assertTrue(DeviceInfo.DeviceClass.Generic.equals(info.get(DeviceInfo.DeviceAttribute.Class)), "Chunkloader device class mismatch");
+        helper.assertTrue("World stabilizer".equals(info.get(DeviceInfo.DeviceAttribute.Description)), "Chunkloader description mismatch");
+        helper.assertTrue("Realizer9001-CL".equals(info.get(DeviceInfo.DeviceAttribute.Product)), "Chunkloader product mismatch");
+        helper.assertTrue(Driver.environmentFor(stack) != null, "Chunkloader has no environment provider");
+
+        final Object[] inactive = component.invoke("isActive", null);
+        helper.assertTrue(Boolean.FALSE.equals(inactive[0]), "Chunkloader should start inactive");
+        final Object[] enabled = component.invoke("setActive", null, true);
+        helper.assertTrue(Boolean.TRUE.equals(enabled[0]), "Chunkloader did not report activation change");
+        final Object[] active = component.invoke("isActive", null);
+        helper.assertTrue(Boolean.TRUE.equals(active[0]), "Chunkloader should be active after setActive(true)");
+        environment.onMessage(new TestMessage(component, "computer.stopped", new Object[0]));
+        final Object[] stopped = component.invoke("isActive", null);
+        helper.assertTrue(Boolean.FALSE.equals(stopped[0]), "Chunkloader did not deactivate on computer.stopped");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tractorBeamUpgradeRejectsNonRobotAgentHost(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for tractor beam upgrade");
