@@ -43,7 +43,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         renderTooltip(guiGraphics, mouseX, mouseY);
         final int slot = serverSlotAt(mouseX, mouseY, leftPos, topPos);
         if (slot >= 0) {
-            guiGraphics.renderComponentTooltip(font, slotTooltip(menu.slotKind(slot)), mouseX, mouseY);
+            guiGraphics.renderComponentTooltip(font, slotTooltip(menu.slotKind(slot), menu.slotTierLimit(slot)), mouseX, mouseY);
         }
     }
 
@@ -59,8 +59,18 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         });
     }
 
-    public static List<Component> slotTooltip(final int kind) {
-        return List.of(slotLabel(kind));
+    public static Component slotTierLabel(final int tier) {
+        if (tier == Integer.MAX_VALUE) {
+            return Component.translatable("gui.neoopencomputers.server_rack.slot.any_tier");
+        }
+        if (tier < 0) {
+            return Component.translatable("gui.neoopencomputers.server_rack.slot.unavailable");
+        }
+        return Component.translatable("gui.neoopencomputers.server_rack.slot.max_tier", tier);
+    }
+
+    public static List<Component> slotTooltip(final int kind, final int tier) {
+        return List.of(slotLabel(kind), slotTierLabel(tier));
     }
 
     public static int serverSlotAt(final int mouseX, final int mouseY, final int left, final int top) {

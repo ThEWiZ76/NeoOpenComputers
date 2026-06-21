@@ -33,7 +33,7 @@ final class ServerRackMenuShapeTest {
         assertEquals(17, ServerRackMenu.SERVER_SLOT_COUNT);
         assertEquals(36, ServerRackMenu.PLAYER_SLOT_COUNT);
         assertEquals(53, ServerRackMenu.TOTAL_SLOT_COUNT);
-        assertEquals(17, ServerRackMenu.SERVER_DATA_COUNT);
+        assertEquals(34, ServerRackMenu.SERVER_DATA_COUNT);
     }
 
     @Test
@@ -43,9 +43,11 @@ final class ServerRackMenuShapeTest {
 
     @Test
     void serverRackMenuExposesSlotKindAccess() throws NoSuchMethodException {
-        final Method method = ServerRackMenu.class.getMethod("slotKind", int.class);
+        final Method kind = ServerRackMenu.class.getMethod("slotKind", int.class);
+        final Method tier = ServerRackMenu.class.getMethod("slotTierLimit", int.class);
 
-        assertEquals(int.class, method.getReturnType());
+        assertEquals(int.class, kind.getReturnType());
+        assertEquals(int.class, tier.getReturnType());
     }
 
     @Test
@@ -64,5 +66,12 @@ final class ServerRackMenuShapeTest {
         assertEquals(ServerRackMenu.SLOT_KIND_CPU, ServerRackMenu.slotKindForTier(1, 2));
         assertEquals(ServerRackMenu.SLOT_KIND_EEPROM, ServerRackMenu.slotKindForTier(1, 12));
         assertEquals(ServerRackMenu.SLOT_KIND_NONE, ServerRackMenu.slotKindForTier(1, 13));
+    }
+
+    @Test
+    void slotTierLimitForTierUsesServerTierLayout() {
+        assertEquals(2, ServerRackMenu.slotTierLimitForTier(1, 2));
+        assertEquals(Integer.MAX_VALUE, ServerRackMenu.slotTierLimitForTier(1, 12));
+        assertEquals(-1, ServerRackMenu.slotTierLimitForTier(1, 13));
     }
 }

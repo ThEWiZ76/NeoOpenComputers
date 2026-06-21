@@ -16,7 +16,7 @@ public class ServerRackMenu extends AbstractContainerMenu {
     public static final int SERVER_SLOT_COUNT = 17;
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int TOTAL_SLOT_COUNT = SERVER_SLOT_COUNT + PLAYER_SLOT_COUNT;
-    public static final int SERVER_DATA_COUNT = SERVER_SLOT_COUNT;
+    public static final int SERVER_DATA_COUNT = SERVER_SLOT_COUNT * 2;
 
     public static final int SLOT_KIND_NONE = 0;
     public static final int SLOT_KIND_CARD = 1;
@@ -90,7 +90,11 @@ public class ServerRackMenu extends AbstractContainerMenu {
     }
 
     public int slotKind(final int slot) {
-        return slot >= 0 && slot < SERVER_DATA_COUNT ? serverData.get(slot) : SLOT_KIND_NONE;
+        return slot >= 0 && slot < SERVER_SLOT_COUNT ? serverData.get(slot) : SLOT_KIND_NONE;
+    }
+
+    public int slotTierLimit(final int slot) {
+        return slot >= 0 && slot < SERVER_SLOT_COUNT ? serverData.get(SERVER_SLOT_COUNT + slot) : -1;
     }
 
     @Override
@@ -105,6 +109,14 @@ public class ServerRackMenu extends AbstractContainerMenu {
 
     public static int slotKindForTier(final int tier, final int slot) {
         return slotKindCode(ServerRackMountableEnvironment.slotTypeName(tier, slot));
+    }
+
+    public static int slotTierLimitFor(final Container serverInventory, final int slot) {
+        return serverInventory instanceof ServerRackMountableEnvironment server ? server.slotTierLimit(slot) : -1;
+    }
+
+    public static int slotTierLimitForTier(final int tier, final int slot) {
+        return ServerRackMountableEnvironment.slotTierLimit(tier, slot);
     }
 
     public static int slotKindCode(final String type) {
@@ -123,7 +135,13 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return new ContainerData() {
             @Override
             public int get(final int index) {
-                return slotKindFor(serverInventory, index);
+                if (index < 0 || index >= SERVER_DATA_COUNT) {
+                    return 0;
+                }
+                if (index < SERVER_SLOT_COUNT) {
+                    return slotKindFor(serverInventory, index);
+                }
+                return slotTierLimitFor(serverInventory, index - SERVER_SLOT_COUNT);
             }
 
             @Override
