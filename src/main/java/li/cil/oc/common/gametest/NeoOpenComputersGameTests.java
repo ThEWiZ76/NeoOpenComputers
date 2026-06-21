@@ -1876,6 +1876,35 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void relayWirelessCardRelaysPacketsToWirelessEndpoints(final GameTestHelper helper) {
+        final BlockPos relayPos = new BlockPos(1, 1, 1);
+        helper.setBlock(relayPos, ModBlocks.RELAY.get());
+        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(relayPos));
+        final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+        relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()));
+
+        final RecordingNetworkEnvironment source = new RecordingNetworkEnvironment();
+        final RecordingWirelessEndpoint receiver = new RecordingWirelessEndpoint(helper.getLevel(), helper.absolutePos(new BlockPos(4, 1, 1)));
+        Network.joinNewNetwork(source.node());
+        Network.joinWirelessNetwork(receiver);
+        source.node().connect(relay.sidedNode(Direction.WEST));
+        final Connector relayConnector = (Connector) relay.sidedNode(Direction.WEST);
+        relayConnector.changeBuffer(10);
+
+        final li.cil.oc.api.network.Packet packet = Network.newPacket(source.node().address(), null, 222, new Object[]{"wireless"});
+        source.node().sendToReachable("network.message", packet);
+        RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+
+        helper.assertTrue(receiver.lastPacket != null, "Relay did not send wireless packet");
+        helper.assertTrue(receiver.lastSender == relay, "Relay did not identify as wireless sender");
+        helper.assertTrue(receiver.lastPacket.ttl() == packet.ttl() - 1, "Relay wireless packet did not hop");
+        helper.assertTrue("wireless".equals(receiver.lastPacket.data()[0]), "Relay sent wrong wireless payload");
+        helper.assertTrue(relayConnector.localBuffer() < 10, "Relay did not spend energy for wireless forwarding");
+        Network.leaveWirelessNetwork(receiver);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void connectedConnectorNodesShareGlobalEnergy(final GameTestHelper helper) {
         final RecordingConnectorEnvironment source = new RecordingConnectorEnvironment(10);
         final RecordingConnectorEnvironment sink = new RecordingConnectorEnvironment(10);
@@ -3557,6 +3586,44 @@ public final class NeoOpenComputersGameTests {
 
         @Override
         public void onMessage(final Message message) {
+        }
+    }
+
+    private static final class RecordingWirelessEndpoint implements li.cil.oc.api.network.WirelessEndpoint {
+        private final net.minecraft.world.level.Level level;
+        private final BlockPos pos;
+        private li.cil.oc.api.network.Packet lastPacket;
+        private li.cil.oc.api.network.WirelessEndpoint lastSender;
+
+        private RecordingWirelessEndpoint(final net.minecraft.world.level.Level level, final BlockPos pos) {
+            this.level = level;
+            this.pos = pos;
+        }
+
+        @Override
+        public int x() {
+            return pos.getX();
+        }
+
+        @Override
+        public int y() {
+            return pos.getY();
+        }
+
+        @Override
+        public int z() {
+            return pos.getZ();
+        }
+
+        @Override
+        public net.minecraft.world.level.Level world() {
+            return level;
+        }
+
+        @Override
+        public void receivePacket(final li.cil.oc.api.network.Packet packet, final li.cil.oc.api.network.WirelessEndpoint sender) {
+            lastPacket = packet;
+            lastSender = sender;
         }
     }
 
