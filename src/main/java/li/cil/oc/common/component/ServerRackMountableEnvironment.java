@@ -9,6 +9,7 @@ import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.internal.Server;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Analyzable;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.driver.item.Slot;
@@ -28,6 +29,7 @@ import net.minecraft.world.level.Level;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -315,7 +317,20 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
-        return machine == null || machine.node() == null ? new Node[0] : new Node[]{machine.node()};
+        if (machine == null || machine.node() == null) {
+            return new Node[0];
+        }
+        final LinkedHashSet<Node> nodes = new LinkedHashSet<>();
+        final Node machineNode = machine.node();
+        nodes.add(machineNode);
+        if (machineNode.network() != null) {
+            for (final Node reachable : machineNode.reachableNodes()) {
+                if (reachable instanceof Component component && component.canBeSeenFrom(machineNode)) {
+                    nodes.add(reachable);
+                }
+            }
+        }
+        return nodes.toArray(Node[]::new);
     }
 
     @Override

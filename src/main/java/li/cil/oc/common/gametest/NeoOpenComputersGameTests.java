@@ -2359,6 +2359,27 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void analyzerReportsRackServerInternalComponents(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        helper.assertTrue(mountable instanceof li.cil.oc.api.internal.Server, "Rack did not create server mountable");
+        final net.minecraft.world.Container serverInventory = (net.minecraft.world.Container) mountable;
+        serverInventory.setItem(2, new ItemStack(ModItems.CPU_TIER3.get()));
+        serverInventory.setItem(5, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        serverInventory.setItem(8, new ItemStack(ModItems.HDD_TIER3.get()));
+        serverInventory.setItem(12, luaBiosEepromStack());
+
+        final List<Component> lines = AnalyzerItem.describe(rack, Direction.NORTH);
+        final String analysis = lines.stream().map(Component::getString).collect(java.util.stream.Collectors.joining("\n"));
+
+        helper.assertTrue(analysis.contains("Component: filesystem"), "Analyzer did not report rack server filesystem:\n" + analysis);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void raidCreatesFilesystemWhenFilledWithHardDisks(final GameTestHelper helper) {
         final BlockPos raidPos = new BlockPos(1, 1, 1);
         helper.setBlock(raidPos, ModBlocks.RAID.get());
