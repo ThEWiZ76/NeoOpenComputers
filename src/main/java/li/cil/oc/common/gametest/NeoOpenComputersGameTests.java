@@ -1324,6 +1324,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void angelUpgradeCreatesPassiveDeviceInfoEnvironment(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.ANGEL_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for angel upgrade");
+
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.ANGEL_UPGRADE.get()), new AgentTestHost(helper));
+        helper.assertTrue(environment != null, "Angel upgrade did not create environment");
+        helper.assertTrue(environment.node() != null, "Angel upgrade environment has no node");
+        helper.assertTrue(environment instanceof DeviceInfo, "Angel upgrade environment lacks device info");
+        final Map<String, String> info = ((DeviceInfo) environment).getDeviceInfo();
+        helper.assertTrue(DeviceInfo.DeviceClass.Generic.equals(info.get(DeviceInfo.DeviceAttribute.Class)), "Angel upgrade device class mismatch");
+        helper.assertTrue("Angel upgrade".equals(info.get(DeviceInfo.DeviceAttribute.Description)), "Angel upgrade description mismatch");
+        helper.assertTrue("FreePlacer (TM)".equals(info.get(DeviceInfo.DeviceAttribute.Product)), "Angel upgrade product mismatch");
+        helper.assertTrue("8192".equals(info.get(DeviceInfo.DeviceAttribute.Capacity)), "Angel upgrade capacity mismatch");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tractorBeamUpgradeRejectsNonRobotAgentHost(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for tractor beam upgrade");
