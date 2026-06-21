@@ -40,6 +40,10 @@ public class RackBlockEntity extends BlockEntity implements Rack {
         }
     }
 
+    public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final RackBlockEntity rack) {
+        rack.tickServer();
+    }
+
     public static boolean acceptsDriverSlot(final String slot) {
         return Slot.RackMountable.equals(slot);
     }
@@ -256,6 +260,14 @@ public class RackBlockEntity extends BlockEntity implements Rack {
         }
         final DriverItem driver = Driver.driverFor(stack);
         return driver != null && acceptsDriverSlot(driver.slot(stack));
+    }
+
+    private void tickServer() {
+        for (final RackMountable mountable : mountables) {
+            if (mountable != null && mountable.canUpdate()) {
+                mountable.update();
+            }
+        }
     }
 
     private void refreshMountables() {

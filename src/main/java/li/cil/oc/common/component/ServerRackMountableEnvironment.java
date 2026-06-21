@@ -90,6 +90,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private int pendingComponentSlot = -1;
+    private boolean wasWorking;
 
     public ServerRackMountableEnvironment(final Rack rack, final int slot, final int tier) {
         OpenComputersApi.initialize();
@@ -214,12 +215,47 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public boolean onActivate(final Player player, final InteractionHand hand, final ItemStack heldItem, final float hitX, final float hitY) {
-        return false;
+        if (player == null || !player.isShiftKeyDown()) {
+            return false;
+        }
+        final boolean changed;
+        if (machine.isRunning() || machine.isPaused()) {
+            changed = machine.stop();
+        } else if (canStartMachine()) {
+            changed = machine.start();
+        } else {
+            machine.crash("missing required components");
+            changed = false;
+        }
+        if (changed) {
+            updateWorkingState();
+            markChanged();
+        }
+        return true;
     }
 
     @Override
     public EnumSet<StateAware.State> getCurrentState() {
-        return EnumSet.of(StateAware.State.CanWork);
+        if (machine.isRunning() || machine.isPaused()) {
+            return EnumSet.of(StateAware.State.IsWorking);
+        }
+        if (canStartMachine()) {
+            return EnumSet.of(StateAware.State.CanWork);
+        }
+        return EnumSet.of(StateAware.State.None);
+    }
+
+    @Override
+    public boolean canUpdate() {
+        return machine.canUpdate();
+    }
+
+    @Override
+    public void update() {
+        machine.update();
+        if (updateWorkingState()) {
+            markChanged();
+        }
     }
 
     @Override
@@ -375,6 +411,36 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         if (machine != null) {
             machine.onHostChanged();
         }
+        updateWorkingState();
+    }
+
+    private boolean canStartMachine() {
+        boolean hasCpu = false;
+        boolean hasMemory = false;
+        boolean hasEeprom = false;
+        for (int index = 0; index < items.size(); index++) {
+            if (!canPlaceItem(index, items.get(index))) {
+                continue;
+            }
+            final String type = slotType(index);
+            if (Slot.CPU.equals(type)) {
+                hasCpu = true;
+            } else if (Slot.Memory.equals(type)) {
+                hasMemory = true;
+            } else if (SLOT_TYPE_EEPROM.equals(type)) {
+                hasEeprom = true;
+            }
+        }
+        return hasCpu && hasMemory && hasEeprom;
+    }
+
+    private boolean updateWorkingState() {
+        final boolean working = machine.isRunning() || machine.isPaused();
+        if (wasWorking == working) {
+            return false;
+        }
+        wasWorking = working;
+        return true;
     }
 
     private record ServerSlot(String type, int tier) {

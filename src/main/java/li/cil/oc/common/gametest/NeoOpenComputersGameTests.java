@@ -1719,6 +1719,35 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void rackServerBootsAndReportsWorkingState(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        helper.assertTrue(mountable instanceof li.cil.oc.api.internal.Server, "Rack did not create server mountable");
+        final li.cil.oc.api.internal.Server rackServer = (li.cil.oc.api.internal.Server) mountable;
+        final net.minecraft.world.Container serverInventory = (net.minecraft.world.Container) rackServer;
+        serverInventory.setItem(2, new ItemStack(ModItems.CPU_TIER3.get()));
+        serverInventory.setItem(5, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        serverInventory.setItem(8, bootableHardDiskStack(helper, "computer.pushSignal('rack_booted', 'ok')"));
+        serverInventory.setItem(12, luaBiosEepromStack());
+
+        helper.assertTrue(rackServer.machine().components().containsValue("filesystem"), "Rack server filesystem is not visible before boot: " + rackServer.machine().components());
+        helper.assertTrue(rackServer.machine().start(), "Rack server machine did not start");
+        helper.assertTrue(mountable.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.IsWorking), "Rack server did not report working state");
+        final CompoundTag data = mountable.getData();
+        mountable.save(data);
+        helper.assertTrue(data.contains("machine"), "Rack server did not persist machine state");
+
+        helper.succeedWhen(() -> {
+            RackBlockEntity.serverTick(helper.getLevel(), rackPos, helper.getBlockState(rackPos), rack);
+            helper.assertTrue(rackServer.machine().isRunning(), "Rack server stopped while ticking: " + rackServer.machine().lastError());
+        });
+    }
+
+    @GameTest(template = "empty")
     public static void tieredScreensExposeTierCapabilities(final GameTestHelper helper) {
         final BlockPos tier1Pos = new BlockPos(0, 1, 0);
         final BlockPos tier2Pos = new BlockPos(1, 1, 0);

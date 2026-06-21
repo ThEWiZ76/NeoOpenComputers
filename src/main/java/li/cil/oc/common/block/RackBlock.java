@@ -1,6 +1,7 @@
 package li.cil.oc.common.block;
 
 import com.mojang.serialization.MapCodec;
+import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -13,6 +14,8 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -34,6 +37,15 @@ public class RackBlock extends HorizontalDirectionalBlock implements EntityBlock
     @Override
     public BlockEntity newBlockEntity(final BlockPos pos, final BlockState state) {
         return new RackBlockEntity(pos, state);
+    }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(final Level level, final BlockState state, final BlockEntityType<T> type) {
+        if (level.isClientSide || type != ModBlockEntities.RACK.get()) {
+            return null;
+        }
+        return (tickerLevel, pos, blockState, blockEntity) ->
+            RackBlockEntity.serverTick(tickerLevel, pos, blockState, (RackBlockEntity) blockEntity);
     }
 
     @Override
