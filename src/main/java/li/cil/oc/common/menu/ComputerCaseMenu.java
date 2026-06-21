@@ -11,8 +11,9 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 public class ComputerCaseMenu extends AbstractContainerMenu {
-    public static final int COMPUTER_SLOT_COUNT = ComputerCaseBlockEntity.CONTAINER_SIZE;
+    public static final int MIN_COMPUTER_SLOT_COUNT = ComputerCaseBlockEntity.CONTAINER_SIZE;
     public static final int MAX_COMPUTER_SLOT_COUNT = 10;
+    public static final int COMPUTER_SLOT_COUNT = MAX_COMPUTER_SLOT_COUNT;
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int TOTAL_SLOT_COUNT = COMPUTER_SLOT_COUNT + PLAYER_SLOT_COUNT;
     public static final int MAX_TOTAL_SLOT_COUNT = MAX_COMPUTER_SLOT_COUNT + PLAYER_SLOT_COUNT;
@@ -42,9 +43,9 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
 
     public ComputerCaseMenu(final int containerId, final Inventory playerInventory, final Container computerInventory) {
         super(ModMenus.COMPUTER_CASE.get(), containerId);
-        checkContainerSize(computerInventory, COMPUTER_SLOT_COUNT);
+        checkContainerSize(computerInventory, MIN_COMPUTER_SLOT_COUNT);
         this.computerInventory = computerInventory;
-        computerSlotCount = MAX_COMPUTER_SLOT_COUNT;
+        computerSlotCount = COMPUTER_SLOT_COUNT;
         computerInventory.startOpen(playerInventory.player);
 
         for (int slot = 0; slot < computerSlotCount; slot++) {
@@ -58,6 +59,14 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
             });
         }
         addPlayerInventory(playerInventory);
+    }
+
+    public static int computerSlotX(final int slot) {
+        return COMPUTER_SLOT_POSITIONS[slot][0];
+    }
+
+    public static int computerSlotY(final int slot) {
+        return COMPUTER_SLOT_POSITIONS[slot][1];
     }
 
     @Override
