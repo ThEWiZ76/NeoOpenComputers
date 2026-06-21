@@ -20,7 +20,7 @@ public final class ModDriverCatalog {
             registerBlocks(registry, new ComputerCaseBlockDriver(), new DiskDriveBlockDriver(), new InventoryBlockDriver(), new ScreenBlockDriver());
             register(
                 registry,
-                ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(),
+                ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(), ModItems.APU_TIER1.get(), ModItems.APU_TIER2.get(),
                 ModItems.CARD_CONTAINER_TIER1.get(), ModItems.CARD_CONTAINER_TIER2.get(), ModItems.CARD_CONTAINER_TIER3.get(),
                 ModItems.TABLET.get(),
                 ModItems.BATTERY_UPGRADE_TIER1.get(), ModItems.BATTERY_UPGRADE_TIER2.get(), ModItems.BATTERY_UPGRADE_TIER3.get(),

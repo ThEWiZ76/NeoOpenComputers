@@ -9,6 +9,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_BATTERY_UPGRADE_TIER2 = "batteryUpgrade2";
     public static final String COMPAT_BATTERY_UPGRADE_TIER3 = "batteryUpgrade3";
     public static final String COMPAT_ANGEL_UPGRADE = "angelUpgrade";
+    public static final String COMPAT_APU_TIER1 = "apu1";
+    public static final String COMPAT_APU_TIER2 = "apu2";
     public static final String COMPAT_CHUNKLOADER_UPGRADE = "chunkloaderUpgrade";
     public static final String COMPAT_CIRCUIT_CHIP_TIER1 = "circuitChip1";
     public static final String COMPAT_CIRCUIT_CHIP_TIER2 = "circuitChip2";
@@ -155,6 +157,8 @@ public final class ModContentCatalog {
                 ModItems.SERVER_TIER1.get(),
                 ModItems.SERVER_TIER2.get(),
                 ModItems.SERVER_TIER3.get(),
+                ModItems.APU_TIER1.get(),
+                ModItems.APU_TIER2.get(),
                 ModItems.CPU_TIER1.get(),
                 ModItems.CPU_TIER2.get(),
                 ModItems.CPU_TIER3.get(),
@@ -369,6 +373,8 @@ public final class ModContentCatalog {
         final Item serverTier1Item,
         final Item serverTier2Item,
         final Item serverTier3Item,
+        final Item apuTier1Item,
+        final Item apuTier2Item,
         final Item cpuTier1Item,
         final Item cpuTier2Item,
         final Item cpuTier3Item,
@@ -446,6 +452,10 @@ public final class ModContentCatalog {
         registry.register(COMPAT_SERVER_TIER1, null, serverTier1Item);
         registry.register(COMPAT_SERVER_TIER2, null, serverTier2Item);
         registry.register(COMPAT_SERVER_TIER3, null, serverTier3Item);
+        registry.register(ModContentIds.APU_TIER1, null, apuTier1Item);
+        registry.register(ModContentIds.APU_TIER2, null, apuTier2Item);
+        registry.register(COMPAT_APU_TIER1, null, apuTier1Item);
+        registry.register(COMPAT_APU_TIER2, null, apuTier2Item);
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.ASSEMBLER, assembler, assemblerItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);

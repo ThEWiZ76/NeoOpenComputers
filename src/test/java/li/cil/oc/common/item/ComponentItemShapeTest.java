@@ -173,6 +173,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void apuItemIsProcessorDriver() throws NoSuchMethodException {
+        final Constructor<ApuItem> constructor = ApuItem.class.getConstructor(Item.Properties.class, int.class);
+
+        assertTrue(Item.class.isAssignableFrom(ApuItem.class));
+        assertTrue(Processor.class.isAssignableFrom(ApuItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void hoverUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<HoverUpgradeItem> constructor = HoverUpgradeItem.class.getConstructor(Item.Properties.class, int.class);
 

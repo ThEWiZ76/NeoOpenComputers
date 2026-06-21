@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GCG",
+    "PUB",
+    "GCG"
+  ],
+  "key": {
+    "G": {
+      "tag": "c:nuggets/gold"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "P": {
+      "item": "neoopencomputers:cpu_tier2"
+    },
+    "U": {
+      "item": "neoopencomputers:component_bus_tier1"
+    },
+    "B": {
+      "item": "neoopencomputers:graphics_card_tier1"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:apu_tier1"
+  }
+}

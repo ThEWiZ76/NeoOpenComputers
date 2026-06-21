@@ -106,6 +106,12 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void apuItemIdsAreStable() {
+        assertEquals("apu_tier1", ModContentIds.APU_TIER1);
+        assertEquals("apu_tier2", ModContentIds.APU_TIER2);
+    }
+
+    @Test
     void computerCaseBlockIdIsStable() {
         assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
     }

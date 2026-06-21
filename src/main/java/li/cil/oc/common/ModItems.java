@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.item.AngelUpgradeItem;
 import li.cil.oc.common.item.AnalyzerItem;
+import li.cil.oc.common.item.ApuItem;
 import li.cil.oc.common.item.BatteryUpgradeItem;
 import li.cil.oc.common.item.CardContainerItem;
 import li.cil.oc.common.item.ChunkloaderUpgradeItem;
@@ -95,6 +96,14 @@ public final class ModItems {
     public static final DeferredItem<ServerItem> SERVER_TIER3 = ITEMS.register(
         ModContentIds.SERVER_TIER3,
         () -> new ServerItem(new Item.Properties(), 2));
+
+    public static final DeferredItem<ApuItem> APU_TIER1 = ITEMS.register(
+        ModContentIds.APU_TIER1,
+        () -> new ApuItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<ApuItem> APU_TIER2 = ITEMS.register(
+        ModContentIds.APU_TIER2,
+        () -> new ApuItem(new Item.Properties(), 1));
 
     public static final DeferredItem<BlockItem> ASSEMBLER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ASSEMBLER,

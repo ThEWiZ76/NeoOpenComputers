@@ -7,6 +7,8 @@ public final class ModContentIds {
     public static final String ACID = "acid";
     public static final String ANGEL_UPGRADE = "angel_upgrade";
     public static final String ALU = "alu";
+    public static final String APU_TIER1 = "apu_tier1";
+    public static final String APU_TIER2 = "apu_tier2";
     public static final String ARROW_KEYS = "arrow_keys";
     public static final String ASSEMBLER = "assembler";
     public static final String ASSEMBLER_BLOCK_ENTITY = "assembler";

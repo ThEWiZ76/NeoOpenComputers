@@ -54,6 +54,8 @@ final class RecipeResourceTest {
             ModContentIds.SERVER_TIER1,
             ModContentIds.SERVER_TIER2,
             ModContentIds.SERVER_TIER3,
+            ModContentIds.APU_TIER1,
+            ModContentIds.APU_TIER2,
             ModContentIds.ASSEMBLER,
             ModContentIds.BATTERY_UPGRADE_TIER1,
             ModContentIds.BATTERY_UPGRADE_TIER2,
@@ -253,6 +255,15 @@ final class RecipeResourceTest {
         assertItem(tier3.getAsJsonObject("key"), "U", "neoopencomputers:" + ModContentIds.COMPONENT_BUS_TIER3);
         assertItem(tier3.getAsJsonObject("key"), "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(tier3.getAsJsonObject("key"), "O", "minecraft:obsidian");
+    }
+
+    @Test
+    void apuRecipesUseUpstreamShape() throws IOException {
+        JsonObject tier1 = readJson(RECIPE_ROOT.resolve(ModContentIds.APU_TIER1 + ".json"));
+        JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.APU_TIER2 + ".json"));
+
+        assertApuRecipe(tier1, true, ModContentIds.MICROCHIP_TIER1, ModContentIds.CPU_TIER2, ModContentIds.COMPONENT_BUS_TIER1, ModContentIds.GRAPHICS_CARD_TIER1);
+        assertApuRecipe(tier2, false, ModContentIds.MICROCHIP_TIER2, ModContentIds.CPU_TIER3, ModContentIds.COMPONENT_BUS_TIER2, ModContentIds.GRAPHICS_CARD_TIER2);
     }
 
     @Test
@@ -1094,6 +1105,20 @@ final class RecipeResourceTest {
         assertItem(keys, "U", "neoopencomputers:" + bus);
         assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(keys, "O", "minecraft:obsidian");
+    }
+
+    private static void assertApuRecipe(final JsonObject recipe, final boolean goldCorners, final String chip, final String cpu, final String bus, final String graphicsCard) {
+        JsonObject keys = recipe.getAsJsonObject("key");
+        assertPattern(recipe, "GCG", "PUB", "GCG");
+        if (goldCorners) {
+            assertTag(keys, "G", "c:nuggets/gold");
+        } else {
+            assertItem(keys, "G", "minecraft:diamond");
+        }
+        assertItem(keys, "C", "neoopencomputers:" + chip);
+        assertItem(keys, "P", "neoopencomputers:" + cpu);
+        assertItem(keys, "U", "neoopencomputers:" + bus);
+        assertItem(keys, "B", "neoopencomputers:" + graphicsCard);
     }
 
     private static void assertPattern(final JsonObject json, final String... expected) {

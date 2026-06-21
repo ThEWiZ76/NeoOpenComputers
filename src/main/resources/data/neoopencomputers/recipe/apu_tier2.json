@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GCG",
+    "PUB",
+    "GCG"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:diamond"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "P": {
+      "item": "neoopencomputers:cpu_tier3"
+    },
+    "U": {
+      "item": "neoopencomputers:component_bus_tier2"
+    },
+    "B": {
+      "item": "neoopencomputers:graphics_card_tier2"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:apu_tier2"
+  }
+}
