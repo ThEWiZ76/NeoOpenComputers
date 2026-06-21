@@ -77,7 +77,7 @@ final class LinkedCardEnvironmentTest {
 
         assertArrayEquals(new Object[]{true}, left.send(null, new TestArguments("payload", 7)));
 
-        assertEquals(List.of(Arrays.asList("modem_message", left.node().address(), 0, 0D, "payload", 7)), rightHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", right.node().address(), left.node().address(), 0, 0D, "payload", 7)), rightHost.signals);
         assertEquals(List.of(), leftHost.signals);
     }
 
@@ -101,7 +101,7 @@ final class LinkedCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, left.send(context, new TestArguments("payload")));
 
         assertEquals(0.71875D, connector.localBuffer(), 0.000_001D);
-        assertEquals(List.of(Arrays.asList("modem_message", left.node().address(), 0, 0D, "payload")), rightHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", right.node().address(), left.node().address(), 0, 0D, "payload")), rightHost.signals);
     }
 
     @Test

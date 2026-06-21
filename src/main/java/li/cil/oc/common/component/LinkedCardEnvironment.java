@@ -159,11 +159,12 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
             return;
         }
         final Object[] data = packet.data();
-        final Object[] signalArgs = new Object[3 + data.length];
-        signalArgs[0] = packet.source();
-        signalArgs[1] = packet.port();
-        signalArgs[2] = 0D;
-        System.arraycopy(data, 0, signalArgs, 3, data.length);
+        final Object[] signalArgs = new Object[4 + data.length];
+        signalArgs[0] = node().address();
+        signalArgs[1] = packet.source();
+        signalArgs[2] = packet.port();
+        signalArgs[3] = 0D;
+        System.arraycopy(data, 0, signalArgs, 4, data.length);
         machineHost.machine().signal(MODEM_MESSAGE_SIGNAL, signalArgs);
         if (isWakePacket(data)) {
             machineHost.machine().start();
