@@ -34,10 +34,15 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         final int top = topPos;
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF101820);
         guiGraphics.fill(left + 8, top + 18, left + imageWidth - 8, top + imageHeight - 8, 0xFF05080C);
+        final Component status = statusLabel(menu.snapshot());
+        if (status != null) {
+            guiGraphics.drawString(font, status, left + TEXT_LEFT, top + TEXT_TOP, 0xFF6F7F8F, false);
+            return;
+        }
         for (int row = 0; row < Math.min(menu.snapshot().height(), 15); row++) {
             final String line = snapshotLine(menu.snapshot(), row);
             if (!line.isBlank()) {
-                guiGraphics.drawString(font, line, left + 12, top + 22 + row * LINE_HEIGHT, TEXT_COLOR, false);
+                guiGraphics.drawString(font, line, left + TEXT_LEFT, top + TEXT_TOP + row * LINE_HEIGHT, TEXT_COLOR, false);
             }
         }
     }
@@ -104,6 +109,25 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     static String snapshotLine(final TerminalScreenSnapshot snapshot, final int row) {
         return snapshot == null ? "" : snapshot.line(row);
+    }
+
+    static boolean hasVisibleText(final TerminalScreenSnapshot snapshot) {
+        if (snapshot == null) {
+            return false;
+        }
+        for (int row = 0; row < snapshot.height(); row++) {
+            if (!snapshotLine(snapshot, row).isBlank()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static Component statusLabel(final TerminalScreenSnapshot snapshot) {
+        if (snapshot == null || snapshot.width() <= 0 || snapshot.height() <= 0) {
+            return Component.translatable("gui.neoopencomputers.terminal.no_screen_data");
+        }
+        return hasVisibleText(snapshot) ? null : Component.translatable("gui.neoopencomputers.terminal.blank_screen");
     }
 
     static TerminalKeyPayload keyPayload(final TerminalMenu menu, final boolean pressed, final char character, final int keyCode) {

@@ -7,6 +7,7 @@ import li.cil.oc.common.network.TerminalKeyPayload;
 import li.cil.oc.common.network.TerminalMousePayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Inventory;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
@@ -36,6 +37,29 @@ final class TerminalScreenShapeTest {
         final Method method = TerminalScreen.class.getDeclaredMethod("snapshotLine", TerminalScreenSnapshot.class, int.class);
 
         assertEquals(String.class, method.getReturnType());
+    }
+
+    @Test
+    void terminalScreenExposesSnapshotStatusHelpers() throws NoSuchMethodException {
+        final Method hasVisibleText = TerminalScreen.class.getDeclaredMethod("hasVisibleText", TerminalScreenSnapshot.class);
+        final Method statusLabel = TerminalScreen.class.getDeclaredMethod("statusLabel", TerminalScreenSnapshot.class);
+
+        assertEquals(boolean.class, hasVisibleText.getReturnType());
+        assertEquals(Component.class, statusLabel.getReturnType());
+    }
+
+    @Test
+    void terminalScreenStatusDistinguishesMissingAndBlankSnapshots() {
+        final TerminalScreenSnapshot missing = new TerminalScreenSnapshot(0, 0, new String[0]);
+        final TerminalScreenSnapshot blank = new TerminalScreenSnapshot(4, 2, new String[]{"", "   "});
+        final TerminalScreenSnapshot visible = new TerminalScreenSnapshot(4, 2, new String[]{"neo", ""});
+
+        assertEquals(false, TerminalScreen.hasVisibleText(missing));
+        assertEquals(false, TerminalScreen.hasVisibleText(blank));
+        assertEquals(true, TerminalScreen.hasVisibleText(visible));
+        assertTranslationKey("gui.neoopencomputers.terminal.no_screen_data", TerminalScreen.statusLabel(missing));
+        assertTranslationKey("gui.neoopencomputers.terminal.blank_screen", TerminalScreen.statusLabel(blank));
+        assertEquals(null, TerminalScreen.statusLabel(visible));
     }
 
     @Test
@@ -81,5 +105,10 @@ final class TerminalScreenShapeTest {
         containerIdField.setAccessible(true);
         containerIdField.setInt(menu, containerId);
         return menu;
+    }
+
+    private static void assertTranslationKey(final String expected, final Component component) {
+        assertTrue(component.getContents() instanceof TranslatableContents);
+        assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());
     }
 }

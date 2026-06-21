@@ -141,5 +141,7 @@
   "gui.neoopencomputers.rack.state.empty": "No server installed",
   "gui.neoopencomputers.rack.state.incomplete": "Incomplete server",
   "gui.neoopencomputers.rack.state.ready": "Ready",
-  "gui.neoopencomputers.rack.state.running": "Running"
+  "gui.neoopencomputers.rack.state.running": "Running",
+  "gui.neoopencomputers.terminal.blank_screen": "Blank terminal screen",
+  "gui.neoopencomputers.terminal.no_screen_data": "Waiting for terminal screen data"
 }
