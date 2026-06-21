@@ -50,6 +50,7 @@ import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
+import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
@@ -2179,6 +2180,48 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(TerminalServerRegistry.find(address) == rack.getMountable(0), "Terminal server registry did not resolve live mountable");
         rack.removeItemNoUpdate(0);
         helper.assertTrue(TerminalServerRegistry.find(address) == null, "Terminal server registry kept removed mountable");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void terminalServerPersistsBoundTerminalKeys(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+
+        helper.assertTrue(TerminalItem.bindToTerminalServer(terminal, rack, 0), "Terminal did not bind to terminal server");
+        helper.assertTrue(terminalServer.allowsTerminal(terminal), "Terminal server did not authorize bound terminal");
+
+        final CompoundTag saved = terminalServer.getData();
+        terminalServer.save(saved);
+        final TerminalServerRackMountableEnvironment loaded = new TerminalServerRackMountableEnvironment();
+        loaded.load(saved);
+
+        helper.assertTrue(loaded.allowsTerminal(terminal), "Terminal server did not persist bound terminal key");
+        loaded.removeVirtualNodes();
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void terminalServerKeepsOnlyLatestFourTerminalKeys(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+        final ItemStack[] terminals = new ItemStack[5];
+        for (int index = 0; index < terminals.length; index++) {
+            terminals[index] = new ItemStack(ModItems.TERMINAL.get());
+            helper.assertTrue(TerminalItem.bindToTerminalServer(terminals[index], rack, 0), "Terminal did not bind to terminal server");
+        }
+
+        helper.assertFalse(terminalServer.allowsTerminal(terminals[0]), "Terminal server kept evicted terminal key");
+        for (int index = 1; index < terminals.length; index++) {
+            helper.assertTrue(terminalServer.allowsTerminal(terminals[index]), "Terminal server lost recent terminal key");
+        }
         helper.succeed();
     }
 

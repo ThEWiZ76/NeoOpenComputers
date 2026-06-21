@@ -9,21 +9,32 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.blockentity.ScreenItemEnvironment;
+import li.cil.oc.common.item.TerminalItem;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class TerminalServerRackMountableEnvironment extends AbstractManagedEnvironment implements RackMountable, DeviceInfo {
     private static final String TAG_KIND = "kind";
     private static final String TAG_SCREEN = "screen";
     private static final String TAG_KEYBOARD = "keyboard";
+    private static final String TAG_KEYS = "oc:keys";
+    private static final int MAX_TERMINALS = 4;
 
     private final ScreenItemEnvironment screen;
     private final KeyboardItemEnvironment keyboard;
+    private final List<String> keys = new ArrayList<>();
 
     public TerminalServerRackMountableEnvironment() {
         OpenComputersApi.initialize();
@@ -53,6 +64,11 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         if (nbt.contains(TAG_KEYBOARD)) {
             keyboard.load(nbt.getCompound(TAG_KEYBOARD));
         }
+        keys.clear();
+        final ListTag keyTags = nbt.getList(TAG_KEYS, StringTag.TAG_STRING);
+        for (int index = 0; index < keyTags.size(); index++) {
+            keys.add(keyTags.getString(index));
+        }
         connectVirtualTerminal();
     }
 
@@ -65,6 +81,11 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         final CompoundTag keyboardTag = new CompoundTag();
         keyboard.save(keyboardTag);
         nbt.put(TAG_KEYBOARD, keyboardTag);
+        final ListTag keyTags = new ListTag();
+        for (final String key : keys) {
+            keyTags.add(StringTag.valueOf(key));
+        }
+        nbt.put(TAG_KEYS, keyTags);
     }
 
     public void removeVirtualNodes() {
@@ -75,6 +96,27 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         if (keyboard.node() != null) {
             keyboard.node().remove();
         }
+    }
+
+    public String bindTerminal(final ItemStack terminal) {
+        if (terminal == null || terminal.isEmpty() || node() == null || node().address() == null) {
+            return null;
+        }
+        final String oldKey = terminalKey(terminal);
+        if (oldKey != null) {
+            keys.remove(oldKey);
+        }
+        while (keys.size() >= MAX_TERMINALS) {
+            keys.removeFirst();
+        }
+        final String key = UUID.randomUUID().toString();
+        keys.add(key);
+        return key;
+    }
+
+    public boolean allowsTerminal(final ItemStack terminal) {
+        final String key = terminalKey(terminal);
+        return key != null && keys.contains(key);
     }
 
     @Override
@@ -121,5 +163,17 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
             node().connect(keyboard.node());
         }
         TerminalServerRegistry.add(this);
+    }
+
+    private static String terminalKey(final ItemStack terminal) {
+        if (terminal == null || terminal.isEmpty()) {
+            return null;
+        }
+        final CustomData customData = terminal.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return null;
+        }
+        final String key = customData.copyTag().getCompound(TerminalItem.DATA_TAG).getString(TerminalItem.KEY_TAG);
+        return key.isBlank() ? null : key;
     }
 }

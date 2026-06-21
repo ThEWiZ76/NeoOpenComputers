@@ -4,6 +4,7 @@ import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.blockentity.RackBlockEntity;
+import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
@@ -18,6 +19,7 @@ public class TerminalItem extends Item {
     public static final String TERMINAL_SERVER_TAG = "terminalServer";
     public static final String SCREEN_TAG = "screen";
     public static final String KEYBOARD_TAG = "keyboard";
+    public static final String KEY_TAG = "key";
 
     public TerminalItem(final Properties properties) {
         super(properties.stacksTo(1));
@@ -53,12 +55,19 @@ public class TerminalItem extends Item {
         if (terminalServerAddress == null || screenAddress == null || keyboardAddress == null) {
             return false;
         }
+        final String key = mountable instanceof TerminalServerRackMountableEnvironment terminalServer
+            ? terminalServer.bindTerminal(terminal)
+            : null;
+        if (key == null || key.isBlank()) {
+            return false;
+        }
         final CustomData customData = terminal.get(DataComponents.CUSTOM_DATA);
         final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
         final CompoundTag data = new CompoundTag();
         data.putString(TERMINAL_SERVER_TAG, terminalServerAddress);
         data.putString(SCREEN_TAG, screenAddress);
         data.putString(KEYBOARD_TAG, keyboardAddress);
+        data.putString(KEY_TAG, key);
         root.put(DATA_TAG, data);
         terminal.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
         return true;
