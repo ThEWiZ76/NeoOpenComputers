@@ -3,6 +3,7 @@ package li.cil.oc.common.item;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Tiered;
+import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
@@ -30,7 +31,10 @@ public class ServerItem extends Item implements DriverItem, Tiered {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return new ServerRackMountableEnvironment(tier, false);
+        if (host instanceof Rack rack) {
+            return new ServerRackMountableEnvironment(rack, findSlot(rack, stack), tier);
+        }
+        return new ServerRackMountableEnvironment(null, -1, tier);
     }
 
     @Override
@@ -46,5 +50,15 @@ public class ServerItem extends Item implements DriverItem, Tiered {
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
         return new CompoundTag();
+    }
+
+    private static int findSlot(final Rack rack, final ItemStack stack) {
+        for (int slot = 0; slot < rack.getContainerSize(); slot++) {
+            final ItemStack candidate = rack.getItem(slot);
+            if (candidate == stack || ItemStack.matches(candidate, stack)) {
+                return slot;
+            }
+        }
+        return -1;
     }
 }

@@ -1683,6 +1683,12 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(mountable != null, "Rack did not create server mountable");
         helper.assertTrue(mountable.node() != null, "Rack mountable has no node");
         helper.assertTrue(rack.indexOfMountable(mountable) == 0, "Rack mountable index mismatch");
+        helper.assertTrue(mountable instanceof li.cil.oc.api.internal.Server, "Rack server mountable is not an internal server");
+        final li.cil.oc.api.internal.Server rackServer = (li.cil.oc.api.internal.Server) mountable;
+        helper.assertTrue(rackServer.rack() == rack, "Rack server reported wrong rack");
+        helper.assertTrue(rackServer.slot() == 0, "Rack server reported wrong slot");
+        helper.assertTrue(rackServer.tier() == 1, "Rack server reported wrong tier");
+        helper.assertTrue(rackServer.machine() != null, "Rack server did not create machine");
         helper.succeed();
     }
 

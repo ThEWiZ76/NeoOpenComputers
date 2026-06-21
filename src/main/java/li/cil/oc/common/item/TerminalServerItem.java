@@ -4,7 +4,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.common.component.ServerRackMountableEnvironment;
+import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +21,7 @@ public class TerminalServerItem extends Item implements DriverItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return new ServerRackMountableEnvironment(0, true);
+        return new TerminalServerRackMountableEnvironment();
     }
 
     @Override
