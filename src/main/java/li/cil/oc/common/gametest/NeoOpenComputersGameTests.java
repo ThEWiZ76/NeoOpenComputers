@@ -52,6 +52,7 @@ import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
 import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.menu.ComputerCaseMenu;
+import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
@@ -1063,6 +1064,30 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(disassembler.containsOutput(ModItems.TABLET_CASE_TIER2.get()), "Disassembler did not output tablet case");
         helper.assertTrue(disassembler.containsOutput(ModItems.CPU_TIER1.get()), "Disassembler did not output CPU");
         helper.assertTrue(disassembler.containsOutput(ModItems.MEMORY_TIER1.get()), "Disassembler did not output memory");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void disassemblerMenuReportsInputState(final GameTestHelper helper) {
+        final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
+        final ItemStack memory = new ItemStack(ModItems.MEMORY_TIER1.get());
+        final ItemStack tablet = ModItems.TABLET.get().assembleFromCase(
+            new ItemStack(ModItems.TABLET_CASE_TIER2.get()),
+            ItemStack.EMPTY,
+            cpu.copy(),
+            memory.copy());
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.DISASSEMBLER.get());
+        final DisassemblerBlockEntity disassembler = helper.getBlockEntity(pos);
+
+        helper.assertTrue(DisassemblerMenu.stateFor(disassembler) == DisassemblerMenu.STATE_EMPTY, "Empty disassembler did not report empty state");
+
+        disassembler.setItem(DisassemblerBlockEntity.SLOT_INPUT, tablet);
+        helper.assertTrue(DisassemblerMenu.stateFor(disassembler) == DisassemblerMenu.STATE_READY, "Ready disassembler did not report ready state");
+        helper.assertTrue(!disassembler.canPlaceItem(DisassemblerBlockEntity.SLOT_OUTPUT_START, tablet), "Disassembler output slot accepted player input");
+
+        disassembler.setItem(DisassemblerBlockEntity.SLOT_OUTPUT_START, new ItemStack(Items.STONE));
+        helper.assertTrue(DisassemblerMenu.stateFor(disassembler) == DisassemblerMenu.STATE_BLOCKED, "Blocked disassembler did not report blocked state");
         helper.succeed();
     }
 

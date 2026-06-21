@@ -157,6 +157,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void disassemblerMenuIdIsStable() {
+        assertEquals("disassembler", ModContentIds.DISASSEMBLER_MENU);
+    }
+
+    @Test
     void powerDistributorBlockIdIsStable() {
         assertEquals("power_distributor", ModContentIds.POWER_DISTRIBUTOR);
     }

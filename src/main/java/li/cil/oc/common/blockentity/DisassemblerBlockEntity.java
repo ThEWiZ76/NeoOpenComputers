@@ -1,23 +1,28 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.template.DisassemblerTemplates;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.Containers;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class DisassemblerBlockEntity extends BlockEntity implements Container {
+public class DisassemblerBlockEntity extends BlockEntity implements Container, MenuProvider {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT_START = 1;
     public static final int OUTPUT_SLOT_COUNT = 9;
@@ -115,8 +120,23 @@ public class DisassemblerBlockEntity extends BlockEntity implements Container {
     }
 
     @Override
+    public boolean canPlaceItem(final int slot, final ItemStack stack) {
+        return slot == SLOT_INPUT && canInsert(stack);
+    }
+
+    @Override
     public boolean stillValid(final Player player) {
         return !isRemoved();
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.disassembler");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new DisassemblerMenu(containerId, playerInventory, this);
     }
 
     @Override

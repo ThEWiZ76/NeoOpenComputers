@@ -58,8 +58,12 @@ public class DisassemblerBlock extends HorizontalDirectionalBlock implements Ent
         if (level.isClientSide) {
             return InteractionResult.SUCCESS;
         }
-        if (level.getBlockEntity(pos) instanceof DisassemblerBlockEntity disassembler && disassembler.canDisassemble()) {
-            return disassembler.disassemble() ? InteractionResult.CONSUME : InteractionResult.PASS;
+        if (level.getBlockEntity(pos) instanceof DisassemblerBlockEntity disassembler) {
+            if (player.isShiftKeyDown() && disassembler.canDisassemble()) {
+                return disassembler.disassemble() ? InteractionResult.CONSUME : InteractionResult.PASS;
+            }
+            player.openMenu(disassembler);
+            return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
     }
