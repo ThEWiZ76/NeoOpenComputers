@@ -2242,6 +2242,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalServerSnapshotIncludesVirtualScreenText(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+
+        terminalServer.screen().set(0, 0, "neo", false);
+        final li.cil.oc.common.component.TerminalScreenSnapshot snapshot = terminalServer.screenSnapshot();
+
+        helper.assertTrue(snapshot.width() == terminalServer.screen().renderWidth(), "Terminal snapshot width mismatch");
+        helper.assertTrue(snapshot.height() == terminalServer.screen().renderHeight(), "Terminal snapshot height mismatch");
+        helper.assertTrue("neo".equals(snapshot.line(0)), "Terminal snapshot missed virtual screen text");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void analyzerReportsRackTerminalServerVirtualNodes(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

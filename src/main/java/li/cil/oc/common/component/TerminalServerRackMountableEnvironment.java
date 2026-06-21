@@ -4,6 +4,7 @@ import li.cil.oc.api.Network;
 import li.cil.oc.api.component.RackBusConnectable;
 import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.util.StateAware;
@@ -119,6 +120,18 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         return key != null && keys.contains(key);
     }
 
+    public TextBuffer screen() {
+        return screen;
+    }
+
+    public TerminalScreenSnapshot screenSnapshot() {
+        final String[] lines = new String[screen.renderHeight()];
+        for (int row = 0; row < lines.length; row++) {
+            lines[row] = line(row);
+        }
+        return new TerminalScreenSnapshot(screen.renderWidth(), screen.renderHeight(), lines);
+    }
+
     @Override
     public int getConnectableCount() {
         return 0;
@@ -163,6 +176,14 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
             node().connect(keyboard.node());
         }
         TerminalServerRegistry.add(this);
+    }
+
+    private String line(final int row) {
+        final StringBuilder builder = new StringBuilder(screen.renderWidth());
+        for (int column = 0; column < screen.renderWidth(); column++) {
+            builder.appendCodePoint(screen.getCodePoint(column, row));
+        }
+        return builder.toString().stripTrailing();
     }
 
     private static String terminalKey(final ItemStack terminal) {
