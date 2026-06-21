@@ -1132,6 +1132,9 @@ public final class NeoOpenComputersGameTests {
         assertRackMountableDriver(helper, new ItemStack(ModItems.SERVER_TIER1.get()), 0);
         assertRackMountableDriver(helper, new ItemStack(ModItems.SERVER_TIER3.get()), 2);
         assertRackMountableDriver(helper, new ItemStack(ModItems.TERMINAL_SERVER.get()), 0);
+        assertComponentBusDriver(helper, new ItemStack(ModItems.COMPONENT_BUS_TIER1.get()), 0, 8);
+        assertComponentBusDriver(helper, new ItemStack(ModItems.COMPONENT_BUS_TIER2.get()), 1, 12);
+        assertComponentBusDriver(helper, new ItemStack(ModItems.COMPONENT_BUS_TIER3.get()), 2, 16);
         helper.succeed();
     }
 
@@ -1694,12 +1697,14 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(serverInventory.getContainerSize() == 13, "Tier 2 server slot count mismatch");
         helper.assertTrue(serverInventory.canPlaceItem(0, new ItemStack(ModItems.NETWORK_CARD.get())), "Server rejected card slot item");
         helper.assertTrue(serverInventory.canPlaceItem(2, new ItemStack(ModItems.CPU_TIER3.get())), "Server rejected tier 3 CPU");
+        helper.assertTrue(serverInventory.canPlaceItem(3, new ItemStack(ModItems.COMPONENT_BUS_TIER3.get())), "Server rejected tier 3 component bus");
         helper.assertTrue(serverInventory.canPlaceItem(5, new ItemStack(ModItems.MEMORY_TIER3.get())), "Server rejected tier 3 memory");
         helper.assertTrue(serverInventory.canPlaceItem(8, new ItemStack(ModItems.HDD_TIER3.get())), "Server rejected tier 3 hard disk");
         helper.assertTrue(serverInventory.canPlaceItem(12, luaBiosEepromStack()), "Server rejected EEPROM");
         helper.assertTrue(!serverInventory.canPlaceItem(2, new ItemStack(ModItems.MEMORY_TIER1.get())), "Server CPU slot accepted memory");
         serverInventory.setItem(0, new ItemStack(ModItems.NETWORK_CARD.get()));
         serverInventory.setItem(2, new ItemStack(ModItems.CPU_TIER3.get()));
+        serverInventory.setItem(3, new ItemStack(ModItems.COMPONENT_BUS_TIER3.get()));
         serverInventory.setItem(5, new ItemStack(ModItems.MEMORY_TIER3.get()));
         serverInventory.setItem(8, new ItemStack(ModItems.HDD_TIER3.get()));
         serverInventory.setItem(12, luaBiosEepromStack());
@@ -1709,7 +1714,7 @@ public final class NeoOpenComputersGameTests {
                 internalComponentCount++;
             }
         }
-        helper.assertTrue(internalComponentCount == 5, "Rack server internal component count mismatch");
+        helper.assertTrue(internalComponentCount == 6, "Rack server internal component count mismatch");
         helper.succeed();
     }
 
@@ -2926,6 +2931,16 @@ public final class NeoOpenComputersGameTests {
         final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticEnvironmentHost(helper));
         helper.assertTrue(environment instanceof li.cil.oc.api.component.RackMountable, "Driver did not create rack mountable for " + stack);
         helper.assertTrue(environment.node() != null, "Rack mountable has no node for " + stack);
+    }
+
+    private static void assertComponentBusDriver(final GameTestHelper helper, final ItemStack stack, final int tier, final int supportedComponents) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver instanceof Processor, "No component bus processor driver for " + stack);
+        helper.assertTrue(Slot.ComponentBus.equals(driver.slot(stack)), "Expected component bus slot for " + stack);
+        helper.assertTrue(driver.tier(stack) == tier, "Expected component bus tier " + tier + " for " + stack + " but got " + driver.tier(stack));
+        helper.assertTrue(((Processor) driver).supportedComponents(stack) == supportedComponents, "Expected component bus supported component count " + supportedComponents);
+        helper.assertTrue(((Processor) driver).architecture(stack) == null, "Component bus should not provide an architecture");
+        helper.assertTrue(driver.createEnvironment(stack, new StaticEnvironmentHost(helper)) == null, "Component bus should not create a component environment");
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {

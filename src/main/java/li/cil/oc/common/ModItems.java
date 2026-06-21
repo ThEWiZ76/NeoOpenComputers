@@ -7,6 +7,7 @@ import li.cil.oc.common.item.ApuItem;
 import li.cil.oc.common.item.BatteryUpgradeItem;
 import li.cil.oc.common.item.CardContainerItem;
 import li.cil.oc.common.item.ChunkloaderUpgradeItem;
+import li.cil.oc.common.item.ComponentBusItem;
 import li.cil.oc.common.item.CraftingUpgradeItem;
 import li.cil.oc.common.item.CpuItem;
 import li.cil.oc.common.item.DataCardItem;
@@ -170,9 +171,15 @@ public final class ModItems {
     public static final DeferredItem<Item> CHAMELIUM = ITEMS.registerSimpleItem(ModContentIds.CHAMELIUM, new Item.Properties());
     public static final DeferredItem<Item> TRANSISTOR = ITEMS.registerSimpleItem(ModContentIds.TRANSISTOR, new Item.Properties());
     public static final DeferredItem<Item> CAPACITOR = ITEMS.registerSimpleItem(ModContentIds.CAPACITOR, new Item.Properties());
-    public static final DeferredItem<Item> COMPONENT_BUS_TIER1 = ITEMS.registerSimpleItem(ModContentIds.COMPONENT_BUS_TIER1, new Item.Properties());
-    public static final DeferredItem<Item> COMPONENT_BUS_TIER2 = ITEMS.registerSimpleItem(ModContentIds.COMPONENT_BUS_TIER2, new Item.Properties());
-    public static final DeferredItem<Item> COMPONENT_BUS_TIER3 = ITEMS.registerSimpleItem(ModContentIds.COMPONENT_BUS_TIER3, new Item.Properties());
+    public static final DeferredItem<ComponentBusItem> COMPONENT_BUS_TIER1 = ITEMS.register(
+        ModContentIds.COMPONENT_BUS_TIER1,
+        () -> new ComponentBusItem(new Item.Properties(), 0));
+    public static final DeferredItem<ComponentBusItem> COMPONENT_BUS_TIER2 = ITEMS.register(
+        ModContentIds.COMPONENT_BUS_TIER2,
+        () -> new ComponentBusItem(new Item.Properties(), 1));
+    public static final DeferredItem<ComponentBusItem> COMPONENT_BUS_TIER3 = ITEMS.register(
+        ModContentIds.COMPONENT_BUS_TIER3,
+        () -> new ComponentBusItem(new Item.Properties(), 2));
     public static final DeferredItem<Item> MICROCHIP_TIER1 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER1, new Item.Properties());
     public static final DeferredItem<Item> MICROCHIP_TIER2 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER2, new Item.Properties());
     public static final DeferredItem<Item> MICROCHIP_TIER3 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER3, new Item.Properties());
