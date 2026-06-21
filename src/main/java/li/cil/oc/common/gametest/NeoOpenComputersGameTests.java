@@ -2922,6 +2922,42 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void motionSensorRequiresLineOfSight(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos sensorPos = new BlockPos(1, 1, 1);
+        final BlockPos wallBase = new BlockPos(2, 1, 1);
+        final BlockPos villagerPos = new BlockPos(3, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(sensorPos, ModBlocks.MOTION_SENSOR.get());
+        helper.setBlock(wallBase, Blocks.STONE);
+        helper.setBlock(wallBase.above(), Blocks.STONE);
+
+        final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "Villager did not spawn");
+        final BlockPos absoluteVillagerPos = helper.absolutePos(villagerPos);
+        villager.setNoAi(true);
+        villager.moveTo(absoluteVillagerPos.getX() + 0.5D, absoluteVillagerPos.getY(), absoluteVillagerPos.getZ() + 0.5D, 0, 0);
+        helper.getLevel().addFreshEntity(villager);
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        startSignalComputer(helper, computer);
+
+        helper.runAtTickTime(2, () ->
+            helper.assertTrue(componentAddress(computer, "motion_sensor") != null, "Motion sensor component is not visible: " + computer.machine().components()));
+        helper.runAtTickTime(20, () -> {
+            for (int attempt = 0; attempt < 16; attempt++) {
+                final Signal signal = computer.machine().popSignal();
+                if (signal == null) {
+                    break;
+                }
+                helper.assertTrue(!"motion".equals(signal.name()), "Motion sensor detected entity through wall");
+            }
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void inventoryControllerStoresStacksInDatabase(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);

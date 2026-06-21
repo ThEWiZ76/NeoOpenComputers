@@ -15,10 +15,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
@@ -131,7 +133,7 @@ public class MotionSensorBlockEntity extends BlockEntity implements Environment,
         final Vec3 center = Vec3.atCenterOf(pos);
         final AABB bounds = new AABB(pos).inflate(RADIUS);
         final Map<Integer, Vec3> visibleEntities = new HashMap<>();
-        for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, bounds, entity -> entity.isAlive() && !entity.isInvisible())) {
+        for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, bounds, entity -> entity.isAlive() && isVisible(level, center, entity))) {
             final Vec3 entityPosition = entity.position();
             if (entityPosition.distanceToSqr(center) > RADIUS * RADIUS) {
                 continue;
@@ -144,6 +146,17 @@ public class MotionSensorBlockEntity extends BlockEntity implements Environment,
         }
         trackedEntities.clear();
         trackedEntities.putAll(visibleEntities);
+    }
+
+    private static boolean isVisible(final Level level, final Vec3 center, final LivingEntity entity) {
+        if (entity.isInvisible()) {
+            return false;
+        }
+        return hasClearPath(level, center, entity.position(), entity) || hasClearPath(level, center, entity.getEyePosition(), entity);
+    }
+
+    private static boolean hasClearPath(final Level level, final Vec3 center, final Vec3 target, final LivingEntity entity) {
+        return level.clip(new ClipContext(center, target, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity)).getType() == HitResult.Type.MISS;
     }
 
     private void sendMotionSignal(final Vec3 center, final Vec3 entityPosition) {
