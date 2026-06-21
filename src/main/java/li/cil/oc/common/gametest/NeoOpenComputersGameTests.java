@@ -50,6 +50,7 @@ import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
+import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
@@ -3211,6 +3212,27 @@ public final class NeoOpenComputersGameTests {
             assertNextSignal(helper, computer, "hdd_booted", "ok");
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void computerCaseMenuReportsMachineStatus(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        helper.assertTrue(ComputerCaseMenu.computerStateFor(computer) == ComputerCaseMenu.STATE_INCOMPLETE, "Empty computer case did not report incomplete status");
+        helper.assertTrue(ComputerCaseMenu.missingRequirementsFor(computer) == (ComputerCaseMenu.MISSING_CPU | ComputerCaseMenu.MISSING_MEMORY | ComputerCaseMenu.MISSING_EEPROM), "Empty computer case missing mask mismatch");
+
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(ComputerCaseMenu.missingRequirementsFor(computer) == 0, "Complete computer case reported missing requirements");
+        helper.assertTrue(ComputerCaseMenu.computerStateFor(computer) == ComputerCaseMenu.STATE_READY, "Complete stopped computer case did not report ready status");
+        helper.assertTrue(computer.toggleMachine(), "Computer case did not start with required components");
+        helper.assertTrue(ComputerCaseMenu.computerStateFor(computer) == ComputerCaseMenu.STATE_RUNNING, "Running computer case did not report running status");
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 160)
