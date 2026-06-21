@@ -39,6 +39,8 @@ final class RecipeResourceTest {
             ModContentIds.CONTROL_UNIT,
             ModContentIds.DISK_PLATTER,
             ModContentIds.INTERWEB,
+            ModContentIds.INK_CARTRIDGE_EMPTY,
+            ModContentIds.INK_CARTRIDGE,
             ModContentIds.BUTTON_GROUP,
             ModContentIds.CHAMELIUM,
             ModContentIds.ARROW_KEYS,
@@ -866,6 +868,9 @@ final class RecipeResourceTest {
     @Test
     void inputDeviceRecipesUseMaterialParts() throws IOException {
         JsonObject manual = readJson(RECIPE_ROOT.resolve(ModContentIds.MANUAL + ".json"));
+        JsonObject inkCartridgeEmpty = readJson(RECIPE_ROOT.resolve(ModContentIds.INK_CARTRIDGE_EMPTY + ".json"));
+        JsonObject inkCartridgeEmptyKeys = inkCartridgeEmpty.getAsJsonObject("key");
+        JsonObject inkCartridge = readJson(RECIPE_ROOT.resolve(ModContentIds.INK_CARTRIDGE + ".json"));
         JsonObject buttonGroup = readJson(RECIPE_ROOT.resolve(ModContentIds.BUTTON_GROUP + ".json"));
         JsonObject arrowKeys = readJson(RECIPE_ROOT.resolve(ModContentIds.ARROW_KEYS + ".json"));
         JsonObject numPad = readJson(RECIPE_ROOT.resolve(ModContentIds.NUM_PAD + ".json"));
@@ -874,6 +879,18 @@ final class RecipeResourceTest {
         assertEquals("minecraft:crafting_shapeless", manual.get("type").getAsString());
         assertIngredientItem(manual, "minecraft:book");
         assertIngredientItem(manual, "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertPattern(inkCartridgeEmpty, "IDI", "TBT", "IPI");
+        assertTag(inkCartridgeEmptyKeys, "I", "c:nuggets/iron");
+        assertItem(inkCartridgeEmptyKeys, "D", "minecraft:dispenser");
+        assertItem(inkCartridgeEmptyKeys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(inkCartridgeEmptyKeys, "B", "minecraft:bucket");
+        assertItem(inkCartridgeEmptyKeys, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertEquals("minecraft:crafting_shapeless", inkCartridge.get("type").getAsString());
+        assertIngredientItem(inkCartridge, "minecraft:cyan_dye");
+        assertIngredientItem(inkCartridge, "minecraft:magenta_dye");
+        assertIngredientItem(inkCartridge, "minecraft:yellow_dye");
+        assertIngredientItem(inkCartridge, "minecraft:black_dye");
+        assertIngredientItem(inkCartridge, "neoopencomputers:" + ModContentIds.INK_CARTRIDGE_EMPTY);
         assertPattern(buttonGroup, "BBB", "BBB");
         assertItem(buttonGroup.getAsJsonObject("key"), "B", "minecraft:stone_button");
         assertPattern(arrowKeys, " B ", "BBB");

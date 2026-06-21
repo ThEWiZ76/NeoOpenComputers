@@ -88,6 +88,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_MATERIAL_CUTTING_WIRE = "materialCuttingWire";
     public static final String COMPAT_MATERIAL_DISK = "materialDisk";
     public static final String COMPAT_MATERIAL_INTERWEB = "materialInterweb";
+    public static final String COMPAT_INK_CARTRIDGE_EMPTY = "inkCartridgeEmpty";
+    public static final String COMPAT_INK_CARTRIDGE = "inkCartridge";
     public static final String COMPAT_MATERIAL_NUM_PAD = "materialNumPad";
     public static final String COMPAT_MATERIAL_TRANSISTOR = "materialTransistor";
     public static final String COMPAT_CAPACITOR = "capacitor";
@@ -217,6 +219,8 @@ public final class ModContentCatalog {
                 ModItems.CONTROL_UNIT.get(),
                 ModItems.DISK_PLATTER.get(),
                 ModItems.INTERWEB.get(),
+                ModItems.INK_CARTRIDGE_EMPTY.get(),
+                ModItems.INK_CARTRIDGE.get(),
                 ModItems.BUTTON_GROUP.get(),
                 ModItems.ARROW_KEYS.get(),
                 ModItems.NUM_PAD.get());
@@ -244,6 +248,8 @@ public final class ModContentCatalog {
         final Item controlUnitItem,
         final Item diskPlatterItem,
         final Item interwebItem,
+        final Item inkCartridgeEmptyItem,
+        final Item inkCartridgeItem,
         final Item buttonGroupItem,
         final Item arrowKeysItem,
         final Item numPadItem) {
@@ -266,6 +272,8 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.CONTROL_UNIT, null, controlUnitItem);
         registry.register(ModContentIds.DISK_PLATTER, null, diskPlatterItem);
         registry.register(ModContentIds.INTERWEB, null, interwebItem);
+        registry.register(ModContentIds.INK_CARTRIDGE_EMPTY, null, inkCartridgeEmptyItem);
+        registry.register(ModContentIds.INK_CARTRIDGE, null, inkCartridgeItem);
         registry.register(ModContentIds.BUTTON_GROUP, null, buttonGroupItem);
         registry.register(ModContentIds.ARROW_KEYS, null, arrowKeysItem);
         registry.register(ModContentIds.NUM_PAD, null, numPadItem);
@@ -288,6 +296,8 @@ public final class ModContentCatalog {
         registry.register(COMPAT_MATERIAL_CONTROL_UNIT, null, controlUnitItem);
         registry.register(COMPAT_MATERIAL_DISK, null, diskPlatterItem);
         registry.register(COMPAT_MATERIAL_INTERWEB, null, interwebItem);
+        registry.register(COMPAT_INK_CARTRIDGE_EMPTY, null, inkCartridgeEmptyItem);
+        registry.register(COMPAT_INK_CARTRIDGE, null, inkCartridgeItem);
         registry.register(COMPAT_MATERIAL_BUTTON_GROUP, null, buttonGroupItem);
         registry.register(COMPAT_MATERIAL_ARROW_KEY, null, arrowKeysItem);
         registry.register(COMPAT_MATERIAL_NUM_PAD, null, numPadItem);

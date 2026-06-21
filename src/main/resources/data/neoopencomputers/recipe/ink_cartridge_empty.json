@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "tag": "c:nuggets/iron"
+    },
+    "D": {
+      "item": "minecraft:dispenser"
+    },
+    "T": {
+      "item": "neoopencomputers:transistor"
+    },
+    "B": {
+      "item": "minecraft:bucket"
+    },
+    "P": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "pattern": [
+    "IDI",
+    "TBT",
+    "IPI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:ink_cartridge_empty"
+  }
+}

@@ -140,6 +140,8 @@ public final class NeoOpenComputersGameTests {
         ModItems.CONTROL_UNIT.get();
         ModItems.DISK_PLATTER.get();
         ModItems.INTERWEB.get();
+        ModItems.INK_CARTRIDGE_EMPTY.get();
+        ModItems.INK_CARTRIDGE.get();
         ModItems.BUTTON_GROUP.get();
         ModItems.ARROW_KEYS.get();
         ModItems.NUM_PAD.get();
@@ -260,6 +262,16 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.LINKED_CARD.get()), 1);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void inkCartridgeLeavesEmptyCraftingRemainder(final GameTestHelper helper) {
+        final Item filled = ModItems.INK_CARTRIDGE.get();
+
+        helper.assertTrue(filled.getDefaultMaxStackSize() == 1, "Ink cartridge should not stack");
+        helper.assertTrue(filled.hasCraftingRemainingItem(), "Ink cartridge should have a crafting remainder");
+        helper.assertTrue(filled.getCraftingRemainingItem() == ModItems.INK_CARTRIDGE_EMPTY.get(), "Ink cartridge remainder should be empty cartridge");
         helper.succeed();
     }
 

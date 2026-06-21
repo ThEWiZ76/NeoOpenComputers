@@ -59,6 +59,8 @@ final class ModContentRegistrationTest {
             Map.entry("control_unit", ModContentIds.CONTROL_UNIT),
             Map.entry("disk_platter", ModContentIds.DISK_PLATTER),
             Map.entry("interweb", ModContentIds.INTERWEB),
+            Map.entry("ink_cartridge_empty", ModContentIds.INK_CARTRIDGE_EMPTY),
+            Map.entry("ink_cartridge", ModContentIds.INK_CARTRIDGE),
             Map.entry("button_group", ModContentIds.BUTTON_GROUP),
             Map.entry("arrow_keys", ModContentIds.ARROW_KEYS),
             Map.entry("num_pad", ModContentIds.NUM_PAD));

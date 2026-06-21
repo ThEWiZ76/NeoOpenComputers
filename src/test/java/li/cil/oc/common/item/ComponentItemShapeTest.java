@@ -214,6 +214,14 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void inkCartridgeItemAcceptsEmptyCartridgeRemainder() throws NoSuchMethodException {
+        final Constructor<InkCartridgeItem> constructor = InkCartridgeItem.class.getConstructor(Item.Properties.class, Item.class);
+
+        assertTrue(Item.class.isAssignableFrom(InkCartridgeItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class, Item.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void navigationUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<NavigationUpgradeItem> constructor = NavigationUpgradeItem.class.getConstructor(Item.Properties.class);
 

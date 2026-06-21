@@ -17,6 +17,7 @@ import li.cil.oc.common.item.GeneratorUpgradeItem;
 import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
 import li.cil.oc.common.item.HoverUpgradeItem;
+import li.cil.oc.common.item.InkCartridgeItem;
 import li.cil.oc.common.item.InventoryControllerUpgradeItem;
 import li.cil.oc.common.item.InventoryUpgradeItem;
 import li.cil.oc.common.item.InternetCardItem;
@@ -115,6 +116,10 @@ public final class ModItems {
     public static final DeferredItem<Item> CONTROL_UNIT = ITEMS.registerSimpleItem(ModContentIds.CONTROL_UNIT, new Item.Properties());
     public static final DeferredItem<Item> DISK_PLATTER = ITEMS.registerSimpleItem(ModContentIds.DISK_PLATTER, new Item.Properties());
     public static final DeferredItem<Item> INTERWEB = ITEMS.registerSimpleItem(ModContentIds.INTERWEB, new Item.Properties());
+    public static final DeferredItem<Item> INK_CARTRIDGE_EMPTY = ITEMS.registerSimpleItem(ModContentIds.INK_CARTRIDGE_EMPTY, new Item.Properties().stacksTo(1));
+    public static final DeferredItem<InkCartridgeItem> INK_CARTRIDGE = ITEMS.register(
+        ModContentIds.INK_CARTRIDGE,
+        () -> new InkCartridgeItem(new Item.Properties(), INK_CARTRIDGE_EMPTY.get()));
     public static final DeferredItem<Item> BUTTON_GROUP = ITEMS.registerSimpleItem(ModContentIds.BUTTON_GROUP, new Item.Properties());
     public static final DeferredItem<Item> ARROW_KEYS = ITEMS.registerSimpleItem(ModContentIds.ARROW_KEYS, new Item.Properties());
     public static final DeferredItem<Item> NUM_PAD = ITEMS.registerSimpleItem(ModContentIds.NUM_PAD, new Item.Properties());

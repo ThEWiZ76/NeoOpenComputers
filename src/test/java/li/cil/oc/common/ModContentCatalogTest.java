@@ -33,15 +33,21 @@ final class ModContentCatalogTest {
             null,
             null,
             null,
+            null,
+            null,
             null);
 
         assertNotNull(registry.get(ModContentIds.TRANSISTOR));
         assertNotNull(registry.get(ModContentIds.CAPACITOR));
         assertNotNull(registry.get(ModContentIds.CHAMELIUM));
+        assertNotNull(registry.get(ModContentIds.INK_CARTRIDGE_EMPTY));
+        assertNotNull(registry.get(ModContentIds.INK_CARTRIDGE));
         assertNotNull(registry.get(ModContentIds.PRINTED_CIRCUIT_BOARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CAPACITOR));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CHAMELIUM));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_INK_CARTRIDGE_EMPTY));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_INK_CARTRIDGE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER3));
@@ -50,9 +56,13 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.TRANSISTOR, registry.get(ModContentIds.TRANSISTOR).name());
         assertEquals(ModContentIds.CAPACITOR, registry.get(ModContentIds.CAPACITOR).name());
         assertEquals(ModContentIds.CHAMELIUM, registry.get(ModContentIds.CHAMELIUM).name());
+        assertEquals(ModContentIds.INK_CARTRIDGE_EMPTY, registry.get(ModContentIds.INK_CARTRIDGE_EMPTY).name());
+        assertEquals(ModContentIds.INK_CARTRIDGE, registry.get(ModContentIds.INK_CARTRIDGE).name());
         assertEquals(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR, registry.get(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR).name());
         assertEquals(ModContentCatalog.COMPAT_CAPACITOR, registry.get(ModContentCatalog.COMPAT_CAPACITOR).name());
         assertEquals(ModContentCatalog.COMPAT_CHAMELIUM, registry.get(ModContentCatalog.COMPAT_CHAMELIUM).name());
+        assertEquals(ModContentCatalog.COMPAT_INK_CARTRIDGE_EMPTY, registry.get(ModContentCatalog.COMPAT_INK_CARTRIDGE_EMPTY).name());
+        assertEquals(ModContentCatalog.COMPAT_INK_CARTRIDGE, registry.get(ModContentCatalog.COMPAT_INK_CARTRIDGE).name());
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER1, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER2, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER3, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER3).name());

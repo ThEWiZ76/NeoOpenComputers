@@ -70,6 +70,8 @@ public final class ModContentIds {
     public static final String HOLOGRAM_TIER1 = "hologram_tier1";
     public static final String HOLOGRAM_TIER2 = "hologram_tier2";
     public static final String HOLOGRAM_BLOCK_ENTITY = "hologram";
+    public static final String INK_CARTRIDGE_EMPTY = "ink_cartridge_empty";
+    public static final String INK_CARTRIDGE = "ink_cartridge";
     public static final String INTERNET_CARD = "internet_card";
     public static final String INTERWEB = "interweb";
     public static final String INVENTORY_CONTROLLER_UPGRADE = "inventory_controller_upgrade";
