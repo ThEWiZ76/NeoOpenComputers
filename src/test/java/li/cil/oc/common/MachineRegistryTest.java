@@ -204,6 +204,23 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void computerCallbacksExposeEnergyState() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        Network.joinNewNetwork(machine.node());
+        Connector connector = assertInstanceOf(Connector.class, machine.node());
+        connector.setLocalBufferSize(25D);
+        connector.changeBuffer(-connector.localBuffer());
+        connector.changeBuffer(9D);
+        String address = machine.node().address();
+
+        assertTrue(machine.methods(address).containsKey("energy"));
+        assertTrue(machine.methods(address).containsKey("maxEnergy"));
+        assertArrayEquals(new Object[]{9D}, machine.invoke(address, "energy", new Object[0]));
+        assertArrayEquals(new Object[]{25D}, machine.invoke(address, "maxEnergy", new Object[0]));
+    }
+
+    @Test
     void computerBeepCallbackMatchesUpstreamDurationSemantics() throws Exception {
         OpenComputersApi.initialize();
         SimpleMachine machine = assertInstanceOf(SimpleMachine.class, API.machine.create(null));

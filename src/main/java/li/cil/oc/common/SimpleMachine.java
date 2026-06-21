@@ -194,6 +194,16 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         return new Object[]{isRunning()};
     }
 
+    @Callback(direct = true, doc = "function():number -- Returns the amount of energy stored in the computer.")
+    public Object[] energy(final Context context, final Arguments arguments) {
+        return new Object[]{node() instanceof Connector connector ? connector.globalBuffer() : 0D};
+    }
+
+    @Callback(direct = true, doc = "function():number -- Returns the maximum amount of energy that can be stored in the computer.")
+    public Object[] maxEnergy(final Context context, final Arguments arguments) {
+        return new Object[]{node() instanceof Connector connector ? connector.globalBufferSize() : 0D};
+    }
+
     @Callback(doc = "function([frequency:string or number[, duration:number]]) -- Plays a tone, useful to alert users via audible feedback.")
     public Object[] beep(final Context context, final Arguments arguments) {
         if (arguments != null && arguments.count() == 1 && arguments.isString(0)) {
