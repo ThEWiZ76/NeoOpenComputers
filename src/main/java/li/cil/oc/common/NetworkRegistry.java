@@ -761,6 +761,9 @@ final class NetworkRegistry implements NetworkAPI {
             notifyConnect(firstNode, firstNode);
         }
 
+        private WiredNetwork() {
+        }
+
         @Override
         public boolean connect(final Node nodeA, final Node nodeB) {
             if (!(nodeA instanceof BaseNode baseA) || !(nodeB instanceof BaseNode baseB) || nodeA == nodeB) {
@@ -772,18 +775,30 @@ final class NetworkRegistry implements NetworkAPI {
             if (baseA.network != this) {
                 return false;
             }
+            final Set<BaseNode> previousNodes = connectedSet(baseA);
+            final Set<BaseNode> mergedNodes = baseB.network instanceof WiredNetwork otherNetwork && otherNetwork != this
+                ? new LinkedHashSet<>(otherNetwork.nodesByAddress.values())
+                : Set.of();
             if (baseB.network != null && baseB.network != this) {
                 merge(baseB.network);
             }
+            final boolean addedNode = baseB.network == null;
             if (baseB.network == null) {
                 add(baseB);
-                notifyConnect(baseB, baseB);
             }
             final boolean changedA = edges.get(baseA).add(baseB);
             final boolean changedB = edges.get(baseB).add(baseA);
             if (changedA || changedB) {
-                notifyConnect(baseA, baseB);
-                notifyConnect(baseB, baseA);
+                if (addedNode) {
+                    notifyConnectReachable(baseB);
+                    notifyConnect(baseB, baseA);
+                } else if (!mergedNodes.isEmpty()) {
+                    notifyConnectAcross(previousNodes, mergedNodes);
+                    notifyConnectAcross(mergedNodes, previousNodes);
+                } else {
+                    notifyConnect(baseA, baseB);
+                    notifyConnect(baseB, baseA);
+                }
                 return true;
             }
             return false;
@@ -797,8 +812,16 @@ final class NetworkRegistry implements NetworkAPI {
             final boolean changedA = edges.get(baseA).remove(baseB);
             final boolean changedB = edges.get(baseB).remove(baseA);
             if (changedA || changedB) {
-                notifyDisconnect(baseA, baseB);
-                notifyDisconnect(baseB, baseA);
+                final Set<BaseNode> sideA = connectedSet(baseA);
+                if (sideA.contains(baseB)) {
+                    notifyDisconnect(baseA, baseB);
+                    notifyDisconnect(baseB, baseA);
+                } else {
+                    final Set<BaseNode> sideB = connectedSet(baseB);
+                    notifyDisconnectAcross(sideA, sideB);
+                    notifyDisconnectAcross(sideB, sideA);
+                    moveToNewNetwork(sideB);
+                }
                 return true;
             }
             return false;
@@ -836,7 +859,7 @@ final class NetworkRegistry implements NetworkAPI {
                 return List.of();
             }
             final Set<BaseNode> referenceNeighbors = neighborSet(baseReference);
-            return nodesByAddress.values().stream()
+            return connectedSet(baseReference).stream()
                 .filter(node -> node != reference)
                 .filter(node -> node.reachability() == Visibility.Network ||
                     node.reachability() == Visibility.Neighbors && referenceNeighbors.contains(node))
@@ -910,6 +933,52 @@ final class NetworkRegistry implements NetworkAPI {
             return edges.getOrDefault(node, Set.of());
         }
 
+        private Set<BaseNode> connectedSet(final BaseNode start) {
+            final Set<BaseNode> visited = new LinkedHashSet<>();
+            final ArrayDeque<BaseNode> open = new ArrayDeque<>();
+            if (start.network == this) {
+                visited.add(start);
+                open.add(start);
+            }
+            while (!open.isEmpty()) {
+                final BaseNode node = open.removeFirst();
+                for (final BaseNode neighbor : neighborSet(node)) {
+                    if (neighbor.network == this && visited.add(neighbor)) {
+                        open.add(neighbor);
+                    }
+                }
+            }
+            return visited;
+        }
+
+        private void moveToNewNetwork(final Set<BaseNode> movedNodes) {
+            final Map<BaseNode, Set<BaseNode>> movedEdges = new LinkedHashMap<>();
+            for (final BaseNode node : movedNodes) {
+                movedEdges.put(node, new LinkedHashSet<>(neighborSet(node)));
+            }
+            for (final BaseNode node : movedNodes) {
+                nodesByAddress.remove(node.address);
+                edges.remove(node);
+                node.network = null;
+            }
+            for (final Set<BaseNode> neighbors : edges.values()) {
+                neighbors.removeAll(movedNodes);
+            }
+
+            final WiredNetwork movedNetwork = new WiredNetwork();
+            for (final BaseNode node : movedNodes) {
+                movedNetwork.add(node);
+            }
+            for (final Map.Entry<BaseNode, Set<BaseNode>> entry : movedEdges.entrySet()) {
+                final Set<BaseNode> targetEdges = movedNetwork.edges.get(entry.getKey());
+                for (final BaseNode neighbor : entry.getValue()) {
+                    if (movedNodes.contains(neighbor)) {
+                        targetEdges.add(neighbor);
+                    }
+                }
+            }
+        }
+
         private void deliver(final Node source, final Iterable<Node> targets, final String name, final Object[] data) {
             final MessageImpl message = new MessageImpl(source, name, data);
             for (Node target : targets) {
@@ -925,6 +994,32 @@ final class NetworkRegistry implements NetworkAPI {
 
         private void notifyDisconnect(final BaseNode host, final Node disconnected) {
             host.host().onDisconnect(disconnected);
+        }
+
+        private void notifyConnectReachable(final BaseNode connected) {
+            for (final BaseNode target : connectedSet(connected)) {
+                notifyConnect(target, connected);
+            }
+        }
+
+        private void notifyConnectAcross(final Iterable<BaseNode> targets, final Iterable<BaseNode> connectedNodes) {
+            for (final BaseNode target : targets) {
+                for (final BaseNode connected : connectedNodes) {
+                    if (target != connected) {
+                        notifyConnect(target, connected);
+                    }
+                }
+            }
+        }
+
+        private void notifyDisconnectAcross(final Iterable<BaseNode> targets, final Iterable<BaseNode> disconnectedNodes) {
+            for (final BaseNode target : targets) {
+                for (final BaseNode disconnected : disconnectedNodes) {
+                    if (target != disconnected) {
+                        notifyDisconnect(target, disconnected);
+                    }
+                }
+            }
         }
     }
 

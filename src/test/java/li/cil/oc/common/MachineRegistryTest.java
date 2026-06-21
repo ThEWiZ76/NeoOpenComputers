@@ -156,6 +156,24 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void queuesComponentAddedSignalWhenVisibleComponentConnectsThroughNeighbor() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        TestEnvironment bridge = new TestEnvironment();
+        TestEnvironment environment = new TestEnvironment();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(bridge.node());
+        machine.popSignal();
+
+        bridge.node().connect(environment.node());
+
+        Signal signal = machine.popSignal();
+        assertNotNull(signal);
+        assertEquals("component_added", signal.name());
+        assertArrayEquals(new Object[]{environment.node().address(), "test_component"}, signal.args());
+    }
+
+    @Test
     void queuesComponentRemovedSignalWhenVisibleComponentDisconnects() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -167,6 +185,26 @@ final class MachineRegistryTest {
         machine.node().disconnect(environment.node());
 
         Signal signal = machine.popSignal();
+        assertEquals("component_removed", signal.name());
+        assertArrayEquals(new Object[]{environment.node().address(), "test_component"}, signal.args());
+    }
+
+    @Test
+    void queuesComponentRemovedSignalWhenVisibleComponentDisconnectsThroughNeighbor() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        TestEnvironment bridge = new TestEnvironment();
+        TestEnvironment environment = new TestEnvironment();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(bridge.node());
+        machine.popSignal();
+        bridge.node().connect(environment.node());
+        machine.popSignal();
+
+        bridge.node().disconnect(environment.node());
+
+        Signal signal = machine.popSignal();
+        assertNotNull(signal);
         assertEquals("component_removed", signal.name());
         assertArrayEquals(new Object[]{environment.node().address(), "test_component"}, signal.args());
     }
