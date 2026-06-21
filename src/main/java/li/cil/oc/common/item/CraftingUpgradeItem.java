@@ -37,7 +37,7 @@ public class CraftingUpgradeItem extends Item implements HostAware {
 
     @Override
     public int tier(final ItemStack stack) {
-        return 0;
+        return 1;
     }
 
     @Override

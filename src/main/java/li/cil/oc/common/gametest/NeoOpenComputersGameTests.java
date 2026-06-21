@@ -318,7 +318,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.HDD_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get()), 1);
-        assertItemTier(helper, new ItemStack(ModItems.CRAFTING_UPGRADE.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.CRAFTING_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.INTERNET_CARD.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.MOTION_SENSOR.get()), 1);
@@ -339,7 +339,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
-        assertItemTier(helper, new ItemStack(ModItems.LINKED_CARD.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.LINKED_CARD.get()), 2);
         helper.succeed();
     }
 

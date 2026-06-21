@@ -40,7 +40,7 @@ public class LinkedCardItem extends Item implements HostAware {
 
     @Override
     public int tier(final ItemStack stack) {
-        return 1;
+        return 2;
     }
 
     @Override
