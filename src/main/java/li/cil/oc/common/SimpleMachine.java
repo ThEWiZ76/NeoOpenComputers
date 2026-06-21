@@ -9,6 +9,7 @@ import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
@@ -174,8 +175,35 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         return host instanceof DeviceInfo deviceInfo ? deviceInfo.getDeviceInfo() : null;
     }
 
+    @Callback(doc = "function():boolean -- Starts the computer. Returns true if the state changed.")
+    public Object[] start(final Context context, final Arguments arguments) {
+        return new Object[]{!isPaused() && start()};
+    }
+
+    @Callback(doc = "function():boolean -- Stops the computer. Returns true if the state changed.")
+    public Object[] stop(final Context context, final Arguments arguments) {
+        return new Object[]{stop()};
+    }
+
+    @Callback(direct = true, doc = "function():boolean -- Returns whether the computer is running.")
+    public Object[] isRunning(final Context context, final Arguments arguments) {
+        return new Object[]{isRunning()};
+    }
+
+    @Callback(doc = "function([frequency:string or number[, duration:number]]) -- Plays a tone, useful to alert users via audible feedback.")
+    public Object[] beep(final Context context, final Arguments arguments) {
+        if (arguments != null && arguments.count() == 1 && arguments.isString(0)) {
+            beep(arguments.checkString(0));
+        } else {
+            final int frequency = arguments == null ? 440 : arguments.optInteger(0, 440);
+            final int duration = arguments == null ? 500 : arguments.optInteger(1, 500);
+            beep((short) frequency, (short) duration);
+        }
+        return new Object[0];
+    }
+
     @Callback(doc = "function():table -- Collect information on all connected devices.")
-    public Object[] getDeviceInfo(final li.cil.oc.api.machine.Context context, final Arguments arguments) {
+    public Object[] getDeviceInfo(final Context context, final Arguments arguments) {
         if (context != null) {
             context.pause(1);
         }
@@ -328,7 +356,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             return Map.of();
         }
         final Node target = node().network().node(address);
-        if (!(target instanceof Component component) || !component.canBeSeenFrom(node())) {
+        if (!(target instanceof Component component) || target != node() && !component.canBeSeenFrom(node())) {
             return Map.of();
         }
         final Map<String, Callback> methods = new LinkedHashMap<>();

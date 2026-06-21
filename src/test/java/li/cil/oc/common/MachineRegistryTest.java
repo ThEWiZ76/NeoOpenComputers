@@ -183,6 +183,24 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void computerCallbacksExposeStateControls() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        Network.joinNewNetwork(machine.node());
+        String address = machine.node().address();
+
+        assertTrue(machine.methods(address).containsKey("start"));
+        assertTrue(machine.methods(address).containsKey("stop"));
+        assertTrue(machine.methods(address).containsKey("isRunning"));
+        assertTrue(machine.methods(address).containsKey("beep"));
+
+        assertArrayEquals(new Object[]{true}, machine.invoke(address, "start", new Object[0]));
+        assertArrayEquals(new Object[]{true}, machine.invoke(address, "isRunning", new Object[0]));
+        assertArrayEquals(new Object[]{true}, machine.invoke(address, "stop", new Object[0]));
+        assertArrayEquals(new Object[]{false}, machine.invoke(address, "isRunning", new Object[0]));
+    }
+
+    @Test
     void queuesComponentAddedSignalWhenVisibleComponentConnects() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
