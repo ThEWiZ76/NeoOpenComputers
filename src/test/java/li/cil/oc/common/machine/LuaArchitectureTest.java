@@ -12,6 +12,7 @@ import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
+import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.MachineHost;
@@ -897,6 +898,22 @@ final class LuaArchitectureTest {
 
         assertEquals("nil", architecture.globalString("result"));
         assertEquals("bad argument", architecture.globalString("message"));
+    }
+
+    @Test
+    void mapsComponentInvokeCallBudgetLimitsToNoLuaValues() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            count = select('#', component.invoke('fs-address', 'bad'))
+            result, message = component.invoke('fs-address', 'bad')
+            """);
+        architecture.bind(machineWithThrowingInvoke(new LimitReachedException()));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(0, architecture.globalInteger("count"));
+        assertEquals("nil", architecture.globalString("result"));
+        assertEquals("nil", architecture.globalString("message"));
     }
 
     @Test

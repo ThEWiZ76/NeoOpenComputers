@@ -10,6 +10,7 @@ import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.ExecutionResult;
+import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
@@ -1205,6 +1206,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("access denied"));
         } catch (IOException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("i/o error"));
+        } catch (LimitReachedException e) {
+            return LuaValue.NONE;
         } catch (Exception e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
         }
@@ -1221,6 +1224,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such method"));
         } catch (SecurityException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("access denied"));
+        } catch (LimitReachedException e) {
+            return LuaValue.NONE;
         } catch (Exception e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
         }
