@@ -90,6 +90,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_MATERIAL_NUM_PAD = "materialNumPad";
     public static final String COMPAT_MATERIAL_TRANSISTOR = "materialTransistor";
     public static final String COMPAT_CAPACITOR = "capacitor";
+    public static final String COMPAT_CHAMELIUM = "chamelium";
 
     public static void registerDefaults() {
         if (API.items instanceof ItemRegistry registry) {
@@ -201,6 +202,7 @@ public final class ModContentCatalog {
                 ModItems.CIRCUIT_BOARD.get(),
                 ModItems.PRINTED_CIRCUIT_BOARD.get(),
                 ModItems.CARD.get(),
+                ModItems.CHAMELIUM.get(),
                 ModItems.TRANSISTOR.get(),
                 ModItems.CAPACITOR.get(),
                 ModItems.COMPONENT_BUS_TIER1.get(),
@@ -227,6 +229,7 @@ public final class ModContentCatalog {
         final Item circuitBoardItem,
         final Item printedCircuitBoardItem,
         final Item cardItem,
+        final Item chameliumItem,
         final Item transistorItem,
         final Item capacitorItem,
         final Item componentBusTier1Item,
@@ -248,6 +251,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.CIRCUIT_BOARD, null, circuitBoardItem);
         registry.register(ModContentIds.PRINTED_CIRCUIT_BOARD, null, printedCircuitBoardItem);
         registry.register(ModContentIds.CARD, null, cardItem);
+        registry.register(ModContentIds.CHAMELIUM, null, chameliumItem);
         registry.register(ModContentIds.TRANSISTOR, null, transistorItem);
         registry.register(ModContentIds.CAPACITOR, null, capacitorItem);
         registry.register(ModContentIds.COMPONENT_BUS_TIER1, null, componentBusTier1Item);
@@ -269,6 +273,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_MATERIAL_CIRCUIT_BOARD, null, circuitBoardItem);
         registry.register(COMPAT_MATERIAL_CIRCUIT_BOARD_PRINTED, null, printedCircuitBoardItem);
         registry.register(COMPAT_MATERIAL_CARD, null, cardItem);
+        registry.register(COMPAT_CHAMELIUM, null, chameliumItem);
         registry.register(COMPAT_MATERIAL_TRANSISTOR, null, transistorItem);
         registry.register(COMPAT_CAPACITOR, null, capacitorItem);
         registry.register(COMPAT_COMPONENT_BUS_TIER1, null, componentBusTier1Item);

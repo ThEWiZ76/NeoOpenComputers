@@ -46,6 +46,7 @@ final class ModContentRegistrationTest {
             Map.entry("circuit_board", ModContentIds.CIRCUIT_BOARD),
             Map.entry("printed_circuit_board", ModContentIds.PRINTED_CIRCUIT_BOARD),
             Map.entry("card", ModContentIds.CARD),
+            Map.entry("chamelium", ModContentIds.CHAMELIUM),
             Map.entry("transistor", ModContentIds.TRANSISTOR),
             Map.entry("capacitor", ModContentIds.CAPACITOR),
             Map.entry("component_bus_tier1", ModContentIds.COMPONENT_BUS_TIER1),

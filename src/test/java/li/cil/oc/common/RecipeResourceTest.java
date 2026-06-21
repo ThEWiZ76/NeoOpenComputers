@@ -40,6 +40,7 @@ final class RecipeResourceTest {
             ModContentIds.DISK_PLATTER,
             ModContentIds.INTERWEB,
             ModContentIds.BUTTON_GROUP,
+            ModContentIds.CHAMELIUM,
             ModContentIds.ARROW_KEYS,
             ModContentIds.NUM_PAD,
             ModContentIds.ANALYZER,
@@ -445,6 +446,19 @@ final class RecipeResourceTest {
         assertIngredientItem(acid, "minecraft:bone");
         assertIngredientCount(acid, 5);
         assertResultCount(acid, 1);
+    }
+
+    @Test
+    void chameliumRecipeUsesUpstreamInputs() throws IOException {
+        JsonObject chamelium = readJson(RECIPE_ROOT.resolve(ModContentIds.CHAMELIUM + ".json"));
+        JsonObject keys = chamelium.getAsJsonObject("key");
+
+        assertPattern(chamelium, "GRG", "RCR", "GWG");
+        assertItem(keys, "G", "minecraft:gravel");
+        assertItem(keys, "R", "minecraft:redstone");
+        assertItem(keys, "C", "minecraft:charcoal");
+        assertItem(keys, "W", "minecraft:water_bucket");
+        assertResultCount(chamelium, 16);
     }
 
     @Test

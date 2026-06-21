@@ -101,6 +101,7 @@ public final class ModItems {
     public static final DeferredItem<Item> CIRCUIT_BOARD = ITEMS.registerSimpleItem(ModContentIds.CIRCUIT_BOARD, new Item.Properties());
     public static final DeferredItem<Item> PRINTED_CIRCUIT_BOARD = ITEMS.registerSimpleItem(ModContentIds.PRINTED_CIRCUIT_BOARD, new Item.Properties());
     public static final DeferredItem<Item> CARD = ITEMS.registerSimpleItem(ModContentIds.CARD, new Item.Properties());
+    public static final DeferredItem<Item> CHAMELIUM = ITEMS.registerSimpleItem(ModContentIds.CHAMELIUM, new Item.Properties());
     public static final DeferredItem<Item> TRANSISTOR = ITEMS.registerSimpleItem(ModContentIds.TRANSISTOR, new Item.Properties());
     public static final DeferredItem<Item> CAPACITOR = ITEMS.registerSimpleItem(ModContentIds.CAPACITOR, new Item.Properties());
     public static final DeferredItem<Item> COMPONENT_BUS_TIER1 = ITEMS.registerSimpleItem(ModContentIds.COMPONENT_BUS_TIER1, new Item.Properties());
