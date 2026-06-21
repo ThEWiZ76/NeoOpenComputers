@@ -43,6 +43,7 @@ import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.TabletItem;
+import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
@@ -124,6 +125,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.ADAPTER.get();
         ModItems.ANALYZER.get();
         ModItems.WRENCH.get();
+        ModItems.TEXTURE_PICKER.get();
         ModItems.ASSEMBLER.get();
         ModItems.BATTERY_UPGRADE_TIER1.get();
         ModItems.BATTERY_UPGRADE_TIER2.get();
@@ -225,6 +227,15 @@ public final class NeoOpenComputersGameTests {
         final boolean rotated = WrenchItem.rotateBlock(helper.getLevel(), helper.absolutePos(pos), false);
         helper.assertTrue(rotated, "Wrench did not rotate computer case");
         helper.assertTrue(helper.getBlockState(pos).getValue(ComputerCaseBlock.FACING) == Direction.EAST, "Wrench did not rotate computer case clockwise");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void texturePickerDescribesTargetBlock(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, Blocks.STONE.defaultBlockState());
+
+        helper.assertTrue("minecraft:stone".equals(TexturePickerItem.describeBlockTexture(helper.getLevel(), helper.absolutePos(pos))), "Texture Picker did not describe target block");
         helper.succeed();
     }
 

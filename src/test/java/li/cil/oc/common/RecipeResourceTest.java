@@ -47,6 +47,7 @@ final class RecipeResourceTest {
             ModContentIds.NUM_PAD,
             ModContentIds.ANALYZER,
             ModContentIds.WRENCH,
+            ModContentIds.TEXTURE_PICKER,
             ModContentIds.ASSEMBLER,
             ModContentIds.BATTERY_UPGRADE_TIER1,
             ModContentIds.BATTERY_UPGRADE_TIER2,
@@ -171,6 +172,23 @@ final class RecipeResourceTest {
         assertPattern(json, "I I", " C ", " I ");
         assertTag(keys, "I", "c:ingots/iron");
         assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+    }
+
+    @Test
+    void texturePickerRecipeUsesUpstreamShape() throws IOException {
+        JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.TEXTURE_PICKER + ".json"));
+        JsonObject keys = json.getAsJsonObject("key");
+
+        assertPattern(json, "BRG", "PAT", "YMW");
+        assertItem(keys, "B", "minecraft:black_dye");
+        assertItem(keys, "R", "minecraft:red_dye");
+        assertItem(keys, "G", "minecraft:green_dye");
+        assertItem(keys, "P", "minecraft:blue_dye");
+        assertItem(keys, "A", "neoopencomputers:" + ModContentIds.ANALYZER);
+        assertItem(keys, "T", "minecraft:purple_dye");
+        assertItem(keys, "Y", "minecraft:yellow_dye");
+        assertItem(keys, "M", "minecraft:magenta_dye");
+        assertItem(keys, "W", "minecraft:white_dye");
     }
 
     @Test

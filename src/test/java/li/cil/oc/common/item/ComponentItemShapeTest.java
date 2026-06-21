@@ -242,6 +242,14 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void texturePickerItemIsSimpleToolItem() throws NoSuchMethodException {
+        final Constructor<TexturePickerItem> constructor = TexturePickerItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(TexturePickerItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void navigationUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<NavigationUpgradeItem> constructor = NavigationUpgradeItem.class.getConstructor(Item.Properties.class);
 

@@ -105,6 +105,7 @@ public final class ModContentIds {
     public static final String STICKY_PISTON_UPGRADE = "sticky_piston_upgrade";
     public static final String TANK_CONTROLLER_UPGRADE = "tank_controller_upgrade";
     public static final String TANK_UPGRADE = "tank_upgrade";
+    public static final String TEXTURE_PICKER = "texture_picker";
     public static final String TRANSISTOR = "transistor";
     public static final String TRADING_UPGRADE = "trading_upgrade";
     public static final String TRACTOR_BEAM_UPGRADE = "tractor_beam_upgrade";

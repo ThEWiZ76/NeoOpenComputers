@@ -95,6 +95,7 @@ final class ModContentCatalogTest {
             null,
             null,
             null,
+            null,
             null, null, null,
             null, null, null,
             null, null, null,
@@ -140,6 +141,8 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.ANALYZER));
         assertNotNull(registry.get(ModContentIds.WRENCH));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_WRENCH));
+        assertNotNull(registry.get(ModContentIds.TEXTURE_PICKER));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_TEXTURE_PICKER));
         assertNotNull(registry.get(ModContentIds.CABLE));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER1));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER2));
@@ -287,6 +290,8 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.ANALYZER, registry.get(ModContentIds.ANALYZER).name());
         assertEquals(ModContentIds.WRENCH, registry.get(ModContentIds.WRENCH).name());
         assertEquals(ModContentCatalog.COMPAT_WRENCH, registry.get(ModContentCatalog.COMPAT_WRENCH).name());
+        assertEquals(ModContentIds.TEXTURE_PICKER, registry.get(ModContentIds.TEXTURE_PICKER).name());
+        assertEquals(ModContentCatalog.COMPAT_TEXTURE_PICKER, registry.get(ModContentCatalog.COMPAT_TEXTURE_PICKER).name());
         assertEquals(ModContentIds.CABLE, registry.get(ModContentIds.CABLE).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER1, registry.get(ModContentIds.COMPUTER_CASE_TIER1).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER2, registry.get(ModContentIds.COMPUTER_CASE_TIER2).name());

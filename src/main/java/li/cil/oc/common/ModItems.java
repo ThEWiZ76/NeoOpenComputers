@@ -36,6 +36,7 @@ import li.cil.oc.common.item.TankControllerUpgradeItem;
 import li.cil.oc.common.item.TankUpgradeItem;
 import li.cil.oc.common.item.TabletCaseItem;
 import li.cil.oc.common.item.TabletItem;
+import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.TradingUpgradeItem;
 import li.cil.oc.common.item.TractorBeamUpgradeItem;
 import li.cil.oc.common.item.UpgradeContainerItem;
@@ -61,6 +62,10 @@ public final class ModItems {
     public static final DeferredItem<WrenchItem> WRENCH = ITEMS.register(
         ModContentIds.WRENCH,
         () -> new WrenchItem(new Item.Properties()));
+
+    public static final DeferredItem<TexturePickerItem> TEXTURE_PICKER = ITEMS.register(
+        ModContentIds.TEXTURE_PICKER,
+        () -> new TexturePickerItem(new Item.Properties()));
 
     public static final DeferredItem<BlockItem> ASSEMBLER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ASSEMBLER,

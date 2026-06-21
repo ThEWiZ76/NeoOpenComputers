@@ -79,6 +79,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void texturePickerItemIdIsStable() {
+        assertEquals("texture_picker", ModContentIds.TEXTURE_PICKER);
+    }
+
+    @Test
     void computerCaseBlockIdIsStable() {
         assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
     }
