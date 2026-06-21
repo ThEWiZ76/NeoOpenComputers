@@ -707,6 +707,26 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void threadedArchitectureCallsConsumeDirectBudget() throws Exception {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new ThreadedBudgetProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        DirectBudgetEnvironment environment = new DirectBudgetEnvironment();
+        machine.onHostChanged();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+        ThreadedBudgetArchitecture.targetAddress = environment.node().address();
+        assertTrue(machine.start());
+
+        machine.update();
+
+        assertInstanceOf(LimitReachedException.class, ThreadedBudgetArchitecture.error);
+        assertThrows(LimitReachedException.class, () -> machine.invoke(environment.node().address(), "direct", new Object[0]));
+    }
+
+    @Test
     void runningMachineHonorsArchitectureSleepTicks() {
         OpenComputersApi.initialize();
         MutableClock clock = new MutableClock();
@@ -1002,6 +1022,28 @@ final class MachineRegistryTest {
         }
     }
 
+    private static final class ThreadedBudgetProcessorDriver extends TestDriver implements Processor, CallBudget {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return ThreadedBudgetArchitecture.class;
+        }
+
+        @Override
+        public double getCallBudget(final ItemStack stack) {
+            return 0.5D;
+        }
+    }
+
     private static final class SleepyProcessorDriver extends TestDriver implements Processor {
         @Override
         public String slot(final ItemStack stack) {
@@ -1137,6 +1179,30 @@ final class MachineRegistryTest {
             } catch (Exception e) {
                 error = e;
             }
+        }
+    }
+
+    public static final class ThreadedBudgetArchitecture extends TrackingArchitecture implements MachineBoundArchitecture {
+        private static String targetAddress;
+        private static Exception error;
+        private Machine machine;
+
+        @Override
+        public void bind(final Machine machine) {
+            this.machine = machine;
+            error = null;
+        }
+
+        @Override
+        public ExecutionResult runThreaded(final boolean isSynchronizedReturn) {
+            super.runThreaded(isSynchronizedReturn);
+            try {
+                machine.invoke(targetAddress, "direct", new Object[0]);
+                machine.invoke(targetAddress, "direct", new Object[0]);
+            } catch (Exception e) {
+                error = e;
+            }
+            return new ExecutionResult.Sleep(1);
         }
     }
 

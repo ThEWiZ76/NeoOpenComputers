@@ -61,6 +61,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String BOOT_ADDRESS_TAG = "bootAddress";
     private static final String MEMORY_TAG = "memory";
     private static final String PULL_SIGNAL_MARKER = "\u0000oc.pullSignal";
+    private static final String BUDGET_RETRY_MARKER = "\u0000oc.budgetRetry";
     private static final String VALUE_MARKER = "\u0000oc.value";
     private static final boolean DEFAULT_ALLOW_BYTECODE = false;
     private static final boolean DEFAULT_ALLOW_GC = false;
@@ -75,6 +76,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private LuaValue bootChunk;
     private LuaThread bootThread;
     private ExecutionResult pendingResult;
+    private PendingBudgetCall pendingBudgetCall;
     private double memoryBytes;
     private boolean waitingForSignal;
     private double signalDeadlineSeconds;
@@ -102,7 +104,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     @Override
     public boolean isInitialized() {
-        return initialized;
+        return initialized && booted;
     }
 
     @Override
@@ -126,6 +128,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         componentProxyCache.clear();
         globals = sandboxGlobals();
         pendingResult = null;
+        pendingBudgetCall = null;
         installComputerLibrary();
         installComponentLibrary();
         installOsLibrary();
@@ -150,6 +153,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         bootChunk = null;
         bootThread = null;
         pendingResult = null;
+        pendingBudgetCall = null;
         waitingForSignal = false;
         signalDeadlineSeconds = 0D;
         componentProxyCache.clear();
@@ -164,6 +168,15 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (!initialized) {
             return new ExecutionResult.Error("Lua architecture is not initialized");
         }
+        if (pendingBudgetCall != null) {
+            try {
+                final Varargs results = pendingBudgetCall.invoke();
+                pendingBudgetCall = null;
+                return resumeBoot(results);
+            } catch (LimitReachedException e) {
+                return new ExecutionResult.Sleep(1);
+            }
+        }
         if (waitingForSignal) {
             final Signal signal = machine == null ? null : machine.popSignal();
             if (signal != null) {
@@ -177,8 +190,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return sleepUntilSignalDeadline();
         }
         if (!booted) {
-            booted = true;
-            return resumeBoot(LuaValue.NONE);
+            try {
+                return resumeBoot(LuaValue.NONE);
+            } finally {
+                booted = true;
+            }
         }
         return new ExecutionResult.Sleep(1);
     }
@@ -1193,7 +1209,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private Varargs invokeComponent(final String address, final String method, final Object[] javaArgs) {
         try {
+            return invokeComponentOnce(address, method, javaArgs);
+        } catch (LimitReachedException e) {
+            pendingBudgetCall = () -> invokeComponentOnce(address, method, javaArgs);
+            return globals.yield(LuaValue.valueOf(BUDGET_RETRY_MARKER));
+        }
+    }
+
+    private Varargs invokeComponentOnce(final String address, final String method, final Object[] javaArgs) throws LimitReachedException {
+        try {
             return toLuaValues(machine.invoke(address, method, javaArgs));
+        } catch (LimitReachedException e) {
+            throw e;
         } catch (IllegalArgumentException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "bad argument" : e.getMessage()));
         } catch (IndexOutOfBoundsException e) {
@@ -1206,8 +1233,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("access denied"));
         } catch (IOException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("i/o error"));
-        } catch (LimitReachedException e) {
-            return LuaValue.NONE;
         } catch (Exception e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
         }
@@ -1215,7 +1240,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private Varargs invokeValue(final Value value, final String method, final Object[] javaArgs) {
         try {
+            return invokeValueOnce(value, method, javaArgs);
+        } catch (LimitReachedException e) {
+            pendingBudgetCall = () -> invokeValueOnce(value, method, javaArgs);
+            return globals.yield(LuaValue.valueOf(BUDGET_RETRY_MARKER));
+        }
+    }
+
+    private Varargs invokeValueOnce(final Value value, final String method, final Object[] javaArgs) throws LimitReachedException {
+        try {
             return toLuaValues(machine.invoke(value, method, javaArgs));
+        } catch (LimitReachedException e) {
+            throw e;
         } catch (IllegalArgumentException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "bad argument" : e.getMessage()));
         } catch (IndexOutOfBoundsException e) {
@@ -1224,8 +1260,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such method"));
         } catch (SecurityException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("access denied"));
-        } catch (LimitReachedException e) {
-            return LuaValue.NONE;
         } catch (Exception e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
         }
@@ -1521,5 +1555,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private record ProcessorCandidate(ItemStack stack, Processor processor) {
+    }
+
+    @FunctionalInterface
+    private interface PendingBudgetCall {
+        Varargs invoke() throws LimitReachedException;
     }
 }

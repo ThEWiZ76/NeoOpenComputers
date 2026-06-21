@@ -80,7 +80,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private int maxComponents;
     private double maxCallBudget = 1D;
     private double callBudget;
-    private boolean inArchitectureRun;
+    private boolean inSynchronizedCall;
     private long startedAtNanos = -1L;
     private long sleepUntilNanos = -1L;
     private long pauseUntilNanos = -1L;
@@ -579,22 +579,22 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             return;
         }
         try {
-            inArchitectureRun = true;
+            inSynchronizedCall = true;
             try {
                 architecture.runSynchronized();
-                final ExecutionResult result = architecture.runThreaded(false);
-                if (result instanceof ExecutionResult.Shutdown shutdown) {
-                    stop();
-                    if (shutdown.reboot) {
-                        start();
-                    }
-                } else if (result instanceof ExecutionResult.Error error) {
-                    crash(error.message);
-                } else if (result instanceof ExecutionResult.Sleep sleep) {
-                    sleepUntilNanos = sleep.ticks <= 0 ? -1L : nanoTime.getAsLong() + sleep.ticks * NANOS_PER_TICK;
-                }
             } finally {
-                inArchitectureRun = false;
+                inSynchronizedCall = false;
+            }
+            final ExecutionResult result = architecture.runThreaded(false);
+            if (result instanceof ExecutionResult.Shutdown shutdown) {
+                stop();
+                if (shutdown.reboot) {
+                    start();
+                }
+            } else if (result instanceof ExecutionResult.Error error) {
+                crash(error.message);
+            } else if (result instanceof ExecutionResult.Sleep sleep) {
+                sleepUntilNanos = sleep.ticks <= 0 ? -1L : nanoTime.getAsLong() + sleep.ticks * NANOS_PER_TICK;
             }
         } catch (RuntimeException e) {
             crash(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
@@ -665,7 +665,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public void consumeCallBudget(final double callCost) throws LimitReachedException {
-        if (architecture != null && architecture.isInitialized() && !inArchitectureRun) {
+        if (architecture != null && architecture.isInitialized() && !inSynchronizedCall) {
             final double clampedCost = Math.max(0D, callCost);
             if (clampedCost > callBudget) {
                 throw new LimitReachedException();

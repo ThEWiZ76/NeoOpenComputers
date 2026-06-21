@@ -85,6 +85,32 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void reportsInitializedOnlyAfterInitialBootRun() {
+        LuaArchitecture architecture = new LuaArchitecture("counter = 1");
+
+        assertTrue(architecture.initialize());
+        assertEquals(false, architecture.isInitialized());
+
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.isInitialized());
+    }
+
+    @Test
+    void doesNotReportInitializedDuringInitialBootCallbacks() {
+        boolean[] initializedDuringInvoke = {true};
+        LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'label')");
+        architecture.bind(machineWithInvokeInitializationCapture(Map.of("fs-address", "filesystem"), architecture, initializedDuringInvoke));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, initializedDuringInvoke[0]);
+        assertEquals(true, architecture.isInitialized());
+        assertEquals("tmp", architecture.globalString("result"));
+    }
+
+    @Test
     void reportsLuaRuntimeErrorsAsExecutionErrors() {
         LuaArchitecture architecture = new LuaArchitecture("error('boot failed')");
 
@@ -917,6 +943,28 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void retriesComponentInvokeAfterCallBudgetLimit() {
+        int[] attempts = {0};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            result = component.invoke('fs-address', 'label')
+            continued = true
+            """);
+        architecture.bind(machineWithBudgetRetryInvoke(Map.of("fs-address", "filesystem"), attempts));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(1, attempts[0]);
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(2, attempts[0]);
+        assertEquals("tmp", architecture.globalString("result"));
+        assertEquals(true, architecture.globalBoolean("continued"));
+    }
+
+    @Test
     void mapsComponentProxyFailuresToLuaResults() {
         LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result, message = fs.bad()");
         architecture.bind(machineWithThrowingInvoke(new IOException("disk failed")));
@@ -1435,6 +1483,23 @@ final class LuaArchitectureTest {
             });
     }
 
+    private static Machine machineWithInvokeInitializationCapture(final Map<String, String> components, final LuaArchitecture architecture, final boolean[] initializedDuringInvoke) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> components;
+                case "invoke" -> {
+                    initializedDuringInvoke[0] = architecture.isInitialized();
+                    yield new Object[]{"tmp"};
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
     private static Machine machineWithThrowingInvoke(final Exception failure) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
@@ -1442,6 +1507,26 @@ final class LuaArchitectureTest {
             (proxy, method, args) -> switch (method.getName()) {
                 case "components" -> Map.of("fs-address", "filesystem");
                 case "invoke" -> throw failure;
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithBudgetRetryInvoke(final Map<String, String> components, final int[] attempts) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> components;
+                case "invoke" -> {
+                    attempts[0]++;
+                    if (attempts[0] == 1) {
+                        throw new LimitReachedException();
+                    }
+                    yield new Object[]{"tmp"};
+                }
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
                 case "toString" -> "test-machine";
