@@ -1857,6 +1857,27 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void diskDriveExposesComponentCallbacks(final GameTestHelper helper) {
+        final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+
+        helper.assertTrue(diskDrive.node() instanceof li.cil.oc.api.network.Component, "Disk drive has no component node");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) diskDrive.node();
+        assertSingleResult(helper, invokeComponent(helper, component, "isEmpty"), Boolean.TRUE, "Disk drive empty state before insert");
+
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+        assertSingleResult(helper, invokeComponent(helper, component, "isEmpty"), Boolean.FALSE, "Disk drive empty state after insert");
+        final Object[] media = invokeComponent(helper, component, "media");
+        helper.assertTrue(media.length == 1 && media[0] instanceof String address && !address.isEmpty(), "Disk drive did not report media address");
+
+        assertSingleResult(helper, invokeComponent(helper, component, "eject", 0D), Boolean.TRUE, "Disk drive eject");
+        assertSingleResult(helper, invokeComponent(helper, component, "isEmpty"), Boolean.TRUE, "Disk drive empty state after eject");
+        assertDroppedItem(helper, ModItems.FLOPPY.get());
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void analyzerReportsAdapterInstalledUpgradeNode(final GameTestHelper helper) {
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
         helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
@@ -2618,6 +2639,10 @@ public final class NeoOpenComputersGameTests {
 
     private static void assertNoEnergy(final GameTestHelper helper, final Object[] result, final String name) {
         helper.assertTrue(result.length == 2 && result[0] == null && "not enough energy".equals(result[1]), name + " did not report missing energy");
+    }
+
+    private static void assertSingleResult(final GameTestHelper helper, final Object[] result, final Object expected, final String name) {
+        helper.assertTrue(result.length == 1 && expected.equals(result[0]), name + " expected " + expected + " but got " + (result.length == 0 ? "<empty>" : result[0]));
     }
 
     private static boolean modemPortOpen(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final int port) {

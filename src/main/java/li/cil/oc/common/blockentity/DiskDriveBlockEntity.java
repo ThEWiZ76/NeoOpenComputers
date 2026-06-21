@@ -5,6 +5,9 @@ import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
@@ -21,6 +24,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.network.chat.Component;
@@ -105,6 +109,35 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     @Override
     public Map<String, String> getDeviceInfo() {
         return DEVICE_INFO;
+    }
+
+    @Callback(doc = "function():boolean -- Checks whether some medium is currently in the drive.")
+    public Object[] isEmpty(final Context context, final Arguments args) {
+        return new Object[]{diskEnvironment == null || diskEnvironment.node() == null};
+    }
+
+    @Callback(doc = "function([velocity:number]):boolean -- Eject the currently present medium from the drive.")
+    public Object[] eject(final Context context, final Arguments args) {
+        final double velocity = Math.max(0D, Math.min(args.optDouble(0, 0D), 1D));
+        final ItemStack ejected = removeItem(SLOT_FLOPPY, 1);
+        if (ejected.isEmpty()) {
+            return new Object[]{false};
+        }
+        if (level != null && !level.isClientSide) {
+            final ItemEntity entity = new ItemEntity(level, worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D, worldPosition.getZ() + 0.5D, ejected);
+            entity.setDeltaMovement(0D, 0D, -velocity);
+            level.addFreshEntity(entity);
+        }
+        return new Object[]{true};
+    }
+
+    @Callback(doc = "function():string -- Return the internal floppy disk address.")
+    public Object[] media(final Context context, final Arguments args) {
+        if (diskEnvironment == null || diskEnvironment.node() == null) {
+            return new Object[]{null, "drive is empty"};
+        }
+        final String address = diskEnvironment.node().address();
+        return address == null || address.isEmpty() ? new Object[]{null, "drive is empty"} : new Object[]{address};
     }
 
     @Override
@@ -288,8 +321,8 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     private static Node createNode(final ManagedEnvironment host) {
-        final var builder = Network.newNode(host, Visibility.Neighbors);
-        return builder == null ? null : builder.create();
+        final var builder = Network.newNode(host, Visibility.Network);
+        return builder == null ? null : builder.withComponent("disk_drive", Visibility.Network).create();
     }
 
     private void removeNodes() {
