@@ -1876,6 +1876,24 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void connectedConnectorNodesShareGlobalEnergy(final GameTestHelper helper) {
+        final RecordingConnectorEnvironment source = new RecordingConnectorEnvironment(10);
+        final RecordingConnectorEnvironment sink = new RecordingConnectorEnvironment(10);
+        Network.joinNewNetwork(source.node());
+        Network.joinNewNetwork(sink.node());
+        source.node().connect(sink.node());
+
+        source.connector().changeBuffer(10);
+
+        assertClose(helper, sink.connector().globalBuffer(), 10, "Connected connector global buffer");
+        assertClose(helper, sink.connector().globalBufferSize(), 20, "Connected connector global capacity");
+        helper.assertTrue(sink.connector().tryChangeBuffer(-6), "Connected connector could not drain shared energy");
+        assertClose(helper, source.connector().localBuffer(), 4, "Connected connector source buffer after drain");
+        assertClose(helper, sink.connector().globalBuffer(), 4, "Connected connector global buffer after drain");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void terminalServerExposesVirtualScreenAndKeyboard(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
@@ -3449,6 +3467,35 @@ public final class NeoOpenComputersGameTests {
             if ("network.message".equals(message.name()) && message.data().length == 1 && message.data()[0] instanceof li.cil.oc.api.network.Packet packet) {
                 lastPacket = packet;
             }
+        }
+    }
+
+    private static final class RecordingConnectorEnvironment implements li.cil.oc.api.network.Environment {
+        private final Connector node;
+
+        private RecordingConnectorEnvironment(final double bufferSize) {
+            node = (Connector) Network.newNode(this, Visibility.Network).withConnector(bufferSize).create();
+        }
+
+        @Override
+        public Node node() {
+            return node;
+        }
+
+        private Connector connector() {
+            return node;
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
         }
     }
 

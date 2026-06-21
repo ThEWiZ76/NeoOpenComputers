@@ -558,7 +558,46 @@ final class NetworkRegistry implements NetworkAPI {
         }
     }
 
-    private class ConnectorNode extends BaseNode implements Connector {
+    private interface ConnectorBufferAccess extends Connector {
+        double rawLocalBuffer();
+
+        double rawLocalBufferSize();
+
+        double rawChangeBuffer(double delta);
+    }
+
+    private List<ConnectorBufferAccess> connectorBuffers(final BaseNode reference, final ConnectorBufferAccess fallback) {
+        if (reference.network == null) {
+            return List.of(fallback);
+        }
+        final List<ConnectorBufferAccess> connectors = new ArrayList<>();
+        for (final Node node : reference.network.nodes()) {
+            if (node instanceof ConnectorBufferAccess connector) {
+                connectors.add(connector);
+            }
+        }
+        return connectors.isEmpty() ? List.of(fallback) : connectors;
+    }
+
+    private double changeConnectorBuffers(final ConnectorBufferAccess preferred, final List<ConnectorBufferAccess> connectors, final double delta) {
+        double remaining = preferred.rawChangeBuffer(delta);
+        if (Math.abs(remaining) <= ConnectorNode.BUFFER_EPSILON) {
+            return 0;
+        }
+        for (final ConnectorBufferAccess connector : connectors) {
+            if (connector != preferred) {
+                remaining = connector.rawChangeBuffer(remaining);
+                if (Math.abs(remaining) <= ConnectorNode.BUFFER_EPSILON) {
+                    return 0;
+                }
+            }
+        }
+        return remaining;
+    }
+
+    private class ConnectorNode extends BaseNode implements ConnectorBufferAccess {
+        private static final double BUFFER_EPSILON = 1e-7;
+
         private double localBufferSize;
         private double localBuffer;
 
@@ -579,29 +618,26 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public double globalBuffer() {
-            return localBuffer;
+            return connectorBuffers(this, this).stream().mapToDouble(ConnectorBufferAccess::rawLocalBuffer).sum();
         }
 
         @Override
         public double globalBufferSize() {
-            return localBufferSize;
+            return connectorBuffers(this, this).stream().mapToDouble(ConnectorBufferAccess::rawLocalBufferSize).sum();
         }
 
         @Override
         public double changeBuffer(final double delta) {
-            final double oldBuffer = localBuffer;
-            localBuffer = Math.max(0, Math.min(localBuffer + delta, localBufferSize));
-            return delta - (localBuffer - oldBuffer);
+            return changeConnectorBuffers(this, connectorBuffers(this, this), delta);
         }
 
         @Override
         public boolean tryChangeBuffer(final double delta) {
-            final double newBuffer = localBuffer + delta;
-            if (newBuffer < 0 || newBuffer > localBufferSize) {
+            final double newBuffer = globalBuffer() + delta;
+            if (newBuffer < -BUFFER_EPSILON || newBuffer - globalBufferSize() > BUFFER_EPSILON) {
                 return false;
             }
-            localBuffer = newBuffer;
-            return true;
+            return Math.abs(changeBuffer(delta)) <= BUFFER_EPSILON;
         }
 
         @Override
@@ -621,9 +657,27 @@ final class NetworkRegistry implements NetworkAPI {
             super.save(nbt);
             nbt.putDouble("buffer", Math.min(localBuffer, localBufferSize));
         }
+
+        @Override
+        public double rawLocalBuffer() {
+            return localBuffer;
+        }
+
+        @Override
+        public double rawLocalBufferSize() {
+            return localBufferSize;
+        }
+
+        @Override
+        public double rawChangeBuffer(final double delta) {
+            final double oldBuffer = localBuffer;
+            localBuffer = Math.max(0, Math.min(localBuffer + delta, localBufferSize));
+            return delta - (localBuffer - oldBuffer);
+        }
+
     }
 
-    private final class ComponentConnectorNode extends ComponentNode implements ComponentConnector {
+    private final class ComponentConnectorNode extends ComponentNode implements ComponentConnector, ConnectorBufferAccess {
         private final ConnectorNode connectorDelegate;
 
         private ComponentConnectorNode(final Environment host, final Visibility reachability, final String name, final Visibility visibility, final double localBufferSize) {
@@ -643,22 +697,26 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public double globalBuffer() {
-            return connectorDelegate.globalBuffer();
+            return connectorBuffers(this, this).stream().mapToDouble(ConnectorBufferAccess::rawLocalBuffer).sum();
         }
 
         @Override
         public double globalBufferSize() {
-            return connectorDelegate.globalBufferSize();
+            return connectorBuffers(this, this).stream().mapToDouble(ConnectorBufferAccess::rawLocalBufferSize).sum();
         }
 
         @Override
         public double changeBuffer(final double delta) {
-            return connectorDelegate.changeBuffer(delta);
+            return changeConnectorBuffers(this, connectorBuffers(this, this), delta);
         }
 
         @Override
         public boolean tryChangeBuffer(final double delta) {
-            return connectorDelegate.tryChangeBuffer(delta);
+            final double newBuffer = globalBuffer() + delta;
+            if (newBuffer < -ConnectorNode.BUFFER_EPSILON || newBuffer - globalBufferSize() > ConnectorNode.BUFFER_EPSILON) {
+                return false;
+            }
+            return Math.abs(changeBuffer(delta)) <= ConnectorNode.BUFFER_EPSILON;
         }
 
         @Override
@@ -676,6 +734,21 @@ final class NetworkRegistry implements NetworkAPI {
         public void save(final CompoundTag nbt) {
             super.save(nbt);
             connectorDelegate.save(nbt);
+        }
+
+        @Override
+        public double rawLocalBuffer() {
+            return connectorDelegate.rawLocalBuffer();
+        }
+
+        @Override
+        public double rawLocalBufferSize() {
+            return connectorDelegate.rawLocalBufferSize();
+        }
+
+        @Override
+        public double rawChangeBuffer(final double delta) {
+            return connectorDelegate.rawChangeBuffer(delta);
         }
     }
 
