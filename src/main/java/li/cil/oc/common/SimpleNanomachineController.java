@@ -16,7 +16,9 @@ final class SimpleNanomachineController implements Controller {
     private final Player player;
     private final NanomachinesRegistry registry;
     private List<Behavior> behaviors = List.of();
+    private List<Behavior> activeBehaviors = List.of();
     private boolean[] inputs = new boolean[0];
+    private boolean activeBehaviorsDirty;
     private double buffer = BUFFER_SIZE * 0.25D;
 
     SimpleNanomachineController(final Player player, final NanomachinesRegistry registry) {
@@ -35,9 +37,11 @@ final class SimpleNanomachineController implements Controller {
                 }
             }
         }
-        disableAll(DisableReason.Default);
+        disableActive(DisableReason.Default);
         behaviors = List.copyOf(created);
+        activeBehaviors = List.of();
         inputs = new boolean[Math.max(1, (int) Math.ceil(behaviors.size() * 0.4D))];
+        activeBehaviorsDirty = true;
         return this;
     }
 
@@ -66,18 +70,22 @@ final class SimpleNanomachineController implements Controller {
         if (value && !inputs[index] && activeInputCount() >= MAX_ACTIVE_INPUTS) {
             return false;
         }
+        if (inputs[index] != value) {
+            activeBehaviorsDirty = true;
+        }
         inputs[index] = value;
         return true;
     }
 
     @Override
     public Iterable<Behavior> getActiveBehaviors() {
-        return inputs.length > 0 && activeInputCount() > 0 ? behaviors : List.of();
+        cleanActiveBehaviors(DisableReason.InputChanged);
+        return activeBehaviors;
     }
 
     @Override
     public int getInputCount(final Behavior behavior) {
-        return activeInputCount();
+        return behaviors.contains(behavior) ? activeInputCount() : 0;
     }
 
     @Override
@@ -98,7 +106,7 @@ final class SimpleNanomachineController implements Controller {
     }
 
     void dispose() {
-        disableAll(DisableReason.Default);
+        disableActive(DisableReason.Default);
     }
 
     private int activeInputCount() {
@@ -111,9 +119,40 @@ final class SimpleNanomachineController implements Controller {
         return active;
     }
 
-    private void disableAll(final DisableReason reason) {
-        for (final Behavior behavior : behaviors) {
+    private void cleanActiveBehaviors(final DisableReason reason) {
+        if (!activeBehaviorsDirty) {
+            return;
+        }
+
+        final List<Behavior> newBehaviors = inputs.length > 0 && activeInputCount() > 0 ? behaviors : List.of();
+        final List<Behavior> addedBehaviors = new ArrayList<>();
+        final List<Behavior> removedBehaviors = new ArrayList<>();
+        for (final Behavior behavior : newBehaviors) {
+            if (!activeBehaviors.contains(behavior)) {
+                addedBehaviors.add(behavior);
+            }
+        }
+        for (final Behavior behavior : activeBehaviors) {
+            if (!newBehaviors.contains(behavior)) {
+                removedBehaviors.add(behavior);
+            }
+        }
+        activeBehaviors = List.copyOf(newBehaviors);
+        activeBehaviorsDirty = false;
+
+        for (final Behavior behavior : addedBehaviors) {
+            behavior.onEnable();
+        }
+        for (final Behavior behavior : removedBehaviors) {
             behavior.onDisable(reason);
         }
+    }
+
+    private void disableActive(final DisableReason reason) {
+        for (final Behavior behavior : activeBehaviors) {
+            behavior.onDisable(reason);
+        }
+        activeBehaviors = List.of();
+        activeBehaviorsDirty = false;
     }
 }

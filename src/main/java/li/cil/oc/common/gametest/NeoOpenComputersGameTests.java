@@ -632,6 +632,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesInputChangesNotifyBehaviorLifecycle(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.common.NanomachinesRegistry registry = new li.cil.oc.common.NanomachinesRegistry();
+        final RecordingNanomachineBehavior behavior = new RecordingNanomachineBehavior();
+        registry.addProvider(new RecordingNanomachineProvider(behavior));
+        final li.cil.oc.api.nanomachines.Controller controller = registry.installController(player);
+
+        helper.assertFalse(containsBehavior(controller.getActiveBehaviors(), behavior), "Nanomachines behavior started active");
+        helper.assertTrue(controller.setInput(0, true), "Nanomachines input rejected first active input");
+        helper.assertTrue(containsBehavior(controller.getActiveBehaviors(), behavior), "Nanomachines behavior did not become active");
+        helper.assertTrue(behavior.enableCount == 1, "Nanomachines input did not enable behavior");
+        helper.assertTrue(controller.setInput(0, false), "Nanomachines input rejected deactivation");
+        helper.assertFalse(containsBehavior(controller.getActiveBehaviors(), behavior), "Nanomachines behavior stayed active after input disable");
+        helper.assertTrue(behavior.disableCount == 1, "Nanomachines input did not disable behavior");
+        helper.assertTrue(behavior.disableReason == li.cil.oc.api.nanomachines.DisableReason.InputChanged, "Nanomachines behavior disable reason was not input changed");
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void mfuLinksRemoteSidedTileEnvironment(final GameTestHelper helper) {
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(2, 1, 0);
@@ -4353,6 +4373,15 @@ public final class NeoOpenComputersGameTests {
         return false;
     }
 
+    private static boolean containsBehavior(final Iterable<li.cil.oc.api.nanomachines.Behavior> behaviors, final li.cil.oc.api.nanomachines.Behavior behavior) {
+        for (final li.cil.oc.api.nanomachines.Behavior candidate : behaviors) {
+            if (candidate == behavior) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean containsStack(final net.minecraft.world.Container inventory, final Item item, final int count) {
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             final ItemStack stack = inventory.getItem(slot);
@@ -5453,6 +5482,55 @@ public final class NeoOpenComputersGameTests {
         @Callback
         public Object[] ping(final Context context, final Arguments arguments) {
             return new Object[]{"pong"};
+        }
+    }
+
+    private static final class RecordingNanomachineProvider implements li.cil.oc.api.nanomachines.BehaviorProvider {
+        private final li.cil.oc.api.nanomachines.Behavior behavior;
+
+        private RecordingNanomachineProvider(final li.cil.oc.api.nanomachines.Behavior behavior) {
+            this.behavior = behavior;
+        }
+
+        @Override
+        public Iterable<li.cil.oc.api.nanomachines.Behavior> createBehaviors(final Player player) {
+            return List.of(behavior);
+        }
+
+        @Override
+        public CompoundTag writeToNBT(final li.cil.oc.api.nanomachines.Behavior behavior) {
+            return new CompoundTag();
+        }
+
+        @Override
+        public li.cil.oc.api.nanomachines.Behavior readFromNBT(final Player player, final CompoundTag nbt) {
+            return behavior;
+        }
+    }
+
+    private static final class RecordingNanomachineBehavior implements li.cil.oc.api.nanomachines.Behavior {
+        private int enableCount;
+        private int disableCount;
+        private li.cil.oc.api.nanomachines.DisableReason disableReason;
+
+        @Override
+        public String getNameHint() {
+            return "recording";
+        }
+
+        @Override
+        public void onEnable() {
+            enableCount++;
+        }
+
+        @Override
+        public void onDisable(final li.cil.oc.api.nanomachines.DisableReason reason) {
+            disableCount++;
+            disableReason = reason;
+        }
+
+        @Override
+        public void update() {
         }
     }
 
