@@ -2,6 +2,7 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -51,7 +52,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
 
     public NetworkCardEnvironment(final EnvironmentHost host) {
         this.host = host;
-        final var builder = Network.newNode(this, Visibility.Network);
+        final var builder = Network.newNode(this, nodeReachability());
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create());
         }
@@ -210,6 +211,10 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
 
     protected int maxOpenPorts() {
         return MAX_OPEN_PORTS;
+    }
+
+    protected Visibility nodeReachability() {
+        return host instanceof Rack ? Visibility.Neighbors : Visibility.Network;
     }
 
     private boolean isOwnComputerMessage(final Message message) {

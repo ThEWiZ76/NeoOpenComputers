@@ -49,7 +49,7 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
         super(host);
         this.tier = Math.max(0, Math.min(tier, MAX_RANGE_BY_TIER.length - 1));
         strength = maxWirelessRange();
-        final var builder = Network.newNode(this, Visibility.Network);
+        final var builder = Network.newNode(this, nodeReachability());
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
         }

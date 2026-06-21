@@ -8,6 +8,7 @@ import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
@@ -21,6 +22,7 @@ import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -115,6 +117,16 @@ final class NetworkCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, card.isWired(null, new TestArguments()));
         assertArrayEquals(new Object[]{false}, card.isWireless(null, new TestArguments()));
         assertNotNull(card.node());
+    }
+
+    @Test
+    void rackNetworkCardsUseNeighborReachabilityLikeUpstream() {
+        OpenComputersApi.initialize();
+        NetworkCardEnvironment wired = new NetworkCardEnvironment(rackHost());
+        WirelessNetworkCardEnvironment wireless = new WirelessNetworkCardEnvironment(rackHost(), 1);
+
+        assertEquals(Visibility.Neighbors, wired.node().reachability());
+        assertEquals(Visibility.Neighbors, wireless.node().reachability());
     }
 
     @Test
@@ -554,6 +566,46 @@ final class NetworkCardEnvironmentTest {
         @Override public int ttl() { return 16; }
         @Override public Packet hop() { return this; }
         @Override public void save(final CompoundTag nbt) {}
+    }
+
+    private static EnvironmentHost rackHost() {
+        return (EnvironmentHost) Proxy.newProxyInstance(
+            Rack.class.getClassLoader(),
+            new Class<?>[]{Rack.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-rack";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Object defaultValue(final Class<?> type) {
+        if (!type.isPrimitive() || type == Void.TYPE) {
+            return null;
+        }
+        if (type == Boolean.TYPE) {
+            return false;
+        }
+        if (type == Character.TYPE) {
+            return '\0';
+        }
+        if (type == Byte.TYPE) {
+            return (byte) 0;
+        }
+        if (type == Short.TYPE) {
+            return (short) 0;
+        }
+        if (type == Integer.TYPE) {
+            return 0;
+        }
+        if (type == Long.TYPE) {
+            return 0L;
+        }
+        if (type == Float.TYPE) {
+            return 0F;
+        }
+        return 0D;
     }
 
     private record TestArguments(Object... values) implements Arguments {
