@@ -1894,6 +1894,67 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void relayUpgradeInventoryUpdatesPacketLimits(final GameTestHelper helper) {
+        final BlockPos relayPos = new BlockPos(1, 1, 1);
+        helper.setBlock(relayPos, ModBlocks.RELAY.get());
+        final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+
+        helper.assertTrue(relay.getContainerSize() == RelayBlockEntity.CONTAINER_SIZE, "Relay inventory size mismatch");
+        helper.assertTrue(relay.canPlaceItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.CPU_TIER3.get())), "Relay rejected CPU slot");
+        helper.assertTrue(relay.canPlaceItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get())), "Relay rejected memory slot");
+        helper.assertTrue(relay.canPlaceItem(RelayBlockEntity.HDD_SLOT, new ItemStack(ModItems.HDD_TIER3.get())), "Relay rejected HDD slot");
+        helper.assertTrue(relay.canPlaceItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get())), "Relay rejected wireless card slot");
+        helper.assertTrue(!relay.canPlaceItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get())), "Relay accepted memory in CPU slot");
+        helper.assertTrue(!relay.canPlaceItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.INTERNET_CARD.get())), "Relay accepted unsupported card");
+
+        final int baseDelay = relay.relayDelay();
+        final int baseAmount = relay.relayAmount();
+        final int baseQueueSize = relay.maxQueueSize();
+
+        relay.setItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.CPU_TIER3.get()));
+        relay.setItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        relay.setItem(RelayBlockEntity.HDD_SLOT, new ItemStack(ModItems.HDD_TIER3.get()));
+        relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()));
+
+        helper.assertTrue(relay.relayDelay() < baseDelay, "Relay CPU did not reduce delay");
+        helper.assertTrue(relay.relayAmount() > baseAmount, "Relay memory did not increase packet amount");
+        helper.assertTrue(relay.maxQueueSize() > baseQueueSize, "Relay HDD did not increase queue size");
+        helper.assertTrue(relay.isWirelessEnabled(), "Relay wireless card did not enable wireless mode");
+
+        relay.removeItemNoUpdate(RelayBlockEntity.CPU_SLOT);
+        relay.removeItemNoUpdate(RelayBlockEntity.MEMORY_SLOT);
+        relay.removeItemNoUpdate(RelayBlockEntity.HDD_SLOT);
+        relay.removeItemNoUpdate(RelayBlockEntity.CARD_SLOT);
+
+        helper.assertTrue(relay.relayDelay() == baseDelay, "Relay CPU removal did not reset delay");
+        helper.assertTrue(relay.relayAmount() == baseAmount, "Relay memory removal did not reset packet amount");
+        helper.assertTrue(relay.maxQueueSize() == baseQueueSize, "Relay HDD removal did not reset queue size");
+        helper.assertTrue(!relay.isWirelessEnabled(), "Relay card removal did not disable wireless mode");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void brokenRelayDropsInstalledUpgradeItems(final GameTestHelper helper) {
+        final BlockPos relayPos = new BlockPos(1, 1, 1);
+        helper.killAllEntities();
+        helper.setBlock(relayPos, ModBlocks.RELAY.get());
+        final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+        relay.setItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.CPU_TIER3.get()));
+        relay.setItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        relay.setItem(RelayBlockEntity.HDD_SLOT, new ItemStack(ModItems.HDD_TIER3.get()));
+        relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()));
+
+        helper.getLevel().destroyBlock(helper.absolutePos(relayPos), true);
+        helper.runAtTickTime(1, () -> {
+            helper.assertTrue(droppedItemCount(helper, ModItems.CPU_TIER3.get()) == 1, "Broken relay did not drop installed CPU");
+            helper.assertTrue(droppedItemCount(helper, ModItems.MEMORY_TIER3.get()) == 1, "Broken relay did not drop installed memory");
+            helper.assertTrue(droppedItemCount(helper, ModItems.HDD_TIER3.get()) == 1, "Broken relay did not drop installed HDD");
+            helper.assertTrue(droppedItemCount(helper, ModItems.WIRELESS_NETWORK_CARD_TIER2.get()) == 1, "Broken relay did not drop installed wireless card");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty")
     public static void terminalServerExposesVirtualScreenAndKeyboard(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

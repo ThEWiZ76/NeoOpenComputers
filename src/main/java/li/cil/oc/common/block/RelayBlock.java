@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.ItemStack;
 
 @SuppressWarnings("deprecation")
 public class RelayBlock extends Block implements EntityBlock {
@@ -55,6 +56,14 @@ public class RelayBlock extends Block implements EntityBlock {
     @Override
     protected void onRemove(final BlockState state, final Level level, final BlockPos pos, final BlockState newState, final boolean movedByPiston) {
         if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof RelayBlockEntity relay) {
+            if (!level.isClientSide) {
+                for (int slot = 0; slot < relay.getContainerSize(); slot++) {
+                    final ItemStack stack = relay.getItem(slot);
+                    if (!stack.isEmpty()) {
+                        popResource(level, pos, stack.copy());
+                    }
+                }
+            }
             relay.removeNodes();
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
