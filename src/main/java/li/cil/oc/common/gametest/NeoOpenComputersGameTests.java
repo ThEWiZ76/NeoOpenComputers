@@ -45,6 +45,7 @@ import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
+import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
@@ -3165,6 +3166,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void diskDriveEjectUsesBlockFacing(final GameTestHelper helper) throws Exception {
+        final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get().defaultBlockState().setValue(DiskDriveBlock.FACING, Direction.EAST));
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) diskDrive.node();
+        assertSingleResult(helper, invokeComponent(helper, component, "eject", 1D), Boolean.TRUE, "Disk drive eject");
+        final ItemEntity entity = droppedItemEntity(helper, ModItems.FLOPPY.get());
+        helper.assertTrue(entity.getDeltaMovement().x > 0.5D, "Ejected disk did not move along facing direction: " + entity.getDeltaMovement());
+        helper.assertTrue(Math.abs(entity.getDeltaMovement().z) < 0.001D, "Ejected disk kept north/south velocity: " + entity.getDeltaMovement());
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void diskDriveMediaHotplugSignalsReachComputer(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(1, 1, 1);
         final BlockPos diskDrivePos = new BlockPos(2, 1, 1);
@@ -4143,13 +4159,17 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static ItemStack droppedItemStack(final GameTestHelper helper, final Item item) {
+        return droppedItemEntity(helper, item).getItem();
+    }
+
+    private static ItemEntity droppedItemEntity(final GameTestHelper helper, final Item item) {
         for (ItemEntity entity : helper.getEntities(EntityType.ITEM)) {
             if (entity.getItem().is(item)) {
-                return entity.getItem();
+                return entity;
             }
         }
         helper.fail("Expected dropped item " + item);
-        return ItemStack.EMPTY;
+        throw new IllegalStateException("Expected dropped item " + item);
     }
 
     private static int droppedItemCount(final GameTestHelper helper, final Item item) {

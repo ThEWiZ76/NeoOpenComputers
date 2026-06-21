@@ -16,6 +16,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.block.DiskDriveBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -125,7 +126,8 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         }
         if (level != null && !level.isClientSide) {
             final ItemEntity entity = new ItemEntity(level, worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D, worldPosition.getZ() + 0.5D, ejected);
-            entity.setDeltaMovement(0D, 0D, -velocity);
+            final Direction facing = getBlockState().getValue(DiskDriveBlock.FACING);
+            entity.setDeltaMovement(facing.getStepX() * velocity, facing.getStepY() * velocity, facing.getStepZ() * velocity);
             level.addFreshEntity(entity);
         }
         return new Object[]{true};
