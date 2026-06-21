@@ -1,5 +1,6 @@
 package li.cil.oc.common;
 
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
@@ -10,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -33,12 +35,31 @@ final class AnalyzerItemTest {
         assertTrue(contains(lines, "Stored energy: 4.00/10.00"));
     }
 
+    @Test
+    void describesDeviceInfoMetadata() {
+        NetworkRegistry registry = new NetworkRegistry();
+        TestDeviceEnvironment host = new TestDeviceEnvironment();
+        ComponentConnector node = registry.newNode(host, Visibility.Network)
+            .withComponent("geolyzer", Visibility.Network)
+            .withConnector(10D)
+            .create();
+        host.node = node;
+        registry.joinNewNetwork(node);
+
+        List<Component> lines = AnalyzerItem.describe(host);
+
+        assertTrue(contains(lines, "Device class: generic"));
+        assertTrue(contains(lines, "Description: Geolyzer"));
+        assertTrue(contains(lines, "Vendor: MightyPirates"));
+        assertTrue(contains(lines, "Product: Terrain Analyzer MkII"));
+    }
+
     private static boolean contains(final List<Component> lines, final String expected) {
         return lines.stream().anyMatch(line -> line.getString().equals(expected));
     }
 
-    private static final class TestEnvironment implements Environment {
-        private Node node;
+    private static class TestEnvironment implements Environment {
+        protected Node node;
 
         @Override
         public Node node() {
@@ -55,6 +76,17 @@ final class AnalyzerItemTest {
 
         @Override
         public void onMessage(final Message message) {
+        }
+    }
+
+    private static final class TestDeviceEnvironment extends TestEnvironment implements DeviceInfo {
+        @Override
+        public Map<String, String> getDeviceInfo() {
+            return Map.of(
+                DeviceAttribute.Class, DeviceClass.Generic,
+                DeviceAttribute.Description, "Geolyzer",
+                DeviceAttribute.Vendor, "MightyPirates",
+                DeviceAttribute.Product, "Terrain Analyzer MkII");
         }
     }
 }

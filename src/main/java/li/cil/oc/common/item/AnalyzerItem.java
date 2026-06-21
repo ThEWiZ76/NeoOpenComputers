@@ -1,5 +1,6 @@
 package li.cil.oc.common.item;
 
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class AnalyzerItem extends Item {
     public AnalyzerItem(final Properties properties) {
@@ -90,6 +92,9 @@ public class AnalyzerItem extends Item {
             }
             lines.add(line("Total energy: " + format(connector.globalBuffer()) + "/" + format(connector.globalBufferSize())));
         }
+        if (node.host() instanceof DeviceInfo deviceInfo) {
+            describeDeviceInfo(deviceInfo.getDeviceInfo(), lines);
+        }
         if (node instanceof Component component) {
             lines.add(line("Component: " + component.name()));
         }
@@ -97,6 +102,53 @@ public class AnalyzerItem extends Item {
         if (address != null && !address.isEmpty()) {
             lines.add(line("Address: " + address));
         }
+    }
+
+    private static void describeDeviceInfo(final Map<String, String> deviceInfo, final List<net.minecraft.network.chat.Component> lines) {
+        if (deviceInfo == null || deviceInfo.isEmpty()) {
+            return;
+        }
+        final List<String> orderedKeys = List.of(
+            DeviceInfo.DeviceAttribute.Class,
+            DeviceInfo.DeviceAttribute.Description,
+            DeviceInfo.DeviceAttribute.Vendor,
+            DeviceInfo.DeviceAttribute.Product,
+            DeviceInfo.DeviceAttribute.Version,
+            DeviceInfo.DeviceAttribute.Serial,
+            DeviceInfo.DeviceAttribute.Capacity,
+            DeviceInfo.DeviceAttribute.Size,
+            DeviceInfo.DeviceAttribute.Clock,
+            DeviceInfo.DeviceAttribute.Width);
+        for (String key : orderedKeys) {
+            addDeviceInfoLine(key, deviceInfo.get(key), lines);
+        }
+        deviceInfo.entrySet().stream()
+            .filter(entry -> !orderedKeys.contains(entry.getKey()))
+            .sorted(Map.Entry.comparingByKey())
+            .forEach(entry -> addDeviceInfoLine(entry.getKey(), entry.getValue(), lines));
+    }
+
+    private static void addDeviceInfoLine(final String key, final String value, final List<net.minecraft.network.chat.Component> lines) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
+        lines.add(line(deviceInfoLabel(key) + ": " + value));
+    }
+
+    private static String deviceInfoLabel(final String key) {
+        return switch (key) {
+            case DeviceInfo.DeviceAttribute.Class -> "Device class";
+            case DeviceInfo.DeviceAttribute.Description -> "Description";
+            case DeviceInfo.DeviceAttribute.Vendor -> "Vendor";
+            case DeviceInfo.DeviceAttribute.Product -> "Product";
+            case DeviceInfo.DeviceAttribute.Version -> "Version";
+            case DeviceInfo.DeviceAttribute.Serial -> "Serial";
+            case DeviceInfo.DeviceAttribute.Capacity -> "Capacity";
+            case DeviceInfo.DeviceAttribute.Size -> "Size";
+            case DeviceInfo.DeviceAttribute.Clock -> "Clock";
+            case DeviceInfo.DeviceAttribute.Width -> "Width";
+            default -> key;
+        };
     }
 
     private static MutableComponent line(final String value) {
