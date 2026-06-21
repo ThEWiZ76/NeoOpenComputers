@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "OWO",
+    "NCW",
+    "OBO"
+  ],
+  "key": {
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "N": {
+      "item": "neoopencomputers:wireless_network_card_tier1"
+    },
+    "W": {
+      "item": "neoopencomputers:wireless_network_card_tier2"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:terminal_server"
+  }
+}

@@ -89,6 +89,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void terminalServerItemIdIsStable() {
+        assertEquals("terminal_server", ModContentIds.TERMINAL_SERVER);
+    }
+
+    @Test
     void computerCaseBlockIdIsStable() {
         assertEquals("computer_case_tier1", ModContentIds.COMPUTER_CASE_TIER1);
     }

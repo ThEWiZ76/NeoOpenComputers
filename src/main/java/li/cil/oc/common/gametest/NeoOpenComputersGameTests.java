@@ -128,6 +128,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.WRENCH.get();
         ModItems.TEXTURE_PICKER.get();
         ModItems.TERMINAL.get();
+        ModItems.TERMINAL_SERVER.get();
         ModItems.ASSEMBLER.get();
         ModItems.BATTERY_UPGRADE_TIER1.get();
         ModItems.BATTERY_UPGRADE_TIER2.get();

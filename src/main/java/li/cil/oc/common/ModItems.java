@@ -37,6 +37,7 @@ import li.cil.oc.common.item.TankUpgradeItem;
 import li.cil.oc.common.item.TabletCaseItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
+import li.cil.oc.common.item.TerminalServerItem;
 import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.TradingUpgradeItem;
 import li.cil.oc.common.item.TractorBeamUpgradeItem;
@@ -71,6 +72,10 @@ public final class ModItems {
     public static final DeferredItem<TerminalItem> TERMINAL = ITEMS.register(
         ModContentIds.TERMINAL,
         () -> new TerminalItem(new Item.Properties()));
+
+    public static final DeferredItem<TerminalServerItem> TERMINAL_SERVER = ITEMS.register(
+        ModContentIds.TERMINAL_SERVER,
+        () -> new TerminalServerItem(new Item.Properties()));
 
     public static final DeferredItem<BlockItem> ASSEMBLER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ASSEMBLER,

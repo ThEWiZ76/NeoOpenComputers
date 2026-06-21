@@ -49,6 +49,7 @@ final class RecipeResourceTest {
             ModContentIds.WRENCH,
             ModContentIds.TEXTURE_PICKER,
             ModContentIds.TERMINAL,
+            ModContentIds.TERMINAL_SERVER,
             ModContentIds.ASSEMBLER,
             ModContentIds.BATTERY_UPGRADE_TIER1,
             ModContentIds.BATTERY_UPGRADE_TIER2,
@@ -204,6 +205,19 @@ final class RecipeResourceTest {
         assertItem(keys, "M", "neoopencomputers:" + ModContentIds.SCREEN_TIER2);
         assertItem(keys, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
         assertItem(keys, "K", "neoopencomputers:" + ModContentIds.KEYBOARD);
+    }
+
+    @Test
+    void terminalServerRecipeUsesUpstreamShape() throws IOException {
+        JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.TERMINAL_SERVER + ".json"));
+        JsonObject keys = json.getAsJsonObject("key");
+
+        assertPattern(json, "OWO", "NCW", "OBO");
+        assertItem(keys, "O", "minecraft:obsidian");
+        assertItem(keys, "N", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER1);
+        assertItem(keys, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
     @Test

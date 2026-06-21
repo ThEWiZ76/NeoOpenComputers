@@ -258,6 +258,14 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void terminalServerItemIsSimpleComponentItem() throws NoSuchMethodException {
+        final Constructor<TerminalServerItem> constructor = TerminalServerItem.class.getConstructor(Item.Properties.class);
+
+        assertTrue(Item.class.isAssignableFrom(TerminalServerItem.class));
+        assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
     void navigationUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<NavigationUpgradeItem> constructor = NavigationUpgradeItem.class.getConstructor(Item.Properties.class);
 
