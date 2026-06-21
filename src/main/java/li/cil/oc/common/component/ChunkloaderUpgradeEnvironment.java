@@ -9,13 +9,21 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.NeoOpenComputers;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
+import net.neoforged.neoforge.common.world.chunk.TicketController;
 
 import java.util.Map;
 
 public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "chunkloader";
     private static final String ACTIVE_TAG = "active";
+    private static final TicketController TICKETS = new TicketController(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "chunkloader_upgrade"));
 
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
@@ -26,6 +34,7 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
 
     private final EnvironmentHost host;
     private boolean active;
+    private boolean forced;
 
     public ChunkloaderUpgradeEnvironment(final EnvironmentHost host) {
         this.host = host;
@@ -33,6 +42,10 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Network).withConnector().create());
         }
+    }
+
+    public static void registerTicketController(final RegisterTicketControllersEvent event) {
+        event.register(TICKETS);
     }
 
     @Override
@@ -72,6 +85,7 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
     public void load(final CompoundTag tag) {
         super.load(tag);
         active = tag.getBoolean(ACTIVE_TAG);
+        updateChunkTicket();
     }
 
     @Override
@@ -87,9 +101,28 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
             return false;
         }
         active = value;
+        updateChunkTicket();
         if (host != null) {
             host.markChanged();
         }
         return true;
+    }
+
+    private void updateChunkTicket() {
+        final boolean shouldForce = active && host != null && host.world() instanceof ServerLevel;
+        if (forced == shouldForce) {
+            return;
+        }
+        final ServerLevel level = host != null && host.world() instanceof ServerLevel serverLevel ? serverLevel : null;
+        if (level != null) {
+            final BlockPos owner = ownerPosition();
+            final ChunkPos chunk = new ChunkPos(owner);
+            TICKETS.forceChunk(level, owner, chunk.x, chunk.z, shouldForce, true);
+        }
+        forced = shouldForce;
+    }
+
+    private BlockPos ownerPosition() {
+        return BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition());
     }
 }

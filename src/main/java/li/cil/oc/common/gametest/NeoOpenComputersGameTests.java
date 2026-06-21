@@ -1,6 +1,7 @@
 package li.cil.oc.common.gametest;
 
 import li.cil.oc.NeoOpenComputers;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DeviceInfo;
@@ -79,6 +80,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -1733,6 +1736,27 @@ public final class NeoOpenComputersGameTests {
         environment.onMessage(new TestMessage(component, "computer.stopped", new Object[0]));
         final Object[] stopped = component.invoke("isActive", null);
         helper.assertTrue(Boolean.FALSE.equals(stopped[0]), "Chunkloader did not deactivate on computer.stopped");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void chunkloaderUpgradeForcesHostChunkWhenActive(final GameTestHelper helper) throws Exception {
+        final ItemStack stack = new ItemStack(ModItems.CHUNKLOADER_UPGRADE.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for chunkloader upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        final ChunkPos ownerChunk = new ChunkPos(BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()));
+        final ManagedEnvironment environment = driver.createEnvironment(stack, host);
+        helper.assertTrue(environment != null, "Chunkloader upgrade did not create environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Chunkloader node is not a component connector");
+        final ComponentConnector component = (ComponentConnector) environment.node();
+
+        component.invoke("setActive", null, true);
+        helper.assertTrue(hasModForcedTickingChunk(helper, ownerChunk.toLong()), "Chunkloader did not add forced chunk ticket");
+
+        component.invoke("setActive", null, false);
+        helper.assertFalse(hasModForcedTickingChunk(helper, ownerChunk.toLong()), "Chunkloader did not remove forced chunk ticket");
         helper.succeed();
     }
 
@@ -4294,6 +4318,16 @@ public final class NeoOpenComputersGameTests {
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             final ItemStack stack = inventory.getItem(slot);
             if (stack.is(item) && stack.getCount() >= count) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasModForcedTickingChunk(final GameTestHelper helper, final long chunk) {
+        final ForcedChunksSavedData data = helper.getLevel().getDataStorage().computeIfAbsent(ForcedChunksSavedData.factory(), ForcedChunksSavedData.FILE_ID);
+        for (final LongSet chunks : data.getBlockForcedChunks().getTickingChunks().values()) {
+            if (chunks.contains(chunk)) {
                 return true;
             }
         }

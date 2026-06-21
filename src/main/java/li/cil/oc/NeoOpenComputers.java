@@ -13,6 +13,7 @@ import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.ModRecipeSerializers;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.MfuTargetEvents;
 import li.cil.oc.common.machine.ProgramLocationImc;
 import li.cil.oc.common.network.RackNetworking;
@@ -43,6 +44,7 @@ public final class NeoOpenComputers {
         ModCreativeTabs.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
         MfuTargetEvents.register();
+        modEventBus.addListener(ChunkloaderUpgradeEnvironment::registerTicketController);
         modEventBus.addListener(RackNetworking::register);
         modEventBus.addListener(TerminalNetworking::register);
         modEventBus.addListener(this::onCommonSetup);
