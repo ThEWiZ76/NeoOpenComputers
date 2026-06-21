@@ -1866,12 +1866,38 @@ public final class NeoOpenComputersGameTests {
 
         final li.cil.oc.api.network.Packet packet = Network.newPacket(source.node().address(), null, 123, new Object[]{"payload"});
         source.node().sendToReachable("network.message", packet);
-        RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+        tickRelayThroughDelay(helper, relayPos, relay);
 
         helper.assertTrue(receiver.lastPacket != null, "Relay did not forward packet");
         helper.assertTrue(receiver.lastPacket.port() == 123, "Relay forwarded wrong port");
         helper.assertTrue(receiver.lastPacket.ttl() == packet.ttl() - 1, "Relay did not decrement packet TTL");
         helper.assertTrue("payload".equals(receiver.lastPacket.data()[0]), "Relay forwarded wrong payload");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void relayWaitsConfiguredDelayBeforeForwarding(final GameTestHelper helper) {
+        final BlockPos relayPos = new BlockPos(1, 1, 1);
+        helper.setBlock(relayPos, ModBlocks.RELAY.get());
+        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(relayPos));
+        final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+
+        final RecordingNetworkEnvironment source = new RecordingNetworkEnvironment();
+        final RecordingNetworkEnvironment receiver = new RecordingNetworkEnvironment();
+        Network.joinNewNetwork(source.node());
+        Network.joinNewNetwork(receiver.node());
+        source.node().connect(relay.sidedNode(Direction.WEST));
+        receiver.node().connect(relay.sidedNode(Direction.EAST));
+
+        source.node().sendToReachable("network.message", Network.newPacket(source.node().address(), null, 124, new Object[]{"delayed"}));
+        for (int tick = 1; tick < relay.relayDelay(); tick++) {
+            RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+            helper.assertTrue(receiver.lastPacket == null, "Relay ignored relay delay");
+        }
+
+        RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+        helper.assertTrue(receiver.lastPacket != null, "Relay did not forward after relay delay");
+        helper.assertTrue("delayed".equals(receiver.lastPacket.data()[0]), "Relay delayed wrong payload");
         helper.succeed();
     }
 
@@ -1893,7 +1919,7 @@ public final class NeoOpenComputersGameTests {
 
         final li.cil.oc.api.network.Packet packet = Network.newPacket(source.node().address(), null, 222, new Object[]{"wireless"});
         source.node().sendToReachable("network.message", packet);
-        RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+        tickRelayThroughDelay(helper, relayPos, relay);
 
         helper.assertTrue(receiver.lastPacket != null, "Relay did not send wireless packet");
         helper.assertTrue(receiver.lastSender == relay, "Relay did not identify as wireless sender");
@@ -1927,8 +1953,8 @@ public final class NeoOpenComputersGameTests {
 
         final li.cil.oc.api.network.Packet packet = Network.newPacket(source.node().address(), null, 225, new Object[]{"linked"});
         source.node().sendToReachable("network.message", packet);
-        RelayBlockEntity.serverTick(helper.getLevel(), firstRelayPos, helper.getBlockState(firstRelayPos), firstRelay);
-        RelayBlockEntity.serverTick(helper.getLevel(), secondRelayPos, helper.getBlockState(secondRelayPos), secondRelay);
+        tickRelayThroughDelay(helper, firstRelayPos, firstRelay);
+        tickRelayThroughDelay(helper, secondRelayPos, secondRelay);
 
         helper.assertTrue(receiver.lastPacket != null, "Relay linked card did not forward packet");
         helper.assertTrue(receiver.lastPacket.port() == 225, "Relay linked card forwarded wrong port");
@@ -1965,12 +1991,12 @@ public final class NeoOpenComputersGameTests {
         ((Connector) relay.sidedNode(Direction.WEST)).changeBuffer(10);
 
         source.node().sendToReachable("network.message", Network.newPacket(source.node().address(), null, 223, new Object[]{"short"}));
-        RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+        tickRelayThroughDelay(helper, relayPos, relay);
         helper.assertTrue(receiver.lastPacket == null, "Relay ignored configured low wireless strength");
 
         component.invoke("setStrength", null, 4D);
         source.node().sendToReachable("network.message", Network.newPacket(source.node().address(), null, 224, new Object[]{"long"}));
-        RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+        tickRelayThroughDelay(helper, relayPos, relay);
         helper.assertTrue(receiver.lastPacket != null, "Relay did not use configured wireless strength");
         helper.assertTrue("long".equals(receiver.lastPacket.data()[0]), "Relay sent wrong configured wireless payload");
         Network.leaveWirelessNetwork(receiver);
@@ -3805,6 +3831,12 @@ public final class NeoOpenComputersGameTests {
             }
         }
         helper.fail("Expected signal " + name + " but it was not in the next 16 queued signals");
+    }
+
+    private static void tickRelayThroughDelay(final GameTestHelper helper, final BlockPos pos, final RelayBlockEntity relay) {
+        for (int tick = 0; tick < relay.relayDelay(); tick++) {
+            RelayBlockEntity.serverTick(helper.getLevel(), pos, helper.getBlockState(pos), relay);
+        }
     }
 
     private static InteractionResult invokeUseWithoutItem(final BlockState state, final GameTestHelper helper, final BlockPos pos, final BlockHitResult hit) {

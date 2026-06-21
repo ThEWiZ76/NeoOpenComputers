@@ -61,6 +61,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private static final String TAG_QUEUE = "oc:queue";
     private static final String TAG_STRENGTH = "oc:strength";
     private static final String TAG_REPEATER = "oc:isRepeater";
+    private static final String TAG_RELAY_COOLDOWN = "oc:relayCooldown";
     private static final String TAG_SIDE = "side";
     private static final String TAG_PACKET = "packet";
     private static final int MAX_TIER = 2;
@@ -74,6 +75,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private int maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
     private int relayDelay = DEFAULT_RELAY_DELAY;
     private int relayAmount = DEFAULT_RELAY_AMOUNT;
+    private int relayCooldown = -1;
     private boolean wirelessEnabled;
     private double wirelessMaxRange;
     private double wirelessStrength;
@@ -136,6 +138,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         if (tag.contains(TAG_REPEATER)) {
             isRepeater = tag.getBoolean(TAG_REPEATER);
         }
+        relayCooldown = tag.contains(TAG_RELAY_COOLDOWN) ? tag.getInt(TAG_RELAY_COOLDOWN) : -1;
         queue.clear();
         final ListTag queueTags = tag.getList(TAG_QUEUE, CompoundTag.TAG_COMPOUND);
         for (int index = 0; index < queueTags.size() && queue.size() < maxQueueSize; index++) {
@@ -152,6 +155,9 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         ContainerHelper.saveAllItems(tag, items, registries);
         tag.putDouble(TAG_STRENGTH, wirelessStrength);
         tag.putBoolean(TAG_REPEATER, isRepeater);
+        if (relayCooldown > 0) {
+            tag.putInt(TAG_RELAY_COOLDOWN, relayCooldown);
+        }
         final ListTag plugTags = new ListTag();
         for (final Plug plug : plugs) {
             final CompoundTag plugTag = new CompoundTag();
@@ -351,10 +357,19 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
             return;
         }
         queue.add(new QueuedPacket(sourceSide, packet.hop()));
+        if (relayCooldown < 0) {
+            relayCooldown = relayDelay - 1;
+        }
         setChanged();
     }
 
     private void relayQueuedPacket() {
+        if (relayCooldown > 0) {
+            relayCooldown--;
+            setChanged();
+            return;
+        }
+        relayCooldown = -1;
         final int packetsToRelay = Math.min(queue.size(), relayAmount);
         for (int packetIndex = 0; packetIndex < packetsToRelay; packetIndex++) {
             final QueuedPacket queued = queue.poll();
@@ -369,6 +384,9 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
             relayWirelessPacket(queued);
             relayLinkedPacket(queued);
             setChanged();
+        }
+        if (!queue.isEmpty()) {
+            relayCooldown = relayDelay - 1;
         }
     }
 
