@@ -1,6 +1,7 @@
 package li.cil.oc.common.menu;
 
 import li.cil.oc.common.component.TerminalScreenSnapshot;
+import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.junit.jupiter.api.Test;
@@ -19,10 +20,18 @@ final class TerminalMenuShapeTest {
     void terminalMenuHasClientConstructor() throws NoSuchMethodException {
         final Constructor<TerminalMenu> clientConstructor = TerminalMenu.class.getConstructor(int.class, Inventory.class);
         final Constructor<TerminalMenu> serverConstructor = TerminalMenu.class.getConstructor(int.class, Inventory.class, TerminalScreenSnapshot.class);
+        final Constructor<TerminalMenu> terminalServerConstructor = TerminalMenu.class.getConstructor(
+            int.class,
+            Inventory.class,
+            TerminalScreenSnapshot.class,
+            TerminalServerRackMountableEnvironment.class);
 
         assertTrue(AbstractContainerMenu.class.isAssignableFrom(TerminalMenu.class));
         assertArrayEquals(new Class<?>[]{int.class, Inventory.class}, clientConstructor.getParameterTypes());
         assertArrayEquals(new Class<?>[]{int.class, Inventory.class, TerminalScreenSnapshot.class}, serverConstructor.getParameterTypes());
+        assertArrayEquals(
+            new Class<?>[]{int.class, Inventory.class, TerminalScreenSnapshot.class, TerminalServerRackMountableEnvironment.class},
+            terminalServerConstructor.getParameterTypes());
     }
 
     @Test
@@ -43,6 +52,13 @@ final class TerminalMenuShapeTest {
         final Method method = TerminalMenu.class.getMethod("updateSnapshot", TerminalScreenSnapshot.class);
 
         assertEquals(void.class, method.getReturnType());
+    }
+
+    @Test
+    void terminalMenuExposesTerminalServerTarget() throws NoSuchMethodException {
+        final Method method = TerminalMenu.class.getMethod("terminalServer");
+
+        assertEquals(TerminalServerRackMountableEnvironment.class, method.getReturnType());
     }
 
     @Test

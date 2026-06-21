@@ -125,7 +125,7 @@ public class TerminalItem extends Item {
             return null;
         }
         final TerminalScreenSnapshot snapshot = terminalServer.screenSnapshot();
-        return new TerminalMenu(containerId, playerInventory, snapshot);
+        return new TerminalMenu(containerId, playerInventory, snapshot, terminalServer);
     }
 
     public static TerminalScreenSnapshotPayload createScreenSnapshotPayloadForBoundTerminal(final int containerId, final ItemStack terminal) {

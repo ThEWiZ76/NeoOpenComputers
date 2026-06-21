@@ -14,4 +14,15 @@ final class TerminalNetworkingShapeTest {
 
         assertEquals(void.class, register.getReturnType());
     }
+
+    @Test
+    void exposesTerminalKeyApplyEntryPoint() throws NoSuchMethodException {
+        final Method apply = TerminalNetworking.class.getDeclaredMethod(
+            "applyTerminalKey",
+            net.minecraft.world.inventory.AbstractContainerMenu.class,
+            TerminalKeyPayload.class,
+            net.minecraft.world.entity.player.Player.class);
+
+        assertEquals(void.class, apply.getReturnType());
+    }
 }
