@@ -480,8 +480,14 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 if (args.narg() == 1 && args.arg1().isstring()) {
                     machine.beep(args.arg1().tojstring());
-                } else if (args.narg() >= 2) {
-                    machine.beep((short) args.arg(1).toint(), (short) args.arg(2).toint());
+                } else {
+                    final int frequency = args.isnoneornil(1) ? 440 : args.checkint(1);
+                    if (frequency < 20 || frequency > 2000) {
+                        throw new IllegalArgumentException("invalid frequency, must be in [20, 2000]");
+                    }
+                    final double duration = args.isnoneornil(2) ? 0.1D : args.checkdouble(2);
+                    final int durationInMilliseconds = Math.max(50, Math.min(5000, (int) (duration * 1000D)));
+                    machine.beep((short) frequency, (short) durationInMilliseconds);
                 }
                 return LuaValue.TRUE;
             }

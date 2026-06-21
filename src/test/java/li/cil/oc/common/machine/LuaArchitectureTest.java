@@ -634,6 +634,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesNumericComputerBeepToLuaWithUpstreamTiming() {
+        List<short[]> beeps = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("computer.beep(); computer.beep(440, 0.01); computer.beep(1200, 10)");
+        architecture.bind(machineWithNumericBeeps(beeps));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(3, beeps.size());
+        assertArrayEquals(new short[]{440, 100}, beeps.get(0));
+        assertArrayEquals(new short[]{440, 50}, beeps.get(1));
+        assertArrayEquals(new short[]{1200, 5000}, beeps.get(2));
+    }
+
+    @Test
     void exposesComputerUsersToLua() {
         String[] added = {null};
         String[] removed = {null};
@@ -1302,6 +1317,24 @@ final class LuaArchitectureTest {
 
     private static Machine machineWithBeep(final String[] beepPattern) {
         return machine(new ArrayDeque<>(), 0D, null, beepPattern);
+    }
+
+    private static Machine machineWithNumericBeeps(final List<short[]> beeps) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "beep" -> {
+                    if (args.length == 2) {
+                        beeps.add(new short[]{(Short) args[0], (Short) args[1]});
+                    }
+                    yield null;
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
     }
 
     private static Machine machineWithUserAccess(final String[] users, final String[] added, final String[] removed) {
