@@ -40,6 +40,7 @@ import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
+import li.cil.oc.common.blockentity.RelayBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
@@ -1850,6 +1851,31 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void relayForwardsPacketsBetweenSideNetworks(final GameTestHelper helper) {
+        final BlockPos relayPos = new BlockPos(1, 1, 1);
+        helper.setBlock(relayPos, ModBlocks.RELAY.get());
+        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(relayPos));
+        final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+
+        final RecordingNetworkEnvironment source = new RecordingNetworkEnvironment();
+        final RecordingNetworkEnvironment receiver = new RecordingNetworkEnvironment();
+        Network.joinNewNetwork(source.node());
+        Network.joinNewNetwork(receiver.node());
+        source.node().connect(relay.sidedNode(Direction.WEST));
+        receiver.node().connect(relay.sidedNode(Direction.EAST));
+
+        final li.cil.oc.api.network.Packet packet = Network.newPacket(source.node().address(), null, 123, new Object[]{"payload"});
+        source.node().sendToReachable("network.message", packet);
+        RelayBlockEntity.serverTick(helper.getLevel(), relayPos, helper.getBlockState(relayPos), relay);
+
+        helper.assertTrue(receiver.lastPacket != null, "Relay did not forward packet");
+        helper.assertTrue(receiver.lastPacket.port() == 123, "Relay forwarded wrong port");
+        helper.assertTrue(receiver.lastPacket.ttl() == packet.ttl() - 1, "Relay did not decrement packet TTL");
+        helper.assertTrue("payload".equals(receiver.lastPacket.data()[0]), "Relay forwarded wrong payload");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void terminalServerExposesVirtualScreenAndKeyboard(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
@@ -3398,6 +3424,31 @@ public final class NeoOpenComputersGameTests {
     private record TestMessage(Node source, String name, Object[] data) implements Message {
         @Override
         public void cancel() {
+        }
+    }
+
+    private static final class RecordingNetworkEnvironment implements li.cil.oc.api.network.Environment {
+        private final Node node = Network.newNode(this, Visibility.Network).create();
+        private li.cil.oc.api.network.Packet lastPacket;
+
+        @Override
+        public Node node() {
+            return node;
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
+            if ("network.message".equals(message.name()) && message.data().length == 1 && message.data()[0] instanceof li.cil.oc.api.network.Packet packet) {
+                lastPacket = packet;
+            }
         }
     }
 

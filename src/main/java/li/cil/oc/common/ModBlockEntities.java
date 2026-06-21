@@ -15,6 +15,7 @@ import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
+import li.cil.oc.common.blockentity.RelayBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.blockentity.WaypointBlockEntity;
@@ -113,6 +114,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.REDSTONE_IO_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(RedstoneIoBlockEntity::new, ModBlocks.REDSTONE_IO.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RelayBlockEntity>> RELAY =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.RELAY_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(RelayBlockEntity::new, ModBlocks.RELAY.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TransposerBlockEntity>> TRANSPOSER =
         BLOCK_ENTITY_TYPES.register(

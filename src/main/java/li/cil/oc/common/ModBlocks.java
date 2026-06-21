@@ -15,6 +15,7 @@ import li.cil.oc.common.block.PowerDistributorBlock;
 import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.block.RaidBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
+import li.cil.oc.common.block.RelayBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.TransposerBlock;
 import li.cil.oc.common.block.WaypointBlock;
@@ -110,7 +111,7 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> RELAY = BLOCKS.register(
         ModContentIds.RELAY,
-        () -> new Block(networkInfrastructureProperties()));
+        () -> new RelayBlock(networkInfrastructureProperties()));
 
     public static final DeferredBlock<Block> TRANSPOSER = BLOCKS.register(
         ModContentIds.TRANSPOSER,
