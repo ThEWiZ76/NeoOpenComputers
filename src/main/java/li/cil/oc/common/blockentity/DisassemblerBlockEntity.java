@@ -1,5 +1,6 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.template.DisassemblerTemplates;
@@ -22,12 +23,20 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class DisassemblerBlockEntity extends BlockEntity implements Container, MenuProvider {
+import java.util.Map;
+
+public class DisassemblerBlockEntity extends BlockEntity implements Container, MenuProvider, DeviceInfo {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT_START = 1;
     public static final int OUTPUT_SLOT_COUNT = 9;
     public static final int CONTAINER_SIZE = 10;
     public static final double DEFAULT_BREAK_CHANCE = 0.05D;
+    private static final Map<String, String> DEVICE_INFO = Map.of(
+        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
+        DeviceInfo.DeviceAttribute.Description, "Disassembler",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Product, "Break.3R-100"
+    );
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
 
@@ -137,6 +146,11 @@ public class DisassemblerBlockEntity extends BlockEntity implements Container, M
     @Override
     public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
         return new DisassemblerMenu(containerId, playerInventory, this);
+    }
+
+    @Override
+    public Map<String, String> getDeviceInfo() {
+        return DEVICE_INFO;
     }
 
     @Override
