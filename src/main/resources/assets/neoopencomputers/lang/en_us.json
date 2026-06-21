@@ -134,6 +134,7 @@
   "gui.neoopencomputers.server_rack.slot.max_tier": "Max tier %s",
   "gui.neoopencomputers.server_rack.slot.memory": "Memory slot",
   "gui.neoopencomputers.server_rack.slot.unavailable": "Unavailable for this server tier",
+  "gui.neoopencomputers.server_rack.components": "Components %s/%s",
   "gui.neoopencomputers.server_rack.status": "Server status",
   "gui.neoopencomputers.server_rack.state.empty": "No server data",
   "gui.neoopencomputers.server_rack.state.incomplete": "Incomplete server",

@@ -19,7 +19,9 @@ public class ServerRackMenu extends AbstractContainerMenu {
     public static final int TOTAL_SLOT_COUNT = SERVER_SLOT_COUNT + PLAYER_SLOT_COUNT;
     public static final int SERVER_STATUS_INDEX = SERVER_SLOT_COUNT * 2;
     public static final int SERVER_MISSING_REQUIREMENTS_INDEX = SERVER_STATUS_INDEX + 1;
-    public static final int SERVER_DATA_COUNT = SERVER_MISSING_REQUIREMENTS_INDEX + 1;
+    public static final int SERVER_COMPONENT_COUNT_INDEX = SERVER_MISSING_REQUIREMENTS_INDEX + 1;
+    public static final int SERVER_MAX_COMPONENTS_INDEX = SERVER_COMPONENT_COUNT_INDEX + 1;
+    public static final int SERVER_DATA_COUNT = SERVER_MAX_COMPONENTS_INDEX + 1;
 
     public static final int STATE_EMPTY = 0;
     public static final int STATE_READY = 1;
@@ -116,6 +118,14 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return serverData.get(SERVER_MISSING_REQUIREMENTS_INDEX);
     }
 
+    public int componentCount() {
+        return serverData.get(SERVER_COMPONENT_COUNT_INDEX);
+    }
+
+    public int maxComponents() {
+        return serverData.get(SERVER_MAX_COMPONENTS_INDEX);
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -156,6 +166,14 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return serverInventory instanceof ServerRackMountableEnvironment server ? server.missingRequiredComponents() : 0;
     }
 
+    public static int componentCountFor(final Container serverInventory) {
+        return serverInventory instanceof ServerRackMountableEnvironment server ? server.machine().componentCount() : 0;
+    }
+
+    public static int maxComponentsFor(final Container serverInventory) {
+        return serverInventory instanceof ServerRackMountableEnvironment server ? server.machine().maxComponents() : 0;
+    }
+
     public static int slotKindCode(final String type) {
         return switch (type) {
             case li.cil.oc.api.driver.item.Slot.Card -> SLOT_KIND_CARD;
@@ -184,7 +202,13 @@ public class ServerRackMenu extends AbstractContainerMenu {
                 if (index == SERVER_STATUS_INDEX) {
                     return serverStateFor(serverInventory);
                 }
-                return missingRequirementsFor(serverInventory);
+                if (index == SERVER_MISSING_REQUIREMENTS_INDEX) {
+                    return missingRequirementsFor(serverInventory);
+                }
+                if (index == SERVER_COMPONENT_COUNT_INDEX) {
+                    return componentCountFor(serverInventory);
+                }
+                return maxComponentsFor(serverInventory);
             }
 
             @Override

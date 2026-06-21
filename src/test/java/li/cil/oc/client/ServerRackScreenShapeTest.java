@@ -38,6 +38,7 @@ final class ServerRackScreenShapeTest {
         final Method tooltip = ServerRackScreen.class.getMethod("slotTooltip", int.class, int.class);
         final Method statusLabel = ServerRackScreen.class.getMethod("statusLabel", int.class);
         final Method statusTooltip = ServerRackScreen.class.getMethod("statusTooltip", int.class, int.class);
+        final Method capacityStatusTooltip = ServerRackScreen.class.getMethod("statusTooltip", int.class, int.class, int.class, int.class);
         final Method slotAt = ServerRackScreen.class.getMethod("serverSlotAt", int.class, int.class, int.class, int.class);
         final Method controlAt = ServerRackScreen.class.getDeclaredMethod("statusControlAt", int.class, int.class, int.class, int.class);
         final Method controlPayload = ServerRackScreen.class.getDeclaredMethod("controlPayload", ServerRackMenu.class, int.class);
@@ -47,6 +48,7 @@ final class ServerRackScreenShapeTest {
         assertEquals(List.class, tooltip.getReturnType());
         assertEquals(Component.class, statusLabel.getReturnType());
         assertEquals(List.class, statusTooltip.getReturnType());
+        assertEquals(List.class, capacityStatusTooltip.getReturnType());
         assertEquals(int.class, slotAt.getReturnType());
         assertEquals(boolean.class, controlAt.getReturnType());
         assertEquals(ServerRackControlPayload.class, controlPayload.getReturnType());
@@ -93,6 +95,22 @@ final class ServerRackScreenShapeTest {
         assertTranslationKey("gui.neoopencomputers.rack.missing.cpu", tooltip.get(2));
         assertTranslationKey("gui.neoopencomputers.rack.missing.memory", tooltip.get(3));
         assertTranslationKey("gui.neoopencomputers.rack.missing.eeprom", tooltip.get(4));
+    }
+
+    @Test
+    void serverRackStatusTooltipShowsComponentCapacity() {
+        final List<Component> tooltip = ServerRackScreen.statusTooltip(
+            ServerRackMenu.STATE_READY,
+            0,
+            5,
+            12);
+
+        assertEquals(3, tooltip.size());
+        assertTranslationKey("gui.neoopencomputers.server_rack.status", tooltip.get(0));
+        assertTranslationKey("gui.neoopencomputers.server_rack.state.ready", tooltip.get(1));
+        assertTranslationKey("gui.neoopencomputers.server_rack.components", tooltip.get(2));
+        assertEquals(5, ((TranslatableContents) tooltip.get(2).getContents()).getArgs()[0]);
+        assertEquals(12, ((TranslatableContents) tooltip.get(2).getContents()).getArgs()[1]);
     }
 
     @Test

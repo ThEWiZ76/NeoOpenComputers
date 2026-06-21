@@ -54,7 +54,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         if (slot >= 0) {
             guiGraphics.renderComponentTooltip(font, slotTooltip(menu.slotKind(slot), menu.slotTierLimit(slot)), mouseX, mouseY);
         } else if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
-            guiGraphics.renderComponentTooltip(font, statusTooltip(menu.serverState(), menu.missingRequirements()), mouseX, mouseY);
+            guiGraphics.renderComponentTooltip(font, statusTooltip(menu.serverState(), menu.missingRequirements(), menu.componentCount(), menu.maxComponents()), mouseX, mouseY);
         }
     }
 
@@ -103,9 +103,16 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     }
 
     public static List<Component> statusTooltip(final int state, final int missingRequirements) {
+        return statusTooltip(state, missingRequirements, 0, 0);
+    }
+
+    public static List<Component> statusTooltip(final int state, final int missingRequirements, final int componentCount, final int maxComponents) {
         final List<Component> tooltip = new ArrayList<>();
         tooltip.add(Component.translatable("gui.neoopencomputers.server_rack.status"));
         tooltip.add(statusLabel(state));
+        if (maxComponents > 0) {
+            tooltip.add(Component.translatable("gui.neoopencomputers.server_rack.components", componentCount, maxComponents));
+        }
         if ((missingRequirements & ServerRackMenu.MISSING_CPU) != 0) {
             tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.cpu"));
         }
