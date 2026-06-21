@@ -20,10 +20,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,6 +34,7 @@ import java.util.Map;
 
 public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo, Analyzable {
     public static final int CONTAINER_SIZE = 3;
+    public static final String DATA_TAG = "oc:raid";
 
     private static final String TAG_NODE = "node";
     private static final String TAG_FILESYSTEM = "filesystem";
@@ -61,6 +64,30 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
 
     public static boolean acceptsDriverSlot(final String slot) {
         return Slot.HDD.equals(slot);
+    }
+
+    public void saveToStack(final ItemStack stack, final HolderLookup.Provider registries) {
+        final CompoundTag data = new CompoundTag();
+        ContainerHelper.saveAllItems(data, items, registries);
+        save(data);
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
+        root.put(DATA_TAG, data);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    public void loadFromStack(final ItemStack stack, final HolderLookup.Provider registries) {
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return;
+        }
+        final CompoundTag data = customData.copyTag().getCompound(DATA_TAG);
+        if (data.isEmpty()) {
+            return;
+        }
+        ContainerHelper.loadAllItems(data, items, registries);
+        load(data);
+        setChanged();
     }
 
     @Override

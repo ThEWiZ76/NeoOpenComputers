@@ -1853,6 +1853,36 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void raidBlockItemRetainsDisksAndFilesystem(final GameTestHelper helper) {
+        final BlockPos raidPos = new BlockPos(1, 1, 1);
+        helper.setBlock(raidPos, ModBlocks.RAID.get());
+        final RaidBlockEntity raid = helper.getBlockEntity(raidPos);
+        raid.setItem(0, new ItemStack(ModItems.HDD_TIER1.get()));
+        raid.setItem(1, new ItemStack(ModItems.HDD_TIER2.get()));
+        raid.setItem(2, new ItemStack(ModItems.HDD_TIER3.get()));
+
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) raid.onAnalyze(null, Direction.NORTH, 0, 0, 0)[0];
+        final Object[] open = invokeComponent(helper, component, "open", "persisted.txt", "w");
+        invokeComponent(helper, component, "write", open[0], "kept".getBytes(StandardCharsets.UTF_8));
+        invokeComponent(helper, component, "close", open[0]);
+
+        final ItemStack saved = new ItemStack(ModItems.RAID.get());
+        raid.saveToStack(saved, helper.getLevel().registryAccess());
+
+        final BlockPos loadedPos = new BlockPos(3, 1, 1);
+        helper.setBlock(loadedPos, ModBlocks.RAID.get());
+        final RaidBlockEntity loaded = helper.getBlockEntity(loadedPos);
+        loaded.loadFromStack(saved, helper.getLevel().registryAccess());
+
+        helper.assertTrue(loaded.getItem(0).is(ModItems.HDD_TIER1.get()), "Loaded RAID missing tier 1 disk");
+        helper.assertTrue(loaded.getItem(1).is(ModItems.HDD_TIER2.get()), "Loaded RAID missing tier 2 disk");
+        helper.assertTrue(loaded.getItem(2).is(ModItems.HDD_TIER3.get()), "Loaded RAID missing tier 3 disk");
+        final li.cil.oc.api.network.Component loadedComponent = (li.cil.oc.api.network.Component) loaded.onAnalyze(null, Direction.NORTH, 0, 0, 0)[0];
+        assertSingleResult(helper, invokeComponent(helper, loadedComponent, "exists", "persisted.txt"), Boolean.TRUE, "Loaded RAID file");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tieredScreensExposeTierCapabilities(final GameTestHelper helper) {
         final BlockPos tier1Pos = new BlockPos(0, 1, 0);
         final BlockPos tier2Pos = new BlockPos(1, 1, 0);

@@ -5,7 +5,10 @@ import li.cil.oc.common.blockentity.RaidBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Containers;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -28,6 +31,23 @@ public class RaidBlock extends Block implements EntityBlock {
     @Override
     public BlockEntity newBlockEntity(final BlockPos pos, final BlockState state) {
         return new RaidBlockEntity(pos, state);
+    }
+
+    @Override
+    public void setPlacedBy(final Level level, final BlockPos pos, final BlockState state, final LivingEntity placer, final ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof RaidBlockEntity raid) {
+            raid.loadFromStack(stack, level.registryAccess());
+        }
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(final LevelReader level, final BlockPos pos, final BlockState state) {
+        final ItemStack stack = new ItemStack(this);
+        if (level.getBlockEntity(pos) instanceof RaidBlockEntity raid) {
+            raid.saveToStack(stack, level.registryAccess());
+        }
+        return stack;
     }
 
     @Override
