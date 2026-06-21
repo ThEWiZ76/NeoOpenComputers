@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
+import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.RaidMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.flag.FeatureFlags;
@@ -21,6 +22,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<DiskDriveMenu>> DISK_DRIVE = MENUS.register(
         ModContentIds.DISK_DRIVE_MENU,
         () -> new MenuType<>(DiskDriveMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<RackMenu>> RACK = MENUS.register(
+        ModContentIds.RACK_MENU,
+        () -> new MenuType<>(RackMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static final DeferredHolder<MenuType<?>, MenuType<RaidMenu>> RAID = MENUS.register(
         ModContentIds.RAID_MENU,

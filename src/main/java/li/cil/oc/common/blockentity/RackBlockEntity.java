@@ -17,17 +17,22 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import li.cil.oc.common.menu.RackMenu;
 
 import java.util.LinkedHashSet;
 
-public class RackBlockEntity extends BlockEntity implements Rack, Analyzable {
+public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, Analyzable {
     public static final int CONTAINER_SIZE = 4;
 
     private static final String TAG_MOUNTABLE_DATA = "oc:mountableData";
@@ -50,6 +55,16 @@ public class RackBlockEntity extends BlockEntity implements Rack, Analyzable {
 
     public static boolean acceptsDriverSlot(final String slot) {
         return Slot.RackMountable.equals(slot);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.rack");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new RackMenu(containerId, playerInventory, this);
     }
 
     @Override

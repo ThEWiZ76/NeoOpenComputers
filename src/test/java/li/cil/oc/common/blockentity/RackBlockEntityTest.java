@@ -3,6 +3,7 @@ package li.cil.oc.common.blockentity;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Rack;
 import net.minecraft.world.Container;
+import net.minecraft.world.MenuProvider;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,5 +23,6 @@ final class RackBlockEntityTest {
     void rackIsContainerAndApiRack() {
         assertTrue(Container.class.isAssignableFrom(RackBlockEntity.class));
         assertTrue(Rack.class.isAssignableFrom(RackBlockEntity.class));
+        assertTrue(MenuProvider.class.isAssignableFrom(RackBlockEntity.class));
     }
 }

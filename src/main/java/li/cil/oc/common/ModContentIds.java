@@ -101,6 +101,7 @@ public final class ModContentIds {
     public static final String POWER_DISTRIBUTOR = "power_distributor";
     public static final String RACK = "rack";
     public static final String RACK_BLOCK_ENTITY = "rack";
+    public static final String RACK_MENU = "rack";
     public static final String RAID = "raid";
     public static final String RAID_BLOCK_ENTITY = "raid";
     public static final String RAID_MENU = "raid";

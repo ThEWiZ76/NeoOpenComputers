@@ -167,6 +167,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void rackMenuIdIsStable() {
+        assertEquals("rack", ModContentIds.RACK_MENU);
+    }
+
+    @Test
     void raidBlockIdIsStable() {
         assertEquals("raid", ModContentIds.RAID);
     }
