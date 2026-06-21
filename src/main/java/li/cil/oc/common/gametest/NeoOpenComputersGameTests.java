@@ -1755,6 +1755,27 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void generatorUpgradeReturnsFuelContainersOnInsert(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for generator upgrade");
+
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final AgentTestHost host = new AgentTestHost(helper, player);
+        host.mainInventory().setItem(0, new ItemStack(Items.LAVA_BUCKET, 1));
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.GENERATOR_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Generator upgrade did not create generator environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Generator node is not a component connector");
+
+        final ComponentConnector connector = (ComponentConnector) environment.node();
+        final Object[] insert = connector.invoke("insert", null, 1);
+
+        helper.assertTrue(Boolean.TRUE.equals(insert[0]) && Integer.valueOf(1).equals(insert[1]), "Generator did not queue lava bucket fuel");
+        helper.assertTrue(host.mainInventory().getItem(0).isEmpty(), "Generator did not consume lava bucket fuel");
+        helper.assertTrue(containsStack(player.getInventory(), Items.BUCKET, 1), "Generator did not return fuel container");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void craftingUpgradeRejectsNonRobotAgentHost(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.CRAFTING_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for crafting upgrade");
@@ -5252,12 +5273,18 @@ public final class NeoOpenComputersGameTests {
 
     private static class AgentTestHost implements li.cil.oc.api.internal.Agent {
         private final GameTestHelper helper;
+        private final Player player;
         private final SimpleContainer mainInventory = new SimpleContainer(9);
         private final SimpleContainer equipmentInventory = new SimpleContainer(4);
         private int selectedSlot;
 
         private AgentTestHost(final GameTestHelper helper) {
+            this(helper, null);
+        }
+
+        private AgentTestHost(final GameTestHelper helper, final Player player) {
             this.helper = helper;
+            this.player = player;
         }
 
         @Override
@@ -5296,7 +5323,7 @@ public final class NeoOpenComputersGameTests {
 
         @Override
         public Player player() {
-            return null;
+            return player;
         }
 
         @Override

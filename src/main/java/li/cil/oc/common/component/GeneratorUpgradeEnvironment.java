@@ -79,9 +79,26 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
         }
 
         final int inserted = Math.min(selectedStack.getCount(), Math.min(space, requestedCount));
+        final ItemStack previousSelectedFuel = selectedStack.copy();
+        final ItemStack container = selectedStack.getCraftingRemainingItem();
         final ItemStack moved = selectedStack.split(inserted);
         if (selectedStack.isEmpty()) {
             inventory.setItem(selectedSlot, ItemStack.EMPTY);
+        }
+
+        if (!container.isEmpty()) {
+            if (host.player() == null) {
+                inventory.setItem(selectedSlot, previousSelectedFuel);
+                return new Object[]{false, "no inventory space available for fuel containers"};
+            }
+            container.setCount(container.getCount() * inserted);
+            if (!host.player().getInventory().add(container)) {
+                inventory.setItem(selectedSlot, previousSelectedFuel);
+                return new Object[]{false, "no inventory space available for fuel containers"};
+            }
+            if (!container.isEmpty()) {
+                host.player().drop(container.copy(), false);
+            }
         }
 
         if (queuedFuel.isEmpty()) {
