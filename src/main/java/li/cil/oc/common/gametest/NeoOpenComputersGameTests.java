@@ -635,6 +635,41 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void mfuDisconnectsRemoteTargetWithoutEnergy(final GameTestHelper helper) {
+        final BlockPos adapterPos = new BlockPos(0, 1, 0);
+        final BlockPos targetPos = new BlockPos(2, 1, 0);
+        helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
+
+        final ItemStack stack = new ItemStack(ModItems.MFU.get());
+        final DriverItem driver = Driver.driverFor(stack, AdapterBlockEntity.class);
+        helper.assertTrue(driver != null, "No MFU driver for adapter host");
+        final BlockPos absoluteTarget = helper.absolutePos(targetPos);
+        driver.dataTag(stack).putIntArray("oc:coord", new int[]{
+            absoluteTarget.getX(),
+            absoluteTarget.getY(),
+            absoluteTarget.getZ(),
+            0,
+            Direction.NORTH.ordinal()
+        });
+
+        final AdapterBlockEntity adapter = new AdapterBlockEntity(helper.absolutePos(adapterPos), ModBlocks.ADAPTER.get().defaultBlockState());
+        adapter.setLevel(helper.getLevel());
+        final ManagedEnvironment environment = driver.createEnvironment(stack, adapter);
+        helper.assertTrue(environment != null, "MFU did not create remote adapter environment");
+        helper.assertTrue(environment.node() instanceof Connector, "MFU node is not a connector");
+        final Connector connector = (Connector) environment.node();
+        connector.setLocalBufferSize(1D);
+        connector.changeBuffer(1D);
+        Network.joinNewNetwork(connector);
+        helper.assertTrue(reachableComponent(environment.node(), "inventory"), "MFU did not link initial remote inventory component");
+
+        helper.succeedWhen(() -> {
+            environment.update();
+            helper.assertFalse(reachableComponent(environment.node(), "inventory"), "MFU kept remote target linked without energy");
+        });
+    }
+
+    @GameTest(template = "empty")
     public static void tabletCaseItemsReportAssemblyTier(final GameTestHelper helper) {
         helper.assertTrue(ModItems.TABLET_CASE_TIER1.get().tier() == 0, "Tier 1 tablet case did not report tier 0");
         helper.assertTrue(ModItems.TABLET_CASE_TIER2.get().tier() == 1, "Tier 2 tablet case did not report tier 1");

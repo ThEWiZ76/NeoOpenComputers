@@ -3,6 +3,7 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverBlock;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
@@ -23,6 +24,8 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
     public static final int LEGACY_TARGET_TAG_LENGTH = 4;
     public static final int TARGET_TAG_LENGTH = 5;
     public static final double DEFAULT_RANGE = 3D;
+    public static final int DEFAULT_TICK_FREQUENCY = 10;
+    public static final double DEFAULT_RELAY_COST = 1D;
 
     private static final String TARGET_TAG = "oc:target";
     private static final String SIDE_TAG = "oc:side";
@@ -78,6 +81,10 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         refreshTargetEnvironment();
         if (targetEnvironment != null && targetEnvironment.canUpdate()) {
             targetEnvironment.update();
+        }
+        if (shouldDrainEnergy() && !tryConsumeEnergy()) {
+            removeTargetEnvironment();
+            disconnectTargetNode();
         }
     }
 
@@ -218,6 +225,27 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
             return sidedEnvironment.sidedNode(side);
         }
         return environment.node();
+    }
+
+    private boolean shouldDrainEnergy() {
+        return host != null
+            && host.world() != null
+            && host.world().getGameTime() % DEFAULT_TICK_FREQUENCY == 0;
+    }
+
+    private boolean tryConsumeEnergy() {
+        if (!(node() instanceof final Connector connector)) {
+            return true;
+        }
+        final double cost = DEFAULT_RELAY_COST * DEFAULT_TICK_FREQUENCY * distanceToTarget();
+        return cost <= 0D || connector.tryChangeBuffer(-cost);
+    }
+
+    private double distanceToTarget() {
+        final double dx = target.getX() - host.xPosition();
+        final double dy = target.getY() - host.yPosition();
+        final double dz = target.getZ() - host.zPosition();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     private boolean targetInRange() {
