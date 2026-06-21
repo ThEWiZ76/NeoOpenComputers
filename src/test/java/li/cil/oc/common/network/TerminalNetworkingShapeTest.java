@@ -57,4 +57,13 @@ final class TerminalNetworkingShapeTest {
 
         assertEquals(boolean.class, helper.getReturnType());
     }
+
+    @Test
+    void exposesTerminalInputReadinessHelper() throws NoSuchMethodException {
+        final Method helper = TerminalNetworking.class.getDeclaredMethod(
+            "acceptsTerminalInput",
+            li.cil.oc.common.component.TerminalScreenSnapshot.class);
+
+        assertEquals(boolean.class, helper.getReturnType());
+    }
 }

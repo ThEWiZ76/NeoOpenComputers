@@ -58,6 +58,15 @@ final class TerminalNetworkingTest {
         assertEquals(false, TerminalNetworking.mouseInside(new TerminalScreenSnapshot(0, 0, new String[0]), new TerminalMousePayload(1, TerminalMousePayload.MOUSE_DOWN, 1, 1, 0)));
     }
 
+    @Test
+    void checksTerminalInputReadinessFromSnapshotBounds() {
+        assertEquals(false, TerminalNetworking.acceptsTerminalInput(null));
+        assertEquals(false, TerminalNetworking.acceptsTerminalInput(new TerminalScreenSnapshot(0, 0, new String[0])));
+        assertEquals(false, TerminalNetworking.acceptsTerminalInput(new TerminalScreenSnapshot(4, 0, new String[0])));
+        assertEquals(false, TerminalNetworking.acceptsTerminalInput(new TerminalScreenSnapshot(0, 2, new String[]{"", ""})));
+        assertEquals(true, TerminalNetworking.acceptsTerminalInput(new TerminalScreenSnapshot(4, 2, new String[]{"", ""})));
+    }
+
     private static TerminalMenu allocateMenu(final int containerId, final TerminalScreenSnapshot snapshot) throws ReflectiveOperationException {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);

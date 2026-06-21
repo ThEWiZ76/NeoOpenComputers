@@ -43,6 +43,9 @@ public final class TerminalNetworking {
         if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId() || menu.terminalServer() == null) {
             return;
         }
+        if (!acceptsTerminalInput(menu.terminalServer().screenSnapshot())) {
+            return;
+        }
         if (payload.pressed()) {
             menu.terminalServer().screen().keyDown((char) payload.character(), payload.keyCode(), player);
         } else {
@@ -52,6 +55,9 @@ public final class TerminalNetworking {
 
     static void applyTerminalClipboard(final AbstractContainerMenu containerMenu, final TerminalClipboardPayload payload, final Player player) {
         if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId() || menu.terminalServer() == null) {
+            return;
+        }
+        if (!acceptsTerminalInput(menu.terminalServer().screenSnapshot())) {
             return;
         }
         menu.terminalServer().screen().clipboard(payload.value(), player);
@@ -82,6 +88,12 @@ public final class TerminalNetworking {
             && payload.y() >= 1
             && payload.x() <= snapshot.width()
             && payload.y() <= snapshot.height();
+    }
+
+    static boolean acceptsTerminalInput(final TerminalScreenSnapshot snapshot) {
+        return snapshot != null
+            && snapshot.width() > 0
+            && snapshot.height() > 0;
     }
 
     private static void handleScreenSnapshot(final TerminalScreenSnapshotPayload payload, final IPayloadContext context) {
