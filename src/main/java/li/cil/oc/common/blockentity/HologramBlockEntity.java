@@ -5,18 +5,22 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.HologramBlock;
+import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,7 +28,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.Arrays;
 import java.util.Map;
 
-public class HologramBlockEntity extends BlockEntity implements Environment, EnvironmentHost, DeviceInfo {
+public class HologramBlockEntity extends BlockEntity implements Environment, SidedEnvironment, EnvironmentHost, Analyzable, DeviceInfo {
     public static final int WIDTH = 48;
     public static final int HEIGHT = 32;
 
@@ -87,6 +91,21 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Env
             node = createNode(this);
         }
         return node;
+    }
+
+    @Override
+    public Node sidedNode(final Direction side) {
+        return canConnect(side) ? node() : null;
+    }
+
+    @Override
+    public boolean canConnect(final Direction side) {
+        return side == Direction.DOWN;
+    }
+
+    @Override
+    public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
+        return new Node[]{node()};
     }
 
     @Override

@@ -246,6 +246,24 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void hologramExposesBottomSidedNodeAndAnalyzerNode(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(0, 1, 0);
+        helper.setBlock(pos, ModBlocks.HOLOGRAM_TIER1.get());
+        final HologramBlockEntity hologram = helper.getBlockEntity(pos);
+
+        helper.assertTrue(hologram instanceof li.cil.oc.api.network.SidedEnvironment, "Hologram must expose sided networking");
+        final li.cil.oc.api.network.SidedEnvironment sided = (li.cil.oc.api.network.SidedEnvironment) hologram;
+        helper.assertTrue(sided.canConnect(Direction.DOWN), "Hologram should connect from bottom");
+        helper.assertTrue(!sided.canConnect(Direction.NORTH), "Hologram should not connect from sides");
+        helper.assertTrue(sided.sidedNode(Direction.DOWN) == hologram.node(), "Hologram bottom side did not expose component node");
+        helper.assertTrue(sided.sidedNode(Direction.NORTH) == null, "Hologram side exposed component node");
+        helper.assertTrue(hologram instanceof li.cil.oc.api.network.Analyzable, "Hologram must be analyzable");
+        final Node[] nodes = ((li.cil.oc.api.network.Analyzable) hologram).onAnalyze(null, Direction.NORTH, 0, 0, 0);
+        helper.assertTrue(nodes.length == 1 && nodes[0] == hologram.node(), "Analyzer did not report hologram node");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void wrenchRotatesComputerCase(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState().setValue(ComputerCaseBlock.FACING, Direction.NORTH));
