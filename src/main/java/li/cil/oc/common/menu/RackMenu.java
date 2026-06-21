@@ -2,11 +2,14 @@ package li.cil.oc.common.menu;
 
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.blockentity.RackBlockEntity;
+import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -14,21 +17,32 @@ public class RackMenu extends AbstractContainerMenu {
     public static final int RACK_SLOT_COUNT = RackBlockEntity.CONTAINER_SIZE;
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int TOTAL_SLOT_COUNT = RACK_SLOT_COUNT + PLAYER_SLOT_COUNT;
+    public static final int RACK_STATE_COUNT = RACK_SLOT_COUNT;
+    public static final int STATE_EMPTY = 0;
+    public static final int STATE_READY = 1;
+    public static final int STATE_RUNNING = 2;
 
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 84;
     private static final int PLAYER_HOTBAR_Y = 142;
 
     private final Container rackInventory;
+    private final ContainerData rackStateData;
 
     public RackMenu(final int containerId, final Inventory playerInventory) {
-        this(containerId, playerInventory, new SimpleContainer(RACK_SLOT_COUNT));
+        this(containerId, playerInventory, new SimpleContainer(RACK_SLOT_COUNT), new SimpleContainerData(RACK_STATE_COUNT));
     }
 
     public RackMenu(final int containerId, final Inventory playerInventory, final Container rackInventory) {
+        this(containerId, playerInventory, rackInventory, rackStateData(rackInventory));
+    }
+
+    public RackMenu(final int containerId, final Inventory playerInventory, final Container rackInventory, final ContainerData rackStateData) {
         super(ModMenus.RACK.get(), containerId);
         checkContainerSize(rackInventory, RACK_SLOT_COUNT);
+        checkContainerDataCount(rackStateData, RACK_STATE_COUNT);
         this.rackInventory = rackInventory;
+        this.rackStateData = rackStateData;
         rackInventory.startOpen(playerInventory.player);
 
         addSlot(new RackSlot(rackInventory, 0, 53, 26));
@@ -36,6 +50,7 @@ public class RackMenu extends AbstractContainerMenu {
         addSlot(new RackSlot(rackInventory, 2, 89, 26));
         addSlot(new RackSlot(rackInventory, 3, 107, 26));
         addPlayerInventory(playerInventory);
+        addDataSlots(rackStateData);
     }
 
     @Override
@@ -71,6 +86,13 @@ public class RackMenu extends AbstractContainerMenu {
         return rackInventory;
     }
 
+    public int rackState(final int slot) {
+        if (slot < 0 || slot >= RACK_STATE_COUNT) {
+            return STATE_EMPTY;
+        }
+        return rackStateData.get(slot);
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -87,6 +109,44 @@ public class RackMenu extends AbstractContainerMenu {
         for (int column = 0; column < 9; column++) {
             addSlot(new Slot(playerInventory, column, PLAYER_INVENTORY_X + column * 18, PLAYER_HOTBAR_Y));
         }
+    }
+
+    private static ContainerData rackStateData(final Container rackInventory) {
+        if (!(rackInventory instanceof RackBlockEntity rack)) {
+            return new SimpleContainerData(RACK_STATE_COUNT);
+        }
+
+        return new ContainerData() {
+            @Override
+            public int get(final int index) {
+                if (index < 0 || index >= RACK_STATE_COUNT) {
+                    return STATE_EMPTY;
+                }
+
+                if (!(rack.getMountable(index) instanceof ServerRackMountableEnvironment server)) {
+                    return STATE_EMPTY;
+                }
+
+                if (server.machine().isRunning() || server.machine().isPaused()) {
+                    return STATE_RUNNING;
+                }
+
+                if (server.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.CanWork)) {
+                    return STATE_READY;
+                }
+
+                return STATE_EMPTY;
+            }
+
+            @Override
+            public void set(final int index, final int value) {
+            }
+
+            @Override
+            public int getCount() {
+                return RACK_STATE_COUNT;
+            }
+        };
     }
 
     private static final class RackSlot extends Slot {

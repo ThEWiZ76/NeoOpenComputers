@@ -29,7 +29,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         guiGraphics.fill(left + 7, top + 16, left + 169, top + 76, 0xFF3B4252);
         for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
             drawSlot(guiGraphics, left + FIRST_SLOT_X - 1 + slot * SLOT_SPACING, top + SLOT_Y - 1);
-            drawControl(guiGraphics, left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING, top + CONTROL_Y);
+            drawControl(guiGraphics, left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING, top + CONTROL_Y, controlColor(menu.rackState(slot)));
         }
     }
 
@@ -65,15 +65,23 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         return -1;
     }
 
+    static int controlColor(final int state) {
+        return switch (state) {
+            case RackMenu.STATE_READY -> 0xFFA3BE8C;
+            case RackMenu.STATE_RUNNING -> 0xFF88C0D0;
+            default -> 0xFF4C566A;
+        };
+    }
+
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
         guiGraphics.fill(left - 1, top - 1, left + 17, top + 17, 0xFF1F232B);
         guiGraphics.fill(left, top, left + 16, top + 16, 0xFF4C566A);
     }
 
-    private static void drawControl(final GuiGraphics guiGraphics, final int left, final int top) {
+    private static void drawControl(final GuiGraphics guiGraphics, final int left, final int top, final int color) {
         guiGraphics.fill(left, top, left + CONTROL_SIZE, top + CONTROL_SIZE, 0xFF1F232B);
-        guiGraphics.fill(left + 3, top + 2, left + 5, top + 8, 0xFF88C0D0);
-        guiGraphics.fill(left + 5, top + 3, left + 7, top + 7, 0xFF88C0D0);
-        guiGraphics.fill(left + 7, top + 4, left + 8, top + 6, 0xFF88C0D0);
+        guiGraphics.fill(left + 3, top + 2, left + 5, top + 8, color);
+        guiGraphics.fill(left + 5, top + 3, left + 7, top + 7, color);
+        guiGraphics.fill(left + 7, top + 4, left + 8, top + 6, color);
     }
 }

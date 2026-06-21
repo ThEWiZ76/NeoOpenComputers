@@ -38,6 +38,13 @@ final class RackScreenShapeTest {
         assertEquals(RackControlPayload.TOGGLE, payload.action());
     }
 
+    @Test
+    void rackScreenUsesRackStateForControlColor() {
+        assertEquals(0xFF4C566A, RackScreen.controlColor(RackMenu.STATE_EMPTY));
+        assertEquals(0xFFA3BE8C, RackScreen.controlColor(RackMenu.STATE_READY));
+        assertEquals(0xFF88C0D0, RackScreen.controlColor(RackMenu.STATE_RUNNING));
+    }
+
     private static RackMenu allocateMenu(final int containerId) throws ReflectiveOperationException {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);

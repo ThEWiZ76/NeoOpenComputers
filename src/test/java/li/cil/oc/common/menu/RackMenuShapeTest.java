@@ -3,6 +3,7 @@ package li.cil.oc.common.menu;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
@@ -16,10 +17,12 @@ final class RackMenuShapeTest {
     void rackMenuHasClientAndServerConstructors() throws NoSuchMethodException {
         final Constructor<RackMenu> clientConstructor = RackMenu.class.getConstructor(int.class, Inventory.class);
         final Constructor<RackMenu> serverConstructor = RackMenu.class.getConstructor(int.class, Inventory.class, Container.class);
+        final Constructor<RackMenu> dataConstructor = RackMenu.class.getConstructor(int.class, Inventory.class, Container.class, ContainerData.class);
 
         assertTrue(AbstractContainerMenu.class.isAssignableFrom(RackMenu.class));
         assertArrayEquals(new Class<?>[]{int.class, Inventory.class}, clientConstructor.getParameterTypes());
         assertArrayEquals(new Class<?>[]{int.class, Inventory.class, Container.class}, serverConstructor.getParameterTypes());
+        assertArrayEquals(new Class<?>[]{int.class, Inventory.class, Container.class, ContainerData.class}, dataConstructor.getParameterTypes());
     }
 
     @Test
@@ -27,10 +30,19 @@ final class RackMenuShapeTest {
         assertEquals(4, RackMenu.RACK_SLOT_COUNT);
         assertEquals(36, RackMenu.PLAYER_SLOT_COUNT);
         assertEquals(40, RackMenu.TOTAL_SLOT_COUNT);
+        assertEquals(4, RackMenu.RACK_STATE_COUNT);
+        assertEquals(0, RackMenu.STATE_EMPTY);
+        assertEquals(1, RackMenu.STATE_READY);
+        assertEquals(2, RackMenu.STATE_RUNNING);
     }
 
     @Test
     void rackMenuExposesServerRackInventoryTarget() throws NoSuchMethodException {
         assertEquals(Container.class, RackMenu.class.getMethod("rackInventory").getReturnType());
+    }
+
+    @Test
+    void rackMenuExposesRackStateLookup() throws NoSuchMethodException {
+        assertEquals(int.class, RackMenu.class.getMethod("rackState", int.class).getReturnType());
     }
 }
