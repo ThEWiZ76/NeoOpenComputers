@@ -47,4 +47,14 @@ final class TerminalNetworkingShapeTest {
 
         assertEquals(void.class, apply.getReturnType());
     }
+
+    @Test
+    void exposesTerminalMouseBoundsHelper() throws NoSuchMethodException {
+        final Method helper = TerminalNetworking.class.getDeclaredMethod(
+            "mouseInside",
+            li.cil.oc.common.component.TerminalScreenSnapshot.class,
+            TerminalMousePayload.class);
+
+        assertEquals(boolean.class, helper.getReturnType());
+    }
 }

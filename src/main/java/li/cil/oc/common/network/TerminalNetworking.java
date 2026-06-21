@@ -1,5 +1,6 @@
 package li.cil.oc.common.network;
 
+import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.menu.TerminalMenu;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -60,6 +61,9 @@ public final class TerminalNetworking {
         if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId() || menu.terminalServer() == null) {
             return;
         }
+        if (!mouseInside(menu.terminalServer().screenSnapshot(), payload)) {
+            return;
+        }
         switch (payload.kind()) {
             case TerminalMousePayload.MOUSE_DOWN -> menu.terminalServer().screen().mouseDown(payload.x(), payload.y(), payload.buttonOrDelta(), player);
             case TerminalMousePayload.MOUSE_DRAG -> menu.terminalServer().screen().mouseDrag(payload.x(), payload.y(), payload.buttonOrDelta(), player);
@@ -68,6 +72,16 @@ public final class TerminalNetworking {
             default -> {
             }
         }
+    }
+
+    static boolean mouseInside(final TerminalScreenSnapshot snapshot, final TerminalMousePayload payload) {
+        return snapshot != null
+            && snapshot.width() > 0
+            && snapshot.height() > 0
+            && payload.x() >= 1
+            && payload.y() >= 1
+            && payload.x() <= snapshot.width()
+            && payload.y() <= snapshot.height();
     }
 
     private static void handleScreenSnapshot(final TerminalScreenSnapshotPayload payload, final IPayloadContext context) {

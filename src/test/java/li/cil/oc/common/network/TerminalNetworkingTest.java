@@ -47,6 +47,17 @@ final class TerminalNetworkingTest {
         TerminalNetworking.applyScreenSnapshot(allocateTestMenu(5), payload);
     }
 
+    @Test
+    void checksMousePayloadAgainstSnapshotBounds() {
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
+
+        assertEquals(true, TerminalNetworking.mouseInside(snapshot, new TerminalMousePayload(1, TerminalMousePayload.MOUSE_DOWN, 1, 1, 0)));
+        assertEquals(true, TerminalNetworking.mouseInside(snapshot, new TerminalMousePayload(1, TerminalMousePayload.MOUSE_DOWN, 4, 2, 0)));
+        assertEquals(false, TerminalNetworking.mouseInside(snapshot, new TerminalMousePayload(1, TerminalMousePayload.MOUSE_DOWN, 0, 1, 0)));
+        assertEquals(false, TerminalNetworking.mouseInside(snapshot, new TerminalMousePayload(1, TerminalMousePayload.MOUSE_DOWN, 5, 1, 0)));
+        assertEquals(false, TerminalNetworking.mouseInside(new TerminalScreenSnapshot(0, 0, new String[0]), new TerminalMousePayload(1, TerminalMousePayload.MOUSE_DOWN, 1, 1, 0)));
+    }
+
     private static TerminalMenu allocateMenu(final int containerId, final TerminalScreenSnapshot snapshot) throws ReflectiveOperationException {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
