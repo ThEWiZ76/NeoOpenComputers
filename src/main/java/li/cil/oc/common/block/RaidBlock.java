@@ -3,8 +3,6 @@ package li.cil.oc.common.block;
 import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.Containers;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -65,9 +63,12 @@ public class RaidBlock extends Block implements EntityBlock {
     @Override
     protected void onRemove(final BlockState state, final Level level, final BlockPos pos, final BlockState newState, final boolean movedByPiston) {
         if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof RaidBlockEntity raid) {
-            raid.save(new CompoundTag());
+            if (!level.isClientSide) {
+                final ItemStack stack = new ItemStack(this);
+                raid.saveToStack(stack, level.registryAccess());
+                popResource(level, pos, stack);
+            }
         }
-        Containers.dropContentsOnDestroy(state, newState, level, pos);
         super.onRemove(state, level, pos, newState, movedByPiston);
     }
 }

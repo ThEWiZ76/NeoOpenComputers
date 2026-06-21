@@ -1882,6 +1882,39 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void brokenRaidDropsStatefulRaidItem(final GameTestHelper helper) {
+        final BlockPos raidPos = new BlockPos(1, 1, 1);
+
+        helper.killAllEntities();
+        helper.setBlock(raidPos, ModBlocks.RAID.get());
+        final RaidBlockEntity raid = helper.getBlockEntity(raidPos);
+        raid.setItem(0, new ItemStack(ModItems.HDD_TIER1.get()));
+        raid.setItem(1, new ItemStack(ModItems.HDD_TIER2.get()));
+        raid.setItem(2, new ItemStack(ModItems.HDD_TIER3.get()));
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) raid.onAnalyze(null, Direction.NORTH, 0, 0, 0)[0];
+        final Object[] open = invokeComponent(helper, component, "open", "survived.txt", "w");
+        invokeComponent(helper, component, "write", open[0], "kept".getBytes(StandardCharsets.UTF_8));
+        invokeComponent(helper, component, "close", open[0]);
+
+        helper.getLevel().destroyBlock(helper.absolutePos(raidPos), true);
+        helper.runAtTickTime(1, () -> {
+            helper.assertTrue(droppedItemCount(helper, ModItems.RAID.get()) == 1, "Broken RAID did not drop exactly one RAID item");
+            helper.assertTrue(droppedItemCount(helper, ModItems.HDD_TIER1.get()) == 0, "Broken RAID dropped loose tier 1 HDD");
+            helper.assertTrue(droppedItemCount(helper, ModItems.HDD_TIER2.get()) == 0, "Broken RAID dropped loose tier 2 HDD");
+            helper.assertTrue(droppedItemCount(helper, ModItems.HDD_TIER3.get()) == 0, "Broken RAID dropped loose tier 3 HDD");
+            final ItemStack dropped = droppedItemStack(helper, ModItems.RAID.get());
+            final BlockPos loadedPos = new BlockPos(3, 1, 1);
+            helper.setBlock(loadedPos, ModBlocks.RAID.get());
+            final RaidBlockEntity loaded = helper.getBlockEntity(loadedPos);
+            loaded.loadFromStack(dropped, helper.getLevel().registryAccess());
+            helper.assertTrue(loaded.getItem(0).is(ModItems.HDD_TIER1.get()), "Dropped RAID item missing tier 1 disk");
+            final li.cil.oc.api.network.Component loadedComponent = (li.cil.oc.api.network.Component) loaded.onAnalyze(null, Direction.NORTH, 0, 0, 0)[0];
+            assertSingleResult(helper, invokeComponent(helper, loadedComponent, "exists", "survived.txt"), Boolean.TRUE, "Dropped RAID file");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty")
     public static void tieredScreensExposeTierCapabilities(final GameTestHelper helper) {
         final BlockPos tier1Pos = new BlockPos(0, 1, 0);
@@ -3237,6 +3270,16 @@ public final class NeoOpenComputersGameTests {
         }
         helper.fail("Expected dropped item " + item);
         return ItemStack.EMPTY;
+    }
+
+    private static int droppedItemCount(final GameTestHelper helper, final Item item) {
+        int count = 0;
+        for (ItemEntity entity : helper.getEntities(EntityType.ITEM)) {
+            if (entity.getItem().is(item)) {
+                count += entity.getItem().getCount();
+            }
+        }
+        return count;
     }
 
     private static void writeFile(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final String filesystemAddress, final String path, final String data) {
