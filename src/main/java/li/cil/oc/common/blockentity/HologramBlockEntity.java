@@ -322,7 +322,7 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
         final int oldValue = colors[index];
         colors[index] = convertColor(args.checkInteger(1) & 0xFFFFFF);
         setChanged();
-        return new Object[]{convertColor(oldValue)};
+        return new Object[]{oldValue};
     }
 
     @Callback(doc = "function(angle:number, x:number, y:number, z:number):boolean -- Sets the tier-2 base rotation.")
