@@ -6,6 +6,7 @@ import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
@@ -160,7 +161,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, number or nil -- Sets the background color.")
-    public Object[] setBackground(final Context context, final Arguments args) {
+    public Object[] setBackground(final Context context, final Arguments args) throws LimitReachedException {
         final int color = args.checkInteger(0);
         final boolean palette = args.optBoolean(1, false);
         consumeScreenCallBudget(context, SET_BACKGROUND_COSTS[tier]);
@@ -179,7 +180,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, number or nil -- Sets the foreground color.")
-    public Object[] setForeground(final Context context, final Arguments args) {
+    public Object[] setForeground(final Context context, final Arguments args) throws LimitReachedException {
         final int color = args.checkInteger(0);
         final boolean palette = args.optBoolean(1, false);
         consumeScreenCallBudget(context, SET_FOREGROUND_COSTS[tier]);
@@ -200,7 +201,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Callback(direct = true, doc = "function(index:number, color:number):number -- Sets a palette color and returns the previous value.")
-    public Object[] setPaletteColor(final Context context, final Arguments args) {
+    public Object[] setPaletteColor(final Context context, final Arguments args) throws LimitReachedException {
         final int index = args.checkInteger(0);
         final int color = args.checkInteger(1);
         checkPaletteIndex(index);
@@ -328,7 +329,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Callback(direct = true, doc = "function(x:number, y:number, value:string[, vertical:boolean]):boolean -- Writes text to the screen.")
-    public Object[] set(final Context context, final Arguments args) {
+    public Object[] set(final Context context, final Arguments args) throws LimitReachedException {
         final int x = args.checkInteger(0) - 1;
         final int y = args.checkInteger(1) - 1;
         final String value = args.checkString(2);
@@ -341,7 +342,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Callback(direct = true, doc = "function(x:number, y:number, width:number, height:number, tx:number, ty:number):boolean -- Copies screen text.")
-    public Object[] copy(final Context context, final Arguments args) {
+    public Object[] copy(final Context context, final Arguments args) throws LimitReachedException {
         final int x = args.checkInteger(0) - 1;
         final int y = args.checkInteger(1) - 1;
         final int width = Math.max(0, args.checkInteger(2));
@@ -356,7 +357,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Callback(direct = true, doc = "function(x:number, y:number, width:number, height:number, char:string):boolean -- Fills screen text.")
-    public Object[] fill(final Context context, final Arguments args) {
+    public Object[] fill(final Context context, final Arguments args) throws LimitReachedException {
         final int x = args.checkInteger(0) - 1;
         final int y = args.checkInteger(1) - 1;
         final int width = Math.max(0, args.checkInteger(2));
@@ -495,7 +496,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         return new Object[]{null, "invalid buffer index"};
     }
 
-    private void consumeScreenCallBudget(final Context context, final double cost) {
+    private void consumeScreenCallBudget(final Context context, final double cost) throws LimitReachedException {
         if (context != null && activeBufferIndex == SCREEN_INDEX) {
             context.consumeCallBudget(cost);
         }

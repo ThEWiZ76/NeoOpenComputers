@@ -5,12 +5,14 @@ import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.CallBudget;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.ExecutionResult;
+import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
@@ -76,6 +78,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private String lastError;
     private double costPerTick;
     private int maxComponents;
+    private double maxCallBudget = 1D;
+    private double callBudget;
+    private boolean inArchitectureRun;
     private long startedAtNanos = -1L;
     private long sleepUntilNanos = -1L;
     private long pauseUntilNanos = -1L;
@@ -132,6 +137,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         }
         componentEnvironments.clear();
         maxComponents = 0;
+        double callBudgetSum = 0D;
+        int callBudgetCount = 0;
         if (architecture != null) {
             architecture.close();
             architecture = null;
@@ -157,6 +164,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
                 continue;
             }
 
+            if (driver instanceof CallBudget budgetDriver) {
+                callBudgetSum += Math.max(0D, budgetDriver.getCallBudget(stack));
+                callBudgetCount++;
+            }
+
             if (driver instanceof Processor processor) {
                 maxComponents += Math.max(0, processor.supportedComponents(stack));
                 if (architecture == null) {
@@ -180,6 +192,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             componentEnvironments.add(environment);
             host.onMachineConnect(environment.node());
         }
+        maxCallBudget = callBudgetCount == 0 ? 1D : callBudgetSum / callBudgetCount;
     }
 
     @Override
@@ -466,6 +479,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     public Object[] invoke(final String address, final String method, final Object[] args) throws Exception {
         final Component component = component(address);
         if (component != null) {
+            final Callback callback = component.annotation(method);
+            if (callback.direct()) {
+                consumeCallBudget(1D / callback.limit());
+            }
             return component.invoke(method, this, args == null ? new Object[0] : args);
         }
         if (node() == null || node().network() == null) {
@@ -479,6 +496,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         final Method callback = discoverCallbacks(value).get(method);
         if (callback == null) {
             throw new NoSuchMethodException(method);
+        }
+        final Callback annotation = callback.getAnnotation(Callback.class);
+        if (annotation.direct()) {
+            consumeCallBudget(1D / annotation.limit());
         }
         try {
             final Object result = callback.invoke(value, this, new MachineArguments(args == null ? new Object[0] : args));
@@ -541,6 +562,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (!running || architecture == null) {
             return;
         }
+        callBudget = maxCallBudget;
         final long updateStartedAt = nanoTime.getAsLong();
         if (paused) {
             if (pauseUntilWorldTime >= 0 && host != null && host.world() != null && host.world().getGameTime() < pauseUntilWorldTime) {
@@ -557,17 +579,22 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             return;
         }
         try {
-            architecture.runSynchronized();
-            final ExecutionResult result = architecture.runThreaded(false);
-            if (result instanceof ExecutionResult.Shutdown shutdown) {
-                stop();
-                if (shutdown.reboot) {
-                    start();
+            inArchitectureRun = true;
+            try {
+                architecture.runSynchronized();
+                final ExecutionResult result = architecture.runThreaded(false);
+                if (result instanceof ExecutionResult.Shutdown shutdown) {
+                    stop();
+                    if (shutdown.reboot) {
+                        start();
+                    }
+                } else if (result instanceof ExecutionResult.Error error) {
+                    crash(error.message);
+                } else if (result instanceof ExecutionResult.Sleep sleep) {
+                    sleepUntilNanos = sleep.ticks <= 0 ? -1L : nanoTime.getAsLong() + sleep.ticks * NANOS_PER_TICK;
                 }
-            } else if (result instanceof ExecutionResult.Error error) {
-                crash(error.message);
-            } else if (result instanceof ExecutionResult.Sleep sleep) {
-                sleepUntilNanos = sleep.ticks <= 0 ? -1L : nanoTime.getAsLong() + sleep.ticks * NANOS_PER_TICK;
+            } finally {
+                inArchitectureRun = false;
             }
         } catch (RuntimeException e) {
             crash(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
@@ -637,7 +664,14 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     }
 
     @Override
-    public void consumeCallBudget(final double callCost) {
+    public void consumeCallBudget(final double callCost) throws LimitReachedException {
+        if (architecture != null && architecture.isInitialized() && !inArchitectureRun) {
+            final double clampedCost = Math.max(0D, callCost);
+            if (clampedCost > callBudget) {
+                throw new LimitReachedException();
+            }
+            callBudget -= clampedCost;
+        }
     }
 
     @Override

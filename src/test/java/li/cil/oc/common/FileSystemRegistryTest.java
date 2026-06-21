@@ -241,7 +241,7 @@ final class FileSystemRegistryTest {
         assertEquals("MPFS.21.6", metadata.get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("262", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
         assertEquals("256", metadata.get(DeviceInfo.DeviceAttribute.Size));
-        assertEquals("20/20/20", metadata.get(DeviceInfo.DeviceAttribute.Clock));
+        assertEquals("80/80/40", metadata.get(DeviceInfo.DeviceAttribute.Clock));
     }
 
     @Test
@@ -351,7 +351,7 @@ final class FileSystemRegistryTest {
         component.invoke("read", context, readHandle, 2);
         component.invoke("seek", context, readHandle, "set", 0);
 
-        assertEquals(1.0D, context.callBudget, 0.000_001D);
+        assertEquals((1.0D / 3.0D) + (1.0D / 7.0D) + (1.0D / 7.0D), context.callBudget, 0.000_001D);
     }
 
     @Test

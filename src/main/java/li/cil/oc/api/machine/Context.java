@@ -20,7 +20,7 @@ public interface Context {
 
     boolean stop();
 
-    void consumeCallBudget(double callCost);
+    void consumeCallBudget(double callCost) throws LimitReachedException;
 
     boolean signal(String name, Object... args);
 }

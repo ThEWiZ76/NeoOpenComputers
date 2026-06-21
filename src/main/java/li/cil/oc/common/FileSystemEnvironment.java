@@ -9,6 +9,7 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -46,6 +47,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     private final Optional<EnvironmentHost> host;
     private final Optional<String> accessSound;
     private final int speed;
+    private final int costIndex;
     private final Map<String, Set<Integer>> owners = new LinkedHashMap<>();
     private boolean saving;
 
@@ -55,6 +57,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         this.host = Optional.ofNullable(host);
         this.accessSound = Optional.ofNullable(accessSound);
         this.speed = Math.max(1, Math.min(speed, 6));
+        this.costIndex = Math.max(0, Math.min(this.speed, READ_COSTS.length - 1));
         setNode(Network.newNode(this, Visibility.Network)
             .withComponent("filesystem", Visibility.Neighbors)
             .withConnector()
@@ -84,7 +87,6 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     @Override
     public Map<String, String> getDeviceInfo() {
         final long spaceTotal = fileSystem.spaceTotal();
-        final int costIndex = speed - 1;
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Volume,
             DeviceInfo.DeviceAttribute.Description, "Filesystem",
@@ -171,7 +173,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         return new Object[]{fileSystem.rename(clean(arguments.checkString(0)), clean(arguments.checkString(1)))};
     }
 
-    @Callback(direct = true, doc = "function(path:string[,mode:string='r']):userdata -- Opens a file handle.")
+    @Callback(direct = true, limit = 4, doc = "function(path:string[,mode:string='r']):userdata -- Opens a file handle.")
     public Object[] open(final Context context, final Arguments arguments) throws IOException {
         checkHandleLimit(context);
         final int handle = fileSystem.open(clean(arguments.checkString(0)), parseMode(arguments.optString(1, "r")));
@@ -185,9 +187,9 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         return null;
     }
 
-    @Callback(direct = true, doc = "function(handle:userdata,count:number):string -- Reads up to count bytes from a file handle.")
-    public Object[] read(final Context context, final Arguments arguments) throws IOException {
-        consumeCallBudget(context, READ_COSTS[speed - 1]);
+    @Callback(direct = true, limit = 15, doc = "function(handle:userdata,count:number):string -- Reads up to count bytes from a file handle.")
+    public Object[] read(final Context context, final Arguments arguments) throws IOException, LimitReachedException {
+        consumeCallBudget(context, READ_COSTS[costIndex]);
         final int handleId = checkHandle(arguments, 0);
         checkOwner(context, handleId);
         final Handle handle = getHandle(handleId);
@@ -206,8 +208,8 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     }
 
     @Callback(direct = true, doc = "function(handle:userdata,whence:string,offset:number):number -- Seeks in a file handle.")
-    public Object[] seek(final Context context, final Arguments arguments) throws IOException {
-        consumeCallBudget(context, SEEK_COSTS[speed - 1]);
+    public Object[] seek(final Context context, final Arguments arguments) throws IOException, LimitReachedException {
+        consumeCallBudget(context, SEEK_COSTS[costIndex]);
         final int handleId = checkHandle(arguments, 0);
         checkOwner(context, handleId);
         final Handle handle = getHandle(handleId);
@@ -223,8 +225,8 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     }
 
     @Callback(direct = true, doc = "function(handle:userdata,value:string):boolean -- Writes bytes to a file handle.")
-    public Object[] write(final Context context, final Arguments arguments) throws IOException {
-        consumeCallBudget(context, WRITE_COSTS[speed - 1]);
+    public Object[] write(final Context context, final Arguments arguments) throws IOException, LimitReachedException {
+        consumeCallBudget(context, WRITE_COSTS[costIndex]);
         final int handleId = checkHandle(arguments, 0);
         checkOwner(context, handleId);
         final byte[] value = arguments.checkByteArray(1);
@@ -473,7 +475,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         return context.node().address();
     }
 
-    private static void consumeCallBudget(final Context context, final double cost) {
+    private static void consumeCallBudget(final Context context, final double cost) throws LimitReachedException {
         if (context != null) {
             context.consumeCallBudget(cost);
         }

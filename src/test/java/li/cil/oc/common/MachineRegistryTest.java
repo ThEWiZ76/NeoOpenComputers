@@ -5,6 +5,7 @@ import li.cil.oc.api.Network;
 import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
+import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
@@ -17,6 +18,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.CallBudget;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
@@ -642,6 +644,69 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void directCallbacksConsumeBudgetUntilNextUpdate() throws Exception {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        DirectBudgetEnvironment environment = new DirectBudgetEnvironment();
+        machine.onHostChanged();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+        assertTrue(machine.start());
+
+        machine.update();
+        assertArrayEquals(new Object[]{"direct"}, machine.invoke(environment.node().address(), "direct", new Object[0]));
+        assertArrayEquals(new Object[]{"direct"}, machine.invoke(environment.node().address(), "direct", new Object[0]));
+        assertThrows(LimitReachedException.class, () -> machine.invoke(environment.node().address(), "direct", new Object[0]));
+
+        machine.update();
+
+        assertArrayEquals(new Object[]{"direct"}, machine.invoke(environment.node().address(), "direct", new Object[0]));
+    }
+
+    @Test
+    void callBudgetDriversSetDirectCallbackBudget() throws Exception {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new BudgetProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        DirectBudgetEnvironment environment = new DirectBudgetEnvironment();
+        machine.onHostChanged();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+        assertTrue(machine.start());
+
+        machine.update();
+        assertArrayEquals(new Object[]{"direct"}, machine.invoke(environment.node().address(), "direct", new Object[0]));
+        assertThrows(LimitReachedException.class, () -> machine.invoke(environment.node().address(), "direct", new Object[0]));
+        assertArrayEquals(new Object[]{"regular"}, machine.invoke(environment.node().address(), "regular", new Object[0]));
+    }
+
+    @Test
+    void synchronizedArchitectureCallsDoNotConsumeDirectBudget() throws Exception {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new SynchronizedBudgetProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        DirectBudgetEnvironment environment = new DirectBudgetEnvironment();
+        machine.onHostChanged();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+        SynchronizedBudgetArchitecture.targetAddress = environment.node().address();
+        assertTrue(machine.start());
+
+        machine.update();
+
+        assertNull(SynchronizedBudgetArchitecture.error);
+        assertArrayEquals(new Object[]{"direct"}, machine.invoke(environment.node().address(), "direct", new Object[0]));
+        assertThrows(LimitReachedException.class, () -> machine.invoke(environment.node().address(), "direct", new Object[0]));
+    }
+
+    @Test
     void runningMachineHonorsArchitectureSleepTicks() {
         OpenComputersApi.initialize();
         MutableClock clock = new MutableClock();
@@ -893,6 +958,50 @@ final class MachineRegistryTest {
         }
     }
 
+    private static final class BudgetProcessorDriver extends TestDriver implements Processor, CallBudget {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return TrackingArchitecture.class;
+        }
+
+        @Override
+        public double getCallBudget(final ItemStack stack) {
+            return 0.5D;
+        }
+    }
+
+    private static final class SynchronizedBudgetProcessorDriver extends TestDriver implements Processor, CallBudget {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return SynchronizedBudgetArchitecture.class;
+        }
+
+        @Override
+        public double getCallBudget(final ItemStack stack) {
+            return 0.5D;
+        }
+    }
+
     private static final class SleepyProcessorDriver extends TestDriver implements Processor {
         @Override
         public String slot(final ItemStack stack) {
@@ -1008,6 +1117,29 @@ final class MachineRegistryTest {
         }
     }
 
+    public static final class SynchronizedBudgetArchitecture extends TrackingArchitecture implements MachineBoundArchitecture {
+        private static String targetAddress;
+        private static Exception error;
+        private Machine machine;
+
+        @Override
+        public void bind(final Machine machine) {
+            this.machine = machine;
+            error = null;
+        }
+
+        @Override
+        public void runSynchronized() {
+            super.runSynchronized();
+            try {
+                machine.invoke(targetAddress, "direct", new Object[0]);
+                machine.invoke(targetAddress, "direct", new Object[0]);
+            } catch (Exception e) {
+                error = e;
+            }
+        }
+    }
+
     public static class TrackingArchitecture implements Architecture {
         private boolean initialized;
         private int signalCount;
@@ -1086,6 +1218,24 @@ final class MachineRegistryTest {
         @Override
         public void onMessage(final Message message) {
             messages.add(message.name());
+        }
+    }
+
+    private static final class DirectBudgetEnvironment extends AbstractManagedEnvironment {
+        private DirectBudgetEnvironment() {
+            setNode(Network.newNode(this, Visibility.Network)
+                .withComponent("budget_component", Visibility.Network)
+                .create());
+        }
+
+        @li.cil.oc.api.machine.Callback(direct = true, limit = 2)
+        public Object[] direct(final li.cil.oc.api.machine.Context context, final li.cil.oc.api.machine.Arguments arguments) {
+            return new Object[]{"direct"};
+        }
+
+        @li.cil.oc.api.machine.Callback
+        public Object[] regular(final li.cil.oc.api.machine.Context context, final li.cil.oc.api.machine.Arguments arguments) {
+            return new Object[]{"regular"};
         }
     }
 

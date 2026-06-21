@@ -133,7 +133,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void delegatesPaletteColorCallbacksToScreen() {
+    void delegatesPaletteColorCallbacksToScreen() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         FakeTextBuffer screen = new FakeTextBuffer();
@@ -164,7 +164,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void screenMutationsConsumeCallBudget() {
+    void screenMutationsConsumeCallBudget() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         FakeTextBuffer screen = new FakeTextBuffer();
@@ -184,7 +184,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void videoBufferMutationsDoNotConsumeScreenCallBudget() {
+    void videoBufferMutationsDoNotConsumeScreenCallBudget() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         RecordingContext context = new RecordingContext();
@@ -202,7 +202,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void colorSettersReturnPreviousColorAndPaletteIndex() {
+    void colorSettersReturnPreviousColorAndPaletteIndex() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         FakeTextBuffer screen = new FakeTextBuffer();
@@ -221,7 +221,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void getReturnsResolvedPaletteColorsAndIndices() {
+    void getReturnsResolvedPaletteColorsAndIndices() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         gpu.allocateBuffer(null, new TestArguments(2, 1));
@@ -242,7 +242,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void managesVideoBuffersWithoutBoundScreen() {
+    void managesVideoBuffersWithoutBoundScreen() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
 
@@ -277,7 +277,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void bitbltCopiesBetweenVideoBuffers() {
+    void bitbltCopiesBetweenVideoBuffers() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         gpu.allocateBuffer(null, new TestArguments(3, 2));
@@ -296,7 +296,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void persistsVideoBuffersAndActiveIndex() {
+    void persistsVideoBuffersAndActiveIndex() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         gpu.allocateBuffer(null, new TestArguments(3, 2));
