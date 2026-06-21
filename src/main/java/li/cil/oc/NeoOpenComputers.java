@@ -12,6 +12,7 @@ import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.machine.ProgramLocationImc;
+import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.DisassemblerTemplateImc;
 import net.neoforged.bus.api.IEventBus;
@@ -34,6 +35,7 @@ public final class NeoOpenComputers {
         ModItems.register(modEventBus);
         ModMenus.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
+        modEventBus.addListener(TerminalNetworking::register);
         modEventBus.addListener(this::onCommonSetup);
         modEventBus.addListener(this::onInterModProcess);
         LOGGER.info("Loading NeoOpenComputers {}", modContainer.getModInfo().getVersion());
