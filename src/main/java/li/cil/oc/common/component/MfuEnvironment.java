@@ -12,6 +12,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -23,9 +24,6 @@ import java.util.Map;
 public final class MfuEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     public static final int LEGACY_TARGET_TAG_LENGTH = 4;
     public static final int TARGET_TAG_LENGTH = 5;
-    public static final double DEFAULT_RANGE = 3D;
-    public static final int DEFAULT_TICK_FREQUENCY = 10;
-    public static final double DEFAULT_RELAY_COST = 1D;
 
     private static final String TARGET_TAG = "oc:target";
     private static final String SIDE_TAG = "oc:side";
@@ -230,14 +228,14 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
     private boolean shouldDrainEnergy() {
         return host != null
             && host.world() != null
-            && host.world().getGameTime() % DEFAULT_TICK_FREQUENCY == 0;
+            && host.world().getGameTime() % ModSettings.mfuTickFrequency() == 0;
     }
 
     private boolean tryConsumeEnergy() {
         if (!(node() instanceof final Connector connector)) {
             return true;
         }
-        final double cost = DEFAULT_RELAY_COST * DEFAULT_TICK_FREQUENCY * distanceToTarget();
+        final double cost = ModSettings.mfuRelayCost() * ModSettings.mfuTickFrequency() * distanceToTarget();
         return cost <= 0D || connector.tryChangeBuffer(-cost);
     }
 
@@ -252,7 +250,8 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         final double dx = target.getX() - host.xPosition();
         final double dy = target.getY() - host.yPosition();
         final double dz = target.getZ() - host.zPosition();
-        return dx * dx + dy * dy + dz * dz <= DEFAULT_RANGE * DEFAULT_RANGE;
+        final double range = ModSettings.mfuRange();
+        return dx * dx + dy * dy + dz * dz <= range * range;
     }
 
     private void saveTargetEnvironment(final CompoundTag tag) {
