@@ -404,7 +404,9 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
         helper.setBlock(pos.relative(Direction.EAST), Blocks.CAULDRON);
         final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
-        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) transposer.node();
+        final ComponentConnector component = (ComponentConnector) transposer.node();
+        component.setLocalBufferSize(1D);
+        component.changeBuffer(1D);
 
         final Object[] result = invokeComponent(
             helper,
@@ -418,6 +420,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Integer.valueOf(1000).equals(result[1]), "Transposer reported wrong transferred amount");
         helper.assertTrue(helper.getBlockState(pos.relative(Direction.WEST)).is(Blocks.CAULDRON), "Source cauldron was not drained");
         helper.assertTrue(helper.getBlockState(pos.relative(Direction.EAST)).is(Blocks.WATER_CAULDRON), "Sink cauldron was not filled");
+        helper.assertTrue(Double.compare(0D, component.localBuffer()) == 0, "Transposer fluid transfer did not consume energy");
         helper.succeed();
     }
 
@@ -428,7 +431,9 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
         helper.setBlock(pos.relative(Direction.EAST), Blocks.CAULDRON);
         final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
-        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) transposer.node();
+        final ComponentConnector component = (ComponentConnector) transposer.node();
+        component.setLocalBufferSize(1D);
+        component.changeBuffer(1D);
         final double[] pauseSeconds = new double[]{-1D};
         final Context context = new RecordingContext(component, pauseSeconds);
 
@@ -445,6 +450,91 @@ public final class NeoOpenComputersGameTests {
         } catch (Exception e) {
             helper.fail("Component invocation failed: transferFluid " + e.getMessage());
         }
+    }
+
+    @GameTest(template = "empty")
+    public static void transposerTransferItemRequiresEnergy(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final BlockPos sourcePos = pos.relative(Direction.WEST);
+        final BlockPos sinkPos = pos.relative(Direction.EAST);
+        helper.setBlock(pos, ModBlocks.TRANSPOSER.get());
+        helper.setBlock(sourcePos, Blocks.CHEST);
+        helper.setBlock(sinkPos, Blocks.CHEST);
+        final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
+        final ComponentConnector component = (ComponentConnector) transposer.node();
+        final net.minecraft.world.Container source = helper.getBlockEntity(sourcePos);
+        final net.minecraft.world.Container sink = helper.getBlockEntity(sinkPos);
+        source.setItem(0, new ItemStack(Items.DIAMOND));
+
+        final Object[] noEnergy = invokeComponent(helper, component, "transferItem", Direction.WEST.get3DDataValue(), Direction.EAST.get3DDataValue(), 1);
+        assertNoEnergy(helper, noEnergy, "Transposer item transfer");
+        helper.assertTrue(source.getItem(0).is(Items.DIAMOND), "Transposer moved item without energy");
+        helper.assertTrue(sink.getItem(0).isEmpty(), "Transposer inserted item without energy");
+
+        component.setLocalBufferSize(1D);
+        component.changeBuffer(1D);
+        final Object[] transferred = invokeComponent(helper, component, "transferItem", Direction.WEST.get3DDataValue(), Direction.EAST.get3DDataValue(), 1);
+        helper.assertTrue(Boolean.TRUE.equals(transferred[0]), "Transposer did not transfer item with energy");
+        helper.assertTrue(source.getItem(0).isEmpty(), "Transposer did not remove source item");
+        helper.assertTrue(sink.getItem(0).is(Items.DIAMOND), "Transposer did not insert sink item");
+        helper.assertTrue(Double.compare(0D, component.localBuffer()) == 0, "Transposer item transfer did not consume energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void transposerTransferFluidRequiresEnergy(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.TRANSPOSER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+        helper.setBlock(pos.relative(Direction.EAST), Blocks.CAULDRON);
+        final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
+        final ComponentConnector component = (ComponentConnector) transposer.node();
+
+        final Object[] result = invokeComponent(
+            helper,
+            component,
+            "transferFluid",
+            Direction.WEST.get3DDataValue(),
+            Direction.EAST.get3DDataValue(),
+            1000);
+
+        assertNoEnergy(helper, result, "Transposer fluid transfer");
+        helper.assertTrue(helper.getBlockState(pos.relative(Direction.WEST)).is(Blocks.WATER_CAULDRON), "Transposer drained fluid without energy");
+        helper.assertTrue(helper.getBlockState(pos.relative(Direction.EAST)).is(Blocks.CAULDRON), "Transposer filled tank without energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void transposerItemTransferRequiresEnergy(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRANSPOSER.get()));
+        helper.assertTrue(driver != null, "No driver for transposer item");
+
+        final BlockPos hostPos = new BlockPos(2, 1, 2);
+        final BlockPos sourcePos = hostPos.relative(Direction.WEST);
+        final BlockPos sinkPos = hostPos.relative(Direction.EAST);
+        helper.setBlock(sourcePos, Blocks.CHEST);
+        helper.setBlock(sinkPos, Blocks.CHEST);
+        final net.minecraft.world.Container source = helper.getBlockEntity(sourcePos);
+        final net.minecraft.world.Container sink = helper.getBlockEntity(sinkPos);
+        source.setItem(0, new ItemStack(Items.EMERALD));
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRANSPOSER.get()), new StaticPositionEnvironmentHost(helper, hostPos));
+        helper.assertTrue(environment != null, "Transposer item did not create environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Transposer item node is not a connector");
+        final ComponentConnector component = (ComponentConnector) environment.node();
+
+        final Object[] noEnergy = invokeComponent(helper, component, "transferItem", Direction.WEST.get3DDataValue(), Direction.EAST.get3DDataValue(), 1);
+        assertNoEnergy(helper, noEnergy, "Transposer item environment transfer");
+        helper.assertTrue(source.getItem(0).is(Items.EMERALD), "Transposer item environment moved item without energy");
+        helper.assertTrue(sink.getItem(0).isEmpty(), "Transposer item environment inserted item without energy");
+
+        component.setLocalBufferSize(1D);
+        component.changeBuffer(1D);
+        final Object[] transferred = invokeComponent(helper, component, "transferItem", Direction.WEST.get3DDataValue(), Direction.EAST.get3DDataValue(), 1);
+        helper.assertTrue(Boolean.TRUE.equals(transferred[0]), "Transposer item environment did not transfer item with energy");
+        helper.assertTrue(source.getItem(0).isEmpty(), "Transposer item environment did not remove source item");
+        helper.assertTrue(sink.getItem(0).is(Items.EMERALD), "Transposer item environment did not insert sink item");
+        helper.assertTrue(Double.compare(0D, component.localBuffer()) == 0, "Transposer item environment transfer did not consume energy");
+        helper.succeed();
     }
 
     @GameTest(template = "empty")

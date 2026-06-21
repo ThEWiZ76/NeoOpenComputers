@@ -7,6 +7,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Component;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
@@ -37,6 +38,7 @@ import java.util.Map;
 public class TransposerBlockEntity extends BlockEntity implements Environment, EnvironmentHost, DeviceInfo {
     private static final String TAG_NODE = "node";
     private static final String COMPONENT_NAME = "transposer";
+    private static final double TRANSFER_COST = 1D;
     private static final double FLUID_TRANSFER_RATE = 4000D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
@@ -189,6 +191,9 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
         if (count == 0) {
             return new Object[]{false};
         }
+        if (!consumeTransferEnergy()) {
+            return noEnergy();
+        }
         if (args.count() > 3) {
             final int sourceSlot = checkSlot(source, args.checkInteger(3));
             final int sinkSlot = args.count() > 4 && args.checkAny(4) != null ? checkSlot(sink, args.checkInteger(4)) : -1;
@@ -253,6 +258,9 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
         final int count = Math.max(0, args.optInteger(2, 1000));
         if (count == 0) {
             return new Object[]{false, 0};
+        }
+        if (!consumeTransferEnergy()) {
+            return noEnergy();
         }
 
         final FluidStack drainable;
@@ -319,6 +327,14 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
         if (node != null) {
             node.remove();
         }
+    }
+
+    private boolean consumeTransferEnergy() {
+        return node() instanceof Connector connector && connector.tryChangeBuffer(-TRANSFER_COST);
+    }
+
+    private static Object[] noEnergy() {
+        return new Object[]{null, "not enough energy"};
     }
 
     private Container container(final int side) {
