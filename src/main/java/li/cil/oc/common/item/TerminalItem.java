@@ -4,6 +4,7 @@ import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.blockentity.RackBlockEntity;
+import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.menu.TerminalMenu;
@@ -49,7 +50,7 @@ public class TerminalItem extends Item {
         }
         if (!level.isClientSide) {
             player.openMenu(new SimpleMenuProvider(
-                (containerId, playerInventory, menuPlayer) -> new TerminalMenu(containerId, playerInventory),
+                (containerId, playerInventory, menuPlayer) -> createMenuForBoundTerminal(containerId, playerInventory, terminal),
                 net.minecraft.network.chat.Component.translatable("item.neoopencomputers.terminal")));
         }
         return InteractionResultHolder.sidedSuccess(terminal, level.isClientSide);
@@ -105,6 +106,15 @@ public class TerminalItem extends Item {
         }
         final TerminalServerRackMountableEnvironment terminalServer = TerminalServerRegistry.find(address);
         return terminalServer != null && terminalServer.allowsTerminal(terminal) ? terminalServer : null;
+    }
+
+    public static TerminalMenu createMenuForBoundTerminal(final int containerId, final net.minecraft.world.entity.player.Inventory playerInventory, final ItemStack terminal) {
+        final TerminalServerRackMountableEnvironment terminalServer = findBoundTerminalServer(terminal);
+        if (terminalServer == null) {
+            return null;
+        }
+        final TerminalScreenSnapshot snapshot = terminalServer.screenSnapshot();
+        return new TerminalMenu(containerId, playerInventory, snapshot);
     }
 
     private static boolean bindToFirstTerminalServer(final ItemStack terminal, final RackBlockEntity rack) {

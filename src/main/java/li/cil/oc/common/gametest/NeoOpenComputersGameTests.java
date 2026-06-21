@@ -2259,6 +2259,24 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalItemMenuUsesBoundTerminalScreenSnapshot(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+
+        helper.assertTrue(TerminalItem.bindToTerminalServer(terminal, rack, 0), "Terminal did not bind to terminal server");
+        terminalServer.screen().set(0, 0, "menu", false);
+        final li.cil.oc.common.menu.TerminalMenu menu = TerminalItem.createMenuForBoundTerminal(1, null, terminal);
+
+        helper.assertTrue(menu != null, "Terminal item did not create menu for bound terminal");
+        helper.assertTrue("menu".equals(menu.snapshot().line(0)), "Terminal menu did not include screen snapshot");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void analyzerReportsRackTerminalServerVirtualNodes(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
