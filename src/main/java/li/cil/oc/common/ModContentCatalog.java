@@ -48,6 +48,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_EXPERIENCE_UPGRADE = "experienceUpgrade";
     public static final String COMPAT_INVENTORY_UPGRADE = "inventoryUpgrade";
     public static final String COMPAT_INTERNET_CARD = "internetcard";
+    public static final String COMPAT_LEASH_UPGRADE = "leashUpgrade";
     public static final String COMPAT_LINKED_CARD = "linkedcard";
     public static final String COMPAT_MEMORY_TIER1 = "ram1";
     public static final String COMPAT_MEMORY_TIER2 = "ram2";
@@ -177,6 +178,7 @@ public final class ModContentCatalog {
                 ModItems.SIGN_UPGRADE.get(),
                 ModItems.TRADING_UPGRADE.get(),
                 ModItems.TRACTOR_BEAM_UPGRADE.get(),
+                ModItems.LEASH_UPGRADE.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER1.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER2.get(),
                 ModItems.REDSTONE_CARD.get(),
@@ -367,6 +369,7 @@ public final class ModContentCatalog {
         final Item signUpgradeItem,
         final Item tradingUpgradeItem,
         final Item tractorBeamUpgradeItem,
+        final Item leashUpgradeItem,
         final Item wirelessNetworkCardTier1Item,
         final Item wirelessNetworkCardTier2Item,
         final Item redstoneCardItem,
@@ -449,6 +452,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.SIGN_UPGRADE, null, signUpgradeItem);
         registry.register(ModContentIds.TRADING_UPGRADE, null, tradingUpgradeItem);
         registry.register(ModContentIds.TRACTOR_BEAM_UPGRADE, null, tractorBeamUpgradeItem);
+        registry.register(ModContentIds.LEASH_UPGRADE, null, leashUpgradeItem);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(ModContentIds.REDSTONE_CARD, null, redstoneCardItem);
@@ -503,6 +507,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_SIGN_UPGRADE, null, signUpgradeItem);
         registry.register(COMPAT_TRADING_UPGRADE, null, tradingUpgradeItem);
         registry.register(COMPAT_TRACTOR_BEAM_UPGRADE, null, tractorBeamUpgradeItem);
+        registry.register(COMPAT_LEASH_UPGRADE, null, leashUpgradeItem);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD, null, wirelessNetworkCardTier2Item);

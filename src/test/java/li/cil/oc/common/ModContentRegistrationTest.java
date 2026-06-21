@@ -312,6 +312,7 @@ final class ModContentRegistrationTest {
         assertEquals("sign_upgrade", ModContentIds.SIGN_UPGRADE);
         assertEquals("trading_upgrade", ModContentIds.TRADING_UPGRADE);
         assertEquals("tractor_beam_upgrade", ModContentIds.TRACTOR_BEAM_UPGRADE);
+        assertEquals("leash_upgrade", ModContentIds.LEASH_UPGRADE);
     }
 
     @Test

@@ -18,6 +18,7 @@ import li.cil.oc.common.item.HoverUpgradeItem;
 import li.cil.oc.common.item.InventoryControllerUpgradeItem;
 import li.cil.oc.common.item.InventoryUpgradeItem;
 import li.cil.oc.common.item.InternetCardItem;
+import li.cil.oc.common.item.LeashUpgradeItem;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.NavigationUpgradeItem;
@@ -299,6 +300,10 @@ public final class ModItems {
     public static final DeferredItem<TractorBeamUpgradeItem> TRACTOR_BEAM_UPGRADE = ITEMS.register(
         ModContentIds.TRACTOR_BEAM_UPGRADE,
         () -> new TractorBeamUpgradeItem(new Item.Properties()));
+
+    public static final DeferredItem<LeashUpgradeItem> LEASH_UPGRADE = ITEMS.register(
+        ModContentIds.LEASH_UPGRADE,
+        () -> new LeashUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<WirelessNetworkCardItem> WIRELESS_NETWORK_CARD_TIER1 = ITEMS.register(
         ModContentIds.WIRELESS_NETWORK_CARD_TIER1,

@@ -89,6 +89,7 @@ final class RecipeResourceTest {
             ModContentIds.SIGN_UPGRADE,
             ModContentIds.TRADING_UPGRADE,
             ModContentIds.TRACTOR_BEAM_UPGRADE,
+            ModContentIds.LEASH_UPGRADE,
             ModContentIds.KEYBOARD,
             ModContentIds.LINKED_CARD,
             ModContentIds.MANUAL,
@@ -609,6 +610,8 @@ final class RecipeResourceTest {
         JsonObject trading = tradingRecipe.getAsJsonObject("key");
         JsonObject tractorBeamRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.TRACTOR_BEAM_UPGRADE + ".json"));
         JsonObject tractorBeam = tractorBeamRecipe.getAsJsonObject("key");
+        JsonObject leashRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.LEASH_UPGRADE + ".json"));
+        JsonObject leash = leashRecipe.getAsJsonObject("key");
         JsonObject solarRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SOLAR_GENERATOR_UPGRADE + ".json"));
         JsonObject solar = solarRecipe.getAsJsonObject("key");
         JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
@@ -667,6 +670,11 @@ final class RecipeResourceTest {
         assertTag(tractorBeam, "I", "c:ingots/iron");
         assertItem(tractorBeam, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
         assertItem(tractorBeam, "H", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+
+        assertPattern(leashRecipe, "ILI", "LCL", "ILI");
+        assertTag(leash, "I", "c:ingots/iron");
+        assertItem(leash, "L", "minecraft:lead");
+        assertItem(leash, "C", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
 
         assertPattern(solarRecipe, "GGG", "CUC");
         assertItem(solar, "G", "minecraft:glass");

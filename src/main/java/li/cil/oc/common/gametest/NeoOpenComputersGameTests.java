@@ -194,6 +194,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.TANK_CONTROLLER_UPGRADE.get();
         ModItems.TRADING_UPGRADE.get();
         ModItems.TRACTOR_BEAM_UPGRADE.get();
+        ModItems.LEASH_UPGRADE.get();
         ModItems.TRANSPOSER.get();
         ModItems.UPGRADE_CONTAINER_TIER1.get();
         ModItems.UPGRADE_CONTAINER_TIER2.get();
@@ -243,6 +244,7 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.SIGN_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.TRADING_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.LEASH_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.SOLAR_GENERATOR_UPGRADE.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), 1);
