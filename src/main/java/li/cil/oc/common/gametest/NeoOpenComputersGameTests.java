@@ -4008,6 +4008,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment.node() instanceof ComponentConnector, "Transposer item has no connector component node for " + stack);
         final ComponentConnector component = (ComponentConnector) environment.node();
         helper.assertTrue("transposer".equals(component.name()), "Transposer item component name mismatch for " + stack);
+        helper.assertTrue(component.visibility() == Visibility.Neighbors, "Transposer item component should be neighbor-visible");
         final Object[] size = invokeComponent(helper, component, "getInventorySize", Direction.EAST.get3DDataValue());
         helper.assertTrue(size.length == 1 && Integer.valueOf(27).equals(size[0]), "Transposer item did not inspect adjacent chest");
     }
