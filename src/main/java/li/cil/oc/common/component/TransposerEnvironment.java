@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.api.prefab.ItemStackArrayValue;
 import li.cil.oc.common.util.FluidDescriptions;
 import li.cil.oc.common.util.InventoryComparison;
 import net.minecraft.core.BlockPos;
@@ -108,7 +109,7 @@ public final class TransposerEnvironment extends AbstractManagedEnvironment impl
         for (int slot = 0; slot < stacks.length; slot++) {
             stacks[slot] = container.getItem(slot).copy();
         }
-        return new Object[]{stacks};
+        return new Object[]{new ItemStackArrayValue(stacks)};
     }
 
     @Callback(doc = "function(side:number):string -- Get the registry name of the inventory block on the specified side.")

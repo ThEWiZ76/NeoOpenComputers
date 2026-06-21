@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.api.prefab.ItemStackArrayValue;
 import li.cil.oc.common.util.InventoryComparison;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -107,7 +108,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         for (int slot = 0; slot < stacks.length; slot++) {
             stacks[slot] = container.getItem(slot).copy();
         }
-        return new Object[]{stacks};
+        return new Object[]{new ItemStackArrayValue(stacks)};
     }
 
     @Callback(doc = "function(side:number, slot:number, dbAddress:string, dbSlot:number):boolean -- Store an item stack description in the specified database slot.")

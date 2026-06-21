@@ -23,6 +23,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.api.prefab.ItemStackArrayValue;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
@@ -1579,9 +1580,13 @@ public final class NeoOpenComputersGameTests {
                 final Object[] stackResult = computer.machine().invoke(address, "getStackInSlot", new Object[]{east, 1});
                 helper.assertTrue(stackResult.length == 1 && stackResult[0] instanceof ItemStack stack && stack.is(net.minecraft.world.item.Items.DIAMOND) && stack.getCount() == 4, "Inventory controller did not expose slot stack");
                 final Object[] stacksResult = computer.machine().invoke(address, "getAllStacks", new Object[]{east});
-                helper.assertTrue(stacksResult.length == 1 && stacksResult[0] instanceof ItemStack[], "Inventory controller did not expose stack array");
-                final ItemStack[] stacks = (ItemStack[]) stacksResult[0];
-                helper.assertTrue(stacks.length == 27 && stacks[0].getCount() == 4 && stacks[1].getCount() == 1, "Inventory controller all-stack list mismatch");
+                helper.assertTrue(stacksResult.length == 1 && stacksResult[0] instanceof ItemStackArrayValue, "Inventory controller did not expose item-stack array value");
+                final ItemStackArrayValue stacks = (ItemStackArrayValue) stacksResult[0];
+                helper.assertTrue(Integer.valueOf(27).equals(stacks.count(null, null)[0]), "Inventory controller all-stack value size mismatch");
+                final Map<?, ?> stackMap = (Map<?, ?>) stacks.getAll(null, null)[0];
+                final Object firstStack = stackMap.get(1);
+                final Object secondStack = stackMap.get(2);
+                helper.assertTrue(firstStack instanceof ItemStack first && first.getCount() == 4 && secondStack instanceof ItemStack second && second.getCount() == 1, "Inventory controller all-stack value mismatch");
             } catch (Exception e) {
                 helper.fail("Inventory controller invocation failed: " + e.getMessage());
             }
@@ -1773,10 +1778,12 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "getInventorySize", new Object[]{}, 27);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{1}, 3);
                 final Object[] stacksResult = computer.machine().invoke(address, "getAllStacks", new Object[]{});
-                helper.assertTrue(stacksResult.length == 1 && stacksResult[0] instanceof ItemStack[], "getAllStacks did not return an item-stack array");
-                final ItemStack[] stacks = (ItemStack[]) stacksResult[0];
-                helper.assertTrue(stacks.length == 27, "getAllStacks returned wrong chest size");
-                helper.assertTrue(stacks[0].is(net.minecraft.world.item.Items.DIAMOND) && stacks[0].getCount() == 3, "getAllStacks did not include first slot diamonds");
+                helper.assertTrue(stacksResult.length == 1 && stacksResult[0] instanceof ItemStackArrayValue, "getAllStacks did not return an item-stack array value");
+                final ItemStackArrayValue stacks = (ItemStackArrayValue) stacksResult[0];
+                helper.assertTrue(Integer.valueOf(27).equals(stacks.count(null, null)[0]), "getAllStacks returned wrong chest size");
+                final Map<?, ?> stackMap = (Map<?, ?>) stacks.getAll(null, null)[0];
+                final Object firstStack = stackMap.get(1);
+                helper.assertTrue(firstStack instanceof ItemStack stack && stack.is(net.minecraft.world.item.Items.DIAMOND) && stack.getCount() == 3, "getAllStacks did not include first slot diamonds");
                 assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{3, 4}, true);
                 assertInvokeResult(helper, computer, address, "compareStacks", new Object[]{3, 4, true}, false);
                 assertInvokeResult(helper, computer, address, "transferStack", new Object[]{1, 2, 2}, true);
