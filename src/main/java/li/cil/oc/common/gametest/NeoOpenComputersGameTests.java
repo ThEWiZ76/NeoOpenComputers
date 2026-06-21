@@ -435,6 +435,40 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void mfuLinksRemoteBlockDriverEnvironment(final GameTestHelper helper) {
+        final BlockPos adapterPos = new BlockPos(0, 1, 0);
+        final BlockPos targetPos = new BlockPos(3, 1, 0);
+        helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
+
+        final ItemStack stack = new ItemStack(ModItems.MFU.get());
+        final DriverItem driver = Driver.driverFor(stack, AdapterBlockEntity.class);
+        helper.assertTrue(driver != null, "No MFU driver for adapter host");
+        final BlockPos absoluteTarget = helper.absolutePos(targetPos);
+        driver.dataTag(stack).putIntArray("oc:coord", new int[]{
+            absoluteTarget.getX(),
+            absoluteTarget.getY(),
+            absoluteTarget.getZ(),
+            Direction.NORTH.ordinal()
+        });
+
+        final AdapterBlockEntity adapter = new AdapterBlockEntity(helper.absolutePos(adapterPos), ModBlocks.ADAPTER.get().defaultBlockState());
+        adapter.setLevel(helper.getLevel());
+        final ManagedEnvironment environment = driver.createEnvironment(stack, adapter);
+        helper.assertTrue(environment != null, "MFU did not create remote adapter environment");
+        Network.joinNewNetwork(environment.node());
+
+        boolean foundInventory = false;
+        for (final Node reachable : environment.node().reachableNodes()) {
+            if (reachable instanceof li.cil.oc.api.network.Component component && "inventory".equals(component.name())) {
+                foundInventory = true;
+                break;
+            }
+        }
+        helper.assertTrue(foundInventory, "MFU did not link remote inventory component");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tabletCaseItemsReportAssemblyTier(final GameTestHelper helper) {
         helper.assertTrue(ModItems.TABLET_CASE_TIER1.get().tier() == 0, "Tier 1 tablet case did not report tier 0");
         helper.assertTrue(ModItems.TABLET_CASE_TIER2.get().tier() == 1, "Tier 2 tablet case did not report tier 1");
