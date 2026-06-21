@@ -64,11 +64,12 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
 
     @Override
     public boolean canUpdate() {
-        return targetEnvironment != null && targetEnvironment.canUpdate();
+        return true;
     }
 
     @Override
     public void update() {
+        refreshTargetEnvironment();
         if (targetEnvironment != null && targetEnvironment.canUpdate()) {
             targetEnvironment.update();
         }
