@@ -28,6 +28,7 @@ public final class NeoOpenComputersClient {
         event.register(ModMenus.DISK_DRIVE.get(), DiskDriveScreen::new);
         event.register(ModMenus.RACK.get(), RackScreen::new);
         event.register(ModMenus.RAID.get(), RaidScreen::new);
+        event.register(ModMenus.RELAY.get(), RelayScreen::new);
     }
 
     @SubscribeEvent

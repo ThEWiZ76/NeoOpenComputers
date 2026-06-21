@@ -5,6 +5,7 @@ import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.RaidMenu;
+import li.cil.oc.common.menu.RelayMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
@@ -30,6 +31,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<RaidMenu>> RAID = MENUS.register(
         ModContentIds.RAID_MENU,
         () -> new MenuType<>(RaidMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<RelayMenu>> RELAY = MENUS.register(
+        ModContentIds.RELAY_MENU,
+        () -> new MenuType<>(RelayMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static void register(final IEventBus modEventBus) {
         MENUS.register(modEventBus);

@@ -13,6 +13,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.menu.RelayMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -21,7 +22,11 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -30,7 +35,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
-public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, Container {
+public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, Container, MenuProvider {
     public static final double CONNECTOR_BUFFER_SIZE = 600D;
     public static final int CONTAINER_SIZE = 4;
     public static final int CPU_SLOT = 0;
@@ -66,6 +71,16 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
 
     public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final RelayBlockEntity relay) {
         relay.relayQueuedPacket();
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.relay");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new RelayMenu(containerId, playerInventory, this);
     }
 
     @Override

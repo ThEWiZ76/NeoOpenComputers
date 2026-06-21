@@ -113,6 +113,7 @@ public final class ModContentIds {
     public static final String REDSTONE_IO_BLOCK_ENTITY = "redstone";
     public static final String RELAY = "relay";
     public static final String RELAY_BLOCK_ENTITY = "relay";
+    public static final String RELAY_MENU = "relay";
     public static final String SERVER_TIER1 = "server_tier1";
     public static final String SERVER_TIER2 = "server_tier2";
     public static final String SERVER_TIER3 = "server_tier3";
