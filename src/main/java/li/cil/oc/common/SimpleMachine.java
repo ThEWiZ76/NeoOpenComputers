@@ -68,6 +68,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private long pauseUntilNanos = -1L;
     private long pauseUntilWorldTime = -1L;
     private long cpuTimeNanos;
+    private short lastBeepFrequency;
+    private short lastBeepDuration;
+    private String lastBeepPattern;
 
     SimpleMachine(final MachineHost host) {
         this(host, System::nanoTime);
@@ -197,8 +200,15 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             beep(arguments.checkString(0));
         } else {
             final int frequency = arguments == null ? 440 : arguments.optInteger(0, 440);
-            final int duration = arguments == null ? 500 : arguments.optInteger(1, 500);
-            beep((short) frequency, (short) duration);
+            if (frequency < 20 || frequency > 2000) {
+                throw new IllegalArgumentException("invalid frequency, must be in [20, 2000]");
+            }
+            final double duration = arguments == null ? 0.1D : arguments.optDouble(1, 0.1D);
+            final int durationInMilliseconds = Math.max(50, Math.min(5000, (int) (duration * 1000D)));
+            if (context != null) {
+                context.pause(durationInMilliseconds / 1000D);
+            }
+            beep((short) frequency, (short) durationInMilliseconds);
         }
         return new Object[0];
     }
@@ -300,10 +310,26 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public void beep(final short frequency, final short duration) {
+        lastBeepFrequency = frequency;
+        lastBeepDuration = duration;
+        lastBeepPattern = null;
     }
 
     @Override
     public void beep(final String pattern) {
+        lastBeepPattern = pattern;
+    }
+
+    int lastBeepFrequency() {
+        return lastBeepFrequency;
+    }
+
+    int lastBeepDuration() {
+        return lastBeepDuration;
+    }
+
+    String lastBeepPattern() {
+        return lastBeepPattern;
     }
 
     @Override

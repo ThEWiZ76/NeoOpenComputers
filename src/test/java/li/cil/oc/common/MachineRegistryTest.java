@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class MachineRegistryTest {
@@ -200,6 +201,26 @@ final class MachineRegistryTest {
         assertArrayEquals(new Object[]{true}, machine.invoke(address, "isRunning", new Object[0]));
         assertArrayEquals(new Object[]{true}, machine.invoke(address, "stop", new Object[0]));
         assertArrayEquals(new Object[]{false}, machine.invoke(address, "isRunning", new Object[0]));
+    }
+
+    @Test
+    void computerBeepCallbackMatchesUpstreamDurationSemantics() throws Exception {
+        OpenComputersApi.initialize();
+        SimpleMachine machine = assertInstanceOf(SimpleMachine.class, API.machine.create(null));
+        Network.joinNewNetwork(machine.node());
+        String address = machine.node().address();
+
+        assertThrows(IllegalArgumentException.class, () -> machine.invoke(address, "beep", new Object[]{19}));
+
+        machine.invoke(address, "start", new Object[0]);
+        machine.invoke(address, "beep", new Object[]{440, 0.01D});
+        assertEquals(440, machine.lastBeepFrequency());
+        assertEquals(50, machine.lastBeepDuration());
+        assertTrue(machine.isPaused());
+
+        machine.invoke(address, "beep", new Object[]{1200, 10D});
+        assertEquals(1200, machine.lastBeepFrequency());
+        assertEquals(5000, machine.lastBeepDuration());
     }
 
     @Test
