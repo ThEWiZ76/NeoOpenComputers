@@ -47,6 +47,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
     private static final String USERS_TAG = "users";
+    private static final String SIGNALS_TAG = "signals";
+    private static final String SIGNAL_NAME_TAG = "name";
+    private static final String SIGNAL_ARGS_TAG = "args";
+    private static final String SIGNAL_ARG_TYPE_TAG = "type";
+    private static final String SIGNAL_ARG_VALUE_TAG = "value";
+    private static final String SIGNAL_ARG_KEY_TAG = "key";
     private static final String ARCHITECTURE_TAG = "architecture";
     private static final String CPU_TIME_NANOS_TAG = "cpuTimeNanos";
     private static final String CHECKED_SIGNAL_MESSAGE = "computer.checked_signal";
@@ -640,6 +646,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         for (int i = 0; i < userTags.size(); i++) {
             users.add(userTags.getString(i));
         }
+        signals.clear();
+        final ListTag signalTags = nbt.getList(SIGNALS_TAG, CompoundTag.TAG_COMPOUND);
+        for (int i = 0; i < signalTags.size(); i++) {
+            final CompoundTag signalTag = signalTags.getCompound(i);
+            signals.addLast(loadSignal(signalTag));
+        }
         if (architecture != null && nbt.contains(ARCHITECTURE_TAG)) {
             architecture.load(nbt.getCompound(ARCHITECTURE_TAG));
         }
@@ -661,6 +673,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             userTags.add(StringTag.valueOf(user));
         }
         nbt.put(USERS_TAG, userTags);
+        final ListTag signalTags = new ListTag();
+        for (Signal signal : signals) {
+            signalTags.add(saveSignal(signal));
+        }
+        nbt.put(SIGNALS_TAG, signalTags);
         if (architecture != null) {
             final CompoundTag architectureTag = new CompoundTag();
             architecture.save(architectureTag);
@@ -669,6 +686,112 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     }
 
     private record SimpleSignal(String name, Object[] args) implements Signal {
+    }
+
+    private static CompoundTag saveSignal(final Signal signal) {
+        final CompoundTag signalTag = new CompoundTag();
+        signalTag.putString(SIGNAL_NAME_TAG, signal.name());
+        final ListTag argsTag = new ListTag();
+        for (Object arg : signal.args()) {
+            argsTag.add(saveSignalArg(arg));
+        }
+        signalTag.put(SIGNAL_ARGS_TAG, argsTag);
+        return signalTag;
+    }
+
+    private static Signal loadSignal(final CompoundTag signalTag) {
+        final ListTag argTags = signalTag.getList(SIGNAL_ARGS_TAG, CompoundTag.TAG_COMPOUND);
+        final Object[] args = new Object[argTags.size()];
+        for (int i = 0; i < argTags.size(); i++) {
+            args[i] = loadSignalArg(argTags.getCompound(i));
+        }
+        return new SimpleSignal(signalTag.getString(SIGNAL_NAME_TAG), args);
+    }
+
+    private static CompoundTag saveSignalArg(final Object value) {
+        final CompoundTag tag = new CompoundTag();
+        switch (value) {
+            case null -> tag.putString(SIGNAL_ARG_TYPE_TAG, "null");
+            case Boolean typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "boolean");
+                tag.putBoolean(SIGNAL_ARG_VALUE_TAG, typedValue);
+            }
+            case Byte typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "byte");
+                tag.putByte(SIGNAL_ARG_VALUE_TAG, typedValue);
+            }
+            case Short typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "short");
+                tag.putShort(SIGNAL_ARG_VALUE_TAG, typedValue);
+            }
+            case Integer typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "int");
+                tag.putInt(SIGNAL_ARG_VALUE_TAG, typedValue);
+            }
+            case Long typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "long");
+                tag.putLong(SIGNAL_ARG_VALUE_TAG, typedValue);
+            }
+            case Float typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "float");
+                tag.putFloat(SIGNAL_ARG_VALUE_TAG, typedValue);
+            }
+            case Double typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "double");
+                tag.putDouble(SIGNAL_ARG_VALUE_TAG, typedValue);
+            }
+            case String typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "string");
+                tag.putString(SIGNAL_ARG_VALUE_TAG, typedValue);
+            }
+            case Character typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "string");
+                tag.putString(SIGNAL_ARG_VALUE_TAG, typedValue.toString());
+            }
+            case byte[] typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "bytes");
+                tag.putByteArray(SIGNAL_ARG_VALUE_TAG, typedValue);
+            }
+            case Map<?, ?> typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "map");
+                final ListTag entries = new ListTag();
+                for (Map.Entry<?, ?> entry : typedValue.entrySet()) {
+                    if (entry.getKey() != null && entry.getValue() != null) {
+                        final CompoundTag entryTag = new CompoundTag();
+                        entryTag.putString(SIGNAL_ARG_KEY_TAG, entry.getKey().toString());
+                        entryTag.putString(SIGNAL_ARG_VALUE_TAG, entry.getValue().toString());
+                        entries.add(entryTag);
+                    }
+                }
+                tag.put(SIGNAL_ARG_VALUE_TAG, entries);
+            }
+            default -> tag.putString(SIGNAL_ARG_TYPE_TAG, "null");
+        }
+        return tag;
+    }
+
+    private static Object loadSignalArg(final CompoundTag tag) {
+        return switch (tag.getString(SIGNAL_ARG_TYPE_TAG)) {
+            case "boolean" -> tag.getBoolean(SIGNAL_ARG_VALUE_TAG);
+            case "byte" -> tag.getByte(SIGNAL_ARG_VALUE_TAG);
+            case "short" -> tag.getShort(SIGNAL_ARG_VALUE_TAG);
+            case "int" -> tag.getInt(SIGNAL_ARG_VALUE_TAG);
+            case "long" -> tag.getLong(SIGNAL_ARG_VALUE_TAG);
+            case "float" -> tag.getFloat(SIGNAL_ARG_VALUE_TAG);
+            case "double" -> tag.getDouble(SIGNAL_ARG_VALUE_TAG);
+            case "string" -> tag.getString(SIGNAL_ARG_VALUE_TAG);
+            case "bytes" -> tag.getByteArray(SIGNAL_ARG_VALUE_TAG);
+            case "map" -> {
+                final ListTag entries = tag.getList(SIGNAL_ARG_VALUE_TAG, CompoundTag.TAG_COMPOUND);
+                final Map<String, String> map = new LinkedHashMap<>();
+                for (int i = 0; i < entries.size(); i++) {
+                    final CompoundTag entryTag = entries.getCompound(i);
+                    map.put(entryTag.getString(SIGNAL_ARG_KEY_TAG), entryTag.getString(SIGNAL_ARG_VALUE_TAG));
+                }
+                yield map;
+            }
+            default -> null;
+        };
     }
 
     private static void saveComponentEnvironment(final ManagedEnvironment environment) {

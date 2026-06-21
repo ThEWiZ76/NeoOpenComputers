@@ -492,6 +492,24 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void savesAndLoadsQueuedSignals() {
+        OpenComputersApi.initialize();
+        Machine saved = API.machine.create(null);
+        saved.signal("boot", "disk", 1, true, null);
+        CompoundTag tag = new CompoundTag();
+
+        saved.save(tag);
+
+        Machine loaded = API.machine.create(null);
+        loaded.load(tag);
+
+        Signal signal = loaded.popSignal();
+        assertEquals("boot", signal.name());
+        assertArrayEquals(new Object[]{"disk", 1, true, null}, signal.args());
+        assertNull(loaded.popSignal());
+    }
+
+    @Test
     void hostChangedDropsArchitectureWhenProcessorRemoved() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();
