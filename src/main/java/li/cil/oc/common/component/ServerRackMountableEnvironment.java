@@ -1,41 +1,102 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.Driver;
 import li.cil.oc.api.component.RackBusConnectable;
+import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.internal.Server;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.OpenComputersApi;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import java.util.EnumSet;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
-public final class ServerRackMountableEnvironment extends AbstractManagedEnvironment implements Server, DeviceInfo {
+public final class ServerRackMountableEnvironment extends AbstractManagedEnvironment implements Server, Container, DeviceInfo {
     private static final String TAG_KIND = "kind";
     private static final String TAG_MACHINE = "machine";
     private static final String TAG_TIER = "tier";
+    private static final String SLOT_TYPE_EEPROM = "eeprom";
+    private static final int TIER_ANY = Integer.MAX_VALUE;
+    private static final ServerSlot[][] SLOT_LAYOUTS = {
+        {
+            new ServerSlot(Slot.Card, 1),
+            new ServerSlot(Slot.Card, 1),
+            new ServerSlot(Slot.CPU, 1),
+            new ServerSlot(Slot.ComponentBus, 1),
+            new ServerSlot(Slot.Memory, 1),
+            new ServerSlot(Slot.Memory, 1),
+            new ServerSlot(Slot.HDD, 1),
+            new ServerSlot(Slot.HDD, 1),
+            new ServerSlot(SLOT_TYPE_EEPROM, TIER_ANY)
+        },
+        {
+            new ServerSlot(Slot.Card, 2),
+            new ServerSlot(Slot.Card, 1),
+            new ServerSlot(Slot.CPU, 2),
+            new ServerSlot(Slot.ComponentBus, 2),
+            new ServerSlot(Slot.ComponentBus, 2),
+            new ServerSlot(Slot.Memory, 2),
+            new ServerSlot(Slot.Memory, 2),
+            new ServerSlot(Slot.Memory, 2),
+            new ServerSlot(Slot.HDD, 2),
+            new ServerSlot(Slot.HDD, 2),
+            new ServerSlot(Slot.HDD, 2),
+            new ServerSlot(Slot.Card, 1),
+            new ServerSlot(SLOT_TYPE_EEPROM, TIER_ANY)
+        },
+        {
+            new ServerSlot(Slot.Card, 2),
+            new ServerSlot(Slot.Card, 2),
+            new ServerSlot(Slot.CPU, 2),
+            new ServerSlot(Slot.ComponentBus, 2),
+            new ServerSlot(Slot.ComponentBus, 2),
+            new ServerSlot(Slot.ComponentBus, 2),
+            new ServerSlot(Slot.Memory, 2),
+            new ServerSlot(Slot.Memory, 2),
+            new ServerSlot(Slot.Memory, 2),
+            new ServerSlot(Slot.Memory, 2),
+            new ServerSlot(Slot.HDD, 2),
+            new ServerSlot(Slot.HDD, 2),
+            new ServerSlot(Slot.HDD, 2),
+            new ServerSlot(Slot.HDD, 2),
+            new ServerSlot(Slot.Card, 1),
+            new ServerSlot(Slot.Card, 1),
+            new ServerSlot(SLOT_TYPE_EEPROM, TIER_ANY)
+        }
+    };
 
     private final Rack rack;
     private final int slot;
     private final int tier;
     private final Machine machine;
+    private final NonNullList<ItemStack> items;
+    private final Map<String, Integer> componentSlots = new HashMap<>();
+    private int pendingComponentSlot = -1;
 
     public ServerRackMountableEnvironment(final Rack rack, final int slot, final int tier) {
         OpenComputersApi.initialize();
         this.rack = rack;
         this.slot = slot;
         this.tier = Math.max(0, Math.min(2, tier));
+        this.items = NonNullList.withSize(slotCount(this.tier), ItemStack.EMPTY);
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.create());
@@ -73,20 +134,45 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public Iterable<ItemStack> internalComponents() {
-        return List.of();
+        return () -> new Iterator<>() {
+            private int nextSlot = nextComponentSlot(0);
+
+            @Override
+            public boolean hasNext() {
+                return nextSlot >= 0;
+            }
+
+            @Override
+            public ItemStack next() {
+                if (nextSlot < 0) {
+                    throw new NoSuchElementException();
+                }
+                final int result = nextSlot;
+                nextSlot = nextComponentSlot(result + 1);
+                pendingComponentSlot = result;
+                return items.get(result);
+            }
+        };
     }
 
     @Override
     public int componentSlot(final String address) {
-        return -1;
+        return address == null ? -1 : componentSlots.getOrDefault(address, -1);
     }
 
     @Override
     public void onMachineConnect(final Node node) {
+        if (node != null && node.address() != null && pendingComponentSlot >= 0) {
+            componentSlots.put(node.address(), pendingComponentSlot);
+        }
+        pendingComponentSlot = -1;
     }
 
     @Override
     public void onMachineDisconnect(final Node node) {
+        if (node != null && node.address() != null) {
+            componentSlots.remove(node.address());
+        }
     }
 
     @Override
@@ -142,13 +228,15 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.System,
             DeviceInfo.DeviceAttribute.Description, "Server",
             DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-            DeviceInfo.DeviceAttribute.Product, "Server Tier " + (tier + 1)
+            DeviceInfo.DeviceAttribute.Product, "Server Tier " + (tier + 1),
+            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(getContainerSize())
         );
     }
 
     @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
+        ContainerHelper.loadAllItems(nbt, items, world() == null ? null : world().registryAccess());
         if (machine != null && nbt.contains(TAG_MACHINE)) {
             machine.load(nbt.getCompound(TAG_MACHINE));
         }
@@ -157,10 +245,138 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     @Override
     public void save(final CompoundTag nbt) {
         super.save(nbt);
+        if (world() != null) {
+            ContainerHelper.saveAllItems(nbt, items, world().registryAccess());
+        }
         if (machine != null) {
             final CompoundTag machineTag = new CompoundTag();
             machine.save(machineTag);
             nbt.put(TAG_MACHINE, machineTag);
         }
+    }
+
+    @Override
+    public int getContainerSize() {
+        return items.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        for (final ItemStack stack : items) {
+            if (!stack.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public ItemStack getItem(final int slot) {
+        return isValidSlot(slot) ? items.get(slot) : ItemStack.EMPTY;
+    }
+
+    @Override
+    public ItemStack removeItem(final int slot, final int amount) {
+        if (!isValidSlot(slot)) {
+            return ItemStack.EMPTY;
+        }
+        final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
+        if (!removed.isEmpty()) {
+            markChanged();
+            notifyHardwareChanged();
+        }
+        return removed;
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(final int slot) {
+        return isValidSlot(slot) ? ContainerHelper.takeItem(items, slot) : ItemStack.EMPTY;
+    }
+
+    @Override
+    public void setItem(final int slot, final ItemStack stack) {
+        if (!isValidSlot(slot) || (!stack.isEmpty() && !canPlaceItem(slot, stack))) {
+            return;
+        }
+        final ItemStack stored = stack.copy();
+        if (!stored.isEmpty() && stored.getCount() > getMaxStackSize()) {
+            stored.setCount(getMaxStackSize());
+        }
+        items.set(slot, stored);
+        markChanged();
+        notifyHardwareChanged();
+    }
+
+    @Override
+    public boolean canPlaceItem(final int slot, final ItemStack stack) {
+        if (!isValidSlot(slot) || stack.isEmpty()) {
+            return false;
+        }
+        final DriverItem driver = Driver.driverFor(stack, getClass());
+        return driver != null && slotType(slot).equals(driver.slot(stack)) && driver.tier(stack) <= slotTier(slot);
+    }
+
+    @Override
+    public int getMaxStackSize() {
+        return 1;
+    }
+
+    @Override
+    public boolean stillValid(final Player player) {
+        return rack instanceof Container container && container.stillValid(player);
+    }
+
+    @Override
+    public void setChanged() {
+        markChanged();
+    }
+
+    @Override
+    public void clearContent() {
+        for (int index = 0; index < items.size(); index++) {
+            items.set(index, ItemStack.EMPTY);
+        }
+        markChanged();
+        notifyHardwareChanged();
+    }
+
+    private int nextComponentSlot(final int start) {
+        for (int index = start; index < items.size(); index++) {
+            if (canPlaceItem(index, items.get(index))) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private boolean isValidSlot(final int slot) {
+        return slot >= 0 && slot < items.size();
+    }
+
+    private String slotType(final int slot) {
+        final ServerSlot[] layout = slotLayout(tier);
+        return slot >= 0 && slot < layout.length ? layout[slot].type() : Slot.None;
+    }
+
+    private int slotTier(final int slot) {
+        final ServerSlot[] layout = slotLayout(tier);
+        return slot >= 0 && slot < layout.length ? layout[slot].tier() : -1;
+    }
+
+    private static int slotCount(final int tier) {
+        return slotLayout(tier).length;
+    }
+
+    private static ServerSlot[] slotLayout(final int tier) {
+        return SLOT_LAYOUTS[Math.clamp(tier, 0, SLOT_LAYOUTS.length - 1)];
+    }
+
+    private void notifyHardwareChanged() {
+        if (machine != null) {
+            machine.onHostChanged();
+        }
+    }
+
+    private record ServerSlot(String type, int tier) {
     }
 }

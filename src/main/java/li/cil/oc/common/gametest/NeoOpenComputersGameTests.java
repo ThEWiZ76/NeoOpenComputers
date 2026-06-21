@@ -1689,6 +1689,27 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(rackServer.slot() == 0, "Rack server reported wrong slot");
         helper.assertTrue(rackServer.tier() == 1, "Rack server reported wrong tier");
         helper.assertTrue(rackServer.machine() != null, "Rack server did not create machine");
+        helper.assertTrue(rackServer instanceof net.minecraft.world.Container, "Rack server did not expose component inventory");
+        final net.minecraft.world.Container serverInventory = (net.minecraft.world.Container) rackServer;
+        helper.assertTrue(serverInventory.getContainerSize() == 13, "Tier 2 server slot count mismatch");
+        helper.assertTrue(serverInventory.canPlaceItem(0, new ItemStack(ModItems.NETWORK_CARD.get())), "Server rejected card slot item");
+        helper.assertTrue(serverInventory.canPlaceItem(2, new ItemStack(ModItems.CPU_TIER3.get())), "Server rejected tier 3 CPU");
+        helper.assertTrue(serverInventory.canPlaceItem(5, new ItemStack(ModItems.MEMORY_TIER3.get())), "Server rejected tier 3 memory");
+        helper.assertTrue(serverInventory.canPlaceItem(8, new ItemStack(ModItems.HDD_TIER3.get())), "Server rejected tier 3 hard disk");
+        helper.assertTrue(serverInventory.canPlaceItem(12, luaBiosEepromStack()), "Server rejected EEPROM");
+        helper.assertTrue(!serverInventory.canPlaceItem(2, new ItemStack(ModItems.MEMORY_TIER1.get())), "Server CPU slot accepted memory");
+        serverInventory.setItem(0, new ItemStack(ModItems.NETWORK_CARD.get()));
+        serverInventory.setItem(2, new ItemStack(ModItems.CPU_TIER3.get()));
+        serverInventory.setItem(5, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        serverInventory.setItem(8, new ItemStack(ModItems.HDD_TIER3.get()));
+        serverInventory.setItem(12, luaBiosEepromStack());
+        int internalComponentCount = 0;
+        for (final ItemStack stack : rackServer.internalComponents()) {
+            if (!stack.isEmpty()) {
+                internalComponentCount++;
+            }
+        }
+        helper.assertTrue(internalComponentCount == 5, "Rack server internal component count mismatch");
         helper.succeed();
     }
 
