@@ -632,6 +632,30 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void computerSignalNetworkMessagesQueueMachineSignalsWithSourceAddress() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        TestEnvironment source = new TestEnvironment();
+
+        machine.onMessage(new TestMessage(source.node(), "computer.signal", new Object[]{"modem_message", 123}));
+
+        Signal signal = machine.popSignal();
+        assertEquals("modem_message", signal.name());
+        assertArrayEquals(new Object[]{source.node().address(), 123}, signal.args());
+    }
+
+    @Test
+    void computerStopNetworkMessageStopsMachine() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        assertTrue(machine.start());
+
+        machine.onMessage(new TestMessage(null, "computer.stop", new Object[0]));
+
+        assertFalse(machine.isRunning());
+    }
+
+    @Test
     void hostChangedWhileRunningNotifiesReachableComponentsStopped() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);

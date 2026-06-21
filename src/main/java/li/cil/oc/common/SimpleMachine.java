@@ -47,7 +47,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private static final String ARCHITECTURE_TAG = "architecture";
     private static final String CPU_TIME_NANOS_TAG = "cpuTimeNanos";
     private static final String CHECKED_SIGNAL_MESSAGE = "computer.checked_signal";
+    private static final String COMPUTER_SIGNAL_MESSAGE = "computer.signal";
     private static final String COMPUTER_START_MESSAGE = "computer.start";
+    private static final String COMPUTER_STOP_MESSAGE = "computer.stop";
     private static final String COMPUTER_STARTED_MESSAGE = "computer.started";
     private static final String COMPUTER_STOPPED_MESSAGE = "computer.stopped";
 
@@ -362,8 +364,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     public void onMessage(final Message message) {
         if (CHECKED_SIGNAL_MESSAGE.equals(message.name())) {
             queueCheckedSignal(message.data());
+        } else if (COMPUTER_SIGNAL_MESSAGE.equals(message.name())) {
+            queueNetworkSignal(message);
         } else if (COMPUTER_START_MESSAGE.equals(message.name())) {
             start();
+        } else if (COMPUTER_STOP_MESSAGE.equals(message.name())) {
+            stop();
         }
     }
 
@@ -707,6 +713,17 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             return;
         }
         signal(signalName, Arrays.copyOfRange(data, nameIndex + 1, data.length));
+    }
+
+    private void queueNetworkSignal(final Message message) {
+        final Object[] data = message.data();
+        if (data.length == 0 || !(data[0] instanceof String signalName)) {
+            return;
+        }
+        final Object[] args = new Object[data.length];
+        args[0] = message.source() == null ? null : message.source().address();
+        System.arraycopy(data, 1, args, 1, data.length - 1);
+        signal(signalName, args);
     }
 
     private void bindArchitecture(final Architecture architecture) {
