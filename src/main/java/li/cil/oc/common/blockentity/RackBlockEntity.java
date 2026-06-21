@@ -38,6 +38,7 @@ import java.util.List;
 
 public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, Analyzable {
     public static final int CONTAINER_SIZE = 4;
+    public static final String DATA_TAG = "oc:rack";
 
     private static final String TAG_MOUNTABLE_DATA = "oc:mountableData";
     private static final String STACK_MOUNTABLE_DATA_TAG = "oc:rackMountable";
@@ -72,6 +73,28 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             }
         }
         return stacks;
+    }
+
+    public void saveToStack(final ItemStack stack, final HolderLookup.Provider registries) {
+        final CompoundTag data = new CompoundTag();
+        saveRackData(data, registries);
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
+        root.put(DATA_TAG, data);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    public void loadFromStack(final ItemStack stack, final HolderLookup.Provider registries) {
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return;
+        }
+        final CompoundTag data = customData.copyTag().getCompound(DATA_TAG);
+        if (data.isEmpty()) {
+            return;
+        }
+        loadRackData(data, registries);
+        setChanged();
     }
 
     @Override
@@ -272,26 +295,13 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        ContainerHelper.loadAllItems(tag, items, registries);
-        if (tag.contains(TAG_MOUNTABLE_DATA)) {
-            final ListTag data = tag.getList(TAG_MOUNTABLE_DATA, CompoundTag.TAG_COMPOUND);
-            for (int slot = 0; slot < Math.min(data.size(), CONTAINER_SIZE); slot++) {
-                mountableData[slot] = data.getCompound(slot);
-            }
-        }
-        refreshMountables();
+        loadRackData(tag, registries);
     }
 
     @Override
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        saveMountableData();
-        ContainerHelper.saveAllItems(tag, items, registries);
-        final ListTag data = new ListTag();
-        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
-            data.add(mountableData[slot] == null ? new CompoundTag() : mountableData[slot]);
-        }
-        tag.put(TAG_MOUNTABLE_DATA, data);
+        saveRackData(tag, registries);
     }
 
     @Override
@@ -341,6 +351,32 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
         root.put(STACK_MOUNTABLE_DATA_TAG, data.copy());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    private void loadRackData(final CompoundTag tag, final HolderLookup.Provider registries) {
+        removeMountables();
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            items.set(slot, ItemStack.EMPTY);
+            mountableData[slot] = new CompoundTag();
+        }
+        ContainerHelper.loadAllItems(tag, items, registries);
+        if (tag.contains(TAG_MOUNTABLE_DATA)) {
+            final ListTag data = tag.getList(TAG_MOUNTABLE_DATA, CompoundTag.TAG_COMPOUND);
+            for (int slot = 0; slot < Math.min(data.size(), CONTAINER_SIZE); slot++) {
+                mountableData[slot] = data.getCompound(slot).copy();
+            }
+        }
+        refreshMountables();
+    }
+
+    private void saveRackData(final CompoundTag tag, final HolderLookup.Provider registries) {
+        saveMountableData();
+        ContainerHelper.saveAllItems(tag, items, registries);
+        final ListTag data = new ListTag();
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            data.add(mountableData[slot] == null ? new CompoundTag() : mountableData[slot].copy());
+        }
+        tag.put(TAG_MOUNTABLE_DATA, data);
     }
 
     private void tickServer() {

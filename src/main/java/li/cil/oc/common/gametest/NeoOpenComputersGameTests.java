@@ -1797,6 +1797,37 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void rackBlockItemRetainsMountablesAndServerComponents(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+        rack.setItem(1, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final li.cil.oc.api.internal.Server rackServer = (li.cil.oc.api.internal.Server) rack.getMountable(0);
+        final net.minecraft.world.Container serverInventory = (net.minecraft.world.Container) rackServer;
+        serverInventory.setItem(2, new ItemStack(ModItems.CPU_TIER3.get()));
+        serverInventory.setItem(5, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        serverInventory.setItem(8, new ItemStack(ModItems.HDD_TIER3.get()));
+        serverInventory.setItem(12, luaBiosEepromStack());
+
+        final ItemStack clone = ModBlocks.RACK.get().getCloneItemStack(helper.getLevel(), helper.absolutePos(rackPos), helper.getBlockState(rackPos));
+        final BlockPos loadedPos = new BlockPos(3, 1, 1);
+        helper.setBlock(loadedPos, ModBlocks.RACK.get());
+        ModBlocks.RACK.get().setPlacedBy(helper.getLevel(), helper.absolutePos(loadedPos), helper.getBlockState(loadedPos), null, clone);
+
+        final RackBlockEntity loadedRack = helper.getBlockEntity(loadedPos);
+        helper.assertTrue(loadedRack.getItem(0).is(ModItems.SERVER_TIER2.get()), "Loaded rack missing server");
+        helper.assertTrue(loadedRack.getItem(1).is(ModItems.TERMINAL_SERVER.get()), "Loaded rack missing terminal server");
+        final li.cil.oc.api.internal.Server loadedServer = (li.cil.oc.api.internal.Server) loadedRack.getMountable(0);
+        final net.minecraft.world.Container loadedInventory = (net.minecraft.world.Container) loadedServer;
+        helper.assertTrue(loadedInventory.getItem(2).is(ModItems.CPU_TIER3.get()), "Loaded rack server missing CPU");
+        helper.assertTrue(loadedInventory.getItem(5).is(ModItems.MEMORY_TIER3.get()), "Loaded rack server missing memory");
+        helper.assertTrue(loadedInventory.getItem(8).is(ModItems.HDD_TIER3.get()), "Loaded rack server missing hard disk");
+        helper.assertTrue(loadedInventory.getItem(12).is(ModItems.EEPROM.get()), "Loaded rack server missing EEPROM");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void terminalServerExposesVirtualScreenAndKeyboard(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
