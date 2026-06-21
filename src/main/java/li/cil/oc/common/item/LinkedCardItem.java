@@ -44,11 +44,16 @@ public class LinkedCardItem extends Item implements HostAware {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public CompoundTag dataTag(final ItemStack stack) {
-        if (stack == null) {
+        if (stack == null || stack.isEmpty()) {
             return new CompoundTag();
         }
-        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        return customData == null ? new CompoundTag() : customData.copyTag();
+        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(new CompoundTag()));
+            customData = stack.get(DataComponents.CUSTOM_DATA);
+        }
+        return customData.getUnsafe();
     }
 }

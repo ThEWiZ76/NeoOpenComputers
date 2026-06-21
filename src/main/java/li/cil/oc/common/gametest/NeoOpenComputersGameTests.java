@@ -47,6 +47,7 @@ import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.item.AnalyzerItem;
+import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
@@ -56,6 +57,7 @@ import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
+import li.cil.oc.common.component.LinkedCardEnvironment;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.template.AssemblerTemplate;
@@ -340,6 +342,22 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.LINKED_CARD.get()), 2);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void linkedCardDriverDataTagPersistsTunnel(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.LINKED_CARD.get());
+        final DriverItem driver = Driver.driverFor(stack);
+
+        helper.assertTrue(driver != null, "No driver for linked card");
+        driver.dataTag(stack).putString(LinkedCardItem.TUNNEL_TAG, "pair");
+
+        helper.assertTrue("pair".equals(driver.dataTag(stack).getString(LinkedCardItem.TUNNEL_TAG)), "Linked card driver data tag did not persist tunnel");
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment instanceof LinkedCardEnvironment, "Linked card did not create linked environment");
+        final LinkedCardEnvironment linked = (LinkedCardEnvironment) environment;
+        helper.assertTrue("pair".equals(linked.linkedChannel()), "Linked card environment did not use persisted tunnel");
         helper.succeed();
     }
 
