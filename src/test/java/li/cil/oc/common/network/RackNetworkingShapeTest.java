@@ -35,4 +35,14 @@ final class RackNetworkingShapeTest {
 
         assertEquals(boolean.class, apply.getReturnType());
     }
+
+    @Test
+    void exposesServerRackControlApplyEntryPoint() throws NoSuchMethodException {
+        final Method apply = RackNetworking.class.getDeclaredMethod(
+            "applyServerRackControl",
+            net.minecraft.world.inventory.AbstractContainerMenu.class,
+            ServerRackControlPayload.class);
+
+        assertEquals(boolean.class, apply.getReturnType());
+    }
 }

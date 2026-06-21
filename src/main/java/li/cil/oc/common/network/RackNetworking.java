@@ -24,7 +24,11 @@ public final class RackNetworking {
             .playToServer(
                 RackOpenServerPayload.TYPE,
                 RackOpenServerPayload.STREAM_CODEC,
-                RackNetworking::handleRackOpenServer);
+                RackNetworking::handleRackOpenServer)
+            .playToServer(
+                ServerRackControlPayload.TYPE,
+                ServerRackControlPayload.STREAM_CODEC,
+                RackNetworking::handleServerRackControl);
     }
 
     static boolean applyRackControl(final AbstractContainerMenu containerMenu, final RackControlPayload payload) {
@@ -56,12 +60,23 @@ public final class RackNetworking {
         return true;
     }
 
+    static boolean applyServerRackControl(final AbstractContainerMenu containerMenu, final ServerRackControlPayload payload) {
+        if (!(containerMenu instanceof ServerRackMenu menu) || menu.containerId != payload.containerId()) {
+            return false;
+        }
+        return menu.serverInventory() instanceof ServerRackMountableEnvironment server && server.controlPower(payload.action());
+    }
+
     private static void handleRackControl(final RackControlPayload payload, final IPayloadContext context) {
         applyRackControl(context.player().containerMenu, payload);
     }
 
     private static void handleRackOpenServer(final RackOpenServerPayload payload, final IPayloadContext context) {
         applyRackOpenServer(context.player(), context.player().containerMenu, payload);
+    }
+
+    private static void handleServerRackControl(final ServerRackControlPayload payload, final IPayloadContext context) {
+        applyServerRackControl(context.player().containerMenu, payload);
     }
 
     private RackNetworking() {

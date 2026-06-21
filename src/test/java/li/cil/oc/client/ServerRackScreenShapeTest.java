@@ -1,13 +1,17 @@
 package li.cil.oc.client;
 
 import li.cil.oc.common.menu.ServerRackMenu;
+import li.cil.oc.common.network.RackControlPayload;
+import li.cil.oc.common.network.ServerRackControlPayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Inventory;
 import org.junit.jupiter.api.Test;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -35,6 +39,8 @@ final class ServerRackScreenShapeTest {
         final Method statusLabel = ServerRackScreen.class.getMethod("statusLabel", int.class);
         final Method statusTooltip = ServerRackScreen.class.getMethod("statusTooltip", int.class, int.class);
         final Method slotAt = ServerRackScreen.class.getMethod("serverSlotAt", int.class, int.class, int.class, int.class);
+        final Method controlAt = ServerRackScreen.class.getDeclaredMethod("statusControlAt", int.class, int.class, int.class, int.class);
+        final Method controlPayload = ServerRackScreen.class.getDeclaredMethod("controlPayload", ServerRackMenu.class, int.class);
 
         assertEquals(Component.class, label.getReturnType());
         assertEquals(Component.class, tierLabel.getReturnType());
@@ -42,6 +48,8 @@ final class ServerRackScreenShapeTest {
         assertEquals(Component.class, statusLabel.getReturnType());
         assertEquals(List.class, statusTooltip.getReturnType());
         assertEquals(int.class, slotAt.getReturnType());
+        assertEquals(boolean.class, controlAt.getReturnType());
+        assertEquals(ServerRackControlPayload.class, controlPayload.getReturnType());
     }
 
     @Test
@@ -87,8 +95,36 @@ final class ServerRackScreenShapeTest {
         assertTranslationKey("gui.neoopencomputers.rack.missing.eeprom", tooltip.get(4));
     }
 
+    @Test
+    void serverRackScreenBuildsControlPayloadForMenu() throws ReflectiveOperationException {
+        final ServerRackMenu menu = allocateMenu(11);
+
+        final ServerRackControlPayload payload = ServerRackScreen.controlPayload(menu, RackControlPayload.TOGGLE);
+
+        assertEquals(11, payload.containerId());
+        assertEquals(RackControlPayload.TOGGLE, payload.action());
+    }
+
+    @Test
+    void serverRackScreenMapsMouseToStatusControl() {
+        assertEquals(true, ServerRackScreen.statusControlAt(152, 62, 0, 0));
+        assertEquals(false, ServerRackScreen.statusControlAt(151, 62, 0, 0));
+        assertEquals(false, ServerRackScreen.statusControlAt(164, 62, 0, 0));
+        assertEquals(false, ServerRackScreen.statusControlAt(152, 74, 0, 0));
+    }
+
     private static void assertTranslationKey(final String expected, final Component component) {
         assertTrue(component.getContents() instanceof TranslatableContents);
         assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());
+    }
+
+    private static ServerRackMenu allocateMenu(final int containerId) throws ReflectiveOperationException {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final ServerRackMenu menu = (ServerRackMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(ServerRackMenu.class);
+        final Field containerIdField = net.minecraft.world.inventory.AbstractContainerMenu.class.getDeclaredField("containerId");
+        containerIdField.setAccessible(true);
+        containerIdField.setInt(menu, containerId);
+        return menu;
     }
 }

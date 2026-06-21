@@ -1,10 +1,13 @@
 package li.cil.oc.client;
 
 import li.cil.oc.common.menu.ServerRackMenu;
+import li.cil.oc.common.network.RackControlPayload;
+import li.cil.oc.common.network.ServerRackControlPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +18,9 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     private static final int SERVER_SLOT_SIZE = 16;
     private static final int SERVER_SLOT_STRIDE = 18;
     private static final int SERVER_SLOT_COLUMNS = 9;
+    private static final int STATUS_CONTROL_X = 152;
+    private static final int STATUS_CONTROL_Y = 62;
+    private static final int STATUS_CONTROL_SIZE = 10;
 
     public ServerRackScreen(final ServerRackMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
@@ -36,6 +42,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             }
         }
         guiGraphics.drawString(font, statusLabel(menu.serverState()), left + 8, top + 62, 0xFFD8DEE9, false);
+        drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, top + STATUS_CONTROL_Y, menu.serverState());
     }
 
     @Override
@@ -49,6 +56,15 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         } else if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
             guiGraphics.renderComponentTooltip(font, statusTooltip(menu.serverState(), menu.missingRequirements()), mouseX, mouseY);
         }
+    }
+
+    @Override
+    public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
+        if (button == 0 && statusControlAt((int) mouseX, (int) mouseY, leftPos, topPos)) {
+            PacketDistributor.sendToServer(controlPayload(menu, RackControlPayload.TOGGLE));
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     public static Component slotLabel(final int kind) {
@@ -102,6 +118,16 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         return tooltip;
     }
 
+    static ServerRackControlPayload controlPayload(final ServerRackMenu menu, final int action) {
+        return new ServerRackControlPayload(menu.containerId, action);
+    }
+
+    static boolean statusControlAt(final int mouseX, final int mouseY, final int left, final int top) {
+        final int x = mouseX - left;
+        final int y = mouseY - top;
+        return x >= STATUS_CONTROL_X && x < STATUS_CONTROL_X + STATUS_CONTROL_SIZE && y >= STATUS_CONTROL_Y && y < STATUS_CONTROL_Y + STATUS_CONTROL_SIZE;
+    }
+
     public static int serverSlotAt(final int mouseX, final int mouseY, final int left, final int top) {
         final int x = mouseX - left - SERVER_SLOT_LEFT;
         final int y = mouseY - top - SERVER_SLOT_TOP;
@@ -120,6 +146,14 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top, final int kind) {
         guiGraphics.fill(left - 1, top - 1, left + 17, top + 17, 0xFF1F232B);
         guiGraphics.fill(left, top, left + 16, top + 16, kind == ServerRackMenu.SLOT_KIND_NONE ? 0xFF2E3440 : 0xFF4C566A);
+    }
+
+    private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state) {
+        final int color = state == ServerRackMenu.STATE_RUNNING ? 0xFF88C0D0 : state == ServerRackMenu.STATE_READY ? 0xFFA3BE8C : 0xFFD08770;
+        guiGraphics.fill(left, top, left + STATUS_CONTROL_SIZE, top + STATUS_CONTROL_SIZE, 0xFF1F232B);
+        guiGraphics.fill(left + 3, top + 2, left + 5, top + 8, color);
+        guiGraphics.fill(left + 5, top + 3, left + 7, top + 7, color);
+        guiGraphics.fill(left + 7, top + 4, left + 8, top + 6, color);
     }
 
     private static String slotAbbreviation(final int kind) {
