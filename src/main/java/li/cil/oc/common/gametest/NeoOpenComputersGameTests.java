@@ -109,12 +109,15 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.IFluidTank;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -667,6 +670,42 @@ public final class NeoOpenComputersGameTests {
             environment.update();
             helper.assertFalse(reachableComponent(environment.node(), "inventory"), "MFU kept remote target linked without energy");
         });
+    }
+
+    @GameTest(template = "empty")
+    public static void mfuRefreshesRemoteTargetOnNeighborNotify(final GameTestHelper helper) {
+        final BlockPos adapterPos = new BlockPos(0, 1, 0);
+        final BlockPos targetPos = new BlockPos(2, 1, 0);
+        helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
+
+        final ItemStack stack = new ItemStack(ModItems.MFU.get());
+        final DriverItem driver = Driver.driverFor(stack, AdapterBlockEntity.class);
+        helper.assertTrue(driver != null, "No MFU driver for adapter host");
+        final BlockPos absoluteTarget = helper.absolutePos(targetPos);
+        driver.dataTag(stack).putIntArray("oc:coord", new int[]{
+            absoluteTarget.getX(),
+            absoluteTarget.getY(),
+            absoluteTarget.getZ(),
+            0,
+            Direction.NORTH.ordinal()
+        });
+
+        final AdapterBlockEntity adapter = new AdapterBlockEntity(helper.absolutePos(adapterPos), ModBlocks.ADAPTER.get().defaultBlockState());
+        adapter.setLevel(helper.getLevel());
+        final ManagedEnvironment environment = driver.createEnvironment(stack, adapter);
+        helper.assertTrue(environment != null, "MFU did not create remote adapter environment");
+        Network.joinNewNetwork(environment.node());
+        helper.assertTrue(reachableComponent(environment.node(), "inventory"), "MFU did not link initial remote inventory component");
+
+        helper.setBlock(targetPos, Blocks.AIR.defaultBlockState());
+        NeoForge.EVENT_BUS.post(new BlockEvent.NeighborNotifyEvent(
+            helper.getLevel(),
+            absoluteTarget,
+            Blocks.AIR.defaultBlockState(),
+            EnumSet.allOf(Direction.class),
+            false));
+        helper.assertFalse(reachableComponent(environment.node(), "inventory"), "MFU ignored target block change event");
+        helper.succeed();
     }
 
     @GameTest(template = "empty")

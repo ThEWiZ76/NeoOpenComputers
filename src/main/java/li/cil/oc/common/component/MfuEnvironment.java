@@ -16,10 +16,15 @@ import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 public final class MfuEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     public static final int LEGACY_TARGET_TAG_LENGTH = 4;
@@ -30,6 +35,7 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
     private static final String BLOCK_TAG = "oc:adapter.block";
     private static final String NAME_TAG = "name";
     private static final String DATA_TAG = "data";
+    private static final Set<MfuEnvironment> ACTIVE = Collections.newSetFromMap(new WeakHashMap<>());
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Bus,
         DeviceInfo.DeviceAttribute.Description, "Remote Adapter",
@@ -50,6 +56,9 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         this.host = host;
         this.target = target;
         this.side = side == null ? Direction.NORTH : side;
+        synchronized (ACTIVE) {
+            ACTIVE.add(this);
+        }
         final var builder = Network.newNode(this, Visibility.None);
         if (builder != null) {
             setNode(builder.withConnector().create());
@@ -67,6 +76,20 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
 
     public Direction side() {
         return side;
+    }
+
+    public static void refreshTargetChanged(final LevelAccessor level, final BlockPos pos) {
+        if (!(level instanceof final Level world) || world.isClientSide()) {
+            return;
+        }
+
+        final List<MfuEnvironment> environments;
+        synchronized (ACTIVE) {
+            environments = List.copyOf(ACTIVE);
+        }
+        for (final MfuEnvironment environment : environments) {
+            environment.refreshIfTargetChanged(world, pos);
+        }
     }
 
     @Override
@@ -103,6 +126,9 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         } else if (targetNode != null && node == targetNode) {
             targetNode = null;
         } else if (node == node()) {
+            synchronized (ACTIVE) {
+                ACTIVE.remove(this);
+            }
             removeTargetEnvironment();
             disconnectTargetNode();
         }
@@ -131,6 +157,12 @@ public final class MfuEnvironment extends AbstractManagedEnvironment implements 
         tag.putIntArray(TARGET_TAG, new int[]{target.getX(), target.getY(), target.getZ()});
         tag.putInt(SIDE_TAG, side.ordinal());
         saveTargetEnvironment(tag);
+    }
+
+    private void refreshIfTargetChanged(final Level world, final BlockPos pos) {
+        if (host != null && host.world() == world && target.equals(pos)) {
+            refreshTargetEnvironment();
+        }
     }
 
     private void refreshTargetEnvironment() {

@@ -13,6 +13,7 @@ import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.ModRecipeSerializers;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.component.MfuTargetEvents;
 import li.cil.oc.common.machine.ProgramLocationImc;
 import li.cil.oc.common.network.RackNetworking;
 import li.cil.oc.common.network.TerminalNetworking;
@@ -41,6 +42,7 @@ public final class NeoOpenComputers {
         ModRecipeSerializers.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
+        MfuTargetEvents.register();
         modEventBus.addListener(RackNetworking::register);
         modEventBus.addListener(TerminalNetworking::register);
         modEventBus.addListener(this::onCommonSetup);
