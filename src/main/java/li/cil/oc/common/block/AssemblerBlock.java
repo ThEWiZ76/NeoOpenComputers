@@ -85,8 +85,12 @@ public class AssemblerBlock extends HorizontalDirectionalBlock implements Entity
         if (level.isClientSide) {
             return InteractionResult.SUCCESS;
         }
-        if (level.getBlockEntity(pos) instanceof AssemblerBlockEntity assembler && assembler.canAssemble()) {
-            return assembler.start(true) ? InteractionResult.CONSUME : InteractionResult.PASS;
+        if (level.getBlockEntity(pos) instanceof AssemblerBlockEntity assembler) {
+            if (player.isShiftKeyDown() && assembler.canAssemble()) {
+                return assembler.start(true) ? InteractionResult.CONSUME : InteractionResult.PASS;
+            }
+            player.openMenu(assembler);
+            return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
     }

@@ -12,6 +12,7 @@ public final class ModContentIds {
     public static final String ARROW_KEYS = "arrow_keys";
     public static final String ASSEMBLER = "assembler";
     public static final String ASSEMBLER_BLOCK_ENTITY = "assembler";
+    public static final String ASSEMBLER_MENU = "assembler";
     public static final String BATTERY_UPGRADE_TIER1 = "battery_upgrade_tier1";
     public static final String BATTERY_UPGRADE_TIER2 = "battery_upgrade_tier2";
     public static final String BATTERY_UPGRADE_TIER3 = "battery_upgrade_tier3";

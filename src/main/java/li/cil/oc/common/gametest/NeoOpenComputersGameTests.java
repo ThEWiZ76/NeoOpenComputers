@@ -50,6 +50,7 @@ import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
+import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
@@ -911,6 +912,62 @@ public final class NeoOpenComputersGameTests {
 
             helper.assertTrue(!assembler.isAssembling(), "Assembler did not finish after required energy");
             helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).is(Items.EMERALD), "Assembler did not install pending output");
+            helper.succeed();
+        }
+    }
+
+    @GameTest(template = "empty")
+    public static void assemblerMenuReportsAssemblyState(final GameTestHelper helper) {
+        try (AssemblerTemplates.Registration ignored = AssemblerTemplates.register(new AssemblerTemplate() {
+            @Override
+            public String name() {
+                return "menu_status_test";
+            }
+
+            @Override
+            public boolean matches(final ItemStack stack) {
+                return stack.is(Items.DIAMOND);
+            }
+
+            @Override
+            public boolean validate(final AssemblerBlockEntity assembler) {
+                return true;
+            }
+
+            @Override
+            public boolean canPlaceItem(final AssemblerBlockEntity assembler, final int slot, final ItemStack stack) {
+                return slot == AssemblerBlockEntity.SLOT_TEMPLATE && matches(stack);
+            }
+
+            @Override
+            public ItemStack assemble(final AssemblerBlockEntity assembler) {
+                return new ItemStack(Items.EMERALD);
+            }
+
+            @Override
+            public double energyRequired(final AssemblerBlockEntity assembler) {
+                return 4D;
+            }
+        })) {
+            final BlockPos pos = new BlockPos(1, 1, 1);
+            helper.setBlock(pos, ModBlocks.ASSEMBLER.get());
+            final AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
+
+            helper.assertTrue(AssemblerMenu.stateFor(assembler) == AssemblerMenu.STATE_IDLE, "Empty assembler did not report idle state");
+            helper.assertTrue(AssemblerMenu.progressFor(assembler) == 0, "Idle assembler reported progress");
+
+            assembler.setItem(AssemblerBlockEntity.SLOT_TEMPLATE, new ItemStack(Items.DIAMOND));
+            helper.assertTrue(AssemblerMenu.stateFor(assembler) == AssemblerMenu.STATE_READY, "Ready assembler did not report ready state");
+
+            helper.assertTrue(assembler.start(false), "Assembler did not start menu status recipe");
+            helper.assertTrue(AssemblerMenu.stateFor(assembler) == AssemblerMenu.STATE_BUSY, "Started assembler did not report busy state");
+
+            final ComponentConnector connector = (ComponentConnector) assembler.node();
+            connector.changeBuffer(2D);
+            AssemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), assembler);
+
+            final int progress = AssemblerMenu.progressFor(assembler);
+            helper.assertTrue(progress > 0 && progress < 100, "Busy assembler did not report partial progress");
             helper.succeed();
         }
     }

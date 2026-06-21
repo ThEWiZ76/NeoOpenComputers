@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
@@ -21,6 +22,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<ComputerCaseMenu>> COMPUTER_CASE = MENUS.register(
         ModContentIds.COMPUTER_CASE_MENU,
         () -> new MenuType<>(ComputerCaseMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<AssemblerMenu>> ASSEMBLER = MENUS.register(
+        ModContentIds.ASSEMBLER_MENU,
+        () -> new MenuType<>(AssemblerMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static final DeferredHolder<MenuType<?>, MenuType<DiskDriveMenu>> DISK_DRIVE = MENUS.register(
         ModContentIds.DISK_DRIVE_MENU,

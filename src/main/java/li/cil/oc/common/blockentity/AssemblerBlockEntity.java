@@ -13,6 +13,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplates;
@@ -21,9 +22,13 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -31,7 +36,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Map;
 
-public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo {
+public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo, MenuProvider {
     public static final int SLOT_TEMPLATE = 0;
     public static final int SLOT_CONTAINER_START = 1;
     public static final int CONTAINER_SLOT_COUNT = 3;
@@ -269,6 +274,16 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     @Override
     public boolean stillValid(final Player player) {
         return !isRemoved();
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.assembler");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new AssemblerMenu(containerId, playerInventory, this);
     }
 
     @Override

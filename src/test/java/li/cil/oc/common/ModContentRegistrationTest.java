@@ -38,6 +38,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void assemblerMenuIdIsStable() {
+        assertEquals("assembler", ModContentIds.ASSEMBLER_MENU);
+    }
+
+    @Test
     void materialItemIdsAreStable() {
         Map<String, String> ids = Map.ofEntries(
             Map.entry("cutting_wire", ModContentIds.CUTTING_WIRE),
