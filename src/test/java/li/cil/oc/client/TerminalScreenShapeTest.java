@@ -44,10 +44,16 @@ final class TerminalScreenShapeTest {
         final Method hasVisibleText = TerminalScreen.class.getDeclaredMethod("hasVisibleText", TerminalScreenSnapshot.class);
         final Method statusLabel = TerminalScreen.class.getDeclaredMethod("statusLabel", TerminalScreenSnapshot.class);
         final Method acceptsInput = TerminalScreen.class.getDeclaredMethod("acceptsInput", TerminalScreenSnapshot.class);
+        final Method imageWidth = TerminalScreen.class.getDeclaredMethod("imageWidth", TerminalScreenSnapshot.class);
+        final Method imageHeight = TerminalScreen.class.getDeclaredMethod("imageHeight", TerminalScreenSnapshot.class);
+        final Method visibleRows = TerminalScreen.class.getDeclaredMethod("visibleRows", TerminalScreenSnapshot.class);
 
         assertEquals(boolean.class, hasVisibleText.getReturnType());
         assertEquals(Component.class, statusLabel.getReturnType());
         assertEquals(boolean.class, acceptsInput.getReturnType());
+        assertEquals(int.class, imageWidth.getReturnType());
+        assertEquals(int.class, imageHeight.getReturnType());
+        assertEquals(int.class, visibleRows.getReturnType());
     }
 
     @Test
@@ -69,6 +75,23 @@ final class TerminalScreenShapeTest {
         assertEquals(false, TerminalScreen.acceptsInput(null));
         assertEquals(false, TerminalScreen.acceptsInput(new TerminalScreenSnapshot(0, 0, new String[0])));
         assertEquals(true, TerminalScreen.acceptsInput(new TerminalScreenSnapshot(4, 2, new String[]{"", ""})));
+    }
+
+    @Test
+    void terminalScreenSizesPanelForSnapshotDimensions() {
+        final TerminalScreenSnapshot missing = new TerminalScreenSnapshot(0, 0, new String[0]);
+        final TerminalScreenSnapshot terminalServerDefault = new TerminalScreenSnapshot(80, 25, new String[25]);
+
+        assertEquals(248, TerminalScreen.imageWidth(missing));
+        assertEquals(166, TerminalScreen.imageHeight(missing));
+        assertEquals(504, TerminalScreen.imageWidth(terminalServerDefault));
+        assertEquals(259, TerminalScreen.imageHeight(terminalServerDefault));
+    }
+
+    @Test
+    void terminalScreenRendersAllSnapshotRowsThatFitAdaptivePanel() {
+        assertEquals(0, TerminalScreen.visibleRows(new TerminalScreenSnapshot(0, 0, new String[0])));
+        assertEquals(25, TerminalScreen.visibleRows(new TerminalScreenSnapshot(80, 25, new String[25])));
     }
 
     @Test

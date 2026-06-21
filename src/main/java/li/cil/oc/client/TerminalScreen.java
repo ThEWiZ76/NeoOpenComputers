@@ -13,16 +13,20 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
+    private static final int DEFAULT_IMAGE_WIDTH = 248;
+    private static final int DEFAULT_IMAGE_HEIGHT = 166;
     private static final int LINE_HEIGHT = 9;
     private static final int CELL_WIDTH = 6;
     private static final int TEXT_LEFT = 12;
     private static final int TEXT_TOP = 22;
+    private static final int TEXT_RIGHT_MARGIN = 12;
+    private static final int TEXT_BOTTOM_MARGIN = 12;
     private static final int TEXT_COLOR = 0xFFB8F4C8;
 
     public TerminalScreen(final TerminalMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
-        imageWidth = 248;
-        imageHeight = 166;
+        imageWidth = imageWidth(menu.snapshot());
+        imageHeight = imageHeight(menu.snapshot());
         titleLabelX = 8;
         titleLabelY = 6;
         inventoryLabelY = 1000;
@@ -30,6 +34,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     @Override
     protected void renderBg(final GuiGraphics guiGraphics, final float partialTick, final int mouseX, final int mouseY) {
+        updateLayoutForSnapshot();
         final int left = leftPos;
         final int top = topPos;
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF101820);
@@ -39,7 +44,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             guiGraphics.drawString(font, status, left + TEXT_LEFT, top + TEXT_TOP, 0xFF6F7F8F, false);
             return;
         }
-        for (int row = 0; row < Math.min(menu.snapshot().height(), 15); row++) {
+        for (int row = 0; row < visibleRows(menu.snapshot()); row++) {
             final String line = snapshotLine(menu.snapshot(), row);
             if (!line.isBlank()) {
                 guiGraphics.drawString(font, line, left + TEXT_LEFT, top + TEXT_TOP + row * LINE_HEIGHT, TEXT_COLOR, false);
@@ -134,6 +139,27 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         return snapshot != null && snapshot.width() > 0 && snapshot.height() > 0;
     }
 
+    static int imageWidth(final TerminalScreenSnapshot snapshot) {
+        if (!acceptsInput(snapshot)) {
+            return DEFAULT_IMAGE_WIDTH;
+        }
+        return Math.max(DEFAULT_IMAGE_WIDTH, TEXT_LEFT + snapshot.width() * CELL_WIDTH + TEXT_RIGHT_MARGIN);
+    }
+
+    static int imageHeight(final TerminalScreenSnapshot snapshot) {
+        if (!acceptsInput(snapshot)) {
+            return DEFAULT_IMAGE_HEIGHT;
+        }
+        return Math.max(DEFAULT_IMAGE_HEIGHT, TEXT_TOP + snapshot.height() * LINE_HEIGHT + TEXT_BOTTOM_MARGIN);
+    }
+
+    static int visibleRows(final TerminalScreenSnapshot snapshot) {
+        if (!acceptsInput(snapshot)) {
+            return 0;
+        }
+        return Math.min(snapshot.height(), Math.max(0, (imageHeight(snapshot) - TEXT_TOP - TEXT_BOTTOM_MARGIN) / LINE_HEIGHT));
+    }
+
     static TerminalKeyPayload keyPayload(final TerminalMenu menu, final boolean pressed, final char character, final int keyCode) {
         return new TerminalKeyPayload(menu.containerId, pressed, character, keyCode);
     }
@@ -175,6 +201,17 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, leftPos, topPos, menu.snapshot());
         if (payload != null) {
             PacketDistributor.sendToServer(payload);
+        }
+    }
+
+    private void updateLayoutForSnapshot() {
+        final int nextImageWidth = imageWidth(menu.snapshot());
+        final int nextImageHeight = imageHeight(menu.snapshot());
+        if (imageWidth != nextImageWidth || imageHeight != nextImageHeight) {
+            imageWidth = nextImageWidth;
+            imageHeight = nextImageHeight;
+            leftPos = (width - imageWidth) / 2;
+            topPos = (height - imageHeight) / 2;
         }
     }
 }
