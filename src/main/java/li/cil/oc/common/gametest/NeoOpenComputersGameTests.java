@@ -86,6 +86,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
@@ -358,6 +362,26 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment instanceof LinkedCardEnvironment, "Linked card did not create linked environment");
         final LinkedCardEnvironment linked = (LinkedCardEnvironment) environment;
         helper.assertTrue("pair".equals(linked.linkedChannel()), "Linked card environment did not use persisted tunnel");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
+        final CraftingInput input = CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),
+            new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), new ItemStack(ModItems.INTERWEB.get()), new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()),
+            new ItemStack(ModItems.MICROCHIP_TIER3.get()), ItemStack.EMPTY, new ItemStack(ModItems.MICROCHIP_TIER3.get())
+        ));
+        final Optional<RecipeHolder<CraftingRecipe>> recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
+
+        helper.assertTrue(recipe.isPresent(), "No linked card recipe matched");
+        final ItemStack result = recipe.get().value().assemble(input, helper.getLevel().registryAccess());
+        helper.assertTrue(result.is(ModItems.LINKED_CARD.get()), "Linked card recipe returned wrong item");
+        helper.assertTrue(result.getCount() == 2, "Linked card recipe should craft paired cards");
+        final DriverItem driver = Driver.driverFor(result);
+        helper.assertTrue(driver != null, "No driver for linked card result");
+        final String tunnel = driver.dataTag(result).getString(LinkedCardItem.TUNNEL_TAG);
+        helper.assertTrue(!tunnel.isBlank(), "Linked card recipe did not assign a tunnel");
         helper.succeed();
     }
 

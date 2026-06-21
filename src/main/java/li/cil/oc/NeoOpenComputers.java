@@ -10,6 +10,7 @@ import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModMenus;
+import li.cil.oc.common.ModRecipeSerializers;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.machine.ProgramLocationImc;
 import li.cil.oc.common.network.RackNetworking;
@@ -35,6 +36,7 @@ public final class NeoOpenComputers {
         ModBlockEntities.register(modEventBus);
         ModItems.register(modEventBus);
         ModMenus.register(modEventBus);
+        ModRecipeSerializers.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
         modEventBus.addListener(RackNetworking::register);
         modEventBus.addListener(TerminalNetworking::register);
