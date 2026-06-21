@@ -1119,6 +1119,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tractorBeamUpgradeSucksNearbyItemStack(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for tractor beam upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        host.setSelectedSlot(3);
+        final ItemEntity drop = new ItemEntity(
+            helper.getLevel(),
+            host.xPosition() + 0.5D,
+            host.yPosition() + 0.5D,
+            host.zPosition() + 0.5D,
+            new ItemStack(Items.DIAMOND, 2));
+        helper.getLevel().addFreshEntity(drop);
+
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Tractor beam upgrade did not create tractor beam environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Tractor beam node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("tractor_beam".equals(component.name()), "Tractor beam component name mismatch");
+
+        final Object[] suck = component.invoke("suck", null);
+        helper.assertTrue(Boolean.TRUE.equals(suck[0]), "Tractor beam did not suck nearby item");
+        helper.assertTrue(host.mainInventory().getItem(3).is(Items.DIAMOND) && host.mainInventory().getItem(3).getCount() == 2, "Tractor beam did not insert item stack into selected slot");
+        helper.assertTrue(drop.isRemoved() || drop.getItem().isEmpty(), "Tractor beam left sucked item in world");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void experienceUpgradeConsumesExperienceBottle(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for experience upgrade");
