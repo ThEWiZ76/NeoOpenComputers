@@ -161,7 +161,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static TerminalKeyPayload keyPayload(final TerminalMenu menu, final boolean pressed, final char character, final int keyCode) {
-        return new TerminalKeyPayload(menu.containerId, pressed, character, keyCode);
+        return new TerminalKeyPayload(menu.containerId, pressed, character, openComputersKeyCode(keyCode));
     }
 
     static TerminalClipboardPayload clipboardPayload(final TerminalMenu menu, final String value) {
@@ -213,5 +213,35 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             leftPos = (width - imageWidth) / 2;
             topPos = (height - imageHeight) / 2;
         }
+    }
+
+    static int openComputersKeyCode(final int keyCode) {
+        return switch (keyCode) {
+            case GLFW.GLFW_KEY_ENTER -> 0x1C;
+            case GLFW.GLFW_KEY_KP_ENTER -> 0x9C;
+            case GLFW.GLFW_KEY_BACKSPACE -> 0x0E;
+            case GLFW.GLFW_KEY_TAB -> 0x0F;
+            case GLFW.GLFW_KEY_DELETE -> 0xD3;
+            case GLFW.GLFW_KEY_DOWN -> 0xD0;
+            case GLFW.GLFW_KEY_LEFT -> 0xCB;
+            case GLFW.GLFW_KEY_RIGHT -> 0xCD;
+            case GLFW.GLFW_KEY_UP -> 0xC8;
+            case GLFW.GLFW_KEY_HOME -> 0xC7;
+            case GLFW.GLFW_KEY_END -> 0xCF;
+            case GLFW.GLFW_KEY_PAGE_DOWN -> 0xD1;
+            case GLFW.GLFW_KEY_PAGE_UP -> 0xC9;
+            case GLFW.GLFW_KEY_LEFT_CONTROL -> 0x1D;
+            case GLFW.GLFW_KEY_RIGHT_CONTROL -> 0x9D;
+            case GLFW.GLFW_KEY_LEFT_ALT -> 0x38;
+            case GLFW.GLFW_KEY_RIGHT_ALT -> 0xB8;
+            case GLFW.GLFW_KEY_LEFT_SHIFT -> 0x2A;
+            case GLFW.GLFW_KEY_RIGHT_SHIFT -> 0x36;
+            case GLFW.GLFW_KEY_SPACE -> 0x39;
+            case GLFW.GLFW_KEY_C -> 0x2E;
+            case GLFW.GLFW_KEY_D -> 0x20;
+            case GLFW.GLFW_KEY_Q -> 0x10;
+            case GLFW.GLFW_KEY_W -> 0x11;
+            default -> keyCode;
+        };
     }
 }

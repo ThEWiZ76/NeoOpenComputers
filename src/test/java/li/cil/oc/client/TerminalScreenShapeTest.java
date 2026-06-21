@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Inventory;
+import org.lwjgl.glfw.GLFW;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
@@ -104,6 +105,15 @@ final class TerminalScreenShapeTest {
         assertEquals(true, payload.pressed());
         assertEquals((int) 'x', payload.character());
         assertEquals(45, payload.keyCode());
+    }
+
+    @Test
+    void terminalScreenMapsGlfwEnterToOpenComputersKeyCode() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+
+        final TerminalKeyPayload payload = TerminalScreen.keyPayload(menu, true, (char) 0, GLFW.GLFW_KEY_ENTER);
+
+        assertEquals(0x1C, payload.keyCode());
     }
 
     @Test
