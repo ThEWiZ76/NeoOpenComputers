@@ -62,6 +62,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_TANK_CONTROLLER_UPGRADE = "tankControllerUpgrade";
     public static final String COMPAT_TANK_UPGRADE = "tankUpgrade";
     public static final String COMPAT_TRADING_UPGRADE = "tradingUpgrade";
+    public static final String COMPAT_TRACTOR_BEAM_UPGRADE = "tractorBeamUpgrade";
     public static final String COMPAT_UPGRADE_CONTAINER_TIER1 = "upgradecontainer1";
     public static final String COMPAT_UPGRADE_CONTAINER_TIER2 = "upgradecontainer2";
     public static final String COMPAT_UPGRADE_CONTAINER_TIER3 = "upgradecontainer3";
@@ -175,6 +176,7 @@ public final class ModContentCatalog {
                 ModItems.STICKY_PISTON_UPGRADE.get(),
                 ModItems.SIGN_UPGRADE.get(),
                 ModItems.TRADING_UPGRADE.get(),
+                ModItems.TRACTOR_BEAM_UPGRADE.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER1.get(),
                 ModItems.WIRELESS_NETWORK_CARD_TIER2.get(),
                 ModItems.REDSTONE_CARD.get(),
@@ -364,6 +366,7 @@ public final class ModContentCatalog {
         final Item stickyPistonUpgradeItem,
         final Item signUpgradeItem,
         final Item tradingUpgradeItem,
+        final Item tractorBeamUpgradeItem,
         final Item wirelessNetworkCardTier1Item,
         final Item wirelessNetworkCardTier2Item,
         final Item redstoneCardItem,
@@ -445,6 +448,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.STICKY_PISTON_UPGRADE, null, stickyPistonUpgradeItem);
         registry.register(ModContentIds.SIGN_UPGRADE, null, signUpgradeItem);
         registry.register(ModContentIds.TRADING_UPGRADE, null, tradingUpgradeItem);
+        registry.register(ModContentIds.TRACTOR_BEAM_UPGRADE, null, tractorBeamUpgradeItem);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(ModContentIds.WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(ModContentIds.REDSTONE_CARD, null, redstoneCardItem);
@@ -498,6 +502,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_STICKY_PISTON_UPGRADE, null, stickyPistonUpgradeItem);
         registry.register(COMPAT_SIGN_UPGRADE, null, signUpgradeItem);
         registry.register(COMPAT_TRADING_UPGRADE, null, tradingUpgradeItem);
+        registry.register(COMPAT_TRACTOR_BEAM_UPGRADE, null, tractorBeamUpgradeItem);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD, null, wirelessNetworkCardTier2Item);

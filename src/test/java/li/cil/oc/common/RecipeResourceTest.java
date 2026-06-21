@@ -88,6 +88,7 @@ final class RecipeResourceTest {
             ModContentIds.STICKY_PISTON_UPGRADE,
             ModContentIds.SIGN_UPGRADE,
             ModContentIds.TRADING_UPGRADE,
+            ModContentIds.TRACTOR_BEAM_UPGRADE,
             ModContentIds.KEYBOARD,
             ModContentIds.LINKED_CARD,
             ModContentIds.MANUAL,
@@ -606,6 +607,8 @@ final class RecipeResourceTest {
         JsonObject sign = signRecipe.getAsJsonObject("key");
         JsonObject tradingRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.TRADING_UPGRADE + ".json"));
         JsonObject trading = tradingRecipe.getAsJsonObject("key");
+        JsonObject tractorBeamRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.TRACTOR_BEAM_UPGRADE + ".json"));
+        JsonObject tractorBeam = tractorBeamRecipe.getAsJsonObject("key");
         JsonObject solarRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.SOLAR_GENERATOR_UPGRADE + ".json"));
         JsonObject solar = solarRecipe.getAsJsonObject("key");
         JsonObject hover1 = recipeKeys(ModContentIds.HOVER_UPGRADE_TIER1);
@@ -657,6 +660,13 @@ final class RecipeResourceTest {
         assertItem(trading, "D", "minecraft:dropper");
         assertItem(trading, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(trading, "P", "minecraft:piston");
+
+        assertPattern(tractorBeamRecipe, "GPG", "ICI", "GHG");
+        assertTag(tractorBeam, "G", "c:ingots/gold");
+        assertItem(tractorBeam, "P", "minecraft:piston");
+        assertTag(tractorBeam, "I", "c:ingots/iron");
+        assertItem(tractorBeam, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
+        assertItem(tractorBeam, "H", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
 
         assertPattern(solarRecipe, "GGG", "CUC");
         assertItem(solar, "G", "minecraft:glass");

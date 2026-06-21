@@ -107,6 +107,7 @@ final class ModContentCatalogTest {
             null,
             null,
             null,
+            null,
             null, null, null,
             null,
             null,
@@ -174,6 +175,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.STICKY_PISTON_UPGRADE));
         assertNotNull(registry.get(ModContentIds.SIGN_UPGRADE));
         assertNotNull(registry.get(ModContentIds.TRADING_UPGRADE));
+        assertNotNull(registry.get(ModContentIds.TRACTOR_BEAM_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3));
@@ -228,6 +230,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_STICKY_PISTON_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_SIGN_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TRADING_UPGRADE));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_TRACTOR_BEAM_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TANK_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TANK_CONTROLLER_UPGRADE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_INTERNET_CARD));
@@ -308,6 +311,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.STICKY_PISTON_UPGRADE, registry.get(ModContentIds.STICKY_PISTON_UPGRADE).name());
         assertEquals(ModContentIds.SIGN_UPGRADE, registry.get(ModContentIds.SIGN_UPGRADE).name());
         assertEquals(ModContentIds.TRADING_UPGRADE, registry.get(ModContentIds.TRADING_UPGRADE).name());
+        assertEquals(ModContentIds.TRACTOR_BEAM_UPGRADE, registry.get(ModContentIds.TRACTOR_BEAM_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER1, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3, registry.get(ModContentCatalog.COMPAT_DATABASE_UPGRADE_TIER3).name());
@@ -362,6 +366,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_STICKY_PISTON_UPGRADE, registry.get(ModContentCatalog.COMPAT_STICKY_PISTON_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_SIGN_UPGRADE, registry.get(ModContentCatalog.COMPAT_SIGN_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_TRADING_UPGRADE, registry.get(ModContentCatalog.COMPAT_TRADING_UPGRADE).name());
+        assertEquals(ModContentCatalog.COMPAT_TRACTOR_BEAM_UPGRADE, registry.get(ModContentCatalog.COMPAT_TRACTOR_BEAM_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_TANK_UPGRADE, registry.get(ModContentCatalog.COMPAT_TANK_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_TANK_CONTROLLER_UPGRADE, registry.get(ModContentCatalog.COMPAT_TANK_CONTROLLER_UPGRADE).name());
         assertEquals(ModContentCatalog.COMPAT_INTERNET_CARD, registry.get(ModContentCatalog.COMPAT_INTERNET_CARD).name());

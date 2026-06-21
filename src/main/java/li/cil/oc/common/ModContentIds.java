@@ -100,6 +100,7 @@ public final class ModContentIds {
     public static final String TANK_UPGRADE = "tank_upgrade";
     public static final String TRANSISTOR = "transistor";
     public static final String TRADING_UPGRADE = "trading_upgrade";
+    public static final String TRACTOR_BEAM_UPGRADE = "tractor_beam_upgrade";
     public static final String CUTTING_WIRE = "cutting_wire";
     public static final String WIRELESS_NETWORK_CARD_TIER1 = "wireless_network_card_tier1";
     public static final String WIRELESS_NETWORK_CARD_TIER2 = "wireless_network_card_tier2";

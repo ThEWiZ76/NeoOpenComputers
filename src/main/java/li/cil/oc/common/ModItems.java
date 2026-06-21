@@ -32,6 +32,7 @@ import li.cil.oc.common.item.TankUpgradeItem;
 import li.cil.oc.common.item.TabletCaseItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TradingUpgradeItem;
+import li.cil.oc.common.item.TractorBeamUpgradeItem;
 import li.cil.oc.common.item.UpgradeContainerItem;
 import li.cil.oc.common.item.WirelessNetworkCardItem;
 import net.minecraft.world.item.BlockItem;
@@ -294,6 +295,10 @@ public final class ModItems {
     public static final DeferredItem<TradingUpgradeItem> TRADING_UPGRADE = ITEMS.register(
         ModContentIds.TRADING_UPGRADE,
         () -> new TradingUpgradeItem(new Item.Properties()));
+
+    public static final DeferredItem<TractorBeamUpgradeItem> TRACTOR_BEAM_UPGRADE = ITEMS.register(
+        ModContentIds.TRACTOR_BEAM_UPGRADE,
+        () -> new TractorBeamUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<WirelessNetworkCardItem> WIRELESS_NETWORK_CARD_TIER1 = ITEMS.register(
         ModContentIds.WIRELESS_NETWORK_CARD_TIER1,
