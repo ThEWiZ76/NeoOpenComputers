@@ -75,6 +75,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         return switch (state) {
             case RackMenu.STATE_READY -> 0xFFA3BE8C;
             case RackMenu.STATE_RUNNING -> 0xFF88C0D0;
+            case RackMenu.STATE_INCOMPLETE -> 0xFFD08770;
             default -> 0xFF4C566A;
         };
     }
@@ -83,6 +84,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         return switch (state) {
             case RackMenu.STATE_READY -> Component.translatable("gui.neoopencomputers.rack.state.ready");
             case RackMenu.STATE_RUNNING -> Component.translatable("gui.neoopencomputers.rack.state.running");
+            case RackMenu.STATE_INCOMPLETE -> Component.translatable("gui.neoopencomputers.rack.state.incomplete");
             default -> Component.translatable("gui.neoopencomputers.rack.state.empty");
         };
     }

@@ -50,6 +50,7 @@ import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
+import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.template.AssemblerTemplate;
@@ -1750,6 +1751,20 @@ public final class NeoOpenComputersGameTests {
             RackBlockEntity.serverTick(helper.getLevel(), rackPos, helper.getBlockState(rackPos), rack);
             helper.assertTrue(rackServer.machine().isRunning(), "Rack server stopped while ticking: " + rackServer.machine().lastError());
         });
+    }
+
+    @GameTest(template = "empty")
+    public static void rackMenuDistinguishesEmptyAndIncompleteServerStates(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+
+        helper.assertTrue(RackMenu.rackStateFor(rack, 0) == RackMenu.STATE_EMPTY, "Empty rack slot reported non-empty state");
+
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+
+        helper.assertTrue(RackMenu.rackStateFor(rack, 0) == RackMenu.STATE_INCOMPLETE, "Incomplete server looked like an empty slot");
+        helper.succeed();
     }
 
     @GameTest(template = "empty")

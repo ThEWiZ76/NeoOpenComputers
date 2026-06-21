@@ -125,6 +125,7 @@
   "mod.neoopencomputers": "NeoOpenComputers",
   "gui.neoopencomputers.rack.control": "Server power",
   "gui.neoopencomputers.rack.state.empty": "No server installed",
+  "gui.neoopencomputers.rack.state.incomplete": "Incomplete server",
   "gui.neoopencomputers.rack.state.ready": "Ready",
   "gui.neoopencomputers.rack.state.running": "Running"
 }

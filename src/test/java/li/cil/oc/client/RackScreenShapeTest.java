@@ -45,6 +45,7 @@ final class RackScreenShapeTest {
         assertEquals(0xFF4C566A, RackScreen.controlColor(RackMenu.STATE_EMPTY));
         assertEquals(0xFFA3BE8C, RackScreen.controlColor(RackMenu.STATE_READY));
         assertEquals(0xFF88C0D0, RackScreen.controlColor(RackMenu.STATE_RUNNING));
+        assertEquals(0xFFD08770, RackScreen.controlColor(RackMenu.STATE_INCOMPLETE));
     }
 
     @Test
@@ -52,6 +53,7 @@ final class RackScreenShapeTest {
         assertTranslationKey("gui.neoopencomputers.rack.state.empty", RackScreen.stateLabel(RackMenu.STATE_EMPTY));
         assertTranslationKey("gui.neoopencomputers.rack.state.ready", RackScreen.stateLabel(RackMenu.STATE_READY));
         assertTranslationKey("gui.neoopencomputers.rack.state.running", RackScreen.stateLabel(RackMenu.STATE_RUNNING));
+        assertTranslationKey("gui.neoopencomputers.rack.state.incomplete", RackScreen.stateLabel(RackMenu.STATE_INCOMPLETE));
 
         final List<Component> tooltip = RackScreen.controlTooltip(RackMenu.STATE_READY);
 

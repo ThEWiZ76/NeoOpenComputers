@@ -34,6 +34,7 @@ final class RackMenuShapeTest {
         assertEquals(0, RackMenu.STATE_EMPTY);
         assertEquals(1, RackMenu.STATE_READY);
         assertEquals(2, RackMenu.STATE_RUNNING);
+        assertEquals(3, RackMenu.STATE_INCOMPLETE);
     }
 
     @Test
@@ -44,5 +45,6 @@ final class RackMenuShapeTest {
     @Test
     void rackMenuExposesRackStateLookup() throws NoSuchMethodException {
         assertEquals(int.class, RackMenu.class.getMethod("rackState", int.class).getReturnType());
+        assertEquals(int.class, RackMenu.class.getMethod("rackStateFor", Container.class, int.class).getReturnType());
     }
 }

@@ -1,5 +1,7 @@
 package li.cil.oc.common.menu;
 
+import li.cil.oc.api.component.RackMountable;
+import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
@@ -21,6 +23,7 @@ public class RackMenu extends AbstractContainerMenu {
     public static final int STATE_EMPTY = 0;
     public static final int STATE_READY = 1;
     public static final int STATE_RUNNING = 2;
+    public static final int STATE_INCOMPLETE = 3;
 
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 84;
@@ -93,6 +96,27 @@ public class RackMenu extends AbstractContainerMenu {
         return rackStateData.get(slot);
     }
 
+    public static int rackStateFor(final Container rackInventory, final int slot) {
+        if (!(rackInventory instanceof RackBlockEntity rack) || slot < 0 || slot >= RACK_STATE_COUNT) {
+            return STATE_EMPTY;
+        }
+
+        final RackMountable mountable = rack.getMountable(slot);
+        if (mountable == null) {
+            return STATE_EMPTY;
+        }
+
+        final var states = mountable.getCurrentState();
+        if ((mountable instanceof ServerRackMountableEnvironment server && (server.machine().isRunning() || server.machine().isPaused()))
+                || states.contains(StateAware.State.IsWorking)) {
+            return STATE_RUNNING;
+        }
+        if (states.contains(StateAware.State.CanWork)) {
+            return STATE_READY;
+        }
+        return STATE_INCOMPLETE;
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -119,23 +143,7 @@ public class RackMenu extends AbstractContainerMenu {
         return new ContainerData() {
             @Override
             public int get(final int index) {
-                if (index < 0 || index >= RACK_STATE_COUNT) {
-                    return STATE_EMPTY;
-                }
-
-                if (!(rack.getMountable(index) instanceof ServerRackMountableEnvironment server)) {
-                    return STATE_EMPTY;
-                }
-
-                if (server.machine().isRunning() || server.machine().isPaused()) {
-                    return STATE_RUNNING;
-                }
-
-                if (server.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.CanWork)) {
-                    return STATE_READY;
-                }
-
-                return STATE_EMPTY;
+                return rackStateFor(rack, index);
             }
 
             @Override
