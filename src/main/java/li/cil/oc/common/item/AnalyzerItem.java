@@ -3,6 +3,7 @@ package li.cil.oc.common.item;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
@@ -57,6 +58,10 @@ public class AnalyzerItem extends Item {
     }
 
     private static Iterable<Node> nodes(final Object target, final Direction side) {
+        if (target instanceof Analyzable analyzable) {
+            final Node[] nodes = analyzable.onAnalyze(null, side, 0, 0, 0);
+            return nodes == null ? List.of() : List.of(nodes);
+        }
         if (target instanceof SidedEnvironment sidedEnvironment) {
             final Node node = sidedEnvironment.sidedNode(side);
             return node == null ? List.of() : List.of(node);

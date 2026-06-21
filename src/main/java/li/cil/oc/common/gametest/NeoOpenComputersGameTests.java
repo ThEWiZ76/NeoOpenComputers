@@ -40,6 +40,7 @@ import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
+import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
@@ -88,6 +89,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -1816,6 +1818,20 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(computer.toggleMachine(), "Computer case did not start with CPU, memory, and EEPROM");
         helper.succeedWhen(() -> helper.assertTrue(computer.machine().isRunning(), "Computer machine is not running"));
+    }
+
+    @GameTest(template = "empty")
+    public static void analyzerReportsDiskDriveFilesystemNode(final GameTestHelper helper) {
+        final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+
+        final List<Component> lines = AnalyzerItem.describe(diskDrive, Direction.NORTH);
+        final String analysis = lines.stream().map(Component::getString).collect(java.util.stream.Collectors.joining("\n"));
+
+        helper.assertTrue(analysis.contains("Component: filesystem"), "Analyzer did not report inserted floppy filesystem:\n" + analysis);
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 200)

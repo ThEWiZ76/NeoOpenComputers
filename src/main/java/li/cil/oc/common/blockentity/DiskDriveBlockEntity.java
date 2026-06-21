@@ -10,9 +10,11 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -31,7 +33,7 @@ import li.cil.oc.common.menu.DiskDriveMenu;
 
 import java.util.Map;
 
-public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo, MenuProvider {
+public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo, MenuProvider, Analyzable {
     public static final int SLOT_FLOPPY = 0;
     public static final int CONTAINER_SIZE = 1;
 
@@ -103,6 +105,11 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     @Override
     public Map<String, String> getDeviceInfo() {
         return DEVICE_INFO;
+    }
+
+    @Override
+    public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
+        return diskEnvironment == null || diskEnvironment.node() == null ? null : new Node[]{diskEnvironment.node()};
     }
 
     @Override
