@@ -423,6 +423,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void computerPushSignalRequiresSignalName() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid, message = pcall(function()
+              computer.pushSignal()
+            end)
+            """);
+        architecture.bind(machineWithSignalCapture(new String[]{null}, new Object[][]{null}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("string expected"));
+    }
+
+    @Test
     void exposesComputerAddressesToLua() {
         LuaArchitecture architecture = new LuaArchitecture("address = computer.address(); tmp = computer.tmpAddress()");
         architecture.bind(machineWithAddress("machine-address"));
