@@ -300,6 +300,9 @@ final class LuaArchitectureTest {
             packageType = type(package)
             requireType = type(require)
             luajavaType = type(luajava)
+            dofileType = type(dofile)
+            loadfileType = type(loadfile)
+            printType = type(print)
             """);
 
         assertTrue(architecture.initialize());
@@ -313,6 +316,9 @@ final class LuaArchitectureTest {
         assertEquals("nil", architecture.globalString("packageType"));
         assertEquals("nil", architecture.globalString("requireType"));
         assertEquals("nil", architecture.globalString("luajavaType"));
+        assertEquals("nil", architecture.globalString("dofileType"));
+        assertEquals("nil", architecture.globalString("loadfileType"));
+        assertEquals("nil", architecture.globalString("printType"));
     }
 
     @Test
