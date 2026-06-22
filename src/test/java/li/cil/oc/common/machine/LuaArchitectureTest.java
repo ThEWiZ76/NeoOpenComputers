@@ -491,6 +491,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void osTimeNormalizesDateFieldsLikeLuaJ() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            nextYear = os.time({year = 1970, month = 13, day = 1, hour = 0, min = 0, sec = 0})
+            nextMonth = os.time({year = 1970, month = 1, day = 32, hour = 0, min = 0, sec = 0})
+            nextDay = os.time({year = 1970, month = 1, day = 1, hour = 24, min = 0, sec = 0})
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(31_536_000D, architecture.globalDouble("nextYear"), 0.000_001D);
+        assertEquals(2_678_400D, architecture.globalDouble("nextMonth"), 0.000_001D);
+        assertEquals(86_400D, architecture.globalDouble("nextDay"), 0.000_001D);
+    }
+
+    @Test
     void validatesOsDateTimeArgumentLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("""
             valid, message = pcall(function()

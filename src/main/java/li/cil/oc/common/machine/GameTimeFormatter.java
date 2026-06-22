@@ -104,7 +104,13 @@ final class GameTimeFormatter {
 
     static Long mktime(final int year, final int month, final int day, final int hour, final int minute, final int second) {
         try {
-            return LocalDateTime.of(year, month, day, hour, minute, second).toEpochSecond(ZoneOffset.UTC);
+            return LocalDateTime.of(year, 1, 1, 0, 0, 0)
+                .plusMonths(month - 1L)
+                .plusDays(day - 1L)
+                .plusHours(hour)
+                .plusMinutes(minute)
+                .plusSeconds(second)
+                .toEpochSecond(ZoneOffset.UTC);
         } catch (DateTimeException e) {
             return null;
         }
