@@ -56,4 +56,13 @@ final class NanomachineParticlesTest {
 
         assertEquals("portal", NanomachineParticles.ambientParticleEffect(0));
     }
+
+    @Test
+    void mapsUpstreamParticleEffectNamesToModernParticleNames() {
+        assertEquals("firework", NanomachineParticles.particleTypeName("fireworksSpark"));
+        assertEquals("mycelium", NanomachineParticles.particleTypeName("townaura"));
+        assertEquals("dust", NanomachineParticles.particleTypeName("reddust"));
+        assertEquals("happy_villager", NanomachineParticles.particleTypeName("happyVillager"));
+        assertEquals("portal", NanomachineParticles.particleTypeName("unknown"));
+    }
 }

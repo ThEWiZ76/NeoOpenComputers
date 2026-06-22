@@ -3,6 +3,7 @@ package li.cil.oc.client;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.network.NanomachineClientState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.player.Player;
@@ -50,10 +51,30 @@ final class NanomachineParticles {
             case "flame" -> ParticleTypes.FLAME;
             case "lava" -> ParticleTypes.LAVA;
             case "splash" -> ParticleTypes.SPLASH;
+            case "reddust" -> DustParticleOptions.REDSTONE;
             case "slime" -> ParticleTypes.ITEM_SLIME;
             case "heart" -> ParticleTypes.HEART;
             case "happyVillager" -> ParticleTypes.HAPPY_VILLAGER;
             default -> ParticleTypes.PORTAL;
+        };
+    }
+
+    static String particleTypeName(final String effectName) {
+        return switch (effectName) {
+            case "fireworksSpark" -> "firework";
+            case "townaura" -> "mycelium";
+            case "smoke" -> "smoke";
+            case "witchMagic" -> "witch";
+            case "note" -> "note";
+            case "enchantmenttable" -> "enchant";
+            case "flame" -> "flame";
+            case "lava" -> "lava";
+            case "splash" -> "splash";
+            case "reddust" -> "dust";
+            case "slime" -> "item_slime";
+            case "heart" -> "heart";
+            case "happyVillager" -> "happy_villager";
+            default -> "portal";
         };
     }
 
