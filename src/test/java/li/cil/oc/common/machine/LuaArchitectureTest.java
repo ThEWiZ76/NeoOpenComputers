@@ -1190,6 +1190,17 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exactEmptyComponentListFilterDoesNotWildcardLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("components = component.list('', true); fs = components['fs-address']");
+        architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("fs"));
+    }
+
+    @Test
     void ignoresBooleanComponentListFiltersLikeUpstreamLuaJ() {
         Map<String, String> components = new LinkedHashMap<>();
         components.put("fs-address", "filesystem");

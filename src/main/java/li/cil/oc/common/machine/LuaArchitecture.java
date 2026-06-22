@@ -1636,7 +1636,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private static boolean matchesComponentFilter(final String type, final String filter, final boolean exact) {
-        if (filter == null || filter.isEmpty()) {
+        if (filter == null) {
             return true;
         }
         if (type == null) {
