@@ -7,6 +7,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
@@ -16,11 +17,6 @@ import net.minecraft.world.item.component.CustomData;
 import java.util.function.Consumer;
 
 public class HardDiskDriveItem extends Item implements DriverItem {
-    private static final long[] CAPACITIES = {
-        1024L * 1024L,
-        2048L * 1024L,
-        4096L * 1024L
-    };
     private static final String HDD_DATA_TAG = "oc:hdd";
     private final int tier;
 
@@ -49,7 +45,7 @@ public class HardDiskDriveItem extends Item implements DriverItem {
 
     static ManagedEnvironment createEnvironment(final int tier, final CompoundTag data, final Consumer<CompoundTag> saveData, final EnvironmentHost host) {
         final int clampedTier = Math.max(0, Math.min(2, tier));
-        final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(CAPACITIES[clampedTier]);
+        final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(ModSettings.hddSize(clampedTier) * 1024L);
         if (fileSystem == null) {
             return null;
         }

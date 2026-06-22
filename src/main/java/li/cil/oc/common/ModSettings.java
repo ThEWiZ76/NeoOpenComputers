@@ -2,7 +2,11 @@ package li.cil.oc.common;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
+import java.util.List;
+
 public final class ModSettings {
+    private static final List<Integer> DEFAULT_HDD_SIZES = List.of(1024, 2048, 4096);
+
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
     public static final ModConfigSpec.BooleanValue INPUT_USERNAME;
@@ -14,6 +18,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.IntValue TMP_SIZE;
     public static final ModConfigSpec.IntValue FILE_COST;
+    public static final ModConfigSpec.ConfigValue<List<? extends Integer>> HDD_SIZES;
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
@@ -61,6 +66,9 @@ public final class ModSettings {
         FILE_COST = builder
             .comment("Base byte cost charged for each file or directory on limited filesystems. OpenComputers upstream default is 512.")
             .defineInRange("fileCost", 512, 0, Integer.MAX_VALUE);
+        HDD_SIZES = builder
+            .comment("Sizes of the three hard drive tiers in kilobytes. OpenComputers upstream default is [1024, 2048, 4096].")
+            .defineList("hddSizes", DEFAULT_HDD_SIZES, value -> value instanceof Integer && (Integer) value >= 0);
         MAX_HANDLES = builder
             .comment("Maximum number of file handles any single computer may have open per filesystem. OpenComputers upstream default is 16.")
             .defineInRange("maxHandles", 16, 0, Integer.MAX_VALUE);
@@ -149,6 +157,19 @@ public final class ModSettings {
         return intValue(MAX_READ_BUFFER);
     }
 
+    public static List<Integer> hddSizes() {
+        final List<Integer> sizes = listValue(HDD_SIZES);
+        if (sizes.size() != DEFAULT_HDD_SIZES.size()) {
+            return DEFAULT_HDD_SIZES;
+        }
+        return sizes;
+    }
+
+    public static int hddSize(final int tier) {
+        final List<Integer> sizes = hddSizes();
+        return sizes.get(Math.max(0, Math.min(sizes.size() - 1, tier)));
+    }
+
     private static boolean booleanValue(final ModConfigSpec.BooleanValue value) {
         try {
             return value.get();
@@ -170,6 +191,14 @@ public final class ModSettings {
             return value.getAsInt();
         } catch (final IllegalStateException ignored) {
             return value.getDefault();
+        }
+    }
+
+    private static List<Integer> listValue(final ModConfigSpec.ConfigValue<List<? extends Integer>> value) {
+        try {
+            return List.copyOf(value.get());
+        } catch (final IllegalStateException ignored) {
+            return List.copyOf(value.getDefault());
         }
     }
 }

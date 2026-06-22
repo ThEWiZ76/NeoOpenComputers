@@ -13,16 +13,20 @@ import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelReader;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
-import java.nio.charset.StandardCharsets;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -118,6 +122,17 @@ final class ComponentItemShapeTest {
         byte[] data = (byte[]) secondComponent.invoke("read", null, readHandle, 16)[0];
 
         assertEquals("ready", new String(data, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void hardDiskDriveCapacityUsesConfiguredHddSizes() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.HDD_SIZES, List.of(2, 4, 8), () -> {
+            assertHardDiskCapacity(0, 2L * 1024L);
+            assertHardDiskCapacity(1, 4L * 1024L);
+            assertHardDiskCapacity(2, 8L * 1024L);
+        });
     }
 
     @Test
@@ -426,5 +441,29 @@ final class ComponentItemShapeTest {
         assertTrue(Item.class.isAssignableFrom(DataCardItem.class));
         assertTrue(DriverItem.class.isAssignableFrom(DataCardItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
+    }
+
+    private static void assertHardDiskCapacity(final int tier, final long expectedCapacity) throws Exception {
+        final ManagedEnvironment environment = HardDiskDriveItem.createEnvironment(tier, new CompoundTag(), saved -> {}, null);
+        final Component component = assertInstanceOf(Component.class, environment.node());
+
+        assertEquals(expectedCapacity, component.invoke("spaceTotal", null)[0]);
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 }

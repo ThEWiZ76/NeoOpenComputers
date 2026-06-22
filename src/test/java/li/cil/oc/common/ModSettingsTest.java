@@ -24,6 +24,12 @@ final class ModSettingsTest {
         assertEquals(512, ModSettings.fileCost());
         assertEquals(16, ModSettings.maxHandles());
         assertEquals(2048, ModSettings.maxReadBuffer());
+        assertEquals(List.of(1024, 2048, 4096), ModSettings.hddSizes());
+        assertEquals(1024, ModSettings.hddSize(0));
+        assertEquals(2048, ModSettings.hddSize(1));
+        assertEquals(4096, ModSettings.hddSize(2));
+        assertEquals(1024, ModSettings.hddSize(-1));
+        assertEquals(4096, ModSettings.hddSize(99));
     }
 
     @Test
@@ -43,5 +49,6 @@ final class ModSettingsTest {
         assertEquals(List.of("filesystem", "fileCost"), ModSettings.FILE_COST.getPath());
         assertEquals(List.of("filesystem", "maxHandles"), ModSettings.MAX_HANDLES.getPath());
         assertEquals(List.of("filesystem", "maxReadBuffer"), ModSettings.MAX_READ_BUFFER.getPath());
+        assertEquals(List.of("filesystem", "hddSizes"), ModSettings.HDD_SIZES.getPath());
     }
 }

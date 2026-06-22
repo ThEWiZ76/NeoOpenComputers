@@ -14,6 +14,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -44,11 +45,6 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     private static final String TAG_NODE = "node";
     private static final String TAG_FILESYSTEM = "filesystem";
     private static final String TAG_LABEL = "label";
-    private static final long[] HDD_CAPACITIES = {
-        1024L * 1024L,
-        2048L * 1024L,
-        4096L * 1024L
-    };
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Disk,
         DeviceInfo.DeviceAttribute.Description, "RAID",
@@ -362,7 +358,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         for (final ItemStack stack : items) {
             final DriverItem driver = Driver.driverFor(stack, getClass());
             if (driver != null && acceptsDriverSlot(driver.slot(stack))) {
-                total += HDD_CAPACITIES[Math.max(0, Math.min(HDD_CAPACITIES.length - 1, driver.tier(stack)))];
+                total += ModSettings.hddSize(driver.tier(stack)) * 1024L;
             }
         }
         return total;
