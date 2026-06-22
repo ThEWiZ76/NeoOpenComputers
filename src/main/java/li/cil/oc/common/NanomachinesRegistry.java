@@ -4,10 +4,13 @@ import li.cil.oc.api.detail.NanomachinesAPI;
 import li.cil.oc.api.API;
 import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.Controller;
+import li.cil.oc.common.network.NanomachinePowerPayload;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -80,6 +83,9 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
         if (controller != null) {
             controller.dispose();
         }
+        if (player instanceof ServerPlayer serverPlayer) {
+            PacketDistributor.sendToPlayer(serverPlayer, new NanomachinePowerPayload(false, 0D, 0D));
+        }
         player.getPersistentData().remove(TAG_HAS_NANOMACHINES);
         player.getPersistentData().remove(TAG_CONTROLLER);
     }
@@ -91,6 +97,9 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
         final Controller controller = getController(player);
         if (controller instanceof SimpleNanomachineController simpleController) {
             simpleController.update();
+            if (player instanceof ServerPlayer serverPlayer) {
+                PacketDistributor.sendToPlayer(serverPlayer, new NanomachinePowerPayload(true, simpleController.getLocalBuffer(), simpleController.getLocalBufferSize()));
+            }
         }
     }
 }

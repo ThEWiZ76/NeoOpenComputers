@@ -1,8 +1,7 @@
 package li.cil.oc.client;
 
-import li.cil.oc.api.API;
-import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.network.NanomachineClientState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -19,17 +18,12 @@ final class NanomachineHud {
     }
 
     static void render(final GuiGraphics graphics, final Minecraft minecraft) {
-        if (minecraft.player == null || API.nanomachines == null) {
-            return;
-        }
-        final Controller controller = API.nanomachines.getController(minecraft.player);
-        if (controller == null || controller.getLocalBufferSize() <= 0D) {
+        if (minecraft.player == null || !NanomachineClientState.installed() || NanomachineClientState.maxBuffer() <= 0D) {
             return;
         }
         final int screenWidth = graphics.guiWidth();
         final int screenHeight = graphics.guiHeight();
-        final double fill = controller.getLocalBuffer() / controller.getLocalBufferSize();
-        final Layout layout = layout(screenWidth, screenHeight, ModSettings.nanomachineHudPos(), fill);
+        final Layout layout = layout(screenWidth, screenHeight, ModSettings.nanomachineHudPos(), NanomachineClientState.fill());
         graphics.fill(layout.left(), layout.top(), layout.left() + layout.width(), layout.top() + layout.height(), BACKGROUND);
         graphics.fill(layout.left(), layout.top(), layout.left() + layout.width(), layout.top() + 1, BORDER);
         graphics.fill(layout.left(), layout.top() + layout.height() - 1, layout.left() + layout.width(), layout.top() + layout.height(), BORDER);

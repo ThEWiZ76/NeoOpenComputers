@@ -17,6 +17,7 @@ import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.MfuTargetEvents;
 import li.cil.oc.common.machine.ProgramLocationImc;
+import li.cil.oc.common.network.NanomachinesNetworking;
 import li.cil.oc.common.network.RackNetworking;
 import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.template.AssemblerTemplateImc;
@@ -47,6 +48,7 @@ public final class NeoOpenComputers {
         MfuTargetEvents.register();
         NanomachinesRegistry.registerTickHandler();
         modEventBus.addListener(ChunkloaderUpgradeEnvironment::registerTicketController);
+        modEventBus.addListener(NanomachinesNetworking::register);
         modEventBus.addListener(RackNetworking::register);
         modEventBus.addListener(TerminalNetworking::register);
         modEventBus.addListener(this::onCommonSetup);
