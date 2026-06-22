@@ -1642,6 +1642,24 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsMissingTableArgumentsLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            valid, message = pcall(function()
+              return userdata.apply(value, 'table-value')
+            end)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("bad arguments #2 (table expected, got no value)"));
+    }
+
+    @Test
     void rejectsBooleanStringArgumentsLikeUpstream() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""
