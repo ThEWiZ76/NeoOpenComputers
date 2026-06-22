@@ -2413,7 +2413,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public boolean isLong(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof Long;
+            return index >= 0 && index < values.length && values[index] instanceof Number number && !Double.isNaN(number.doubleValue());
         }
 
         @Override

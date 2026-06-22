@@ -1483,6 +1483,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void treatsLuaNumberArgumentsAsLongsLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            result = userdata.apply(value, 'long?', 4)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("long", architecture.globalString("result"));
+    }
+
+    @Test
     void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
         TestValue value = new TestValue();
         int[] valueInvokes = {0};
@@ -3234,6 +3249,9 @@ final class LuaArchitectureTest {
             }
             if ("integer?".equals(arguments.checkString(0))) {
                 return arguments.isInteger(1) ? "integer" : "not-integer";
+            }
+            if ("long?".equals(arguments.checkString(0))) {
+                return arguments.isLong(1) ? "long" : "not-long";
             }
             return "applied:" + arguments.checkString(0);
         }
