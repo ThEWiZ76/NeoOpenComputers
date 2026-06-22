@@ -1134,8 +1134,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (machine == null) {
                     return LuaValue.NIL;
                 }
-                final String address = firstComponentAddress(args.arg(2).tojstring());
-                return address == null ? LuaValue.NIL : createComponentProxy(address);
+                final String type = args.arg(2).tojstring();
+                if (!ensurePrimaryAvailable(type)) {
+                    throw new LuaError("no primary '" + type + "' available");
+                }
+                return createComponentProxy(primaryComponents.get(type));
             }
         });
         metatable.set("__pairs", new VarArgFunction() {
