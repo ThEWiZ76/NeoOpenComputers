@@ -16,16 +16,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class DamageTypeResourceTest {
     private static final String HUNGRY_DAMAGE_TYPE = "neoopencomputers:nanomachines_hungry";
-    private static final Path DAMAGE_TYPE = Path.of("src/main/resources/data/neoopencomputers/damage_type/nanomachines_hungry.json");
+    private static final String OVERLOAD_DAMAGE_TYPE = "neoopencomputers:nanomachines_overload";
+    private static final Path HUNGRY_DAMAGE_TYPE_PATH = Path.of("src/main/resources/data/neoopencomputers/damage_type/nanomachines_hungry.json");
+    private static final Path OVERLOAD_DAMAGE_TYPE_PATH = Path.of("src/main/resources/data/neoopencomputers/damage_type/nanomachines_overload.json");
     private static final Path BYPASSES_ARMOR = Path.of("src/main/resources/data/minecraft/tags/damage_type/bypasses_armor.json");
     private static final Path BYPASSES_EFFECTS = Path.of("src/main/resources/data/minecraft/tags/damage_type/bypasses_effects.json");
     private static final Path EN_US = Path.of("src/main/resources/assets/neoopencomputers/lang/en_us.json");
 
     @Test
     void nanomachinesHungryDamageTypeUsesUpstreamMessageId() throws IOException {
-        final JsonObject json = readJson(DAMAGE_TYPE);
+        final JsonObject json = readJson(HUNGRY_DAMAGE_TYPE_PATH);
 
         assertEquals("oc.nanomachinesHungry", json.get("message_id").getAsString());
+        assertEquals("never", json.get("scaling").getAsString());
+        assertEquals(0.0F, json.get("exhaustion").getAsFloat());
+    }
+
+    @Test
+    void nanomachinesOverloadDamageTypeUsesUpstreamMessageId() throws IOException {
+        final JsonObject json = readJson(OVERLOAD_DAMAGE_TYPE_PATH);
+
+        assertEquals("oc.nanomachinesOverload", json.get("message_id").getAsString());
         assertEquals("never", json.get("scaling").getAsString());
         assertEquals(0.0F, json.get("exhaustion").getAsFloat());
     }
@@ -37,12 +48,27 @@ final class DamageTypeResourceTest {
     }
 
     @Test
+    void nanomachinesOverloadDamageBypassesArmorAndEffects() throws IOException {
+        assertTagContains(BYPASSES_ARMOR, OVERLOAD_DAMAGE_TYPE);
+        assertTagContains(BYPASSES_EFFECTS, OVERLOAD_DAMAGE_TYPE);
+    }
+
+    @Test
     void nanomachinesHungryDamageHasUpstreamDeathMessages() throws IOException {
         final JsonObject json = readJson(EN_US);
 
         assertEquals("%s was eaten by nanomachines.", json.get("death.attack.oc.nanomachinesHungry.1").getAsString());
         assertEquals("%s didn't keep their nanomachines fed.", json.get("death.attack.oc.nanomachinesHungry.2").getAsString());
         assertEquals("%s has been digested.", json.get("death.attack.oc.nanomachinesHungry.3").getAsString());
+    }
+
+    @Test
+    void nanomachinesOverloadDamageHasUpstreamDeathMessages() throws IOException {
+        final JsonObject json = readJson(EN_US);
+
+        assertEquals("%s got too greedy.", json.get("death.attack.oc.nanomachinesOverload.1").getAsString());
+        assertEquals("%s had a nervous breakdown.", json.get("death.attack.oc.nanomachinesOverload.2").getAsString());
+        assertEquals("The nanomachines of %s went out of control.", json.get("death.attack.oc.nanomachinesOverload.3").getAsString());
     }
 
     private static void assertTagContains(final Path path, final String value) throws IOException {

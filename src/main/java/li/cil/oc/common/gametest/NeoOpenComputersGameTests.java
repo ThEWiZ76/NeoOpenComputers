@@ -876,6 +876,7 @@ public final class NeoOpenComputersGameTests {
     @GameTest(template = "empty")
     public static void nanomachinesOverloadDamagesPlayersAboveSafeInputCount(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 4));
         final li.cil.oc.common.NanomachinesRegistry registry = new li.cil.oc.common.NanomachinesRegistry();
         registry.addProvider(new RecordingNanomachineProvider(List.of(
             new RecordingNanomachineBehavior(),
@@ -896,7 +897,8 @@ public final class NeoOpenComputersGameTests {
         final float before = player.getHealth();
         runNanomachinesTicks(registry, player, 20);
 
-        helper.assertTrue(player.getHealth() < before, "Nanomachines overload did not damage player");
+        final float expected = before - 1F;
+        helper.assertTrue(Math.abs(player.getHealth() - expected) < 0.001F, "Nanomachines overload did not bypass resistance");
         helper.succeed();
     }
 

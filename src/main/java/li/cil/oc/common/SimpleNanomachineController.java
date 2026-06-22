@@ -7,6 +7,7 @@ import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.nanomachines.DisableReason;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.WirelessEndpoint;
+import li.cil.oc.common.damage.ModDamageSources;
 import li.cil.oc.common.item.NanomachineItemData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -628,7 +629,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
         final int overload = activeInputCount() - getSafeActiveInputs();
         if (overload > 0) {
-            player.hurt(player.damageSources().magic(), overload);
+            player.hurt(ModDamageSources.nanomachinesOverload(player), overload);
         }
     }
 

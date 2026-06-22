@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "neoopencomputers:nanomachines_hungry"
+    "neoopencomputers:nanomachines_hungry",
+    "neoopencomputers:nanomachines_overload"
   ]
 }

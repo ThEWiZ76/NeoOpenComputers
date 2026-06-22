@@ -187,5 +187,8 @@
   "gui.neoopencomputers.terminal.no_screen_data": "Waiting for terminal screen data",
   "death.attack.oc.nanomachinesHungry.1": "%s was eaten by nanomachines.",
   "death.attack.oc.nanomachinesHungry.2": "%s didn't keep their nanomachines fed.",
-  "death.attack.oc.nanomachinesHungry.3": "%s has been digested."
+  "death.attack.oc.nanomachinesHungry.3": "%s has been digested.",
+  "death.attack.oc.nanomachinesOverload.1": "%s got too greedy.",
+  "death.attack.oc.nanomachinesOverload.2": "%s had a nervous breakdown.",
+  "death.attack.oc.nanomachinesOverload.3": "The nanomachines of %s went out of control."
 }
