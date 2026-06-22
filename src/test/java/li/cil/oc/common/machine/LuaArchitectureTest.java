@@ -522,6 +522,16 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void formatsOsDateTimezoneLikeLuaJ() {
+        LuaArchitecture architecture = new LuaArchitecture("zone = os.date('%z', 86400)");
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("+0000", architecture.globalString("zone"));
+    }
+
+    @Test
     void readsBootSourceFromEepromDataTag() {
         CompoundTag data = new CompoundTag();
         data.putByteArray(ItemRegistry.EEPROM_CODE_TAG, "counter = 7".getBytes(StandardCharsets.UTF_8));

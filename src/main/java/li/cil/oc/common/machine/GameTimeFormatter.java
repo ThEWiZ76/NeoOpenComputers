@@ -46,6 +46,7 @@ final class GameTimeFormatter {
         Map.entry('X', time -> format("%T", time)),
         Map.entry('y', time -> String.format("%02d", time.year() % 100)),
         Map.entry('Y', time -> String.format("%04d", time.year())),
+        Map.entry('z', time -> "+0000"),
         Map.entry('%', time -> "%"));
 
     private GameTimeFormatter() {
