@@ -2388,7 +2388,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public String checkString(final int index) {
-            final Object value = checkAny(index);
+            final Object value = checkAny(index, "string");
             if (value instanceof String string) {
                 return string;
             }
@@ -2539,6 +2539,16 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return "table";
             }
             return "userdata";
+        }
+
+        private Object checkAny(final int index, final String type) {
+            if (index < 0) {
+                throw new IndexOutOfBoundsException();
+            }
+            if (index >= values.length) {
+                throw new IllegalArgumentException("bad arguments #" + (index + 1) + " (" + type + " expected, got no value)");
+            }
+            return values[index];
         }
     }
 
