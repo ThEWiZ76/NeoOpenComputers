@@ -1454,6 +1454,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         metatable.set("__call", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs callbackArgs) {
+                if (componentCallback(address, method) == null) {
+                    throw new LuaError("no such method");
+                }
                 int offset = callbackArgs.narg() > 0 && callbackArgs.arg(1).eq_b(callback) ? 1 : 0;
                 if (callbackArgs.narg() > offset && callbackArgs.arg(offset + 1).eq_b(proxy)) {
                     offset++;

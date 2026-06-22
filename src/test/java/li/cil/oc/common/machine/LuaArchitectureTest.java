@@ -1317,6 +1317,25 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsStaleComponentProxyMethodsLikeUpstream() {
+        int[] componentInvokes = {0};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.proxy('fs-address')
+            valid, message = pcall(function()
+              fs.label('payload')
+            end)
+            """);
+        architecture.bind(machineWithDroppedComponentMethods(componentInvokes));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("no such method"));
+        assertEquals(0, componentInvokes[0]);
+    }
+
+    @Test
     void exposesComponentProxyFieldsToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
@@ -2448,6 +2467,31 @@ final class LuaArchitectureTest {
                         yield new Object[]{"invoked"};
                     }
                     yield new Object[]{value};
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithDroppedComponentMethods(final int[] componentInvokes) {
+        int[] methodReads = {0};
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> Map.of("fs-address", "filesystem");
+                case "methods" -> {
+                    methodReads[0]++;
+                    if (methodReads[0] > 2) {
+                        yield Map.of();
+                    }
+                    yield Map.of("label", callback("directCallback"));
+                }
+                case "invoke" -> {
+                    componentInvokes[0]++;
+                    yield new Object[]{"invoked"};
                 }
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
