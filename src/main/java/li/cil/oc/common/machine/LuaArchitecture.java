@@ -919,6 +919,38 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return address == null ? LuaValue.NIL : createComponentProxy(address);
             }
         });
+        metatable.set("__pairs", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return new VarArgFunction() {
+                    private LuaValue componentKey = LuaValue.NIL;
+                    private List<String> primaryTypes;
+                    private int primaryIndex;
+
+                    @Override
+                    public Varargs invoke(final Varargs iteratorArgs) {
+                        while (primaryTypes == null) {
+                            final Varargs next = component.next(componentKey);
+                            componentKey = next.arg1();
+                            if (componentKey.isnil()) {
+                                processPendingPrimaryComponents();
+                                primaryTypes = new ArrayList<>(primaryComponents.keySet());
+                                break;
+                            }
+                            return next;
+                        }
+                        while (primaryIndex < primaryTypes.size()) {
+                            final String type = primaryTypes.get(primaryIndex++);
+                            final String address = primaryComponents.get(type);
+                            if (address != null && machine != null && type.equals(machine.components().get(address))) {
+                                return LuaValue.varargsOf(LuaValue.valueOf(type), createComponentProxy(address));
+                            }
+                        }
+                        return LuaValue.NIL;
+                    }
+                };
+            }
+        });
         component.setmetatable(metatable);
         globals.set("component", component);
     }

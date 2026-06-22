@@ -1729,6 +1729,30 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void pairsComponentIncludesPrimaryComponentProxies() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            component.setPrimary('filesystem', 'fs')
+            apiListType = nil
+            primaryAddress = nil
+            for key, value in pairs(component) do
+              if key == 'list' then
+                apiListType = type(value)
+              end
+              if key == 'filesystem' then
+                primaryAddress = value.address
+              end
+            end
+            """);
+        architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("function", architecture.globalString("apiListType"));
+        assertEquals("fs-address", architecture.globalString("primaryAddress"));
+    }
+
+    @Test
     void invokesRealFilesystemComponentFromLua() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
