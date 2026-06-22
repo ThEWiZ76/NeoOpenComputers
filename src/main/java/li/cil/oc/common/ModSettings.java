@@ -81,6 +81,8 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue NANOMACHINES_MAX_INPUTS_ACTIVE;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_COMMAND_DELAY;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_COMMAND_RANGE;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_HUNGRY_DAMAGE;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_HUNGRY_ENERGY_RESTORED;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -298,6 +300,12 @@ public final class ModSettings {
         NANOMACHINES_COMMAND_RANGE = builder
             .comment("Range for nanomachine wireless commands in blocks. OpenComputers upstream default is 2.")
             .defineInRange("commandRange", 2D, 0D, Double.MAX_VALUE);
+        NANOMACHINES_HUNGRY_DAMAGE = builder
+            .comment("Damage applied when hungry nanomachine behaviors run out of energy. OpenComputers upstream default is 5.")
+            .defineInRange("hungryDamage", 5D, 0D, Double.MAX_VALUE);
+        NANOMACHINES_HUNGRY_ENERGY_RESTORED = builder
+            .comment("Energy restored after hungry nanomachine out-of-energy damage. OpenComputers upstream default is 50.")
+            .defineInRange("hungryEnergyRestored", 50D, 0D, Double.MAX_VALUE);
         builder.pop();
 
         SPEC = builder.build();
@@ -364,6 +372,14 @@ public final class ModSettings {
 
     public static double nanomachinesCommandRange() {
         return Math.max(0D, doubleValue(NANOMACHINES_COMMAND_RANGE));
+    }
+
+    public static double nanomachinesHungryDamage() {
+        return Math.max(0D, doubleValue(NANOMACHINES_HUNGRY_DAMAGE));
+    }
+
+    public static double nanomachinesHungryEnergyRestored() {
+        return Math.max(0D, doubleValue(NANOMACHINES_HUNGRY_ENERGY_RESTORED));
     }
 
     public static boolean inputUsername() {

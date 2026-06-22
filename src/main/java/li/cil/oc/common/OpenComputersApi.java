@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.api.API;
 import li.cil.oc.common.machine.LuaArchitecture;
+import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineParticleProvider;
 
 public final class OpenComputersApi {
@@ -22,6 +23,7 @@ public final class OpenComputersApi {
         if (API.nanomachines == null) {
             final NanomachinesRegistry registry = new NanomachinesRegistry();
             registry.addProvider(new NanomachineParticleProvider());
+            registry.addProvider(new NanomachineHungryProvider());
             API.nanomachines = registry;
         }
         if (API.fileSystem == null) {

@@ -116,6 +116,8 @@ final class ModSettingsTest {
         assertEquals(4, ModSettings.nanomachinesMaxInputsActive());
         assertEquals(1D, ModSettings.nanomachinesCommandDelay());
         assertEquals(2D, ModSettings.nanomachinesCommandRange());
+        assertEquals(5D, ModSettings.nanomachinesHungryDamage());
+        assertEquals(50D, ModSettings.nanomachinesHungryEnergyRestored());
     }
 
     @Test
@@ -182,6 +184,8 @@ final class ModSettingsTest {
         assertEquals(List.of("nanomachines", "maxInputsActive"), ModSettings.NANOMACHINES_MAX_INPUTS_ACTIVE.getPath());
         assertEquals(List.of("nanomachines", "commandDelay"), ModSettings.NANOMACHINES_COMMAND_DELAY.getPath());
         assertEquals(List.of("nanomachines", "commandRange"), ModSettings.NANOMACHINES_COMMAND_RANGE.getPath());
+        assertEquals(List.of("nanomachines", "hungryDamage"), ModSettings.NANOMACHINES_HUNGRY_DAMAGE.getPath());
+        assertEquals(List.of("nanomachines", "hungryEnergyRestored"), ModSettings.NANOMACHINES_HUNGRY_ENERGY_RESTORED.getPath());
     }
 
     @Test
