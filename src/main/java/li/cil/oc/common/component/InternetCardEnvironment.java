@@ -72,12 +72,15 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():boolean -- Returns whether HTTP requests can be made.")
     public Object[] isHttpEnabled(final Context context, final Arguments args) {
-        return new Object[]{true};
+        return new Object[]{ModSettings.enableHttp()};
     }
 
     @Callback(doc = "function(url:string[, postData:string[, headers:table[, method:string]]]):userdata -- Starts an HTTP request.")
     public synchronized Object[] request(final Context context, final Arguments args) throws IOException {
         checkOwner(context);
+        if (!ModSettings.enableHttp()) {
+            return new Object[]{null, "http requests are unavailable"};
+        }
         final String url = checkHttpUrl(args.checkString(0));
         final byte[] postData = args.count() > 1 && args.checkAny(1) != null ? args.checkByteArray(1) : null;
         final Map<String, String> headers = args.isTable(2) ? headers(args.checkTable(2)) : Map.of();
@@ -90,12 +93,15 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():boolean -- Returns whether TCP connections can be made.")
     public Object[] isTcpEnabled(final Context context, final Arguments args) {
-        return new Object[]{true};
+        return new Object[]{ModSettings.enableTcp()};
     }
 
     @Callback(doc = "function(address:string[, port:number]):userdata -- Opens a new TCP connection.")
     public synchronized Object[] connect(final Context context, final Arguments args) throws IOException {
         checkOwner(context);
+        if (!ModSettings.enableTcp()) {
+            return new Object[]{null, "tcp connections are unavailable"};
+        }
         final TcpAddress address = checkTcpAddress(args.checkString(0), args.optInteger(1, -1));
         ensureConnectionSlot();
         final TcpSocket socket = new TcpSocket(address.host(), address.port(), this);

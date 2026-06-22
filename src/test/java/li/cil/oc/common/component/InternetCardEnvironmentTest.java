@@ -179,6 +179,20 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void disabledHttpReportsUnavailableAndDoesNotUseTransport() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
+            throw new AssertionError("transport should not be called when HTTP is disabled");
+        });
+
+        withCachedConfig(ModSettings.ENABLE_HTTP, false, () -> {
+            assertArrayEquals(new Object[]{false}, card.isHttpEnabled(null, new TestArguments()));
+            assertArrayEquals(new Object[]{null, "http requests are unavailable"},
+                card.request(null, new TestArguments("https://example.test/disabled")));
+        });
+    }
+
+    @Test
     void invalidHttpSchemeFailsLikeUpstream() {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
@@ -280,6 +294,18 @@ final class InternetCardEnvironmentTest {
             serverThread.shutdownNow();
             assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
         }
+    }
+
+    @Test
+    void disabledTcpReportsUnavailableWithoutConnecting() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+
+        withCachedConfig(ModSettings.ENABLE_TCP, false, () -> {
+            assertArrayEquals(new Object[]{false}, card.isTcpEnabled(null, new TestArguments()));
+            assertArrayEquals(new Object[]{null, "tcp connections are unavailable"},
+                card.connect(null, new TestArguments("127.0.0.1", 1)));
+        });
     }
 
     @Test

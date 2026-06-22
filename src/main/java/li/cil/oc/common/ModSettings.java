@@ -37,6 +37,8 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> HDD_SIZES;
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
+    public static final ModConfigSpec.BooleanValue ENABLE_HTTP;
+    public static final ModConfigSpec.BooleanValue ENABLE_TCP;
     public static final ModConfigSpec.IntValue MAX_TCP_CONNECTIONS;
     public static final ModConfigSpec.ConfigValue<String> HTTP_USER_AGENT;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
@@ -133,6 +135,12 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("internet");
+        ENABLE_HTTP = builder
+            .comment("Allow internet cards to make HTTP requests. OpenComputers upstream default is true.")
+            .define("enableHttp", true);
+        ENABLE_TCP = builder
+            .comment("Allow internet cards to make TCP connections. OpenComputers upstream default is true.")
+            .define("enableTcp", true);
         MAX_TCP_CONNECTIONS = builder
             .comment("Maximum open internet-card HTTP/TCP connections. OpenComputers upstream default is 4.")
             .defineInRange("maxTcpConnections", 4, 0, Integer.MAX_VALUE);
@@ -301,6 +309,14 @@ public final class ModSettings {
 
     public static int maxReadBuffer() {
         return intValue(MAX_READ_BUFFER);
+    }
+
+    public static boolean enableHttp() {
+        return booleanValue(ENABLE_HTTP);
+    }
+
+    public static boolean enableTcp() {
+        return booleanValue(ENABLE_TCP);
     }
 
     public static int maxTcpConnections() {
