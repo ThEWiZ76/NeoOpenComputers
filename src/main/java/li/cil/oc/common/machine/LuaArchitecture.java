@@ -324,6 +324,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private static void installCoroutineCompatibility(final Globals globals) {
         final LuaValue coroutine = globals.get("coroutine");
+        final LuaValue originalCreate = coroutine.get("create");
         final LuaValue originalResume = coroutine.get("resume");
         final LuaValue originalYield = coroutine.get("yield");
         coroutine.set("resume", new VarArgFunction() {
@@ -351,6 +352,22 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 return originalYield.invoke(LuaValue.varargsOf(LuaValue.NIL, args));
+            }
+        });
+        coroutine.set("wrap", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaValue thread = originalCreate.call(args.checkfunction(1));
+                return new VarArgFunction() {
+                    @Override
+                    public Varargs invoke(final Varargs args) {
+                        final Varargs result = coroutine.get("resume").invoke(LuaValue.varargsOf(thread, args));
+                        if (result.arg1().toboolean()) {
+                            return result.subargs(2);
+                        }
+                        throw new LuaError(result.arg(2).tojstring());
+                    }
+                };
             }
         });
     }

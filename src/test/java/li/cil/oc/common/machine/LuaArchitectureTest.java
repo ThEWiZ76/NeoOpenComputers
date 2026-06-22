@@ -569,6 +569,30 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void bubblesComputerPullSignalThroughCoroutineWrapLikeUpstream() {
+        Queue<Signal> signals = new ArrayDeque<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            wrapped = coroutine.wrap(function()
+              return computer.pullSignal()
+            end)
+            name, value = wrapped()
+            continued = true
+            """);
+        architecture.bind(machine(signals, 0D));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        signals.add(new TestSignal("event", new Object[]{"payload"}));
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("event", architecture.globalString("name"));
+        assertEquals("payload", architecture.globalString("value"));
+        assertEquals(true, architecture.globalBoolean("continued"));
+    }
+
+    @Test
     void resumesComputerPullSignalAfterTimeout() {
         Queue<Signal> signals = new ArrayDeque<>();
         double[] uptime = {10D};
