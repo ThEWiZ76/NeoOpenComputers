@@ -1204,8 +1204,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (!type.equals(machine.components().get(address))) {
             return false;
         }
-        if (address.equals(primaryComponents.get(type))) {
+        final String previous = primaryComponents.get(type);
+        if (address.equals(previous)) {
             return false;
+        }
+        if (previous != null) {
+            machine.signal("component_unavailable", type);
         }
         primaryComponents.put(type, address);
         machine.signal("component_available", type);

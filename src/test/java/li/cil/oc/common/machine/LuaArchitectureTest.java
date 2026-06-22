@@ -1418,6 +1418,28 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void changingPrimaryComponentEmitsUnavailableThenAvailableSignals() {
+        List<String> signals = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            component.setPrimary('filesystem', 'fs1')
+            component.setPrimary('filesystem', 'fs2')
+            """);
+        architecture.bind(machineWithComponentsAndSignalLog(Map.of(
+            "fs1-address", "filesystem",
+            "fs2-address", "filesystem"
+        ), signals));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(List.of(
+            "component_available:filesystem",
+            "component_unavailable:filesystem",
+            "component_available:filesystem"
+        ), signals);
+    }
+
+    @Test
     void invokesRealFilesystemComponentFromLua() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1757,6 +1779,24 @@ final class LuaArchitectureTest {
 
     private static Machine machineWithComponentsAndSignalCapture(final Map<String, String> components, final String[] signalName, final Object[][] signalArguments) {
         return machine(new ArrayDeque<>(), 0D, null, null, components, new Object[0], Map.of(), new String[0], null, null, signalName, signalArguments);
+    }
+
+    private static Machine machineWithComponentsAndSignalLog(final Map<String, String> components, final List<String> signals) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> components;
+                case "signal" -> {
+                    Object[] signalArguments = (Object[]) args[1];
+                    signals.add(args[0] + ":" + signalArguments[0]);
+                    yield true;
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
     }
 
     private static Machine machineWithComponentsMethodsAndInvokeResult(final Map<String, String> components, final Map<String, Callback> methods, final Object[] invokeResult) {
