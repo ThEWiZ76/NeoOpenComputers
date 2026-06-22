@@ -8,6 +8,7 @@ import li.cil.oc.api.nanomachines.DisableReason;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.WirelessEndpoint;
 import li.cil.oc.common.item.NanomachineItemData;
+import li.cil.oc.common.nanomachines.provider.NanomachineParticleProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
@@ -37,6 +38,7 @@ final class NanomachinesRegistryTest {
         OpenComputersApi.initialize();
 
         assertTrue(API.nanomachines instanceof NanomachinesRegistry);
+        assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineParticleProvider.class));
     }
 
     @Test
@@ -453,6 +455,15 @@ final class NanomachinesRegistryTest {
         for (int i = 0; i < behaviors.size(); i++) {
             final CompoundTag behavior = behaviors.getCompound(i);
             if (behavior.getIntArray("triggerInputs").length == 0 && behavior.getIntArray("connectorInputs").length == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasProvider(final NanomachinesRegistry registry, final Class<?> providerType) {
+        for (final BehaviorProvider provider : registry.getProviders()) {
+            if (providerType.isInstance(provider)) {
                 return true;
             }
         }
