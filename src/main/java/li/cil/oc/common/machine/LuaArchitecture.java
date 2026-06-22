@@ -543,35 +543,22 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         debug.set("getlocal", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                return safeDebugNameValue(fullGetLocal.invoke(args));
+                return debugNameOnly(fullGetLocal.invoke(args));
             }
         });
         final LuaValue fullGetUpvalue = fullDebug.get("getupvalue");
         debug.set("getupvalue", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                return safeDebugNameValue(fullGetUpvalue.invoke(args));
+                return debugNameOnly(fullGetUpvalue.invoke(args));
             }
         });
         globals.set("debug", debug);
     }
 
-    private static Varargs safeDebugNameValue(final Varargs result) {
+    private static Varargs debugNameOnly(final Varargs result) {
         final LuaValue name = result.arg1();
-        if (name.isnil()) {
-            return LuaValue.NIL;
-        }
-        return LuaValue.varargsOf(name, safeDebugValue(result.arg(2)));
-    }
-
-    private static LuaValue safeDebugValue(final LuaValue value) {
-        if (value.isnil() || value.isstring() || value.isnumber() || value.isboolean() || value.istable()) {
-            return value;
-        }
-        if (value.isuserdata() && value.touserdata() instanceof Value) {
-            return value;
-        }
-        return LuaValue.NIL;
+        return name.isnil() ? LuaValue.NIL : name;
     }
 
     private static void copyDebugInfoField(final LuaValue source, final LuaTable target, final String key) {

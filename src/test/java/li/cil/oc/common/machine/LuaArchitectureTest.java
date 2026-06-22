@@ -241,15 +241,19 @@ final class LuaArchitectureTest {
     }
 
     @Test
-    void exposesSafeDebugLocalAndUpvalueValues() {
+    void exposesOnlyDebugLocalAndUpvalueNamesLikeUpstreamSandbox() {
         LuaArchitecture architecture = new LuaArchitecture("""
             local captured = 'up'
             function sample(argument)
               localName, localResult = debug.getlocal(1, 1)
+              localResultCount = select('#', debug.getlocal(1, 1))
               localNameType = type(localName)
               upvalueName, upvalueResult = debug.getupvalue(function()
                 return captured
               end, 1)
+              upvalueResultCount = select('#', debug.getupvalue(function()
+                return captured
+              end, 1))
               upvalueNameType = type(upvalueName)
             end
             sample('argument')
@@ -258,8 +262,10 @@ final class LuaArchitectureTest {
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals("argument", architecture.globalString("localResult"));
-        assertEquals("up", architecture.globalString("upvalueResult"));
+        assertEquals("nil", architecture.globalString("localResult"));
+        assertEquals("nil", architecture.globalString("upvalueResult"));
+        assertEquals(1, architecture.globalInteger("localResultCount"));
+        assertEquals(1, architecture.globalInteger("upvalueResultCount"));
         assertEquals("string", architecture.globalString("localNameType"));
         assertEquals("string", architecture.globalString("upvalueNameType"));
     }
