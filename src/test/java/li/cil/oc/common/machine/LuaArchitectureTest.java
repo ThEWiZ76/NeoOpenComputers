@@ -893,6 +893,9 @@ final class LuaArchitectureTest {
             invokeMethodValid, invokeMethodMessage = pcall(function()
               component.invoke('fs-address')
             end)
+            proxyValid, proxyMessage = pcall(function()
+              component.proxy()
+            end)
             """);
         architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
 
@@ -915,6 +918,8 @@ final class LuaArchitectureTest {
         assertTrue(architecture.globalString("invokeAddressMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("invokeMethodValid"));
         assertTrue(architecture.globalString("invokeMethodMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("proxyValid"));
+        assertTrue(architecture.globalString("proxyMessage").contains("string expected"));
     }
 
     @Test

@@ -837,10 +837,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("proxy", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || args.narg() < 1) {
+                final String address = args.checkjstring(1);
+                if (machine == null) {
                     return LuaValue.NIL;
                 }
-                final String address = args.arg(1).tojstring();
                 return hasComponent(address) ? createComponentProxy(address) : noSuchComponent();
             }
         });
