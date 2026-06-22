@@ -17,6 +17,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
@@ -222,7 +225,9 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         return CompletableFuture.supplyAsync(() -> {
             HttpURLConnection connection = null;
             try {
-                connection = (HttpURLConnection) new URL(url).openConnection();
+                final URL parsed = new URL(url);
+                checkAddressAllowed(InetAddress.getByName(parsed.getHost()), parsed.getHost());
+                connection = (HttpURLConnection) parsed.openConnection();
                 connection.setDoInput(true);
                 connection.setConnectTimeout(ModSettings.httpRequestTimeout());
                 connection.setReadTimeout(ModSettings.httpRequestTimeout());
@@ -265,6 +270,29 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             }
         }
         return result;
+    }
+
+    private static void checkAddressAllowed(final InetAddress address, final String host) throws IOException {
+        if (!isAddressAllowed(address, host)) {
+            throw new IOException("address is not allowed");
+        }
+    }
+
+    private static boolean isAddressAllowed(final InetAddress address, final String host) {
+        if (!ModSettings.enableHttp() && !ModSettings.enableTcp()) {
+            return false;
+        }
+        try {
+            for (final String rule : ModSettings.internetFilteringRules()) {
+                final Boolean result = InternetFilteringRule.parse(rule).apply(address, host);
+                if (result != null) {
+                    return result;
+                }
+            }
+            return false;
+        } catch (final IllegalArgumentException ignored) {
+            return false;
+        }
     }
 
     @FunctionalInterface
@@ -368,8 +396,10 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             this.owner = owner;
             connection = CompletableFuture.supplyAsync(() -> {
                 try {
+                    final InetAddress resolved = InetAddress.getByName(host);
+                    checkAddressAllowed(resolved, host);
                     final Socket socket = new Socket();
-                    socket.connect(new InetSocketAddress(host, port), 10_000);
+                    socket.connect(new InetSocketAddress(resolved, port), 10_000);
                     socket.setTcpNoDelay(true);
                     return socket;
                 } catch (IOException e) {
@@ -470,6 +500,157 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Override
         public void save(final CompoundTag nbt) {
+        }
+    }
+
+    private record InternetFilteringRule(boolean allow, List<RulePredicate> predicates) {
+        private static final List<String> BOGON_RANGES = List.of(
+            "0.0.0.0/8",
+            "10.0.0.0/8",
+            "100.64.0.0/10",
+            "127.0.0.0/8",
+            "169.254.0.0/16",
+            "172.16.0.0/12",
+            "192.0.0.0/24",
+            "192.0.2.0/24",
+            "192.168.0.0/16",
+            "198.18.0.0/15",
+            "198.51.100.0/24",
+            "203.0.113.0/24",
+            "224.0.0.0/3",
+            "::/128",
+            "::1/128",
+            "::ffff:0:0/96",
+            "::/96",
+            "100::/64",
+            "2001:10::/28",
+            "2001:db8::/32",
+            "fc00::/7",
+            "fe80::/10",
+            "fec0::/10",
+            "ff00::/8"
+        );
+        private static final List<InetAddressRange> BOGONS = BOGON_RANGES.stream()
+            .map(range -> range.split("/", 2))
+            .map(parts -> InetAddressRange.parse(parts[0], Integer.parseInt(parts[1])))
+            .toList();
+
+        private Boolean apply(final InetAddress address, final String host) {
+            for (final RulePredicate predicate : predicates) {
+                if (!predicate.matches(address, host)) {
+                    return null;
+                }
+            }
+            return allow;
+        }
+
+        private static InternetFilteringRule parse(final String rule) {
+            final String[] parts = rule.trim().split("\\s+");
+            if (parts.length == 0 || parts[0].isEmpty() || "removeme".equals(parts[0])) {
+                return new InternetFilteringRule(false, List.of((address, host) -> false));
+            }
+            if (!"allow".equals(parts[0]) && !"deny".equals(parts[0])) {
+                throw new IllegalArgumentException("invalid filtering rule action");
+            }
+            final boolean allow = "allow".equals(parts[0]);
+            final List<RulePredicate> predicates = new java.util.ArrayList<>();
+            for (int i = 1; i < parts.length; i++) {
+                final String filter = parts[i];
+                if ("all".equals(filter)) {
+                    continue;
+                }
+                if ("default".equals(filter)) {
+                    predicates.add((address, host) -> allow && defaultAllow(address, host));
+                } else if ("private".equals(filter)) {
+                    predicates.add((address, host) -> isPrivate(address));
+                } else if ("bogon".equals(filter)) {
+                    predicates.add((address, host) -> BOGONS.stream().anyMatch(range -> range.matches(address)));
+                } else if ("ipv4".equals(filter)) {
+                    predicates.add((address, host) -> address instanceof Inet4Address);
+                } else if ("ipv6".equals(filter)) {
+                    predicates.add((address, host) -> address instanceof Inet6Address);
+                } else if (filter.startsWith("ip:")) {
+                    final String value = filter.substring("ip:".length());
+                    final String[] range = value.split("/", 2);
+                    if (range.length == 2) {
+                        final InetAddressRange addressRange = InetAddressRange.parse(range[0], Integer.parseInt(range[1]));
+                        predicates.add((address, host) -> addressRange.matches(address));
+                    } else {
+                        final InetAddress exact = parseAddress(value);
+                        predicates.add((address, host) -> exact.equals(address));
+                    }
+                } else if (filter.startsWith("domain:")) {
+                    final String domain = filter.substring("domain:".length());
+                    final List<InetAddress> addresses = List.of(resolveAll(domain));
+                    predicates.add((address, host) -> host.equals(domain) || addresses.contains(address));
+                } else {
+                    throw new IllegalArgumentException("invalid filtering rule filter");
+                }
+            }
+            return new InternetFilteringRule(allow, predicates);
+        }
+
+        private static boolean defaultAllow(final InetAddress address, final String host) {
+            return !isPrivate(address) && BOGONS.stream().noneMatch(range -> range.matches(address));
+        }
+
+        private static boolean isPrivate(final InetAddress address) {
+            return address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress() || address.isSiteLocalAddress();
+        }
+
+        private static InetAddress parseAddress(final String value) {
+            try {
+                return InetAddress.getByName(value);
+            } catch (final IOException e) {
+                throw new IllegalArgumentException("invalid IP address", e);
+            }
+        }
+
+        private static InetAddress[] resolveAll(final String domain) {
+            try {
+                return InetAddress.getAllByName(domain);
+            } catch (final IOException e) {
+                throw new IllegalArgumentException("invalid domain", e);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    private interface RulePredicate {
+        boolean matches(InetAddress address, String host);
+    }
+
+    private record InetAddressRange(byte[] min, byte[] max) {
+        private boolean matches(final InetAddress address) {
+            final byte[] value = address.getAddress();
+            if (value.length != min.length) {
+                return false;
+            }
+            for (int i = 0; i < value.length; i++) {
+                final int unsigned = Byte.toUnsignedInt(value[i]);
+                if (unsigned < Byte.toUnsignedInt(min[i]) || unsigned > Byte.toUnsignedInt(max[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static InetAddressRange parse(final String address, final int prefixSize) {
+            final byte[] min = InternetFilteringRule.parseAddress(address).getAddress();
+            final byte[] max = min.clone();
+            int remaining = prefixSize;
+            for (int i = 0; i < min.length; i++) {
+                if (remaining <= 0) {
+                    min[i] = 0;
+                    max[i] = (byte) 0xFF;
+                } else if (remaining < 8) {
+                    final int mask = 0xFF << (8 - remaining);
+                    min[i] = (byte) (min[i] & mask);
+                    max[i] = (byte) (Byte.toUnsignedInt(max[i]) | ~mask);
+                }
+                remaining -= 8;
+            }
+            return new InetAddressRange(min, max);
         }
     }
 }

@@ -52,6 +52,7 @@ final class ModSettingsTest {
         assertEquals(true, ModSettings.enableHttp());
         assertEquals(true, ModSettings.enableHttpHeaders());
         assertEquals(true, ModSettings.enableTcp());
+        assertEquals(List.of("removeme", "deny private", "deny bogon", "allow default"), ModSettings.internetFilteringRules());
         assertEquals(0, ModSettings.httpRequestTimeout());
         assertEquals(4, ModSettings.maxTcpConnections());
         assertEquals("opencomputers/" + API.VERSION, ModSettings.httpUserAgent());
@@ -97,6 +98,7 @@ final class ModSettingsTest {
         assertEquals(List.of("internet", "enableHttp"), ModSettings.ENABLE_HTTP.getPath());
         assertEquals(List.of("internet", "enableHttpHeaders"), ModSettings.ENABLE_HTTP_HEADERS.getPath());
         assertEquals(List.of("internet", "enableTcp"), ModSettings.ENABLE_TCP.getPath());
+        assertEquals(List.of("internet", "filteringRules"), ModSettings.FILTERING_RULES.getPath());
         assertEquals(List.of("internet", "requestTimeout"), ModSettings.REQUEST_TIMEOUT.getPath());
         assertEquals(List.of("internet", "maxTcpConnections"), ModSettings.MAX_TCP_CONNECTIONS.getPath());
         assertEquals(List.of("internet", "httpUserAgent"), ModSettings.HTTP_USER_AGENT.getPath());

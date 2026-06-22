@@ -130,9 +130,11 @@ final class InternetCardEnvironmentTest {
                 return null;
             });
 
-            Object handle = card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/headers"))[0];
-            InternetCardEnvironment.HttpRequest request = assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
-            awaitHttpConnected(request);
+            withFilteringRules(List.of("allow all"), () -> {
+                Object handle = card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/headers"))[0];
+                InternetCardEnvironment.HttpRequest request = assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
+                awaitHttpConnected(request);
+            });
 
             assertEquals("opencomputers/" + API.VERSION, userAgent.get(2, TimeUnit.SECONDS));
         } finally {
@@ -166,11 +168,11 @@ final class InternetCardEnvironmentTest {
                 return null;
             });
 
-            withCachedConfig(ModSettings.HTTP_USER_AGENT, "neo/$version", () -> {
+            withFilteringRules(List.of("allow all"), () -> withCachedConfig(ModSettings.HTTP_USER_AGENT, "neo/$version", () -> {
                 Object handle = card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/headers"))[0];
                 InternetCardEnvironment.HttpRequest request = assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
                 awaitHttpConnected(request);
-            });
+            }));
 
             assertEquals("neo/" + API.VERSION, userAgent.get(2, TimeUnit.SECONDS));
         } finally {
@@ -226,12 +228,52 @@ final class InternetCardEnvironmentTest {
                 return null;
             });
 
-            withCachedConfig(ModSettings.REQUEST_TIMEOUT, 1, () -> {
+            withFilteringRules(List.of("allow all"), () -> withCachedConfig(ModSettings.REQUEST_TIMEOUT, 1, () -> {
                 InternetCardEnvironment.HttpRequest request = assertInstanceOf(
                     InternetCardEnvironment.HttpRequest.class,
                     card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/silent"))[0]);
                 accepted.get(2, TimeUnit.SECONDS);
                 awaitHttpTimeout(request);
+            }));
+        } finally {
+            serverThread.shutdownNow();
+            assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
+    void defaultFilteringRulesDenyPrivateHttpAddresses() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+
+        InternetCardEnvironment.HttpRequest request = assertInstanceOf(
+            InternetCardEnvironment.HttpRequest.class,
+            card.request(null, new TestArguments("http://127.0.0.1:1/denied"))[0]);
+
+        awaitHttpFailure(request, "address is not allowed");
+    }
+
+    @Test
+    void configuredFilteringRulesAllowPrivateHttpAddresses() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+        ExecutorService serverThread = Executors.newSingleThreadExecutor();
+
+        try (ServerSocket server = new ServerSocket(0)) {
+            serverThread.submit(() -> {
+                try (Socket socket = server.accept()) {
+                    socket.getInputStream().readNBytes(1);
+                    socket.getOutputStream().write("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+                    socket.getOutputStream().flush();
+                }
+                return null;
+            });
+
+            withFilteringRules(List.of("allow all"), () -> {
+                InternetCardEnvironment.HttpRequest request = assertInstanceOf(
+                    InternetCardEnvironment.HttpRequest.class,
+                    card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/allowed"))[0]);
+                awaitHttpConnected(request);
             });
         } finally {
             serverThread.shutdownNow();
@@ -330,13 +372,15 @@ final class InternetCardEnvironmentTest {
             });
 
             assertArrayEquals(new Object[]{true}, card.isTcpEnabled(null, new TestArguments()));
-            Object handle = card.connect(null, new TestArguments("127.0.0.1", server.getLocalPort()))[0];
-            InternetCardEnvironment.TcpSocket socket = assertInstanceOf(InternetCardEnvironment.TcpSocket.class, handle);
+            withFilteringRules(List.of("allow all"), () -> {
+                Object handle = card.connect(null, new TestArguments("127.0.0.1", server.getLocalPort()))[0];
+                InternetCardEnvironment.TcpSocket socket = assertInstanceOf(InternetCardEnvironment.TcpSocket.class, handle);
 
-            awaitConnected(socket);
-            assertArrayEquals(new Object[]{4}, socket.write(null, new TestArguments("ping".getBytes(StandardCharsets.UTF_8))));
-            assertArrayEquals("pong".getBytes(StandardCharsets.UTF_8), awaitRead(socket, 4));
-            socket.close(null, new TestArguments());
+                awaitConnected(socket);
+                assertArrayEquals(new Object[]{4}, socket.write(null, new TestArguments("ping".getBytes(StandardCharsets.UTF_8))));
+                assertArrayEquals("pong".getBytes(StandardCharsets.UTF_8), awaitRead(socket, 4));
+                socket.close(null, new TestArguments());
+            });
         } finally {
             serverThread.shutdownNow();
             assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
@@ -371,14 +415,16 @@ final class InternetCardEnvironmentTest {
                 return null;
             });
 
-            InternetCardEnvironment.TcpSocket socket = assertInstanceOf(
-                InternetCardEnvironment.TcpSocket.class,
-                card.connect(null, new TestArguments("127.0.0.1", server.getLocalPort()))[0]);
-            awaitConnected(socket);
+            withFilteringRules(List.of("allow all"), () -> {
+                InternetCardEnvironment.TcpSocket socket = assertInstanceOf(
+                    InternetCardEnvironment.TcpSocket.class,
+                    card.connect(null, new TestArguments("127.0.0.1", server.getLocalPort()))[0]);
+                awaitConnected(socket);
 
-            withCachedConfig(ModSettings.MAX_READ_BUFFER, 3, () ->
-                assertArrayEquals("abc".getBytes(StandardCharsets.UTF_8), awaitRead(socket, 10)));
-            socket.close(null, new TestArguments());
+                withCachedConfig(ModSettings.MAX_READ_BUFFER, 3, () ->
+                    assertArrayEquals("abc".getBytes(StandardCharsets.UTF_8), awaitRead(socket, 10)));
+                socket.close(null, new TestArguments());
+            });
         } finally {
             serverThread.shutdownNow();
             assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
@@ -423,6 +469,19 @@ final class InternetCardEnvironmentTest {
         throw new AssertionError("HTTP request did not time out");
     }
 
+    private static void awaitHttpFailure(final InternetCardEnvironment.HttpRequest request, final String message) throws Exception {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            try {
+                request.response(null, new TestArguments());
+            } catch (CompletionException e) {
+                assertEquals(message, e.getCause().getMessage());
+                return;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("HTTP request did not fail");
+    }
+
     private static byte[] awaitRead(final InternetCardEnvironment.TcpSocket socket, final int length) throws Exception {
         for (int attempt = 0; attempt < 100; attempt++) {
             Object value = socket.read(null, new TestArguments(length))[0];
@@ -444,6 +503,10 @@ final class InternetCardEnvironmentTest {
         } finally {
             cachedValue.set(value, previous);
         }
+    }
+
+    private static void withFilteringRules(final List<String> rules, final ThrowingRunnable action) throws Exception {
+        withCachedConfig(ModSettings.FILTERING_RULES, rules, action);
     }
 
     @FunctionalInterface

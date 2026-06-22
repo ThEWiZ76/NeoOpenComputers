@@ -10,6 +10,7 @@ public final class ModSettings {
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
     private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
     private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
+    private static final List<String> DEFAULT_FILTERING_RULES = List.of("removeme", "deny private", "deny bogon", "allow default");
 
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
@@ -40,6 +41,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP;
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP_HEADERS;
     public static final ModConfigSpec.BooleanValue ENABLE_TCP;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> FILTERING_RULES;
     public static final ModConfigSpec.IntValue REQUEST_TIMEOUT;
     public static final ModConfigSpec.IntValue MAX_TCP_CONNECTIONS;
     public static final ModConfigSpec.ConfigValue<String> HTTP_USER_AGENT;
@@ -146,6 +148,9 @@ public final class ModSettings {
         ENABLE_TCP = builder
             .comment("Allow internet cards to make TCP connections. OpenComputers upstream default is true.")
             .define("enableTcp", true);
+        FILTERING_RULES = builder
+            .comment("Internet card address filtering rules. Rules are processed in order; no match denies access.")
+            .defineList("filteringRules", DEFAULT_FILTERING_RULES, value -> value instanceof String);
         REQUEST_TIMEOUT = builder
             .comment("HTTP request timeout in seconds. Zero disables timeouts, matching OpenComputers upstream.")
             .defineInRange("requestTimeout", 0, 0, Integer.MAX_VALUE / 1000);
@@ -331,6 +336,10 @@ public final class ModSettings {
         return booleanValue(ENABLE_TCP);
     }
 
+    public static List<String> internetFilteringRules() {
+        return stringListValue(FILTERING_RULES);
+    }
+
     public static int httpRequestTimeout() {
         return intValue(REQUEST_TIMEOUT) * 1000;
     }
@@ -401,6 +410,14 @@ public final class ModSettings {
             return value.get();
         } catch (final IllegalStateException ignored) {
             return value.getDefault();
+        }
+    }
+
+    private static List<String> stringListValue(final ModConfigSpec.ConfigValue<List<? extends String>> value) {
+        try {
+            return List.copyOf(value.get());
+        } catch (final IllegalStateException ignored) {
+            return List.copyOf(value.getDefault());
         }
     }
 
