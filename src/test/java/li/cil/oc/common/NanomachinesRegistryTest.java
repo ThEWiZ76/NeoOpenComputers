@@ -265,6 +265,28 @@ final class NanomachinesRegistryTest {
         assertArrayEquals(new Object[]{"nanomachines", "input", "error"}, sender.lastPacket.data());
     }
 
+    @Test
+    void controllerRespondsToGetActiveEffectsWirelessCommand() {
+        API.network = new NetworkRegistry();
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(
+            new TestBehavior("speed,boost\"now"),
+            new TestBehavior(""))));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        controller.setInput(0, true);
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 557}), sender);
+        sender.lastPacket = null;
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getActiveEffects"}), sender);
+
+        assertTrue(sender.lastPacket != null);
+        assertEquals(557, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "effects", "{speed_boost_now}"}, sender.lastPacket.data());
+    }
+
     private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {
         for (int i = 0; i < behaviors.size(); i++) {
             if (behaviors.getCompound(i).getIntArray("connectorInputs").length > 0) {

@@ -184,6 +184,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             } catch (final RuntimeException e) {
                 respond(sender, "input", "error");
             }
+        } else if ("getActiveEffects".equals(command)) {
+            respond(sender, "effects", activeEffects());
         }
     }
 
@@ -372,6 +374,22 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     private static int clampPort(final int port) {
         return Math.max(0, Math.min(0xFFFF, port));
+    }
+
+    private String activeEffects() {
+        final StringBuilder builder = new StringBuilder("{");
+        boolean first = true;
+        for (final Behavior behavior : getActiveBehaviors()) {
+            final String name = behavior.getNameHint();
+            if (name != null && !name.isEmpty()) {
+                if (!first) {
+                    builder.append(',');
+                }
+                builder.append(name.replace(',', '_').replace('"', '_'));
+                first = false;
+            }
+        }
+        return builder.append('}').toString();
     }
 
     private int activeInputCount() {
