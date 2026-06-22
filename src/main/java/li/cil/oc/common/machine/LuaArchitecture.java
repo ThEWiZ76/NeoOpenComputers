@@ -1929,8 +1929,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("index out of bounds"));
         } catch (NoSuchMethodException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such method"));
+        } catch (FileNotFoundException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("file not found"));
         } catch (SecurityException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("access denied"));
+        } catch (IOException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("i/o error"));
         } catch (Exception e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
         }

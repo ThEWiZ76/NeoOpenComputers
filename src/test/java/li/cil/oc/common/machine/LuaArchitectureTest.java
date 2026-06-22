@@ -1861,6 +1861,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void mapsUserdataCallbackIoFailuresToLuaResultsLikeComponents() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            result, message = value.bad()
+            """);
+        architecture.bind(machineWithThrowingValueInvoke(value, new IOException("disk failed")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("result"));
+        assertEquals("i/o error", architecture.globalString("message"));
+    }
+
+    @Test
     void exposesComponentProxyToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
@@ -3006,6 +3022,26 @@ final class LuaArchitectureTest {
                 case "components" -> Map.of("fs-address", "filesystem");
                 case "methods" -> Map.of("bad", callback("labelCallback"));
                 case "invoke" -> throw failure;
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithThrowingValueInvoke(final TestValue value, final Exception failure) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> Map.of("fs-address", "filesystem");
+                case "methods" -> args[0] == value ? Map.of("bad", callback("labelCallback")) : Map.of();
+                case "invoke" -> {
+                    if (args[0] == value) {
+                        throw failure;
+                    }
+                    yield new Object[]{value};
+                }
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
                 case "toString" -> "test-machine";
