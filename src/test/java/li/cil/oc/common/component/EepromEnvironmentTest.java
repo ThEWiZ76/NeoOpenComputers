@@ -47,7 +47,9 @@ final class EepromEnvironmentTest {
     void readsAndWritesEepromData() throws Exception {
         OpenComputersApi.initialize();
         CompoundTag data = data("Lua BIOS", "code", "data", false);
-        Component component = (Component) new EepromEnvironment(data).node();
+        EepromEnvironment environment = new EepromEnvironment(data);
+        Component component = (Component) environment.node();
+        charge(environment, 100);
 
         assertArrayEquals(bytes("code"), (byte[]) component.invoke("get", null)[0]);
         assertArrayEquals(bytes("data"), (byte[]) component.invoke("getData", null)[0]);
@@ -77,20 +79,26 @@ final class EepromEnvironmentTest {
     }
 
     @Test
-    void eepromWritesConsumeEnergyAndPauseLikeUpstream() throws Exception {
+    void eepromWritesConsumeOwnConnectorEnergyAndPauseLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         CompoundTag data = data("Lua BIOS", "code", "data", false);
-        Component component = (Component) new EepromEnvironment(data).node();
-        Connector connector = connectorWithEnergy(100);
-        RecordingContext context = new RecordingContext(connector);
+        EepromEnvironment environment = new EepromEnvironment(data);
+        Component component = (Component) environment.node();
+        Connector eepromConnector = assertInstanceOf(Connector.class, environment.node());
+        eepromConnector.setLocalBufferSize(100);
+        eepromConnector.changeBuffer(100);
+        Connector contextConnector = connectorWithEnergy(0);
+        RecordingContext context = new RecordingContext(contextConnector);
 
         component.invoke("set", context, "next");
-        assertEquals(50, connector.localBuffer());
+        assertEquals(50, eepromConnector.localBuffer());
+        assertEquals(0, contextConnector.localBuffer());
         assertEquals(2, context.pauseSeconds);
 
         context.pauseSeconds = -1;
         component.invoke("setData", context, "user");
-        assertEquals(0, connector.localBuffer());
+        assertEquals(0, eepromConnector.localBuffer());
+        assertEquals(0, contextConnector.localBuffer());
         assertEquals(1, context.pauseSeconds);
     }
 
@@ -98,9 +106,12 @@ final class EepromEnvironmentTest {
     void eepromWritesFailWithoutEnoughEnergy() throws Exception {
         OpenComputersApi.initialize();
         CompoundTag data = data("Lua BIOS", "code", "data", false);
-        Component component = (Component) new EepromEnvironment(data).node();
-        Connector connector = connectorWithEnergy(49);
-        RecordingContext context = new RecordingContext(connector);
+        EepromEnvironment environment = new EepromEnvironment(data);
+        Component component = (Component) environment.node();
+        Connector eepromConnector = assertInstanceOf(Connector.class, environment.node());
+        eepromConnector.setLocalBufferSize(100);
+        eepromConnector.changeBuffer(49);
+        RecordingContext context = new RecordingContext(connectorWithEnergy(100));
 
         assertArrayEquals(new Object[]{null, "not enough energy"}, component.invoke("set", context, "next"));
         assertArrayEquals(bytes("code"), data.getByteArray(ItemRegistry.EEPROM_CODE_TAG));
@@ -128,7 +139,9 @@ final class EepromEnvironmentTest {
         withCachedConfig(ModSettings.EEPROM_SIZE, 6, () ->
             withCachedConfig(ModSettings.EEPROM_DATA_SIZE, 3, () -> {
                 CompoundTag data = data("ROM", "code", "dat", false);
-                Component component = (Component) new EepromEnvironment(data).node();
+                EepromEnvironment environment = new EepromEnvironment(data);
+                Component component = (Component) environment.node();
+                charge(environment, 200);
                 DeviceInfo info = assertInstanceOf(DeviceInfo.class, component.host());
 
                 assertArrayEquals(new Object[]{6}, component.invoke("getSize", null));
@@ -165,6 +178,12 @@ final class EepromEnvironmentTest {
             .create();
         connector.changeBuffer(energy);
         return connector;
+    }
+
+    private static void charge(final EepromEnvironment environment, final double energy) {
+        Connector connector = assertInstanceOf(Connector.class, environment.node());
+        connector.setLocalBufferSize(energy);
+        connector.changeBuffer(energy);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

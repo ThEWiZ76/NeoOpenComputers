@@ -60,7 +60,7 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
         if (data.getBoolean(ItemRegistry.EEPROM_READONLY_TAG)) {
             return new Object[]{null, "storage is readonly"};
         }
-        if (!consumeEnergy(context)) {
+        if (!consumeEnergy()) {
             return new Object[]{null, "not enough energy"};
         }
         final byte[] newData = arguments.optByteArray(0, new byte[0]);
@@ -129,7 +129,7 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(doc = "function(data:string) -- Overwrite the currently stored byte array.")
     public Object[] setData(final Context context, final Arguments arguments) {
-        if (!consumeEnergy(context)) {
+        if (!consumeEnergy()) {
             return new Object[]{null, "not enough energy"};
         }
         final byte[] newData = arguments.optByteArray(0, new byte[0]);
@@ -150,8 +150,8 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
         return bytes == null ? new byte[0] : Arrays.copyOf(bytes, bytes.length);
     }
 
-    private static boolean consumeEnergy(final Context context) {
-        return context == null || !(context.node() instanceof Connector connector) || connector.tryChangeBuffer(-WRITE_COST);
+    private boolean consumeEnergy() {
+        return !(node() instanceof Connector connector) || connector.tryChangeBuffer(-WRITE_COST);
     }
 
     private static void pause(final Context context, final double seconds) {
