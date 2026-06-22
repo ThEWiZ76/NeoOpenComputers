@@ -297,6 +297,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         installCheckArg(globals);
         installDebugLibrary(globals);
         installGetMetatableCompatibility(globals);
+        installLoadCompatibility(globals);
         installPairsCompatibility(globals);
         installStringCompatibility(globals);
         LoadState.install(globals);
@@ -315,6 +316,24 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return originalGetMetatable.invoke(args);
             }
         });
+    }
+
+    private static void installLoadCompatibility(final Globals globals) {
+        final LuaValue originalLoad = globals.get("load");
+        globals.set("load", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaValue chunk = args.arg(1);
+                if (!ModSettings.allowBytecode() && chunk instanceof LuaString string && isLuaBytecode(string)) {
+                    return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("attempt to load a binary chunk"));
+                }
+                return originalLoad.invoke(args);
+            }
+        });
+    }
+
+    private static boolean isLuaBytecode(final LuaString value) {
+        return value.m_length > 0 && value.m_bytes[value.m_offset] == 0x1B;
     }
 
     private static void installPairsCompatibility(final Globals globals) {
