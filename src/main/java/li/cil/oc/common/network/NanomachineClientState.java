@@ -4,6 +4,8 @@ public final class NanomachineClientState {
     private static boolean installed;
     private static double buffer;
     private static double maxBuffer;
+    private static int activeInputs;
+    private static int totalInputs;
 
     private NanomachineClientState() {
     }
@@ -19,12 +21,16 @@ public final class NanomachineClientState {
         if (maxBuffer > 0D) {
             buffer = Math.min(buffer, maxBuffer);
         }
+        totalInputs = Math.max(0, payload.totalInputs());
+        activeInputs = Math.min(Math.max(0, payload.activeInputs()), totalInputs);
     }
 
     public static void clear() {
         installed = false;
         buffer = 0D;
         maxBuffer = 0D;
+        activeInputs = 0;
+        totalInputs = 0;
     }
 
     public static boolean installed() {
@@ -37,6 +43,14 @@ public final class NanomachineClientState {
 
     public static double maxBuffer() {
         return maxBuffer;
+    }
+
+    public static int activeInputs() {
+        return activeInputs;
+    }
+
+    public static int totalInputs() {
+        return totalInputs;
     }
 
     public static double fill() {

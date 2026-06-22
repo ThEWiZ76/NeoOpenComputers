@@ -20,7 +20,7 @@ final class NanomachinePowerPayloadTest {
 
     @Test
     void roundTripsThroughStreamCodec() {
-        final NanomachinePowerPayload payload = new NanomachinePowerPayload(true, 12.5D, 100D);
+        final NanomachinePowerPayload payload = new NanomachinePowerPayload(true, 12.5D, 100D, 3, 9);
         final RegistryFriendlyByteBuf buffer = new RegistryFriendlyByteBuf(
             Unpooled.buffer(),
             RegistryAccess.EMPTY,
@@ -32,5 +32,7 @@ final class NanomachinePowerPayloadTest {
         assertEquals(true, decoded.installed());
         assertEquals(12.5D, decoded.buffer());
         assertEquals(100D, decoded.maxBuffer());
+        assertEquals(3, decoded.activeInputs());
+        assertEquals(9, decoded.totalInputs());
     }
 }

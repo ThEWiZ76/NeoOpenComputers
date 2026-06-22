@@ -84,7 +84,7 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
             controller.dispose();
         }
         if (player instanceof ServerPlayer serverPlayer) {
-            PacketDistributor.sendToPlayer(serverPlayer, new NanomachinePowerPayload(false, 0D, 0D));
+            PacketDistributor.sendToPlayer(serverPlayer, new NanomachinePowerPayload(false, 0D, 0D, 0, 0));
         }
         player.getPersistentData().remove(TAG_HAS_NANOMACHINES);
         player.getPersistentData().remove(TAG_CONTROLLER);
@@ -98,8 +98,23 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
         if (controller instanceof SimpleNanomachineController simpleController) {
             simpleController.update();
             if (player instanceof ServerPlayer serverPlayer) {
-                PacketDistributor.sendToPlayer(serverPlayer, new NanomachinePowerPayload(true, simpleController.getLocalBuffer(), simpleController.getLocalBufferSize()));
+                PacketDistributor.sendToPlayer(serverPlayer, new NanomachinePowerPayload(
+                    true,
+                    simpleController.getLocalBuffer(),
+                    simpleController.getLocalBufferSize(),
+                    activeInputCount(simpleController),
+                    simpleController.getTotalInputCount()));
             }
         }
+    }
+
+    private static int activeInputCount(final Controller controller) {
+        int activeInputs = 0;
+        for (int i = 0; i < controller.getTotalInputCount(); i++) {
+            if (controller.getInput(i)) {
+                activeInputs++;
+            }
+        }
+        return activeInputs;
     }
 }

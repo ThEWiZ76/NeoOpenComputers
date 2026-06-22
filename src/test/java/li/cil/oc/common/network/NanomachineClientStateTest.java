@@ -15,23 +15,27 @@ final class NanomachineClientStateTest {
 
     @Test
     void applyPowerPayloadStoresInstalledPowerState() {
-        NanomachineClientState.apply(new NanomachinePowerPayload(true, 25D, 100D));
+        NanomachineClientState.apply(new NanomachinePowerPayload(true, 25D, 100D, 2, 8));
 
         assertTrue(NanomachineClientState.installed());
         assertEquals(25D, NanomachineClientState.buffer());
         assertEquals(100D, NanomachineClientState.maxBuffer());
+        assertEquals(2, NanomachineClientState.activeInputs());
+        assertEquals(8, NanomachineClientState.totalInputs());
         assertEquals(0.25D, NanomachineClientState.fill());
     }
 
     @Test
     void absentPayloadClearsPowerState() {
-        NanomachineClientState.apply(new NanomachinePowerPayload(true, 25D, 100D));
+        NanomachineClientState.apply(new NanomachinePowerPayload(true, 25D, 100D, 2, 8));
 
-        NanomachineClientState.apply(new NanomachinePowerPayload(false, 25D, 100D));
+        NanomachineClientState.apply(new NanomachinePowerPayload(false, 25D, 100D, 2, 8));
 
         assertFalse(NanomachineClientState.installed());
         assertEquals(0D, NanomachineClientState.buffer());
         assertEquals(0D, NanomachineClientState.maxBuffer());
+        assertEquals(0, NanomachineClientState.activeInputs());
+        assertEquals(0, NanomachineClientState.totalInputs());
         assertEquals(0D, NanomachineClientState.fill());
     }
 }

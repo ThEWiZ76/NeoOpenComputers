@@ -1,6 +1,7 @@
 package li.cil.oc.client;
 
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,13 @@ final class ScreenBlockEntityRendererShapeTest {
     @Test
     void clientRegistersGuiLayers() throws NoSuchMethodException {
         Method method = NeoOpenComputersClient.class.getDeclaredMethod("registerGuiLayers", RegisterGuiLayersEvent.class);
+
+        assertTrue(Modifier.isStatic(method.getModifiers()));
+    }
+
+    @Test
+    void clientHandlesClientTickForNanomachineParticles() throws NoSuchMethodException {
+        Method method = NeoOpenComputersClient.class.getDeclaredMethod("onClientTick", ClientTickEvent.Post.class);
 
         assertTrue(Modifier.isStatic(method.getModifiers()));
     }

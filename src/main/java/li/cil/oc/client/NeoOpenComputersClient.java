@@ -7,6 +7,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
@@ -21,6 +23,7 @@ public final class NeoOpenComputersClient {
     private static final ResourceLocation NANOMACHINE_HUD = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "nanomachine_hud");
 
     public NeoOpenComputersClient() {
+        NeoForge.EVENT_BUS.addListener(NeoOpenComputersClient::onClientTick);
     }
 
     @SubscribeEvent
@@ -44,6 +47,10 @@ public final class NeoOpenComputersClient {
     @SubscribeEvent
     static void registerGuiLayers(final RegisterGuiLayersEvent event) {
         event.registerAbove(VanillaGuiLayers.PLAYER_HEALTH, NANOMACHINE_HUD, (graphics, deltaTracker) -> NanomachineHud.render(graphics, Minecraft.getInstance()));
+    }
+
+    static void onClientTick(final ClientTickEvent.Post event) {
+        NanomachineParticles.spawnAmbient(Minecraft.getInstance());
     }
 
     @SubscribeEvent
