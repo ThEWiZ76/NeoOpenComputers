@@ -748,11 +748,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     }
                     for (Map.Entry<String, Callback> entry : machine.methods(address).entrySet()) {
                         final Callback callback = entry.getValue();
-                        final LuaTable metadata = new LuaTable();
-                        metadata.set("direct", LuaValue.valueOf(callback != null && callback.direct()));
-                        metadata.set("getter", LuaValue.valueOf(callback != null && callback.getter()));
-                        metadata.set("setter", LuaValue.valueOf(callback != null && callback.setter()));
-                        methods.set(entry.getKey(), metadata);
+                        if (callback != null && !callback.getter() && !callback.setter()) {
+                            methods.set(entry.getKey(), LuaValue.valueOf(callback.direct()));
+                        }
                     }
                 }
                 return methods;

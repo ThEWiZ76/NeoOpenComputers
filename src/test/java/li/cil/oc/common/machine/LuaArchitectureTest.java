@@ -918,7 +918,7 @@ final class LuaArchitectureTest {
         methods.put("label", callback("labelCallback"));
         methods.put("direct", callback("directCallback"));
         methods.put("accessor", callback("accessorCallback"));
-        LuaArchitecture architecture = new LuaArchitecture("methods = component.methods('fs-address'); labelDirect = methods.label.direct; direct = methods.direct.direct; getter = methods.accessor.getter; setter = methods.accessor.setter; missing, missingMessage = component.methods('missing')");
+        LuaArchitecture architecture = new LuaArchitecture("methods = component.methods('fs-address'); labelDirect = methods.label; direct = methods.direct; accessor = methods.accessor; missing, missingMessage = component.methods('missing')");
         architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
 
         assertTrue(architecture.initialize());
@@ -926,8 +926,7 @@ final class LuaArchitectureTest {
 
         assertEquals(false, architecture.globalBoolean("labelDirect"));
         assertEquals(true, architecture.globalBoolean("direct"));
-        assertEquals(true, architecture.globalBoolean("getter"));
-        assertEquals(true, architecture.globalBoolean("setter"));
+        assertEquals("nil", architecture.globalString("accessor"));
         assertEquals("nil", architecture.globalString("missing"));
         assertEquals("no such component", architecture.globalString("missingMessage"));
     }
