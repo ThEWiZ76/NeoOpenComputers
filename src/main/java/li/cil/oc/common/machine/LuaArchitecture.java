@@ -2099,7 +2099,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         metatable.set("__tostring", new ZeroArgFunction() {
             @Override
             public LuaValue call() {
-                return LuaValue.valueOf(value.toString());
+                try {
+                    return LuaValue.valueOf(String.valueOf(value));
+                } catch (Exception e) {
+                    return LuaValue.valueOf(e.toString());
+                }
             }
         });
         metatable.set("__pairs", new VarArgFunction() {

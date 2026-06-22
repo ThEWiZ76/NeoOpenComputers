@@ -1422,6 +1422,23 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void userdataToStringSuppressesHostFailuresLikeUpstream() {
+        TestValue value = new TestValue();
+        value.failToString = true;
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            valid, text = pcall(tostring, value)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("text").contains("broken tostring"));
+    }
+
+    @Test
     void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
         TestValue value = new TestValue();
         int[] valueInvokes = {0};
@@ -3141,6 +3158,7 @@ final class LuaArchitectureTest {
         private String unapplyArgument;
         private String unapplyValue;
         private boolean disposed;
+        private boolean failToString;
 
         @Override
         public Object apply(final Context context, final Arguments arguments) {
@@ -3174,6 +3192,9 @@ final class LuaArchitectureTest {
 
         @Override
         public String toString() {
+            if (failToString) {
+                throw new IllegalStateException("broken tostring");
+            }
             return "test-value";
         }
     }
