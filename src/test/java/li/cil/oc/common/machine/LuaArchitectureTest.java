@@ -2295,6 +2295,25 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsStaleComponentProxyMethodToStringLikeUpstream() {
+        int[] componentInvokes = {0};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.proxy('fs-address')
+            valid, message = pcall(function()
+              return tostring(fs.label)
+            end)
+            """);
+        architecture.bind(machineWithDroppedComponentMethods(componentInvokes));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("no such method"));
+        assertEquals(0, componentInvokes[0]);
+    }
+
+    @Test
     void rejectsStaleComponentProxyFieldsLikeUpstream() {
         int[] componentInvokes = {0};
         LuaArchitecture architecture = new LuaArchitecture("""

@@ -1762,7 +1762,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public LuaValue call() {
                 final Callback callback = componentCallback(address, method);
-                final String doc = callback == null ? "" : callback.doc();
+                if (callback == null) {
+                    throw new LuaError("no such method");
+                }
+                final String doc = callback.doc();
                 return LuaValue.valueOf(doc == null || doc.isEmpty() ? "function" : doc);
             }
         });
