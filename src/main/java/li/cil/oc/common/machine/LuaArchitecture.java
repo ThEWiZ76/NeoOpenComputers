@@ -297,6 +297,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.set("_VERSION", LuaValue.valueOf("Luaj"));
         installCheckArg(globals);
         installDebugLibrary(globals);
+        installCoroutineCompatibility(globals);
         installGetMetatableCompatibility(globals);
         installLoadCompatibility(globals);
         installPairsCompatibility(globals);
@@ -315,6 +316,21 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     return LuaValue.NIL;
                 }
                 return originalGetMetatable.invoke(args);
+            }
+        });
+    }
+
+    private static void installCoroutineCompatibility(final Globals globals) {
+        final LuaValue coroutine = globals.get("coroutine");
+        final LuaValue originalResume = coroutine.get("resume");
+        coroutine.set("resume", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaValue thread = args.arg(1);
+                if (thread.type() != LuaValue.TTHREAD) {
+                    throw new LuaError("bad argument #1 (thread expected, got " + luaTypeName(thread) + ")");
+                }
+                return originalResume.invoke(args);
             }
         });
     }

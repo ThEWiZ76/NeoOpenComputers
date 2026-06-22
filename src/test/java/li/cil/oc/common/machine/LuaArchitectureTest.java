@@ -259,6 +259,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void coroutineResumeValidatesThreadArgumentLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid, message = pcall(function()
+              coroutine.resume('not-a-thread')
+            end)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("bad argument #1"));
+        assertTrue(architecture.globalString("message").contains("thread expected"));
+    }
+
+    @Test
     void exposesOpenComputersCheckArgCompatibility() {
         LuaArchitecture architecture = new LuaArchitecture("""
             valid = checkArg(1, 'text', 'string')
