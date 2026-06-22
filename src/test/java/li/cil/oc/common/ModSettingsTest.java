@@ -108,8 +108,13 @@ final class ModSettingsTest {
         assertEquals(8, ModSettings.hddPlatterCount(99));
         assertEquals(100_000D, ModSettings.nanomachinesBuffer());
         assertEquals(0.4D, ModSettings.nanomachineTriggerQuota());
+        assertEquals(0.2D, ModSettings.nanomachineConnectorQuota());
+        assertEquals(2, ModSettings.nanomachineMaxInputs());
+        assertEquals(2, ModSettings.nanomachineMaxOutputs());
         assertEquals(2, ModSettings.nanomachinesSafeInputsActive());
         assertEquals(4, ModSettings.nanomachinesMaxInputsActive());
+        assertEquals(1D, ModSettings.nanomachinesCommandDelay());
+        assertEquals(2D, ModSettings.nanomachinesCommandRange());
     }
 
     @Test
@@ -165,8 +170,13 @@ final class ModSettingsTest {
         assertEquals(List.of("hologram", "setRawDelay"), ModSettings.HOLOGRAM_SET_RAW_DELAY.getPath());
         assertEquals(List.of("power", "buffer", "nanomachines"), ModSettings.NANOMACHINES_BUFFER.getPath());
         assertEquals(List.of("nanomachines", "triggerQuota"), ModSettings.NANOMACHINES_TRIGGER_QUOTA.getPath());
+        assertEquals(List.of("nanomachines", "connectorQuota"), ModSettings.NANOMACHINES_CONNECTOR_QUOTA.getPath());
+        assertEquals(List.of("nanomachines", "maxInputs"), ModSettings.NANOMACHINE_MAX_INPUTS.getPath());
+        assertEquals(List.of("nanomachines", "maxOutputs"), ModSettings.NANOMACHINE_MAX_OUTPUTS.getPath());
         assertEquals(List.of("nanomachines", "safeInputsActive"), ModSettings.NANOMACHINES_SAFE_INPUTS_ACTIVE.getPath());
         assertEquals(List.of("nanomachines", "maxInputsActive"), ModSettings.NANOMACHINES_MAX_INPUTS_ACTIVE.getPath());
+        assertEquals(List.of("nanomachines", "commandDelay"), ModSettings.NANOMACHINES_COMMAND_DELAY.getPath());
+        assertEquals(List.of("nanomachines", "commandRange"), ModSettings.NANOMACHINES_COMMAND_RANGE.getPath());
     }
 
     @Test

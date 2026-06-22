@@ -69,8 +69,13 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_TRIGGER_QUOTA;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_CONNECTOR_QUOTA;
+    public static final ModConfigSpec.IntValue NANOMACHINE_MAX_INPUTS;
+    public static final ModConfigSpec.IntValue NANOMACHINE_MAX_OUTPUTS;
     public static final ModConfigSpec.IntValue NANOMACHINES_SAFE_INPUTS_ACTIVE;
     public static final ModConfigSpec.IntValue NANOMACHINES_MAX_INPUTS_ACTIVE;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_COMMAND_DELAY;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_COMMAND_RANGE;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -252,12 +257,27 @@ public final class ModSettings {
         NANOMACHINES_TRIGGER_QUOTA = builder
             .comment("Relative nanomachine trigger input count based on behavior count. OpenComputers upstream default is 0.4.")
             .defineInRange("triggerQuota", 0.4D, 0D, Double.MAX_VALUE);
+        NANOMACHINES_CONNECTOR_QUOTA = builder
+            .comment("Relative nanomachine connector count based on behavior count. OpenComputers upstream default is 0.2.")
+            .defineInRange("connectorQuota", 0.2D, 0D, Double.MAX_VALUE);
+        NANOMACHINE_MAX_INPUTS = builder
+            .comment("Maximum number of inputs per nanomachine neural-network node. OpenComputers upstream default is 2.")
+            .defineInRange("maxInputs", 2, 1, Integer.MAX_VALUE);
+        NANOMACHINE_MAX_OUTPUTS = builder
+            .comment("Maximum number of outputs per nanomachine neural-network node. OpenComputers upstream default is 2.")
+            .defineInRange("maxOutputs", 2, 1, Integer.MAX_VALUE);
         NANOMACHINES_SAFE_INPUTS_ACTIVE = builder
             .comment("Number of active nanomachine inputs considered safe. OpenComputers upstream default is 2.")
             .defineInRange("safeInputsActive", 2, 0, Integer.MAX_VALUE);
         NANOMACHINES_MAX_INPUTS_ACTIVE = builder
             .comment("Maximum number of simultaneously active nanomachine inputs. OpenComputers upstream default is 4.")
             .defineInRange("maxInputsActive", 4, 0, Integer.MAX_VALUE);
+        NANOMACHINES_COMMAND_DELAY = builder
+            .comment("Delay between nanomachine wireless commands in seconds. OpenComputers upstream default is 1.")
+            .defineInRange("commandDelay", 1D, 0D, Double.MAX_VALUE);
+        NANOMACHINES_COMMAND_RANGE = builder
+            .comment("Range for nanomachine wireless commands in blocks. OpenComputers upstream default is 2.")
+            .defineInRange("commandRange", 2D, 0D, Double.MAX_VALUE);
         builder.pop();
 
         SPEC = builder.build();
@@ -290,12 +310,32 @@ public final class ModSettings {
         return Math.max(0D, doubleValue(NANOMACHINES_TRIGGER_QUOTA));
     }
 
+    public static double nanomachineConnectorQuota() {
+        return Math.max(0D, doubleValue(NANOMACHINES_CONNECTOR_QUOTA));
+    }
+
+    public static int nanomachineMaxInputs() {
+        return Math.max(1, intValue(NANOMACHINE_MAX_INPUTS));
+    }
+
+    public static int nanomachineMaxOutputs() {
+        return Math.max(1, intValue(NANOMACHINE_MAX_OUTPUTS));
+    }
+
     public static int nanomachinesSafeInputsActive() {
         return Math.max(0, intValue(NANOMACHINES_SAFE_INPUTS_ACTIVE));
     }
 
     public static int nanomachinesMaxInputsActive() {
         return Math.max(0, intValue(NANOMACHINES_MAX_INPUTS_ACTIVE));
+    }
+
+    public static double nanomachinesCommandDelay() {
+        return Math.max(0D, doubleValue(NANOMACHINES_COMMAND_DELAY));
+    }
+
+    public static double nanomachinesCommandRange() {
+        return Math.max(0D, doubleValue(NANOMACHINES_COMMAND_RANGE));
     }
 
     public static boolean inputUsername() {
