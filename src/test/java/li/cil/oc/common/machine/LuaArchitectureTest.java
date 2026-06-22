@@ -532,6 +532,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void formatsOsDateWeekNumbersLikeLuaJ() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            friday = os.date('%U/%W', 86400)
+            sunday = os.date('%U/%W', 259200)
+            monday = os.date('%U/%W', 345600)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("53/53", architecture.globalString("friday"));
+        assertEquals("1/53", architecture.globalString("sunday"));
+        assertEquals("1/1", architecture.globalString("monday"));
+    }
+
+    @Test
     void readsBootSourceFromEepromDataTag() {
         CompoundTag data = new CompoundTag();
         data.putByteArray(ItemRegistry.EEPROM_CODE_TAG, "counter = 7".getBytes(StandardCharsets.UTF_8));

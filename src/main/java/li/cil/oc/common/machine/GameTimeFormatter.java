@@ -1,7 +1,9 @@
 package li.cil.oc.common.machine;
 
 import java.time.DateTimeException;
+import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -41,6 +43,8 @@ final class GameTimeFormatter {
         Map.entry('S', time -> String.format("%02d", time.second())),
         Map.entry('t', time -> "\t"),
         Map.entry('T', time -> format("%H:%M:%S", time)),
+        Map.entry('U', time -> Integer.toString(weekNumber(time, DayOfWeek.SUNDAY))),
+        Map.entry('W', time -> Integer.toString(weekNumber(time, DayOfWeek.MONDAY))),
         Map.entry('w', time -> Integer.toString(time.weekDay() - 1)),
         Map.entry('x', time -> format("%D", time)),
         Map.entry('X', time -> format("%T", time)),
@@ -82,6 +86,20 @@ final class GameTimeFormatter {
             }
         }
         return result.toString();
+    }
+
+    private static int weekNumber(final DateTime time, final DayOfWeek firstDayOfWeek) {
+        final LocalDate date = LocalDate.of(time.year(), time.month(), time.day());
+        final LocalDate firstDayOfYear = date.withDayOfYear(1);
+        final int targetDay = dayIndex(firstDayOfWeek);
+        final int firstDay = dayIndex(firstDayOfYear.getDayOfWeek());
+        final int daysUntilFirstWeek = Math.floorMod(targetDay - firstDay, 7);
+        final int dayOfYear = time.yearDay() - 1;
+        return dayOfYear < daysUntilFirstWeek ? 53 : (dayOfYear - daysUntilFirstWeek) / 7 + 1;
+    }
+
+    private static int dayIndex(final DayOfWeek dayOfWeek) {
+        return dayOfWeek.getValue() % 7;
     }
 
     static Long mktime(final int year, final int month, final int day, final int hour, final int minute, final int second) {
