@@ -1666,11 +1666,15 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 final String method = args.arg(2).tojstring();
+                final LuaValue field = fields.get(method);
                 final Callback callback = componentCallback(address, method);
-                if (callback != null && callback.getter()) {
+                if (!field.isnil() && field.get("getter").toboolean()) {
+                    if (callback == null) {
+                        throw new LuaError("no such method");
+                    }
                     return invokeComponent(address, method, new Object[0]);
                 }
-                if (callback != null && callback.setter()) {
+                if (!field.isnil() && field.get("setter").toboolean()) {
                     return LuaValue.NIL;
                 }
                 if (callback == null) {
@@ -1683,11 +1687,16 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 final LuaValue key = args.arg(2);
-                final Callback callback = componentCallback(address, key.tojstring());
-                if (callback != null && callback.setter()) {
-                    return invokeComponent(address, key.tojstring(), new Object[]{toJavaValue(args.arg(3))});
+                final String method = key.tojstring();
+                final LuaValue field = fields.get(method);
+                final Callback callback = componentCallback(address, method);
+                if (!field.isnil() && field.get("setter").toboolean()) {
+                    if (callback == null) {
+                        throw new LuaError("no such method");
+                    }
+                    return invokeComponent(address, method, new Object[]{toJavaValue(args.arg(3))});
                 }
-                if (callback != null && callback.getter()) {
+                if (!field.isnil() && field.get("getter").toboolean()) {
                     throw new LuaError("field is read-only");
                 }
                 proxy.rawset(key, args.arg(3));
