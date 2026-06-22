@@ -2408,7 +2408,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public boolean isInteger(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof Integer;
+            return index >= 0 && index < values.length && values[index] instanceof Number number && !Double.isNaN(number.doubleValue());
         }
 
         @Override
