@@ -85,6 +85,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private PendingBudgetCall pendingBudgetCall;
     private double memoryBytes;
     private boolean waitingForSignal;
+    private boolean waitingForSleep;
     private double signalDeadlineSeconds;
     private final LongSupplier wallTimeMillis;
     private final Map<String, String> primaryComponents = new HashMap<>();
@@ -167,6 +168,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         pendingResult = null;
         pendingBudgetCall = null;
         waitingForSignal = false;
+        waitingForSleep = false;
         signalDeadlineSeconds = 0D;
         primaryComponents.clear();
         pendingPrimaryComponents.clear();
@@ -195,11 +197,21 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (waitingForSignal) {
             final Signal signal = machine == null ? null : machine.popSignal();
             if (signal != null) {
+                if (waitingForSleep) {
+                    if (machineUpTime() < signalDeadlineSeconds) {
+                        return sleepUntilSignalDeadline();
+                    }
+                    waitingForSignal = false;
+                    waitingForSleep = false;
+                    return resumeBoot(LuaValue.NONE);
+                }
                 waitingForSignal = false;
+                waitingForSleep = false;
                 return resumeBoot(signalToLuaValues(signal));
             }
             if (machineUpTime() >= signalDeadlineSeconds) {
                 waitingForSignal = false;
+                waitingForSleep = false;
                 return resumeBoot(LuaValue.NONE);
             }
             return sleepUntilSignalDeadline();
@@ -832,6 +844,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     ? Math.max(0D, args.arg(1).todouble())
                     : Double.POSITIVE_INFINITY;
                 waitingForSignal = true;
+                waitingForSleep = false;
                 signalDeadlineSeconds = Double.isInfinite(timeout) ? Double.POSITIVE_INFINITY : machineUpTime() + timeout;
                 return globals.yield(LuaValue.valueOf(PULL_SIGNAL_MARKER));
             }
@@ -1224,6 +1237,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     ? Math.max(0D, args.arg(1).todouble())
                     : 0D;
                 waitingForSignal = true;
+                waitingForSleep = true;
                 signalDeadlineSeconds = machineUpTime() + timeout;
                 return globals.yield(LuaValue.valueOf(PULL_SIGNAL_MARKER));
             }
