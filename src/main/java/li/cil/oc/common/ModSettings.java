@@ -7,6 +7,7 @@ import java.util.List;
 
 public final class ModSettings {
     private static final List<Integer> DEFAULT_HDD_SIZES = List.of(1024, 2048, 4096);
+    private static final List<Integer> DEFAULT_HDD_PLATTER_COUNTS = List.of(2, 4, 8);
     private static final List<Integer> DEFAULT_CPU_COMPONENT_COUNT = List.of(8, 12, 16, 1024);
     private static final List<Double> DEFAULT_CALL_BUDGETS = List.of(0.5D, 1.0D, 1.5D);
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
@@ -45,7 +46,10 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue TMP_SIZE;
     public static final ModConfigSpec.IntValue FILE_COST;
     public static final ModConfigSpec.IntValue FLOPPY_SIZE;
+    public static final ModConfigSpec.DoubleValue HDD_READ;
+    public static final ModConfigSpec.DoubleValue HDD_WRITE;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> HDD_SIZES;
+    public static final ModConfigSpec.ConfigValue<List<? extends Integer>> HDD_PLATTER_COUNTS;
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP;
@@ -159,9 +163,18 @@ public final class ModSettings {
         FLOPPY_SIZE = builder
             .comment("Size of writable floppy disks in kilobytes. OpenComputers upstream default is 512.")
             .defineInRange("floppySize", 512, 0, Integer.MAX_VALUE);
+        HDD_READ = builder
+            .comment("Energy cost to read one kilobyte from a filesystem. OpenComputers upstream default is 0.1.")
+            .defineInRange("hddRead", 0.1D, 0D, Double.MAX_VALUE);
+        HDD_WRITE = builder
+            .comment("Energy cost to write one kilobyte to a filesystem. OpenComputers upstream default is 0.25.")
+            .defineInRange("hddWrite", 0.25D, 0D, Double.MAX_VALUE);
         HDD_SIZES = builder
             .comment("Sizes of the three hard drive tiers in kilobytes. OpenComputers upstream default is [1024, 2048, 4096].")
             .defineList("hddSizes", DEFAULT_HDD_SIZES, value -> value instanceof Integer && (Integer) value >= 0);
+        HDD_PLATTER_COUNTS = builder
+            .comment("Physical platter counts for the three hard drive tiers in unmanaged mode. OpenComputers upstream default is [2, 4, 8].")
+            .defineList("hddPlatterCounts", DEFAULT_HDD_PLATTER_COUNTS, value -> value instanceof Integer && (Integer) value >= 1);
         MAX_HANDLES = builder
             .comment("Maximum number of file handles any single computer may have open per filesystem. OpenComputers upstream default is 16.")
             .defineInRange("maxHandles", 16, 0, Integer.MAX_VALUE);
@@ -405,6 +418,40 @@ public final class ModSettings {
         return intValue(FLOPPY_SIZE);
     }
 
+    public static double hddReadCost() {
+        return doubleValue(HDD_READ) / 1024.0D;
+    }
+
+    public static double hddWriteCost() {
+        return doubleValue(HDD_WRITE) / 1024.0D;
+    }
+
+    public static List<Integer> hddSizes() {
+        final List<Integer> sizes = listValue(HDD_SIZES);
+        if (sizes.size() != DEFAULT_HDD_SIZES.size()) {
+            return DEFAULT_HDD_SIZES;
+        }
+        return sizes;
+    }
+
+    public static int hddSize(final int tier) {
+        final List<Integer> sizes = hddSizes();
+        return sizes.get(clampIndex(tier, sizes.size()));
+    }
+
+    public static List<Integer> hddPlatterCounts() {
+        final List<Integer> counts = listValue(HDD_PLATTER_COUNTS);
+        if (counts.size() != DEFAULT_HDD_PLATTER_COUNTS.size()) {
+            return DEFAULT_HDD_PLATTER_COUNTS;
+        }
+        return counts;
+    }
+
+    public static int hddPlatterCount(final int tier) {
+        final List<Integer> counts = hddPlatterCounts();
+        return counts.get(clampIndex(tier, counts.size()));
+    }
+
     public static int maxHandles() {
         return intValue(MAX_HANDLES);
     }
@@ -473,19 +520,6 @@ public final class ModSettings {
 
     public static double hologramSetRawDelay() {
         return doubleValue(HOLOGRAM_SET_RAW_DELAY);
-    }
-
-    public static List<Integer> hddSizes() {
-        final List<Integer> sizes = listValue(HDD_SIZES);
-        if (sizes.size() != DEFAULT_HDD_SIZES.size()) {
-            return DEFAULT_HDD_SIZES;
-        }
-        return sizes;
-    }
-
-    public static int hddSize(final int tier) {
-        final List<Integer> sizes = hddSizes();
-        return sizes.get(Math.max(0, Math.min(sizes.size() - 1, tier)));
     }
 
     private static boolean booleanValue(final ModConfigSpec.BooleanValue value) {

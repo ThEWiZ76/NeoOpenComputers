@@ -85,12 +85,20 @@ final class ModSettingsTest {
         assertEquals(1D, ModSettings.hologramMaxTranslation(-1));
         assertEquals(2D, ModSettings.hologramMaxTranslation(99));
         assertEquals(0.2D, ModSettings.hologramSetRawDelay());
+        assertEquals(0.1D / 1024.0D, ModSettings.hddReadCost(), 0.000_001D);
+        assertEquals(0.25D / 1024.0D, ModSettings.hddWriteCost(), 0.000_001D);
         assertEquals(List.of(1024, 2048, 4096), ModSettings.hddSizes());
         assertEquals(1024, ModSettings.hddSize(0));
         assertEquals(2048, ModSettings.hddSize(1));
         assertEquals(4096, ModSettings.hddSize(2));
         assertEquals(1024, ModSettings.hddSize(-1));
         assertEquals(4096, ModSettings.hddSize(99));
+        assertEquals(List.of(2, 4, 8), ModSettings.hddPlatterCounts());
+        assertEquals(2, ModSettings.hddPlatterCount(0));
+        assertEquals(4, ModSettings.hddPlatterCount(1));
+        assertEquals(8, ModSettings.hddPlatterCount(2));
+        assertEquals(2, ModSettings.hddPlatterCount(-1));
+        assertEquals(8, ModSettings.hddPlatterCount(99));
     }
 
     @Test
@@ -127,9 +135,12 @@ final class ModSettingsTest {
         assertEquals(List.of("filesystem", "tmpSize"), ModSettings.TMP_SIZE.getPath());
         assertEquals(List.of("filesystem", "fileCost"), ModSettings.FILE_COST.getPath());
         assertEquals(List.of("filesystem", "floppySize"), ModSettings.FLOPPY_SIZE.getPath());
+        assertEquals(List.of("filesystem", "hddRead"), ModSettings.HDD_READ.getPath());
+        assertEquals(List.of("filesystem", "hddWrite"), ModSettings.HDD_WRITE.getPath());
         assertEquals(List.of("filesystem", "maxHandles"), ModSettings.MAX_HANDLES.getPath());
         assertEquals(List.of("filesystem", "maxReadBuffer"), ModSettings.MAX_READ_BUFFER.getPath());
         assertEquals(List.of("filesystem", "hddSizes"), ModSettings.HDD_SIZES.getPath());
+        assertEquals(List.of("filesystem", "hddPlatterCounts"), ModSettings.HDD_PLATTER_COUNTS.getPath());
         assertEquals(List.of("internet", "enableHttp"), ModSettings.ENABLE_HTTP.getPath());
         assertEquals(List.of("internet", "enableHttpHeaders"), ModSettings.ENABLE_HTTP_HEADERS.getPath());
         assertEquals(List.of("internet", "enableTcp"), ModSettings.ENABLE_TCP.getPath());

@@ -407,6 +407,35 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentUsesConfiguredHddEnergyCosts() throws Exception {
+        withCachedConfig(ModSettings.HDD_READ, 0.5D, () -> {
+            withCachedConfig(ModSettings.HDD_WRITE, 0.75D, () -> {
+                OpenComputersApi.initialize();
+                FileSystem fileSystem = API.fileSystem.fromMemory(4096);
+                ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+                Component component = (Component) environment.node();
+                RecordingEnvironment contextEnvironment = new RecordingEnvironment();
+                Connector connector = (Connector) API.network.newNode(contextEnvironment, Visibility.Network).withConnector(2).create();
+                contextEnvironment.node = connector;
+                connector.changeBuffer(2);
+                RecordingContext context = new RecordingContext(connector);
+                byte[] data = new byte[1024];
+                java.util.Arrays.fill(data, (byte) 'x');
+
+                Object writeHandle = component.invoke("open", context, "data.txt", "w")[0];
+                assertArrayEquals(new Object[]{true}, component.invoke("write", context, writeHandle, data));
+                component.invoke("close", context, writeHandle);
+                Object readHandle = component.invoke("open", context, "data.txt", "r")[0];
+                component.invoke("read", context, readHandle, data.length);
+
+                assertEquals(0.75D, connector.localBuffer(), 0.000_001D);
+                return null;
+            });
+            return null;
+        });
+    }
+
+    @Test
     void managedFileSystemEnvironmentRejectsHandlesOwnedByAnotherContext() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(4096);
@@ -515,7 +544,7 @@ final class FileSystemRegistryTest {
         assertEquals(maxReadBuffer, read.length);
     }
 
-    private static <T> T withCachedConfig(final ModConfigSpec.ConfigValue<Integer> value, final int override, final ThrowingSupplier<T> action) throws Exception {
+    private static <T, V> T withCachedConfig(final ModConfigSpec.ConfigValue<V> value, final V override, final ThrowingSupplier<T> action) throws Exception {
         final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
         cachedValue.setAccessible(true);
         final Object previous = cachedValue.get(value);
