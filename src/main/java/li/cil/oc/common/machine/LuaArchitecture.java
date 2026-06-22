@@ -8,6 +8,7 @@ import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
+import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.LimitReachedException;
@@ -131,6 +132,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         pendingBudgetCall = null;
         installComputerLibrary();
         installComponentLibrary();
+        installUserdataLibrary();
         installOsLibrary();
         installUnicodeLibrary();
         installSystemLibrary();
@@ -894,6 +896,79 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.set("os", os);
     }
 
+    private void installUserdataLibrary() {
+        final LuaTable userdata = new LuaTable();
+        userdata.set("apply", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final Value value = checkValue(args, 1);
+                return toLuaValue(value.apply(machine, new LuaArguments(toJavaArgs(args, 2))));
+            }
+        });
+        userdata.set("unapply", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final Value value = checkValue(args, 1);
+                value.unapply(machine, new LuaArguments(toJavaArgs(args, 2)));
+                return LuaValue.NIL;
+            }
+        });
+        userdata.set("call", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final Value value = checkValue(args, 1);
+                return toLuaValues(value.call(machine, new LuaArguments(toJavaArgs(args, 2))));
+            }
+        });
+        userdata.set("dispose", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final Value value = checkValue(args, 1);
+                try {
+                    value.dispose(machine);
+                } catch (Exception ignored) {
+                    // Upstream logs and suppresses userdata dispose failures.
+                }
+                return LuaValue.NIL;
+            }
+        });
+        userdata.set("methods", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final Value value = checkValue(args, 1);
+                final LuaTable methods = new LuaTable();
+                if (machine != null) {
+                    for (Map.Entry<String, Callback> entry : machine.methods(value).entrySet()) {
+                        final Callback callback = entry.getValue();
+                        methods.set(entry.getKey(), LuaValue.valueOf(callback != null && callback.direct()));
+                    }
+                }
+                return methods;
+            }
+        });
+        userdata.set("invoke", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final Value value = checkValue(args, 1);
+                final String method = args.checkjstring(2);
+                return invokeValue(value, method, toJavaArgs(args, 3));
+            }
+        });
+        userdata.set("doc", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final Value value = checkValue(args, 1);
+                final String method = args.checkjstring(2);
+                if (machine == null) {
+                    return LuaValue.NIL;
+                }
+                final Callback callback = machine.methods(value).get(method);
+                return callback == null || callback.doc().isEmpty() ? LuaValue.NIL : LuaValue.valueOf(callback.doc());
+            }
+        });
+        globals.set("userdata", userdata);
+    }
+
     private void installUnicodeLibrary() {
         final LuaTable unicode = new LuaTable();
         unicode.set("lower", new VarArgFunction() {
@@ -1426,6 +1501,27 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return LuaValue.varargsOf(luaValues);
     }
 
+    private static Object[] toJavaArgs(final Varargs args, final int offset) {
+        final Object[] javaArgs = new Object[Math.max(0, args.narg() - offset + 1)];
+        for (int index = 0; index < javaArgs.length; index++) {
+            javaArgs[index] = toJavaValue(args.arg(index + offset));
+        }
+        return javaArgs;
+    }
+
+    private static Value checkValue(final Varargs args, final int index) {
+        final LuaValue arg = args.arg(index);
+        if (arg instanceof LuaTable table) {
+            final LuaValue marker = table.get(VALUE_MARKER);
+            if (marker.isuserdata() && marker.touserdata() instanceof Value value) {
+                return value;
+            }
+            throw new LuaError("bad argument #" + index + " (userdata expected)");
+        }
+        final Object userdata = args.checkuserdata(index, Value.class);
+        return (Value) userdata;
+    }
+
     private LuaTable valueProxy(final Value value) {
         final LuaTable table = new LuaTable();
         table.set(VALUE_MARKER, LuaValue.userdataOf(value));
@@ -1557,6 +1653,170 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private record ProcessorCandidate(ItemStack stack, Processor processor) {
+    }
+
+    private record LuaArguments(Object[] values) implements Arguments {
+        @Override
+        public int count() {
+            return values.length;
+        }
+
+        @Override
+        public Object checkAny(final int index) {
+            if (index < 0 || index >= values.length) {
+                throw new IllegalArgumentException("missing argument #" + (index + 1));
+            }
+            return values[index];
+        }
+
+        @Override
+        public boolean checkBoolean(final int index) {
+            return (Boolean) checkAny(index);
+        }
+
+        @Override
+        public int checkInteger(final int index) {
+            return ((Number) checkAny(index)).intValue();
+        }
+
+        @Override
+        public long checkLong(final int index) {
+            return ((Number) checkAny(index)).longValue();
+        }
+
+        @Override
+        public double checkDouble(final int index) {
+            return ((Number) checkAny(index)).doubleValue();
+        }
+
+        @Override
+        public String checkString(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof String string) {
+                return string;
+            }
+            if (value instanceof byte[] bytes) {
+                return new String(bytes, StandardCharsets.UTF_8);
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (string expected)");
+        }
+
+        @Override
+        public byte[] checkByteArray(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof byte[] bytes) {
+                return bytes;
+            }
+            if (value instanceof String string) {
+                return string.getBytes(StandardCharsets.UTF_8);
+            }
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (byte array expected)");
+        }
+
+        @Override
+        public Map checkTable(final int index) {
+            return (Map) checkAny(index);
+        }
+
+        @Override
+        public ItemStack checkItemStack(final int index) {
+            return (ItemStack) checkAny(index);
+        }
+
+        @Override
+        public Object optAny(final int index, final Object def) {
+            return index >= 0 && index < values.length ? values[index] : def;
+        }
+
+        @Override
+        public boolean optBoolean(final int index, final boolean def) {
+            return index >= 0 && index < values.length ? checkBoolean(index) : def;
+        }
+
+        @Override
+        public int optInteger(final int index, final int def) {
+            return index >= 0 && index < values.length ? checkInteger(index) : def;
+        }
+
+        @Override
+        public long optLong(final int index, final long def) {
+            return index >= 0 && index < values.length ? checkLong(index) : def;
+        }
+
+        @Override
+        public double optDouble(final int index, final double def) {
+            return index >= 0 && index < values.length ? checkDouble(index) : def;
+        }
+
+        @Override
+        public String optString(final int index, final String def) {
+            return index >= 0 && index < values.length ? checkString(index) : def;
+        }
+
+        @Override
+        public byte[] optByteArray(final int index, final byte[] def) {
+            return index >= 0 && index < values.length ? checkByteArray(index) : def;
+        }
+
+        @Override
+        public Map optTable(final int index, final Map def) {
+            return index >= 0 && index < values.length ? checkTable(index) : def;
+        }
+
+        @Override
+        public ItemStack optItemStack(final int index, final ItemStack def) {
+            return index >= 0 && index < values.length ? checkItemStack(index) : def;
+        }
+
+        @Override
+        public boolean isBoolean(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Boolean;
+        }
+
+        @Override
+        public boolean isInteger(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Integer;
+        }
+
+        @Override
+        public boolean isLong(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Long;
+        }
+
+        @Override
+        public boolean isDouble(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Double;
+        }
+
+        @Override
+        public boolean isString(final int index) {
+            return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]);
+        }
+
+        @Override
+        public boolean isByteArray(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof byte[];
+        }
+
+        @Override
+        public boolean isTable(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof Map;
+        }
+
+        @Override
+        public boolean isItemStack(final int index) {
+            return index >= 0 && index < values.length && values[index] instanceof ItemStack;
+        }
+
+        @Override
+        public Object[] toArray() {
+            return Arrays.copyOf(values, values.length);
+        }
+
+        @Override
+        public java.util.Iterator<Object> iterator() {
+            return Arrays.asList(values).iterator();
+        }
     }
 
     @FunctionalInterface

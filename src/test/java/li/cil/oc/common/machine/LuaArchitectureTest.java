@@ -11,12 +11,15 @@ import li.cil.oc.api.fs.Mode;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -1033,6 +1036,42 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesUserdataLibraryForValueHandles() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            methods = userdata.methods(value)
+            direct = methods.echo
+            doc = userdata.doc(value, 'echo')
+            invoked = userdata.invoke(value, 'echo', 'payload')
+            called = userdata.call(value, 'call')
+            applied = userdata.apply(value, 'apply')
+            unapplied = userdata.unapply(value, 'unapply')
+            disposed = userdata.dispose(value)
+            invalidValid, invalidMessage = pcall(function()
+              userdata.invoke({}, 'echo')
+            end)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.globalBoolean("direct"));
+        assertEquals("function():string -- Direct callback.", architecture.globalString("doc"));
+        assertEquals("invoked:payload", architecture.globalString("invoked"));
+        assertEquals("called:call", architecture.globalString("called"));
+        assertEquals("applied:apply", architecture.globalString("applied"));
+        assertEquals("nil", architecture.globalString("unapplied"));
+        assertTrue(value.unapplied);
+        assertEquals("unapply", value.unapplyArgument);
+        assertEquals("nil", architecture.globalString("disposed"));
+        assertTrue(value.disposed);
+        assertEquals(false, architecture.globalBoolean("invalidValid"));
+        assertTrue(architecture.globalString("invalidMessage").contains("userdata expected"));
+    }
+
+    @Test
     void retriesComponentInvokeAfterCallBudgetLimit() {
         int[] attempts = {0};
         LuaArchitecture architecture = new LuaArchitecture("""
@@ -1624,6 +1663,27 @@ final class LuaArchitectureTest {
             });
     }
 
+    private static Machine machineWithValueSupport(final TestValue value) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> Map.of("fs-address", "filesystem");
+                case "methods" -> args[0] == value ? Map.of("echo", callback("directCallback")) : Map.of();
+                case "invoke" -> {
+                    if (args[0] == value) {
+                        Object[] javaArgs = (Object[]) args[2];
+                        yield new Object[]{"invoked:" + javaArgs[0]};
+                    }
+                    yield new Object[]{value};
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
     private static Machine machineWithMethods(final Map<String, Callback> methods) {
         return machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], methods);
     }
@@ -2056,6 +2116,41 @@ final class LuaArchitectureTest {
 
     @Callback(getter = true, setter = true)
     private static void accessorCallback() {
+    }
+
+    private static final class TestValue implements Value {
+        private boolean unapplied;
+        private String unapplyArgument;
+        private boolean disposed;
+
+        @Override
+        public Object apply(final Context context, final Arguments arguments) {
+            return "applied:" + arguments.checkString(0);
+        }
+
+        @Override
+        public void unapply(final Context context, final Arguments arguments) {
+            unapplied = true;
+            unapplyArgument = arguments.checkString(0);
+        }
+
+        @Override
+        public Object[] call(final Context context, final Arguments arguments) {
+            return new Object[]{"called:" + arguments.checkString(0)};
+        }
+
+        @Override
+        public void dispose(final Context context) {
+            disposed = true;
+        }
+
+        @Override
+        public void load(final CompoundTag tag) {
+        }
+
+        @Override
+        public void save(final CompoundTag tag) {
+        }
     }
 
     private static final class TestMutableProcessor implements MutableProcessor {
