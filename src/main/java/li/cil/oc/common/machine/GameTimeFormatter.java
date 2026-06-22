@@ -8,6 +8,8 @@ import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.luaj.vm2.LuaError;
+
 final class GameTimeFormatter {
     private static final String[] WEEK_DAYS = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
     private static final String[] SHORT_WEEK_DAYS = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -67,9 +69,12 @@ final class GameTimeFormatter {
         for (int index = 0; index < format.length(); index++) {
             final char value = format.charAt(index);
             if (value == '%' && index + 1 < format.length()) {
-                final Function<DateTime, String> specifier = SPECIFIERS.get(format.charAt(++index));
+                final char specifierKey = format.charAt(++index);
+                final Function<DateTime, String> specifier = SPECIFIERS.get(specifierKey);
                 if (specifier != null) {
                     result.append(specifier.apply(time));
+                } else {
+                    throw new LuaError("bad argument #1: invalid conversion specifier '%" + (int) specifierKey + "'");
                 }
             } else {
                 result.append(value);
