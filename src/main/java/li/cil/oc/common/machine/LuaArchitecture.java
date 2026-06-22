@@ -296,11 +296,25 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.set("collectgarbage", LuaValue.NIL);
         installCheckArg(globals);
         installDebugLibrary(globals);
+        installGetMetatableCompatibility(globals);
         installPairsCompatibility(globals);
         installStringCompatibility(globals);
         LoadState.install(globals);
         LuaC.install(globals);
         return globals;
+    }
+
+    private static void installGetMetatableCompatibility(final Globals globals) {
+        final LuaValue originalGetMetatable = globals.get("getmetatable");
+        globals.set("getmetatable", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (args.arg(1).isstring()) {
+                    return LuaValue.NIL;
+                }
+                return originalGetMetatable.invoke(args);
+            }
+        });
     }
 
     private static void installPairsCompatibility(final Globals globals) {

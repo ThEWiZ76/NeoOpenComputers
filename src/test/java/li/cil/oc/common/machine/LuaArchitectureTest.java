@@ -134,6 +134,7 @@ final class LuaArchitectureTest {
             coroutineValue = type(coroutine.create(function() end))
             bitValue = bit32.band(7, 3)
             loaded = load('return 4')()
+            stringMetatableType = type(getmetatable('text'))
             """);
 
         assertTrue(architecture.initialize());
@@ -144,6 +145,7 @@ final class LuaArchitectureTest {
         assertEquals("thread", architecture.globalString("coroutineValue"));
         assertEquals(3, architecture.globalInteger("bitValue"));
         assertEquals(4, architecture.globalInteger("loaded"));
+        assertEquals("nil", architecture.globalString("stringMetatableType"));
     }
 
     @Test
