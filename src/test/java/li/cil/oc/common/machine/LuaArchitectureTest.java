@@ -241,6 +241,30 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesSafeDebugLocalAndUpvalueValues() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            local captured = 'up'
+            function sample(argument)
+              localName, localResult = debug.getlocal(1, 1)
+              localNameType = type(localName)
+              upvalueName, upvalueResult = debug.getupvalue(function()
+                return captured
+              end, 1)
+              upvalueNameType = type(upvalueName)
+            end
+            sample('argument')
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("argument", architecture.globalString("localResult"));
+        assertEquals("up", architecture.globalString("upvalueResult"));
+        assertEquals("string", architecture.globalString("localNameType"));
+        assertEquals("string", architecture.globalString("upvalueNameType"));
+    }
+
+    @Test
     void exposesTablePackAndUnpackCompatibility() {
         LuaArchitecture architecture = new LuaArchitecture("""
             packed = table.pack('a', nil, 'c')
