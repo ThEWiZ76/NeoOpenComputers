@@ -22,6 +22,7 @@ final class ModSettingsTest {
         assertEquals(false, ModSettings.allowGc());
         assertEquals(64, ModSettings.tmpSize());
         assertEquals(512, ModSettings.fileCost());
+        assertEquals(512, ModSettings.floppySize());
         assertEquals(16, ModSettings.maxHandles());
         assertEquals(2048, ModSettings.maxReadBuffer());
         assertEquals(List.of(1024, 2048, 4096), ModSettings.hddSizes());
@@ -47,6 +48,7 @@ final class ModSettingsTest {
         assertEquals(List.of("computer", "lua", "allowGC"), ModSettings.ALLOW_GC.getPath());
         assertEquals(List.of("filesystem", "tmpSize"), ModSettings.TMP_SIZE.getPath());
         assertEquals(List.of("filesystem", "fileCost"), ModSettings.FILE_COST.getPath());
+        assertEquals(List.of("filesystem", "floppySize"), ModSettings.FLOPPY_SIZE.getPath());
         assertEquals(List.of("filesystem", "maxHandles"), ModSettings.MAX_HANDLES.getPath());
         assertEquals(List.of("filesystem", "maxReadBuffer"), ModSettings.MAX_READ_BUFFER.getPath());
         assertEquals(List.of("filesystem", "hddSizes"), ModSettings.HDD_SIZES.getPath());

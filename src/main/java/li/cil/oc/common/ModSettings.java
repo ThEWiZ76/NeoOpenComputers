@@ -18,6 +18,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.IntValue TMP_SIZE;
     public static final ModConfigSpec.IntValue FILE_COST;
+    public static final ModConfigSpec.IntValue FLOPPY_SIZE;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> HDD_SIZES;
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
@@ -66,6 +67,9 @@ public final class ModSettings {
         FILE_COST = builder
             .comment("Base byte cost charged for each file or directory on limited filesystems. OpenComputers upstream default is 512.")
             .defineInRange("fileCost", 512, 0, Integer.MAX_VALUE);
+        FLOPPY_SIZE = builder
+            .comment("Size of writable floppy disks in kilobytes. OpenComputers upstream default is 512.")
+            .defineInRange("floppySize", 512, 0, Integer.MAX_VALUE);
         HDD_SIZES = builder
             .comment("Sizes of the three hard drive tiers in kilobytes. OpenComputers upstream default is [1024, 2048, 4096].")
             .defineList("hddSizes", DEFAULT_HDD_SIZES, value -> value instanceof Integer && (Integer) value >= 0);
@@ -147,6 +151,10 @@ public final class ModSettings {
 
     public static int fileCost() {
         return intValue(FILE_COST);
+    }
+
+    public static int floppySize() {
+        return intValue(FLOPPY_SIZE);
     }
 
     public static int maxHandles() {

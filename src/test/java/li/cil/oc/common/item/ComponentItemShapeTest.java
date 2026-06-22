@@ -154,6 +154,29 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void blankFloppyUsesConfiguredWritableFilesystem() throws Exception {
+        OpenComputersApi.initialize();
+        CompoundTag savedData = new CompoundTag();
+
+        withCachedConfig(ModSettings.FLOPPY_SIZE, 2, () -> {
+            ManagedEnvironment first = FloppyItem.createWritableEnvironment(new CompoundTag(), saved -> savedData.put("disk", saved.copy()), new CompoundTag(), null);
+            Component firstComponent = assertInstanceOf(Component.class, first.node());
+            assertEquals(2L * 1024L, firstComponent.invoke("spaceTotal", null)[0]);
+            Object handle = firstComponent.invoke("open", null, "note.txt", "w")[0];
+            firstComponent.invoke("write", null, handle, "ok".getBytes(StandardCharsets.UTF_8));
+            firstComponent.invoke("close", null, handle);
+            first.save(new CompoundTag());
+
+            ManagedEnvironment second = FloppyItem.createWritableEnvironment(savedData.getCompound("disk"), saved -> {}, new CompoundTag(), null);
+            Component secondComponent = assertInstanceOf(Component.class, second.node());
+            Object readHandle = secondComponent.invoke("open", null, "note.txt", "r")[0];
+            byte[] data = (byte[]) secondComponent.invoke("read", null, readHandle, 16)[0];
+
+            assertEquals("ok", new String(data, StandardCharsets.UTF_8));
+        });
+    }
+
+    @Test
     void cardContainerItemIsContainerDriver() throws NoSuchMethodException {
         final Constructor<CardContainerItem> constructor = CardContainerItem.class.getConstructor(Item.Properties.class, int.class);
 
