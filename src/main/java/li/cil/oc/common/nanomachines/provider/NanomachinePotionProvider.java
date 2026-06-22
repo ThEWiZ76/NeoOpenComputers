@@ -2,9 +2,9 @@ package li.cil.oc.common.nanomachines.provider;
 
 import li.cil.oc.api.Nanomachines;
 import li.cil.oc.api.nanomachines.Behavior;
-import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.nanomachines.DisableReason;
+import li.cil.oc.api.prefab.AbstractProvider;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -18,9 +18,14 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public final class NanomachinePotionProvider implements BehaviorProvider {
+public final class NanomachinePotionProvider extends AbstractProvider {
+    private static final String PROVIDER_ID = "c29e4eec-5a46-479a-9b3d-ad0f06da784a";
     private static final String POTION_ID_TAG = "potionId";
     private static final int DURATION = 600;
+
+    public NanomachinePotionProvider() {
+        super(PROVIDER_ID);
+    }
 
     @Override
     public Iterable<Behavior> createBehaviors(final Player player) {
@@ -31,16 +36,14 @@ public final class NanomachinePotionProvider implements BehaviorProvider {
     }
 
     @Override
-    public CompoundTag writeToNBT(final Behavior behavior) {
-        final CompoundTag tag = new CompoundTag();
+    protected void writeBehaviorToNBT(final Behavior behavior, final CompoundTag tag) {
         if (behavior instanceof PotionBehavior potionBehavior) {
             tag.putString(POTION_ID_TAG, potionBehavior.effectId().toString());
         }
-        return tag;
     }
 
     @Override
-    public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
+    protected Behavior readBehaviorFromNBT(final Player player, final CompoundTag nbt) {
         return new PotionBehavior(resourceLocation(nbt.getString(POTION_ID_TAG)), player);
     }
 

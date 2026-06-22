@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NanomachinePotionProviderTest {
@@ -31,11 +32,22 @@ final class NanomachinePotionProviderTest {
         final CompoundTag tag = provider.writeToNBT(speed);
         final Behavior loaded = provider.readFromNBT(null, tag);
 
+        assertEquals("c29e4eec-5a46-479a-9b3d-ad0f06da784a", tag.getString("provider"));
         loaded.onEnable();
         loaded.update();
         loaded.onDisable(DisableReason.Default);
         assertEquals("minecraft:speed", tag.getString("potionId"));
         assertEquals("speed", loaded.getNameHint());
+    }
+
+    @Test
+    void ignoresBehaviorNbtOwnedByOtherProviders() {
+        final NanomachinePotionProvider provider = new NanomachinePotionProvider();
+        final CompoundTag tag = new CompoundTag();
+        tag.putString("provider", "b48c4bbd-51bb-4915-9367-16cff3220e4b");
+        tag.putString("effectName", "flame");
+
+        assertNull(provider.readFromNBT(null, tag));
     }
 
     private static List<String> behaviorNames(final Iterable<Behavior> behaviors) {

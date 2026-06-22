@@ -66,6 +66,7 @@ import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.nanomachines.provider.NanomachineDisintegrationProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
+import li.cil.oc.common.nanomachines.provider.NanomachinePotionProvider;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.AssemblerTemplates;
@@ -911,6 +912,26 @@ public final class NeoOpenComputersGameTests {
 
         final float expected = before - (float) ModSettings.nanomachinesHungryDamage();
         helper.assertTrue(Math.abs(player.getHealth() - expected) < 0.001F, "Hungry damage did not bypass resistance");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void nanomachinesPotionProviderAppliesAndRemovesEffects(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final NanomachinePotionProvider provider = new NanomachinePotionProvider();
+        final li.cil.oc.api.nanomachines.Behavior speed = nanomachineBehaviorByName(provider.createBehaviors(player), "speed");
+
+        helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SPEED), "Player already had speed effect");
+        speed.update();
+
+        final MobEffectInstance effect = player.getEffect(MobEffects.MOVEMENT_SPEED);
+        helper.assertTrue(effect != null, "Nanomachines potion behavior did not apply speed");
+        helper.assertTrue(effect.getAmplifier() == 0, "Nanomachines potion behavior applied wrong amplifier");
+        helper.assertTrue(effect.getDuration() <= 600 && effect.getDuration() > 0, "Nanomachines potion behavior applied wrong duration");
+
+        speed.onDisable(li.cil.oc.api.nanomachines.DisableReason.InputChanged);
+
+        helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SPEED), "Nanomachines potion behavior did not remove speed");
         helper.succeed();
     }
 
@@ -4856,6 +4877,15 @@ public final class NeoOpenComputersGameTests {
             }
         }
         return false;
+    }
+
+    private static li.cil.oc.api.nanomachines.Behavior nanomachineBehaviorByName(final Iterable<li.cil.oc.api.nanomachines.Behavior> behaviors, final String name) {
+        for (final li.cil.oc.api.nanomachines.Behavior behavior : behaviors) {
+            if (name.equals(behavior.getNameHint())) {
+                return behavior;
+            }
+        }
+        throw new IllegalArgumentException("Missing nanomachine behavior " + name);
     }
 
     private static CompoundTag nanomachineConfigurationTag(final int triggerInput) {
