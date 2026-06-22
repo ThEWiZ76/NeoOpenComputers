@@ -1,15 +1,21 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Iterator;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class HologramBlockEntityTest {
     @Test
@@ -54,6 +60,24 @@ final class HologramBlockEntityTest {
         assertArrayEquals(new Object[]{4.0D}, tierTwo.getScale(null, new TestArguments()));
     }
 
+    @Test
+    void usesConfiguredScaleTranslationAndRawDelay() throws Exception {
+        withCachedConfig(ModSettings.HOLOGRAM_MAX_SCALE, List.of(5D, 6D), () ->
+            withCachedConfig(ModSettings.HOLOGRAM_MAX_TRANSLATION, List.of(2D, 3D), () ->
+                withCachedConfig(ModSettings.HOLOGRAM_SET_RAW_DELAY, 0.125D, () -> {
+                    HologramBlockEntity tierTwo = allocateHologram(1);
+                    TrackingContext context = new TrackingContext();
+
+                    tierTwo.setScale(null, new TestArguments(9.0D));
+                    tierTwo.setTranslation(null, new TestArguments(-4D, 8D, 4D));
+                    tierTwo.setRaw(context, new TestArguments(new byte[HologramBlockEntity.WIDTH * HologramBlockEntity.WIDTH * HologramBlockEntity.HEIGHT]));
+
+                    assertArrayEquals(new Object[]{6.0D}, tierTwo.getScale(null, new TestArguments()));
+                    assertArrayEquals(new Object[]{-3.0D, 6.0D, 3.0D}, tierTwo.getTranslation(null, new TestArguments()));
+                    assertEquals(0.125D, context.pauseSeconds, 0.000_001D);
+                })));
+    }
+
     private static HologramBlockEntity allocateHologram(final int tier) throws Exception {
         Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
@@ -69,6 +93,39 @@ final class HologramBlockEntityTest {
         Field field = HologramBlockEntity.class.getDeclaredField(name);
         field.setAccessible(true);
         field.set(hologram, value);
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    private interface ThrowingRunnable {
+        void run() throws Exception;
+    }
+
+    private static final class TrackingContext implements Context {
+        private double pauseSeconds = -1D;
+
+        @Override public Node node() { return null; }
+        @Override public boolean canInteract(final String player) { return true; }
+        @Override public boolean isRunning() { return true; }
+        @Override public boolean isPaused() { return false; }
+        @Override public boolean start() { return true; }
+        @Override public boolean pause(final double seconds) {
+            pauseSeconds = seconds;
+            return true;
+        }
+        @Override public boolean stop() { return true; }
+        @Override public void consumeCallBudget(final double callCost) { }
+        @Override public boolean signal(final String name, final Object... args) { return true; }
     }
 
     private record TestArguments(Object... values) implements Arguments {

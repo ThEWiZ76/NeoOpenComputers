@@ -14,6 +14,7 @@ import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.HologramBlock;
 import net.minecraft.core.Direction;
@@ -51,8 +52,6 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
     private static final String TAG_ROTATION_SPEED_Z = "oc:rotationSpeedZ";
     private static final String TAG_HAS_POWER = "oc:hasPower";
     private static final double HOLOGRAM_COST_PER_TICK = 0.2D;
-    private static final double[] MAX_SCALE_BY_TIER = {3.0D, 4.0D};
-    private static final double[] MAX_TRANSLATION_BY_TIER = {1.0D, 2.0D};
     private static final String COMPONENT_NAME = "hologram";
 
     private final int[] volume = new int[VOLUME_SIZE];
@@ -241,7 +240,7 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
                 }
             }
         }
-        context.pause(0.5D);
+        context.pause(ModSettings.hologramSetRawDelay());
         setChanged();
         return null;
     }
@@ -482,11 +481,11 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
     }
 
     private double maxScale() {
-        return MAX_SCALE_BY_TIER[tier];
+        return ModSettings.hologramMaxScale(tier);
     }
 
     private double maxTranslation() {
-        return MAX_TRANSLATION_BY_TIER[tier];
+        return ModSettings.hologramMaxTranslation(tier);
     }
 
     private int checkColor(final Arguments args, final int index) {

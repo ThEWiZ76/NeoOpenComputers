@@ -10,6 +10,8 @@ public final class ModSettings {
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
     private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
     private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
+    private static final List<Double> DEFAULT_HOLOGRAM_MAX_SCALE = List.of(3D, 4D);
+    private static final List<Double> DEFAULT_HOLOGRAM_MAX_TRANSLATION = List.of(1D, 2D);
     private static final List<String> DEFAULT_FILTERING_RULES = List.of("removeme", "deny private", "deny bogon", "allow default");
 
     public static final ModConfigSpec SPEC;
@@ -46,6 +48,9 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue INTERNET_THREADS;
     public static final ModConfigSpec.IntValue MAX_TCP_CONNECTIONS;
     public static final ModConfigSpec.ConfigValue<String> HTTP_USER_AGENT;
+    public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_SCALE;
+    public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_TRANSLATION;
+    public static final ModConfigSpec.DoubleValue HOLOGRAM_SET_RAW_DELAY;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
@@ -164,6 +169,18 @@ public final class ModSettings {
         HTTP_USER_AGENT = builder
             .comment("HTTP User-Agent for internet-card requests. $version is replaced with the mod version.")
             .define("httpUserAgent", "opencomputers/$version");
+        builder.pop();
+
+        builder.push("hologram");
+        HOLOGRAM_MAX_SCALE = builder
+            .comment("Maximum hologram render scale for tier one and tier two. OpenComputers upstream default is [3.0, 4.0].")
+            .defineList("maxScale", DEFAULT_HOLOGRAM_MAX_SCALE, value -> value instanceof Double && (Double) value >= 0D);
+        HOLOGRAM_MAX_TRANSLATION = builder
+            .comment("Maximum hologram translation for tier one and tier two. OpenComputers upstream default is [1.0, 2.0].")
+            .defineList("maxTranslation", DEFAULT_HOLOGRAM_MAX_TRANSLATION, value -> value instanceof Double && (Double) value >= 0D);
+        HOLOGRAM_SET_RAW_DELAY = builder
+            .comment("Pause in seconds after setting the full raw hologram buffer. OpenComputers upstream default is 0.2.")
+            .defineInRange("setRawDelay", 0.2D, 0D, Double.MAX_VALUE);
         builder.pop();
 
         builder.push("power");
@@ -358,6 +375,36 @@ public final class ModSettings {
 
     public static String httpUserAgent() {
         return stringValue(HTTP_USER_AGENT).replace("$version", API.VERSION);
+    }
+
+    public static List<Double> hologramMaxScale() {
+        final List<Double> scales = doubleListValue(HOLOGRAM_MAX_SCALE);
+        if (scales.size() != DEFAULT_HOLOGRAM_MAX_SCALE.size()) {
+            return DEFAULT_HOLOGRAM_MAX_SCALE;
+        }
+        return scales;
+    }
+
+    public static double hologramMaxScale(final int tier) {
+        final List<Double> scales = hologramMaxScale();
+        return scales.get(clampIndex(tier, scales.size()));
+    }
+
+    public static List<Double> hologramMaxTranslation() {
+        final List<Double> translations = doubleListValue(HOLOGRAM_MAX_TRANSLATION);
+        if (translations.size() != DEFAULT_HOLOGRAM_MAX_TRANSLATION.size()) {
+            return DEFAULT_HOLOGRAM_MAX_TRANSLATION;
+        }
+        return translations;
+    }
+
+    public static double hologramMaxTranslation(final int tier) {
+        final List<Double> translations = hologramMaxTranslation();
+        return translations.get(clampIndex(tier, translations.size()));
+    }
+
+    public static double hologramSetRawDelay() {
+        return doubleValue(HOLOGRAM_SET_RAW_DELAY);
     }
 
     public static List<Integer> hddSizes() {

@@ -57,6 +57,17 @@ final class ModSettingsTest {
         assertEquals(4, ModSettings.internetThreads());
         assertEquals(4, ModSettings.maxTcpConnections());
         assertEquals("opencomputers/" + API.VERSION, ModSettings.httpUserAgent());
+        assertEquals(List.of(3D, 4D), ModSettings.hologramMaxScale());
+        assertEquals(3D, ModSettings.hologramMaxScale(0));
+        assertEquals(4D, ModSettings.hologramMaxScale(1));
+        assertEquals(3D, ModSettings.hologramMaxScale(-1));
+        assertEquals(4D, ModSettings.hologramMaxScale(99));
+        assertEquals(List.of(1D, 2D), ModSettings.hologramMaxTranslation());
+        assertEquals(1D, ModSettings.hologramMaxTranslation(0));
+        assertEquals(2D, ModSettings.hologramMaxTranslation(1));
+        assertEquals(1D, ModSettings.hologramMaxTranslation(-1));
+        assertEquals(2D, ModSettings.hologramMaxTranslation(99));
+        assertEquals(0.2D, ModSettings.hologramSetRawDelay());
         assertEquals(List.of(1024, 2048, 4096), ModSettings.hddSizes());
         assertEquals(1024, ModSettings.hddSize(0));
         assertEquals(2048, ModSettings.hddSize(1));
@@ -104,5 +115,8 @@ final class ModSettingsTest {
         assertEquals(List.of("internet", "threads"), ModSettings.INTERNET_THREADS.getPath());
         assertEquals(List.of("internet", "maxTcpConnections"), ModSettings.MAX_TCP_CONNECTIONS.getPath());
         assertEquals(List.of("internet", "httpUserAgent"), ModSettings.HTTP_USER_AGENT.getPath());
+        assertEquals(List.of("hologram", "maxScale"), ModSettings.HOLOGRAM_MAX_SCALE.getPath());
+        assertEquals(List.of("hologram", "maxTranslation"), ModSettings.HOLOGRAM_MAX_TRANSLATION.getPath());
+        assertEquals(List.of("hologram", "setRawDelay"), ModSettings.HOLOGRAM_SET_RAW_DELAY.getPath());
     }
 }
