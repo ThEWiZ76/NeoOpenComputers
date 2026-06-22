@@ -1601,6 +1601,27 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
             });
         }
+        final LuaTable metatable = new LuaTable();
+        metatable.set("__call", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return toLuaValues(value.call(machine, new LuaArguments(toJavaArgs(args, 2))));
+            }
+        });
+        metatable.set("__index", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return toLuaValue(value.apply(machine, new LuaArguments(new Object[]{toJavaValue(args.arg(2))})));
+            }
+        });
+        metatable.set("__newindex", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                value.unapply(machine, new LuaArguments(new Object[]{toJavaValue(args.arg(2)), toJavaValue(args.arg(3))}));
+                return LuaValue.NIL;
+            }
+        });
+        table.setmetatable(metatable);
         return table;
     }
 

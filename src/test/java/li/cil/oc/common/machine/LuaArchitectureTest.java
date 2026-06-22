@@ -1061,6 +1061,9 @@ final class LuaArchitectureTest {
             called = userdata.call(value, 'call')
             applied = userdata.apply(value, 'apply')
             unapplied = userdata.unapply(value, 'unapply')
+            metaCalled = value('meta-call')
+            metaApplied = value.metaApply
+            value.metaUnapply = 'meta-unapply'
             disposed = userdata.dispose(value)
             invalidValid, invalidMessage = pcall(function()
               userdata.invoke({}, 'echo')
@@ -1076,9 +1079,12 @@ final class LuaArchitectureTest {
         assertEquals("invoked:payload", architecture.globalString("invoked"));
         assertEquals("called:call", architecture.globalString("called"));
         assertEquals("applied:apply", architecture.globalString("applied"));
+        assertEquals("called:meta-call", architecture.globalString("metaCalled"));
+        assertEquals("applied:metaApply", architecture.globalString("metaApplied"));
         assertEquals("nil", architecture.globalString("unapplied"));
         assertTrue(value.unapplied);
-        assertEquals("unapply", value.unapplyArgument);
+        assertEquals("metaUnapply", value.unapplyArgument);
+        assertEquals("meta-unapply", value.unapplyValue);
         assertEquals("nil", architecture.globalString("disposed"));
         assertTrue(value.disposed);
         assertEquals(false, architecture.globalBoolean("invalidValid"));
@@ -2184,6 +2190,7 @@ final class LuaArchitectureTest {
     private static final class TestValue implements Value {
         private boolean unapplied;
         private String unapplyArgument;
+        private String unapplyValue;
         private boolean disposed;
 
         @Override
@@ -2195,6 +2202,7 @@ final class LuaArchitectureTest {
         public void unapply(final Context context, final Arguments arguments) {
             unapplied = true;
             unapplyArgument = arguments.checkString(0);
+            unapplyValue = arguments.count() > 1 ? arguments.checkString(1) : null;
         }
 
         @Override
