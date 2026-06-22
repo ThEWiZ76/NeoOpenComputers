@@ -194,7 +194,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         if (read < 0) {
             return new Object[]{null};
         }
-        consumeEnergy(context, ModSettings.hddReadCost() * read);
+        consumeEnergy(ModSettings.hddReadCost() * read);
         if (read == buffer.length) {
             return new Object[]{buffer};
         }
@@ -226,7 +226,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         final int handleId = checkHandle(arguments, 0);
         checkOwner(context, handleId);
         final byte[] value = arguments.checkByteArray(1);
-        consumeEnergy(context, ModSettings.hddWriteCost() * value.length);
+        consumeEnergy(ModSettings.hddWriteCost() * value.length);
         getHandle(handleId).write(value);
         return new Object[]{true};
     }
@@ -477,8 +477,8 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         }
     }
 
-    private static void consumeEnergy(final Context context, final double cost) throws IOException {
-        if (context != null && context.node() instanceof Connector connector && !connector.tryChangeBuffer(-cost)) {
+    private void consumeEnergy(final double cost) throws IOException {
+        if (node() instanceof Connector connector && !connector.tryChangeBuffer(-cost)) {
             throw new IOException("not enough energy");
         }
     }

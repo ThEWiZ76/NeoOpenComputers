@@ -11,6 +11,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.network.Component;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.ModSettings;
@@ -133,6 +134,7 @@ final class ComponentItemShapeTest {
         CompoundTag stackData = new CompoundTag();
         ManagedEnvironment first = HardDiskDriveItem.createEnvironment(stackData, saved -> stackData.put("disk", saved.copy()), null);
         Component firstComponent = assertInstanceOf(Component.class, first.node());
+        charge(first, 1D);
         Object handle = firstComponent.invoke("open", null, "boot.txt", "w")[0];
         firstComponent.invoke("write", null, handle, "ready".getBytes(StandardCharsets.UTF_8));
         firstComponent.invoke("close", null, handle);
@@ -140,6 +142,7 @@ final class ComponentItemShapeTest {
         first.save(new CompoundTag());
         ManagedEnvironment second = HardDiskDriveItem.createEnvironment(stackData.getCompound("disk"), saved -> {}, null);
         Component secondComponent = assertInstanceOf(Component.class, second.node());
+        charge(second, 1D);
         Object readHandle = secondComponent.invoke("open", null, "boot.txt", "r")[0];
         byte[] data = (byte[]) secondComponent.invoke("read", null, readHandle, 16)[0];
 
@@ -183,6 +186,7 @@ final class ComponentItemShapeTest {
         withCachedConfig(ModSettings.FLOPPY_SIZE, 2, () -> {
             ManagedEnvironment first = FloppyItem.createWritableEnvironment(new CompoundTag(), saved -> savedData.put("disk", saved.copy()), new CompoundTag(), null);
             Component firstComponent = assertInstanceOf(Component.class, first.node());
+            charge(first, 1D);
             assertEquals(2L * 1024L, firstComponent.invoke("spaceTotal", null)[0]);
             Object handle = firstComponent.invoke("open", null, "note.txt", "w")[0];
             firstComponent.invoke("write", null, handle, "ok".getBytes(StandardCharsets.UTF_8));
@@ -191,6 +195,7 @@ final class ComponentItemShapeTest {
 
             ManagedEnvironment second = FloppyItem.createWritableEnvironment(savedData.getCompound("disk"), saved -> {}, new CompoundTag(), null);
             Component secondComponent = assertInstanceOf(Component.class, second.node());
+            charge(second, 1D);
             Object readHandle = secondComponent.invoke("open", null, "note.txt", "r")[0];
             byte[] data = (byte[]) secondComponent.invoke("read", null, readHandle, 16)[0];
 
@@ -529,6 +534,13 @@ final class ComponentItemShapeTest {
         } finally {
             cachedValue.set(value, previous);
         }
+    }
+
+    private static Connector charge(final ManagedEnvironment environment, final double energy) {
+        Connector connector = assertInstanceOf(Connector.class, environment.node());
+        connector.setLocalBufferSize(energy);
+        connector.changeBuffer(energy);
+        return connector;
     }
 
     @FunctionalInterface

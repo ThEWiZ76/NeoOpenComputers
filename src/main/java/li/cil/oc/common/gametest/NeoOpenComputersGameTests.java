@@ -3709,6 +3709,7 @@ public final class NeoOpenComputersGameTests {
         raid.setItem(2, new ItemStack(ModItems.HDD_TIER3.get()));
 
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) raid.onAnalyze(null, Direction.NORTH, 0, 0, 0)[0];
+        chargeConnector(helper, component, 1D);
         final Object[] open = invokeComponent(helper, component, "open", "persisted.txt", "w");
         invokeComponent(helper, component, "write", open[0], "kept".getBytes(StandardCharsets.UTF_8));
         invokeComponent(helper, component, "close", open[0]);
@@ -3740,6 +3741,7 @@ public final class NeoOpenComputersGameTests {
         raid.setItem(1, new ItemStack(ModItems.HDD_TIER2.get()));
         raid.setItem(2, new ItemStack(ModItems.HDD_TIER3.get()));
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) raid.onAnalyze(null, Direction.NORTH, 0, 0, 0)[0];
+        chargeConnector(helper, component, 1D);
         final Object[] open = invokeComponent(helper, component, "open", "survived.txt", "w");
         invokeComponent(helper, component, "write", open[0], "kept".getBytes(StandardCharsets.UTF_8));
         invokeComponent(helper, component, "close", open[0]);
@@ -4952,6 +4954,7 @@ public final class NeoOpenComputersGameTests {
         final ManagedEnvironment environment = driver.createEnvironment(stack, null);
         helper.assertTrue(environment != null, "Hard disk driver did not create an environment");
         helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Hard disk environment has no filesystem component");
+        chargeConnector(helper, environment.node(), 1D);
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         try {
             final Object handle = component.invoke("open", null, "init.lua", "w")[0];
@@ -5464,6 +5467,7 @@ public final class NeoOpenComputersGameTests {
 
     private static void writeFile(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final String filesystemAddress, final String path, final String data) {
         try {
+            chargeComponent(helper, computer, filesystemAddress, 1D);
             final Object handle = computer.machine().invoke(filesystemAddress, "open", new Object[]{path, "w"})[0];
             computer.machine().invoke(filesystemAddress, "write", new Object[]{handle, data.getBytes(StandardCharsets.UTF_8)});
             computer.machine().invoke(filesystemAddress, "close", new Object[]{handle});
@@ -5484,6 +5488,23 @@ public final class NeoOpenComputersGameTests {
         } catch (Exception e) {
             helper.fail("Failed to inspect dropped hard disk: " + e.getMessage());
         }
+    }
+
+    private static void chargeComponent(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final String address, final double energy) {
+        for (final Node reachable : computer.node().reachableNodes()) {
+            if (address.equals(reachable.address())) {
+                chargeConnector(helper, reachable, energy);
+                return;
+            }
+        }
+        helper.fail("Could not find component node " + address + " to charge");
+    }
+
+    private static void chargeConnector(final GameTestHelper helper, final Node node, final double energy) {
+        helper.assertTrue(node instanceof Connector, "Expected connector node to charge");
+        final Connector connector = (Connector) node;
+        connector.setLocalBufferSize(energy);
+        connector.changeBuffer(energy);
     }
 
     private record TestMessage(Node source, String name, Object[] data) implements Message {

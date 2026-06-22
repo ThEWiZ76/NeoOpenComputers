@@ -335,6 +335,7 @@ final class FileSystemRegistryTest {
         assertTrue(fileSystem.makeDirectory("tmp"));
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
+        charge(environment, 1D);
 
         Object writeHandle = component.invoke("open", null, "tmp/data.txt", "w")[0];
         assertArrayEquals(new Object[]{true}, component.invoke("write", null, writeHandle, "hello"));
@@ -353,6 +354,7 @@ final class FileSystemRegistryTest {
         FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
+        charge(environment, 1D);
 
         Object handle = component.invoke("open", null, "data.txt", "w")[0];
         Map<String, Object> handleTable = Map.of("handle", Integer.parseInt(handle.toString()));
@@ -371,6 +373,7 @@ final class FileSystemRegistryTest {
         assertTrue(fileSystem.makeDirectory("tmp"));
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 2);
         Component component = (Component) environment.node();
+        charge(environment, 1D);
         RecordingContext context = new RecordingContext();
 
         Object writeHandle = component.invoke("open", context, "tmp/data.txt", "w")[0];
@@ -389,11 +392,32 @@ final class FileSystemRegistryTest {
         FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
+        Connector connector = charge(environment, 1D);
+        byte[] data = new byte[1024];
+        java.util.Arrays.fill(data, (byte) 'x');
+
+        Object writeHandle = component.invoke("open", null, "data.txt", "w")[0];
+        assertArrayEquals(new Object[]{true}, component.invoke("write", null, writeHandle, data));
+        component.invoke("close", null, writeHandle);
+        Object readHandle = component.invoke("open", null, "data.txt", "r")[0];
+        component.invoke("read", null, readHandle, data.length);
+
+        assertEquals(0.65D, connector.localBuffer(), 0.000_001D);
+    }
+
+    @Test
+    void managedFileSystemEnvironmentConsumesOwnConnectorEnergyLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+        Connector fileSystemConnector = assertInstanceOf(Connector.class, environment.node());
         RecordingEnvironment contextEnvironment = new RecordingEnvironment();
-        Connector connector = (Connector) API.network.newNode(contextEnvironment, Visibility.Network).withConnector(1).create();
-        contextEnvironment.node = connector;
-        connector.changeBuffer(1);
-        RecordingContext context = new RecordingContext(connector);
+        Connector contextConnector = (Connector) API.network.newNode(contextEnvironment, Visibility.Network).withConnector(1).create();
+        contextEnvironment.node = contextConnector;
+        fileSystemConnector.setLocalBufferSize(1);
+        fileSystemConnector.changeBuffer(1);
+        RecordingContext context = new RecordingContext(contextConnector);
         byte[] data = new byte[1024];
         java.util.Arrays.fill(data, (byte) 'x');
 
@@ -403,7 +427,8 @@ final class FileSystemRegistryTest {
         Object readHandle = component.invoke("open", context, "data.txt", "r")[0];
         component.invoke("read", context, readHandle, data.length);
 
-        assertEquals(0.65D, connector.localBuffer(), 0.000_001D);
+        assertEquals(0.65D, fileSystemConnector.localBuffer(), 0.000_001D);
+        assertEquals(0D, contextConnector.localBuffer(), 0.000_001D);
     }
 
     @Test
@@ -414,19 +439,15 @@ final class FileSystemRegistryTest {
                 FileSystem fileSystem = API.fileSystem.fromMemory(4096);
                 ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
                 Component component = (Component) environment.node();
-                RecordingEnvironment contextEnvironment = new RecordingEnvironment();
-                Connector connector = (Connector) API.network.newNode(contextEnvironment, Visibility.Network).withConnector(2).create();
-                contextEnvironment.node = connector;
-                connector.changeBuffer(2);
-                RecordingContext context = new RecordingContext(connector);
+                Connector connector = charge(environment, 2D);
                 byte[] data = new byte[1024];
                 java.util.Arrays.fill(data, (byte) 'x');
 
-                Object writeHandle = component.invoke("open", context, "data.txt", "w")[0];
-                assertArrayEquals(new Object[]{true}, component.invoke("write", context, writeHandle, data));
-                component.invoke("close", context, writeHandle);
-                Object readHandle = component.invoke("open", context, "data.txt", "r")[0];
-                component.invoke("read", context, readHandle, data.length);
+                Object writeHandle = component.invoke("open", null, "data.txt", "w")[0];
+                assertArrayEquals(new Object[]{true}, component.invoke("write", null, writeHandle, data));
+                component.invoke("close", null, writeHandle);
+                Object readHandle = component.invoke("open", null, "data.txt", "r")[0];
+                component.invoke("read", null, readHandle, data.length);
 
                 assertEquals(0.75D, connector.localBuffer(), 0.000_001D);
                 return null;
@@ -441,6 +462,7 @@ final class FileSystemRegistryTest {
         FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
+        charge(environment, 1D);
         RecordingContext owner = new RecordingContext("owner");
         RecordingContext stranger = new RecordingContext("stranger");
 
@@ -500,6 +522,7 @@ final class FileSystemRegistryTest {
         ManagedEnvironment loaded = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(4096), "tmp", null, null, 1);
         loaded.load(nbt);
         Component loadedComponent = (Component) loaded.node();
+        charge(loaded, 1D);
 
         assertArrayEquals(new Object[]{true}, loadedComponent.invoke("write", context, rawHandle, "after reload"));
         loadedComponent.invoke("close", context, rawHandle);
@@ -510,6 +533,7 @@ final class FileSystemRegistryTest {
         OpenComputersApi.initialize();
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(4096), "tmp", null, null, 1);
         Component component = (Component) environment.node();
+        charge(environment, 1D);
         Object handle = component.invoke("open", null, "data.txt", "w")[0];
 
         environment.save(new CompoundTag());
@@ -531,6 +555,7 @@ final class FileSystemRegistryTest {
         FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
+        charge(environment, 1D);
         byte[] data = new byte[maxReadBuffer + 2];
         java.util.Arrays.fill(data, (byte) 'x');
 
@@ -542,6 +567,13 @@ final class FileSystemRegistryTest {
         byte[] read = (byte[]) component.invoke("read", null, readHandle, 4096)[0];
 
         assertEquals(maxReadBuffer, read.length);
+    }
+
+    private static Connector charge(final ManagedEnvironment environment, final double energy) {
+        Connector connector = assertInstanceOf(Connector.class, environment.node());
+        connector.setLocalBufferSize(energy);
+        connector.changeBuffer(energy);
+        return connector;
     }
 
     private static <T, V> T withCachedConfig(final ModConfigSpec.ConfigValue<V> value, final V override, final ThrowingSupplier<T> action) throws Exception {
