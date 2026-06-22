@@ -989,10 +989,14 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         os.set("time", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (args.isnoneornil(1)) {
+                final LuaValue value = args.arg(1);
+                if (value.isnil()) {
                     return LuaValue.valueOf(worldTimestamp());
                 }
-                final LuaTable time = args.checktable(1);
+                if (!value.istable()) {
+                    throw new LuaError("bad argument #1 (table or nil expected, got " + luaTypeName(value) + ")");
+                }
+                final LuaTable time = value.checktable();
                 final int second = intField(time, "sec", 0);
                 final int minute = intField(time, "min", 0);
                 final int hour = intField(time, "hour", 12);
