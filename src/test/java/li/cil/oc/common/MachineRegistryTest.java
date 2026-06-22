@@ -262,6 +262,28 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void machineUserManagementMatchesUpstreamLimits() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+
+        for (int index = 0; index < ModSettings.maxUsers(); index++) {
+            machine.addUser("user" + index);
+        }
+
+        Exception tooMany = assertThrows(Exception.class, () -> machine.addUser("overflow"));
+        assertEquals("too many users", tooMany.getMessage());
+
+        Machine duplicate = API.machine.create(null);
+        duplicate.addUser("alice");
+        Exception existing = assertThrows(Exception.class, () -> duplicate.addUser("alice"));
+        assertEquals("user exists", existing.getMessage());
+
+        String tooLongName = "x".repeat(ModSettings.maxUsernameLength() + 1);
+        Exception tooLong = assertThrows(Exception.class, () -> API.machine.create(null).addUser(tooLongName));
+        assertEquals("username too long", tooLong.getMessage());
+    }
+
+    @Test
     void computerBeepCallbackMatchesUpstreamDurationSemantics() throws Exception {
         OpenComputersApi.initialize();
         SimpleMachine machine = assertInstanceOf(SimpleMachine.class, API.machine.create(null));

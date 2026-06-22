@@ -6,6 +6,9 @@ public final class ModSettings {
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
     public static final ModConfigSpec.BooleanValue INPUT_USERNAME;
+    public static final ModConfigSpec.BooleanValue CAN_COMPUTERS_BE_OWNED;
+    public static final ModConfigSpec.IntValue MAX_USERS;
+    public static final ModConfigSpec.IntValue MAX_USERNAME_LENGTH;
     public static final ModConfigSpec.DoubleValue COMPUTER_TIMEOUT;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
@@ -25,6 +28,15 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("computer");
+        CAN_COMPUTERS_BE_OWNED = builder
+            .comment("Allow computer user lists to restrict interaction. OpenComputers upstream default is true.")
+            .define("canComputersBeOwned", true);
+        MAX_USERS = builder
+            .comment("Maximum number of users registered with one computer. OpenComputers upstream default is 16.")
+            .defineInRange("maxUsers", 16, 0, Integer.MAX_VALUE);
+        MAX_USERNAME_LENGTH = builder
+            .comment("Maximum registered computer username length. OpenComputers upstream default is 32.")
+            .defineInRange("maxUsernameLength", 32, 0, Integer.MAX_VALUE);
         COMPUTER_TIMEOUT = builder
             .comment("Seconds programs may run without yielding before they are stopped. OpenComputers upstream default is 5.0.")
             .defineInRange("timeout", 5D, 0D, Double.MAX_VALUE);
@@ -76,6 +88,18 @@ public final class ModSettings {
 
     public static boolean inputUsername() {
         return booleanValue(INPUT_USERNAME);
+    }
+
+    public static boolean canComputersBeOwned() {
+        return booleanValue(CAN_COMPUTERS_BE_OWNED);
+    }
+
+    public static int maxUsers() {
+        return intValue(MAX_USERS);
+    }
+
+    public static int maxUsernameLength() {
+        return intValue(MAX_USERNAME_LENGTH);
     }
 
     public static double computerTimeout() {

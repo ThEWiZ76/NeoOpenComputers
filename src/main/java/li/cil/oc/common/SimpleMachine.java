@@ -528,7 +528,16 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     }
 
     @Override
-    public void addUser(final String name) {
+    public void addUser(final String name) throws Exception {
+        if (users.size() >= ModSettings.maxUsers()) {
+            throw new Exception("too many users");
+        }
+        if (users.contains(name)) {
+            throw new Exception("user exists");
+        }
+        if (name != null && name.length() > ModSettings.maxUsernameLength()) {
+            throw new Exception("username too long");
+        }
         users.add(name);
     }
 
@@ -539,7 +548,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public boolean canInteract(final String player) {
-        return users.isEmpty() || users.contains(player);
+        return !ModSettings.canComputersBeOwned() || users.isEmpty() || users.contains(player);
     }
 
     @Override
