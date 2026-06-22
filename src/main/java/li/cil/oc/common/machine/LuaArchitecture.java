@@ -2400,7 +2400,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public byte[] checkByteArray(final int index) {
-            final Object value = checkAny(index);
+            final Object value = checkAny(index, "string");
             if (value instanceof byte[] bytes) {
                 return bytes;
             }
