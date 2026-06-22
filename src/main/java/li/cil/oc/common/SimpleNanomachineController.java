@@ -1,17 +1,23 @@
 package li.cil.oc.common;
 
+import li.cil.oc.api.Network;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.nanomachines.DisableReason;
+import li.cil.oc.api.network.Packet;
+import li.cil.oc.api.network.WirelessEndpoint;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-final class SimpleNanomachineController implements Controller {
+final class SimpleNanomachineController implements Controller, WirelessEndpoint {
     private static final String TAG_ENERGY = "energy";
     private static final String TAG_ACTIVE_INPUTS = "activeInputs";
     private static final String TAG_CONNECTORS = "connectors";
@@ -28,6 +34,8 @@ final class SimpleNanomachineController implements Controller {
     private List<Behavior> activeBehaviors = List.of();
     private boolean[] inputs = new boolean[0];
     private boolean activeBehaviorsDirty;
+    private final String uuid = UUID.randomUUID().toString();
+    private int responsePort;
     private double buffer;
 
     SimpleNanomachineController(final Player player, final NanomachinesRegistry registry) {
@@ -117,6 +125,41 @@ final class SimpleNanomachineController implements Controller {
         buffer = Math.clamp(requested, 0D, getLocalBufferSize());
         saveState();
         return requested - buffer;
+    }
+
+    @Override
+    public int x() {
+        return player == null ? 0 : player.blockPosition().getX();
+    }
+
+    @Override
+    public int y() {
+        return player == null ? 0 : player.blockPosition().getY();
+    }
+
+    @Override
+    public int z() {
+        return player == null ? 0 : player.blockPosition().getZ();
+    }
+
+    @Override
+    public Level world() {
+        return player == null ? null : player.level();
+    }
+
+    @Override
+    public void receivePacket(final Packet packet, final WirelessEndpoint sender) {
+        if (packet == null || sender == null || getLocalBuffer() <= 0D) {
+            return;
+        }
+        final Object[] data = packet.data();
+        if (data.length < 2 || !isNanomachinesHeader(data[0])) {
+            return;
+        }
+        if ("setResponsePort".equals(commandValue(data[1])) && data.length >= 3 && commandValue(data[2]) instanceof Number port) {
+            responsePort = clampPort(port.intValue());
+            respond(sender, "port", responsePort);
+        }
     }
 
     void dispose() {
@@ -276,6 +319,34 @@ final class SimpleNanomachineController implements Controller {
             }
         }
         return entries;
+    }
+
+    private void respond(final WirelessEndpoint endpoint, final Object... data) {
+        if (responsePort <= 0) {
+            return;
+        }
+        final Object[] response = new Object[data.length + 1];
+        response[0] = "nanomachines";
+        System.arraycopy(data, 0, response, 1, data.length);
+        final Packet packet = Network.newPacket(uuid, null, responsePort, response);
+        if (packet != null) {
+            Network.sendWirelessPacket(this, ModSettings.nanomachinesCommandRange(), packet);
+        }
+    }
+
+    private static boolean isNanomachinesHeader(final Object value) {
+        return "nanomachines".equals(commandValue(value));
+    }
+
+    private static Object commandValue(final Object value) {
+        if (value instanceof byte[] bytes) {
+            return new String(bytes, StandardCharsets.UTF_8);
+        }
+        return value;
+    }
+
+    private static int clampPort(final int port) {
+        return Math.max(0, Math.min(0xFFFF, port));
     }
 
     private int activeInputCount() {

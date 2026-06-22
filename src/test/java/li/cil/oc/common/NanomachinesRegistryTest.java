@@ -1,26 +1,33 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.Network;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.nanomachines.BehaviorProvider;
+import li.cil.oc.api.network.Packet;
+import li.cil.oc.api.network.WirelessEndpoint;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NanomachinesRegistryTest {
     @AfterEach
     void resetApi() {
         API.nanomachines = null;
+        API.network = null;
     }
 
     @Test
@@ -144,6 +151,25 @@ final class NanomachinesRegistryTest {
         assertTrue(hasConnectorBackedBehavior(tag.getList("behaviors", CompoundTag.TAG_COMPOUND)));
     }
 
+    @Test
+    void controllerRespondsToSetResponsePortWirelessCommand() {
+        API.network = new NetworkRegistry();
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+
+        Object endpointCandidate = controller;
+        assertTrue(endpointCandidate instanceof WirelessEndpoint);
+        WirelessEndpoint endpoint = (WirelessEndpoint) endpointCandidate;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 123}), sender);
+
+        assertTrue(sender.lastPacket != null);
+        assertSame(endpoint, sender.lastSender);
+        assertEquals(123, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "port", 123}, sender.lastPacket.data());
+    }
+
     private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {
         for (int i = 0; i < behaviors.size(); i++) {
             if (behaviors.getCompound(i).getIntArray("connectorInputs").length > 0) {
@@ -151,6 +177,37 @@ final class NanomachinesRegistryTest {
             }
         }
         return false;
+    }
+
+    private static final class RecordingWirelessEndpoint implements WirelessEndpoint {
+        private Packet lastPacket;
+        private WirelessEndpoint lastSender;
+
+        @Override
+        public int x() {
+            return 0;
+        }
+
+        @Override
+        public int y() {
+            return 0;
+        }
+
+        @Override
+        public int z() {
+            return 0;
+        }
+
+        @Override
+        public Level world() {
+            return null;
+        }
+
+        @Override
+        public void receivePacket(final Packet packet, final WirelessEndpoint sender) {
+            lastPacket = packet;
+            lastSender = sender;
+        }
     }
 
     private static final class TestBehaviorProvider implements BehaviorProvider {
