@@ -70,10 +70,46 @@ final class NanomachinesRegistryTest {
         assertEquals(1, provider.readCount);
     }
 
+    @Test
+    void controllerActivatesOnlyBehaviorsConnectedToActiveInputs() {
+        TestBehavior first = new TestBehavior("first");
+        TestBehavior second = new TestBehavior("second");
+        TestBehavior third = new TestBehavior("third");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(first, second, third)));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        tag.putIntArray("activeInputs", new int[]{0});
+
+        controller.load(tag);
+
+        assertIterableEquals(List.of(first, third), controller.getActiveBehaviors());
+        assertEquals(1, controller.getInputCount(first));
+        assertEquals(0, controller.getInputCount(second));
+        assertEquals(1, controller.getInputCount(third));
+    }
+
     private static final class TestBehaviorProvider implements BehaviorProvider {
         @Override
         public Iterable<Behavior> createBehaviors(final Player player) {
             return List.of();
+        }
+
+        @Override
+        public CompoundTag writeToNBT(final Behavior behavior) {
+            return new CompoundTag();
+        }
+
+        @Override
+        public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
+            return null;
+        }
+    }
+
+    private record ListBehaviorProvider(List<Behavior> behaviors) implements BehaviorProvider {
+        @Override
+        public Iterable<Behavior> createBehaviors(final Player player) {
+            return behaviors;
         }
 
         @Override
@@ -93,7 +129,7 @@ final class NanomachinesRegistryTest {
 
         @Override
         public Iterable<Behavior> createBehaviors(final Player player) {
-            return List.of(new TestBehavior());
+            return List.of(new TestBehavior("test"));
         }
 
         @Override
@@ -107,14 +143,14 @@ final class NanomachinesRegistryTest {
         @Override
         public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
             readCount++;
-            return new TestBehavior();
+            return new TestBehavior("test");
         }
     }
 
-    private static final class TestBehavior implements Behavior {
+    private record TestBehavior(String name) implements Behavior {
         @Override
         public String getNameHint() {
-            return "test";
+            return name;
         }
 
         @Override

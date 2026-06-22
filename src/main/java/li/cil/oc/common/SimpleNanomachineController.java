@@ -16,6 +16,7 @@ final class SimpleNanomachineController implements Controller {
     private static final String TAG_ACTIVE_INPUTS = "activeInputs";
     private static final String TAG_BEHAVIORS = "behaviors";
     private static final String TAG_BEHAVIOR = "behavior";
+    private static final String TAG_TRIGGER_INPUTS = "triggerInputs";
 
     private final Player player;
     private final NanomachinesRegistry registry;
@@ -39,12 +40,12 @@ final class SimpleNanomachineController implements Controller {
         for (final var provider : registry.getProviders()) {
             for (final Behavior behavior : provider.createBehaviors(player)) {
                 if (behavior != null) {
-                    created.add(new BehaviorEntry(provider, behavior));
+                    created.add(new BehaviorEntry(provider, behavior, new int[0]));
                 }
             }
         }
         disableActive(DisableReason.Default);
-        setBehaviorEntries(created);
+        setBehaviorEntries(assignTriggerInputs(created));
         return this;
     }
 
@@ -89,7 +90,12 @@ final class SimpleNanomachineController implements Controller {
 
     @Override
     public int getInputCount(final Behavior behavior) {
-        return behaviors.contains(behavior) ? activeInputCount() : 0;
+        for (final BehaviorEntry entry : behaviorEntries) {
+            if (entry.behavior().equals(behavior)) {
+                return entry.activeInputCount(inputs);
+            }
+        }
+        return 0;
     }
 
     @Override
@@ -148,8 +154,28 @@ final class SimpleNanomachineController implements Controller {
         }
         behaviors = List.copyOf(created);
         activeBehaviors = List.of();
-        inputs = new boolean[Math.max(1, (int) Math.ceil(behaviors.size() * ModSettings.nanomachineTriggerQuota()))];
+        inputs = new boolean[computeInputCount(behaviorEntries)];
         activeBehaviorsDirty = true;
+    }
+
+    private List<BehaviorEntry> assignTriggerInputs(final List<BehaviorEntry> entries) {
+        final int inputCount = Math.max(1, (int) Math.ceil(entries.size() * ModSettings.nanomachineTriggerQuota()));
+        final List<BehaviorEntry> assigned = new ArrayList<>(entries.size());
+        for (int i = 0; i < entries.size(); i++) {
+            final BehaviorEntry entry = entries.get(i);
+            assigned.add(new BehaviorEntry(entry.provider(), entry.behavior(), new int[]{i % inputCount}));
+        }
+        return assigned;
+    }
+
+    private int computeInputCount(final List<BehaviorEntry> entries) {
+        int inputCount = Math.max(1, (int) Math.ceil(entries.size() * ModSettings.nanomachineTriggerQuota()));
+        for (final BehaviorEntry entry : entries) {
+            for (final int input : entry.triggerInputs()) {
+                inputCount = Math.max(inputCount, input + 1);
+            }
+        }
+        return inputCount;
     }
 
     private ListTag saveBehaviorEntries() {
@@ -160,6 +186,7 @@ final class SimpleNanomachineController implements Controller {
             if (data != null) {
                 tag.put(TAG_BEHAVIOR, data);
             }
+            tag.putIntArray(TAG_TRIGGER_INPUTS, entry.triggerInputs());
             tags.add(tag);
         }
         return tags;
@@ -167,13 +194,17 @@ final class SimpleNanomachineController implements Controller {
 
     private List<BehaviorEntry> loadBehaviorEntries(final ListTag tags) {
         final List<BehaviorEntry> entries = new ArrayList<>();
+        final int fallbackInputCount = Math.max(1, (int) Math.ceil(tags.size() * ModSettings.nanomachineTriggerQuota()));
         for (int i = 0; i < tags.size(); i++) {
             final CompoundTag tag = tags.getCompound(i);
             final CompoundTag data = tag.getCompound(TAG_BEHAVIOR);
+            final int[] triggerInputs = tag.contains(TAG_TRIGGER_INPUTS, CompoundTag.TAG_INT_ARRAY)
+                ? tag.getIntArray(TAG_TRIGGER_INPUTS)
+                : new int[]{i % fallbackInputCount};
             for (final BehaviorProvider provider : registry.getProviders()) {
                 final Behavior behavior = provider.readFromNBT(player, data);
                 if (behavior != null) {
-                    entries.add(new BehaviorEntry(provider, behavior));
+                    entries.add(new BehaviorEntry(provider, behavior, triggerInputs));
                     break;
                 }
             }
@@ -213,7 +244,14 @@ final class SimpleNanomachineController implements Controller {
             return;
         }
 
-        final List<Behavior> newBehaviors = inputs.length > 0 && activeInputCount() > 0 ? behaviors : List.of();
+        final List<Behavior> newBehaviors = new ArrayList<>();
+        if (inputs.length > 0 && activeInputCount() > 0) {
+            for (final BehaviorEntry entry : behaviorEntries) {
+                if (entry.isActive(inputs)) {
+                    newBehaviors.add(entry.behavior());
+                }
+            }
+        }
         final List<Behavior> addedBehaviors = new ArrayList<>();
         final List<Behavior> removedBehaviors = new ArrayList<>();
         for (final Behavior behavior : newBehaviors) {
@@ -245,6 +283,31 @@ final class SimpleNanomachineController implements Controller {
         activeBehaviorsDirty = false;
     }
 
-    private record BehaviorEntry(BehaviorProvider provider, Behavior behavior) {
+    private record BehaviorEntry(BehaviorProvider provider, Behavior behavior, int[] triggerInputs) {
+        private BehaviorEntry {
+            triggerInputs = triggerInputs.clone();
+        }
+
+        private boolean isActive(final boolean[] inputs) {
+            if (triggerInputs.length == 0) {
+                return false;
+            }
+            for (final int input : triggerInputs) {
+                if (input < 0 || input >= inputs.length || !inputs[input]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private int activeInputCount(final boolean[] inputs) {
+            int count = 0;
+            for (final int input : triggerInputs) {
+                if (input >= 0 && input < inputs.length && inputs[input]) {
+                    count++;
+                }
+            }
+            return count;
+        }
     }
 }
