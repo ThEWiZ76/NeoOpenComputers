@@ -1324,7 +1324,7 @@ final class LuaArchitectureTest {
         Machine machine = API.machine.create(null);
         ((Connector) machine.node()).setLocalBufferSize(1);
         ((Connector) machine.node()).changeBuffer(1);
-        FileSystem fileSystem = API.fileSystem.fromMemory(512);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Network.joinNewNetwork(machine.node());
         machine.node().connect(fileSystemEnvironment.node());
@@ -1360,7 +1360,7 @@ final class LuaArchitectureTest {
     void bundledLuaBiosBootsInitFromFilesystemComponent() throws IOException {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
-        FileSystem fileSystem = API.fileSystem.fromMemory(1024);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         int outputHandle = fileSystem.open("init.lua", Mode.Write);
         fileSystem.getHandle(outputHandle).write("bootedFromBios = true".getBytes(StandardCharsets.UTF_8));
         fileSystem.getHandle(outputHandle).close();
@@ -1387,7 +1387,7 @@ final class LuaArchitectureTest {
         CompoundTag eepromData = new CompoundTag();
         eepromData.putByteArray(ItemRegistry.EEPROM_CODE_TAG, ModEeproms.luaBiosCode());
         EepromEnvironment eeprom = new EepromEnvironment(eepromData);
-        FileSystem fileSystem = API.fileSystem.fromMemory(1024);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         int outputHandle = fileSystem.open("init.lua", Mode.Write);
         fileSystem.getHandle(outputHandle).write("bootedFromBios = true".getBytes(StandardCharsets.UTF_8));
         fileSystem.getHandle(outputHandle).close();
@@ -1414,7 +1414,7 @@ final class LuaArchitectureTest {
         Machine machine = API.machine.create(null);
         CompoundTag eepromData = new CompoundTag();
         EepromEnvironment eeprom = new EepromEnvironment(eepromData);
-        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(1024), "OpenOS", null, null, 1);
+        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(4096), "OpenOS", null, null, 1);
         Network.joinNewNetwork(machine.node());
         machine.node().connect(eeprom.node());
         machine.node().connect(fileSystemEnvironment.node());

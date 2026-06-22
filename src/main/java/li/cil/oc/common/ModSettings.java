@@ -13,6 +13,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.IntValue TMP_SIZE;
+    public static final ModConfigSpec.IntValue FILE_COST;
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
@@ -57,6 +58,9 @@ public final class ModSettings {
         TMP_SIZE = builder
             .comment("Size of the free /tmp filesystem in kilobytes. OpenComputers upstream default is 64.")
             .defineInRange("tmpSize", 64, 0, Integer.MAX_VALUE);
+        FILE_COST = builder
+            .comment("Base byte cost charged for each file or directory on limited filesystems. OpenComputers upstream default is 512.")
+            .defineInRange("fileCost", 512, 0, Integer.MAX_VALUE);
         MAX_HANDLES = builder
             .comment("Maximum number of file handles any single computer may have open per filesystem. OpenComputers upstream default is 16.")
             .defineInRange("maxHandles", 16, 0, Integer.MAX_VALUE);
@@ -131,6 +135,10 @@ public final class ModSettings {
 
     public static int tmpSize() {
         return intValue(TMP_SIZE);
+    }
+
+    public static int fileCost() {
+        return intValue(FILE_COST);
     }
 
     public static int maxHandles() {

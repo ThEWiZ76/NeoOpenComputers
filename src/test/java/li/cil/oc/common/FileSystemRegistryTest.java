@@ -59,7 +59,7 @@ final class FileSystemRegistryTest {
 
     @Test
     void memoryFileSystemReadsWrittenFiles() throws IOException {
-        FileSystem fileSystem = new FileSystemRegistry().fromMemory(256);
+        FileSystem fileSystem = new FileSystemRegistry().fromMemory(4096);
         assertTrue(fileSystem.makeDirectory("tmp"));
 
         int outputHandle = fileSystem.open("tmp/data.txt", Mode.Write);
@@ -76,8 +76,35 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void memoryFileSystemChargesFileCostForEntriesAndBytes() throws IOException {
+        FileSystem fileSystem = new FileSystemRegistry().fromMemory(4096);
+
+        assertEquals(ModSettings.fileCost(), fileSystem.spaceUsed());
+        assertTrue(fileSystem.makeDirectory("tmp"));
+        assertEquals(ModSettings.fileCost() * 2L, fileSystem.spaceUsed());
+
+        int outputHandle = fileSystem.open("tmp/data.txt", Mode.Write);
+        assertEquals(ModSettings.fileCost() * 3L, fileSystem.spaceUsed());
+        fileSystem.getHandle(outputHandle).write("hello".getBytes(StandardCharsets.UTF_8));
+        fileSystem.getHandle(outputHandle).close();
+
+        assertEquals(ModSettings.fileCost() * 3L + 5L, fileSystem.spaceUsed());
+        assertEquals(5, fileSystem.size("tmp/data.txt"));
+    }
+
+    @Test
+    void memoryFileSystemRequiresFileCostBudgetForNewEntries() throws IOException {
+        FileSystem fileSystem = new FileSystemRegistry().fromMemory(ModSettings.fileCost() * 2L);
+
+        assertTrue(fileSystem.makeDirectory("tmp"));
+
+        IOException error = assertThrows(IOException.class, () -> fileSystem.open("data.txt", Mode.Write));
+        assertEquals("not enough space", error.getMessage());
+    }
+
+    @Test
     void memoryFileSystemAllowsOverwritingExistingBytesAtCapacity() throws IOException {
-        FileSystem fileSystem = new FileSystemRegistry().fromMemory(4);
+        FileSystem fileSystem = new FileSystemRegistry().fromMemory(ModSettings.fileCost() * 2L + 4L);
 
         int outputHandle = fileSystem.open("data.txt", Mode.Write);
         Handle output = fileSystem.getHandle(outputHandle);
@@ -95,7 +122,7 @@ final class FileSystemRegistryTest {
 
     @Test
     void memoryFileSystemRestoresOutputHandlePosition() throws IOException {
-        FileSystem fileSystem = new FileSystemRegistry().fromMemory(16);
+        FileSystem fileSystem = new FileSystemRegistry().fromMemory(ModSettings.fileCost() * 2L + 4L);
         int outputHandle = fileSystem.open("data.txt", Mode.Write);
         Handle output = fileSystem.getHandle(outputHandle);
         output.write("abcd".getBytes(StandardCharsets.UTF_8));
@@ -103,7 +130,7 @@ final class FileSystemRegistryTest {
         CompoundTag nbt = new CompoundTag();
         fileSystem.save(nbt);
 
-        FileSystem loaded = new FileSystemRegistry().fromMemory(16);
+        FileSystem loaded = new FileSystemRegistry().fromMemory(ModSettings.fileCost() * 2L + 4L);
         loaded.load(nbt);
         loaded.getHandle(outputHandle).write("Z".getBytes(StandardCharsets.UTF_8));
         loaded.getHandle(outputHandle).close();
@@ -116,7 +143,7 @@ final class FileSystemRegistryTest {
 
     @Test
     void memoryFileSystemClosePreservesStoredFiles() throws IOException {
-        FileSystem fileSystem = new FileSystemRegistry().fromMemory(256);
+        FileSystem fileSystem = new FileSystemRegistry().fromMemory(4096);
         assertTrue(fileSystem.makeDirectory("tmp"));
         int outputHandle = fileSystem.open("tmp/data.txt", Mode.Write);
         fileSystem.getHandle(outputHandle).write("hello".getBytes(StandardCharsets.UTF_8));
@@ -133,14 +160,14 @@ final class FileSystemRegistryTest {
     @Test
     void readOnlyWrapperRejectsWrites() throws IOException {
         FileSystemRegistry registry = new FileSystemRegistry();
-        FileSystem fileSystem = registry.fromMemory(256);
+        FileSystem fileSystem = registry.fromMemory(4096);
         fileSystem.makeDirectory("tmp");
 
         FileSystem readOnly = registry.asReadOnly(fileSystem);
 
         assertTrue(readOnly.isReadOnly());
-        assertEquals(256, readOnly.spaceTotal());
-        assertEquals(0, readOnly.spaceUsed());
+        assertEquals(4096, readOnly.spaceTotal());
+        assertEquals(ModSettings.fileCost() * 2L, readOnly.spaceUsed());
         assertFalse(readOnly.makeDirectory("other"));
         assertThrows(FileNotFoundException.class, () -> readOnly.open("tmp/data.txt", Mode.Write));
     }
@@ -212,7 +239,7 @@ final class FileSystemRegistryTest {
     @Test
     void createsManagedFileSystemEnvironment() {
         OpenComputersApi.initialize();
-        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
 
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
 
@@ -249,13 +276,13 @@ final class FileSystemRegistryTest {
     @Test
     void managedFileSystemEnvironmentExposesBasicCallbacks() throws Exception {
         OpenComputersApi.initialize();
-        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         assertTrue(fileSystem.makeDirectory("tmp"));
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
 
         assertArrayEquals(new Object[]{false}, component.invoke("isReadOnly", null));
-        assertArrayEquals(new Object[]{256L}, component.invoke("spaceTotal", null));
+        assertArrayEquals(new Object[]{4096L}, component.invoke("spaceTotal", null));
         assertArrayEquals(new Object[]{true}, component.invoke("exists", null, "tmp"));
         assertArrayEquals(new Object[]{0L}, component.invoke("size", null, "tmp"));
         assertArrayEquals(new Object[]{true}, component.invoke("isDirectory", null, "tmp"));
@@ -304,7 +331,7 @@ final class FileSystemRegistryTest {
     @Test
     void managedFileSystemEnvironmentReadsAndWritesFiles() throws Exception {
         OpenComputersApi.initialize();
-        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         assertTrue(fileSystem.makeDirectory("tmp"));
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
@@ -323,7 +350,7 @@ final class FileSystemRegistryTest {
     @Test
     void managedFileSystemEnvironmentAcceptsHandleTables() throws Exception {
         OpenComputersApi.initialize();
-        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
 
@@ -340,7 +367,7 @@ final class FileSystemRegistryTest {
     @Test
     void managedFileSystemEnvironmentConsumesCallBudgetForIo() throws Exception {
         OpenComputersApi.initialize();
-        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         assertTrue(fileSystem.makeDirectory("tmp"));
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 2);
         Component component = (Component) environment.node();
@@ -382,7 +409,7 @@ final class FileSystemRegistryTest {
     @Test
     void managedFileSystemEnvironmentRejectsHandlesOwnedByAnotherContext() throws Exception {
         OpenComputersApi.initialize();
-        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
         RecordingContext owner = new RecordingContext("owner");
@@ -407,7 +434,7 @@ final class FileSystemRegistryTest {
 
     private static void assertOpenHandleLimit(final int limit) throws Exception {
         OpenComputersApi.initialize();
-        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
         RecordingContext context = new RecordingContext("owner");
@@ -430,7 +457,7 @@ final class FileSystemRegistryTest {
     void managedFileSystemEnvironmentPersistsHandleOwners() throws Exception {
         OpenComputersApi.initialize();
         RecordingContext context = new RecordingContext("owner");
-        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(256), "tmp", null, null, 1);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(4096), "tmp", null, null, 1);
         Component component = (Component) environment.node();
         Object handle = component.invoke("open", context, "data.txt", "w")[0];
         int rawHandle = Integer.parseInt(handle.toString());
@@ -441,7 +468,7 @@ final class FileSystemRegistryTest {
         assertEquals("owner", owners.getCompound(0).getString("address"));
         assertArrayEquals(new int[]{rawHandle}, owners.getCompound(0).getIntArray("handles"));
 
-        ManagedEnvironment loaded = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(256), "tmp", null, null, 1);
+        ManagedEnvironment loaded = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(4096), "tmp", null, null, 1);
         loaded.load(nbt);
         Component loadedComponent = (Component) loaded.node();
 
@@ -452,7 +479,7 @@ final class FileSystemRegistryTest {
     @Test
     void managedFileSystemEnvironmentSaveKeepsLiveHandlesOpen() throws Exception {
         OpenComputersApi.initialize();
-        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(256), "tmp", null, null, 1);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(API.fileSystem.fromMemory(4096), "tmp", null, null, 1);
         Component component = (Component) environment.node();
         Object handle = component.invoke("open", null, "data.txt", "w")[0];
 

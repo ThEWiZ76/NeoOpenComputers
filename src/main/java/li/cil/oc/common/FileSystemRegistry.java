@@ -1029,7 +1029,7 @@ final class FileSystemRegistry implements FileSystemAPI {
         @Override
         public boolean makeDirectory(final String path) {
             final String[] segments = segments(path);
-            if (segments.length == 0 || spaceUsed() >= capacity) {
+            if (segments.length == 0 || !hasCapacity(ModSettings.fileCost())) {
                 return false;
             }
             final Directory parent = parent(segments);
@@ -1158,8 +1158,8 @@ final class FileSystemRegistry implements FileSystemAPI {
                     file.touch();
                 }
             } else {
-                if (spaceUsed() >= capacity) {
-                    throw new FileNotFoundException(path);
+                if (!hasCapacity(ModSettings.fileCost())) {
+                    throw new FileNotFoundException("not enough space");
                 }
                 file = new File();
                 parent.children.put(fileName, file);
@@ -1216,6 +1216,10 @@ final class FileSystemRegistry implements FileSystemAPI {
                 nextHandle++;
             }
             return nextHandle++;
+        }
+
+        private boolean hasCapacity(final long delta) {
+            return capacity < 0 || capacity - spaceUsed() >= delta;
         }
 
         private Entry find(final String path) {
@@ -1312,7 +1316,7 @@ final class FileSystemRegistry implements FileSystemAPI {
 
             @Override
             long spaceUsed() {
-                return children.values().stream().mapToLong(Entry::spaceUsed).sum();
+                return ModSettings.fileCost() + children.values().stream().mapToLong(Entry::spaceUsed).sum();
             }
 
             @Override
@@ -1358,7 +1362,7 @@ final class FileSystemRegistry implements FileSystemAPI {
 
             @Override
             long spaceUsed() {
-                return data.length;
+                return ModSettings.fileCost() + data.length;
             }
 
             @Override
@@ -1444,7 +1448,7 @@ final class FileSystemRegistry implements FileSystemAPI {
                 }
                 final int end = Math.toIntExact(position + value.length);
                 final long growth = Math.max(0L, (long) end - file.data.length);
-                if (capacity - spaceUsed() < growth) {
+                if (capacity >= 0 && capacity - spaceUsed() < growth) {
                     throw new IOException("not enough space");
                 }
                 if (end > file.data.length) {
