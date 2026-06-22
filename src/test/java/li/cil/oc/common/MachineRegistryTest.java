@@ -93,7 +93,7 @@ final class MachineRegistryTest {
     }
 
     @Test
-    void createdMachineExposesTemporaryFilesystemAddress() {
+    void createdMachineExposesTemporaryFilesystemAddress() throws Exception {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
         Network.joinNewNetwork(machine.node());
@@ -103,6 +103,7 @@ final class MachineRegistryTest {
         assertNotNull(tmpAddress);
         assertEquals("filesystem", machine.components().get(tmpAddress));
         assertTrue(machine.methods(tmpAddress).containsKey("makeDirectory"));
+        assertArrayEquals(new Object[]{64L * 1024L}, machine.invoke(tmpAddress, "spaceTotal", new Object[0]));
     }
 
     @Test

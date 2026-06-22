@@ -20,6 +20,7 @@ final class ModSettingsTest {
         assertEquals(5D, ModSettings.computerTimeout());
         assertEquals(false, ModSettings.allowBytecode());
         assertEquals(false, ModSettings.allowGc());
+        assertEquals(64, ModSettings.tmpSize());
     }
 
     @Test
@@ -35,5 +36,6 @@ final class ModSettingsTest {
         assertEquals(List.of("computer", "timeout"), ModSettings.COMPUTER_TIMEOUT.getPath());
         assertEquals(List.of("computer", "lua", "allowBytecode"), ModSettings.ALLOW_BYTECODE.getPath());
         assertEquals(List.of("computer", "lua", "allowGC"), ModSettings.ALLOW_GC.getPath());
+        assertEquals(List.of("filesystem", "tmpSize"), ModSettings.TMP_SIZE.getPath());
     }
 }

@@ -47,7 +47,6 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private static final long NANOS_PER_TICK = 50_000_000L;
     private static final int MAX_SIGNAL_QUEUE_SIZE = 256;
     private static final double DEFAULT_BOOT_ENERGY_BUFFER = 1_000D;
-    private static final int DEFAULT_TEMPORARY_FILESYSTEM_CAPACITY = 1_024 * 1_024;
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
     private static final String USERS_TAG = "users";
@@ -110,7 +109,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             API.fileSystem = new FileSystemRegistry();
         }
         temporaryFileSystemEnvironment = API.fileSystem.asManagedEnvironment(
-            API.fileSystem.fromMemory(DEFAULT_TEMPORARY_FILESYSTEM_CAPACITY),
+            API.fileSystem.fromMemory(ModSettings.tmpSize() * 1024L),
             "tmp",
             null,
             null,

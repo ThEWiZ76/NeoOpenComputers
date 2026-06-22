@@ -12,6 +12,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue COMPUTER_TIMEOUT;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
+    public static final ModConfigSpec.IntValue TMP_SIZE;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
@@ -48,6 +49,12 @@ public final class ModSettings {
             .comment("Allow custom Lua __gc callbacks. OpenComputers upstream default is false.")
             .define("allowGC", false);
         builder.pop();
+        builder.pop();
+
+        builder.push("filesystem");
+        TMP_SIZE = builder
+            .comment("Size of the free /tmp filesystem in kilobytes. OpenComputers upstream default is 64.")
+            .defineInRange("tmpSize", 64, 0, Integer.MAX_VALUE);
         builder.pop();
 
         builder.push("power");
@@ -112,6 +119,10 @@ public final class ModSettings {
 
     public static boolean allowGc() {
         return booleanValue(ALLOW_GC);
+    }
+
+    public static int tmpSize() {
+        return intValue(TMP_SIZE);
     }
 
     private static boolean booleanValue(final ModConfigSpec.BooleanValue value) {
