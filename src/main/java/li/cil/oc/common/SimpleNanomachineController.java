@@ -190,6 +190,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             respond(sender, "health", player.getHealth(), player.getMaxHealth());
         } else if ("getHunger".equals(command) && player != null) {
             respond(sender, "hunger", player.getFoodData().getFoodLevel(), player.getFoodData().getSaturationLevel());
+        } else if ("getAge".equals(command) && player != null) {
+            respond(sender, "age", Math.max(0, player.tickCount / 20));
         }
     }
 
