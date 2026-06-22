@@ -2428,7 +2428,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public boolean isByteArray(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof byte[];
+            return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]);
         }
 
         @Override

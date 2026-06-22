@@ -1453,6 +1453,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void treatsLuaStringArgumentsAsByteArraysLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            result = userdata.apply(value, 'byte-array?')
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("byte-array", architecture.globalString("result"));
+    }
+
+    @Test
     void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
         TestValue value = new TestValue();
         int[] valueInvokes = {0};
@@ -3199,6 +3214,9 @@ final class LuaArchitectureTest {
 
         @Override
         public Object apply(final Context context, final Arguments arguments) {
+            if ("byte-array?".equals(arguments.checkString(0))) {
+                return arguments.isByteArray(0) ? "byte-array" : "not-byte-array";
+            }
             return "applied:" + arguments.checkString(0);
         }
 
