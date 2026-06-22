@@ -370,6 +370,18 @@ final class NanomachinesRegistryTest {
         assertEquals(before - expectedCost, controller.getLocalBuffer(), 0.000_001D);
     }
 
+    @Test
+    void controllerDrainsEnergyWhenReconfigured() {
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(new TestBehavior("active"))));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        final double before = controller.getLocalBuffer();
+
+        controller.reconfigure();
+
+        assertEquals(before - ModSettings.nanomachinesReconfigureCost(), controller.getLocalBuffer(), 0.000_001D);
+    }
+
     private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {
         for (int i = 0; i < behaviors.size(); i++) {
             if (behaviors.getCompound(i).getIntArray("connectorInputs").length > 0) {

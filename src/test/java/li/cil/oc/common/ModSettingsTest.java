@@ -170,6 +170,7 @@ final class ModSettingsTest {
         assertEquals(List.of("hologram", "setRawDelay"), ModSettings.HOLOGRAM_SET_RAW_DELAY.getPath());
         assertEquals(List.of("power", "buffer", "nanomachines"), ModSettings.NANOMACHINES_BUFFER.getPath());
         assertEquals(List.of("power", "cost", "nanomachineInput"), ModSettings.NANOMACHINES_INPUT_COST.getPath());
+        assertEquals(List.of("power", "cost", "nanomachinesReconfigure"), ModSettings.NANOMACHINES_RECONFIGURE_COST.getPath());
         assertEquals(List.of("nanomachines", "triggerQuota"), ModSettings.NANOMACHINES_TRIGGER_QUOTA.getPath());
         assertEquals(List.of("nanomachines", "connectorQuota"), ModSettings.NANOMACHINES_CONNECTOR_QUOTA.getPath());
         assertEquals(List.of("nanomachines", "maxInputs"), ModSettings.NANOMACHINE_MAX_INPUTS.getPath());
@@ -184,16 +185,18 @@ final class ModSettingsTest {
     void nanomachinesControllerReadsConfiguredLimitsAndBuffer() throws Exception {
         withCachedConfig(ModSettings.NANOMACHINES_BUFFER, 42D, () ->
             withCachedConfig(ModSettings.NANOMACHINES_INPUT_COST, 0.25D, () ->
-            withCachedConfig(ModSettings.NANOMACHINES_SAFE_INPUTS_ACTIVE, 1, () ->
-                withCachedConfig(ModSettings.NANOMACHINES_MAX_INPUTS_ACTIVE, 3, () -> {
-                    final SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+            withCachedConfig(ModSettings.NANOMACHINES_RECONFIGURE_COST, 0.75D, () ->
+                withCachedConfig(ModSettings.NANOMACHINES_SAFE_INPUTS_ACTIVE, 1, () ->
+                    withCachedConfig(ModSettings.NANOMACHINES_MAX_INPUTS_ACTIVE, 3, () -> {
+                        final SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
 
-                    assertEquals(42D, controller.getLocalBufferSize());
-                    assertEquals(10.5D, controller.getLocalBuffer());
-                    assertEquals(0.25D, ModSettings.nanomachinesInputCost());
-                    assertEquals(1, controller.getSafeActiveInputs());
-                    assertEquals(3, controller.getMaxActiveInputs());
-                }))));
+                        assertEquals(42D, controller.getLocalBufferSize());
+                        assertEquals(10.5D, controller.getLocalBuffer());
+                        assertEquals(0.25D, ModSettings.nanomachinesInputCost());
+                        assertEquals(0.75D, ModSettings.nanomachinesReconfigureCost());
+                        assertEquals(1, controller.getSafeActiveInputs());
+                        assertEquals(3, controller.getMaxActiveInputs());
+                    })))));
     }
 
     @Test

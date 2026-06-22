@@ -39,6 +39,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private int commandDelay;
     private int updateTicks;
     private Runnable queuedCommand;
+    private boolean configured;
     private double buffer;
 
     SimpleNanomachineController(final Player player, final NanomachinesRegistry registry) {
@@ -60,6 +61,11 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
         disableActive(DisableReason.Default);
         configureGeneratedGraph(created);
+        if (configured) {
+            changeBuffer(-ModSettings.nanomachinesReconfigureCost());
+        } else {
+            configured = true;
+        }
         return this;
     }
 

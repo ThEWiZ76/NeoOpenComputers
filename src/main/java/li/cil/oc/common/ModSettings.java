@@ -69,6 +69,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_INPUT_COST;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_RECONFIGURE_COST;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_TRIGGER_QUOTA;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_CONNECTOR_QUOTA;
     public static final ModConfigSpec.IntValue NANOMACHINE_MAX_INPUTS;
@@ -254,6 +255,9 @@ public final class ModSettings {
         NANOMACHINES_INPUT_COST = builder
             .comment("Energy consumed per tick per active nanomachine input. OpenComputers upstream default is 0.5.")
             .defineInRange("nanomachineInput", 0.5D, 0D, Double.MAX_VALUE);
+        NANOMACHINES_RECONFIGURE_COST = builder
+            .comment("Energy consumed when reconfiguring nanomachines. OpenComputers upstream default is 5000.")
+            .defineInRange("nanomachinesReconfigure", 5000D, 0D, Double.MAX_VALUE);
         builder.pop();
         builder.pop();
 
@@ -312,6 +316,10 @@ public final class ModSettings {
 
     public static double nanomachinesInputCost() {
         return Math.max(0D, doubleValue(NANOMACHINES_INPUT_COST));
+    }
+
+    public static double nanomachinesReconfigureCost() {
+        return Math.max(0D, doubleValue(NANOMACHINES_RECONFIGURE_COST));
     }
 
     public static double nanomachineTriggerQuota() {
