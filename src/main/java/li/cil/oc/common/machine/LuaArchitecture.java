@@ -1134,7 +1134,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (machine == null) {
                     return LuaValue.NIL;
                 }
-                final String type = args.arg(2).tojstring();
+                final String type = checkStringArgument(args, 2);
                 if (!ensurePrimaryAvailable(type)) {
                     throw new LuaError("no primary '" + type + "' available");
                 }

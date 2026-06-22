@@ -1412,6 +1412,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void componentShorthandRejectsNonStringKeysLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid, message = pcall(function()
+              return component[1]
+            end)
+            """);
+        architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("string expected"));
+    }
+
+    @Test
     void resolvesComponentPrefixesAndPrimaryStatusForLua() {
         Map<String, String> components = new LinkedHashMap<>();
         components.put("fs1-address", "filesystem");
