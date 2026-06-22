@@ -1064,6 +1064,15 @@ final class LuaArchitectureTest {
             metaCalled = value('meta-call')
             metaApplied = value.metaApply
             value.metaUnapply = 'meta-unapply'
+            valueType = value.type
+            unexpectedKeys = 0
+            for key in pairs(value) do
+              if key == 'echo' then
+                echoVisible = true
+              elseif key ~= 'type' then
+                unexpectedKeys = unexpectedKeys + 1
+              end
+            end
             disposed = userdata.dispose(value)
             invalidValid, invalidMessage = pcall(function()
               userdata.invoke({}, 'echo')
@@ -1081,6 +1090,9 @@ final class LuaArchitectureTest {
         assertEquals("applied:apply", architecture.globalString("applied"));
         assertEquals("called:meta-call", architecture.globalString("metaCalled"));
         assertEquals("applied:metaApply", architecture.globalString("metaApplied"));
+        assertEquals("userdata", architecture.globalString("valueType"));
+        assertEquals(true, architecture.globalBoolean("echoVisible"));
+        assertEquals(0, architecture.globalInteger("unexpectedKeys"));
         assertEquals("nil", architecture.globalString("unapplied"));
         assertTrue(value.unapplied);
         assertEquals("metaUnapply", value.unapplyArgument);

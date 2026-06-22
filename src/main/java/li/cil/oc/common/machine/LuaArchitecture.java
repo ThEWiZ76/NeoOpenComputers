@@ -1587,6 +1587,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private LuaTable valueProxy(final Value value) {
         final LuaTable table = new LuaTable();
         table.set(VALUE_MARKER, LuaValue.userdataOf(value));
+        table.set("type", "userdata");
         final Map<String, Callback> methods = machine == null ? Map.of() : machine.methods(value);
         for (String methodName : methods.keySet()) {
             table.set(methodName, new VarArgFunction() {
@@ -1619,6 +1620,25 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             public Varargs invoke(final Varargs args) {
                 value.unapply(machine, new LuaArguments(new Object[]{toJavaValue(args.arg(2)), toJavaValue(args.arg(3))}));
                 return LuaValue.NIL;
+            }
+        });
+        metatable.set("__pairs", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return new VarArgFunction() {
+                    private LuaValue key = LuaValue.NIL;
+
+                    @Override
+                    public Varargs invoke(final Varargs iteratorArgs) {
+                        while (true) {
+                            final Varargs next = table.next(key);
+                            key = next.arg1();
+                            if (key.isnil() || !VALUE_MARKER.equals(key.tojstring())) {
+                                return next;
+                            }
+                        }
+                    }
+                };
             }
         });
         table.setmetatable(metatable);
