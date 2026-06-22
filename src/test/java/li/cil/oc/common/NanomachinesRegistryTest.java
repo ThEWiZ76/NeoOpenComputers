@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -51,6 +52,24 @@ final class NanomachinesRegistryTest {
         registry.uninstallController(null);
     }
 
+    @Test
+    void controllerPersistsBehaviorConfigurationThroughProviders() {
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        TrackingBehaviorProvider provider = new TrackingBehaviorProvider();
+        registry.addProvider(provider);
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+
+        controller.save(tag);
+
+        assertEquals(1, provider.writeCount);
+
+        SimpleNanomachineController loaded = new SimpleNanomachineController(null, registry);
+        loaded.load(tag);
+
+        assertEquals(1, provider.readCount);
+    }
+
     private static final class TestBehaviorProvider implements BehaviorProvider {
         @Override
         public Iterable<Behavior> createBehaviors(final Player player) {
@@ -65,6 +84,49 @@ final class NanomachinesRegistryTest {
         @Override
         public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
             return null;
+        }
+    }
+
+    private static final class TrackingBehaviorProvider implements BehaviorProvider {
+        private int writeCount;
+        private int readCount;
+
+        @Override
+        public Iterable<Behavior> createBehaviors(final Player player) {
+            return List.of(new TestBehavior());
+        }
+
+        @Override
+        public CompoundTag writeToNBT(final Behavior behavior) {
+            writeCount++;
+            final CompoundTag tag = new CompoundTag();
+            tag.putString("name", behavior.getNameHint());
+            return tag;
+        }
+
+        @Override
+        public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
+            readCount++;
+            return new TestBehavior();
+        }
+    }
+
+    private static final class TestBehavior implements Behavior {
+        @Override
+        public String getNameHint() {
+            return "test";
+        }
+
+        @Override
+        public void onEnable() {
+        }
+
+        @Override
+        public void onDisable(final li.cil.oc.api.nanomachines.DisableReason reason) {
+        }
+
+        @Override
+        public void update() {
         }
     }
 }

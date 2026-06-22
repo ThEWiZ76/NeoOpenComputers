@@ -1,9 +1,11 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.nanomachines.Behavior;
+import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.nanomachines.DisableReason;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
@@ -12,9 +14,12 @@ import java.util.List;
 final class SimpleNanomachineController implements Controller {
     private static final String TAG_ENERGY = "energy";
     private static final String TAG_ACTIVE_INPUTS = "activeInputs";
+    private static final String TAG_BEHAVIORS = "behaviors";
+    private static final String TAG_BEHAVIOR = "behavior";
 
     private final Player player;
     private final NanomachinesRegistry registry;
+    private List<BehaviorEntry> behaviorEntries = List.of();
     private List<Behavior> behaviors = List.of();
     private List<Behavior> activeBehaviors = List.of();
     private boolean[] inputs = new boolean[0];
@@ -30,19 +35,16 @@ final class SimpleNanomachineController implements Controller {
 
     @Override
     public Controller reconfigure() {
-        final List<Behavior> created = new ArrayList<>();
+        final List<BehaviorEntry> created = new ArrayList<>();
         for (final var provider : registry.getProviders()) {
             for (final Behavior behavior : provider.createBehaviors(player)) {
                 if (behavior != null) {
-                    created.add(behavior);
+                    created.add(new BehaviorEntry(provider, behavior));
                 }
             }
         }
         disableActive(DisableReason.Default);
-        behaviors = List.copyOf(created);
-        activeBehaviors = List.of();
-        inputs = new boolean[Math.max(1, (int) Math.ceil(behaviors.size() * ModSettings.nanomachineTriggerQuota()))];
-        activeBehaviorsDirty = true;
+        setBehaviorEntries(created);
         return this;
     }
 
@@ -115,11 +117,16 @@ final class SimpleNanomachineController implements Controller {
     void save(final CompoundTag tag) {
         tag.putDouble(TAG_ENERGY, buffer);
         tag.putIntArray(TAG_ACTIVE_INPUTS, activeInputs());
+        tag.put(TAG_BEHAVIORS, saveBehaviorEntries());
     }
 
     void load(final CompoundTag tag) {
         if (tag.contains(TAG_ENERGY)) {
             buffer = Math.clamp(tag.getDouble(TAG_ENERGY), 0D, getLocalBufferSize());
+        }
+        if (tag.contains(TAG_BEHAVIORS, CompoundTag.TAG_LIST)) {
+            disableActive(DisableReason.Default);
+            setBehaviorEntries(loadBehaviorEntries(tag.getList(TAG_BEHAVIORS, CompoundTag.TAG_COMPOUND)));
         }
         final int[] activeInputs = tag.getIntArray(TAG_ACTIVE_INPUTS);
         for (int i = 0; i < inputs.length; i++) {
@@ -131,6 +138,47 @@ final class SimpleNanomachineController implements Controller {
             }
         }
         activeBehaviorsDirty = true;
+    }
+
+    private void setBehaviorEntries(final List<BehaviorEntry> entries) {
+        behaviorEntries = List.copyOf(entries);
+        final List<Behavior> created = new ArrayList<>(behaviorEntries.size());
+        for (final BehaviorEntry entry : behaviorEntries) {
+            created.add(entry.behavior());
+        }
+        behaviors = List.copyOf(created);
+        activeBehaviors = List.of();
+        inputs = new boolean[Math.max(1, (int) Math.ceil(behaviors.size() * ModSettings.nanomachineTriggerQuota()))];
+        activeBehaviorsDirty = true;
+    }
+
+    private ListTag saveBehaviorEntries() {
+        final ListTag tags = new ListTag();
+        for (final BehaviorEntry entry : behaviorEntries) {
+            final CompoundTag tag = new CompoundTag();
+            final CompoundTag data = entry.provider().writeToNBT(entry.behavior());
+            if (data != null) {
+                tag.put(TAG_BEHAVIOR, data);
+            }
+            tags.add(tag);
+        }
+        return tags;
+    }
+
+    private List<BehaviorEntry> loadBehaviorEntries(final ListTag tags) {
+        final List<BehaviorEntry> entries = new ArrayList<>();
+        for (int i = 0; i < tags.size(); i++) {
+            final CompoundTag tag = tags.getCompound(i);
+            final CompoundTag data = tag.getCompound(TAG_BEHAVIOR);
+            for (final BehaviorProvider provider : registry.getProviders()) {
+                final Behavior behavior = provider.readFromNBT(player, data);
+                if (behavior != null) {
+                    entries.add(new BehaviorEntry(provider, behavior));
+                    break;
+                }
+            }
+        }
+        return entries;
     }
 
     private int activeInputCount() {
@@ -195,5 +243,8 @@ final class SimpleNanomachineController implements Controller {
         }
         activeBehaviors = List.of();
         activeBehaviorsDirty = false;
+    }
+
+    private record BehaviorEntry(BehaviorProvider provider, Behavior behavior) {
     }
 }
