@@ -259,6 +259,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void mathRandomseedFloorsSeedLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            math.randomseed(-1.5)
+            fractional = math.random()
+            math.randomseed(-2)
+            floored = math.random()
+            matchesFlooredSeed = fractional == floored
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.globalBoolean("matchesFlooredSeed"));
+    }
+
+    @Test
     void coroutineResumeValidatesThreadArgumentLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("""
             valid, message = pcall(function()

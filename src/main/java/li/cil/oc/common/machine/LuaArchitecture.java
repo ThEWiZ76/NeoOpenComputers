@@ -300,6 +300,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         installCoroutineCompatibility(globals);
         installGetMetatableCompatibility(globals);
         installLoadCompatibility(globals);
+        installMathCompatibility(globals);
         installPairsCompatibility(globals);
         installStringCompatibility(globals);
         installXpcallCompatibility(globals);
@@ -332,6 +333,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     throw new LuaError("bad argument #1 (thread expected, got " + luaTypeName(thread) + ")");
                 }
                 return originalResume.invoke(args);
+            }
+        });
+    }
+
+    private static void installMathCompatibility(final Globals globals) {
+        final LuaValue math = globals.get("math");
+        final LuaValue originalRandomseed = math.get("randomseed");
+        math.set("randomseed", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                originalRandomseed.call(LuaValue.valueOf(Math.floor(args.checkdouble(1))));
+                return LuaValue.NONE;
             }
         });
     }
