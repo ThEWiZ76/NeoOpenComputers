@@ -1270,6 +1270,18 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void convertsCharacterInvokeResultsToLuaStringsLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'readChar'); resultType = type(result)");
+        architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{'x'}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("x", architecture.globalString("result"));
+        assertEquals("string", architecture.globalString("resultType"));
+    }
+
+    @Test
     void roundTripsOpaqueJavaHandlesThroughLua() {
         Object handle = new Object();
         boolean[] handleRoundTripped = {false};

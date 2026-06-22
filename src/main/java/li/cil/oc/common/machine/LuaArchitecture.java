@@ -1998,6 +1998,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (value instanceof byte[] bytes) {
             return LuaString.valueOf(bytes);
         }
+        if (value instanceof Character characterValue) {
+            return LuaValue.valueOf(String.valueOf(characterValue));
+        }
         if (value instanceof Map<?, ?> mapValue) {
             final LuaTable table = new LuaTable();
             for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
