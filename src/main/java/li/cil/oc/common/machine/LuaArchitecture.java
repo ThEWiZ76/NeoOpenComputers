@@ -956,7 +956,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("type", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String address = args.checkjstring(1);
+                final String address = checkStringArgument(args, 1);
                 if (machine == null) {
                     return LuaValue.NIL;
                 }

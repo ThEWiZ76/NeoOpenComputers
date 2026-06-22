@@ -1481,6 +1481,9 @@ final class LuaArchitectureTest {
             typeValid, typeMessage = pcall(function()
               component.type()
             end)
+            typeNumberValid, typeNumberMessage = pcall(function()
+              component.type(1)
+            end)
             getValid, getMessage = pcall(function()
               component.get()
             end)
@@ -1534,6 +1537,8 @@ final class LuaArchitectureTest {
 
         assertEquals(false, architecture.globalBoolean("typeValid"));
         assertTrue(architecture.globalString("typeMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("typeNumberValid"));
+        assertTrue(architecture.globalString("typeNumberMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("getValid"));
         assertTrue(architecture.globalString("getMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("getTypeValid"));
