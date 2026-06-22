@@ -1233,9 +1233,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (machine == null) {
                     return LuaValue.NIL;
                 }
-                final double timeout = args.narg() >= 1 && args.arg(1).isnumber()
-                    ? Math.max(0D, args.arg(1).todouble())
-                    : 0D;
+                if (args.narg() >= 1 && !args.arg(1).isnil() && !args.arg(1).isnumber()) {
+                    throw new LuaError("bad argument #1 (number or nil expected, got " + luaTypeName(args.arg(1)) + ")");
+                }
+                final double timeout = args.narg() >= 1 && args.arg(1).isnumber() ? Math.max(0D, args.arg(1).todouble()) : 0D;
                 waitingForSignal = true;
                 waitingForSleep = true;
                 signalDeadlineSeconds = machineUpTime() + timeout;

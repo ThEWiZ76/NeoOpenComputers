@@ -675,6 +675,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void osSleepRejectsNonNumberTimeoutLikeOpenOs() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid, message = pcall(function()
+              os.sleep('soon')
+            end)
+            """);
+        architecture.bind(machineWithUptime(new ArrayDeque<>(), new double[]{1D}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("bad argument #1 (number or nil expected, got string)"));
+    }
+
+    @Test
     void exposesComputerPushSignalToLua() {
         String[] signalName = {null};
         Object[][] signalArguments = {null};
