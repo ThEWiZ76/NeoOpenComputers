@@ -847,6 +847,54 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void componentLowLevelFunctionsRequireStringArguments() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        LuaArchitecture architecture = new LuaArchitecture("""
+            typeValid, typeMessage = pcall(function()
+              component.type()
+            end)
+            slotValid, slotMessage = pcall(function()
+              component.slot()
+            end)
+            methodsValid, methodsMessage = pcall(function()
+              component.methods()
+            end)
+            docAddressValid, docAddressMessage = pcall(function()
+              component.doc()
+            end)
+            docMethodValid, docMethodMessage = pcall(function()
+              component.doc('fs-address')
+            end)
+            invokeAddressValid, invokeAddressMessage = pcall(function()
+              component.invoke()
+            end)
+            invokeMethodValid, invokeMethodMessage = pcall(function()
+              component.invoke('fs-address')
+            end)
+            """);
+        architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("typeValid"));
+        assertTrue(architecture.globalString("typeMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("slotValid"));
+        assertTrue(architecture.globalString("slotMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("methodsValid"));
+        assertTrue(architecture.globalString("methodsMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("docAddressValid"));
+        assertTrue(architecture.globalString("docAddressMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("docMethodValid"));
+        assertTrue(architecture.globalString("docMethodMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("invokeAddressValid"));
+        assertTrue(architecture.globalString("invokeAddressMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("invokeMethodValid"));
+        assertTrue(architecture.globalString("invokeMethodMessage").contains("string expected"));
+    }
+
+    @Test
     void exposesComponentMethodsToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
