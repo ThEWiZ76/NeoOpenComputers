@@ -1440,6 +1440,55 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void componentAddedSignalSelectsPrimaryWhenNoneExists() {
+        Map<String, String> components = new LinkedHashMap<>();
+        Queue<Signal> signals = new ArrayDeque<>(List.of(new TestSignal("component_added", new Object[]{"fs-address", "filesystem"})));
+        LuaArchitecture architecture = new LuaArchitecture("""
+            name, address, kind = computer.pullSignal()
+            primary = component.getPrimary('filesystem')
+            primaryAddress = primary.address
+            """);
+        architecture.bind(machineWithDynamicComponentsAndSignals(components, signals, () -> components.put("fs-address", "filesystem"), new ArrayList<>()));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("component_added", architecture.globalString("name"));
+        assertEquals("fs-address", architecture.globalString("address"));
+        assertEquals("filesystem", architecture.globalString("kind"));
+        assertEquals("fs-address", architecture.globalString("primaryAddress"));
+    }
+
+    @Test
+    void componentRemovedSignalSelectsNextPrimaryAndPreservesSignal() {
+        Map<String, String> components = new LinkedHashMap<>();
+        components.put("fs1-address", "filesystem");
+        components.put("fs2-address", "filesystem");
+        Queue<Signal> signals = new ArrayDeque<>(List.of(new TestSignal("component_removed", new Object[]{"fs1-address", "filesystem"})));
+        List<String> emittedSignals = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            component.setPrimary('filesystem', 'fs1')
+            name, address, kind = computer.pullSignal()
+            primary = component.getPrimary('filesystem')
+            primaryAddress = primary.address
+            """);
+        architecture.bind(machineWithDynamicComponentsAndSignals(components, signals, () -> components.remove("fs1-address"), emittedSignals));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("component_removed", architecture.globalString("name"));
+        assertEquals("fs1-address", architecture.globalString("address"));
+        assertEquals("filesystem", architecture.globalString("kind"));
+        assertEquals("fs2-address", architecture.globalString("primaryAddress"));
+        assertEquals(List.of(
+            "component_available:filesystem",
+            "component_unavailable:filesystem",
+            "component_available:filesystem"
+        ), emittedSignals);
+    }
+
+    @Test
     void invokesRealFilesystemComponentFromLua() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1790,6 +1839,31 @@ final class LuaArchitectureTest {
                 case "signal" -> {
                     Object[] signalArguments = (Object[]) args[1];
                     signals.add(args[0] + ":" + signalArguments[0]);
+                    yield true;
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithDynamicComponentsAndSignals(final Map<String, String> components, final Queue<Signal> queuedSignals, final Runnable beforePopSignal, final List<String> emittedSignals) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> components;
+                case "popSignal" -> {
+                    Signal signal = queuedSignals.poll();
+                    if (signal != null) {
+                        beforePopSignal.run();
+                    }
+                    yield signal;
+                }
+                case "signal" -> {
+                    Object[] signalArguments = (Object[]) args[1];
+                    emittedSignals.add(args[0] + ":" + signalArguments[0]);
                     yield true;
                 }
                 case "equals" -> proxy == args[0];

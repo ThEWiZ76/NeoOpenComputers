@@ -1410,6 +1410,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private Varargs signalToLuaValues(final Signal signal) {
+        processComponentSignal(signal);
         final Object[] signalArgs = signal.args();
         final LuaValue[] values = new LuaValue[signalArgs.length + 1];
         values[0] = LuaValue.valueOf(signal.name());
@@ -1417,6 +1418,30 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             values[index + 1] = toLuaValue(signalArgs[index]);
         }
         return LuaValue.varargsOf(values);
+    }
+
+    private void processComponentSignal(final Signal signal) {
+        if (machine == null || signal == null) {
+            return;
+        }
+        final Object[] args = signal.args();
+        if (args.length < 2 || !(args[0] instanceof String address) || !(args[1] instanceof String type)) {
+            return;
+        }
+        if ("component_added".equals(signal.name())) {
+            if (!primaryComponents.containsKey(type) && type.equals(machine.components().get(address))) {
+                setPrimaryComponent(type, address);
+            }
+        } else if ("component_removed".equals(signal.name())) {
+            if (address.equals(primaryComponents.get(type))) {
+                primaryComponents.remove(type);
+                machine.signal("component_unavailable", type);
+                final String next = firstComponentAddress(type);
+                if (next != null) {
+                    setPrimaryComponent(type, next);
+                }
+            }
+        }
     }
 
     private LuaValue machineAddress() {
