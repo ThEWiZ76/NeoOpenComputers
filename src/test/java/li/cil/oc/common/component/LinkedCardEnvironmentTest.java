@@ -100,6 +100,7 @@ final class LinkedCardEnvironmentTest {
         LinkedCardEnvironment right = new LinkedCardEnvironment(rightHost, "pair");
         Network.joinNewNetwork(left.node());
         Network.joinNewNetwork(right.node());
+        charge(left, 101D);
 
         assertArrayEquals(new Object[]{true}, left.send(null, new TestArguments("payload", 7)));
 
@@ -131,6 +132,27 @@ final class LinkedCardEnvironmentTest {
     }
 
     @Test
+    void sendConsumesOwnConnectorEnergyLikeUpstream() {
+        OpenComputersApi.initialize();
+        TestMachineHost rightHost = new TestMachineHost();
+        LinkedCardEnvironment left = new LinkedCardEnvironment(new TestMachineHost(), "pair");
+        LinkedCardEnvironment right = new LinkedCardEnvironment(rightHost, "pair");
+        ComponentConnector leftConnector = assertInstanceOf(ComponentConnector.class, left.node());
+        ComponentConnector contextConnector = assertInstanceOf(ComponentConnector.class, right.node());
+        RecordingContext context = new RecordingContext(right.node());
+        Network.joinNewNetwork(left.node());
+        Network.joinNewNetwork(right.node());
+        leftConnector.setLocalBufferSize(101D);
+        leftConnector.changeBuffer(101D);
+
+        assertArrayEquals(new Object[]{true}, left.send(context, new TestArguments("payload")));
+
+        assertEquals(0.71875D, leftConnector.localBuffer(), 0.000_001D);
+        assertEquals(0D, contextConnector.localBuffer(), 0.000_001D);
+        assertEquals(List.of(Arrays.asList("modem_message", right.node().address(), left.node().address(), 0, 0D, "payload")), rightHost.signals);
+    }
+
+    @Test
     void ignoresCardsOnOtherChannels() {
         OpenComputersApi.initialize();
         TestMachineHost receiverHost = new TestMachineHost();
@@ -138,6 +160,7 @@ final class LinkedCardEnvironmentTest {
         LinkedCardEnvironment receiver = new LinkedCardEnvironment(receiverHost, "other");
         Network.joinNewNetwork(sender.node());
         Network.joinNewNetwork(receiver.node());
+        charge(sender, 101D);
 
         assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments("payload")));
 
@@ -174,6 +197,12 @@ final class LinkedCardEnvironmentTest {
         } finally {
             cachedValue.set(value, previous);
         }
+    }
+
+    private static void charge(final LinkedCardEnvironment card, final double energy) {
+        ComponentConnector connector = assertInstanceOf(ComponentConnector.class, card.node());
+        connector.setLocalBufferSize(energy);
+        connector.changeBuffer(energy);
     }
 
     @FunctionalInterface

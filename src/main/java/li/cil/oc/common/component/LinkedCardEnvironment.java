@@ -61,15 +61,15 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         if (packet == null) {
             return new Object[]{false};
         }
-        if (!consumeEnergy(context, packet)) {
+        if (!consumeEnergy(packet)) {
             return new Object[]{null, "not enough energy"};
         }
         LinkedNetwork.send(channel, this, packet);
         return new Object[]{true};
     }
 
-    private static boolean consumeEnergy(final Context context, final Packet packet) {
-        if (context == null || !(context.node() instanceof Connector connector)) {
+    private boolean consumeEnergy(final Packet packet) {
+        if (!(node() instanceof Connector connector)) {
             return true;
         }
         final double cost = packet.size() / 32.0D + LINKED_CARD_BASE_COST;
