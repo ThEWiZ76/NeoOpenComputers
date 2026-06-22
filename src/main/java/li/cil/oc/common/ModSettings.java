@@ -16,6 +16,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue COMPUTER_TIMEOUT;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
+    public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_SIZE;
     public static final ModConfigSpec.IntValue TMP_SIZE;
     public static final ModConfigSpec.IntValue FILE_COST;
     public static final ModConfigSpec.IntValue FLOPPY_SIZE;
@@ -35,6 +36,9 @@ public final class ModSettings {
         INPUT_USERNAME = builder
             .comment("Include player and entity names in input-related signals. OpenComputers upstream default is true.")
             .define("inputUsername", true);
+        MAX_NETWORK_PACKET_SIZE = builder
+            .comment("Maximum network packet size in bytes. OpenComputers upstream default is 8192.")
+            .defineInRange("maxNetworkPacketSize", 8192, 0, Integer.MAX_VALUE);
         builder.pop();
 
         builder.push("computer");
@@ -143,6 +147,10 @@ public final class ModSettings {
 
     public static boolean allowGc() {
         return booleanValue(ALLOW_GC);
+    }
+
+    public static int maxNetworkPacketSize() {
+        return intValue(MAX_NETWORK_PACKET_SIZE);
     }
 
     public static int tmpSize() {

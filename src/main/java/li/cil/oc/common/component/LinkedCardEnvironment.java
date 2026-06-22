@@ -12,6 +12,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 
 import java.nio.charset.StandardCharsets;
@@ -23,17 +24,8 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
     private static final String WAKE_MESSAGE_TAG = "wakeMessage";
     private static final String WAKE_MESSAGE_FUZZY_TAG = "wakeMessageFuzzy";
     private static final String MODEM_MESSAGE_SIGNAL = "modem_message";
-    private static final int MAX_PACKET_SIZE = 8192;
     private static final int MAX_PACKET_PARTS = 8;
     private static final double LINKED_CARD_BASE_COST = 0.05D * 400D * 5D;
-    private static final Map<String, String> DEVICE_INFO = Map.of(
-        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
-        DeviceInfo.DeviceAttribute.Description, "Quantumnet controller",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "HyperLink IV: Ender Edition",
-        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(MAX_PACKET_SIZE),
-        DeviceInfo.DeviceAttribute.Width, Integer.toString(MAX_PACKET_PARTS)
-    );
 
     private final EnvironmentHost host;
     private String channel;
@@ -51,7 +43,14 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
 
     @Override
     public Map<String, String> getDeviceInfo() {
-        return DEVICE_INFO;
+        return Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
+            DeviceInfo.DeviceAttribute.Description, "Quantumnet controller",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Product, "HyperLink IV: Ender Edition",
+            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize()),
+            DeviceInfo.DeviceAttribute.Width, Integer.toString(MAX_PACKET_PARTS)
+        );
     }
 
     @Callback(doc = "function(data...):boolean -- Sends the specified data to linked cards on this channel.")
@@ -80,7 +79,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
 
     @Callback(direct = true, doc = "function():number -- Gets the maximum packet size.")
     public Object[] maxPacketSize(final Context context, final Arguments args) {
-        return new Object[]{MAX_PACKET_SIZE};
+        return new Object[]{ModSettings.maxNetworkPacketSize()};
     }
 
     @Callback(direct = true, doc = "function():string -- Gets this linked card's shared channel.")

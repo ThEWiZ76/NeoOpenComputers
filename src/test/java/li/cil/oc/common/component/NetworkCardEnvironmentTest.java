@@ -15,13 +15,16 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -249,6 +252,17 @@ final class NetworkCardEnvironmentTest {
         assertEquals("8192", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
         assertEquals("16", metadata.get(DeviceInfo.DeviceAttribute.Size));
         assertEquals("8", metadata.get(DeviceInfo.DeviceAttribute.Width));
+    }
+
+    @Test
+    void deviceInfoReportsConfiguredPacketSize() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.MAX_NETWORK_PACKET_SIZE, 32, () -> {
+            assertEquals("32", new NetworkCardEnvironment(new TestHost()).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Capacity));
+            assertEquals("32", new WirelessNetworkCardEnvironment(new TestHost(), 0).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Capacity));
+            assertEquals("32", new WirelessNetworkCardEnvironment(new TestHost(), 1).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Capacity));
+        });
     }
 
     @Test
@@ -647,6 +661,23 @@ final class NetworkCardEnvironmentTest {
             return 0F;
         }
         return 0D;
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private record TestArguments(Object... values) implements Arguments {

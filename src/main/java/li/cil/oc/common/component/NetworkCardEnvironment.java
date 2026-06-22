@@ -13,6 +13,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 
 import java.io.IOException;
@@ -28,23 +29,11 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     private static final String WAKE_MESSAGE_TAG = "wakeMessage";
     private static final String WAKE_MESSAGE_FUZZY_TAG = "wakeMessageFuzzy";
     private static final int MAX_OPEN_PORTS = 16;
-    private static final int MAX_PACKET_SIZE = 8192;
     private static final int MAX_PACKET_PARTS = 8;
     private static final int MIN_PORT = 1;
     private static final int MAX_PORT = 65535;
     protected static final String NETWORK_MESSAGE = "network.message";
     private static final String MODEM_MESSAGE_SIGNAL = "modem_message";
-    private static final Map<String, String> WIRED_DEVICE_INFO = Map.of(
-        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
-        DeviceInfo.DeviceAttribute.Description, "Ethernet controller",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "42i520 (MPN-01)",
-        DeviceInfo.DeviceAttribute.Version, "1.0",
-        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(MAX_PACKET_SIZE),
-        DeviceInfo.DeviceAttribute.Size, Integer.toString(MAX_OPEN_PORTS),
-        DeviceInfo.DeviceAttribute.Width, Integer.toString(MAX_PACKET_PARTS)
-    );
-
     protected final EnvironmentHost host;
     private final Set<Integer> openPorts = new LinkedHashSet<>();
     private String wakeMessage;
@@ -60,7 +49,16 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
 
     @Override
     public Map<String, String> getDeviceInfo() {
-        return WIRED_DEVICE_INFO;
+        return Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
+            DeviceInfo.DeviceAttribute.Description, "Ethernet controller",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Product, "42i520 (MPN-01)",
+            DeviceInfo.DeviceAttribute.Version, "1.0",
+            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize()),
+            DeviceInfo.DeviceAttribute.Size, Integer.toString(MAX_OPEN_PORTS),
+            DeviceInfo.DeviceAttribute.Width, Integer.toString(MAX_PACKET_PARTS)
+        );
     }
 
     @Callback(doc = "function(port:number):boolean -- Opens the specified port.")

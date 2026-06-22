@@ -20,6 +20,7 @@ final class ModSettingsTest {
         assertEquals(5D, ModSettings.computerTimeout());
         assertEquals(false, ModSettings.allowBytecode());
         assertEquals(false, ModSettings.allowGc());
+        assertEquals(8192, ModSettings.maxNetworkPacketSize());
         assertEquals(64, ModSettings.tmpSize());
         assertEquals(512, ModSettings.fileCost());
         assertEquals(512, ModSettings.floppySize());
@@ -46,6 +47,7 @@ final class ModSettingsTest {
         assertEquals(List.of("computer", "timeout"), ModSettings.COMPUTER_TIMEOUT.getPath());
         assertEquals(List.of("computer", "lua", "allowBytecode"), ModSettings.ALLOW_BYTECODE.getPath());
         assertEquals(List.of("computer", "lua", "allowGC"), ModSettings.ALLOW_GC.getPath());
+        assertEquals(List.of("misc", "maxNetworkPacketSize"), ModSettings.MAX_NETWORK_PACKET_SIZE.getPath());
         assertEquals(List.of("filesystem", "tmpSize"), ModSettings.TMP_SIZE.getPath());
         assertEquals(List.of("filesystem", "fileCost"), ModSettings.FILE_COST.getPath());
         assertEquals(List.of("filesystem", "floppySize"), ModSettings.FLOPPY_SIZE.getPath());

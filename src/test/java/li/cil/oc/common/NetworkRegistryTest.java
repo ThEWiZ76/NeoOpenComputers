@@ -12,9 +12,11 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import net.minecraft.nbt.CompoundTag;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,6 +77,18 @@ final class NetworkRegistryTest {
             () -> registry.newPacket("node-1", "node-2", 42, new Object[]{"x".repeat(8191)}));
 
         assertEquals("packet too big (max 8192)", exception.getMessage());
+    }
+
+    @Test
+    void rejectsPacketsOverConfiguredPayloadSize() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+
+        withCachedConfig(ModSettings.MAX_NETWORK_PACKET_SIZE, 32, () -> {
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> registry.newPacket("node-1", "node-2", 42, new Object[]{"x".repeat(31)}));
+
+            assertEquals("packet too big (max 32)", exception.getMessage());
+        });
     }
 
     @Test
@@ -176,5 +190,22 @@ final class NetworkRegistryTest {
         public Object[] ping(final Context context, final Arguments arguments) {
             return new Object[]{"pong", arguments.checkString(0)};
         }
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 }

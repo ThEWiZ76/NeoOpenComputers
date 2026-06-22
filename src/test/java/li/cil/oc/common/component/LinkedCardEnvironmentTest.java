@@ -15,12 +15,15 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,6 +66,18 @@ final class LinkedCardEnvironmentTest {
 
         assertArrayEquals(new Object[]{"pair"}, card.getChannel(null, new TestArguments()));
         assertArrayEquals(new Object[]{8192}, card.maxPacketSize(null, new TestArguments()));
+    }
+
+    @Test
+    void reportsConfiguredMaxPacketSize() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.MAX_NETWORK_PACKET_SIZE, 32, () -> {
+            LinkedCardEnvironment card = new LinkedCardEnvironment(new TestMachineHost(), "pair");
+
+            assertArrayEquals(new Object[]{32}, card.maxPacketSize(null, new TestArguments()));
+            assertEquals("32", card.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Capacity));
+        });
     }
 
     @Test
@@ -136,6 +151,23 @@ final class LinkedCardEnvironmentTest {
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = LinkedCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private record RecordingContext(Node node) implements Context {

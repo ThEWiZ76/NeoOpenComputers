@@ -11,6 +11,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.WirelessEndpoint;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 
@@ -21,26 +22,6 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
     private static final String STRENGTH_TAG = "strength";
     private static final double[] MAX_RANGE_BY_TIER = {16D, 400D};
     private static final double WIRELESS_COST_PER_RANGE = 0.05D;
-    private static final Map<String, String> TIER1_DEVICE_INFO = Map.of(
-        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
-        DeviceInfo.DeviceAttribute.Description, "Wireless ethernet controller",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "39i110 (LPPW-01)",
-        DeviceInfo.DeviceAttribute.Version, "1.0",
-        DeviceInfo.DeviceAttribute.Capacity, "8192",
-        DeviceInfo.DeviceAttribute.Size, "1",
-        DeviceInfo.DeviceAttribute.Width, "16.0"
-    );
-    private static final Map<String, String> TIER2_DEVICE_INFO = Map.of(
-        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
-        DeviceInfo.DeviceAttribute.Description, "Wireless ethernet controller",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "62i230 (MPW-01)",
-        DeviceInfo.DeviceAttribute.Version, "2.0",
-        DeviceInfo.DeviceAttribute.Capacity, "8192",
-        DeviceInfo.DeviceAttribute.Size, "16",
-        DeviceInfo.DeviceAttribute.Width, "400.0"
-    );
 
     private final int tier;
     private double strength;
@@ -57,7 +38,16 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
 
     @Override
     public Map<String, String> getDeviceInfo() {
-        return tier == 0 ? TIER1_DEVICE_INFO : TIER2_DEVICE_INFO;
+        return Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
+            DeviceInfo.DeviceAttribute.Description, "Wireless ethernet controller",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Product, tier == 0 ? "39i110 (LPPW-01)" : "62i230 (MPW-01)",
+            DeviceInfo.DeviceAttribute.Version, tier == 0 ? "1.0" : "2.0",
+            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize()),
+            DeviceInfo.DeviceAttribute.Size, Integer.toString(maxOpenPorts()),
+            DeviceInfo.DeviceAttribute.Width, Double.toString(maxWirelessRange())
+        );
     }
 
     @Override
