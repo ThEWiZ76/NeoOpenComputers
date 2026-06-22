@@ -1146,6 +1146,26 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void reusesUserdataProxyForSameValueHandle() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            first = component.invoke('fs-address', 'make')
+            second = component.invoke('fs-address', 'make')
+            same = first == second
+            keyed = {}
+            keyed[first] = 'kept'
+            lookup = keyed[second]
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.globalBoolean("same"));
+        assertEquals("kept", architecture.globalString("lookup"));
+    }
+
+    @Test
     void userdataCallbackToStringReturnsDocumentation() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""

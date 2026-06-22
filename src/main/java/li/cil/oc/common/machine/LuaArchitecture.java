@@ -49,6 +49,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -84,6 +85,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private final Map<String, String> primaryComponents = new HashMap<>();
     private final Map<String, PendingPrimaryComponent> pendingPrimaryComponents = new HashMap<>();
     private final Map<String, LuaTable> componentProxyCache = new HashMap<>();
+    private final Map<Value, LuaTable> valueProxyCache = new IdentityHashMap<>();
 
     public LuaArchitecture() {
         this("");
@@ -132,6 +134,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals = sandboxGlobals();
         pendingResult = null;
         pendingBudgetCall = null;
+        valueProxyCache.clear();
         installComputerLibrary();
         installComponentLibrary();
         installUserdataLibrary();
@@ -1855,7 +1858,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private LuaTable valueProxy(final Value value) {
+        final LuaTable cached = valueProxyCache.get(value);
+        if (cached != null) {
+            return cached;
+        }
         final LuaTable table = new LuaTable();
+        valueProxyCache.put(value, table);
         table.set(VALUE_MARKER, LuaValue.userdataOf(value));
         table.set("type", "userdata");
         final Map<String, Callback> methods = machine == null ? Map.of() : machine.methods(value);
