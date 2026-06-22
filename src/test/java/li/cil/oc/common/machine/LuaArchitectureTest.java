@@ -424,6 +424,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void unicodeWtruncRejectsCountsPastStringWidthLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid, message = pcall(function()
+              unicode.wtrunc('abc', 10)
+            end)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(!"nil".equals(architecture.globalString("message")));
+    }
+
+    @Test
     void exposesSystemLibraryToLua() {
         LuaArchitecture architecture = new LuaArchitecture("""
             bytecode = system.allowBytecode()

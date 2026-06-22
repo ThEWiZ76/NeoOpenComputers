@@ -2393,7 +2393,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         int width = 0;
         int previous = 0;
         int end = 0;
-        while (width < count && end < value.length()) {
+        while (width < count) {
             previous = end;
             final int codePoint = value.codePointAt(end);
             width += Math.max(1, wcwidth(codePoint));
