@@ -161,6 +161,34 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesSafeDebugGetInfo() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            function sample(argument, ...)
+              return argument
+            end
+            getinfoType = type(debug.getinfo)
+            info = debug.getinfo(sample)
+            infoType = type(info)
+            sourceType = type(info.source)
+            whatType = type(info.what)
+            lineDefinedType = type(info.linedefined)
+            functionFieldType = type(info.func)
+            sethookType = type(debug.sethook)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("function", architecture.globalString("getinfoType"));
+        assertEquals("table", architecture.globalString("infoType"));
+        assertEquals("string", architecture.globalString("sourceType"));
+        assertEquals("string", architecture.globalString("whatType"));
+        assertEquals("number", architecture.globalString("lineDefinedType"));
+        assertEquals("nil", architecture.globalString("functionFieldType"));
+        assertEquals("nil", architecture.globalString("sethookType"));
+    }
+
+    @Test
     void exposesTablePackAndUnpackCompatibility() {
         LuaArchitecture architecture = new LuaArchitecture("""
             packed = table.pack('a', nil, 'c')

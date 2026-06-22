@@ -35,6 +35,7 @@ import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.Bit32Lib;
 import org.luaj.vm2.lib.CoroutineLib;
+import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.StringLib;
 import org.luaj.vm2.lib.TableLib;
 import org.luaj.vm2.lib.VarArgFunction;
@@ -277,6 +278,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.load(new CoroutineLib());
         globals.load(new Bit32Lib());
         globals.load(new JseMathLib());
+        globals.load(new DebugLib());
         globals.set("package", LuaValue.NIL);
         installCheckArg(globals);
         installDebugLibrary(globals);
@@ -306,7 +308,32 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private static void installDebugLibrary(final Globals globals) {
+        final LuaValue fullDebug = globals.get("debug");
         final LuaTable debug = new LuaTable();
+        final LuaValue fullGetInfo = fullDebug.get("getinfo");
+        debug.set("getinfo", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaValue info = fullGetInfo.invoke(args).arg1();
+                if (info.isnil()) {
+                    return LuaValue.NIL;
+                }
+                final LuaTable safe = new LuaTable();
+                copyDebugInfoField(info, safe, "source");
+                copyDebugInfoField(info, safe, "short_src");
+                copyDebugInfoField(info, safe, "linedefined");
+                copyDebugInfoField(info, safe, "lastlinedefined");
+                copyDebugInfoField(info, safe, "what");
+                copyDebugInfoField(info, safe, "currentline");
+                copyDebugInfoField(info, safe, "nups");
+                copyDebugInfoField(info, safe, "nparams");
+                copyDebugInfoField(info, safe, "isvararg");
+                copyDebugInfoField(info, safe, "name");
+                copyDebugInfoField(info, safe, "namewhat");
+                copyDebugInfoField(info, safe, "istailcall");
+                return safe;
+            }
+        });
         debug.set("traceback", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
@@ -315,7 +342,28 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.valueOf(prefix + "stack traceback unavailable");
             }
         });
+        final LuaValue fullGetLocal = fullDebug.get("getlocal");
+        debug.set("getlocal", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return fullGetLocal.invoke(args).arg1();
+            }
+        });
+        final LuaValue fullGetUpvalue = fullDebug.get("getupvalue");
+        debug.set("getupvalue", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return fullGetUpvalue.invoke(args).arg1();
+            }
+        });
         globals.set("debug", debug);
+    }
+
+    private static void copyDebugInfoField(final LuaValue source, final LuaTable target, final String key) {
+        final LuaValue value = source.get(key);
+        if (value.isstring() || value.isnumber() || value.isboolean()) {
+            target.set(key, value);
+        }
     }
 
     private static void installCheckArg(final Globals globals) {
