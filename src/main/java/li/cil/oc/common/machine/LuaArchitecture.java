@@ -435,6 +435,25 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return value.isnil() ? "nil" : value.typename();
     }
 
+    private static String checkStringArgument(final Varargs args, final int index) {
+        final LuaValue value = args.arg(index);
+        if (value.type() == LuaValue.TSTRING) {
+            return value.tojstring();
+        }
+        throw new LuaError("bad argument #" + index + " (string expected, got " + luaTypeName(value) + ")");
+    }
+
+    private static String checkOptionalStringArgument(final Varargs args, final int index) {
+        final LuaValue value = args.arg(index);
+        if (value.isnil()) {
+            return null;
+        }
+        if (value.type() == LuaValue.TSTRING) {
+            return value.tojstring();
+        }
+        throw new LuaError("bad argument #" + index + " (string or nil expected, got " + luaTypeName(value) + ")");
+    }
+
     private static void installStringCompatibility(final Globals globals) {
         final LuaValue string = globals.get("string");
         final LuaValue originalFormat = string.get("format");
@@ -729,11 +748,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("get", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || args.narg() < 1) {
+                final String prefix = checkStringArgument(args, 1);
+                final String type = checkOptionalStringArgument(args, 2);
+                if (machine == null) {
                     return LuaValue.NIL;
                 }
-                final String prefix = args.arg(1).tojstring();
-                final String type = args.narg() >= 2 && !args.arg(2).isnil() ? args.arg(2).tojstring() : null;
                 final String address = componentAddressByPrefix(prefix, type);
                 if (address != null) {
                     return LuaValue.valueOf(address);
@@ -755,20 +774,20 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("isAvailable", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || args.narg() < 1) {
+                final String type = checkStringArgument(args, 1);
+                if (machine == null) {
                     return LuaValue.FALSE;
                 }
-                final String type = args.arg1().tojstring();
                 return LuaValue.valueOf(firstComponentAddress(type) != null);
             }
         });
         component.set("isPrimary", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || args.narg() < 1) {
+                final String address = checkStringArgument(args, 1);
+                if (machine == null) {
                     return LuaValue.FALSE;
                 }
-                final String address = args.arg(1).tojstring();
                 final String type = machine.components().get(address);
                 return LuaValue.valueOf(type != null && address.equals(firstComponentAddress(type)));
             }
@@ -793,10 +812,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("getPrimary", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || args.narg() < 1) {
+                final String type = checkStringArgument(args, 1);
+                if (machine == null) {
                     return LuaValue.NIL;
                 }
-                final String type = args.checkjstring(1);
                 final String address = firstComponentAddress(type);
                 if (address == null) {
                     throw new LuaError("no primary '" + type + "' available");
@@ -807,15 +826,16 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("setPrimary", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || args.narg() < 1) {
+                final String type = checkStringArgument(args, 1);
+                if (machine == null) {
                     return LuaValue.FALSE;
                 }
-                final String type = args.checkjstring(1);
-                if (args.narg() < 2 || args.arg(2).isnil()) {
+                final String requestedAddress = checkOptionalStringArgument(args, 2);
+                if (requestedAddress == null) {
                     clearPrimaryComponent(type);
                     return LuaValue.NIL;
                 }
-                final String address = componentAddressByPrefix(args.checkjstring(2), type);
+                final String address = componentAddressByPrefix(requestedAddress, type);
                 if (address == null) {
                     throw new LuaError("no such component");
                 }

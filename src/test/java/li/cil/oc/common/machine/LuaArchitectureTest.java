@@ -900,6 +900,27 @@ final class LuaArchitectureTest {
             typeValid, typeMessage = pcall(function()
               component.type()
             end)
+            getValid, getMessage = pcall(function()
+              component.get()
+            end)
+            getTypeValid, getTypeMessage = pcall(function()
+              component.get('fs-address', 1)
+            end)
+            availableValid, availableMessage = pcall(function()
+              component.isAvailable()
+            end)
+            primaryValid, primaryMessage = pcall(function()
+              component.isPrimary()
+            end)
+            getPrimaryValid, getPrimaryMessage = pcall(function()
+              component.getPrimary()
+            end)
+            setPrimaryValid, setPrimaryMessage = pcall(function()
+              component.setPrimary()
+            end)
+            setPrimaryAddressValid, setPrimaryAddressMessage = pcall(function()
+              component.setPrimary('filesystem', 1)
+            end)
             slotValid, slotMessage = pcall(function()
               component.slot()
             end)
@@ -932,6 +953,20 @@ final class LuaArchitectureTest {
 
         assertEquals(false, architecture.globalBoolean("typeValid"));
         assertTrue(architecture.globalString("typeMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("getValid"));
+        assertTrue(architecture.globalString("getMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("getTypeValid"));
+        assertTrue(architecture.globalString("getTypeMessage").contains("string or nil expected"));
+        assertEquals(false, architecture.globalBoolean("availableValid"));
+        assertTrue(architecture.globalString("availableMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("primaryValid"));
+        assertTrue(architecture.globalString("primaryMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("getPrimaryValid"));
+        assertTrue(architecture.globalString("getPrimaryMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("setPrimaryValid"));
+        assertTrue(architecture.globalString("setPrimaryMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("setPrimaryAddressValid"));
+        assertTrue(architecture.globalString("setPrimaryAddressMessage").contains("string or nil expected"));
         assertEquals(false, architecture.globalBoolean("slotValid"));
         assertTrue(architecture.globalString("slotMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("methodsValid"));
