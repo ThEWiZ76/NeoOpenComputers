@@ -7,6 +7,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
+    public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -17,6 +18,9 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("power");
+        SOLAR_GENERATOR_EFFICIENCY = builder
+            .comment("Energy produced per tick by solar generator upgrades. OpenComputers upstream default is 0.2.")
+            .defineInRange("solarGeneratorEfficiency", 0.2D, 0D, Double.MAX_VALUE);
         MFU_TICK_FREQUENCY = builder
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
@@ -43,6 +47,10 @@ public final class ModSettings {
 
     public static int mfuTickFrequency() {
         return intValue(MFU_TICK_FREQUENCY);
+    }
+
+    public static double solarGeneratorEfficiency() {
+        return doubleValue(SOLAR_GENERATOR_EFFICIENCY);
     }
 
     private static double doubleValue(final ModConfigSpec.DoubleValue value) {

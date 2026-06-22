@@ -6,6 +6,7 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
@@ -13,7 +14,6 @@ import java.util.Map;
 
 public class SolarGeneratorUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final double BUFFER_SIZE = 1D;
-    private static final double ENERGY_PER_TICK = 1D;
     private static final int CHECK_INTERVAL = 100;
 
     private final EnvironmentHost host;
@@ -51,7 +51,7 @@ public class SolarGeneratorUpgradeEnvironment extends AbstractManagedEnvironment
             sunVisible = isSunVisible();
         }
         if (sunVisible && node() instanceof Connector connector) {
-            connector.changeBuffer(ENERGY_PER_TICK);
+            connector.changeBuffer(ModSettings.solarGeneratorEfficiency());
         }
     }
 

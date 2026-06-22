@@ -4600,7 +4600,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(connector.localBufferSize() == 1D, "Solar generator connector capacity mismatch");
         helper.getLevel().setDayTime(6000);
         environment.update();
-        helper.assertTrue(connector.localBuffer() > 0D, "Solar generator did not produce energy in daylight");
+        helper.assertTrue(Double.compare(0.2D, connector.localBuffer()) == 0, "Solar generator did not use upstream default efficiency");
     }
 
     private static void assertTankCapacity(final GameTestHelper helper, final ItemStack stack, final int capacity) {
