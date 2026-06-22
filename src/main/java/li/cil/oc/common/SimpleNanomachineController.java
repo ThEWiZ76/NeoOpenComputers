@@ -36,6 +36,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private boolean activeBehaviorsDirty;
     private final String uuid = UUID.randomUUID().toString();
     private int responsePort;
+    private int commandDelay;
+    private Runnable queuedCommand;
     private double buffer;
 
     SimpleNanomachineController(final Player player, final NanomachinesRegistry registry) {
@@ -149,7 +151,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     @Override
     public void receivePacket(final Packet packet, final WirelessEndpoint sender) {
-        if (packet == null || sender == null || getLocalBuffer() <= 0D || !isSenderInCommandRange(sender)) {
+        if (packet == null || sender == null || getLocalBuffer() <= 0D || commandDelay > 0 || !isSenderInCommandRange(sender)) {
             return;
         }
         final Object[] data = packet.data();
@@ -201,6 +203,18 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     void dispose() {
         disableActive(DisableReason.Default);
+    }
+
+    void update() {
+        if (player != null && !player.isAlive()) {
+            return;
+        }
+        if (commandDelay > 0) {
+            commandDelay--;
+            if (commandDelay == 0) {
+                runQueuedCommand();
+            }
+        }
     }
 
     void save(final CompoundTag tag) {
@@ -359,6 +373,22 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     private void respond(final WirelessEndpoint endpoint, final Object... data) {
+        queuedCommand = () -> sendResponse(endpoint, data);
+        commandDelay = (int) (ModSettings.nanomachinesCommandDelay() * 20D);
+        if (commandDelay <= 0) {
+            runQueuedCommand();
+        }
+    }
+
+    private void runQueuedCommand() {
+        final Runnable command = queuedCommand;
+        queuedCommand = null;
+        if (command != null) {
+            command.run();
+        }
+    }
+
+    private void sendResponse(final WirelessEndpoint endpoint, final Object... data) {
         if (responsePort <= 0) {
             return;
         }

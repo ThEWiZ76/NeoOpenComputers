@@ -12,6 +12,7 @@ import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.ModRecipeSerializers;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.NanomachinesRegistry;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.MfuTargetEvents;
@@ -44,6 +45,7 @@ public final class NeoOpenComputers {
         ModCreativeTabs.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
         MfuTargetEvents.register();
+        NanomachinesRegistry.registerTickHandler();
         modEventBus.addListener(ChunkloaderUpgradeEnvironment::registerTicketController);
         modEventBus.addListener(RackNetworking::register);
         modEventBus.addListener(TerminalNetworking::register);

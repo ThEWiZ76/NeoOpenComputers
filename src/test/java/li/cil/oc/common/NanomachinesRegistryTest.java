@@ -163,11 +163,32 @@ final class NanomachinesRegistryTest {
         assertTrue(endpointCandidate instanceof WirelessEndpoint);
         WirelessEndpoint endpoint = (WirelessEndpoint) endpointCandidate;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 123}), sender);
+        runNanomachineCommandDelay(controller);
 
         assertTrue(sender.lastPacket != null);
         assertSame(endpoint, sender.lastSender);
         assertEquals(123, sender.lastPacket.port());
         assertArrayEquals(new Object[]{"nanomachines", "port", 123}, sender.lastPacket.data());
+    }
+
+    @Test
+    void controllerDelaysWirelessCommandResponsesAndIgnoresCommandsWhileWaiting() {
+        API.network = new NetworkRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 654}), sender);
+
+        assertNull(sender.lastPacket);
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getPowerState"}), sender);
+        runNanomachineCommandDelay(controller);
+
+        assertTrue(sender.lastPacket != null);
+        assertEquals(654, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "port", 654}, sender.lastPacket.data());
     }
 
     @Test
@@ -178,9 +199,11 @@ final class NanomachinesRegistryTest {
         Network.joinWirelessNetwork(sender);
         WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 321}), sender);
+        runNanomachineCommandDelay(controller);
         sender.lastPacket = null;
 
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getPowerState"}), sender);
+        runNanomachineCommandDelay(controller);
 
         assertTrue(sender.lastPacket != null);
         assertEquals(321, sender.lastPacket.port());
@@ -195,21 +218,25 @@ final class NanomachinesRegistryTest {
         Network.joinWirelessNetwork(sender);
         WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 444}), sender);
+        runNanomachineCommandDelay(controller);
 
         sender.lastPacket = null;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getTotalInputCount"}), sender);
+        runNanomachineCommandDelay(controller);
         assertTrue(sender.lastPacket != null);
         assertEquals(444, sender.lastPacket.port());
         assertArrayEquals(new Object[]{"nanomachines", "totalInputCount", controller.getTotalInputCount()}, sender.lastPacket.data());
 
         sender.lastPacket = null;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getSafeActiveInputs"}), sender);
+        runNanomachineCommandDelay(controller);
         assertTrue(sender.lastPacket != null);
         assertEquals(444, sender.lastPacket.port());
         assertArrayEquals(new Object[]{"nanomachines", "safeActiveInputs", controller.getSafeActiveInputs()}, sender.lastPacket.data());
 
         sender.lastPacket = null;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getMaxActiveInputs"}), sender);
+        runNanomachineCommandDelay(controller);
         assertTrue(sender.lastPacket != null);
         assertEquals(444, sender.lastPacket.port());
         assertArrayEquals(new Object[]{"nanomachines", "maxActiveInputs", controller.getMaxActiveInputs()}, sender.lastPacket.data());
@@ -223,21 +250,25 @@ final class NanomachinesRegistryTest {
         Network.joinWirelessNetwork(sender);
         WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 555}), sender);
+        runNanomachineCommandDelay(controller);
 
         sender.lastPacket = null;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getInput", 1}), sender);
+        runNanomachineCommandDelay(controller);
         assertTrue(sender.lastPacket != null);
         assertEquals(555, sender.lastPacket.port());
         assertArrayEquals(new Object[]{"nanomachines", "input", 1, false}, sender.lastPacket.data());
 
         sender.lastPacket = null;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setInput", 1, true}), sender);
+        runNanomachineCommandDelay(controller);
         assertTrue(sender.lastPacket != null);
         assertEquals(555, sender.lastPacket.port());
         assertArrayEquals(new Object[]{"nanomachines", "input", 1, true}, sender.lastPacket.data());
 
         sender.lastPacket = null;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getInput", 1}), sender);
+        runNanomachineCommandDelay(controller);
         assertTrue(sender.lastPacket != null);
         assertEquals(555, sender.lastPacket.port());
         assertArrayEquals(new Object[]{"nanomachines", "input", 1, true}, sender.lastPacket.data());
@@ -251,15 +282,18 @@ final class NanomachinesRegistryTest {
         Network.joinWirelessNetwork(sender);
         WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 556}), sender);
+        runNanomachineCommandDelay(controller);
 
         sender.lastPacket = null;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getInput", 2}), sender);
+        runNanomachineCommandDelay(controller);
         assertTrue(sender.lastPacket != null);
         assertEquals(556, sender.lastPacket.port());
         assertArrayEquals(new Object[]{"nanomachines", "input", "error"}, sender.lastPacket.data());
 
         sender.lastPacket = null;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setInput", 2, true}), sender);
+        runNanomachineCommandDelay(controller);
         assertTrue(sender.lastPacket != null);
         assertEquals(556, sender.lastPacket.port());
         assertArrayEquals(new Object[]{"nanomachines", "input", "error"}, sender.lastPacket.data());
@@ -278,9 +312,11 @@ final class NanomachinesRegistryTest {
         Network.joinWirelessNetwork(sender);
         WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 557}), sender);
+        runNanomachineCommandDelay(controller);
         sender.lastPacket = null;
 
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getActiveEffects"}), sender);
+        runNanomachineCommandDelay(controller);
 
         assertTrue(sender.lastPacket != null);
         assertEquals(557, sender.lastPacket.port());
@@ -294,6 +330,13 @@ final class NanomachinesRegistryTest {
             }
         }
         return false;
+    }
+
+    private static void runNanomachineCommandDelay(final SimpleNanomachineController controller) {
+        final int ticks = Math.max(1, (int) (ModSettings.nanomachinesCommandDelay() * 20D));
+        for (int i = 0; i < ticks; i++) {
+            controller.update();
+        }
     }
 
     private static final class RecordingWirelessEndpoint implements WirelessEndpoint {

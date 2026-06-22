@@ -1,10 +1,13 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.detail.NanomachinesAPI;
+import li.cil.oc.api.API;
 import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.Controller;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -18,6 +21,16 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
 
     private final Set<BehaviorProvider> providers = new LinkedHashSet<>();
     private final Map<Player, SimpleNanomachineController> controllers = new WeakHashMap<>();
+
+    public static void registerTickHandler() {
+        NeoForge.EVENT_BUS.addListener(NanomachinesRegistry::onPlayerTick);
+    }
+
+    private static void onPlayerTick(final PlayerTickEvent.Post event) {
+        if (API.nanomachines instanceof NanomachinesRegistry registry) {
+            registry.update(event.getEntity());
+        }
+    }
 
     @Override
     public void addProvider(final BehaviorProvider provider) {
@@ -69,5 +82,15 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
         }
         player.getPersistentData().remove(TAG_HAS_NANOMACHINES);
         player.getPersistentData().remove(TAG_CONTROLLER);
+    }
+
+    public void update(final Player player) {
+        if (player == null || player.level().isClientSide()) {
+            return;
+        }
+        final Controller controller = getController(player);
+        if (controller instanceof SimpleNanomachineController simpleController) {
+            simpleController.update();
+        }
     }
 }

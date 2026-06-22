@@ -699,9 +699,11 @@ public final class NeoOpenComputersGameTests {
         final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
         Network.joinWirelessNetwork(sender);
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 558}), sender);
+        runNanomachinesCommandDelay(player);
         sender.lastPacket = null;
 
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getHealth"}), sender);
+        runNanomachinesCommandDelay(player);
 
         helper.assertTrue(sender.lastPacket != null, "Nanomachines health command did not respond");
         helper.assertTrue(sender.lastPacket.port() == 558, "Nanomachines health command used wrong response port");
@@ -719,9 +721,11 @@ public final class NeoOpenComputersGameTests {
         final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
         Network.joinWirelessNetwork(sender);
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 559}), sender);
+        runNanomachinesCommandDelay(player);
         sender.lastPacket = null;
 
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getHunger"}), sender);
+        runNanomachinesCommandDelay(player);
 
         helper.assertTrue(sender.lastPacket != null, "Nanomachines hunger command did not respond");
         helper.assertTrue(sender.lastPacket.port() == 559, "Nanomachines hunger command used wrong response port");
@@ -738,9 +742,11 @@ public final class NeoOpenComputersGameTests {
         final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
         Network.joinWirelessNetwork(sender);
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 560}), sender);
+        runNanomachinesCommandDelay(player);
         sender.lastPacket = null;
 
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getAge"}), sender);
+        runNanomachinesCommandDelay(player);
 
         helper.assertTrue(sender.lastPacket != null, "Nanomachines age command did not respond");
         helper.assertTrue(sender.lastPacket.port() == 560, "Nanomachines age command used wrong response port");
@@ -756,9 +762,11 @@ public final class NeoOpenComputersGameTests {
         final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
         Network.joinWirelessNetwork(sender);
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 561}), sender);
+        runNanomachinesCommandDelay(player);
         sender.lastPacket = null;
 
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getName"}), sender);
+        runNanomachinesCommandDelay(player);
 
         helper.assertTrue(sender.lastPacket != null, "Nanomachines name command did not respond");
         helper.assertTrue(sender.lastPacket.port() == 561, "Nanomachines name command used wrong response port");
@@ -775,9 +783,11 @@ public final class NeoOpenComputersGameTests {
         final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
         Network.joinWirelessNetwork(sender);
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 562}), sender);
+        runNanomachinesCommandDelay(player);
         sender.lastPacket = null;
 
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getExperience"}), sender);
+        runNanomachinesCommandDelay(player);
 
         helper.assertTrue(sender.lastPacket != null, "Nanomachines experience command did not respond");
         helper.assertTrue(sender.lastPacket.port() == 562, "Nanomachines experience command used wrong response port");
@@ -5109,6 +5119,18 @@ public final class NeoOpenComputersGameTests {
             }
         }
         return count;
+    }
+
+    private static int nanomachinesCommandDelayTicks() {
+        return Math.max(1, (int) (ModSettings.nanomachinesCommandDelay() * 20D));
+    }
+
+    private static void runNanomachinesCommandDelay(final Player player) {
+        if (API.nanomachines instanceof li.cil.oc.common.NanomachinesRegistry registry) {
+            for (int i = 0; i < nanomachinesCommandDelayTicks(); i++) {
+                registry.update(player);
+            }
+        }
     }
 
     private static void writeFile(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final String filesystemAddress, final String path, final String data) {
