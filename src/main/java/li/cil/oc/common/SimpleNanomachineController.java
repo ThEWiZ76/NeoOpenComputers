@@ -217,6 +217,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
                 runQueuedCommand();
             }
         }
+        updateActiveBehaviors();
         damageOverloadedPlayer();
     }
 
@@ -467,6 +468,15 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         final int overload = activeInputCount() - getSafeActiveInputs();
         if (overload > 0) {
             player.hurt(player.damageSources().magic(), overload);
+        }
+    }
+
+    private void updateActiveBehaviors() {
+        if (getLocalBuffer() <= 0D) {
+            return;
+        }
+        for (final Behavior behavior : getActiveBehaviors()) {
+            behavior.update();
         }
     }
 

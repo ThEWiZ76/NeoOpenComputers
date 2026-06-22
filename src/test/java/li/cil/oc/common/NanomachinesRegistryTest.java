@@ -4,6 +4,7 @@ import li.cil.oc.api.API;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.nanomachines.BehaviorProvider;
+import li.cil.oc.api.nanomachines.DisableReason;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.WirelessEndpoint;
 import net.minecraft.nbt.CompoundTag;
@@ -323,6 +324,24 @@ final class NanomachinesRegistryTest {
         assertArrayEquals(new Object[]{"nanomachines", "effects", "{speed_boost_now}"}, sender.lastPacket.data());
     }
 
+    @Test
+    void controllerTicksActiveBehaviorsWhilePowered() {
+        CountingBehavior behavior = new CountingBehavior("active");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(behavior)));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        controller.setInput(0, true);
+
+        controller.update();
+
+        assertEquals(1, behavior.updateCount);
+
+        controller.changeBuffer(-controller.getLocalBuffer());
+        controller.update();
+
+        assertEquals(1, behavior.updateCount);
+    }
+
     private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {
         for (int i = 0; i < behaviors.size(); i++) {
             if (behaviors.getCompound(i).getIntArray("connectorInputs").length > 0) {
@@ -463,6 +482,33 @@ final class NanomachinesRegistryTest {
 
         @Override
         public void update() {
+        }
+    }
+
+    private static final class CountingBehavior implements Behavior {
+        private final String name;
+        private int updateCount;
+
+        private CountingBehavior(final String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getNameHint() {
+            return name;
+        }
+
+        @Override
+        public void onEnable() {
+        }
+
+        @Override
+        public void onDisable(final DisableReason reason) {
+        }
+
+        @Override
+        public void update() {
+            updateCount++;
         }
     }
 }
