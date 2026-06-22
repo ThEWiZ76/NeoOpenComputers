@@ -266,43 +266,84 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private void configureGeneratedGraph(final List<BehaviorEntry> entries) {
         final int inputCount = Math.max(1, (int) Math.ceil(entries.size() * ModSettings.nanomachineTriggerQuota()));
         final int connectorCount = (int) Math.ceil(entries.size() * ModSettings.nanomachineConnectorQuota());
-        connectors = createConnectorEntries(inputCount, connectorCount);
-        setBehaviorEntries(assignGeneratedInputs(entries, inputCount, connectorCount));
+        final List<Integer> triggerSourcePool = triggerSourcePool(inputCount);
+        connectors = createConnectorEntries(triggerSourcePool, connectorCount);
+        setBehaviorEntries(assignGeneratedInputs(entries, triggerSourcePool, connectors.size()));
     }
 
-    private List<ConnectorEntry> createConnectorEntries(final int inputCount, final int connectorCount) {
+    private List<Integer> triggerSourcePool(final int inputCount) {
+        final int maxOutputs = Math.max(1, ModSettings.nanomachineMaxOutputs());
+        final List<Integer> sources = new ArrayList<>(inputCount * maxOutputs);
+        for (int output = 0; output < maxOutputs; output++) {
+            for (int input = 0; input < inputCount; input++) {
+                sources.add(input);
+            }
+        }
+        return sources;
+    }
+
+    private List<ConnectorEntry> createConnectorEntries(final List<Integer> triggerSourcePool, final int connectorCount) {
         final int maxInputs = Math.max(1, ModSettings.nanomachineMaxInputs());
-        final int inputLimit = Math.min(inputCount, maxInputs);
         final List<ConnectorEntry> entries = new ArrayList<>(connectorCount);
         for (int i = 0; i < connectorCount; i++) {
-            final int[] triggerInputs = new int[inputLimit];
-            for (int input = 0; input < inputLimit; input++) {
-                triggerInputs[input] = (i + input) % inputCount;
+            final int[] triggerInputs = takeTriggerInputs(triggerSourcePool, maxInputs);
+            if (triggerInputs.length > 0) {
+                entries.add(new ConnectorEntry(triggerInputs));
             }
-            entries.add(new ConnectorEntry(triggerInputs));
         }
         return List.copyOf(entries);
     }
 
-    private List<BehaviorEntry> assignGeneratedInputs(final List<BehaviorEntry> entries, final int inputCount, final int connectorCount) {
+    private List<BehaviorEntry> assignGeneratedInputs(final List<BehaviorEntry> entries, final List<Integer> triggerSourcePool, final int connectorCount) {
         final int maxInputs = Math.max(1, ModSettings.nanomachineMaxInputs());
         final int maxOutputs = Math.max(1, ModSettings.nanomachineMaxOutputs());
+        final List<Integer> connectorSourcePool = connectorSourcePool(connectorCount, maxOutputs);
         final int[] connectorUseCounts = new int[connectorCount];
         final List<BehaviorEntry> assigned = new ArrayList<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
             final BehaviorEntry entry = entries.get(i);
-            final int[] triggerInputs = new int[]{i % inputCount};
             int[] connectorInputs = new int[0];
-            if (connectorCount > 0 && maxInputs > 1 && i % inputCount == 1) {
-                final int connector = (i / inputCount) % connectorCount;
+            if (connectorCount > 0 && maxInputs > 1 && (i % maxInputs == 1 || triggerSourcePool.isEmpty()) && !connectorSourcePool.isEmpty()) {
+                final int connector = connectorSourcePool.remove(0);
                 if (connectorUseCounts[connector] < maxOutputs) {
                     connectorUseCounts[connector]++;
                     connectorInputs = new int[]{connector};
                 }
             }
-            assigned.add(new BehaviorEntry(entry.provider(), entry.behavior(), triggerInputs, connectorInputs));
+            final int triggerInputLimit = Math.max(1, maxInputs - connectorInputs.length);
+            final int[] triggerInputs = takeTriggerInputs(triggerSourcePool, triggerInputLimit);
+            if (triggerInputs.length > 0 || connectorInputs.length > 0) {
+                assigned.add(new BehaviorEntry(entry.provider(), entry.behavior(), triggerInputs, connectorInputs));
+            }
         }
         return assigned;
+    }
+
+    private List<Integer> connectorSourcePool(final int connectorCount, final int maxOutputs) {
+        final List<Integer> sources = new ArrayList<>(connectorCount * maxOutputs);
+        for (int output = 0; output < maxOutputs; output++) {
+            for (int connector = 0; connector < connectorCount; connector++) {
+                sources.add(connector);
+            }
+        }
+        return sources;
+    }
+
+    private int[] takeTriggerInputs(final List<Integer> triggerSourcePool, final int limit) {
+        final List<Integer> inputs = new ArrayList<>(limit);
+        for (int i = 0; i < triggerSourcePool.size() && inputs.size() < limit; i++) {
+            final int input = triggerSourcePool.get(i);
+            if (!inputs.contains(input)) {
+                inputs.add(input);
+                triggerSourcePool.remove(i);
+                i--;
+            }
+        }
+        final int[] result = new int[inputs.size()];
+        for (int i = 0; i < inputs.size(); i++) {
+            result[i] = inputs.get(i);
+        }
+        return result;
     }
 
     private int computeInputCount(final List<ConnectorEntry> connectors, final List<BehaviorEntry> entries) {

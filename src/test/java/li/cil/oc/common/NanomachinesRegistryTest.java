@@ -88,6 +88,11 @@ final class NanomachinesRegistryTest {
         registry.addProvider(new ListBehaviorProvider(List.of(first, second, third)));
         SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
         CompoundTag tag = new CompoundTag();
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("first", new int[]{0}, new int[0]));
+        behaviors.add(behaviorTag("second", new int[]{1}, new int[0]));
+        behaviors.add(behaviorTag("third", new int[]{0}, new int[0]));
+        tag.put("behaviors", behaviors);
         tag.putIntArray("activeInputs", new int[]{0});
 
         controller.load(tag);
@@ -149,7 +154,10 @@ final class NanomachinesRegistryTest {
         for (int i = 0; i < connectors.size(); i++) {
             assertTrue(connectors.getCompound(i).getIntArray("triggerInputs").length > 0);
         }
-        assertTrue(hasConnectorBackedBehavior(tag.getList("behaviors", CompoundTag.TAG_COMPOUND)));
+        ListTag behaviors = tag.getList("behaviors", CompoundTag.TAG_COMPOUND);
+        assertTrue(hasConnectorBackedBehavior(behaviors));
+        assertFalse(hasBehaviorWithoutInputs(behaviors));
+        assertTrue(maxTriggerFanOut(connectors, behaviors) <= ModSettings.nanomachineMaxOutputs());
     }
 
     @Test
@@ -351,6 +359,45 @@ final class NanomachinesRegistryTest {
         return false;
     }
 
+    private static CompoundTag behaviorTag(final String name, final int[] triggerInputs, final int[] connectorInputs) {
+        final CompoundTag behavior = new CompoundTag();
+        final CompoundTag behaviorData = new CompoundTag();
+        behaviorData.putString("name", name);
+        behavior.put("behavior", behaviorData);
+        behavior.putIntArray("triggerInputs", triggerInputs);
+        behavior.putIntArray("connectorInputs", connectorInputs);
+        return behavior;
+    }
+
+    private static int maxTriggerFanOut(final ListTag connectors, final ListTag behaviors) {
+        final int[] counts = new int[16];
+        for (int i = 0; i < connectors.size(); i++) {
+            for (final int input : connectors.getCompound(i).getIntArray("triggerInputs")) {
+                counts[input]++;
+            }
+        }
+        for (int i = 0; i < behaviors.size(); i++) {
+            for (final int input : behaviors.getCompound(i).getIntArray("triggerInputs")) {
+                counts[input]++;
+            }
+        }
+        int max = 0;
+        for (final int count : counts) {
+            max = Math.max(max, count);
+        }
+        return max;
+    }
+
+    private static boolean hasBehaviorWithoutInputs(final ListTag behaviors) {
+        for (int i = 0; i < behaviors.size(); i++) {
+            final CompoundTag behavior = behaviors.getCompound(i);
+            if (behavior.getIntArray("triggerInputs").length == 0 && behavior.getIntArray("connectorInputs").length == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static void runNanomachineCommandDelay(final SimpleNanomachineController controller) {
         final int ticks = Math.max(1, (int) (ModSettings.nanomachinesCommandDelay() * 20D));
         for (int i = 0; i < ticks; i++) {
@@ -419,6 +466,11 @@ final class NanomachinesRegistryTest {
 
         @Override
         public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
+            for (final Behavior behavior : behaviors) {
+                if (behavior instanceof TestBehavior testBehavior && testBehavior.name().equals(nbt.getString("name"))) {
+                    return behavior;
+                }
+            }
             return null;
         }
     }
