@@ -878,6 +878,9 @@ final class LuaArchitectureTest {
             methodsValid, methodsMessage = pcall(function()
               component.methods()
             end)
+            fieldsValid, fieldsMessage = pcall(function()
+              component.fields()
+            end)
             docAddressValid, docAddressMessage = pcall(function()
               component.doc()
             end)
@@ -902,6 +905,8 @@ final class LuaArchitectureTest {
         assertTrue(architecture.globalString("slotMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("methodsValid"));
         assertTrue(architecture.globalString("methodsMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("fieldsValid"));
+        assertTrue(architecture.globalString("fieldsMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("docAddressValid"));
         assertTrue(architecture.globalString("docAddressMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("docMethodValid"));

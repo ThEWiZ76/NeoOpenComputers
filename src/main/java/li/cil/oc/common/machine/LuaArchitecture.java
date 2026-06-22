@@ -778,9 +778,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("fields", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
+                final String address = args.checkjstring(1);
                 final LuaTable fields = new LuaTable();
-                if (machine != null && args.narg() >= 1) {
-                    final String address = args.arg(1).tojstring();
+                if (machine != null) {
                     if (!hasComponent(address)) {
                         return noSuchComponent();
                     }
