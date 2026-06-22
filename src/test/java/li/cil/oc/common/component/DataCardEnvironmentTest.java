@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,16 @@ final class DataCardEnvironmentTest {
         assertEquals("SC01D H45h3r", assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(0)).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("SC02D Cryptic", assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(1)).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("SC03D Signer", assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(2)).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
+    void createsNeighborReachableNodeLikeUpstream() {
+        OpenComputersApi.initialize();
+
+        DataCardEnvironment card = new DataCardEnvironment(0);
+
+        assertEquals(Visibility.Neighbors, card.node().reachability());
+        assertEquals(Visibility.Neighbors, assertInstanceOf(li.cil.oc.api.network.Component.class, card.node()).visibility());
     }
 
     @Test

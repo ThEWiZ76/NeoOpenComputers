@@ -78,7 +78,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
 
     public DataCardEnvironment(final int tier) {
         this.tier = Math.max(0, Math.min(2, tier));
-        final var builder = Network.newNode(this, Visibility.Network);
+        final var builder = Network.newNode(this, Visibility.Neighbors);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
         }
