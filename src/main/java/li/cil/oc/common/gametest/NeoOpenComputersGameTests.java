@@ -38,6 +38,7 @@ import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
+import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
@@ -84,6 +85,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
@@ -3625,6 +3627,38 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void motionSensorSignalIncludesEntityName(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos sensorPos = new BlockPos(1, 1, 1);
+        final BlockPos villagerPos = new BlockPos(3, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(sensorPos, ModBlocks.MOTION_SENSOR.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        startSignalComputer(helper, computer);
+
+        helper.runAtTickTime(2, () -> {
+            helper.assertTrue(componentAddress(computer, "motion_sensor") != null, "Motion sensor component is not visible: " + computer.machine().components());
+            final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+            helper.assertTrue(villager != null, "Villager did not spawn");
+            final BlockPos absoluteVillagerPos = helper.absolutePos(villagerPos);
+            villager.setNoAi(true);
+            villager.setCustomName(Component.literal("MotionTarget"));
+            villager.moveTo(absoluteVillagerPos.getX() + 0.5D, absoluteVillagerPos.getY(), absoluteVillagerPos.getZ() + 0.5D, 0, 0);
+            helper.getLevel().addFreshEntity(villager);
+            final MotionSensorBlockEntity sensor = helper.getBlockEntity(sensorPos);
+            sendMotionSignalNow(sensor, helper.absolutePos(sensorPos), villager);
+        });
+        helper.runAtTickTime(3, () -> {
+            final String sensorAddress = componentAddress(computer, "motion_sensor");
+            helper.assertTrue(sensorAddress != null, "Motion sensor component is not visible: " + computer.machine().components());
+            assertNextSignal(helper, computer, "motion", sensorAddress, 2D, -0.5D, 0D, "MotionTarget");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void inventoryControllerStoresStacksInDatabase(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);
@@ -5106,6 +5140,16 @@ public final class NeoOpenComputersGameTests {
             return (InteractionResult) useWithoutItem.invoke(state.getBlock(), state, helper.getLevel(), helper.absolutePos(pos), null, hit);
         } catch (ReflectiveOperationException e) {
             throw new AssertionError("Could not invoke screen useWithoutItem", e);
+        }
+    }
+
+    private static void sendMotionSignalNow(final MotionSensorBlockEntity sensor, final BlockPos pos, final LivingEntity entity) {
+        try {
+            final Method sendMotionSignal = MotionSensorBlockEntity.class.getDeclaredMethod("sendMotionSignal", Vec3.class, LivingEntity.class);
+            sendMotionSignal.setAccessible(true);
+            sendMotionSignal.invoke(sensor, Vec3.atCenterOf(pos), entity);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Could not invoke motion sensor signal", e);
         }
     }
 

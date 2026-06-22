@@ -13,6 +13,7 @@ final class ModSettingsTest {
         assertEquals(1D, ModSettings.mfuRelayCost());
         assertEquals(10, ModSettings.mfuTickFrequency());
         assertEquals(0.2D, ModSettings.solarGeneratorEfficiency());
+        assertEquals(true, ModSettings.inputUsername());
     }
 
     @Test
@@ -21,5 +22,6 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "cost", "mfuRelay"), ModSettings.MFU_RELAY_COST.getPath());
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
+        assertEquals(List.of("misc", "inputUsername"), ModSettings.INPUT_USERNAME.getPath());
     }
 }

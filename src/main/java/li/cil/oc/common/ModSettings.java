@@ -5,6 +5,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public final class ModSettings {
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
+    public static final ModConfigSpec.BooleanValue INPUT_USERNAME;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
@@ -15,6 +16,9 @@ public final class ModSettings {
         MFU_RANGE = builder
             .comment("Radius the MFU is able to operate in.")
             .defineInRange("mfuRange", 3D, 0D, 128D);
+        INPUT_USERNAME = builder
+            .comment("Include player and entity names in input-related signals. OpenComputers upstream default is true.")
+            .define("inputUsername", true);
         builder.pop();
 
         builder.push("power");
@@ -51,6 +55,18 @@ public final class ModSettings {
 
     public static double solarGeneratorEfficiency() {
         return doubleValue(SOLAR_GENERATOR_EFFICIENCY);
+    }
+
+    public static boolean inputUsername() {
+        return booleanValue(INPUT_USERNAME);
+    }
+
+    private static boolean booleanValue(final ModConfigSpec.BooleanValue value) {
+        try {
+            return value.get();
+        } catch (final IllegalStateException ignored) {
+            return value.getDefault();
+        }
     }
 
     private static double doubleValue(final ModConfigSpec.DoubleValue value) {

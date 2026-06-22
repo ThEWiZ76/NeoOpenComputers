@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -131,9 +132,10 @@ public class MotionSensorBlockEntity extends BlockEntity implements Environment,
 
     private void detectMotion(final Level level, final BlockPos pos) {
         final Vec3 center = Vec3.atCenterOf(pos);
+        final Vec3 visibilityOrigin = Vec3.atLowerCornerOf(pos);
         final AABB bounds = new AABB(pos).inflate(RADIUS);
         final Map<Integer, Vec3> visibleEntities = new HashMap<>();
-        for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, bounds, entity -> entity.isAlive() && isVisible(level, center, entity))) {
+        for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, bounds, entity -> entity.isAlive() && isVisible(level, visibilityOrigin, entity))) {
             final Vec3 entityPosition = entity.position();
             if (entityPosition.distanceToSqr(center) > RADIUS * RADIUS) {
                 continue;
@@ -141,32 +143,45 @@ public class MotionSensorBlockEntity extends BlockEntity implements Environment,
             visibleEntities.put(entity.getId(), entityPosition);
             final Vec3 previous = trackedEntities.get(entity.getId());
             if (previous == null || entityPosition.distanceToSqr(previous) > sensitivity * sensitivity * 2.0D) {
-                sendMotionSignal(center, entityPosition);
+                sendMotionSignal(center, entity);
             }
         }
         trackedEntities.clear();
         trackedEntities.putAll(visibleEntities);
     }
 
-    private static boolean isVisible(final Level level, final Vec3 center, final LivingEntity entity) {
+    private static boolean isVisible(final Level level, final Vec3 origin, final LivingEntity entity) {
         if (entity.isInvisible()) {
             return false;
         }
-        return hasClearPath(level, center, entity.position(), entity) || hasClearPath(level, center, entity.getEyePosition(), entity);
+        return hasClearPath(level, origin, entity.position(), entity) || hasClearPath(level, origin, entity.getEyePosition(), entity);
     }
 
-    private static boolean hasClearPath(final Level level, final Vec3 center, final Vec3 target, final LivingEntity entity) {
-        return level.clip(new ClipContext(center, target, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity)).getType() == HitResult.Type.MISS;
+    private static boolean hasClearPath(final Level level, final Vec3 origin, final Vec3 target, final LivingEntity entity) {
+        final Vec3 path = target.subtract(origin);
+        final Vec3 start = path.lengthSqr() <= 1.0E-7D ? origin : origin.add(path.normalize());
+        return level.clip(new ClipContext(start, target, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity)).getType() == HitResult.Type.MISS;
     }
 
-    private void sendMotionSignal(final Vec3 center, final Vec3 entityPosition) {
+    private void sendMotionSignal(final Vec3 center, final LivingEntity entity) {
         if (node() != null) {
-            node().sendToReachable(
-                "computer.signal",
-                "motion",
-                entityPosition.x() - center.x(),
-                entityPosition.y() - center.y(),
-                entityPosition.z() - center.z());
+            final Vec3 entityPosition = entity.position();
+            if (ModSettings.inputUsername()) {
+                node().sendToReachable(
+                    "computer.signal",
+                    "motion",
+                    entityPosition.x() - center.x(),
+                    entityPosition.y() - center.y(),
+                    entityPosition.z() - center.z(),
+                    entity.getName().getString());
+            } else {
+                node().sendToReachable(
+                    "computer.signal",
+                    "motion",
+                    entityPosition.x() - center.x(),
+                    entityPosition.y() - center.y(),
+                    entityPosition.z() - center.z());
+            }
         }
     }
 
