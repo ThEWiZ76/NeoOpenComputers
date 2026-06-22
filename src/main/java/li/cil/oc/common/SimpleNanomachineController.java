@@ -248,7 +248,10 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             if (name != null && name.startsWith("particles.") && name.length() > "particles.".length()) {
                 final String effect = name.substring("particles.".length());
                 if (!effect.isBlank()) {
-                    effects.add(effect);
+                    final int count = Math.max(1, getInputCount(behavior));
+                    for (int i = 0; i < count; i++) {
+                        effects.add(effect);
+                    }
                 }
             }
         }

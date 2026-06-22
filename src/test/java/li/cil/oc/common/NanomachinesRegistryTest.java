@@ -387,14 +387,39 @@ final class NanomachinesRegistryTest {
 
     @Test
     void controllerReportsActiveParticleEffectsForClientSync() {
+        TestBehavior flame = new TestBehavior("particles.flame");
         NanomachinesRegistry registry = new NanomachinesRegistry();
         registry.addProvider(new ListBehaviorProvider(List.of(
-            new TestBehavior("particles.flame"),
+            flame,
             new TestBehavior("speed"))));
         SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("particles.flame", new int[]{0}, new int[0]));
+        tag.put("behaviors", behaviors);
+        tag.putIntArray("activeInputs", new int[]{0});
+
+        controller.load(tag);
         controller.setInput(0, true);
 
         assertEquals(List.of("flame"), controller.activeParticleEffects());
+    }
+
+    @Test
+    void controllerRepeatsParticleEffectsByActiveInputCountForClientSync() {
+        TestBehavior flame = new TestBehavior("particles.flame");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(flame));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("particles.flame", new int[]{0, 1}, new int[0]));
+        tag.put("behaviors", behaviors);
+        tag.putIntArray("activeInputs", new int[]{0, 1});
+
+        controller.load(tag);
+
+        assertEquals(List.of("flame", "flame"), controller.activeParticleEffects());
     }
 
     @Test
