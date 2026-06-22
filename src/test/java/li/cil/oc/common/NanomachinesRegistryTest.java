@@ -8,6 +8,7 @@ import li.cil.oc.api.nanomachines.DisableReason;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.WirelessEndpoint;
 import li.cil.oc.common.item.NanomachineItemData;
+import li.cil.oc.common.nanomachines.provider.NanomachineDisintegrationProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineMagnetProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineParticleProvider;
@@ -47,6 +48,7 @@ final class NanomachinesRegistryTest {
         assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachinePotionProvider.class));
         assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineHungryProvider.class));
         assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineMagnetProvider.class));
+        assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineDisintegrationProvider.class));
     }
 
     @Test

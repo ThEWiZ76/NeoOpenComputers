@@ -103,6 +103,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue NANOMACHINES_HUNGRY_DAMAGE;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_HUNGRY_ENERGY_RESTORED;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_MAGNET_RANGE;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_DISINTEGRATION_RANGE;
     public static final ModConfigSpec.ConfigValue<List<? extends Object>> NANOMACHINES_POTION_WHITELIST;
 
     static {
@@ -330,6 +331,9 @@ public final class ModSettings {
         NANOMACHINES_MAGNET_RANGE = builder
             .comment("Range of the item magnet behavior added for each active input. OpenComputers upstream default is 8.")
             .defineInRange("magnetRange", 8D, 0D, Double.MAX_VALUE);
+        NANOMACHINES_DISINTEGRATION_RANGE = builder
+            .comment("Range of the block disintegration behavior added for each active input. OpenComputers upstream default is 1.")
+            .defineInRange("disintegrationRange", 1D, 0D, Double.MAX_VALUE);
         NANOMACHINES_POTION_WHITELIST = builder
             .comment("Allowed nanomachine potion effect IDs. Entries may be strings or numeric registry IDs, matching upstream.")
             .defineList("potionWhitelist", DEFAULT_NANOMACHINES_POTION_WHITELIST, value -> value instanceof String || value instanceof Number);
@@ -411,6 +415,10 @@ public final class ModSettings {
 
     public static double nanomachinesMagnetRange() {
         return Math.max(0D, doubleValue(NANOMACHINES_MAGNET_RANGE));
+    }
+
+    public static double nanomachinesDisintegrationRange() {
+        return Math.max(0D, doubleValue(NANOMACHINES_DISINTEGRATION_RANGE));
     }
 
     public static List<Object> nanomachinesPotionWhitelist() {

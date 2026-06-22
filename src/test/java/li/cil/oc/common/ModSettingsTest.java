@@ -119,6 +119,7 @@ final class ModSettingsTest {
         assertEquals(5D, ModSettings.nanomachinesHungryDamage());
         assertEquals(50D, ModSettings.nanomachinesHungryEnergyRestored());
         assertEquals(8D, ModSettings.nanomachinesMagnetRange());
+        assertEquals(1D, ModSettings.nanomachinesDisintegrationRange());
         assertEquals(List.of(
             "speed",
             "haste",
@@ -207,6 +208,7 @@ final class ModSettingsTest {
         assertEquals(List.of("nanomachines", "hungryDamage"), ModSettings.NANOMACHINES_HUNGRY_DAMAGE.getPath());
         assertEquals(List.of("nanomachines", "hungryEnergyRestored"), ModSettings.NANOMACHINES_HUNGRY_ENERGY_RESTORED.getPath());
         assertEquals(List.of("nanomachines", "magnetRange"), ModSettings.NANOMACHINES_MAGNET_RANGE.getPath());
+        assertEquals(List.of("nanomachines", "disintegrationRange"), ModSettings.NANOMACHINES_DISINTEGRATION_RANGE.getPath());
         assertEquals(List.of("nanomachines", "potionWhitelist"), ModSettings.NANOMACHINES_POTION_WHITELIST.getPath());
     }
 
