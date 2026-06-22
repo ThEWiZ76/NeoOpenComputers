@@ -35,6 +35,7 @@ final class ModSettingsTest {
         assertEquals(0.5D, ModSettings.callBudget(-1));
         assertEquals(1.5D, ModSettings.callBudget(99));
         assertEquals(false, ModSettings.eraseTmpOnReboot());
+        assertEquals(12, ModSettings.executionDelay());
         assertEquals(false, ModSettings.allowBytecode());
         assertEquals(false, ModSettings.allowGc());
         assertEquals(5, ModSettings.initialNetworkPacketTtl());
@@ -108,6 +109,7 @@ final class ModSettingsTest {
         assertEquals(List.of("computer", "cpuComponentCount"), ModSettings.CPU_COMPONENT_COUNT.getPath());
         assertEquals(List.of("computer", "callBudgets"), ModSettings.CALL_BUDGETS.getPath());
         assertEquals(List.of("computer", "eraseTmpOnReboot"), ModSettings.ERASE_TMP_ON_REBOOT.getPath());
+        assertEquals(List.of("computer", "executionDelay"), ModSettings.EXECUTION_DELAY.getPath());
         assertEquals(List.of("computer", "lua", "allowBytecode"), ModSettings.ALLOW_BYTECODE.getPath());
         assertEquals(List.of("computer", "lua", "allowGC"), ModSettings.ALLOW_GC.getPath());
         assertEquals(List.of("misc", "initialNetworkPacketTTL"), ModSettings.INITIAL_NETWORK_PACKET_TTL.getPath());

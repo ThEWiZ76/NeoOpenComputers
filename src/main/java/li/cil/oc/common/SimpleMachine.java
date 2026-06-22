@@ -41,6 +41,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.LongSupplier;
+import java.util.concurrent.TimeUnit;
 
 final class SimpleMachine extends AbstractManagedEnvironment implements Machine, DeviceInfo {
     private static final double NANOS_PER_SECOND = 1_000_000_000D;
@@ -600,7 +601,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             } else if (result instanceof ExecutionResult.Error error) {
                 crash(error.message);
             } else if (result instanceof ExecutionResult.Sleep sleep) {
-                sleepUntilNanos = sleep.ticks <= 0 ? -1L : nanoTime.getAsLong() + sleep.ticks * NANOS_PER_TICK;
+                sleepUntilNanos = sleep.ticks <= 0
+                    ? nanoTime.getAsLong() + TimeUnit.MILLISECONDS.toNanos(ModSettings.executionDelay())
+                    : nanoTime.getAsLong() + sleep.ticks * NANOS_PER_TICK;
             }
         } catch (RuntimeException e) {
             crash(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());

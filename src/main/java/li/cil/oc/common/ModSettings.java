@@ -28,6 +28,7 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> CPU_COMPONENT_COUNT;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> CALL_BUDGETS;
     public static final ModConfigSpec.BooleanValue ERASE_TMP_ON_REBOOT;
+    public static final ModConfigSpec.IntValue EXECUTION_DELAY;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
@@ -135,6 +136,9 @@ public final class ModSettings {
         ERASE_TMP_ON_REBOOT = builder
             .comment("Erase the temporary filesystem when a computer reboots. OpenComputers upstream default is false.")
             .define("eraseTmpOnReboot", false);
+        EXECUTION_DELAY = builder
+            .comment("Milliseconds computers wait before resuming after an immediate yield. OpenComputers upstream default is 12.")
+            .defineInRange("executionDelay", 12, 0, 50);
         builder.push("lua");
         ALLOW_BYTECODE = builder
             .comment("Allow loading Lua bytecode directly. OpenComputers upstream default is false.")
@@ -300,6 +304,10 @@ public final class ModSettings {
 
     public static boolean eraseTmpOnReboot() {
         return booleanValue(ERASE_TMP_ON_REBOOT);
+    }
+
+    public static int executionDelay() {
+        return intValue(EXECUTION_DELAY);
     }
 
     public static boolean allowBytecode() {

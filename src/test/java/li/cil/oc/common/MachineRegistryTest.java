@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.LongSupplier;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -780,6 +781,38 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void zeroTickYieldsHonorConfiguredExecutionDelay() throws Exception {
+        OpenComputersApi.initialize();
+        MutableClock clock = new MutableClock();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new ImmediateYieldProcessorDriver());
+        API.driver = driverRegistry;
+
+        withCachedConfig(ModSettings.EXECUTION_DELAY, 12, () -> {
+            SimpleMachine machine = new SimpleMachine(new TestHost(), clock);
+            machine.onHostChanged();
+            ImmediateYieldArchitecture architecture = (ImmediateYieldArchitecture) machine.architecture();
+            assertTrue(machine.start());
+
+            clock.nanos = 1_000_000_000L;
+            machine.update();
+            machine.update();
+
+            assertEquals(1, architecture.threadedRuns);
+
+            clock.nanos += TimeUnit.MILLISECONDS.toNanos(11);
+            machine.update();
+
+            assertEquals(1, architecture.threadedRuns);
+
+            clock.nanos += TimeUnit.MILLISECONDS.toNanos(1);
+            machine.update();
+
+            assertEquals(2, architecture.threadedRuns);
+        });
+    }
+
+    @Test
     void pausedMachineResumesAfterRequestedDelay() {
         OpenComputersApi.initialize();
         MutableClock clock = new MutableClock();
@@ -1142,6 +1175,23 @@ final class MachineRegistryTest {
         }
     }
 
+    private static final class ImmediateYieldProcessorDriver extends TestDriver implements Processor {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return ImmediateYieldArchitecture.class;
+        }
+    }
+
     private static final class TimedArchitecture implements Architecture {
         private static MutableClock clock;
         private boolean initialized;
@@ -1333,6 +1383,14 @@ final class MachineRegistryTest {
         public ExecutionResult runThreaded(final boolean isSynchronizedReturn) {
             threadedRuns++;
             return new ExecutionResult.Sleep(2);
+        }
+    }
+
+    public static final class ImmediateYieldArchitecture extends TrackingArchitecture {
+        @Override
+        public ExecutionResult runThreaded(final boolean isSynchronizedReturn) {
+            threadedRuns++;
+            return new ExecutionResult.Sleep(0);
         }
     }
 
