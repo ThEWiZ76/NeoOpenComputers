@@ -484,9 +484,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         debug.set("traceback", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final LuaValue message = args.arg(1);
-                final String prefix = message.isnil() ? "" : message.tojstring() + "\n";
-                return LuaValue.valueOf(prefix + "stack traceback unavailable");
+                return fullDebug.get("traceback").invoke(args);
             }
         });
         final LuaValue fullGetLocal = fullDebug.get("getlocal");

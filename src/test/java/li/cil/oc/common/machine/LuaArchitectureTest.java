@@ -207,6 +207,7 @@ final class LuaArchitectureTest {
 
         assertEquals("function", architecture.globalString("tracebackType"));
         assertTrue(architecture.globalString("tracebackText").contains("boot failed"));
+        assertTrue(architecture.globalString("tracebackText").contains("stack traceback:"));
     }
 
     @Test
