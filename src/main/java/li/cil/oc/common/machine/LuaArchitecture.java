@@ -971,7 +971,14 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (machine == null) {
                     return LuaValue.FALSE;
                 }
-                return LuaValue.valueOf(firstComponentAddress(type) != null);
+                processPendingPrimaryComponents();
+                if (!primaryComponents.containsKey(type) && !pendingPrimaryComponents.containsKey(type)) {
+                    final String address = firstAvailableComponentAddress(type);
+                    if (address != null) {
+                        setPrimaryComponent(type, address);
+                    }
+                }
+                return LuaValue.valueOf(primaryComponents.containsKey(type));
             }
         });
         component.set("isPrimary", new VarArgFunction() {
