@@ -2152,6 +2152,26 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void mapsUserdataUnapplyHostFailuresToLuaResultsLikeUpstreamWrapper() {
+        TestValue value = new ThrowingUnapplyValue(new IllegalStateException("unapply failed"));
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            directResult, directMessage = userdata.unapply(value, 'payload')
+            metaValid = pcall(function()
+              value.payload = 'next'
+            end)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("directResult"));
+        assertEquals("unapply failed", architecture.globalString("directMessage"));
+        assertEquals(true, architecture.globalBoolean("metaValid"));
+    }
+
+    @Test
     void exposesComponentProxyToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
@@ -3959,6 +3979,19 @@ final class LuaArchitectureTest {
 
         @Override
         public Object apply(final Context context, final Arguments arguments) {
+            throw failure;
+        }
+    }
+
+    private static final class ThrowingUnapplyValue extends TestValue {
+        private final RuntimeException failure;
+
+        private ThrowingUnapplyValue(final RuntimeException failure) {
+            this.failure = failure;
+        }
+
+        @Override
+        public void unapply(final Context context, final Arguments arguments) {
             throw failure;
         }
     }
