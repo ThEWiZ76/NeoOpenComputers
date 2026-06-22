@@ -971,14 +971,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (machine == null) {
                     return LuaValue.FALSE;
                 }
-                processPendingPrimaryComponents();
-                if (!primaryComponents.containsKey(type) && !pendingPrimaryComponents.containsKey(type)) {
-                    final String address = firstAvailableComponentAddress(type);
-                    if (address != null) {
-                        setPrimaryComponent(type, address);
-                    }
-                }
-                return LuaValue.valueOf(primaryComponents.containsKey(type));
+                return LuaValue.valueOf(ensurePrimaryAvailable(type));
             }
         });
         component.set("isPrimary", new VarArgFunction() {
@@ -989,7 +982,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     return LuaValue.FALSE;
                 }
                 final String type = machine.components().get(address);
-                return LuaValue.valueOf(type != null && address.equals(firstComponentAddress(type)));
+                return LuaValue.valueOf(type != null && ensurePrimaryAvailable(type) && address.equals(primaryComponents.get(type)));
             }
         });
         component.set("slot", new VarArgFunction() {
@@ -1531,6 +1524,20 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             primaryComponents.remove(type);
         }
         return firstAvailableComponentAddress(type);
+    }
+
+    private boolean ensurePrimaryAvailable(final String type) {
+        if (machine == null) {
+            return false;
+        }
+        processPendingPrimaryComponents();
+        if (!primaryComponents.containsKey(type) && !pendingPrimaryComponents.containsKey(type)) {
+            final String address = firstAvailableComponentAddress(type);
+            if (address != null) {
+                setPrimaryComponent(type, address);
+            }
+        }
+        return primaryComponents.containsKey(type);
     }
 
     private String firstAvailableComponentAddress(final String type) {
