@@ -35,12 +35,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class InternetCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "internet";
-    private static final ExecutorService HTTP_EXECUTOR = Executors.newCachedThreadPool(runnable -> {
+    private static final ScheduledExecutorService HTTP_EXECUTOR = Executors.newScheduledThreadPool(ModSettings.internetThreads(), runnable -> {
         final Thread thread = new Thread(runnable, "NeoOpenComputers Internet");
         thread.setDaemon(true);
         return thread;

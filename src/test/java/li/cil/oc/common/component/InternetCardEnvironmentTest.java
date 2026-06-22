@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -59,6 +60,16 @@ final class InternetCardEnvironmentTest {
         assertEquals(DeviceInfo.DeviceClass.Communication, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Internet modem", metadata.get(DeviceInfo.DeviceAttribute.Description));
         assertEquals("SuperLink X-D4NK", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
+    void internetExecutorUsesConfiguredThreadLimit() throws Exception {
+        Field executorField = InternetCardEnvironment.class.getDeclaredField("HTTP_EXECUTOR");
+        executorField.setAccessible(true);
+
+        ScheduledThreadPoolExecutor executor = assertInstanceOf(ScheduledThreadPoolExecutor.class, executorField.get(null));
+
+        assertEquals(ModSettings.internetThreads(), executor.getCorePoolSize());
     }
 
     @Test

@@ -43,6 +43,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ENABLE_TCP;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> FILTERING_RULES;
     public static final ModConfigSpec.IntValue REQUEST_TIMEOUT;
+    public static final ModConfigSpec.IntValue INTERNET_THREADS;
     public static final ModConfigSpec.IntValue MAX_TCP_CONNECTIONS;
     public static final ModConfigSpec.ConfigValue<String> HTTP_USER_AGENT;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
@@ -154,6 +155,9 @@ public final class ModSettings {
         REQUEST_TIMEOUT = builder
             .comment("HTTP request timeout in seconds. Zero disables timeouts, matching OpenComputers upstream.")
             .defineInRange("requestTimeout", 0, 0, Integer.MAX_VALUE / 1000);
+        INTERNET_THREADS = builder
+            .comment("Number of background threads for internet-card DNS and HTTP requests. OpenComputers upstream default is 4.")
+            .defineInRange("threads", 4, 1, Integer.MAX_VALUE);
         MAX_TCP_CONNECTIONS = builder
             .comment("Maximum open internet-card HTTP/TCP connections. OpenComputers upstream default is 4.")
             .defineInRange("maxTcpConnections", 4, 0, Integer.MAX_VALUE);
@@ -342,6 +346,10 @@ public final class ModSettings {
 
     public static int httpRequestTimeout() {
         return intValue(REQUEST_TIMEOUT) * 1000;
+    }
+
+    public static int internetThreads() {
+        return Math.max(1, intValue(INTERNET_THREADS));
     }
 
     public static int maxTcpConnections() {
