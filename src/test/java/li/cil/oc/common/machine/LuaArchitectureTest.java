@@ -1118,6 +1118,25 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void userdataCallbackToStringReturnsDocumentation() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            echoType = type(value.echo)
+            echoDescription = tostring(value.echo)
+            result = value.echo('payload')
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("table", architecture.globalString("echoType"));
+        assertEquals("function():string -- Direct callback.", architecture.globalString("echoDescription"));
+        assertEquals("invoked:payload", architecture.globalString("result"));
+    }
+
+    @Test
     void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
         TestValue value = new TestValue();
         int[] valueInvokes = {0};

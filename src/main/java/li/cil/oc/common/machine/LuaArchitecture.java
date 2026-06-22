@@ -1607,20 +1607,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         table.set("type", "userdata");
         final Map<String, Callback> methods = machine == null ? Map.of() : machine.methods(value);
         for (String methodName : methods.keySet()) {
-            table.set(methodName, new VarArgFunction() {
-                @Override
-                public Varargs invoke(final Varargs args) {
-                    if (machine == null || !machine.methods(value).containsKey(methodName)) {
-                        throw new LuaError("no such method");
-                    }
-                    final int offset = args.narg() > 0 && args.arg(1) == table ? 2 : 1;
-                    final Object[] javaArgs = new Object[Math.max(0, args.narg() - offset + 1)];
-                    for (int index = 0; index < javaArgs.length; index++) {
-                        javaArgs[index] = toJavaValue(args.arg(index + offset));
-                    }
-                    return invokeValue(value, methodName, javaArgs);
-                }
-            });
+            table.set(methodName, valueCallbackFunction(value, methodName, table));
         }
         final LuaTable metatable = new LuaTable();
         metatable.set("__call", new VarArgFunction() {
@@ -1670,6 +1657,40 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         });
         table.setmetatable(metatable);
         return table;
+    }
+
+    private LuaTable valueCallbackFunction(final Value value, final String methodName, final LuaTable proxy) {
+        final LuaTable callback = new LuaTable();
+        callback.set("name", methodName);
+        callback.set("proxy", proxy);
+        final LuaTable metatable = new LuaTable();
+        metatable.set("__call", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null || !machine.methods(value).containsKey(methodName)) {
+                    throw new LuaError("no such method");
+                }
+                int offset = args.narg() > 0 && args.arg(1).eq_b(callback) ? 1 : 0;
+                if (args.narg() > offset && args.arg(offset + 1).eq_b(proxy)) {
+                    offset++;
+                }
+                final Object[] javaArgs = new Object[Math.max(0, args.narg() - offset)];
+                for (int index = 0; index < javaArgs.length; index++) {
+                    javaArgs[index] = toJavaValue(args.arg(index + offset + 1));
+                }
+                return invokeValue(value, methodName, javaArgs);
+            }
+        });
+        metatable.set("__tostring", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                final Callback callback = machine == null ? null : machine.methods(value).get(methodName);
+                final String doc = callback == null ? "" : callback.doc();
+                return LuaValue.valueOf(doc == null || doc.isEmpty() ? "function" : doc);
+            }
+        });
+        callback.setmetatable(metatable);
+        return callback;
     }
 
     private static Object toJavaValue(final LuaValue value) {
