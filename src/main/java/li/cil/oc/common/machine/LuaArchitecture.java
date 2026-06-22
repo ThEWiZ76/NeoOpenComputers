@@ -906,7 +906,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("setArchitecture", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String requestedName = args.checkjstring(1);
+                final String requestedName = checkStringArgument(args, 1);
                 final Processor processor = processor();
                 if (!(processor instanceof MutableProcessor mutableProcessor)) {
                     return LuaValue.NIL;

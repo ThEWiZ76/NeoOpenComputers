@@ -1119,6 +1119,9 @@ final class LuaArchitectureTest {
             missingArgValid, missingArgMessage = pcall(function()
               computer.setArchitecture()
             end)
+            numericArgValid, numericArgMessage = pcall(function()
+              computer.setArchitecture(1)
+            end)
             """);
         architecture.bind(machine);
 
@@ -1133,6 +1136,8 @@ final class LuaArchitectureTest {
         assertEquals("unknown architecture", architecture.globalString("missingMessage"));
         assertEquals(false, architecture.globalBoolean("missingArgValid"));
         assertTrue(architecture.globalString("missingArgMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("numericArgValid"));
+        assertTrue(architecture.globalString("numericArgMessage").contains("string expected"));
     }
 
     @Test
