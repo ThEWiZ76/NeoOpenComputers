@@ -9,6 +9,7 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ItemRegistry;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.Arrays;
@@ -16,18 +17,8 @@ import java.util.Map;
 import java.util.zip.CRC32;
 
 public final class EepromEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
-    private static final int EEPROM_SIZE = 4096;
-    private static final int DATA_SIZE = 256;
     private static final int MAX_LABEL_LENGTH = 24;
     private static final double WRITE_COST = 50D;
-    private static final Map<String, String> DEVICE_INFO = Map.of(
-        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Memory,
-        DeviceInfo.DeviceAttribute.Description, "EEPROM",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "FlashStick2k",
-        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(EEPROM_SIZE),
-        DeviceInfo.DeviceAttribute.Size, Integer.toString(EEPROM_SIZE)
-    );
 
     private final CompoundTag data;
     private final Runnable onChanged;
@@ -49,7 +40,14 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
 
     @Override
     public Map<String, String> getDeviceInfo() {
-        return DEVICE_INFO;
+        return Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Memory,
+            DeviceInfo.DeviceAttribute.Description, "EEPROM",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Product, "FlashStick2k",
+            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.eepromSize()),
+            DeviceInfo.DeviceAttribute.Size, Integer.toString(ModSettings.eepromSize())
+        );
     }
 
     @Callback(direct = true, doc = "function():string -- Get the currently stored byte array.")
@@ -66,7 +64,7 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
             return new Object[]{null, "not enough energy"};
         }
         final byte[] newData = arguments.optByteArray(0, new byte[0]);
-        if (newData.length > EEPROM_SIZE) {
+        if (newData.length > ModSettings.eepromSize()) {
             throw new IllegalArgumentException("not enough space");
         }
         data.putByteArray(ItemRegistry.EEPROM_CODE_TAG, copyBytes(newData));
@@ -99,7 +97,7 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():number -- Get the storage capacity of this EEPROM.")
     public Object[] getSize(final Context context, final Arguments arguments) {
-        return new Object[]{EEPROM_SIZE};
+        return new Object[]{ModSettings.eepromSize()};
     }
 
     @Callback(direct = true, doc = "function():string -- Get the checksum of the data on this EEPROM.")
@@ -121,7 +119,7 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():number -- Get the storage capacity of this EEPROM.")
     public Object[] getDataSize(final Context context, final Arguments arguments) {
-        return new Object[]{DATA_SIZE};
+        return new Object[]{ModSettings.eepromDataSize()};
     }
 
     @Callback(direct = true, doc = "function():string -- Get the currently stored byte array.")
@@ -135,7 +133,7 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
             return new Object[]{null, "not enough energy"};
         }
         final byte[] newData = arguments.optByteArray(0, new byte[0]);
-        if (newData.length > DATA_SIZE) {
+        if (newData.length > ModSettings.eepromDataSize()) {
             throw new IllegalArgumentException("not enough space");
         }
         data.putByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG, copyBytes(newData));

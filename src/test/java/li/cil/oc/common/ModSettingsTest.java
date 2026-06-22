@@ -19,6 +19,8 @@ final class ModSettingsTest {
         assertEquals(16, ModSettings.maxUsers());
         assertEquals(32, ModSettings.maxUsernameLength());
         assertEquals(5D, ModSettings.computerTimeout());
+        assertEquals(4096, ModSettings.eepromSize());
+        assertEquals(256, ModSettings.eepromDataSize());
         assertEquals(false, ModSettings.allowBytecode());
         assertEquals(false, ModSettings.allowGc());
         assertEquals(5, ModSettings.initialNetworkPacketTtl());
@@ -87,6 +89,8 @@ final class ModSettingsTest {
         assertEquals(List.of("computer", "maxUsers"), ModSettings.MAX_USERS.getPath());
         assertEquals(List.of("computer", "maxUsernameLength"), ModSettings.MAX_USERNAME_LENGTH.getPath());
         assertEquals(List.of("computer", "timeout"), ModSettings.COMPUTER_TIMEOUT.getPath());
+        assertEquals(List.of("computer", "eepromSize"), ModSettings.EEPROM_SIZE.getPath());
+        assertEquals(List.of("computer", "eepromDataSize"), ModSettings.EEPROM_DATA_SIZE.getPath());
         assertEquals(List.of("computer", "lua", "allowBytecode"), ModSettings.ALLOW_BYTECODE.getPath());
         assertEquals(List.of("computer", "lua", "allowGC"), ModSettings.ALLOW_GC.getPath());
         assertEquals(List.of("misc", "initialNetworkPacketTTL"), ModSettings.INITIAL_NETWORK_PACKET_TTL.getPath());

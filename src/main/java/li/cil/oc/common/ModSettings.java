@@ -21,6 +21,8 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MAX_USERS;
     public static final ModConfigSpec.IntValue MAX_USERNAME_LENGTH;
     public static final ModConfigSpec.DoubleValue COMPUTER_TIMEOUT;
+    public static final ModConfigSpec.IntValue EEPROM_SIZE;
+    public static final ModConfigSpec.IntValue EEPROM_DATA_SIZE;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
@@ -113,6 +115,12 @@ public final class ModSettings {
         COMPUTER_TIMEOUT = builder
             .comment("Seconds programs may run without yielding before they are stopped. OpenComputers upstream default is 5.0.")
             .defineInRange("timeout", 5D, 0D, Double.MAX_VALUE);
+        EEPROM_SIZE = builder
+            .comment("EEPROM code storage size in bytes. OpenComputers upstream default is 4096.")
+            .defineInRange("eepromSize", 4096, 0, Integer.MAX_VALUE);
+        EEPROM_DATA_SIZE = builder
+            .comment("EEPROM data storage size in bytes. OpenComputers upstream default is 256.")
+            .defineInRange("eepromDataSize", 256, 0, Integer.MAX_VALUE);
         builder.push("lua");
         ALLOW_BYTECODE = builder
             .comment("Allow loading Lua bytecode directly. OpenComputers upstream default is false.")
@@ -240,6 +248,14 @@ public final class ModSettings {
 
     public static double computerTimeout() {
         return doubleValue(COMPUTER_TIMEOUT);
+    }
+
+    public static int eepromSize() {
+        return intValue(EEPROM_SIZE);
+    }
+
+    public static int eepromDataSize() {
+        return intValue(EEPROM_DATA_SIZE);
     }
 
     public static boolean allowBytecode() {
