@@ -6,16 +6,17 @@ import li.cil.oc.api.nanomachines.Controller;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 public final class NanomachinesRegistry implements NanomachinesAPI {
     private static final String TAG_HAS_NANOMACHINES = "oc:hasNanomachines";
     static final String TAG_CONTROLLER = "oc:nanomachines";
 
-    private final List<BehaviorProvider> providers = new ArrayList<>();
+    private final Set<BehaviorProvider> providers = new LinkedHashSet<>();
     private final Map<Player, SimpleNanomachineController> controllers = new WeakHashMap<>();
 
     @Override

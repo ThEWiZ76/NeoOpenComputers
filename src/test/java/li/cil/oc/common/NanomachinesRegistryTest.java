@@ -36,6 +36,7 @@ final class NanomachinesRegistryTest {
 
         registry.addProvider(first);
         registry.addProvider(second);
+        registry.addProvider(first);
 
         assertIterableEquals(List.of(first, second), registry.getProviders());
     }
