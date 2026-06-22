@@ -17,6 +17,25 @@ public final class ModSettings {
     private static final List<Double> DEFAULT_HOLOGRAM_MAX_TRANSLATION = List.of(1D, 2D);
     private static final List<Double> DEFAULT_NANOMACHINE_HUD_POS = List.of(-1D, -1D);
     private static final List<String> DEFAULT_FILTERING_RULES = List.of("removeme", "deny private", "deny bogon", "allow default");
+    private static final List<Object> DEFAULT_NANOMACHINES_POTION_WHITELIST = List.of(
+        "speed",
+        "haste",
+        "strength",
+        "jump_boost",
+        "resistance",
+        "fire_resistance",
+        "water_breathing",
+        "night_vision",
+        "absorption",
+        "blindness",
+        "nausea",
+        "mining_fatigue",
+        "instant_damage",
+        "hunger",
+        "slowness",
+        "poison",
+        "weakness",
+        "wither");
 
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
@@ -84,6 +103,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue NANOMACHINES_HUNGRY_DAMAGE;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_HUNGRY_ENERGY_RESTORED;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_MAGNET_RANGE;
+    public static final ModConfigSpec.ConfigValue<List<? extends Object>> NANOMACHINES_POTION_WHITELIST;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -310,6 +330,9 @@ public final class ModSettings {
         NANOMACHINES_MAGNET_RANGE = builder
             .comment("Range of the item magnet behavior added for each active input. OpenComputers upstream default is 8.")
             .defineInRange("magnetRange", 8D, 0D, Double.MAX_VALUE);
+        NANOMACHINES_POTION_WHITELIST = builder
+            .comment("Allowed nanomachine potion effect IDs. Entries may be strings or numeric registry IDs, matching upstream.")
+            .defineList("potionWhitelist", DEFAULT_NANOMACHINES_POTION_WHITELIST, value -> value instanceof String || value instanceof Number);
         builder.pop();
 
         SPEC = builder.build();
@@ -388,6 +411,10 @@ public final class ModSettings {
 
     public static double nanomachinesMagnetRange() {
         return Math.max(0D, doubleValue(NANOMACHINES_MAGNET_RANGE));
+    }
+
+    public static List<Object> nanomachinesPotionWhitelist() {
+        return objectListValue(NANOMACHINES_POTION_WHITELIST);
     }
 
     public static boolean inputUsername() {
@@ -712,6 +739,14 @@ public final class ModSettings {
     }
 
     private static List<String> stringListValue(final ModConfigSpec.ConfigValue<List<? extends String>> value) {
+        try {
+            return List.copyOf(value.get());
+        } catch (final IllegalStateException ignored) {
+            return List.copyOf(value.getDefault());
+        }
+    }
+
+    private static List<Object> objectListValue(final ModConfigSpec.ConfigValue<List<? extends Object>> value) {
         try {
             return List.copyOf(value.get());
         } catch (final IllegalStateException ignored) {

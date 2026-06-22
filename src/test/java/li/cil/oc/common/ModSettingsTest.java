@@ -119,6 +119,25 @@ final class ModSettingsTest {
         assertEquals(5D, ModSettings.nanomachinesHungryDamage());
         assertEquals(50D, ModSettings.nanomachinesHungryEnergyRestored());
         assertEquals(8D, ModSettings.nanomachinesMagnetRange());
+        assertEquals(List.of(
+            "speed",
+            "haste",
+            "strength",
+            "jump_boost",
+            "resistance",
+            "fire_resistance",
+            "water_breathing",
+            "night_vision",
+            "absorption",
+            "blindness",
+            "nausea",
+            "mining_fatigue",
+            "instant_damage",
+            "hunger",
+            "slowness",
+            "poison",
+            "weakness",
+            "wither"), ModSettings.nanomachinesPotionWhitelist());
     }
 
     @Test
@@ -188,6 +207,7 @@ final class ModSettingsTest {
         assertEquals(List.of("nanomachines", "hungryDamage"), ModSettings.NANOMACHINES_HUNGRY_DAMAGE.getPath());
         assertEquals(List.of("nanomachines", "hungryEnergyRestored"), ModSettings.NANOMACHINES_HUNGRY_ENERGY_RESTORED.getPath());
         assertEquals(List.of("nanomachines", "magnetRange"), ModSettings.NANOMACHINES_MAGNET_RANGE.getPath());
+        assertEquals(List.of("nanomachines", "potionWhitelist"), ModSettings.NANOMACHINES_POTION_WHITELIST.getPath());
     }
 
     @Test

@@ -11,6 +11,7 @@ import li.cil.oc.common.item.NanomachineItemData;
 import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineMagnetProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineParticleProvider;
+import li.cil.oc.common.nanomachines.provider.NanomachinePotionProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
@@ -43,6 +44,7 @@ final class NanomachinesRegistryTest {
 
         assertTrue(API.nanomachines instanceof NanomachinesRegistry);
         assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineParticleProvider.class));
+        assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachinePotionProvider.class));
         assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineHungryProvider.class));
         assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineMagnetProvider.class));
     }

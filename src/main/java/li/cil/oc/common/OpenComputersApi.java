@@ -5,6 +5,7 @@ import li.cil.oc.common.machine.LuaArchitecture;
 import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineMagnetProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineParticleProvider;
+import li.cil.oc.common.nanomachines.provider.NanomachinePotionProvider;
 
 public final class OpenComputersApi {
     public static void initialize() {
@@ -24,6 +25,7 @@ public final class OpenComputersApi {
         if (API.nanomachines == null) {
             final NanomachinesRegistry registry = new NanomachinesRegistry();
             registry.addProvider(new NanomachineParticleProvider());
+            registry.addProvider(new NanomachinePotionProvider());
             registry.addProvider(new NanomachineHungryProvider());
             registry.addProvider(new NanomachineMagnetProvider());
             API.nanomachines = registry;
