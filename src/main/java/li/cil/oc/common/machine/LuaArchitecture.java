@@ -325,6 +325,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static void installCoroutineCompatibility(final Globals globals) {
         final LuaValue coroutine = globals.get("coroutine");
         final LuaValue originalResume = coroutine.get("resume");
+        final LuaValue originalYield = coroutine.get("yield");
         coroutine.set("resume", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
@@ -332,7 +333,24 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (thread.type() != LuaValue.TTHREAD) {
                     throw new LuaError("bad argument #1 (thread expected, got " + luaTypeName(thread) + ")");
                 }
-                return originalResume.invoke(args);
+                final LuaThread coroutineThread = thread.checkthread();
+                Varargs resumeArgs = args;
+                while (true) {
+                    final Varargs result = originalResume.invoke(resumeArgs);
+                    if (!result.arg1().toboolean() || coroutineThread.state.status == LuaThread.STATUS_DEAD) {
+                        return result;
+                    }
+                    if (result.arg(2).isnil()) {
+                        return LuaValue.varargsOf(LuaValue.TRUE, result.subargs(3));
+                    }
+                    resumeArgs = LuaValue.varargsOf(thread, globals.yield(result.arg(2)));
+                }
+            }
+        });
+        coroutine.set("yield", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return originalYield.invoke(LuaValue.varargsOf(LuaValue.NIL, args));
             }
         });
     }
