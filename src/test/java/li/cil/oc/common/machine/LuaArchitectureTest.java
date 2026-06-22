@@ -340,6 +340,16 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesOsDifftimeLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("difference = os.difftime(120, 45)");
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(75D, architecture.globalDouble("difference"), 0.000_001D);
+    }
+
+    @Test
     void readsBootSourceFromEepromDataTag() {
         CompoundTag data = new CompoundTag();
         data.putByteArray(ItemRegistry.EEPROM_CODE_TAG, "counter = 7".getBytes(StandardCharsets.UTF_8));

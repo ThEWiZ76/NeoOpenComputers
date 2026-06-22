@@ -1027,6 +1027,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.valueOf(GameTimeFormatter.format(format, dateTime));
             }
         });
+        os.set("difftime", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return LuaValue.valueOf(args.checkdouble(1) - args.checkdouble(2));
+            }
+        });
         globals.set("os", os);
     }
 
