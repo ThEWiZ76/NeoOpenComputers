@@ -135,6 +135,7 @@ final class LuaArchitectureTest {
             bitValue = bit32.band(7, 3)
             loaded = load('return 4')()
             stringMetatableType = type(getmetatable('text'))
+            versionValue = _VERSION
             """);
 
         assertTrue(architecture.initialize());
@@ -146,6 +147,7 @@ final class LuaArchitectureTest {
         assertEquals(3, architecture.globalInteger("bitValue"));
         assertEquals(4, architecture.globalInteger("loaded"));
         assertEquals("nil", architecture.globalString("stringMetatableType"));
+        assertEquals("Luaj", architecture.globalString("versionValue"));
     }
 
     @Test
