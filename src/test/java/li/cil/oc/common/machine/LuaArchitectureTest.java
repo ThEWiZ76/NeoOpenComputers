@@ -477,6 +477,20 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void osTimeHonorsDaylightSavingFlagLikeLuaJ() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            standard = os.time({year = 1970, month = 1, day = 1, hour = 0, min = 0, sec = 0, isdst = false})
+            daylight = os.time({year = 1970, month = 1, day = 1, hour = 0, min = 0, sec = 0, isdst = true})
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(0D, architecture.globalDouble("standard"), 0.000_001D);
+        assertEquals(-3600D, architecture.globalDouble("daylight"), 0.000_001D);
+    }
+
+    @Test
     void validatesOsDateTimeArgumentLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("""
             valid, message = pcall(function()
