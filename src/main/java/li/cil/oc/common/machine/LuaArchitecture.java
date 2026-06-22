@@ -1022,6 +1022,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     table.set("sec", dateTime.second());
                     table.set("wday", dateTime.weekDay());
                     table.set("yday", dateTime.yearDay());
+                    table.set("isdst", LuaValue.FALSE);
                     return table;
                 }
                 return LuaValue.valueOf(GameTimeFormatter.format(format, dateTime));

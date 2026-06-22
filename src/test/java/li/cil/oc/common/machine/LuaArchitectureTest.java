@@ -324,6 +324,8 @@ final class LuaArchitectureTest {
             date = os.date('*t', 86400)
             day = date.day
             hour = date.hour
+            isdstType = type(date.isdst)
+            isdst = date.isdst
             fromTable = os.time({year = 1970, month = 1, day = 2, hour = 0, min = 0, sec = 0})
             """);
         architecture.bind(machineWithTimes(4000L, 1.25D));
@@ -336,6 +338,8 @@ final class LuaArchitectureTest {
         assertEquals("1970-01-02 00:00:00", architecture.globalString("formatted"));
         assertEquals(2, architecture.globalInteger("day"));
         assertEquals(0, architecture.globalInteger("hour"));
+        assertEquals("boolean", architecture.globalString("isdstType"));
+        assertEquals(false, architecture.globalBoolean("isdst"));
         assertEquals(86_400D, architecture.globalDouble("fromTable"), 0.000_001D);
     }
 
