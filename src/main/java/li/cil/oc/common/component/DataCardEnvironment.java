@@ -174,7 +174,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         if (length <= 0 || length > MAX_RANDOM_SIZE) {
             throw new IllegalArgumentException("length must be in range [1..1024]");
         }
-        consumeEnergy(context, COMPLEX_COST + COMPLEX_BYTE_COST * length);
+        consumeEnergy(COMPLEX_COST + COMPLEX_BYTE_COST * length);
         final byte[] data = new byte[length];
         RANDOM.nextBytes(data);
         return new Object[]{data};
@@ -183,7 +183,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     @Callback(direct = true, doc = "function([bits:number]):userdata, userdata -- Generates an EC public/private key pair.")
     public Object[] generateKeyPair(final Context context, final Arguments args) throws Exception {
         requireTier(2);
-        consumeEnergy(context, ASYMMETRIC_COST);
+        consumeEnergy(ASYMMETRIC_COST);
         final int bits = args.optInteger(0, 384);
         if (bits != 256 && bits != 384) {
             throw new IllegalArgumentException("invalid key length, must be 256 or 384");
@@ -207,7 +207,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     @Callback(direct = true, doc = "function(private:userdata, public:userdata):string -- Generates an ECDH shared secret.")
     public Object[] ecdh(final Context context, final Arguments args) throws Exception {
         requireTier(2);
-        consumeEnergy(context, ASYMMETRIC_COST);
+        consumeEnergy(ASYMMETRIC_COST);
         final PrivateKey privateKey = checkKey(args, 0, false).privateKey();
         final PublicKey publicKey = checkKey(args, 1, true).publicKey();
         try {
@@ -281,7 +281,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
 
     private byte[] costedData(final Context context, final Arguments args, final double baseCost, final double byteCost) throws Exception {
         final byte[] data = checkData(args, 0);
-        consumeEnergy(context, baseCost + data.length * byteCost);
+        consumeEnergy(baseCost + data.length * byteCost);
         if (context != null && data.length > SOFT_LIMIT) {
             context.pause(SOFT_LIMIT_PAUSE);
         }
@@ -296,8 +296,8 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         return data;
     }
 
-    private static void consumeEnergy(final Context context, final double cost) throws Exception {
-        if (context != null && context.node() instanceof Connector connector && !connector.tryChangeBuffer(-cost)) {
+    private void consumeEnergy(final double cost) throws Exception {
+        if (node() instanceof Connector connector && !connector.tryChangeBuffer(-cost)) {
             throw new Exception("not enough energy");
         }
     }

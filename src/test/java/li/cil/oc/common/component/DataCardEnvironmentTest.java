@@ -1,10 +1,14 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ComponentConnector;
+import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.world.item.ItemStack;
@@ -62,6 +66,7 @@ final class DataCardEnvironmentTest {
     void tierOneEncodesHashesAndCompressesData() throws Exception {
         OpenComputersApi.initialize();
         DataCardEnvironment card = new DataCardEnvironment(0);
+        charge(card, 1000D);
         byte[] data = "hello world".getBytes(StandardCharsets.UTF_8);
 
         assertArrayEquals(Base64.getEncoder().encode(data), (byte[]) card.encode64(null, new TestArguments(data))[0]);
@@ -79,7 +84,12 @@ final class DataCardEnvironmentTest {
         DataCardEnvironment card = new DataCardEnvironment(0);
         ComponentConnector connector = assertInstanceOf(ComponentConnector.class, card.node());
         connector.setLocalBufferSize(100);
-        RecordingContext context = new RecordingContext(card.node());
+        TestEnvironment machineEnvironment = new TestEnvironment();
+        Node machineNode = Network.newNode(machineEnvironment, li.cil.oc.api.network.Visibility.None).withConnector(100D).create();
+        machineEnvironment.node = machineNode;
+        Connector machineConnector = assertInstanceOf(Connector.class, machineNode);
+        machineConnector.changeBuffer(100D);
+        RecordingContext context = new RecordingContext(machineNode);
 
         Exception error = assertThrows(Exception.class, () -> card.encode64(context, new TestArguments("hello")));
         assertEquals("not enough energy", error.getMessage());
@@ -92,6 +102,7 @@ final class DataCardEnvironmentTest {
         assertArrayEquals(Base64.getEncoder().encode(large), (byte[]) card.encode64(context, new TestArguments(large))[0]);
         assertEquals(1.0D, context.pauseSeconds, 0.000_001D);
         assertEquals(8.835D, connector.localBuffer(), 0.000_001D);
+        assertEquals(100D, machineConnector.localBuffer(), 0.000_001D);
         assertArrayEquals(new Object[]{1048576}, card.getLimit(null, new TestArguments()));
     }
 
@@ -99,6 +110,7 @@ final class DataCardEnvironmentTest {
     void tierTwoAddsHmacAesAndRandomData() throws Exception {
         OpenComputersApi.initialize();
         DataCardEnvironment card = new DataCardEnvironment(1);
+        charge(card, 1000D);
         byte[] data = "hello world".getBytes(StandardCharsets.UTF_8);
         byte[] key = "0123456789abcdef".getBytes(StandardCharsets.UTF_8);
         byte[] iv = "abcdef0123456789".getBytes(StandardCharsets.UTF_8);
@@ -115,6 +127,7 @@ final class DataCardEnvironmentTest {
     void tierTwoRejectsInvalidAesKeyAndIvLengths() {
         OpenComputersApi.initialize();
         DataCardEnvironment card = new DataCardEnvironment(1);
+        charge(card, 100D);
         byte[] data = "hello world".getBytes(StandardCharsets.UTF_8);
         byte[] key = "too short".getBytes(StandardCharsets.UTF_8);
         byte[] iv = "abcdef0123456789".getBytes(StandardCharsets.UTF_8);
@@ -141,6 +154,8 @@ final class DataCardEnvironmentTest {
         OpenComputersApi.initialize();
         DataCardEnvironment alice = new DataCardEnvironment(2);
         DataCardEnvironment bob = new DataCardEnvironment(2);
+        charge(alice, 1000D);
+        charge(bob, 1000D);
         Object[] aliceKeys = alice.generateKeyPair(null, new TestArguments(256));
         Object[] bobKeys = bob.generateKeyPair(null, new TestArguments(256));
         DataCardEnvironment.ECKey alicePublic = assertInstanceOf(DataCardEnvironment.ECKey.class, aliceKeys[0]);
@@ -197,6 +212,12 @@ final class DataCardEnvironmentTest {
         return cipher.doFinal(data);
     }
 
+    private static void charge(final DataCardEnvironment card, final double amount) {
+        ComponentConnector connector = assertInstanceOf(ComponentConnector.class, card.node());
+        connector.setLocalBufferSize(amount);
+        connector.changeBuffer(amount);
+    }
+
     private static final class RecordingContext implements Context {
         private final Node node;
         private double pauseSeconds = -1D;
@@ -214,6 +235,15 @@ final class DataCardEnvironmentTest {
         @Override public boolean stop() { return true; }
         @Override public void consumeCallBudget(final double callCost) { }
         @Override public boolean signal(final String name, final Object... args) { return true; }
+    }
+
+    private static final class TestEnvironment implements Environment {
+        private Node node;
+
+        @Override public Node node() { return node; }
+        @Override public void onConnect(final Node node) { }
+        @Override public void onDisconnect(final Node node) { }
+        @Override public void onMessage(final Message message) { }
     }
 
     private record TestArguments(Object... values) implements Arguments {
