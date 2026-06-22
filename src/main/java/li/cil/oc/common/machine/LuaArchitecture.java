@@ -988,7 +988,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("slot", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String address = args.checkjstring(1);
+                final String address = checkStringArgument(args, 1);
                 if (machine == null) {
                     return LuaValue.NIL;
                 }
@@ -1039,7 +1039,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("methods", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String address = args.checkjstring(1);
+                final String address = checkStringArgument(args, 1);
                 final LuaTable methods = new LuaTable();
                 if (machine != null) {
                     if (!hasComponent(address)) {
@@ -1058,7 +1058,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("fields", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String address = args.checkjstring(1);
+                final String address = checkStringArgument(args, 1);
                 final LuaTable fields = new LuaTable();
                 if (machine != null) {
                     if (!hasComponent(address)) {
@@ -1081,14 +1081,14 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("doc", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String address = args.checkjstring(1);
+                final String address = checkStringArgument(args, 1);
                 if (machine == null) {
                     return LuaValue.NIL;
                 }
                 if (!hasComponent(address)) {
                     return noSuchComponent();
                 }
-                final String method = args.checkjstring(2);
+                final String method = checkStringArgument(args, 2);
                 final Callback callback = machine.methods(address).get(method);
                 if (callback == null) {
                     return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such method"));
@@ -1102,8 +1102,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("invoke", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String address = args.checkjstring(1);
-                final String method = args.checkjstring(2);
+                final String address = checkStringArgument(args, 1);
+                final String method = checkStringArgument(args, 2);
                 if (machine == null) {
                     return LuaValue.NIL;
                 }
@@ -1120,7 +1120,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("proxy", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String address = args.checkjstring(1);
+                final String address = checkStringArgument(args, 1);
                 if (machine == null) {
                     return LuaValue.NIL;
                 }

@@ -1508,26 +1508,50 @@ final class LuaArchitectureTest {
             slotValid, slotMessage = pcall(function()
               component.slot()
             end)
+            slotNumberValid, slotNumberMessage = pcall(function()
+              component.slot(1)
+            end)
             methodsValid, methodsMessage = pcall(function()
               component.methods()
+            end)
+            methodsNumberValid, methodsNumberMessage = pcall(function()
+              component.methods(1)
             end)
             fieldsValid, fieldsMessage = pcall(function()
               component.fields()
             end)
+            fieldsNumberValid, fieldsNumberMessage = pcall(function()
+              component.fields(1)
+            end)
             docAddressValid, docAddressMessage = pcall(function()
               component.doc()
+            end)
+            docAddressNumberValid, docAddressNumberMessage = pcall(function()
+              component.doc(1, 'label')
             end)
             docMethodValid, docMethodMessage = pcall(function()
               component.doc('fs-address')
             end)
+            docMethodNumberValid, docMethodNumberMessage = pcall(function()
+              component.doc('fs-address', 1)
+            end)
             invokeAddressValid, invokeAddressMessage = pcall(function()
               component.invoke()
+            end)
+            invokeAddressNumberValid, invokeAddressNumberMessage = pcall(function()
+              component.invoke(1, 'label')
             end)
             invokeMethodValid, invokeMethodMessage = pcall(function()
               component.invoke('fs-address')
             end)
+            invokeMethodNumberValid, invokeMethodNumberMessage = pcall(function()
+              component.invoke('fs-address', 1)
+            end)
             proxyValid, proxyMessage = pcall(function()
               component.proxy()
+            end)
+            proxyNumberValid, proxyNumberMessage = pcall(function()
+              component.proxy(1)
             end)
             """);
         architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
@@ -1555,20 +1579,36 @@ final class LuaArchitectureTest {
         assertTrue(architecture.globalString("setPrimaryAddressMessage").contains("string or nil expected"));
         assertEquals(false, architecture.globalBoolean("slotValid"));
         assertTrue(architecture.globalString("slotMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("slotNumberValid"));
+        assertTrue(architecture.globalString("slotNumberMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("methodsValid"));
         assertTrue(architecture.globalString("methodsMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("methodsNumberValid"));
+        assertTrue(architecture.globalString("methodsNumberMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("fieldsValid"));
         assertTrue(architecture.globalString("fieldsMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("fieldsNumberValid"));
+        assertTrue(architecture.globalString("fieldsNumberMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("docAddressValid"));
         assertTrue(architecture.globalString("docAddressMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("docAddressNumberValid"));
+        assertTrue(architecture.globalString("docAddressNumberMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("docMethodValid"));
         assertTrue(architecture.globalString("docMethodMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("docMethodNumberValid"));
+        assertTrue(architecture.globalString("docMethodNumberMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("invokeAddressValid"));
         assertTrue(architecture.globalString("invokeAddressMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("invokeAddressNumberValid"));
+        assertTrue(architecture.globalString("invokeAddressNumberMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("invokeMethodValid"));
         assertTrue(architecture.globalString("invokeMethodMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("invokeMethodNumberValid"));
+        assertTrue(architecture.globalString("invokeMethodNumberMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("proxyValid"));
         assertTrue(architecture.globalString("proxyMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("proxyNumberValid"));
+        assertTrue(architecture.globalString("proxyNumberMessage").contains("string expected"));
     }
 
     @Test
