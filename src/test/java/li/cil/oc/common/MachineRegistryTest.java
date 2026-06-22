@@ -165,6 +165,19 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void machineInvokeRejectsMissingComponentsLikeUpstream() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        Network.joinNewNetwork(machine.node());
+
+        IllegalArgumentException error = assertThrows(
+            IllegalArgumentException.class,
+            () -> machine.invoke("missing-address", "isReadOnly", new Object[0]));
+
+        assertEquals("no such component", error.getMessage());
+    }
+
+    @Test
     void componentCountWeightsFilesystemsLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);

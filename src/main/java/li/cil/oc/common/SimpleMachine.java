@@ -483,7 +483,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (node() == null || node().network() == null) {
             throw new IllegalStateException("machine is not in a network");
         }
-        throw new NoSuchMethodException(method);
+        throw new IllegalArgumentException("no such component");
     }
 
     @Override
