@@ -1,8 +1,10 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -99,6 +101,9 @@ final class ModSettingsTest {
         assertEquals(8, ModSettings.hddPlatterCount(2));
         assertEquals(2, ModSettings.hddPlatterCount(-1));
         assertEquals(8, ModSettings.hddPlatterCount(99));
+        assertEquals(100_000D, ModSettings.nanomachinesBuffer());
+        assertEquals(2, ModSettings.nanomachinesSafeInputsActive());
+        assertEquals(4, ModSettings.nanomachinesMaxInputsActive());
     }
 
     @Test
@@ -152,5 +157,39 @@ final class ModSettingsTest {
         assertEquals(List.of("hologram", "maxScale"), ModSettings.HOLOGRAM_MAX_SCALE.getPath());
         assertEquals(List.of("hologram", "maxTranslation"), ModSettings.HOLOGRAM_MAX_TRANSLATION.getPath());
         assertEquals(List.of("hologram", "setRawDelay"), ModSettings.HOLOGRAM_SET_RAW_DELAY.getPath());
+        assertEquals(List.of("power", "buffer", "nanomachines"), ModSettings.NANOMACHINES_BUFFER.getPath());
+        assertEquals(List.of("nanomachines", "safeInputsActive"), ModSettings.NANOMACHINES_SAFE_INPUTS_ACTIVE.getPath());
+        assertEquals(List.of("nanomachines", "maxInputsActive"), ModSettings.NANOMACHINES_MAX_INPUTS_ACTIVE.getPath());
+    }
+
+    @Test
+    void nanomachinesControllerReadsConfiguredLimitsAndBuffer() throws Exception {
+        withCachedConfig(ModSettings.NANOMACHINES_BUFFER, 42D, () ->
+            withCachedConfig(ModSettings.NANOMACHINES_SAFE_INPUTS_ACTIVE, 1, () ->
+                withCachedConfig(ModSettings.NANOMACHINES_MAX_INPUTS_ACTIVE, 3, () -> {
+                    final SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+
+                    assertEquals(42D, controller.getLocalBufferSize());
+                    assertEquals(10.5D, controller.getLocalBuffer());
+                    assertEquals(1, controller.getSafeActiveInputs());
+                    assertEquals(3, controller.getMaxActiveInputs());
+                })));
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 }

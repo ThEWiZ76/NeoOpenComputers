@@ -67,6 +67,9 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
+    public static final ModConfigSpec.IntValue NANOMACHINES_SAFE_INPUTS_ACTIVE;
+    public static final ModConfigSpec.IntValue NANOMACHINES_MAX_INPUTS_ACTIVE;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -229,6 +232,11 @@ public final class ModSettings {
         MFU_TICK_FREQUENCY = builder
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
+        builder.push("buffer");
+        NANOMACHINES_BUFFER = builder
+            .comment("Nanomachines local energy buffer. OpenComputers upstream default is 100000.")
+            .defineInRange("nanomachines", 100_000D, 0D, Double.MAX_VALUE);
+        builder.pop();
         builder.push("cost");
         WIRELESS_COST_PER_RANGE = builder
             .comment("Wireless card energy cost per block of signal strength for tier one and tier two. OpenComputers upstream default is [0.05, 0.05].")
@@ -237,6 +245,15 @@ public final class ModSettings {
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
         builder.pop();
+        builder.pop();
+
+        builder.push("nanomachines");
+        NANOMACHINES_SAFE_INPUTS_ACTIVE = builder
+            .comment("Number of active nanomachine inputs considered safe. OpenComputers upstream default is 2.")
+            .defineInRange("safeInputsActive", 2, 0, Integer.MAX_VALUE);
+        NANOMACHINES_MAX_INPUTS_ACTIVE = builder
+            .comment("Maximum number of simultaneously active nanomachine inputs. OpenComputers upstream default is 4.")
+            .defineInRange("maxInputsActive", 4, 0, Integer.MAX_VALUE);
         builder.pop();
 
         SPEC = builder.build();
@@ -259,6 +276,18 @@ public final class ModSettings {
 
     public static double solarGeneratorEfficiency() {
         return doubleValue(SOLAR_GENERATOR_EFFICIENCY);
+    }
+
+    public static double nanomachinesBuffer() {
+        return Math.max(0D, doubleValue(NANOMACHINES_BUFFER));
+    }
+
+    public static int nanomachinesSafeInputsActive() {
+        return Math.max(0, intValue(NANOMACHINES_SAFE_INPUTS_ACTIVE));
+    }
+
+    public static int nanomachinesMaxInputsActive() {
+        return Math.max(0, intValue(NANOMACHINES_MAX_INPUTS_ACTIVE));
     }
 
     public static boolean inputUsername() {

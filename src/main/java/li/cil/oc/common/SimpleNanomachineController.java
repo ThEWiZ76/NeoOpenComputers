@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class SimpleNanomachineController implements Controller {
-    private static final double BUFFER_SIZE = 100_000D;
-    private static final int SAFE_ACTIVE_INPUTS = 2;
-    private static final int MAX_ACTIVE_INPUTS = 4;
     private static final String TAG_ENERGY = "energy";
     private static final String TAG_ACTIVE_INPUTS = "activeInputs";
 
@@ -22,11 +19,12 @@ final class SimpleNanomachineController implements Controller {
     private List<Behavior> activeBehaviors = List.of();
     private boolean[] inputs = new boolean[0];
     private boolean activeBehaviorsDirty;
-    private double buffer = BUFFER_SIZE * 0.25D;
+    private double buffer;
 
     SimpleNanomachineController(final Player player, final NanomachinesRegistry registry) {
         this.player = player;
         this.registry = registry;
+        buffer = ModSettings.nanomachinesBuffer() * 0.25D;
         reconfigure();
     }
 
@@ -55,12 +53,12 @@ final class SimpleNanomachineController implements Controller {
 
     @Override
     public int getSafeActiveInputs() {
-        return SAFE_ACTIVE_INPUTS;
+        return ModSettings.nanomachinesSafeInputsActive();
     }
 
     @Override
     public int getMaxActiveInputs() {
-        return MAX_ACTIVE_INPUTS;
+        return ModSettings.nanomachinesMaxInputsActive();
     }
 
     @Override
@@ -70,7 +68,7 @@ final class SimpleNanomachineController implements Controller {
 
     @Override
     public boolean setInput(final int index, final boolean value) {
-        if (value && !inputs[index] && activeInputCount() >= MAX_ACTIVE_INPUTS) {
+        if (value && !inputs[index] && activeInputCount() >= getMaxActiveInputs()) {
             return false;
         }
         if (inputs[index] != value) {
@@ -99,13 +97,13 @@ final class SimpleNanomachineController implements Controller {
 
     @Override
     public double getLocalBufferSize() {
-        return BUFFER_SIZE;
+        return ModSettings.nanomachinesBuffer();
     }
 
     @Override
     public double changeBuffer(final double delta) {
         final double requested = buffer + delta;
-        buffer = Math.clamp(requested, 0D, BUFFER_SIZE);
+        buffer = Math.clamp(requested, 0D, getLocalBufferSize());
         saveState();
         return requested - buffer;
     }
@@ -121,7 +119,7 @@ final class SimpleNanomachineController implements Controller {
 
     void load(final CompoundTag tag) {
         if (tag.contains(TAG_ENERGY)) {
-            buffer = Math.clamp(tag.getDouble(TAG_ENERGY), 0D, BUFFER_SIZE);
+            buffer = Math.clamp(tag.getDouble(TAG_ENERGY), 0D, getLocalBufferSize());
         }
         final int[] activeInputs = tag.getIntArray(TAG_ACTIVE_INPUTS);
         for (int i = 0; i < inputs.length; i++) {
