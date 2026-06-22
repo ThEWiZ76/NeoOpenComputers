@@ -23,6 +23,12 @@ final class ModSettingsTest {
         assertEquals(5, ModSettings.initialNetworkPacketTtl());
         assertEquals(8192, ModSettings.maxNetworkPacketSize());
         assertEquals(8, ModSettings.maxNetworkPacketParts());
+        assertEquals(5, ModSettings.defaultRelayDelay());
+        assertEquals(1.5D, ModSettings.relayDelayUpgrade());
+        assertEquals(20, ModSettings.defaultMaxQueueSize());
+        assertEquals(10, ModSettings.queueSizeUpgrade());
+        assertEquals(1, ModSettings.defaultRelayAmount());
+        assertEquals(1, ModSettings.relayAmountUpgrade());
         assertEquals(List.of(16, 1, 16), ModSettings.maxOpenPorts());
         assertEquals(16, ModSettings.maxOpenPorts(0));
         assertEquals(1, ModSettings.maxOpenPorts(1));
@@ -66,6 +72,12 @@ final class ModSettingsTest {
         assertEquals(List.of("misc", "initialNetworkPacketTTL"), ModSettings.INITIAL_NETWORK_PACKET_TTL.getPath());
         assertEquals(List.of("misc", "maxNetworkPacketSize"), ModSettings.MAX_NETWORK_PACKET_SIZE.getPath());
         assertEquals(List.of("misc", "maxNetworkPacketParts"), ModSettings.MAX_NETWORK_PACKET_PARTS.getPath());
+        assertEquals(List.of("misc", "defaultRelayDelay"), ModSettings.DEFAULT_RELAY_DELAY.getPath());
+        assertEquals(List.of("misc", "relayDelayUpgrade"), ModSettings.RELAY_DELAY_UPGRADE.getPath());
+        assertEquals(List.of("misc", "defaultMaxQueueSize"), ModSettings.DEFAULT_MAX_QUEUE_SIZE.getPath());
+        assertEquals(List.of("misc", "queueSizeUpgrade"), ModSettings.QUEUE_SIZE_UPGRADE.getPath());
+        assertEquals(List.of("misc", "defaultRelayAmount"), ModSettings.DEFAULT_RELAY_AMOUNT.getPath());
+        assertEquals(List.of("misc", "relayAmountUpgrade"), ModSettings.RELAY_AMOUNT_UPGRADE.getPath());
         assertEquals(List.of("misc", "maxOpenPorts"), ModSettings.MAX_OPEN_PORTS.getPath());
         assertEquals(List.of("misc", "maxWirelessRange"), ModSettings.MAX_WIRELESS_RANGE.getPath());
         assertEquals(List.of("power", "cost", "wirelessCostPerRange"), ModSettings.WIRELESS_COST_PER_RANGE.getPath());

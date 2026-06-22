@@ -18,6 +18,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.WirelessEndpoint;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.LinkedNetwork;
 import li.cil.oc.common.item.LinkedCardItem;
@@ -65,9 +66,6 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private static final String TAG_SIDE = "side";
     private static final String TAG_PACKET = "packet";
     private static final int MAX_TIER = 2;
-    private static final double[] WIRELESS_RANGE_BY_TIER = {16D, 400D};
-    private static final double WIRELESS_COST_PER_RANGE = 0.05D;
-    private static final double LINKED_CARD_BASE_COST = WIRELESS_RANGE_BY_TIER[1] * WIRELESS_COST_PER_RANGE * 5D;
 
     private final Plug[] plugs = new Plug[Direction.values().length];
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
@@ -77,6 +75,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private int relayAmount = DEFAULT_RELAY_AMOUNT;
     private int relayCooldown = -1;
     private boolean wirelessEnabled;
+    private int wirelessTier = -1;
     private double wirelessMaxRange;
     private double wirelessStrength;
     private boolean linkedEnabled;
@@ -89,6 +88,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         for (final Direction direction : Direction.values()) {
             plugs[direction.ordinal()] = new Plug(direction);
         }
+        updateLimits();
     }
 
     public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final RelayBlockEntity relay) {
@@ -410,7 +410,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         if (!wirelessEnabled || wirelessStrength <= 0D || queued.sourceSide() == null && !isRepeater) {
             return;
         }
-        final double cost = wirelessStrength * WIRELESS_COST_PER_RANGE;
+        final double cost = wirelessStrength * wirelessCostPerRange();
         if (cost <= 0D || trySpendWirelessEnergy(queued.sourceSide(), cost)) {
             Network.sendWirelessPacket(this, wirelessStrength, queued.packet());
         }
@@ -432,7 +432,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         if (!linkedEnabled || queued.sourceSide() == null) {
             return;
         }
-        final double cost = queued.packet().size() / 32.0D + LINKED_CARD_BASE_COST;
+        final double cost = queued.packet().size() / 32.0D + linkedCardBaseCost();
         if (trySpendWirelessEnergy(queued.sourceSide(), cost)) {
             LinkedNetwork.send(linkedChannel, this, queued.packet());
         }
@@ -468,10 +468,11 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         final boolean wasLinkedEnabled = linkedEnabled;
         final String oldLinkedChannel = linkedChannel;
         final double oldWirelessStrength = wirelessStrength;
-        relayDelay = DEFAULT_RELAY_DELAY;
-        relayAmount = DEFAULT_RELAY_AMOUNT;
-        maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
+        relayDelay = ModSettings.defaultRelayDelay();
+        relayAmount = ModSettings.defaultRelayAmount();
+        maxQueueSize = ModSettings.defaultMaxQueueSize();
         wirelessEnabled = false;
+        wirelessTier = -1;
         wirelessMaxRange = 0D;
         wirelessStrength = 0D;
         linkedEnabled = false;
@@ -479,17 +480,18 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
 
         final DriverItem cpu = driverFor(CPU_SLOT);
         if (cpu != null) {
-            relayDelay = Math.max(1, DEFAULT_RELAY_DELAY - (cpu.tier(items.get(CPU_SLOT)) + 1));
+            relayDelay = Math.max(1, ModSettings.defaultRelayDelay() - (int) ((cpu.tier(items.get(CPU_SLOT)) + 1) * ModSettings.relayDelayUpgrade()));
         }
         final DriverItem memory = driverFor(MEMORY_SLOT);
         if (memory != null) {
-            relayAmount = DEFAULT_RELAY_AMOUNT + memory.tier(items.get(MEMORY_SLOT)) + 1;
+            relayAmount = Math.max(1, ModSettings.defaultRelayAmount() + (memory.tier(items.get(MEMORY_SLOT)) + 1) * ModSettings.relayAmountUpgrade());
         }
         final DriverItem hdd = driverFor(HDD_SLOT);
         if (hdd != null) {
-            maxQueueSize = DEFAULT_MAX_QUEUE_SIZE + (hdd.tier(items.get(HDD_SLOT)) + 1) * 10;
+            maxQueueSize = Math.max(1, ModSettings.defaultMaxQueueSize() + (hdd.tier(items.get(HDD_SLOT)) + 1) * ModSettings.queueSizeUpgrade());
         }
-        wirelessMaxRange = wirelessRange(items.get(CARD_SLOT));
+        wirelessTier = wirelessTier(items.get(CARD_SLOT));
+        wirelessMaxRange = wirelessTier >= 0 ? ModSettings.maxWirelessRange(wirelessTier) : 0D;
         wirelessEnabled = wirelessMaxRange > 0D;
         if (items.get(CARD_SLOT).is(ModItems.LINKED_CARD.get())) {
             linkedEnabled = true;
@@ -537,14 +539,22 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
             || stack.is(ModItems.LINKED_CARD.get());
     }
 
-    private static double wirelessRange(final ItemStack stack) {
+    private static int wirelessTier(final ItemStack stack) {
         if (stack.is(ModItems.WIRELESS_NETWORK_CARD_TIER1.get())) {
-            return WIRELESS_RANGE_BY_TIER[0];
+            return 0;
         }
         if (stack.is(ModItems.WIRELESS_NETWORK_CARD_TIER2.get())) {
-            return WIRELESS_RANGE_BY_TIER[1];
+            return 1;
         }
-        return 0D;
+        return -1;
+    }
+
+    private double wirelessCostPerRange() {
+        return wirelessTier >= 0 ? ModSettings.wirelessCostPerRange(wirelessTier) : 0D;
+    }
+
+    private static double linkedCardBaseCost() {
+        return ModSettings.maxWirelessRange(1) * ModSettings.wirelessCostPerRange(1) * 5D;
     }
 
     private static String linkedChannel(final ItemStack stack) {

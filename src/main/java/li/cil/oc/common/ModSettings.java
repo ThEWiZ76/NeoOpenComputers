@@ -22,6 +22,12 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
     public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_SIZE;
     public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_PARTS;
+    public static final ModConfigSpec.IntValue DEFAULT_RELAY_DELAY;
+    public static final ModConfigSpec.DoubleValue RELAY_DELAY_UPGRADE;
+    public static final ModConfigSpec.IntValue DEFAULT_MAX_QUEUE_SIZE;
+    public static final ModConfigSpec.IntValue QUEUE_SIZE_UPGRADE;
+    public static final ModConfigSpec.IntValue DEFAULT_RELAY_AMOUNT;
+    public static final ModConfigSpec.IntValue RELAY_AMOUNT_UPGRADE;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> MAX_OPEN_PORTS;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> MAX_WIRELESS_RANGE;
     public static final ModConfigSpec.IntValue TMP_SIZE;
@@ -53,6 +59,24 @@ public final class ModSettings {
         MAX_NETWORK_PACKET_PARTS = builder
             .comment("Maximum number of data parts in one network packet. OpenComputers upstream default is 8 and minimum is 4.")
             .defineInRange("maxNetworkPacketParts", 8, 4, Integer.MAX_VALUE);
+        DEFAULT_RELAY_DELAY = builder
+            .comment("Base delay in ticks before a relay forwards queued packets. OpenComputers upstream default is 5.")
+            .defineInRange("defaultRelayDelay", 5, 1, Integer.MAX_VALUE);
+        RELAY_DELAY_UPGRADE = builder
+            .comment("Delay reduction per CPU tier installed in a relay. OpenComputers upstream default is 1.5.")
+            .defineInRange("relayDelayUpgrade", 1.5D, 0D, Double.MAX_VALUE);
+        DEFAULT_MAX_QUEUE_SIZE = builder
+            .comment("Base maximum queued packet count for relays. OpenComputers upstream default is 20.")
+            .defineInRange("defaultMaxQueueSize", 20, 1, Integer.MAX_VALUE);
+        QUEUE_SIZE_UPGRADE = builder
+            .comment("Additional relay queue slots per hard-drive tier. OpenComputers upstream default is 10.")
+            .defineInRange("queueSizeUpgrade", 10, 0, Integer.MAX_VALUE);
+        DEFAULT_RELAY_AMOUNT = builder
+            .comment("Base number of packets relayed per cycle. OpenComputers upstream default is 1.")
+            .defineInRange("defaultRelayAmount", 1, 1, Integer.MAX_VALUE);
+        RELAY_AMOUNT_UPGRADE = builder
+            .comment("Additional packets relayed per memory tier. OpenComputers upstream default is 1.")
+            .defineInRange("relayAmountUpgrade", 1, 0, Integer.MAX_VALUE);
         MAX_OPEN_PORTS = builder
             .comment("Maximum open ports for wired, tier-one wireless, and tier-two wireless cards. OpenComputers upstream default is [16, 1, 16].")
             .defineList("maxOpenPorts", DEFAULT_MAX_OPEN_PORTS, value -> value instanceof Integer && (Integer) value >= 0);
@@ -182,6 +206,30 @@ public final class ModSettings {
 
     public static int maxNetworkPacketParts() {
         return Math.max(4, intValue(MAX_NETWORK_PACKET_PARTS));
+    }
+
+    public static int defaultRelayDelay() {
+        return Math.max(1, intValue(DEFAULT_RELAY_DELAY));
+    }
+
+    public static double relayDelayUpgrade() {
+        return doubleValue(RELAY_DELAY_UPGRADE);
+    }
+
+    public static int defaultMaxQueueSize() {
+        return Math.max(1, intValue(DEFAULT_MAX_QUEUE_SIZE));
+    }
+
+    public static int queueSizeUpgrade() {
+        return intValue(QUEUE_SIZE_UPGRADE);
+    }
+
+    public static int defaultRelayAmount() {
+        return Math.max(1, intValue(DEFAULT_RELAY_AMOUNT));
+    }
+
+    public static int relayAmountUpgrade() {
+        return intValue(RELAY_AMOUNT_UPGRADE);
     }
 
     public static List<Integer> maxOpenPorts() {

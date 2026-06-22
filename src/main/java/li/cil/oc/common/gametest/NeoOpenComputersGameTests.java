@@ -29,6 +29,7 @@ import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.api.Network;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.AdapterBlockEntity;
@@ -115,11 +116,13 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.IFluidTank;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
@@ -2882,6 +2885,63 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void relayUsesConfiguredUpgradeLimits(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.DEFAULT_RELAY_DELAY, 7, () ->
+            withCachedConfig(ModSettings.RELAY_DELAY_UPGRADE, 2.5D, () ->
+                withCachedConfig(ModSettings.DEFAULT_RELAY_AMOUNT, 3, () ->
+                    withCachedConfig(ModSettings.RELAY_AMOUNT_UPGRADE, 2, () ->
+                        withCachedConfig(ModSettings.DEFAULT_MAX_QUEUE_SIZE, 11, () ->
+                            withCachedConfig(ModSettings.QUEUE_SIZE_UPGRADE, 4, () -> {
+                                final BlockPos relayPos = new BlockPos(1, 1, 1);
+                                helper.setBlock(relayPos, ModBlocks.RELAY.get());
+                                final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+
+                                helper.assertTrue(relay.relayDelay() == 7, "Relay ignored configured base delay");
+                                helper.assertTrue(relay.relayAmount() == 3, "Relay ignored configured base relay amount");
+                                helper.assertTrue(relay.maxQueueSize() == 11, "Relay ignored configured base queue size");
+
+                                relay.setItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.CPU_TIER3.get()));
+                                relay.setItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get()));
+                                relay.setItem(RelayBlockEntity.HDD_SLOT, new ItemStack(ModItems.HDD_TIER3.get()));
+
+                                helper.assertTrue(relay.relayDelay() == 1, "Relay ignored configured CPU delay upgrade");
+                                helper.assertTrue(relay.relayAmount() == 9, "Relay ignored configured memory amount upgrade");
+                                helper.assertTrue(relay.maxQueueSize() == 23, "Relay ignored configured HDD queue upgrade");
+                                helper.succeed();
+                            }))))));
+    }
+
+    @GameTest(template = "empty")
+    public static void relayUsesConfiguredWirelessRangeAndCost(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.MAX_WIRELESS_RANGE, List.of(6D, 9D), () ->
+            withCachedConfig(ModSettings.WIRELESS_COST_PER_RANGE, List.of(0.25D, 0.5D), () -> {
+                final BlockPos relayPos = new BlockPos(1, 1, 1);
+                helper.setBlock(relayPos, ModBlocks.RELAY.get());
+                Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(relayPos));
+                final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+                relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()));
+                helper.assertTrue(li.cil.oc.common.menu.RelayMenu.relayStrengthFor(relay) == 9, "Relay ignored configured wireless range");
+
+                final RecordingNetworkEnvironment source = new RecordingNetworkEnvironment();
+                final RecordingWirelessEndpoint receiver = new RecordingWirelessEndpoint(helper.getLevel(), helper.absolutePos(new BlockPos(9, 1, 1)));
+                Network.joinNewNetwork(source.node());
+                Network.joinWirelessNetwork(receiver);
+                source.node().connect(relay.sidedNode(Direction.WEST));
+                final Connector relayConnector = (Connector) relay.sidedNode(Direction.WEST);
+                relayConnector.changeBuffer(10);
+
+                source.node().sendToReachable("network.message", Network.newPacket(source.node().address(), null, 226, new Object[]{"configured"}));
+                tickRelayThroughDelay(helper, relayPos, relay);
+
+                helper.assertTrue(receiver.lastPacket != null, "Relay did not use configured wireless range");
+                helper.assertTrue("configured".equals(receiver.lastPacket.data()[0]), "Relay sent wrong configured wireless payload");
+                assertClose(helper, relayConnector.localBuffer(), 5.5D, "Relay configured wireless cost");
+                Network.leaveWirelessNetwork(receiver);
+                helper.succeed();
+            }));
+    }
+
+    @GameTest(template = "empty")
     public static void relayMenuReportsRuntimeStatus(final GameTestHelper helper) throws Exception {
         final BlockPos relayPos = new BlockPos(1, 1, 1);
         helper.setBlock(relayPos, ModBlocks.RELAY.get());
@@ -4809,6 +4869,18 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Math.abs(actual - expected) < 0.0001D, name + " expected " + expected + " but got " + actual);
     }
 
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
     private static void assertSingleResult(final GameTestHelper helper, final Object[] result, final Object expected, final String name) {
         helper.assertTrue(result.length == 1 && expected.equals(result[0]), name + " expected " + expected + " but got " + (result.length == 0 ? "<empty>" : result[0]));
     }
@@ -4957,6 +5029,11 @@ public final class NeoOpenComputersGameTests {
         @Override
         public void cancel() {
         }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static final class RecordingNetworkEnvironment implements li.cil.oc.api.network.Environment {
