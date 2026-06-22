@@ -138,6 +138,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 @GameTestHolder(NeoOpenComputers.MODID)
@@ -4479,7 +4480,7 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 1400)
+    @GameTest(template = "empty", timeoutTicks = 2200)
     public static void openOsTerminalRunsTypedCommand(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
         final BlockPos keyboardPos = new BlockPos(0, 1, 2);
@@ -4507,11 +4508,17 @@ public final class NeoOpenComputersGameTests {
             helper.runAtTickTime(120L + index * 80L, () -> screen.keyDown(character, keyCode(character), null));
         }
         final AtomicBoolean submitted = new AtomicBoolean(false);
+        final AtomicInteger checksAfterSubmit = new AtomicInteger(0);
         helper.succeedWhen(() -> {
             final String text = screenText(screen);
             if (!submitted.get() && text.contains("/home # " + command)) {
                 submitted.set(true);
                 typeKey(screen, '\r', 0x1C);
+                helper.assertTrue(false, "OpenOS terminal command submitted; waiting for output:\n" + text);
+            }
+            if (submitted.get()) {
+                final int checks = checksAfterSubmit.incrementAndGet();
+                helper.assertTrue(checks >= 20, "OpenOS terminal command output not checked until terminal has advanced:\n" + text);
             }
             helper.assertTrue(countOccurrences(text, "ocok") >= 2, "OpenOS terminal did not run typed echo command:\n" + text);
         });
