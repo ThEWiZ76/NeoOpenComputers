@@ -2334,6 +2334,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 return floatValue.intValue();
             }
+            if (!(value instanceof Number)) {
+                throw new IllegalArgumentException("bad argument #" + (index + 1) + " (integer expected, got " + argumentTypeName(value) + ")");
+            }
             return ((Number) value).intValue();
         }
 
@@ -2499,6 +2502,28 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         @Override
         public java.util.Iterator<Object> iterator() {
             return Arrays.asList(values).iterator();
+        }
+
+        private static String argumentTypeName(final Object value) {
+            if (value == null) {
+                return "nil";
+            }
+            if (value instanceof Boolean) {
+                return "boolean";
+            }
+            if (value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long) {
+                return "integer";
+            }
+            if (value instanceof Number) {
+                return "number";
+            }
+            if (value instanceof String || value instanceof byte[]) {
+                return "string";
+            }
+            if (value instanceof Map) {
+                return "table";
+            }
+            return "userdata";
         }
     }
 
