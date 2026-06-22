@@ -38,7 +38,6 @@ import java.util.concurrent.Executors;
 
 public class InternetCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "internet";
-    private static final int MAX_CONNECTIONS = 4;
     private static final String DEFAULT_USER_AGENT = "opencomputers/" + API.VERSION;
     private static final ExecutorService HTTP_EXECUTOR = Executors.newCachedThreadPool(runnable -> {
         final Thread thread = new Thread(runnable, "NeoOpenComputers Internet");
@@ -107,7 +106,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     private void ensureConnectionSlot() throws IOException {
-        if (connections.size() >= MAX_CONNECTIONS) {
+        if (connections.size() >= ModSettings.maxTcpConnections()) {
             throw new IOException("too many open connections");
         }
     }

@@ -36,6 +36,7 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> HDD_SIZES;
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
+    public static final ModConfigSpec.IntValue MAX_TCP_CONNECTIONS;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
@@ -127,6 +128,12 @@ public final class ModSettings {
         MAX_READ_BUFFER = builder
             .comment("Maximum block size read by one filesystem read call. OpenComputers upstream default is 2048.")
             .defineInRange("maxReadBuffer", 2048, 0, Integer.MAX_VALUE);
+        builder.pop();
+
+        builder.push("internet");
+        MAX_TCP_CONNECTIONS = builder
+            .comment("Maximum open internet-card HTTP/TCP connections. OpenComputers upstream default is 4.")
+            .defineInRange("maxTcpConnections", 4, 0, Integer.MAX_VALUE);
         builder.pop();
 
         builder.push("power");
@@ -289,6 +296,10 @@ public final class ModSettings {
 
     public static int maxReadBuffer() {
         return intValue(MAX_READ_BUFFER);
+    }
+
+    public static int maxTcpConnections() {
+        return intValue(MAX_TCP_CONNECTIONS);
     }
 
     public static List<Integer> hddSizes() {

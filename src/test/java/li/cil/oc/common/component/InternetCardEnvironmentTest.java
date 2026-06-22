@@ -181,6 +181,21 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void usesConfiguredMaxTcpConnections() throws Exception {
+        OpenComputersApi.initialize();
+        CompletableFuture<InternetCardEnvironment.HttpResponse> pending = new CompletableFuture<>();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> pending);
+
+        withCachedConfig(ModSettings.MAX_TCP_CONNECTIONS, 1, () -> {
+            Object handle = card.request(null, new TestArguments("https://example.test/one"))[0];
+            assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
+
+            IOException error = assertThrows(IOException.class, () -> card.request(null, new TestArguments("https://example.test/two")));
+            assertEquals("too many open connections", error.getMessage());
+        });
+    }
+
+    @Test
     void rejectsCallsFromNonOwnerContextWhenOwned() throws Exception {
         OpenComputersApi.initialize();
         CompletableFuture<InternetCardEnvironment.HttpResponse> pending = new CompletableFuture<>();

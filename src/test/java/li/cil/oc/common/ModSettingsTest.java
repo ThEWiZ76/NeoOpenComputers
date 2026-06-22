@@ -48,6 +48,7 @@ final class ModSettingsTest {
         assertEquals(512, ModSettings.floppySize());
         assertEquals(16, ModSettings.maxHandles());
         assertEquals(2048, ModSettings.maxReadBuffer());
+        assertEquals(4, ModSettings.maxTcpConnections());
         assertEquals(List.of(1024, 2048, 4096), ModSettings.hddSizes());
         assertEquals(1024, ModSettings.hddSize(0));
         assertEquals(2048, ModSettings.hddSize(1));
@@ -87,5 +88,6 @@ final class ModSettingsTest {
         assertEquals(List.of("filesystem", "maxHandles"), ModSettings.MAX_HANDLES.getPath());
         assertEquals(List.of("filesystem", "maxReadBuffer"), ModSettings.MAX_READ_BUFFER.getPath());
         assertEquals(List.of("filesystem", "hddSizes"), ModSettings.HDD_SIZES.getPath());
+        assertEquals(List.of("internet", "maxTcpConnections"), ModSettings.MAX_TCP_CONNECTIONS.getPath());
     }
 }
