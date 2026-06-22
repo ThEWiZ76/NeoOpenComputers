@@ -15,6 +15,7 @@ public final class ModSettings {
     private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
     private static final List<Double> DEFAULT_HOLOGRAM_MAX_SCALE = List.of(3D, 4D);
     private static final List<Double> DEFAULT_HOLOGRAM_MAX_TRANSLATION = List.of(1D, 2D);
+    private static final List<Double> DEFAULT_NANOMACHINE_HUD_POS = List.of(-1D, -1D);
     private static final List<String> DEFAULT_FILTERING_RULES = List.of("removeme", "deny private", "deny bogon", "allow default");
 
     public static final ModConfigSpec SPEC;
@@ -60,6 +61,8 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue INTERNET_THREADS;
     public static final ModConfigSpec.IntValue MAX_TCP_CONNECTIONS;
     public static final ModConfigSpec.ConfigValue<String> HTTP_USER_AGENT;
+    public static final ModConfigSpec.BooleanValue ENABLE_NANOMACHINE_PFX;
+    public static final ModConfigSpec.ConfigValue<List<? extends Double>> NANOMACHINE_HUD_POS;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_SCALE;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_TRANSLATION;
     public static final ModConfigSpec.DoubleValue HOLOGRAM_SET_RAW_DELAY;
@@ -121,6 +124,15 @@ public final class ModSettings {
         MAX_WIRELESS_RANGE = builder
             .comment("Maximum wireless card ranges for tier one and tier two. OpenComputers upstream default is [16.0, 400.0].")
             .defineList("maxWirelessRange", DEFAULT_MAX_WIRELESS_RANGE, value -> value instanceof Double && (Double) value >= 0D);
+        builder.pop();
+
+        builder.push("client");
+        ENABLE_NANOMACHINE_PFX = builder
+            .comment("Emit nanomachine particle effects around players. OpenComputers upstream default is true.")
+            .define("enableNanomachinePfx", true);
+        NANOMACHINE_HUD_POS = builder
+            .comment("Position of the nanomachines power HUD indicator. OpenComputers upstream default is [-1, -1].")
+            .defineList("nanomachineHudPos", DEFAULT_NANOMACHINE_HUD_POS, value -> value instanceof Double);
         builder.pop();
 
         builder.push("computer");
@@ -583,6 +595,18 @@ public final class ModSettings {
 
     public static String httpUserAgent() {
         return stringValue(HTTP_USER_AGENT).replace("$version", API.VERSION);
+    }
+
+    public static boolean enableNanomachinePfx() {
+        return booleanValue(ENABLE_NANOMACHINE_PFX);
+    }
+
+    public static List<Double> nanomachineHudPos() {
+        final List<Double> position = doubleListValue(NANOMACHINE_HUD_POS);
+        if (position.size() != DEFAULT_NANOMACHINE_HUD_POS.size()) {
+            return DEFAULT_NANOMACHINE_HUD_POS;
+        }
+        return position;
     }
 
     public static List<Double> hologramMaxScale() {

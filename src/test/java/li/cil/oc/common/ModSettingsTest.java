@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 final class ModSettingsTest {
     @Test
@@ -165,6 +166,8 @@ final class ModSettingsTest {
         assertEquals(List.of("internet", "threads"), ModSettings.INTERNET_THREADS.getPath());
         assertEquals(List.of("internet", "maxTcpConnections"), ModSettings.MAX_TCP_CONNECTIONS.getPath());
         assertEquals(List.of("internet", "httpUserAgent"), ModSettings.HTTP_USER_AGENT.getPath());
+        assertEquals(List.of("client", "enableNanomachinePfx"), ModSettings.ENABLE_NANOMACHINE_PFX.getPath());
+        assertEquals(List.of("client", "nanomachineHudPos"), ModSettings.NANOMACHINE_HUD_POS.getPath());
         assertEquals(List.of("hologram", "maxScale"), ModSettings.HOLOGRAM_MAX_SCALE.getPath());
         assertEquals(List.of("hologram", "maxTranslation"), ModSettings.HOLOGRAM_MAX_TRANSLATION.getPath());
         assertEquals(List.of("hologram", "setRawDelay"), ModSettings.HOLOGRAM_SET_RAW_DELAY.getPath());
@@ -209,6 +212,15 @@ final class ModSettingsTest {
 
             assertEquals(6, controller.getTotalInputCount());
         });
+    }
+
+    @Test
+    void nanomachinesVisualSettingsReadClientConfiguration() throws Exception {
+        withCachedConfig(ModSettings.ENABLE_NANOMACHINE_PFX, false, () ->
+            withCachedConfig(ModSettings.NANOMACHINE_HUD_POS, List.of(0.5D, 16D), () -> {
+                assertFalse(ModSettings.enableNanomachinePfx());
+                assertEquals(List.of(0.5D, 16D), ModSettings.nanomachineHudPos());
+            }));
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
