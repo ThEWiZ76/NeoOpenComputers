@@ -57,7 +57,6 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.LongSupplier;
 
@@ -1390,13 +1389,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         unicode.set("lower", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                return LuaValue.valueOf(args.checkjstring(1).toLowerCase(Locale.ROOT));
+                return LuaValue.valueOf(args.checkjstring(1).toLowerCase());
             }
         });
         unicode.set("upper", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                return LuaValue.valueOf(args.checkjstring(1).toUpperCase(Locale.ROOT));
+                return LuaValue.valueOf(args.checkjstring(1).toUpperCase());
             }
         });
         unicode.set("char", new VarArgFunction() {

@@ -53,6 +53,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 
@@ -401,6 +402,26 @@ final class LuaArchitectureTest {
         assertEquals(true, architecture.globalBoolean("wideFlag"));
         assertEquals(4, architecture.globalInteger("displayWidth"));
         assertEquals("ab", architecture.globalString("truncated"));
+    }
+
+    @Test
+    void unicodeCaseMappingUsesDefaultLocaleLikeUpstream() {
+        Locale previous = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            LuaArchitecture architecture = new LuaArchitecture("""
+                lower = unicode.lower('I')
+                upper = unicode.upper('i')
+                """);
+
+            assertTrue(architecture.initialize());
+            assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+            assertEquals("\u0131", architecture.globalString("lower"));
+            assertEquals("\u0130", architecture.globalString("upper"));
+        } finally {
+            Locale.setDefault(previous);
+        }
     }
 
     @Test
