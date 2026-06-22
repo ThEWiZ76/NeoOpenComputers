@@ -1232,7 +1232,8 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(pos, ModBlocks.ADAPTER.get());
         helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), AdapterBlockEntity.class);
-        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), new StaticPositionEnvironmentHost(helper, pos));
+        final AdapterBlockEntity adapter = helper.getBlockEntity(pos);
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), adapter);
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
 
         final Object[] count = invokeComponent(helper, component, "getTankCount", side);
@@ -1248,6 +1249,20 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Integer.valueOf(1000).equals(fluid[1]), "Tank controller did not report fluid amount");
         helper.assertTrue(Integer.valueOf(1000).equals(fluid[2]), "Tank controller did not report fluid capacity");
         assertSingleWaterTankDescription(helper, allFluids, "Tank controller");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tankControllerUpgradeCreatesRobotEnvironment(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get());
+        final DriverItem driver = Driver.driverFor(stack, RobotTestHost.class);
+        helper.assertTrue(driver != null, "No tank controller driver for robot host");
+
+        final ManagedEnvironment environment = driver.createEnvironment(stack, new RobotTestHost(helper));
+        helper.assertTrue(environment != null, "Tank controller did not create environment for robot host");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Tank controller node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("tank_controller".equals(component.name()), "Tank controller component name mismatch");
         helper.succeed();
     }
 

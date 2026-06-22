@@ -3,6 +3,8 @@ package li.cil.oc.common.item;
 import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Adapter;
+import li.cil.oc.api.internal.Drone;
+import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.TankControllerEnvironment;
@@ -22,12 +24,15 @@ public class TankControllerUpgradeItem extends Item implements HostAware {
 
     @Override
     public boolean worksWith(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
-        return worksWith(stack) && Adapter.class.isAssignableFrom(host);
+        return worksWith(stack) && (Adapter.class.isAssignableFrom(host) || Drone.class.isAssignableFrom(host) || Robot.class.isAssignableFrom(host));
     }
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return new TankControllerEnvironment(host);
+        if (host instanceof Adapter || host instanceof Drone || host instanceof Robot) {
+            return new TankControllerEnvironment(host);
+        }
+        return null;
     }
 
     @Override
