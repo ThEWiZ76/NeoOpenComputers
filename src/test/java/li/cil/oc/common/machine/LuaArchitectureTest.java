@@ -136,6 +136,7 @@ final class LuaArchitectureTest {
             loaded = load('return 4')()
             stringMetatableType = type(getmetatable('text'))
             versionValue = _VERSION
+            rawLength = rawlen({'a', 'b'})
             """);
 
         assertTrue(architecture.initialize());
@@ -148,6 +149,7 @@ final class LuaArchitectureTest {
         assertEquals(4, architecture.globalInteger("loaded"));
         assertEquals("nil", architecture.globalString("stringMetatableType"));
         assertEquals("Luaj", architecture.globalString("versionValue"));
+        assertEquals(2, architecture.globalInteger("rawLength"));
     }
 
     @Test
