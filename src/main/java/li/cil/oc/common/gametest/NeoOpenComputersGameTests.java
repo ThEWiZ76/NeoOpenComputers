@@ -710,6 +710,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesWirelessHungerCommandReportsPlayerFoodState(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.getFoodData().setFoodLevel(6);
+        player.getFoodData().setSaturation(2.5F);
+        final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+        final li.cil.oc.api.network.WirelessEndpoint endpoint = (li.cil.oc.api.network.WirelessEndpoint) controller;
+        final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
+        Network.joinWirelessNetwork(sender);
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 559}), sender);
+        sender.lastPacket = null;
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getHunger"}), sender);
+
+        helper.assertTrue(sender.lastPacket != null, "Nanomachines hunger command did not respond");
+        helper.assertTrue(sender.lastPacket.port() == 559, "Nanomachines hunger command used wrong response port");
+        helper.assertTrue(java.util.Arrays.equals(new Object[]{"nanomachines", "hunger", 6, 2.5F}, sender.lastPacket.data()), "Nanomachines hunger command returned wrong payload");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void mfuLinksRemoteSidedTileEnvironment(final GameTestHelper helper) {
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(2, 1, 0);
