@@ -3,9 +3,13 @@ package li.cil.oc.client;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModMenus;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
@@ -14,6 +18,8 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 @Mod(value = NeoOpenComputers.MODID, dist = Dist.CLIENT)
 @EventBusSubscriber(modid = NeoOpenComputers.MODID, value = Dist.CLIENT)
 public final class NeoOpenComputersClient {
+    private static final ResourceLocation NANOMACHINE_HUD = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "nanomachine_hud");
+
     public NeoOpenComputersClient() {
     }
 
@@ -33,6 +39,11 @@ public final class NeoOpenComputersClient {
         event.register(ModMenus.SERVER_RACK.get(), ServerRackScreen::new);
         event.register(ModMenus.RELAY.get(), RelayScreen::new);
         event.register(ModMenus.TERMINAL.get(), TerminalScreen::new);
+    }
+
+    @SubscribeEvent
+    static void registerGuiLayers(final RegisterGuiLayersEvent event) {
+        event.registerAbove(VanillaGuiLayers.PLAYER_HEALTH, NANOMACHINE_HUD, (graphics, deltaTracker) -> NanomachineHud.render(graphics, Minecraft.getInstance()));
     }
 
     @SubscribeEvent
