@@ -24,7 +24,6 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
     private static final String WAKE_MESSAGE_TAG = "wakeMessage";
     private static final String WAKE_MESSAGE_FUZZY_TAG = "wakeMessageFuzzy";
     private static final String MODEM_MESSAGE_SIGNAL = "modem_message";
-    private static final int MAX_PACKET_PARTS = 8;
     private static final double LINKED_CARD_BASE_COST = 0.05D * 400D * 5D;
 
     private final EnvironmentHost host;
@@ -49,7 +48,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
             DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
             DeviceInfo.DeviceAttribute.Product, "HyperLink IV: Ender Edition",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize()),
-            DeviceInfo.DeviceAttribute.Width, Integer.toString(MAX_PACKET_PARTS)
+            DeviceInfo.DeviceAttribute.Width, Integer.toString(ModSettings.maxNetworkPacketParts())
         );
     }
 

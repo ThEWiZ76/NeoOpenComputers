@@ -16,7 +16,9 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue COMPUTER_TIMEOUT;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
+    public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
     public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_SIZE;
+    public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_PARTS;
     public static final ModConfigSpec.IntValue TMP_SIZE;
     public static final ModConfigSpec.IntValue FILE_COST;
     public static final ModConfigSpec.IntValue FLOPPY_SIZE;
@@ -36,9 +38,15 @@ public final class ModSettings {
         INPUT_USERNAME = builder
             .comment("Include player and entity names in input-related signals. OpenComputers upstream default is true.")
             .define("inputUsername", true);
+        INITIAL_NETWORK_PACKET_TTL = builder
+            .comment("Initial network packet TTL. OpenComputers upstream default and minimum is 5.")
+            .defineInRange("initialNetworkPacketTTL", 5, 5, Integer.MAX_VALUE);
         MAX_NETWORK_PACKET_SIZE = builder
             .comment("Maximum network packet size in bytes. OpenComputers upstream default is 8192.")
             .defineInRange("maxNetworkPacketSize", 8192, 0, Integer.MAX_VALUE);
+        MAX_NETWORK_PACKET_PARTS = builder
+            .comment("Maximum number of data parts in one network packet. OpenComputers upstream default is 8 and minimum is 4.")
+            .defineInRange("maxNetworkPacketParts", 8, 4, Integer.MAX_VALUE);
         builder.pop();
 
         builder.push("computer");
@@ -149,8 +157,16 @@ public final class ModSettings {
         return booleanValue(ALLOW_GC);
     }
 
+    public static int initialNetworkPacketTtl() {
+        return Math.max(5, intValue(INITIAL_NETWORK_PACKET_TTL));
+    }
+
     public static int maxNetworkPacketSize() {
         return intValue(MAX_NETWORK_PACKET_SIZE);
+    }
+
+    public static int maxNetworkPacketParts() {
+        return Math.max(4, intValue(MAX_NETWORK_PACKET_PARTS));
     }
 
     public static int tmpSize() {

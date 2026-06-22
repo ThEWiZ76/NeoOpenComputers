@@ -81,6 +81,17 @@ final class LinkedCardEnvironmentTest {
     }
 
     @Test
+    void reportsConfiguredPacketPartCount() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.MAX_NETWORK_PACKET_PARTS, 4, () -> {
+            LinkedCardEnvironment card = new LinkedCardEnvironment(new TestMachineHost(), "pair");
+
+            assertEquals("4", card.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Width));
+        });
+    }
+
+    @Test
     void sendsPayloadToOtherCardOnSameChannel() {
         OpenComputersApi.initialize();
         TestMachineHost leftHost = new TestMachineHost();

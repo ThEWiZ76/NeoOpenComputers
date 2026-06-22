@@ -29,7 +29,6 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     private static final String WAKE_MESSAGE_TAG = "wakeMessage";
     private static final String WAKE_MESSAGE_FUZZY_TAG = "wakeMessageFuzzy";
     private static final int MAX_OPEN_PORTS = 16;
-    private static final int MAX_PACKET_PARTS = 8;
     private static final int MIN_PORT = 1;
     private static final int MAX_PORT = 65535;
     protected static final String NETWORK_MESSAGE = "network.message";
@@ -57,7 +56,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             DeviceInfo.DeviceAttribute.Version, "1.0",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize()),
             DeviceInfo.DeviceAttribute.Size, Integer.toString(MAX_OPEN_PORTS),
-            DeviceInfo.DeviceAttribute.Width, Integer.toString(MAX_PACKET_PARTS)
+            DeviceInfo.DeviceAttribute.Width, Integer.toString(ModSettings.maxNetworkPacketParts())
         );
     }
 

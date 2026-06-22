@@ -60,6 +60,18 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void newPacketsUseConfiguredInitialTtl() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+
+        withCachedConfig(ModSettings.INITIAL_NETWORK_PACKET_TTL, 9, () -> {
+            Packet packet = registry.newPacket("node-1", "node-2", 42, new Object[]{"ping"});
+
+            assertEquals(9, packet.ttl());
+            assertEquals(8, packet.hop().ttl());
+        });
+    }
+
+    @Test
     void rejectsPacketsWithTooManyDataParts() {
         NetworkRegistry registry = new NetworkRegistry();
 
@@ -67,6 +79,18 @@ final class NetworkRegistryTest {
             () -> registry.newPacket("node-1", "node-2", 42, new Object[]{1, 2, 3, 4, 5, 6, 7, 8, 9}));
 
         assertEquals("packet has too many parts", exception.getMessage());
+    }
+
+    @Test
+    void rejectsPacketsOverConfiguredDataPartCount() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+
+        withCachedConfig(ModSettings.MAX_NETWORK_PACKET_PARTS, 4, () -> {
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> registry.newPacket("node-1", "node-2", 42, new Object[]{1, 2, 3, 4, 5}));
+
+            assertEquals("packet has too many parts", exception.getMessage());
+        });
     }
 
     @Test

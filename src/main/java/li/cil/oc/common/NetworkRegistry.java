@@ -48,9 +48,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 final class NetworkRegistry implements NetworkAPI {
-    private static final int INITIAL_PACKET_TTL = 32;
-    private static final int MAX_PACKET_PARTS = 8;
-
     private int nextNodeId = 1;
     private final Set<WirelessEndpoint> wirelessEndpoints = new LinkedHashSet<>();
 
@@ -152,7 +149,7 @@ final class NetworkRegistry implements NetworkAPI {
 
     @Override
     public Packet newPacket(final String source, final String destination, final int port, final Object[] data) {
-        final Packet packet = new PacketImpl(source, destination, port, data, INITIAL_PACKET_TTL);
+        final Packet packet = new PacketImpl(source, destination, port, data, ModSettings.initialNetworkPacketTtl());
         final int maxPacketSize = ModSettings.maxNetworkPacketSize();
         if (packet.size() > maxPacketSize) {
             throw new IllegalArgumentException("packet too big (max " + maxPacketSize + ")");
@@ -1142,7 +1139,7 @@ final class NetworkRegistry implements NetworkAPI {
         }
 
         private static int computeSize(final Object[] data) {
-            if (data.length > MAX_PACKET_PARTS) {
+            if (data.length > ModSettings.maxNetworkPacketParts()) {
                 throw new IllegalArgumentException("packet has too many parts");
             }
             int computedSize = data.length * 2;

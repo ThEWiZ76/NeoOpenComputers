@@ -266,6 +266,14 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void wiredDeviceInfoReportsConfiguredPacketPartCount() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.MAX_NETWORK_PACKET_PARTS, 4, () ->
+            assertEquals("4", new NetworkCardEnvironment(new TestHost()).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Width)));
+    }
+
+    @Test
     void receivedPacketOnOpenPortQueuesModemMessageSignal() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost host = new TestMachineHost();
