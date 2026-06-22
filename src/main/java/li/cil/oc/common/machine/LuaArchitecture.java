@@ -333,28 +333,40 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                         if (readerResult.narg() > 1) {
                             return readerResult;
                         }
-                        return originalLoad.invoke(textModeLoadArgs(args, readerResult.arg1()));
+                        return originalLoad.invoke(textModeLoadArgs(args, readerResult.arg1(), globals));
                     }
-                    return originalLoad.invoke(textModeLoadArgs(args));
+                    return originalLoad.invoke(textModeLoadArgs(args, globals));
                 }
-                return originalLoad.invoke(args);
+                return originalLoad.invoke(loadArgsWithDefaultEnv(args, globals));
             }
         });
     }
 
-    private static Varargs textModeLoadArgs(final Varargs args) {
-        return textModeLoadArgs(args, args.arg(1));
+    private static Varargs textModeLoadArgs(final Varargs args, final Globals globals) {
+        return textModeLoadArgs(args, args.arg(1), globals);
     }
 
-    private static Varargs textModeLoadArgs(final Varargs args, final LuaValue chunk) {
-        final int count = Math.max(3, args.narg());
+    private static Varargs textModeLoadArgs(final Varargs args, final LuaValue chunk, final Globals globals) {
+        final LuaValue[] values = loadArgsWithDefaultEnvValues(args, globals);
+        values[0] = chunk;
+        values[2] = LuaValue.valueOf("t");
+        return LuaValue.varargsOf(values);
+    }
+
+    private static Varargs loadArgsWithDefaultEnv(final Varargs args, final Globals globals) {
+        return LuaValue.varargsOf(loadArgsWithDefaultEnvValues(args, globals));
+    }
+
+    private static LuaValue[] loadArgsWithDefaultEnvValues(final Varargs args, final Globals globals) {
+        final int count = Math.max(4, args.narg());
         final LuaValue[] values = new LuaValue[count];
         for (int index = 0; index < count; index++) {
             values[index] = args.arg(index + 1);
         }
-        values[0] = chunk;
-        values[2] = LuaValue.valueOf("t");
-        return LuaValue.varargsOf(values);
+        if (args.narg() < 4 || args.arg(4).isnil()) {
+            values[3] = globals;
+        }
+        return values;
     }
 
     private static Varargs textFromLoadReader(final LuaValue reader) {

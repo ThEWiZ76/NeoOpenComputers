@@ -180,6 +180,20 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void usesSandboxEnvironmentForNilLoadEnvLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            sentinel = 'visible'
+            loaded = load('return sentinel', nil, nil, nil)
+            result = loaded()
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("visible", architecture.globalString("result"));
+    }
+
+    @Test
     void exposesMinimalDebugTraceback() {
         LuaArchitecture architecture = new LuaArchitecture("""
             tracebackType = type(debug.traceback)
