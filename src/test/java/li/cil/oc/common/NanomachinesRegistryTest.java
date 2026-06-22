@@ -212,11 +212,12 @@ final class NanomachinesRegistryTest {
         sender.lastPacket = null;
 
         endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getPowerState"}), sender);
+        final double expectedBuffer = controller.getLocalBuffer();
         runNanomachineCommandDelay(controller);
 
         assertTrue(sender.lastPacket != null);
         assertEquals(321, sender.lastPacket.port());
-        assertArrayEquals(new Object[]{"nanomachines", "power", controller.getLocalBuffer(), controller.getLocalBufferSize()}, sender.lastPacket.data());
+        assertArrayEquals(new Object[]{"nanomachines", "power", expectedBuffer, controller.getLocalBufferSize()}, sender.lastPacket.data());
     }
 
     @Test
@@ -348,6 +349,25 @@ final class NanomachinesRegistryTest {
         controller.update();
 
         assertEquals(1, behavior.updateCount);
+    }
+
+    @Test
+    void controllerDrainsEnergyForActiveInputsOnPowerTicks() {
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(new TestBehavior("active"))));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        controller.setInput(0, true);
+        final double before = controller.getLocalBuffer();
+        final double expectedCost = ModSettings.nanomachinesInputCost() * ModSettings.mfuTickFrequency() * 1.5D;
+
+        for (int i = 1; i < ModSettings.mfuTickFrequency(); i++) {
+            controller.update();
+        }
+        assertEquals(before, controller.getLocalBuffer());
+
+        controller.update();
+
+        assertEquals(before - expectedCost, controller.getLocalBuffer(), 0.000_001D);
     }
 
     private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {

@@ -218,6 +218,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             }
         }
         updateActiveBehaviors();
+        drainActiveInputEnergy();
         damageOverloadedPlayer();
     }
 
@@ -519,6 +520,14 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         for (final Behavior behavior : getActiveBehaviors()) {
             behavior.update();
         }
+    }
+
+    private void drainActiveInputEnergy() {
+        final int tickFrequency = Math.max(1, ModSettings.mfuTickFrequency());
+        if (getLocalBuffer() <= 0D || updateTicks % tickFrequency != 0) {
+            return;
+        }
+        changeBuffer(-ModSettings.nanomachinesInputCost() * tickFrequency * (activeInputCount() + 0.5D));
     }
 
     private int[] activeInputs() {

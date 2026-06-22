@@ -68,6 +68,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_INPUT_COST;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_TRIGGER_QUOTA;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_CONNECTOR_QUOTA;
     public static final ModConfigSpec.IntValue NANOMACHINE_MAX_INPUTS;
@@ -250,6 +251,9 @@ public final class ModSettings {
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
+        NANOMACHINES_INPUT_COST = builder
+            .comment("Energy consumed per tick per active nanomachine input. OpenComputers upstream default is 0.5.")
+            .defineInRange("nanomachineInput", 0.5D, 0D, Double.MAX_VALUE);
         builder.pop();
         builder.pop();
 
@@ -304,6 +308,10 @@ public final class ModSettings {
 
     public static double nanomachinesBuffer() {
         return Math.max(0D, doubleValue(NANOMACHINES_BUFFER));
+    }
+
+    public static double nanomachinesInputCost() {
+        return Math.max(0D, doubleValue(NANOMACHINES_INPUT_COST));
     }
 
     public static double nanomachineTriggerQuota() {
