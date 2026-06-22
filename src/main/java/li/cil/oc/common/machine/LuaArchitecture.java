@@ -21,7 +21,9 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModSettings;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.world.item.ItemStack;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
@@ -42,9 +44,12 @@ import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 import org.luaj.vm2.lib.jse.JseMathLib;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1214,6 +1219,34 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private void installUserdataLibrary() {
         final LuaTable userdata = new LuaTable();
+        userdata.set("save", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                try {
+                    final Value value = checkValue(args, 1);
+                    final CompoundTag data = new CompoundTag();
+                    value.save(data);
+                    return LuaValue.varargsOf(new LuaValue[]{
+                        LuaValue.valueOf(value.getClass().getName()),
+                        LuaString.valueOf(writeCompressed(data))
+                    });
+                } catch (IOException e) {
+                    throw new LuaError(e.toString());
+                }
+            }
+        });
+        userdata.set("load", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                try {
+                    final Value value = instantiateValue(args.checkjstring(1));
+                    value.load(readCompressed(args.checkstring(2)));
+                    return toLuaValue(value);
+                } catch (ReflectiveOperationException | IOException | ClassCastException e) {
+                    throw new LuaError(e.toString());
+                }
+            }
+        });
         userdata.set("apply", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
@@ -1283,6 +1316,27 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             }
         });
         globals.set("userdata", userdata);
+    }
+
+    private static byte[] writeCompressed(final CompoundTag data) throws IOException {
+        final ByteArrayOutputStream output = new ByteArrayOutputStream();
+        NbtIo.writeCompressed(data, output);
+        return output.toByteArray();
+    }
+
+    private static CompoundTag readCompressed(final LuaString string) throws IOException {
+        final byte[] bytes = Arrays.copyOfRange(string.m_bytes, string.m_offset, string.m_offset + string.m_length);
+        return NbtIo.readCompressed(new ByteArrayInputStream(bytes), NbtAccounter.unlimitedHeap());
+    }
+
+    private static Value instantiateValue(final String className) throws ReflectiveOperationException {
+        final Class<?> type = Class.forName(className);
+        if (!Value.class.isAssignableFrom(type)) {
+            throw new ClassCastException(className + " is not a Value");
+        }
+        final Constructor<?> constructor = type.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        return (Value) constructor.newInstance();
     }
 
     private void installUnicodeLibrary() {

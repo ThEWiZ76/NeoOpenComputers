@@ -1417,6 +1417,27 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void savesAndLoadsUserdataLikeUpstream() {
+        TestValue value = new TestValue();
+        value.savedText = "persisted";
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            className, data = userdata.save(value)
+            loaded = userdata.load(className, data)
+            loadedType = loaded.type
+            result = userdata.apply(loaded, 'saved')
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(TestValue.class.getName(), architecture.globalString("className"));
+        assertEquals("userdata", architecture.globalString("loadedType"));
+        assertEquals("saved:persisted", architecture.globalString("result"));
+    }
+
+    @Test
     void userdataCallbackToStringReturnsDocumentation() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""
@@ -3529,9 +3550,13 @@ final class LuaArchitectureTest {
         private String unapplyValue;
         private boolean disposed;
         private boolean failToString;
+        private String savedText = "";
 
         @Override
         public Object apply(final Context context, final Arguments arguments) {
+            if ("saved".equals(arguments.checkString(0))) {
+                return "saved:" + savedText;
+            }
             if ("byte-array?".equals(arguments.checkString(0))) {
                 return arguments.isByteArray(0) ? "byte-array" : "not-byte-array";
             }
@@ -3584,10 +3609,12 @@ final class LuaArchitectureTest {
 
         @Override
         public void load(final CompoundTag tag) {
+            savedText = tag.getString("savedText");
         }
 
         @Override
         public void save(final CompoundTag tag) {
+            tag.putString("savedText", savedText);
         }
 
         @Override
