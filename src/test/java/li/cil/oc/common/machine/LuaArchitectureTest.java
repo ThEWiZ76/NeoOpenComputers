@@ -1606,6 +1606,24 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsStringTableArgumentsLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            valid, message = pcall(function()
+              return userdata.apply(value, 'table-value', 'text')
+            end)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("bad argument #2 (table expected, got string)"));
+    }
+
+    @Test
     void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
         TestValue value = new TestValue();
         int[] valueInvokes = {0};
@@ -3369,6 +3387,9 @@ final class LuaArchitectureTest {
             }
             if ("boolean-value".equals(arguments.checkString(0))) {
                 return "boolean:" + arguments.checkBoolean(1);
+            }
+            if ("table-value".equals(arguments.checkString(0))) {
+                return "table:" + arguments.checkTable(1);
             }
             if ("integer-value".equals(arguments.checkString(0))) {
                 return "integer:" + arguments.checkInteger(1);

@@ -2412,7 +2412,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public Map checkTable(final int index) {
-            return (Map) checkAny(index);
+            final Object value = checkAny(index);
+            if (!(value instanceof Map)) {
+                throw new IllegalArgumentException("bad argument #" + (index + 1) + " (table expected, got " + argumentTypeName(value) + ")");
+            }
+            return (Map) value;
         }
 
         @Override
