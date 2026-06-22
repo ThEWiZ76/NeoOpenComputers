@@ -1155,6 +1155,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (callback != null && callback.setter()) {
                     return LuaValue.NIL;
                 }
+                if (callback == null) {
+                    return LuaValue.NIL;
+                }
                 return new VarArgFunction() {
                     @Override
                     public Varargs invoke(final Varargs callbackArgs) {

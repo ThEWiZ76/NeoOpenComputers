@@ -1121,13 +1121,27 @@ final class LuaArchitectureTest {
 
     @Test
     void exposesComponentProxyToLua() {
-        LuaArchitecture architecture = new LuaArchitecture("fs = component.proxy('fs-address'); result = fs.label('arg'); missing, missingMessage = component.proxy('missing')");
-        architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{"tmp"}));
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        List<String> invokedMethods = new ArrayList<>();
+        List<Object[]> invokedArguments = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.proxy('fs-address')
+            labelType = type(fs.label)
+            missingMemberType = type(fs.missing)
+            result = fs.label('arg')
+            missing, missingMessage = component.proxy('missing')
+            """);
+        architecture.bind(machineWithMethodsAndInvokeCapture(Map.of("fs-address", "filesystem"), methods, invokedMethods, invokedArguments));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals("tmp", architecture.globalString("result"));
+        assertEquals("function", architecture.globalString("labelType"));
+        assertEquals("nil", architecture.globalString("missingMemberType"));
+        assertEquals(true, architecture.globalBoolean("result"));
+        assertEquals(List.of("label"), invokedMethods);
+        assertArrayEquals(new Object[]{"arg"}, invokedArguments.getFirst());
         assertEquals("nil", architecture.globalString("missing"));
         assertEquals("no such component", architecture.globalString("missingMessage"));
     }
@@ -1193,7 +1207,7 @@ final class LuaArchitectureTest {
     @Test
     void exposesPrimaryComponentProxyToLua() {
         LuaArchitecture architecture = new LuaArchitecture("fs = component.getPrimary('filesystem'); result = fs.label(); missing = component.getPrimary('gpu')");
-        architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{"tmp"}));
+        architecture.bind(machineWithComponentsMethodsAndInvokeResult(Map.of("fs-address", "filesystem"), Map.of("label", callback("labelCallback")), new Object[]{"tmp"}));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
@@ -1561,12 +1575,17 @@ final class LuaArchitectureTest {
         return machine(new ArrayDeque<>(), 0D, null, null, components, invokeResult);
     }
 
+    private static Machine machineWithComponentsMethodsAndInvokeResult(final Map<String, String> components, final Map<String, Callback> methods, final Object[] invokeResult) {
+        return machine(new ArrayDeque<>(), 0D, null, null, components, invokeResult, methods);
+    }
+
     private static Machine machineWithInvokeCapture(final Map<String, String> components, final String[] invokedAddress) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
             (proxy, method, args) -> switch (method.getName()) {
                 case "components" -> components;
+                case "methods" -> Map.of("label", callback("labelCallback"));
                 case "invoke" -> {
                     invokedAddress[0] = (String) args[0];
                     yield new Object[]{"tmp"};
@@ -1649,6 +1668,7 @@ final class LuaArchitectureTest {
             new Class<?>[]{Machine.class},
             (proxy, method, args) -> switch (method.getName()) {
                 case "components" -> Map.of("fs-address", "filesystem");
+                case "methods" -> Map.of("bad", callback("labelCallback"));
                 case "invoke" -> throw failure;
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
