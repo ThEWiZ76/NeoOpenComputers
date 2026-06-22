@@ -2407,7 +2407,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             if (value instanceof String string) {
                 return string.getBytes(StandardCharsets.UTF_8);
             }
-            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (byte array expected)");
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (string expected, got " + argumentTypeName(value) + ")");
         }
 
         @Override
