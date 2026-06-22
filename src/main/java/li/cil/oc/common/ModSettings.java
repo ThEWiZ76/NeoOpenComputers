@@ -38,6 +38,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP;
+    public static final ModConfigSpec.BooleanValue ENABLE_HTTP_HEADERS;
     public static final ModConfigSpec.BooleanValue ENABLE_TCP;
     public static final ModConfigSpec.IntValue REQUEST_TIMEOUT;
     public static final ModConfigSpec.IntValue MAX_TCP_CONNECTIONS;
@@ -139,6 +140,9 @@ public final class ModSettings {
         ENABLE_HTTP = builder
             .comment("Allow internet cards to make HTTP requests. OpenComputers upstream default is true.")
             .define("enableHttp", true);
+        ENABLE_HTTP_HEADERS = builder
+            .comment("Allow internet cards to send custom HTTP request headers. OpenComputers upstream default is true.")
+            .define("enableHttpHeaders", true);
         ENABLE_TCP = builder
             .comment("Allow internet cards to make TCP connections. OpenComputers upstream default is true.")
             .define("enableTcp", true);
@@ -317,6 +321,10 @@ public final class ModSettings {
 
     public static boolean enableHttp() {
         return booleanValue(ENABLE_HTTP);
+    }
+
+    public static boolean enableHttpHeaders() {
+        return booleanValue(ENABLE_HTTP_HEADERS);
     }
 
     public static boolean enableTcp() {

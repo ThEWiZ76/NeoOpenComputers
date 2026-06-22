@@ -194,6 +194,21 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void disabledHttpHeadersRejectsRequestsWithHeaders() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
+            throw new AssertionError("transport should not be called when HTTP headers are disabled");
+        });
+
+        withCachedConfig(ModSettings.ENABLE_HTTP_HEADERS, false, () ->
+            assertArrayEquals(new Object[]{null, "http request headers are unavailable"},
+                card.request(null, new TestArguments(
+                    "https://example.test/headers",
+                    null,
+                    Map.of("x-test", "denied")))));
+    }
+
+    @Test
     void httpRequestUsesConfiguredRequestTimeout() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment();
