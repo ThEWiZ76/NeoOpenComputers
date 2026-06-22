@@ -1593,6 +1593,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             table.set(methodName, new VarArgFunction() {
                 @Override
                 public Varargs invoke(final Varargs args) {
+                    if (machine == null || !machine.methods(value).containsKey(methodName)) {
+                        throw new LuaError("no such method");
+                    }
                     final int offset = args.narg() > 0 && args.arg(1) == table ? 2 : 1;
                     final Object[] javaArgs = new Object[Math.max(0, args.narg() - offset + 1)];
                     for (int index = 0; index < javaArgs.length; index++) {

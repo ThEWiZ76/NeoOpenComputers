@@ -1108,6 +1108,26 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
+        TestValue value = new TestValue();
+        int[] valueInvokes = {0};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            valid, message = pcall(function()
+              value.echo('payload')
+            end)
+            """);
+        architecture.bind(machineWithDroppedValueMethods(value, valueInvokes));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("no such method"));
+        assertEquals(0, valueInvokes[0]);
+    }
+
+    @Test
     void retriesComponentInvokeAfterCallBudgetLimit() {
         int[] attempts = {0};
         LuaArchitecture architecture = new LuaArchitecture("""
@@ -1759,6 +1779,37 @@ final class LuaArchitectureTest {
                     if (args[0] == value) {
                         Object[] javaArgs = (Object[]) args[2];
                         yield new Object[]{"invoked:" + javaArgs[0]};
+                    }
+                    yield new Object[]{value};
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithDroppedValueMethods(final TestValue value, final int[] valueInvokes) {
+        boolean[] methodsDropped = {false};
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> Map.of("fs-address", "filesystem");
+                case "methods" -> {
+                    if (args[0] == value) {
+                        if (methodsDropped[0]) {
+                            yield Map.of();
+                        }
+                        methodsDropped[0] = true;
+                        yield Map.of("echo", callback("directCallback"));
+                    }
+                    yield Map.of();
+                }
+                case "invoke" -> {
+                    if (args[0] == value) {
+                        valueInvokes[0]++;
+                        yield new Object[]{"invoked"};
                     }
                     yield new Object[]{value};
                 }
