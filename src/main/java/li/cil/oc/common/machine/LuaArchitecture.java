@@ -2375,7 +2375,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public double checkDouble(final int index) {
-            return ((Number) checkAny(index)).doubleValue();
+            final Object value = checkAny(index);
+            if (!(value instanceof Number)) {
+                throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number expected, got " + argumentTypeName(value) + ")");
+            }
+            return ((Number) value).doubleValue();
         }
 
         @Override

@@ -1570,6 +1570,24 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsStringDoubleArgumentsLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            valid, message = pcall(function()
+              return userdata.apply(value, 'double-value', 'text')
+            end)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("bad argument #2 (number expected, got string)"));
+    }
+
+    @Test
     void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
         TestValue value = new TestValue();
         int[] valueInvokes = {0};
@@ -3327,6 +3345,9 @@ final class LuaArchitectureTest {
             }
             if ("long-value".equals(arguments.checkString(0))) {
                 return "long:" + arguments.checkLong(1);
+            }
+            if ("double-value".equals(arguments.checkString(0))) {
+                return "double:" + arguments.checkDouble(1);
             }
             if ("integer-value".equals(arguments.checkString(0))) {
                 return "integer:" + arguments.checkInteger(1);
