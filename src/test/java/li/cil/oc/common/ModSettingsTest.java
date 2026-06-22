@@ -21,6 +21,8 @@ final class ModSettingsTest {
         assertEquals(false, ModSettings.allowBytecode());
         assertEquals(false, ModSettings.allowGc());
         assertEquals(64, ModSettings.tmpSize());
+        assertEquals(16, ModSettings.maxHandles());
+        assertEquals(2048, ModSettings.maxReadBuffer());
     }
 
     @Test
@@ -37,5 +39,7 @@ final class ModSettingsTest {
         assertEquals(List.of("computer", "lua", "allowBytecode"), ModSettings.ALLOW_BYTECODE.getPath());
         assertEquals(List.of("computer", "lua", "allowGC"), ModSettings.ALLOW_GC.getPath());
         assertEquals(List.of("filesystem", "tmpSize"), ModSettings.TMP_SIZE.getPath());
+        assertEquals(List.of("filesystem", "maxHandles"), ModSettings.MAX_HANDLES.getPath());
+        assertEquals(List.of("filesystem", "maxReadBuffer"), ModSettings.MAX_READ_BUFFER.getPath());
     }
 }

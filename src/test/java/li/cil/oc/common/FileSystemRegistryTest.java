@@ -18,12 +18,14 @@ import li.cil.oc.api.machine.TestNodes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -397,6 +399,13 @@ final class FileSystemRegistryTest {
 
     @Test
     void managedFileSystemEnvironmentLimitsOpenHandlesPerContext() throws Exception {
+        withCachedConfig(ModSettings.MAX_HANDLES, 2, () -> {
+            assertOpenHandleLimit(2);
+            return null;
+        });
+    }
+
+    private static void assertOpenHandleLimit(final int limit) throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(256);
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
@@ -404,7 +413,7 @@ final class FileSystemRegistryTest {
         RecordingContext context = new RecordingContext("owner");
         Object firstHandle = null;
 
-        for (int index = 0; index < 16; index++) {
+        for (int index = 0; index < limit; index++) {
             Object handle = component.invoke("open", context, "data" + index + ".txt", "w")[0];
             if (index == 0) {
                 firstHandle = handle;
@@ -455,11 +464,18 @@ final class FileSystemRegistryTest {
 
     @Test
     void managedFileSystemEnvironmentCapsReadBufferSize() throws Exception {
+        withCachedConfig(ModSettings.MAX_READ_BUFFER, 32, () -> {
+            assertReadBufferCap(32);
+            return null;
+        });
+    }
+
+    private static void assertReadBufferCap(final int maxReadBuffer) throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(4096);
         ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
         Component component = (Component) environment.node();
-        byte[] data = new byte[2050];
+        byte[] data = new byte[maxReadBuffer + 2];
         java.util.Arrays.fill(data, (byte) 'x');
 
         Object writeHandle = component.invoke("open", null, "data.txt", "w")[0];
@@ -469,7 +485,24 @@ final class FileSystemRegistryTest {
 
         byte[] read = (byte[]) component.invoke("read", null, readHandle, 4096)[0];
 
-        assertEquals(2048, read.length);
+        assertEquals(maxReadBuffer, read.length);
+    }
+
+    private static <T> T withCachedConfig(final ModConfigSpec.ConfigValue<Integer> value, final int override, final ThrowingSupplier<T> action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            return action.get();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingSupplier<T> {
+        T get() throws Exception;
     }
 
     private static final class MutableLabel implements Label {

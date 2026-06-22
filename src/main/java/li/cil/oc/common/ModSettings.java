@@ -13,6 +13,8 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.IntValue TMP_SIZE;
+    public static final ModConfigSpec.IntValue MAX_HANDLES;
+    public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
@@ -55,6 +57,12 @@ public final class ModSettings {
         TMP_SIZE = builder
             .comment("Size of the free /tmp filesystem in kilobytes. OpenComputers upstream default is 64.")
             .defineInRange("tmpSize", 64, 0, Integer.MAX_VALUE);
+        MAX_HANDLES = builder
+            .comment("Maximum number of file handles any single computer may have open per filesystem. OpenComputers upstream default is 16.")
+            .defineInRange("maxHandles", 16, 0, Integer.MAX_VALUE);
+        MAX_READ_BUFFER = builder
+            .comment("Maximum block size read by one filesystem read call. OpenComputers upstream default is 2048.")
+            .defineInRange("maxReadBuffer", 2048, 0, Integer.MAX_VALUE);
         builder.pop();
 
         builder.push("power");
@@ -123,6 +131,14 @@ public final class ModSettings {
 
     public static int tmpSize() {
         return intValue(TMP_SIZE);
+    }
+
+    public static int maxHandles() {
+        return intValue(MAX_HANDLES);
+    }
+
+    public static int maxReadBuffer() {
+        return intValue(MAX_READ_BUFFER);
     }
 
     private static boolean booleanValue(final ModConfigSpec.BooleanValue value) {

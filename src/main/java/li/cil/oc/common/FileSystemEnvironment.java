@@ -34,8 +34,6 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     private static final String OWNERS_TAG = "owners";
     private static final String ADDRESS_TAG = "address";
     private static final String HANDLES_TAG = "handles";
-    private static final int MAX_OPEN_HANDLES = 16;
-    private static final int MAX_READ_BUFFER = 2048;
     private static final double HDD_READ_COST = 0.1D / 1024.0D;
     private static final double HDD_WRITE_COST = 0.25D / 1024.0D;
     private static final double[] READ_COSTS = {1.0D / 1.0D, 1.0D / 4.0D, 1.0D / 7.0D, 1.0D / 10.0D, 1.0D / 13.0D, 1.0D / 15.0D};
@@ -193,7 +191,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         final int handleId = checkHandle(arguments, 0);
         checkOwner(context, handleId);
         final Handle handle = getHandle(handleId);
-        final byte[] buffer = new byte[Math.min(MAX_READ_BUFFER, Math.max(0, arguments.checkInteger(1)))];
+        final byte[] buffer = new byte[Math.min(ModSettings.maxReadBuffer(), Math.max(0, arguments.checkInteger(1)))];
         final int read = handle.read(buffer);
         if (read < 0) {
             return new Object[]{null};
@@ -422,7 +420,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
             return;
         }
         final Set<Integer> handles = owners.get(address);
-        if (handles != null && handles.size() >= MAX_OPEN_HANDLES) {
+        if (handles != null && handles.size() >= ModSettings.maxHandles()) {
             throw new IOException("too many open handles");
         }
     }
