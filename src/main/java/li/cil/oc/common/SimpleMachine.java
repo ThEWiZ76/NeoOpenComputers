@@ -70,7 +70,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
     private final Set<String> users = new LinkedHashSet<>();
     private final Set<ManagedEnvironment> componentEnvironments = new LinkedHashSet<>();
-    private final ManagedEnvironment temporaryFileSystemEnvironment;
+    private ManagedEnvironment temporaryFileSystemEnvironment;
     private Architecture architecture;
     private boolean running;
     private boolean paused;
@@ -108,12 +108,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (API.fileSystem == null) {
             API.fileSystem = new FileSystemRegistry();
         }
-        temporaryFileSystemEnvironment = API.fileSystem.asManagedEnvironment(
-            API.fileSystem.fromMemory(ModSettings.tmpSize() * 1024L),
-            "tmp",
-            null,
-            null,
-            1);
+        temporaryFileSystemEnvironment = createTemporaryFileSystemEnvironment();
     }
 
     @Override
@@ -597,6 +592,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             if (result instanceof ExecutionResult.Shutdown shutdown) {
                 stop();
                 if (shutdown.reboot) {
+                    if (ModSettings.eraseTmpOnReboot()) {
+                        resetTemporaryFileSystem();
+                    }
                     start();
                 }
             } else if (result instanceof ExecutionResult.Error error) {
@@ -936,6 +934,22 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (temporaryFileSystemEnvironment.node().network() != node().network()) {
             node().connect(temporaryFileSystemEnvironment.node());
         }
+    }
+
+    private ManagedEnvironment createTemporaryFileSystemEnvironment() {
+        return API.fileSystem.asManagedEnvironment(
+            API.fileSystem.fromMemory(ModSettings.tmpSize() * 1024L),
+            "tmp",
+            null,
+            null,
+            1);
+    }
+
+    private void resetTemporaryFileSystem() {
+        if (temporaryFileSystemEnvironment != null && temporaryFileSystemEnvironment.node() != null) {
+            temporaryFileSystemEnvironment.node().remove();
+        }
+        temporaryFileSystemEnvironment = createTemporaryFileSystemEnvironment();
     }
 
     private void queueComponentChangeSignal(final String name, final Node changedNode) {

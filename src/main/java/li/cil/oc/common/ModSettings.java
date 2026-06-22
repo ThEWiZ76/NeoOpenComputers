@@ -27,6 +27,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue EEPROM_DATA_SIZE;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> CPU_COMPONENT_COUNT;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> CALL_BUDGETS;
+    public static final ModConfigSpec.BooleanValue ERASE_TMP_ON_REBOOT;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
@@ -131,6 +132,9 @@ public final class ModSettings {
         CALL_BUDGETS = builder
             .comment("Direct-call budgets for tier-one, tier-two, and tier-three CPUs. OpenComputers upstream default is [0.5, 1.0, 1.5].")
             .defineList("callBudgets", DEFAULT_CALL_BUDGETS, value -> value instanceof Double && (Double) value >= 0D);
+        ERASE_TMP_ON_REBOOT = builder
+            .comment("Erase the temporary filesystem when a computer reboots. OpenComputers upstream default is false.")
+            .define("eraseTmpOnReboot", false);
         builder.push("lua");
         ALLOW_BYTECODE = builder
             .comment("Allow loading Lua bytecode directly. OpenComputers upstream default is false.")
@@ -292,6 +296,10 @@ public final class ModSettings {
     public static double callBudget(final int tier) {
         final List<Double> budgets = callBudgets();
         return budgets.get(clampIndex(tier, budgets.size()));
+    }
+
+    public static boolean eraseTmpOnReboot() {
+        return booleanValue(ERASE_TMP_ON_REBOOT);
     }
 
     public static boolean allowBytecode() {

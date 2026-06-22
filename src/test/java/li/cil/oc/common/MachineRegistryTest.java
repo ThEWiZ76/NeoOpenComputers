@@ -27,9 +27,12 @@ import li.cil.oc.common.machine.MachineBoundArchitecture;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -855,6 +858,27 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void rebootErasesTemporaryFilesystemWhenConfigured() throws Exception {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new RebootingProcessorDriver());
+        API.driver = driverRegistry;
+
+        withCachedConfig(ModSettings.ERASE_TMP_ON_REBOOT, true, () -> {
+            SimpleMachine machine = new SimpleMachine(new TestHost(), new MutableClock());
+            machine.onHostChanged();
+            writeTemporaryFile(machine, "boot.txt", "keep");
+            assertArrayEquals(new Object[]{true}, machine.invoke(machine.tmpAddress(), "exists", new Object[]{"boot.txt"}));
+
+            assertTrue(machine.start());
+            machine.update();
+
+            assertTrue(machine.isRunning());
+            assertArrayEquals(new Object[]{false}, machine.invoke(machine.tmpAddress(), "exists", new Object[]{"boot.txt"}));
+        });
+    }
+
+    @Test
     void checkedSignalNetworkMessagesQueueMachineSignals() {
         Machine machine = new MachineRegistry().create(null);
         TestEnvironment source = new TestEnvironment();
@@ -1084,6 +1108,23 @@ final class MachineRegistryTest {
         }
     }
 
+    private static final class RebootingProcessorDriver extends TestDriver implements Processor {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return RebootingArchitecture.class;
+        }
+    }
+
     private static final class RejectingProcessorDriver extends TestDriver implements Processor {
         @Override
         public String slot(final ItemStack stack) {
@@ -1295,6 +1336,20 @@ final class MachineRegistryTest {
         }
     }
 
+    public static final class RebootingArchitecture extends TrackingArchitecture {
+        private boolean rebooted;
+
+        @Override
+        public ExecutionResult runThreaded(final boolean isSynchronizedReturn) {
+            threadedRuns++;
+            if (!rebooted) {
+                rebooted = true;
+                return new ExecutionResult.Shutdown(true);
+            }
+            return new ExecutionResult.Sleep(1);
+        }
+    }
+
     private static final class TestEnvironment extends AbstractManagedEnvironment {
         private final List<String> messages = new ArrayList<>();
 
@@ -1379,6 +1434,30 @@ final class MachineRegistryTest {
         @Override
         public void cancel() {
         }
+    }
+
+    private static void writeTemporaryFile(final Machine machine, final String path, final String content) throws Exception {
+        final String tmpAddress = machine.tmpAddress();
+        final Object handle = machine.invoke(tmpAddress, "open", new Object[]{path, "w"})[0];
+        machine.invoke(tmpAddress, "write", new Object[]{handle, content.getBytes(StandardCharsets.UTF_8)});
+        machine.invoke(tmpAddress, "close", new Object[]{handle});
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static final class TestHost implements MachineHost, DeviceInfo {
