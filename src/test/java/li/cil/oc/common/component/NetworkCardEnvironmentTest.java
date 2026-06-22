@@ -157,6 +157,27 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void networkCardsUseConfiguredOpenPortLimits() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.MAX_OPEN_PORTS, List.of(2, 3, 4), () -> {
+            NetworkCardEnvironment wired = new NetworkCardEnvironment(new TestHost());
+            WirelessNetworkCardEnvironment tierOne = new WirelessNetworkCardEnvironment(new TestHost(), 0);
+            WirelessNetworkCardEnvironment tierTwo = new WirelessNetworkCardEnvironment(new TestHost(), 1);
+
+            assertEquals("2", wired.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Size));
+            assertEquals("3", tierOne.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Size));
+            assertEquals("4", tierTwo.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Size));
+            openPorts(wired, 100, 2);
+            IOException wiredError = assertThrows(IOException.class, () -> wired.open(null, new TestArguments(102)));
+            assertEquals("too many open ports", wiredError.getMessage());
+            openPorts(tierOne, 200, 3);
+            IOException wirelessError = assertThrows(IOException.class, () -> tierOne.open(null, new TestArguments(203)));
+            assertEquals("too many open ports", wirelessError.getMessage());
+        });
+    }
+
+    @Test
     void tierTwoWirelessCardReportsWirelessAndWired() {
         OpenComputersApi.initialize();
         WirelessNetworkCardEnvironment card = new WirelessNetworkCardEnvironment(new TestHost(), 1);
@@ -164,6 +185,23 @@ final class NetworkCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, card.isWired(null, new TestArguments()));
         assertArrayEquals(new Object[]{true}, card.isWireless(null, new TestArguments()));
         assertArrayEquals(new Object[]{400D}, card.getStrength(null, new TestArguments()));
+    }
+
+    @Test
+    void wirelessCardsUseConfiguredRanges() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.MAX_WIRELESS_RANGE, List.of(12D, 24D), () -> {
+            WirelessNetworkCardEnvironment tierOne = new WirelessNetworkCardEnvironment(new TestHost(), 0);
+            WirelessNetworkCardEnvironment tierTwo = new WirelessNetworkCardEnvironment(new TestHost(), 1);
+
+            assertArrayEquals(new Object[]{12D}, tierOne.getStrength(null, new TestArguments()));
+            assertArrayEquals(new Object[]{12D}, tierOne.setStrength(null, new TestArguments(99D)));
+            assertEquals("12.0", tierOne.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Width));
+            assertArrayEquals(new Object[]{24D}, tierTwo.getStrength(null, new TestArguments()));
+            assertArrayEquals(new Object[]{24D}, tierTwo.setStrength(null, new TestArguments(99D)));
+            assertEquals("24.0", tierTwo.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Width));
+        });
     }
 
     @Test
@@ -443,6 +481,28 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void wirelessBroadcastUsesConfiguredRangeCost() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.WIRELESS_COST_PER_RANGE, List.of(0.1D, 0.2D), () -> {
+            WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(new TestMachineHost(0, 0, 0), 0);
+            WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(new TestMachineHost(3, 4, 0), 0);
+            ComponentConnector connector = assertInstanceOf(ComponentConnector.class, sender.node());
+            RecordingContext context = new RecordingContext(sender.node());
+            Network.joinNewNetwork(sender.node());
+            Network.joinNewNetwork(receiver.node());
+            receiver.open(null, new TestArguments(123));
+            sender.setStrength(null, new TestArguments(5D));
+            connector.setLocalBufferSize(1D);
+            connector.changeBuffer(1D);
+
+            assertArrayEquals(new Object[]{true}, sender.broadcast(context, new TestArguments(123, "payload")));
+
+            assertEquals(0.5D, connector.localBuffer(), 0.000_001D);
+        });
+    }
+
+    @Test
     void wirelessBroadcastDoesNotDeliverBeyondStrength() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
@@ -669,6 +729,12 @@ final class NetworkCardEnvironmentTest {
             return 0F;
         }
         return 0D;
+    }
+
+    private static void openPorts(final NetworkCardEnvironment card, final int firstPort, final int count) throws Exception {
+        for (int offset = 0; offset < count; offset++) {
+            assertArrayEquals(new Object[]{true}, card.open(null, new TestArguments(firstPort + offset)));
+        }
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

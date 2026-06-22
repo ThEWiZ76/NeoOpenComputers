@@ -28,7 +28,6 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     private static final String OPEN_PORTS_TAG = "openPorts";
     private static final String WAKE_MESSAGE_TAG = "wakeMessage";
     private static final String WAKE_MESSAGE_FUZZY_TAG = "wakeMessageFuzzy";
-    private static final int MAX_OPEN_PORTS = 16;
     private static final int MIN_PORT = 1;
     private static final int MAX_PORT = 65535;
     protected static final String NETWORK_MESSAGE = "network.message";
@@ -55,7 +54,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             DeviceInfo.DeviceAttribute.Product, "42i520 (MPN-01)",
             DeviceInfo.DeviceAttribute.Version, "1.0",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize()),
-            DeviceInfo.DeviceAttribute.Size, Integer.toString(MAX_OPEN_PORTS),
+            DeviceInfo.DeviceAttribute.Size, Integer.toString(maxOpenPorts()),
             DeviceInfo.DeviceAttribute.Width, Integer.toString(ModSettings.maxNetworkPacketParts())
         );
     }
@@ -207,7 +206,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     }
 
     protected int maxOpenPorts() {
-        return MAX_OPEN_PORTS;
+        return ModSettings.maxOpenPorts(0);
     }
 
     protected Visibility nodeReachability() {

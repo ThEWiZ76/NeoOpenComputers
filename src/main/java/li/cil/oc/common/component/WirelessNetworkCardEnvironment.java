@@ -20,15 +20,14 @@ import java.util.Map;
 
 public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment implements WirelessEndpoint {
     private static final String STRENGTH_TAG = "strength";
-    private static final double[] MAX_RANGE_BY_TIER = {16D, 400D};
-    private static final double WIRELESS_COST_PER_RANGE = 0.05D;
+    private static final int TIER_COUNT = 2;
 
     private final int tier;
     private double strength;
 
     public WirelessNetworkCardEnvironment(final EnvironmentHost host, final int tier) {
         super(host);
-        this.tier = Math.max(0, Math.min(tier, MAX_RANGE_BY_TIER.length - 1));
+        this.tier = Math.max(0, Math.min(tier, TIER_COUNT - 1));
         strength = maxWirelessRange();
         final var builder = Network.newNode(this, nodeReachability());
         if (builder != null) {
@@ -102,7 +101,7 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
 
     @Override
     protected int maxOpenPorts() {
-        return tier == 0 ? 1 : 16;
+        return ModSettings.maxOpenPorts(tier + 1);
     }
 
     @Override
@@ -162,14 +161,14 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
     }
 
     private double maxWirelessRange() {
-        return MAX_RANGE_BY_TIER[tier];
+        return ModSettings.maxWirelessRange(tier);
     }
 
     private void consumeWirelessEnergy(final Context context) throws IOException {
         if (context == null || !(context.node() instanceof Connector connector)) {
             return;
         }
-        final double cost = strength * WIRELESS_COST_PER_RANGE;
+        final double cost = strength * ModSettings.wirelessCostPerRange(tier);
         if (cost > 0D && !connector.tryChangeBuffer(-cost)) {
             throw new IOException("not enough energy");
         }

@@ -6,6 +6,9 @@ import java.util.List;
 
 public final class ModSettings {
     private static final List<Integer> DEFAULT_HDD_SIZES = List.of(1024, 2048, 4096);
+    private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
+    private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
+    private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
 
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
@@ -19,6 +22,8 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
     public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_SIZE;
     public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_PARTS;
+    public static final ModConfigSpec.ConfigValue<List<? extends Integer>> MAX_OPEN_PORTS;
+    public static final ModConfigSpec.ConfigValue<List<? extends Double>> MAX_WIRELESS_RANGE;
     public static final ModConfigSpec.IntValue TMP_SIZE;
     public static final ModConfigSpec.IntValue FILE_COST;
     public static final ModConfigSpec.IntValue FLOPPY_SIZE;
@@ -26,6 +31,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
+    public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
 
@@ -47,6 +53,12 @@ public final class ModSettings {
         MAX_NETWORK_PACKET_PARTS = builder
             .comment("Maximum number of data parts in one network packet. OpenComputers upstream default is 8 and minimum is 4.")
             .defineInRange("maxNetworkPacketParts", 8, 4, Integer.MAX_VALUE);
+        MAX_OPEN_PORTS = builder
+            .comment("Maximum open ports for wired, tier-one wireless, and tier-two wireless cards. OpenComputers upstream default is [16, 1, 16].")
+            .defineList("maxOpenPorts", DEFAULT_MAX_OPEN_PORTS, value -> value instanceof Integer && (Integer) value >= 0);
+        MAX_WIRELESS_RANGE = builder
+            .comment("Maximum wireless card ranges for tier one and tier two. OpenComputers upstream default is [16.0, 400.0].")
+            .defineList("maxWirelessRange", DEFAULT_MAX_WIRELESS_RANGE, value -> value instanceof Double && (Double) value >= 0D);
         builder.pop();
 
         builder.push("computer");
@@ -101,6 +113,9 @@ public final class ModSettings {
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
         builder.push("cost");
+        WIRELESS_COST_PER_RANGE = builder
+            .comment("Wireless card energy cost per block of signal strength for tier one and tier two. OpenComputers upstream default is [0.05, 0.05].")
+            .defineList("wirelessCostPerRange", DEFAULT_WIRELESS_COST_PER_RANGE, value -> value instanceof Double && (Double) value >= 0D);
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
@@ -169,6 +184,45 @@ public final class ModSettings {
         return Math.max(4, intValue(MAX_NETWORK_PACKET_PARTS));
     }
 
+    public static List<Integer> maxOpenPorts() {
+        final List<Integer> ports = listValue(MAX_OPEN_PORTS);
+        if (ports.size() != DEFAULT_MAX_OPEN_PORTS.size()) {
+            return DEFAULT_MAX_OPEN_PORTS;
+        }
+        return ports;
+    }
+
+    public static int maxOpenPorts(final int tier) {
+        final List<Integer> ports = maxOpenPorts();
+        return ports.get(clampIndex(tier, ports.size()));
+    }
+
+    public static List<Double> maxWirelessRange() {
+        final List<Double> ranges = doubleListValue(MAX_WIRELESS_RANGE);
+        if (ranges.size() != DEFAULT_MAX_WIRELESS_RANGE.size()) {
+            return DEFAULT_MAX_WIRELESS_RANGE;
+        }
+        return ranges;
+    }
+
+    public static double maxWirelessRange(final int tier) {
+        final List<Double> ranges = maxWirelessRange();
+        return ranges.get(clampIndex(tier, ranges.size()));
+    }
+
+    public static List<Double> wirelessCostPerRange() {
+        final List<Double> costs = doubleListValue(WIRELESS_COST_PER_RANGE);
+        if (costs.size() != DEFAULT_WIRELESS_COST_PER_RANGE.size()) {
+            return DEFAULT_WIRELESS_COST_PER_RANGE;
+        }
+        return costs;
+    }
+
+    public static double wirelessCostPerRange(final int tier) {
+        final List<Double> costs = wirelessCostPerRange();
+        return costs.get(clampIndex(tier, costs.size()));
+    }
+
     public static int tmpSize() {
         return intValue(TMP_SIZE);
     }
@@ -232,5 +286,17 @@ public final class ModSettings {
         } catch (final IllegalStateException ignored) {
             return List.copyOf(value.getDefault());
         }
+    }
+
+    private static List<Double> doubleListValue(final ModConfigSpec.ConfigValue<List<? extends Double>> value) {
+        try {
+            return List.copyOf(value.get());
+        } catch (final IllegalStateException ignored) {
+            return List.copyOf(value.getDefault());
+        }
+    }
+
+    private static int clampIndex(final int index, final int size) {
+        return Math.max(0, Math.min(size - 1, index));
     }
 }
