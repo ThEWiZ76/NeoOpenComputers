@@ -57,6 +57,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void cpuItemUsesConfiguredCallBudgets() throws Exception {
+        withCachedConfig(ModSettings.CALL_BUDGETS, List.of(0.25D, 0.75D, 2.0D), () -> {
+            assertEquals(0.25D, cpu(0).getCallBudget(null));
+            assertEquals(0.75D, cpu(1).getCallBudget(null));
+            assertEquals(2.0D, cpu(2).getCallBudget(null));
+        });
+    }
+
+    @Test
     void processorsUseConfiguredComponentCounts() throws Exception {
         withCachedConfig(ModSettings.CPU_COMPONENT_COUNT, List.of(2, 4, 6, 64), () -> {
             assertEquals(2, cpu(0).supportedComponents(null));

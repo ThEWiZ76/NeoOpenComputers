@@ -91,10 +91,6 @@ public class CpuItem extends Item implements Processor, CallBudget {
     }
 
     static double callBudget(final int tier) {
-        return switch (Math.max(0, Math.min(2, tier))) {
-            case 0 -> 0.5D;
-            case 1 -> 1.0D;
-            default -> 1.5D;
-        };
+        return ModSettings.callBudget(tier);
     }
 }

@@ -28,6 +28,12 @@ final class ModSettingsTest {
         assertEquals(1024, ModSettings.cpuComponentCount(3));
         assertEquals(8, ModSettings.cpuComponentCount(-1));
         assertEquals(1024, ModSettings.cpuComponentCount(99));
+        assertEquals(List.of(0.5D, 1.0D, 1.5D), ModSettings.callBudgets());
+        assertEquals(0.5D, ModSettings.callBudget(0));
+        assertEquals(1.0D, ModSettings.callBudget(1));
+        assertEquals(1.5D, ModSettings.callBudget(2));
+        assertEquals(0.5D, ModSettings.callBudget(-1));
+        assertEquals(1.5D, ModSettings.callBudget(99));
         assertEquals(false, ModSettings.allowBytecode());
         assertEquals(false, ModSettings.allowGc());
         assertEquals(5, ModSettings.initialNetworkPacketTtl());
@@ -99,6 +105,7 @@ final class ModSettingsTest {
         assertEquals(List.of("computer", "eepromSize"), ModSettings.EEPROM_SIZE.getPath());
         assertEquals(List.of("computer", "eepromDataSize"), ModSettings.EEPROM_DATA_SIZE.getPath());
         assertEquals(List.of("computer", "cpuComponentCount"), ModSettings.CPU_COMPONENT_COUNT.getPath());
+        assertEquals(List.of("computer", "callBudgets"), ModSettings.CALL_BUDGETS.getPath());
         assertEquals(List.of("computer", "lua", "allowBytecode"), ModSettings.ALLOW_BYTECODE.getPath());
         assertEquals(List.of("computer", "lua", "allowGC"), ModSettings.ALLOW_GC.getPath());
         assertEquals(List.of("misc", "initialNetworkPacketTTL"), ModSettings.INITIAL_NETWORK_PACKET_TTL.getPath());

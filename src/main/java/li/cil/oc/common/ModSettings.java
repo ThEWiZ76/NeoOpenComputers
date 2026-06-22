@@ -8,6 +8,7 @@ import java.util.List;
 public final class ModSettings {
     private static final List<Integer> DEFAULT_HDD_SIZES = List.of(1024, 2048, 4096);
     private static final List<Integer> DEFAULT_CPU_COMPONENT_COUNT = List.of(8, 12, 16, 1024);
+    private static final List<Double> DEFAULT_CALL_BUDGETS = List.of(0.5D, 1.0D, 1.5D);
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
     private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
     private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
@@ -25,6 +26,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue EEPROM_SIZE;
     public static final ModConfigSpec.IntValue EEPROM_DATA_SIZE;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> CPU_COMPONENT_COUNT;
+    public static final ModConfigSpec.ConfigValue<List<? extends Double>> CALL_BUDGETS;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
@@ -126,6 +128,9 @@ public final class ModSettings {
         CPU_COMPONENT_COUNT = builder
             .comment("Supported component counts for tier-one, tier-two, tier-three, and creative CPUs. OpenComputers upstream default is [8, 12, 16, 1024].")
             .defineList("cpuComponentCount", DEFAULT_CPU_COMPONENT_COUNT, value -> value instanceof Integer && (Integer) value >= 0);
+        CALL_BUDGETS = builder
+            .comment("Direct-call budgets for tier-one, tier-two, and tier-three CPUs. OpenComputers upstream default is [0.5, 1.0, 1.5].")
+            .defineList("callBudgets", DEFAULT_CALL_BUDGETS, value -> value instanceof Double && (Double) value >= 0D);
         builder.push("lua");
         ALLOW_BYTECODE = builder
             .comment("Allow loading Lua bytecode directly. OpenComputers upstream default is false.")
@@ -274,6 +279,19 @@ public final class ModSettings {
     public static int cpuComponentCount(final int tier) {
         final List<Integer> counts = cpuComponentCount();
         return counts.get(clampIndex(tier, counts.size()));
+    }
+
+    public static List<Double> callBudgets() {
+        final List<Double> budgets = doubleListValue(CALL_BUDGETS);
+        if (budgets.size() != DEFAULT_CALL_BUDGETS.size()) {
+            return DEFAULT_CALL_BUDGETS;
+        }
+        return budgets;
+    }
+
+    public static double callBudget(final int tier) {
+        final List<Double> budgets = callBudgets();
+        return budgets.get(clampIndex(tier, budgets.size()));
     }
 
     public static boolean allowBytecode() {
