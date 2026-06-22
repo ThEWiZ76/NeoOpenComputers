@@ -724,10 +724,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 final String prefix = args.arg(1).tojstring();
                 final String type = args.narg() >= 2 && !args.arg(2).isnil() ? args.arg(2).tojstring() : null;
-                for (Map.Entry<String, String> entry : machine.components().entrySet()) {
-                    if (entry.getKey().startsWith(prefix) && (type == null || type.equals(entry.getValue()))) {
-                        return LuaValue.valueOf(entry.getKey());
-                    }
+                final String address = componentAddressByPrefix(prefix, type);
+                if (address != null) {
+                    return LuaValue.valueOf(address);
                 }
                 return noSuchComponent();
             }
@@ -806,11 +805,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     clearPrimaryComponent(type);
                     return LuaValue.NIL;
                 }
-                final String address = args.checkjstring(2);
-                if (!hasComponent(address)) {
-                    return noSuchComponent();
+                final String address = componentAddressByPrefix(args.checkjstring(2), type);
+                if (address == null) {
+                    throw new LuaError("no such component");
                 }
-                return LuaValue.valueOf(setPrimaryComponent(type, address));
+                setPrimaryComponent(type, address);
+                return LuaValue.NIL;
             }
         });
         component.set("methods", new VarArgFunction() {
@@ -1179,6 +1179,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         }
         for (Map.Entry<String, String> entry : components.entrySet()) {
             if (entry.getValue().equals(type)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    private String componentAddressByPrefix(final String prefix, final String type) {
+        if (machine == null) {
+            return null;
+        }
+        for (Map.Entry<String, String> entry : machine.components().entrySet()) {
+            if (entry.getKey().startsWith(prefix) && (type == null || type.equals(entry.getValue()))) {
                 return entry.getKey();
             }
         }
