@@ -51,6 +51,7 @@ final class ModSettingsTest {
         assertEquals(2048, ModSettings.maxReadBuffer());
         assertEquals(true, ModSettings.enableHttp());
         assertEquals(true, ModSettings.enableTcp());
+        assertEquals(0, ModSettings.httpRequestTimeout());
         assertEquals(4, ModSettings.maxTcpConnections());
         assertEquals("opencomputers/" + API.VERSION, ModSettings.httpUserAgent());
         assertEquals(List.of(1024, 2048, 4096), ModSettings.hddSizes());
@@ -94,6 +95,7 @@ final class ModSettingsTest {
         assertEquals(List.of("filesystem", "hddSizes"), ModSettings.HDD_SIZES.getPath());
         assertEquals(List.of("internet", "enableHttp"), ModSettings.ENABLE_HTTP.getPath());
         assertEquals(List.of("internet", "enableTcp"), ModSettings.ENABLE_TCP.getPath());
+        assertEquals(List.of("internet", "requestTimeout"), ModSettings.REQUEST_TIMEOUT.getPath());
         assertEquals(List.of("internet", "maxTcpConnections"), ModSettings.MAX_TCP_CONNECTIONS.getPath());
         assertEquals(List.of("internet", "httpUserAgent"), ModSettings.HTTP_USER_AGENT.getPath());
     }

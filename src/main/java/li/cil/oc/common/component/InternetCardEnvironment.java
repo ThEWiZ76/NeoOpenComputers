@@ -221,8 +221,8 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             try {
                 connection = (HttpURLConnection) new URL(url).openConnection();
                 connection.setDoInput(true);
-                connection.setConnectTimeout(10_000);
-                connection.setReadTimeout(10_000);
+                connection.setConnectTimeout(ModSettings.httpRequestTimeout());
+                connection.setReadTimeout(ModSettings.httpRequestTimeout());
                 connection.setRequestMethod(method);
                 connection.setRequestProperty("User-Agent", ModSettings.httpUserAgent());
                 for (Map.Entry<String, String> header : headers.entrySet()) {

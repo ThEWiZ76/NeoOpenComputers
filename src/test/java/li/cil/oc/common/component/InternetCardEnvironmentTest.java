@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -190,6 +191,37 @@ final class InternetCardEnvironmentTest {
             assertArrayEquals(new Object[]{null, "http requests are unavailable"},
                 card.request(null, new TestArguments("https://example.test/disabled")));
         });
+    }
+
+    @Test
+    void httpRequestUsesConfiguredRequestTimeout() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+        CompletableFuture<Void> accepted = new CompletableFuture<>();
+        ExecutorService serverThread = Executors.newSingleThreadExecutor();
+
+        try (ServerSocket server = new ServerSocket(0)) {
+            serverThread.submit(() -> {
+                try (Socket socket = server.accept()) {
+                    accepted.complete(null);
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+                } catch (Exception e) {
+                    accepted.completeExceptionally(e);
+                }
+                return null;
+            });
+
+            withCachedConfig(ModSettings.REQUEST_TIMEOUT, 1, () -> {
+                InternetCardEnvironment.HttpRequest request = assertInstanceOf(
+                    InternetCardEnvironment.HttpRequest.class,
+                    card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/silent"))[0]);
+                accepted.get(2, TimeUnit.SECONDS);
+                awaitHttpTimeout(request);
+            });
+        } finally {
+            serverThread.shutdownNow();
+            assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
+        }
     }
 
     @Test
@@ -361,6 +393,19 @@ final class InternetCardEnvironmentTest {
             Thread.sleep(10);
         }
         throw new AssertionError("HTTP request did not connect");
+    }
+
+    private static void awaitHttpTimeout(final InternetCardEnvironment.HttpRequest request) throws Exception {
+        for (int attempt = 0; attempt < 150; attempt++) {
+            try {
+                Object[] response = request.response(null, new TestArguments());
+                assertArrayEquals(new Object[]{null}, response);
+            } catch (CompletionException e) {
+                return;
+            }
+            Thread.sleep(20);
+        }
+        throw new AssertionError("HTTP request did not time out");
     }
 
     private static byte[] awaitRead(final InternetCardEnvironment.TcpSocket socket, final int length) throws Exception {
