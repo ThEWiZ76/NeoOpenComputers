@@ -477,6 +477,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void validatesOsDateTimeArgumentLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid, message = pcall(function()
+              os.date('%F', 'soon')
+            end)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("bad argument #2 (number or nil expected, got string)"));
+    }
+
+    @Test
     void readsBootSourceFromEepromDataTag() {
         CompoundTag data = new CompoundTag();
         data.putByteArray(ItemRegistry.EEPROM_CODE_TAG, "counter = 7".getBytes(StandardCharsets.UTF_8));

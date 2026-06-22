@@ -1200,6 +1200,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 String format = args.narg() > 0 && args.arg(1).isstring() ? args.arg(1).tojstring() : "%d/%m/%y %H:%M:%S";
+                if (args.narg() > 1 && !args.arg(2).isnil() && !args.arg(2).isnumber()) {
+                    throw new LuaError("bad argument #2 (number or nil expected, got " + luaTypeName(args.arg(2)) + ")");
+                }
                 final double time = args.narg() > 1 && args.arg(2).isnumber() ? args.arg(2).todouble() : worldTimestamp();
                 if (format.startsWith("!")) {
                     format = format.substring(1);
