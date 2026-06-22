@@ -1364,6 +1364,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void componentGetPrimarySelectsInitialPrimaryLikeUpstream() {
+        List<String> signals = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            primary = component.getPrimary('filesystem')
+            primaryAddress = primary.address
+            """);
+        architecture.bind(machineWithComponentsAndSignalLog(Map.of("fs-address", "filesystem"), signals));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("fs-address", architecture.globalString("primaryAddress"));
+        assertEquals(List.of("component_available:filesystem"), signals);
+    }
+
+    @Test
     void resolvesComponentPrefixesAndPrimaryStatusForLua() {
         Map<String, String> components = new LinkedHashMap<>();
         components.put("fs1-address", "filesystem");

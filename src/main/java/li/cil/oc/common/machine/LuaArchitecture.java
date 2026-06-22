@@ -1009,10 +1009,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (machine == null) {
                     return LuaValue.NIL;
                 }
-                final String address = firstComponentAddress(type);
-                if (address == null) {
+                if (!ensurePrimaryAvailable(type)) {
                     throw new LuaError("no primary '" + type + "' available");
                 }
+                final String address = primaryComponents.get(type);
                 return createComponentProxy(address);
             }
         });
