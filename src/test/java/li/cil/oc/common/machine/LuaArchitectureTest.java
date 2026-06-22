@@ -2115,6 +2115,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void mapsUserdataCallHostFailuresToLuaResultsLikeUpstreamWrapper() {
+        TestValue value = new ThrowingCallValue(new IllegalStateException("call failed"));
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            result, message = value('payload')
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("result"));
+        assertEquals("call failed", architecture.globalString("message"));
+    }
+
+    @Test
     void exposesComponentProxyToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
@@ -3818,7 +3834,7 @@ final class LuaArchitectureTest {
     private static void accessorCallback() {
     }
 
-    private static final class TestValue implements Value {
+    private static class TestValue implements Value {
         private boolean unapplied;
         private String unapplyArgument;
         private String unapplyValue;
@@ -3897,6 +3913,19 @@ final class LuaArchitectureTest {
                 throw new IllegalStateException("broken tostring");
             }
             return "test-value";
+        }
+    }
+
+    private static final class ThrowingCallValue extends TestValue {
+        private final RuntimeException failure;
+
+        private ThrowingCallValue(final RuntimeException failure) {
+            this.failure = failure;
+        }
+
+        @Override
+        public Object[] call(final Context context, final Arguments arguments) {
+            throw failure;
         }
     }
 
