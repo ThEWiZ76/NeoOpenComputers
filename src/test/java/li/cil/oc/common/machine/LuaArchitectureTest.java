@@ -628,6 +628,9 @@ final class LuaArchitectureTest {
             after = computer.getArchitecture()
             unchanged = computer.setArchitecture('second')
             missing, missingMessage = computer.setArchitecture('missing')
+            missingArgValid, missingArgMessage = pcall(function()
+              computer.setArchitecture()
+            end)
             """);
         architecture.bind(machine);
 
@@ -642,6 +645,8 @@ final class LuaArchitectureTest {
         assertEquals(false, architecture.globalBoolean("unchanged"));
         assertEquals("nil", architecture.globalString("missing"));
         assertEquals("unknown architecture", architecture.globalString("missingMessage"));
+        assertEquals(false, architecture.globalBoolean("missingArgValid"));
+        assertTrue(architecture.globalString("missingArgMessage").contains("string expected"));
     }
 
     @Test

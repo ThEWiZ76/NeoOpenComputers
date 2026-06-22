@@ -618,14 +618,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("setArchitecture", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (args.narg() < 1) {
-                    return LuaValue.NIL;
-                }
+                final String requestedName = args.checkjstring(1);
                 final Processor processor = processor();
                 if (!(processor instanceof MutableProcessor mutableProcessor)) {
                     return LuaValue.NIL;
                 }
-                final String requestedName = args.arg1().tojstring();
                 final ItemStack stack = processorStack();
                 for (Class<? extends Architecture> architecture : mutableProcessor.allArchitectures()) {
                     if (requestedName.equals(li.cil.oc.api.Machine.getArchitectureName(architecture))) {
