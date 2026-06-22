@@ -2313,7 +2313,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public int checkInteger(final int index) {
-            final Object value = checkAny(index);
+            final Object value = checkAny(index, "integer");
             if (value instanceof Double doubleValue) {
                 if (Double.isNaN(doubleValue)) {
                     throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number has no integer representation)");
