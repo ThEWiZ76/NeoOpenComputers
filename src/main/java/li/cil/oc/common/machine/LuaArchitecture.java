@@ -1622,6 +1622,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.NIL;
             }
         });
+        metatable.set("__metatable", "userdata");
+        metatable.set("__tostring", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                return LuaValue.valueOf(value.toString());
+            }
+        });
         metatable.set("__pairs", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {

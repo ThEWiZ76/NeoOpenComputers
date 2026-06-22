@@ -1065,6 +1065,8 @@ final class LuaArchitectureTest {
             metaApplied = value.metaApply
             value.metaUnapply = 'meta-unapply'
             valueType = value.type
+            valueString = tostring(value)
+            metatableValue = getmetatable(value)
             unexpectedKeys = 0
             for key in pairs(value) do
               if key == 'echo' then
@@ -1091,6 +1093,8 @@ final class LuaArchitectureTest {
         assertEquals("called:meta-call", architecture.globalString("metaCalled"));
         assertEquals("applied:metaApply", architecture.globalString("metaApplied"));
         assertEquals("userdata", architecture.globalString("valueType"));
+        assertEquals("test-value", architecture.globalString("valueString"));
+        assertEquals("userdata", architecture.globalString("metatableValue"));
         assertEquals(true, architecture.globalBoolean("echoVisible"));
         assertEquals(0, architecture.globalInteger("unexpectedKeys"));
         assertEquals("nil", architecture.globalString("unapplied"));
@@ -2233,6 +2237,11 @@ final class LuaArchitectureTest {
 
         @Override
         public void save(final CompoundTag tag) {
+        }
+
+        @Override
+        public String toString() {
+            return "test-value";
         }
     }
 
