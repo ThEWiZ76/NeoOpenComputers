@@ -125,6 +125,34 @@ final class NanomachinesRegistryTest {
         assertEquals(1, controller.getInputCount(linked));
     }
 
+    @Test
+    void controllerGeneratesConnectorGraphFromBehaviorCount() {
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(java.util.stream.IntStream.range(0, 10)
+            .mapToObj(index -> (Behavior) new TestBehavior("behavior" + index))
+            .toList()));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+
+        controller.save(tag);
+
+        ListTag connectors = tag.getList("connectors", CompoundTag.TAG_COMPOUND);
+        assertEquals(2, connectors.size());
+        for (int i = 0; i < connectors.size(); i++) {
+            assertTrue(connectors.getCompound(i).getIntArray("triggerInputs").length > 0);
+        }
+        assertTrue(hasConnectorBackedBehavior(tag.getList("behaviors", CompoundTag.TAG_COMPOUND)));
+    }
+
+    private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {
+        for (int i = 0; i < behaviors.size(); i++) {
+            if (behaviors.getCompound(i).getIntArray("connectorInputs").length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static final class TestBehaviorProvider implements BehaviorProvider {
         @Override
         public Iterable<Behavior> createBehaviors(final Player player) {

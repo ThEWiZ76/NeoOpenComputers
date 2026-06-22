@@ -48,8 +48,7 @@ final class SimpleNanomachineController implements Controller {
             }
         }
         disableActive(DisableReason.Default);
-        connectors = List.of();
-        setBehaviorEntries(assignTriggerInputs(created));
+        configureGeneratedGraph(created);
         return this;
     }
 
@@ -166,12 +165,44 @@ final class SimpleNanomachineController implements Controller {
         activeBehaviorsDirty = true;
     }
 
-    private List<BehaviorEntry> assignTriggerInputs(final List<BehaviorEntry> entries) {
+    private void configureGeneratedGraph(final List<BehaviorEntry> entries) {
         final int inputCount = Math.max(1, (int) Math.ceil(entries.size() * ModSettings.nanomachineTriggerQuota()));
+        final int connectorCount = (int) Math.ceil(entries.size() * ModSettings.nanomachineConnectorQuota());
+        connectors = createConnectorEntries(inputCount, connectorCount);
+        setBehaviorEntries(assignGeneratedInputs(entries, inputCount, connectorCount));
+    }
+
+    private List<ConnectorEntry> createConnectorEntries(final int inputCount, final int connectorCount) {
+        final int maxInputs = Math.max(1, ModSettings.nanomachineMaxInputs());
+        final int inputLimit = Math.min(inputCount, maxInputs);
+        final List<ConnectorEntry> entries = new ArrayList<>(connectorCount);
+        for (int i = 0; i < connectorCount; i++) {
+            final int[] triggerInputs = new int[inputLimit];
+            for (int input = 0; input < inputLimit; input++) {
+                triggerInputs[input] = (i + input) % inputCount;
+            }
+            entries.add(new ConnectorEntry(triggerInputs));
+        }
+        return List.copyOf(entries);
+    }
+
+    private List<BehaviorEntry> assignGeneratedInputs(final List<BehaviorEntry> entries, final int inputCount, final int connectorCount) {
+        final int maxInputs = Math.max(1, ModSettings.nanomachineMaxInputs());
+        final int maxOutputs = Math.max(1, ModSettings.nanomachineMaxOutputs());
+        final int[] connectorUseCounts = new int[connectorCount];
         final List<BehaviorEntry> assigned = new ArrayList<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
             final BehaviorEntry entry = entries.get(i);
-            assigned.add(new BehaviorEntry(entry.provider(), entry.behavior(), new int[]{i % inputCount}, new int[0]));
+            final int[] triggerInputs = new int[]{i % inputCount};
+            int[] connectorInputs = new int[0];
+            if (connectorCount > 0 && maxInputs > 1 && i % inputCount == 1) {
+                final int connector = (i / inputCount) % connectorCount;
+                if (connectorUseCounts[connector] < maxOutputs) {
+                    connectorUseCounts[connector]++;
+                    connectorInputs = new int[]{connector};
+                }
+            }
+            assigned.add(new BehaviorEntry(entry.provider(), entry.behavior(), triggerInputs, connectorInputs));
         }
         return assigned;
     }
