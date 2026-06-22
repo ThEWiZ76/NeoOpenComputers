@@ -215,6 +215,56 @@ final class NanomachinesRegistryTest {
         assertArrayEquals(new Object[]{"nanomachines", "maxActiveInputs", controller.getMaxActiveInputs()}, sender.lastPacket.data());
     }
 
+    @Test
+    void controllerRespondsToGetAndSetInputWirelessCommands() {
+        API.network = new NetworkRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 555}), sender);
+
+        sender.lastPacket = null;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getInput", 1}), sender);
+        assertTrue(sender.lastPacket != null);
+        assertEquals(555, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "input", 1, false}, sender.lastPacket.data());
+
+        sender.lastPacket = null;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setInput", 1, true}), sender);
+        assertTrue(sender.lastPacket != null);
+        assertEquals(555, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "input", 1, true}, sender.lastPacket.data());
+
+        sender.lastPacket = null;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getInput", 1}), sender);
+        assertTrue(sender.lastPacket != null);
+        assertEquals(555, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "input", 1, true}, sender.lastPacket.data());
+    }
+
+    @Test
+    void controllerReportsInputErrorForInvalidWirelessIndex() {
+        API.network = new NetworkRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 556}), sender);
+
+        sender.lastPacket = null;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getInput", 2}), sender);
+        assertTrue(sender.lastPacket != null);
+        assertEquals(556, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "input", "error"}, sender.lastPacket.data());
+
+        sender.lastPacket = null;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setInput", 2, true}), sender);
+        assertTrue(sender.lastPacket != null);
+        assertEquals(556, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "input", "error"}, sender.lastPacket.data());
+    }
+
     private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {
         for (int i = 0; i < behaviors.size(); i++) {
             if (behaviors.getCompound(i).getIntArray("connectorInputs").length > 0) {

@@ -168,6 +168,22 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             respond(sender, "safeActiveInputs", getSafeActiveInputs());
         } else if ("getMaxActiveInputs".equals(command)) {
             respond(sender, "maxActiveInputs", getMaxActiveInputs());
+        } else if ("getInput".equals(command) && data.length >= 3 && commandValue(data[2]) instanceof Number index) {
+            try {
+                respond(sender, "input", index.intValue(), getInput(index.intValue() - 1));
+            } catch (final RuntimeException e) {
+                respond(sender, "input", "error");
+            }
+        } else if ("setInput".equals(command) && data.length >= 4 && commandValue(data[2]) instanceof Number index && commandValue(data[3]) instanceof Boolean value) {
+            try {
+                if (setInput(index.intValue() - 1, value)) {
+                    respond(sender, "input", index.intValue(), getInput(index.intValue() - 1));
+                } else {
+                    respond(sender, "input", "too many active inputs");
+                }
+            } catch (final RuntimeException e) {
+                respond(sender, "input", "error");
+            }
         }
     }
 
@@ -380,6 +396,9 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     private void saveState() {
+        if (player == null) {
+            return;
+        }
         final CompoundTag tag = new CompoundTag();
         save(tag);
         player.getPersistentData().put(NanomachinesRegistry.TAG_CONTROLLER, tag);
