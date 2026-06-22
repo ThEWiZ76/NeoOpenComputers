@@ -1650,6 +1650,85 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void removedPrimaryScreenSwitchesKeyboardToNextScreenKeyboard() {
+        Map<String, String> components = new LinkedHashMap<>();
+        components.put("screen1-address", "screen");
+        components.put("screen2-address", "screen");
+        components.put("keyboard1-address", "keyboard");
+        components.put("keyboard2-address", "keyboard");
+        Queue<Signal> signals = new ArrayDeque<>(List.of(new TestSignal("component_removed", new Object[]{"screen1-address", "screen"})));
+        List<String> emittedSignals = new ArrayList<>();
+        double[] uptime = {50D};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            component.setPrimary('screen', 'screen1')
+            component.setPrimary('keyboard', 'keyboard1')
+            name, address, kind = computer.pullSignal()
+            screenAvailableDuringDelay = component.isAvailable('screen')
+            keyboardAvailableDuringDelay = component.isAvailable('keyboard')
+            seenScreen = false
+            seenKeyboard = false
+            repeat
+              availableName, availableKind = computer.pullSignal()
+              if availableName == 'component_available' and availableKind == 'screen' then
+                seenScreen = true
+              end
+              if availableName == 'component_available' and availableKind == 'keyboard' then
+                seenKeyboard = true
+              end
+            until seenScreen and seenKeyboard
+            screenAddress = component.getPrimary('screen').address
+            keyboardAddress = component.getPrimary('keyboard').address
+            """);
+        architecture.bind(machineWithScreenKeyboardPrimarySignals(
+            components,
+            signals,
+            uptime,
+            () -> components.remove("screen1-address"),
+            Map.of("screen2-address", new Object[]{"keyboard2-address"}),
+            emittedSignals
+        ));
+
+        assertTrue(architecture.initialize());
+        ExecutionResult firstResult = architecture.runThreaded(false);
+        if (firstResult instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+        assertInstanceOf(ExecutionResult.Sleep.class, firstResult);
+
+        assertEquals("component_removed", architecture.globalString("name"));
+        assertEquals("screen1-address", architecture.globalString("address"));
+        assertEquals("screen", architecture.globalString("kind"));
+        assertEquals(false, architecture.globalBoolean("screenAvailableDuringDelay"));
+        assertEquals(false, architecture.globalBoolean("keyboardAvailableDuringDelay"));
+        assertEquals(List.of(
+            "component_available:screen",
+            "component_available:keyboard",
+            "component_unavailable:screen",
+            "component_unavailable:keyboard"
+        ), emittedSignals);
+
+        uptime[0] = 50.1D;
+        ExecutionResult secondResult = architecture.runThreaded(false);
+        if (secondResult instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+        assertInstanceOf(ExecutionResult.Sleep.class, secondResult);
+
+        assertEquals("screen2-address", architecture.globalString("screenAddress"));
+        assertEquals("keyboard2-address", architecture.globalString("keyboardAddress"));
+        assertEquals(List.of(
+            "component_available:screen",
+            "component_available:keyboard",
+            "component_unavailable:screen",
+            "component_unavailable:keyboard"
+        ), emittedSignals.subList(0, 4));
+        assertEquals(List.of(
+            "component_available:keyboard",
+            "component_available:screen"
+        ), emittedSignals.subList(4, 6).stream().sorted().toList());
+    }
+
+    @Test
     void invokesRealFilesystemComponentFromLua() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -2085,7 +2164,7 @@ final class LuaArchitectureTest {
     }
 
     private static Machine machineWithScreenKeyboardPrimarySignals(final Map<String, String> components, final Queue<Signal> queuedSignals, final double[] uptime, final Runnable beforePopSignal, final Map<String, Object[]> keyboardResults, final List<String> emittedSignals) {
-        boolean[] componentAdded = {false};
+        boolean[] componentChanged = {false};
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -2103,16 +2182,16 @@ final class LuaArchitectureTest {
                 }
                 case "popSignal" -> {
                     Signal signal = queuedSignals.poll();
-                    if (signal != null && "component_added".equals(signal.name())) {
+                    if (signal != null && ("component_added".equals(signal.name()) || "component_removed".equals(signal.name()))) {
                         beforePopSignal.run();
-                        componentAdded[0] = true;
+                        componentChanged[0] = true;
                     }
                     yield signal;
                 }
                 case "signal" -> {
                     Object[] signalArguments = (Object[]) args[1];
                     emittedSignals.add(args[0] + ":" + signalArguments[0]);
-                    if (componentAdded[0]) {
+                    if (componentChanged[0]) {
                         queuedSignals.add(new TestSignal((String) args[0], signalArguments));
                     }
                     yield true;

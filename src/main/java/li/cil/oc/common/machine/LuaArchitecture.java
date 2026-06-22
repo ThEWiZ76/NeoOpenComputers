@@ -1540,6 +1540,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 final String next = firstAvailableComponentAddress(type);
                 if (next != null) {
                     setPrimaryComponent(type, next);
+                    if ("screen".equals(type)) {
+                        final List<String> nextKeyboards = componentKeyboardAddresses(next);
+                        final String oldKeyboard = currentOrPendingPrimaryAddress("keyboard");
+                        if (!nextKeyboards.isEmpty() && !nextKeyboards.getFirst().equals(oldKeyboard)) {
+                            setPrimaryComponent("keyboard", nextKeyboards.getFirst());
+                        }
+                    }
                 } else {
                     clearPrimaryComponent(type);
                 }
