@@ -302,6 +302,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         installLoadCompatibility(globals);
         installPairsCompatibility(globals);
         installStringCompatibility(globals);
+        installXpcallCompatibility(globals);
         LoadState.install(globals);
         LuaC.install(globals);
         return globals;
@@ -402,6 +403,20 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return chunk;
             }
         }
+    }
+
+    private static void installXpcallCompatibility(final Globals globals) {
+        final LuaValue originalXpcall = globals.get("xpcall");
+        globals.set("xpcall", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaValue messageHandler = args.arg(2);
+                if (messageHandler.type() != LuaValue.TFUNCTION) {
+                    throw new LuaError("bad argument #2 (function expected, got " + luaTypeName(messageHandler) + ")");
+                }
+                return originalXpcall.invoke(args);
+            }
+        });
     }
 
     private static boolean isLuaBytecode(final LuaString value) {

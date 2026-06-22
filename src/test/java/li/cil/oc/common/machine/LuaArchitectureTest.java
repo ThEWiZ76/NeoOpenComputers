@@ -275,6 +275,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void xpcallValidatesMessageHandlerLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid, message = pcall(function()
+              xpcall(function() end, 'not-a-function')
+            end)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("bad argument #2"));
+        assertTrue(architecture.globalString("message").contains("function expected"));
+    }
+
+    @Test
     void exposesOpenComputersCheckArgCompatibility() {
         LuaArchitecture architecture = new LuaArchitecture("""
             valid = checkArg(1, 'text', 'string')
