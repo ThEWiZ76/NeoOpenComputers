@@ -2164,6 +2164,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private static Object toJavaValue(final LuaValue value) {
+        return toJavaValue(value, new IdentityHashMap<>());
+    }
+
+    private static Object toJavaValue(final LuaValue value, final IdentityHashMap<LuaTable, Map<Object, Object>> processed) {
         if (value.isnil()) {
             return null;
         }
@@ -2184,7 +2188,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             if (rawValue.isuserdata()) {
                 return rawValue.touserdata();
             }
+            final Map<Object, Object> cached = processed.get(table);
+            if (cached != null) {
+                return cached;
+            }
             final Map<Object, Object> values = new LinkedHashMap<>();
+            processed.put(table, values);
             LuaValue key = LuaValue.NIL;
             while (true) {
                 final Varargs next = table.next(key);
@@ -2192,7 +2201,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (key.isnil()) {
                     break;
                 }
-                values.put(toJavaValue(key), toJavaValue(next.arg(2)));
+                values.put(toJavaValue(key, processed), toJavaValue(next.arg(2), processed));
             }
             return values;
         }

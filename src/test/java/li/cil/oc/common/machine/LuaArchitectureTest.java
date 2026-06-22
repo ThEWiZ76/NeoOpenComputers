@@ -1522,6 +1522,29 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void unwrapsCyclicLuaTablesForCallbacksLikeUpstream() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        List<String> invokedMethods = new ArrayList<>();
+        List<Object[]> invokedArguments = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            argument = {}
+            argument.self = argument
+            result = component.invoke('fs-address', 'label', argument)
+            """);
+        architecture.bind(machineWithMethodsAndInvokeCapture(Map.of("fs-address", "filesystem"), methods, invokedMethods, invokedArguments));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(List.of("label"), invokedMethods);
+        assertEquals(1, invokedArguments.getFirst().length);
+        Map<?, ?> argument = (Map<?, ?>) invokedArguments.getFirst()[0];
+        assertTrue(argument == argument.get("self"));
+        assertEquals(true, architecture.globalBoolean("result"));
+    }
+
+    @Test
     void componentProxyMethodToStringReturnsDocumentation() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
