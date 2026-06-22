@@ -817,12 +817,13 @@ final class LuaArchitectureTest {
 
     @Test
     void exposesComputerShutdownToLua() {
-        LuaArchitecture architecture = new LuaArchitecture("computer.shutdown()");
+        LuaArchitecture architecture = new LuaArchitecture("computer.shutdown(); continued = true");
 
         assertTrue(architecture.initialize());
         ExecutionResult.Shutdown result = assertInstanceOf(ExecutionResult.Shutdown.class, architecture.runThreaded(false));
 
         assertEquals(false, result.reboot);
+        assertEquals(false, architecture.globalBoolean("continued"));
     }
 
     @Test

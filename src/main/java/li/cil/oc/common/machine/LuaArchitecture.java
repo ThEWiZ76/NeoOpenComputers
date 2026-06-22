@@ -716,7 +716,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 pendingResult = new ExecutionResult.Shutdown(args.narg() > 0 && args.arg1().toboolean());
-                return LuaValue.NIL;
+                return globals.yield(LuaValue.NIL);
             }
         });
         computer.set("beep", new VarArgFunction() {
