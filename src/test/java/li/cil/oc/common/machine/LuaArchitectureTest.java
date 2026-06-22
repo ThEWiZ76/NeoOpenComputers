@@ -163,6 +163,23 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsBytecodeLoadFromReaderWhenDisabledLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            local dumped = string.dump(function() return 7 end)
+            loaded, message = load(function()
+              return dumped
+            end)
+            loadedType = type(loaded)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("loadedType"));
+        assertTrue(architecture.globalString("message").contains("binary"));
+    }
+
+    @Test
     void exposesMinimalDebugTraceback() {
         LuaArchitecture architecture = new LuaArchitecture("""
             tracebackType = type(debug.traceback)

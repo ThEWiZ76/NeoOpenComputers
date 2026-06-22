@@ -324,12 +324,55 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 final LuaValue chunk = args.arg(1);
-                if (!ModSettings.allowBytecode() && chunk instanceof LuaString string && isLuaBytecode(string)) {
-                    return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("attempt to load a binary chunk"));
+                if (!ModSettings.allowBytecode()) {
+                    if (chunk instanceof LuaString string && isLuaBytecode(string)) {
+                        return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("attempt to load a binary chunk"));
+                    }
+                    if (chunk.isfunction()) {
+                        final Varargs readerResult = textFromLoadReader(chunk);
+                        if (readerResult.narg() > 1) {
+                            return readerResult;
+                        }
+                        return originalLoad.invoke(textModeLoadArgs(args, readerResult.arg1()));
+                    }
+                    return originalLoad.invoke(textModeLoadArgs(args));
                 }
                 return originalLoad.invoke(args);
             }
         });
+    }
+
+    private static Varargs textModeLoadArgs(final Varargs args) {
+        return textModeLoadArgs(args, args.arg(1));
+    }
+
+    private static Varargs textModeLoadArgs(final Varargs args, final LuaValue chunk) {
+        final int count = Math.max(3, args.narg());
+        final LuaValue[] values = new LuaValue[count];
+        for (int index = 0; index < count; index++) {
+            values[index] = args.arg(index + 1);
+        }
+        values[0] = chunk;
+        values[2] = LuaValue.valueOf("t");
+        return LuaValue.varargsOf(values);
+    }
+
+    private static Varargs textFromLoadReader(final LuaValue reader) {
+        final StringBuilder text = new StringBuilder();
+        while (true) {
+            final LuaValue chunk = reader.invoke().arg1();
+            if (chunk.isnil()) {
+                return LuaValue.valueOf(text.toString());
+            }
+            if (chunk instanceof LuaString string) {
+                if (text.isEmpty() && isLuaBytecode(string)) {
+                    return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("attempt to load a binary chunk"));
+                }
+                text.append(string.tojstring());
+            } else {
+                return chunk;
+            }
+        }
     }
 
     private static boolean isLuaBytecode(final LuaString value) {
