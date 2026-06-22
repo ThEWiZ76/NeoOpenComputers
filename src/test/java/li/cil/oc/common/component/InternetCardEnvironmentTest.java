@@ -141,6 +141,44 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void httpRequestUsesConfiguredUserAgent() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+        CompletableFuture<String> userAgent = new CompletableFuture<>();
+        ExecutorService serverThread = Executors.newSingleThreadExecutor();
+
+        try (ServerSocket server = new ServerSocket(0)) {
+            serverThread.submit(() -> {
+                try (Socket socket = server.accept();
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1))) {
+                    String header;
+                    while ((header = reader.readLine()) != null && !header.isEmpty()) {
+                        if (header.regionMatches(true, 0, "User-Agent:", 0, "User-Agent:".length())) {
+                            userAgent.complete(header.substring("User-Agent:".length()).trim());
+                        }
+                    }
+                    socket.getOutputStream().write("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+                    socket.getOutputStream().flush();
+                } catch (IOException e) {
+                    userAgent.completeExceptionally(e);
+                }
+                return null;
+            });
+
+            withCachedConfig(ModSettings.HTTP_USER_AGENT, "neo/$version", () -> {
+                Object handle = card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/headers"))[0];
+                InternetCardEnvironment.HttpRequest request = assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
+                awaitHttpConnected(request);
+            });
+
+            assertEquals("neo/" + API.VERSION, userAgent.get(2, TimeUnit.SECONDS));
+        } finally {
+            serverThread.shutdownNow();
+            assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
     void invalidHttpSchemeFailsLikeUpstream() {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {

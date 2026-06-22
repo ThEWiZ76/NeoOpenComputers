@@ -1,6 +1,5 @@
 package li.cil.oc.common.component;
 
-import li.cil.oc.api.API;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -38,7 +37,6 @@ import java.util.concurrent.Executors;
 
 public class InternetCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "internet";
-    private static final String DEFAULT_USER_AGENT = "opencomputers/" + API.VERSION;
     private static final ExecutorService HTTP_EXECUTOR = Executors.newCachedThreadPool(runnable -> {
         final Thread thread = new Thread(runnable, "NeoOpenComputers Internet");
         thread.setDaemon(true);
@@ -220,7 +218,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
                 connection.setConnectTimeout(10_000);
                 connection.setReadTimeout(10_000);
                 connection.setRequestMethod(method);
-                connection.setRequestProperty("User-Agent", DEFAULT_USER_AGENT);
+                connection.setRequestProperty("User-Agent", ModSettings.httpUserAgent());
                 for (Map.Entry<String, String> header : headers.entrySet()) {
                     connection.setRequestProperty(header.getKey(), header.getValue());
                 }

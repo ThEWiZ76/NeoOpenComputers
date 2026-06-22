@@ -1,5 +1,6 @@
 package li.cil.oc.common;
 
+import li.cil.oc.api.API;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.List;
@@ -37,6 +38,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
     public static final ModConfigSpec.IntValue MAX_TCP_CONNECTIONS;
+    public static final ModConfigSpec.ConfigValue<String> HTTP_USER_AGENT;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
@@ -134,6 +136,9 @@ public final class ModSettings {
         MAX_TCP_CONNECTIONS = builder
             .comment("Maximum open internet-card HTTP/TCP connections. OpenComputers upstream default is 4.")
             .defineInRange("maxTcpConnections", 4, 0, Integer.MAX_VALUE);
+        HTTP_USER_AGENT = builder
+            .comment("HTTP User-Agent for internet-card requests. $version is replaced with the mod version.")
+            .define("httpUserAgent", "opencomputers/$version");
         builder.pop();
 
         builder.push("power");
@@ -302,6 +307,10 @@ public final class ModSettings {
         return intValue(MAX_TCP_CONNECTIONS);
     }
 
+    public static String httpUserAgent() {
+        return stringValue(HTTP_USER_AGENT).replace("$version", API.VERSION);
+    }
+
     public static List<Integer> hddSizes() {
         final List<Integer> sizes = listValue(HDD_SIZES);
         if (sizes.size() != DEFAULT_HDD_SIZES.size()) {
@@ -352,6 +361,14 @@ public final class ModSettings {
             return List.copyOf(value.get());
         } catch (final IllegalStateException ignored) {
             return List.copyOf(value.getDefault());
+        }
+    }
+
+    private static String stringValue(final ModConfigSpec.ConfigValue<String> value) {
+        try {
+            return value.get();
+        } catch (final IllegalStateException ignored) {
+            return value.getDefault();
         }
     }
 

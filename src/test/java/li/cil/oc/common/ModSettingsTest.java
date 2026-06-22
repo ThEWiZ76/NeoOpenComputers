@@ -1,5 +1,6 @@
 package li.cil.oc.common;
 
+import li.cil.oc.api.API;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -49,6 +50,7 @@ final class ModSettingsTest {
         assertEquals(16, ModSettings.maxHandles());
         assertEquals(2048, ModSettings.maxReadBuffer());
         assertEquals(4, ModSettings.maxTcpConnections());
+        assertEquals("opencomputers/" + API.VERSION, ModSettings.httpUserAgent());
         assertEquals(List.of(1024, 2048, 4096), ModSettings.hddSizes());
         assertEquals(1024, ModSettings.hddSize(0));
         assertEquals(2048, ModSettings.hddSize(1));
@@ -89,5 +91,6 @@ final class ModSettingsTest {
         assertEquals(List.of("filesystem", "maxReadBuffer"), ModSettings.MAX_READ_BUFFER.getPath());
         assertEquals(List.of("filesystem", "hddSizes"), ModSettings.HDD_SIZES.getPath());
         assertEquals(List.of("internet", "maxTcpConnections"), ModSettings.MAX_TCP_CONNECTIONS.getPath());
+        assertEquals(List.of("internet", "httpUserAgent"), ModSettings.HTTP_USER_AGENT.getPath());
     }
 }
