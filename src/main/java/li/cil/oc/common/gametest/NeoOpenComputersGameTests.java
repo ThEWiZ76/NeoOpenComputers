@@ -811,6 +811,33 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesOverloadDamagesPlayersAboveSafeInputCount(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.common.NanomachinesRegistry registry = new li.cil.oc.common.NanomachinesRegistry();
+        registry.addProvider(new RecordingNanomachineProvider(List.of(
+            new RecordingNanomachineBehavior(),
+            new RecordingNanomachineBehavior(),
+            new RecordingNanomachineBehavior(),
+            new RecordingNanomachineBehavior(),
+            new RecordingNanomachineBehavior(),
+            new RecordingNanomachineBehavior(),
+            new RecordingNanomachineBehavior(),
+            new RecordingNanomachineBehavior()
+        )));
+        final li.cil.oc.api.nanomachines.Controller controller = registry.installController(player);
+        helper.assertTrue(controller.getTotalInputCount() > controller.getSafeActiveInputs(), "Nanomachines test controller has too few inputs for overload");
+        for (int input = 0; input <= controller.getSafeActiveInputs(); input++) {
+            helper.assertTrue(controller.setInput(input, true), "Nanomachines rejected overload test input " + input);
+        }
+
+        final float before = player.getHealth();
+        runNanomachinesTicks(registry, player, 20);
+
+        helper.assertTrue(player.getHealth() < before, "Nanomachines overload did not damage player");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void mfuLinksRemoteSidedTileEnvironment(final GameTestHelper helper) {
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(2, 1, 0);
@@ -5133,6 +5160,12 @@ public final class NeoOpenComputersGameTests {
         }
     }
 
+    private static void runNanomachinesTicks(final li.cil.oc.common.NanomachinesRegistry registry, final Player player, final int ticks) {
+        for (int i = 0; i < ticks; i++) {
+            registry.update(player);
+        }
+    }
+
     private static void writeFile(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final String filesystemAddress, final String path, final String data) {
         try {
             final Object handle = computer.machine().invoke(filesystemAddress, "open", new Object[]{path, "w"})[0];
@@ -5949,15 +5982,19 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static final class RecordingNanomachineProvider implements li.cil.oc.api.nanomachines.BehaviorProvider {
-        private final li.cil.oc.api.nanomachines.Behavior behavior;
+        private final Iterable<li.cil.oc.api.nanomachines.Behavior> behaviors;
 
         private RecordingNanomachineProvider(final li.cil.oc.api.nanomachines.Behavior behavior) {
-            this.behavior = behavior;
+            this(List.of(behavior));
+        }
+
+        private RecordingNanomachineProvider(final Iterable<li.cil.oc.api.nanomachines.Behavior> behaviors) {
+            this.behaviors = behaviors;
         }
 
         @Override
         public Iterable<li.cil.oc.api.nanomachines.Behavior> createBehaviors(final Player player) {
-            return List.of(behavior);
+            return behaviors;
         }
 
         @Override
@@ -5967,7 +6004,7 @@ public final class NeoOpenComputersGameTests {
 
         @Override
         public li.cil.oc.api.nanomachines.Behavior readFromNBT(final Player player, final CompoundTag nbt) {
-            return behavior;
+            return behaviors.iterator().hasNext() ? behaviors.iterator().next() : null;
         }
     }
 

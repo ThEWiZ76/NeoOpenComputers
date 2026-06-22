@@ -37,6 +37,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private final String uuid = UUID.randomUUID().toString();
     private int responsePort;
     private int commandDelay;
+    private int updateTicks;
     private Runnable queuedCommand;
     private double buffer;
 
@@ -209,12 +210,14 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         if (player != null && !player.isAlive()) {
             return;
         }
+        updateTicks++;
         if (commandDelay > 0) {
             commandDelay--;
             if (commandDelay == 0) {
                 runQueuedCommand();
             }
         }
+        damageOverloadedPlayer();
     }
 
     void save(final CompoundTag tag) {
@@ -455,6 +458,16 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             }
         }
         return active;
+    }
+
+    private void damageOverloadedPlayer() {
+        if (player == null || player.getAbilities().instabuild || getLocalBuffer() <= 0D || updateTicks % 20 != 0) {
+            return;
+        }
+        final int overload = activeInputCount() - getSafeActiveInputs();
+        if (overload > 0) {
+            player.hurt(player.damageSources().magic(), overload);
+        }
     }
 
     private int[] activeInputs() {
