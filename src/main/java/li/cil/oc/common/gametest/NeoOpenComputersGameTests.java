@@ -64,6 +64,7 @@ import li.cil.oc.common.component.LinkedCardEnvironment;
 import li.cil.oc.common.component.MfuEnvironment;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
+import li.cil.oc.common.nanomachines.provider.NanomachineDisintegrationProvider;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.AssemblerTemplates;
@@ -893,6 +894,37 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(player.getHealth() < before, "Nanomachines overload did not damage player");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 300)
+    public static void nanomachinesDisintegrationBreaksNearbyBlocks(final GameTestHelper helper) {
+        final BlockPos playerPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = playerPos.relative(Direction.NORTH);
+        helper.setBlock(targetPos, Blocks.DIRT.defaultBlockState());
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.getAbilities().mayBuild = true;
+        player.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(playerPos)));
+        final li.cil.oc.common.NanomachinesRegistry registry = new li.cil.oc.common.NanomachinesRegistry();
+        registry.addProvider(new NanomachineDisintegrationProvider());
+        final li.cil.oc.api.detail.NanomachinesAPI previous = API.nanomachines;
+        API.nanomachines = registry;
+        try {
+            final li.cil.oc.api.nanomachines.Controller controller = registry.installController(player);
+            helper.assertTrue(controller.setInput(0, true), "Nanomachines rejected disintegration input");
+            helper.startSequence()
+                .thenExecuteFor(200, () -> registry.update(player))
+                .thenExecute(() -> {
+                    try {
+                        helper.assertTrue(helper.getBlockState(targetPos).isAir(), "Disintegration did not break nearby dirt");
+                    } finally {
+                        API.nanomachines = previous;
+                    }
+                })
+                .thenSucceed();
+        } catch (RuntimeException e) {
+            API.nanomachines = previous;
+            throw e;
+        }
     }
 
     @GameTest(template = "empty")
