@@ -790,9 +790,7 @@ final class LuaArchitectureTest {
             first = architectures[1]
             second = architectures[2]
             current = computer.getArchitecture()
-            changed = computer.setArchitecture('second')
-            after = computer.getArchitecture()
-            unchanged = computer.setArchitecture('second')
+            unchanged = computer.setArchitecture('first')
             missing, missingMessage = computer.setArchitecture('missing')
             missingArgValid, missingArgMessage = pcall(function()
               computer.setArchitecture()
@@ -806,13 +804,32 @@ final class LuaArchitectureTest {
         assertEquals("first", architecture.globalString("first"));
         assertEquals("second", architecture.globalString("second"));
         assertEquals("first", architecture.globalString("current"));
-        assertEquals(true, architecture.globalBoolean("changed"));
-        assertEquals("second", architecture.globalString("after"));
         assertEquals(false, architecture.globalBoolean("unchanged"));
         assertEquals("nil", architecture.globalString("missing"));
         assertEquals("unknown architecture", architecture.globalString("missingMessage"));
         assertEquals(false, architecture.globalBoolean("missingArgValid"));
         assertTrue(architecture.globalString("missingArgMessage").contains("string expected"));
+    }
+
+    @Test
+    void changingComputerArchitectureYieldsRebootLikeUpstream() {
+        DriverRegistry drivers = new DriverRegistry();
+        TestMutableProcessor processor = new TestMutableProcessor(FirstArchitecture.class);
+        drivers.add(processor);
+        API.driver = drivers;
+        MachineRegistry machines = new MachineRegistry();
+        machines.add(FirstArchitecture.class);
+        machines.add(SecondArchitecture.class);
+        API.machine = machines;
+        Machine machine = machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], Map.of(), new String[0], null, null, null, null, hostWithComponents(Collections.singletonList(null)));
+        LuaArchitecture architecture = new LuaArchitecture("computer.setArchitecture('second'); continued = true");
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        ExecutionResult.Shutdown result = assertInstanceOf(ExecutionResult.Shutdown.class, architecture.runThreaded(false));
+
+        assertEquals(true, result.reboot);
+        assertEquals(false, architecture.globalBoolean("continued"));
     }
 
     @Test
