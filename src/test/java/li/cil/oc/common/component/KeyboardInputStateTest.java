@@ -40,6 +40,18 @@ final class KeyboardInputStateTest {
     }
 
     @Test
+    void ignoresKeyUpWhenPlayerCanNoLongerInteract() {
+        CapturingNode node = new CapturingNode();
+        KeyboardInputState state = new KeyboardInputState();
+
+        state.onMessage(node, new TestMessage("keyboard.keyDown", null, 'a', 30), player -> true);
+        state.onMessage(node, new TestMessage("keyboard.keyUp", null, 'a', 30), player -> false);
+
+        assertEquals(1, node.signals.size());
+        assertEquals(Arrays.asList("computer.checked_signal", null, "key_down", (int) 'a', 30), node.signals.getFirst());
+    }
+
+    @Test
     void forwardsClipboardLines() {
         CapturingNode node = new CapturingNode();
         KeyboardInputState state = new KeyboardInputState();

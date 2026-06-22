@@ -40,6 +40,9 @@ public final class KeyboardInputState {
                 if (playerKeys.isEmpty()) {
                     pressedKeys.remove(player);
                 }
+                if (!isUsable.test(player)) {
+                    return;
+                }
                 node.sendToReachable(SIGNAL_MESSAGE, player, "key_up", (int) character, code);
             }
         } else if (CLIPBOARD_MESSAGE.equals(message.name()) && data.length >= 2) {
