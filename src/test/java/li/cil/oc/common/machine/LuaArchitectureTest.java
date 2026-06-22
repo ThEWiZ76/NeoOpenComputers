@@ -398,6 +398,26 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void unicodeCharWidthRejectsEmptyStringsLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            widthValid, widthMessage = pcall(function()
+              unicode.charWidth('')
+            end)
+            wideValid, wideMessage = pcall(function()
+              unicode.isWide('')
+            end)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("widthValid"));
+        assertTrue(architecture.globalString("widthMessage").contains("empty string"));
+        assertEquals(false, architecture.globalBoolean("wideValid"));
+        assertTrue(architecture.globalString("wideMessage").contains("empty string"));
+    }
+
+    @Test
     void exposesSystemLibraryToLua() {
         LuaArchitecture architecture = new LuaArchitecture("""
             bytecode = system.allowBytecode()

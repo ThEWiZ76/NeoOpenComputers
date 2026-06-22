@@ -2374,7 +2374,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private static int charWidth(final String value) {
         if (value.isEmpty()) {
-            return 0;
+            throw new LuaError("empty string");
         }
         return wcwidth(value.codePointAt(0));
     }
