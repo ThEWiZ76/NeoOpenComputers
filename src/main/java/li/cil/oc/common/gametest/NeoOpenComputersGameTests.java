@@ -65,6 +65,7 @@ import li.cil.oc.common.component.MfuEnvironment;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.nanomachines.provider.NanomachineDisintegrationProvider;
+import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.AssemblerTemplates;
@@ -84,6 +85,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.GameType;
@@ -893,6 +896,21 @@ public final class NeoOpenComputersGameTests {
         runNanomachinesTicks(registry, player, 20);
 
         helper.assertTrue(player.getHealth() < before, "Nanomachines overload did not damage player");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void nanomachinesHungryDamageBypassesResistance(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 4));
+        final NanomachineHungryProvider provider = new NanomachineHungryProvider();
+        final li.cil.oc.api.nanomachines.Behavior behavior = provider.createBehaviors(player).iterator().next();
+
+        final float before = player.getHealth();
+        behavior.onDisable(li.cil.oc.api.nanomachines.DisableReason.OutOfEnergy);
+
+        final float expected = before - (float) ModSettings.nanomachinesHungryDamage();
+        helper.assertTrue(Math.abs(player.getHealth() - expected) < 0.001F, "Hungry damage did not bypass resistance");
         helper.succeed();
     }
 

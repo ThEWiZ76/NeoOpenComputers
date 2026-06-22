@@ -6,6 +6,7 @@ import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.nanomachines.DisableReason;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.damage.ModDamageSources;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
@@ -47,7 +48,7 @@ public final class NanomachineHungryProvider implements BehaviorProvider {
             if (reason != DisableReason.OutOfEnergy || player == null) {
                 return;
             }
-            player.hurt(player.damageSources().magic(), (float) ModSettings.nanomachinesHungryDamage());
+            player.hurt(ModDamageSources.nanomachinesHungry(player), (float) ModSettings.nanomachinesHungryDamage());
             final Controller controller = Nanomachines.getController(player);
             if (controller != null) {
                 controller.changeBuffer(ModSettings.nanomachinesHungryEnergyRestored());
