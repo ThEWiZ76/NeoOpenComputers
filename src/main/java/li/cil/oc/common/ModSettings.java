@@ -7,6 +7,7 @@ import java.util.List;
 
 public final class ModSettings {
     private static final List<Integer> DEFAULT_HDD_SIZES = List.of(1024, 2048, 4096);
+    private static final List<Integer> DEFAULT_CPU_COMPONENT_COUNT = List.of(8, 12, 16, 1024);
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
     private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
     private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
@@ -23,6 +24,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue COMPUTER_TIMEOUT;
     public static final ModConfigSpec.IntValue EEPROM_SIZE;
     public static final ModConfigSpec.IntValue EEPROM_DATA_SIZE;
+    public static final ModConfigSpec.ConfigValue<List<? extends Integer>> CPU_COMPONENT_COUNT;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
@@ -121,6 +123,9 @@ public final class ModSettings {
         EEPROM_DATA_SIZE = builder
             .comment("EEPROM data storage size in bytes. OpenComputers upstream default is 256.")
             .defineInRange("eepromDataSize", 256, 0, Integer.MAX_VALUE);
+        CPU_COMPONENT_COUNT = builder
+            .comment("Supported component counts for tier-one, tier-two, tier-three, and creative CPUs. OpenComputers upstream default is [8, 12, 16, 1024].")
+            .defineList("cpuComponentCount", DEFAULT_CPU_COMPONENT_COUNT, value -> value instanceof Integer && (Integer) value >= 0);
         builder.push("lua");
         ALLOW_BYTECODE = builder
             .comment("Allow loading Lua bytecode directly. OpenComputers upstream default is false.")
@@ -256,6 +261,19 @@ public final class ModSettings {
 
     public static int eepromDataSize() {
         return intValue(EEPROM_DATA_SIZE);
+    }
+
+    public static List<Integer> cpuComponentCount() {
+        final List<Integer> counts = listValue(CPU_COMPONENT_COUNT);
+        if (counts.size() != DEFAULT_CPU_COMPONENT_COUNT.size()) {
+            return DEFAULT_CPU_COMPONENT_COUNT;
+        }
+        return counts;
+    }
+
+    public static int cpuComponentCount(final int tier) {
+        final List<Integer> counts = cpuComponentCount();
+        return counts.get(clampIndex(tier, counts.size()));
     }
 
     public static boolean allowBytecode() {

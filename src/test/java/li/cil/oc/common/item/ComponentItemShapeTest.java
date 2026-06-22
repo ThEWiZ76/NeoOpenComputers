@@ -22,6 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelReader;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -53,6 +54,18 @@ final class ComponentItemShapeTest {
         assertEquals(0.5D, budgetMethod.invoke(null, 0));
         assertEquals(1.0D, budgetMethod.invoke(null, 1));
         assertEquals(1.5D, budgetMethod.invoke(null, 2));
+    }
+
+    @Test
+    void processorsUseConfiguredComponentCounts() throws Exception {
+        withCachedConfig(ModSettings.CPU_COMPONENT_COUNT, List.of(2, 4, 6, 64), () -> {
+            assertEquals(2, cpu(0).supportedComponents(null));
+            assertEquals(4, cpu(1).supportedComponents(null));
+            assertEquals(6, cpu(2).supportedComponents(null));
+            assertEquals(2, componentBus(0).supportedComponents(null));
+            assertEquals(4, componentBus(1).supportedComponents(null));
+            assertEquals(6, componentBus(2).supportedComponents(null));
+        });
     }
 
     @Test
@@ -471,6 +484,30 @@ final class ComponentItemShapeTest {
         final Component component = assertInstanceOf(Component.class, environment.node());
 
         assertEquals(expectedCapacity, component.invoke("spaceTotal", null)[0]);
+    }
+
+    private static CpuItem cpu(final int tier) throws Exception {
+        final CpuItem item = allocate(CpuItem.class);
+        setField(item, "tier", tier);
+        return item;
+    }
+
+    private static ComponentBusItem componentBus(final int tier) throws Exception {
+        final ComponentBusItem item = allocate(ComponentBusItem.class);
+        setField(item, "tier", tier);
+        return item;
+    }
+
+    private static <T> T allocate(final Class<T> type) throws Exception {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        return type.cast(((Unsafe) unsafeField.get(null)).allocateInstance(type));
+    }
+
+    private static void setField(final Object target, final String name, final Object value) throws Exception {
+        final Field field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

@@ -8,6 +8,7 @@ import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.PassiveDeviceInfoEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -53,11 +54,7 @@ public class CpuItem extends Item implements Processor, CallBudget {
 
     @Override
     public int supportedComponents(final ItemStack stack) {
-        return switch (tier) {
-            case 0 -> 8;
-            case 1 -> 12;
-            default -> 16;
-        };
+        return ModSettings.cpuComponentCount(tier);
     }
 
     @Override
