@@ -1199,6 +1199,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         os.set("date", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
+                if (args.narg() > 0 && !args.arg(1).isnil() && !args.arg(1).isstring()) {
+                    throw new LuaError("bad argument #1 (string or nil expected, got " + luaTypeName(args.arg(1)) + ")");
+                }
                 String format = args.narg() > 0 && args.arg(1).isstring() ? args.arg(1).tojstring() : "%d/%m/%y %H:%M:%S";
                 if (args.narg() > 1 && !args.arg(2).isnil() && !args.arg(2).isnumber()) {
                     throw new LuaError("bad argument #2 (number or nil expected, got " + luaTypeName(args.arg(2)) + ")");
