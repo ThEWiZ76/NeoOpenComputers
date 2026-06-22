@@ -525,11 +525,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("addUser", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || args.narg() < 1) {
+                final String name = args.checkjstring(1);
+                if (machine == null) {
                     return LuaValue.FALSE;
                 }
                 try {
-                    machine.addUser(args.arg1().tojstring());
+                    machine.addUser(name);
                     return LuaValue.TRUE;
                 } catch (Exception e) {
                     throw new LuaError(e.getMessage() == null ? e.toString() : e.getMessage());
@@ -539,10 +540,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("removeUser", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || args.narg() < 1) {
+                final String name = args.checkjstring(1);
+                if (machine == null) {
                     return LuaValue.FALSE;
                 }
-                return LuaValue.valueOf(machine.removeUser(args.arg1().tojstring()));
+                return LuaValue.valueOf(machine.removeUser(name));
             }
         });
         computer.set("pullSignal", new VarArgFunction() {

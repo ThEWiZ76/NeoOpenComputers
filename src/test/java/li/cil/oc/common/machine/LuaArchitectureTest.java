@@ -710,6 +710,27 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void computerUserMutatorsRequireNames() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            addValid, addMessage = pcall(function()
+              computer.addUser()
+            end)
+            removeValid, removeMessage = pcall(function()
+              computer.removeUser()
+            end)
+            """);
+        architecture.bind(machineWithUserAccess(new String[0], new String[]{null}, new String[]{null}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("addValid"));
+        assertTrue(architecture.globalString("addMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("removeValid"));
+        assertTrue(architecture.globalString("removeMessage").contains("string expected"));
+    }
+
+    @Test
     void exposesComponentListToLua() {
         LuaArchitecture architecture = new LuaArchitecture("components = component.list(); fs = components['fs-address']");
         architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));
