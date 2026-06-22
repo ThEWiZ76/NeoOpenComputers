@@ -14,12 +14,15 @@ import java.util.List;
 final class SimpleNanomachineController implements Controller {
     private static final String TAG_ENERGY = "energy";
     private static final String TAG_ACTIVE_INPUTS = "activeInputs";
+    private static final String TAG_CONNECTORS = "connectors";
     private static final String TAG_BEHAVIORS = "behaviors";
     private static final String TAG_BEHAVIOR = "behavior";
     private static final String TAG_TRIGGER_INPUTS = "triggerInputs";
+    private static final String TAG_CONNECTOR_INPUTS = "connectorInputs";
 
     private final Player player;
     private final NanomachinesRegistry registry;
+    private List<ConnectorEntry> connectors = List.of();
     private List<BehaviorEntry> behaviorEntries = List.of();
     private List<Behavior> behaviors = List.of();
     private List<Behavior> activeBehaviors = List.of();
@@ -40,11 +43,12 @@ final class SimpleNanomachineController implements Controller {
         for (final var provider : registry.getProviders()) {
             for (final Behavior behavior : provider.createBehaviors(player)) {
                 if (behavior != null) {
-                    created.add(new BehaviorEntry(provider, behavior, new int[0]));
+                    created.add(new BehaviorEntry(provider, behavior, new int[0], new int[0]));
                 }
             }
         }
         disableActive(DisableReason.Default);
+        connectors = List.of();
         setBehaviorEntries(assignTriggerInputs(created));
         return this;
     }
@@ -92,7 +96,7 @@ final class SimpleNanomachineController implements Controller {
     public int getInputCount(final Behavior behavior) {
         for (final BehaviorEntry entry : behaviorEntries) {
             if (entry.behavior().equals(behavior)) {
-                return entry.activeInputCount(inputs);
+                return entry.activeInputCount(inputs, connectors);
             }
         }
         return 0;
@@ -123,6 +127,7 @@ final class SimpleNanomachineController implements Controller {
     void save(final CompoundTag tag) {
         tag.putDouble(TAG_ENERGY, buffer);
         tag.putIntArray(TAG_ACTIVE_INPUTS, activeInputs());
+        tag.put(TAG_CONNECTORS, saveConnectorEntries());
         tag.put(TAG_BEHAVIORS, saveBehaviorEntries());
     }
 
@@ -130,6 +135,9 @@ final class SimpleNanomachineController implements Controller {
         if (tag.contains(TAG_ENERGY)) {
             buffer = Math.clamp(tag.getDouble(TAG_ENERGY), 0D, getLocalBufferSize());
         }
+        connectors = tag.contains(TAG_CONNECTORS, CompoundTag.TAG_LIST)
+            ? loadConnectorEntries(tag.getList(TAG_CONNECTORS, CompoundTag.TAG_COMPOUND))
+            : List.of();
         if (tag.contains(TAG_BEHAVIORS, CompoundTag.TAG_LIST)) {
             disableActive(DisableReason.Default);
             setBehaviorEntries(loadBehaviorEntries(tag.getList(TAG_BEHAVIORS, CompoundTag.TAG_COMPOUND)));
@@ -154,7 +162,7 @@ final class SimpleNanomachineController implements Controller {
         }
         behaviors = List.copyOf(created);
         activeBehaviors = List.of();
-        inputs = new boolean[computeInputCount(behaviorEntries)];
+        inputs = new boolean[computeInputCount(connectors, behaviorEntries)];
         activeBehaviorsDirty = true;
     }
 
@@ -163,19 +171,42 @@ final class SimpleNanomachineController implements Controller {
         final List<BehaviorEntry> assigned = new ArrayList<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
             final BehaviorEntry entry = entries.get(i);
-            assigned.add(new BehaviorEntry(entry.provider(), entry.behavior(), new int[]{i % inputCount}));
+            assigned.add(new BehaviorEntry(entry.provider(), entry.behavior(), new int[]{i % inputCount}, new int[0]));
         }
         return assigned;
     }
 
-    private int computeInputCount(final List<BehaviorEntry> entries) {
+    private int computeInputCount(final List<ConnectorEntry> connectors, final List<BehaviorEntry> entries) {
         int inputCount = Math.max(1, (int) Math.ceil(entries.size() * ModSettings.nanomachineTriggerQuota()));
+        for (final ConnectorEntry connector : connectors) {
+            for (final int input : connector.triggerInputs()) {
+                inputCount = Math.max(inputCount, input + 1);
+            }
+        }
         for (final BehaviorEntry entry : entries) {
             for (final int input : entry.triggerInputs()) {
                 inputCount = Math.max(inputCount, input + 1);
             }
         }
         return inputCount;
+    }
+
+    private ListTag saveConnectorEntries() {
+        final ListTag tags = new ListTag();
+        for (final ConnectorEntry entry : connectors) {
+            final CompoundTag tag = new CompoundTag();
+            tag.putIntArray(TAG_TRIGGER_INPUTS, entry.triggerInputs());
+            tags.add(tag);
+        }
+        return tags;
+    }
+
+    private List<ConnectorEntry> loadConnectorEntries(final ListTag tags) {
+        final List<ConnectorEntry> entries = new ArrayList<>(tags.size());
+        for (int i = 0; i < tags.size(); i++) {
+            entries.add(new ConnectorEntry(tags.getCompound(i).getIntArray(TAG_TRIGGER_INPUTS)));
+        }
+        return List.copyOf(entries);
     }
 
     private ListTag saveBehaviorEntries() {
@@ -187,6 +218,7 @@ final class SimpleNanomachineController implements Controller {
                 tag.put(TAG_BEHAVIOR, data);
             }
             tag.putIntArray(TAG_TRIGGER_INPUTS, entry.triggerInputs());
+            tag.putIntArray(TAG_CONNECTOR_INPUTS, entry.connectorInputs());
             tags.add(tag);
         }
         return tags;
@@ -201,10 +233,13 @@ final class SimpleNanomachineController implements Controller {
             final int[] triggerInputs = tag.contains(TAG_TRIGGER_INPUTS, CompoundTag.TAG_INT_ARRAY)
                 ? tag.getIntArray(TAG_TRIGGER_INPUTS)
                 : new int[]{i % fallbackInputCount};
+            final int[] connectorInputs = tag.contains(TAG_CONNECTOR_INPUTS, CompoundTag.TAG_INT_ARRAY)
+                ? tag.getIntArray(TAG_CONNECTOR_INPUTS)
+                : new int[0];
             for (final BehaviorProvider provider : registry.getProviders()) {
                 final Behavior behavior = provider.readFromNBT(player, data);
                 if (behavior != null) {
-                    entries.add(new BehaviorEntry(provider, behavior, triggerInputs));
+                    entries.add(new BehaviorEntry(provider, behavior, triggerInputs, connectorInputs));
                     break;
                 }
             }
@@ -247,7 +282,7 @@ final class SimpleNanomachineController implements Controller {
         final List<Behavior> newBehaviors = new ArrayList<>();
         if (inputs.length > 0 && activeInputCount() > 0) {
             for (final BehaviorEntry entry : behaviorEntries) {
-                if (entry.isActive(inputs)) {
+                if (entry.isActive(inputs, connectors)) {
                     newBehaviors.add(entry.behavior());
                 }
             }
@@ -283,8 +318,8 @@ final class SimpleNanomachineController implements Controller {
         activeBehaviorsDirty = false;
     }
 
-    private record BehaviorEntry(BehaviorProvider provider, Behavior behavior, int[] triggerInputs) {
-        private BehaviorEntry {
+    private record ConnectorEntry(int[] triggerInputs) {
+        private ConnectorEntry {
             triggerInputs = triggerInputs.clone();
         }
 
@@ -299,11 +334,40 @@ final class SimpleNanomachineController implements Controller {
             }
             return true;
         }
+    }
 
-        private int activeInputCount(final boolean[] inputs) {
+    private record BehaviorEntry(BehaviorProvider provider, Behavior behavior, int[] triggerInputs, int[] connectorInputs) {
+        private BehaviorEntry {
+            triggerInputs = triggerInputs.clone();
+            connectorInputs = connectorInputs.clone();
+        }
+
+        private boolean isActive(final boolean[] inputs, final List<ConnectorEntry> connectors) {
+            if (triggerInputs.length == 0 && connectorInputs.length == 0) {
+                return false;
+            }
+            for (final int input : triggerInputs) {
+                if (input < 0 || input >= inputs.length || !inputs[input]) {
+                    return false;
+                }
+            }
+            for (final int input : connectorInputs) {
+                if (input < 0 || input >= connectors.size() || !connectors.get(input).isActive(inputs)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private int activeInputCount(final boolean[] inputs, final List<ConnectorEntry> connectors) {
             int count = 0;
             for (final int input : triggerInputs) {
                 if (input >= 0 && input < inputs.length && inputs[input]) {
+                    count++;
+                }
+            }
+            for (final int input : connectorInputs) {
+                if (input >= 0 && input < connectors.size() && connectors.get(input).isActive(inputs)) {
                     count++;
                 }
             }

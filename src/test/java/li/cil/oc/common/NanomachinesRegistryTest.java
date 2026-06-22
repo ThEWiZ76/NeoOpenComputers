@@ -4,6 +4,7 @@ import li.cil.oc.api.API;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.nanomachines.BehaviorProvider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -89,6 +90,41 @@ final class NanomachinesRegistryTest {
         assertEquals(1, controller.getInputCount(third));
     }
 
+    @Test
+    void controllerActivatesConnectorBackedBehaviorsFromSavedConfiguration() {
+        TestBehavior linked = new TestBehavior("linked");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(linked));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag connectors = new ListTag();
+        CompoundTag connector = new CompoundTag();
+        connector.putIntArray("triggerInputs", new int[]{0, 1});
+        connectors.add(connector);
+        tag.put("connectors", connectors);
+        ListTag behaviors = new ListTag();
+        CompoundTag behavior = new CompoundTag();
+        CompoundTag behaviorData = new CompoundTag();
+        behaviorData.putString("name", "linked");
+        behavior.put("behavior", behaviorData);
+        behavior.putIntArray("triggerInputs", new int[0]);
+        behavior.putIntArray("connectorInputs", new int[]{0});
+        behaviors.add(behavior);
+        tag.put("behaviors", behaviors);
+        tag.putIntArray("activeInputs", new int[]{0});
+
+        controller.load(tag);
+
+        assertIterableEquals(List.of(), controller.getActiveBehaviors());
+        assertEquals(0, controller.getInputCount(linked));
+
+        tag.putIntArray("activeInputs", new int[]{0, 1});
+        controller.load(tag);
+
+        assertIterableEquals(List.of(linked), controller.getActiveBehaviors());
+        assertEquals(1, controller.getInputCount(linked));
+    }
+
     private static final class TestBehaviorProvider implements BehaviorProvider {
         @Override
         public Iterable<Behavior> createBehaviors(final Player player) {
@@ -120,6 +156,25 @@ final class NanomachinesRegistryTest {
         @Override
         public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
             return null;
+        }
+    }
+
+    private record NamedBehaviorProvider(TestBehavior behavior) implements BehaviorProvider {
+        @Override
+        public Iterable<Behavior> createBehaviors(final Player player) {
+            return List.of(behavior);
+        }
+
+        @Override
+        public CompoundTag writeToNBT(final Behavior behavior) {
+            final CompoundTag tag = new CompoundTag();
+            tag.putString("name", behavior.getNameHint());
+            return tag;
+        }
+
+        @Override
+        public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
+            return behavior.name().equals(nbt.getString("name")) ? behavior : null;
         }
     }
 
