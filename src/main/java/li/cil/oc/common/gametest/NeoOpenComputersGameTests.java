@@ -944,6 +944,7 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(targetPos, Blocks.DIRT.defaultBlockState());
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.getAbilities().mayBuild = true;
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.DIAMOND_SHOVEL));
         player.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(playerPos)));
         final li.cil.oc.common.NanomachinesRegistry registry = new li.cil.oc.common.NanomachinesRegistry();
         registry.addProvider(new NanomachineDisintegrationProvider());
@@ -966,6 +967,141 @@ public final class NeoOpenComputersGameTests {
             API.nanomachines = previous;
             throw e;
         }
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 120)
+    public static void nanomachinesDisintegrationFinishesCompletedTrackedBlocksOutsideCurrentRange(final GameTestHelper helper) {
+        final BlockPos playerPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = playerPos.relative(Direction.NORTH);
+        final BlockPos movedPos = playerPos.offset(3, 0, 3);
+        helper.setBlock(targetPos, Blocks.DIRT.defaultBlockState());
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.getAbilities().mayBuild = true;
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.DIAMOND_SHOVEL));
+        player.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(playerPos)));
+        final li.cil.oc.api.nanomachines.Behavior behavior = new NanomachineDisintegrationProvider().createBehaviors(player).iterator().next();
+        final li.cil.oc.api.nanomachines.Controller controller = fixedInputController(behavior, 1);
+        final li.cil.oc.api.detail.NanomachinesAPI nanomachines = singleControllerNanomachinesApi(player, controller);
+        final li.cil.oc.api.detail.NanomachinesAPI previous = API.nanomachines;
+        try {
+            API.nanomachines = nanomachines;
+            behavior.update();
+            API.nanomachines = previous;
+            helper.startSequence()
+                .thenIdle(80)
+                .thenExecute(() -> {
+                    player.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(movedPos)));
+                    API.nanomachines = nanomachines;
+                    behavior.update();
+                    API.nanomachines = previous;
+                    try {
+                        helper.assertTrue(helper.getBlockState(targetPos).isAir(), "Disintegration did not finish completed tracked block outside current range");
+                    } finally {
+                        API.nanomachines = previous;
+                    }
+                })
+                .thenSucceed();
+        } catch (RuntimeException e) {
+            API.nanomachines = previous;
+            throw e;
+        }
+    }
+
+    private static li.cil.oc.api.detail.NanomachinesAPI singleControllerNanomachinesApi(
+        final Player owner,
+        final li.cil.oc.api.nanomachines.Controller controller
+    ) {
+        return new li.cil.oc.api.detail.NanomachinesAPI() {
+            @Override
+            public void addProvider(final li.cil.oc.api.nanomachines.BehaviorProvider provider) {
+            }
+
+            @Override
+            public Iterable<li.cil.oc.api.nanomachines.BehaviorProvider> getProviders() {
+                return java.util.List.of();
+            }
+
+            @Override
+            public boolean hasController(final Player player) {
+                return player == owner;
+            }
+
+            @Override
+            public li.cil.oc.api.nanomachines.Controller getController(final Player player) {
+                return player == owner ? controller : null;
+            }
+
+            @Override
+            public li.cil.oc.api.nanomachines.Controller installController(final Player player) {
+                return player == owner ? controller : null;
+            }
+
+            @Override
+            public void uninstallController(final Player player) {
+            }
+        };
+    }
+
+    private static li.cil.oc.api.nanomachines.Controller fixedInputController(
+        final li.cil.oc.api.nanomachines.Behavior behavior,
+        final int inputCount
+    ) {
+        return new li.cil.oc.api.nanomachines.Controller() {
+            @Override
+            public li.cil.oc.api.nanomachines.Controller reconfigure() {
+                return this;
+            }
+
+            @Override
+            public int getTotalInputCount() {
+                return inputCount;
+            }
+
+            @Override
+            public int getSafeActiveInputs() {
+                return inputCount;
+            }
+
+            @Override
+            public int getMaxActiveInputs() {
+                return inputCount;
+            }
+
+            @Override
+            public boolean getInput(final int index) {
+                return index >= 0 && index < inputCount;
+            }
+
+            @Override
+            public boolean setInput(final int index, final boolean value) {
+                return index >= 0 && index < inputCount && value;
+            }
+
+            @Override
+            public Iterable<li.cil.oc.api.nanomachines.Behavior> getActiveBehaviors() {
+                return java.util.List.of(behavior);
+            }
+
+            @Override
+            public int getInputCount(final li.cil.oc.api.nanomachines.Behavior queriedBehavior) {
+                return queriedBehavior == behavior ? inputCount : 0;
+            }
+
+            @Override
+            public double getLocalBuffer() {
+                return 1D;
+            }
+
+            @Override
+            public double getLocalBufferSize() {
+                return 1D;
+            }
+
+            @Override
+            public double changeBuffer(final double delta) {
+                return 1D;
+            }
+        };
     }
 
     @GameTest(template = "empty")

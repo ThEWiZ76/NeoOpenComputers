@@ -21,7 +21,9 @@ import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public final class NanomachineDisintegrationProvider extends AbstractProvider {
     private static final String PROVIDER_ID = "c4e7e3c2-8069-4fbb-b08e-74b1bddcdfe7";
@@ -90,6 +92,7 @@ public final class NanomachineDisintegrationProvider extends AbstractProvider {
             final int radius = (int) Math.ceil(range);
             final BlockPos origin = player.blockPosition();
             final Map<BlockPos, SlowBreakInfo> next = new HashMap<>();
+            final Set<BlockPos> completed = new HashSet<>();
             for (int x = -radius; x <= radius; x++) {
                 for (int y = 0; y <= radius * 2; y++) {
                     for (int z = -radius; z <= radius; z++) {
@@ -99,6 +102,7 @@ public final class NanomachineDisintegrationProvider extends AbstractProvider {
                             if (existing.matches(level, player)) {
                                 if (existing.isComplete(now)) {
                                     existing.finish(level, player);
+                                    completed.add(pos);
                                 } else {
                                     existing.updateProgress(level, now);
                                     next.put(pos, existing);
@@ -113,8 +117,15 @@ public final class NanomachineDisintegrationProvider extends AbstractProvider {
                     }
                 }
             }
+            for (final Map.Entry<BlockPos, SlowBreakInfo> entry : breaking.entrySet()) {
+                final BlockPos pos = entry.getKey();
+                if (!next.containsKey(pos) && !completed.contains(pos) && entry.getValue().isComplete(now)) {
+                    entry.getValue().finish(level, player);
+                    completed.add(pos);
+                }
+            }
             for (final BlockPos pos : breaking.keySet()) {
-                if (!next.containsKey(pos)) {
+                if (!next.containsKey(pos) && !completed.contains(pos)) {
                     level.destroyBlockProgress(pos.hashCode(), pos, -1);
                 }
             }
