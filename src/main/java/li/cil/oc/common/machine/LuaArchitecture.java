@@ -1305,7 +1305,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 final Value value = checkValue(args, 1);
-                return toLuaValue(value.apply(machine, new LuaArguments(toJavaArgs(args, 2))));
+                return applyValue(value, toJavaArgs(args, 2));
             }
         });
         userdata.set("unapply", new VarArgFunction() {
@@ -2003,6 +2003,16 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         }
     }
 
+    private Varargs applyValue(final Value value, final Object[] javaArgs) {
+        try {
+            return toLuaValue(value.apply(machine, new LuaArguments(javaArgs)));
+        } catch (IllegalArgumentException e) {
+            throw new LuaError(e.getMessage() == null ? "bad argument" : e.getMessage());
+        } catch (RuntimeException e) {
+            return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
+        }
+    }
+
     private Connector machineConnector() {
         if (machine == null || !(machine.node() instanceof Connector connector)) {
             return null;
@@ -2209,7 +2219,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         metatable.set("__index", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                return toLuaValue(value.apply(machine, new LuaArguments(new Object[]{toJavaValue(args.arg(2))})));
+                return applyValue(value, new Object[]{toJavaValue(args.arg(2))});
             }
         });
         metatable.set("__newindex", new VarArgFunction() {
