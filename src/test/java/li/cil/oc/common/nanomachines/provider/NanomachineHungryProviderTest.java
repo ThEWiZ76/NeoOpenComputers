@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 final class NanomachineHungryProviderTest {
     @Test
@@ -31,8 +32,17 @@ final class NanomachineHungryProviderTest {
         loaded.onEnable();
         loaded.update();
         loaded.onDisable(DisableReason.Default);
-        assertEquals(0, tag.size());
+        assertEquals("d697c24a-014c-4773-a288-23084a59e9e8", tag.getString("provider"));
         assertEquals("", loaded.getNameHint());
+    }
+
+    @Test
+    void ignoresBehaviorNbtOwnedByOtherProviders() {
+        final NanomachineHungryProvider provider = new NanomachineHungryProvider();
+        final CompoundTag tag = new CompoundTag();
+        tag.putString("provider", "9324d5ec-71f1-41c2-b51c-406e527668fc");
+
+        assertNull(provider.readFromNBT(null, tag));
     }
 
     private static List<String> behaviorNames(final Iterable<Behavior> behaviors) {

@@ -2,9 +2,9 @@ package li.cil.oc.common.nanomachines.provider;
 
 import li.cil.oc.api.Nanomachines;
 import li.cil.oc.api.nanomachines.Behavior;
-import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.nanomachines.DisableReason;
+import li.cil.oc.api.prefab.AbstractProvider;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -12,19 +12,24 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
-public final class NanomachineMagnetProvider implements BehaviorProvider {
+public final class NanomachineMagnetProvider extends AbstractProvider {
+    private static final String PROVIDER_ID = "9324d5ec-71f1-41c2-b51c-406e527668fc";
+
+    public NanomachineMagnetProvider() {
+        super(PROVIDER_ID);
+    }
+
     @Override
     public Iterable<Behavior> createBehaviors(final Player player) {
         return java.util.List.of(new MagnetBehavior(player));
     }
 
     @Override
-    public CompoundTag writeToNBT(final Behavior behavior) {
-        return new CompoundTag();
+    protected void writeBehaviorToNBT(final Behavior behavior, final CompoundTag nbt) {
     }
 
     @Override
-    public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
+    protected Behavior readBehaviorFromNBT(final Player player, final CompoundTag nbt) {
         return new MagnetBehavior(player);
     }
 
