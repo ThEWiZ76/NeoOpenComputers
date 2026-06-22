@@ -1350,14 +1350,21 @@ final class LuaArchitectureTest {
 
     @Test
     void exposesPrimaryComponentProxyToLua() {
-        LuaArchitecture architecture = new LuaArchitecture("fs = component.getPrimary('filesystem'); result = fs.label(); missing = component.getPrimary('gpu')");
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.getPrimary('filesystem')
+            result = fs.label()
+            missingValid, missingMessage = pcall(function()
+              component.getPrimary('gpu')
+            end)
+            """);
         architecture.bind(machineWithComponentsMethodsAndInvokeResult(Map.of("fs-address", "filesystem"), Map.of("label", callback("labelCallback")), new Object[]{"tmp"}));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("tmp", architecture.globalString("result"));
-        assertEquals("nil", architecture.globalString("missing"));
+        assertEquals(false, architecture.globalBoolean("missingValid"));
+        assertTrue(architecture.globalString("missingMessage").contains("no primary 'gpu' available"));
     }
 
     @Test
@@ -1379,6 +1386,24 @@ final class LuaArchitectureTest {
         assertEquals("no such component", architecture.globalString("missingMessage"));
         assertEquals("tmp", architecture.globalString("result"));
         assertEquals("fs2-address", invokedAddress[0]);
+    }
+
+    @Test
+    void clearingPrimaryComponentEmitsUnavailableSignal() {
+        String[] signalName = {null};
+        Object[][] signalArguments = {null};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            component.setPrimary('filesystem', 'fs-address')
+            cleared = component.setPrimary('filesystem', nil)
+            """);
+        architecture.bind(machineWithComponentsAndSignalCapture(Map.of("fs-address", "filesystem"), signalName, signalArguments));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("cleared"));
+        assertEquals("component_unavailable", signalName[0]);
+        assertArrayEquals(new Object[]{"filesystem"}, signalArguments[0]);
     }
 
     @Test
@@ -1717,6 +1742,10 @@ final class LuaArchitectureTest {
 
     private static Machine machineWithComponentsAndInvokeResult(final Map<String, String> components, final Object[] invokeResult) {
         return machine(new ArrayDeque<>(), 0D, null, null, components, invokeResult);
+    }
+
+    private static Machine machineWithComponentsAndSignalCapture(final Map<String, String> components, final String[] signalName, final Object[][] signalArguments) {
+        return machine(new ArrayDeque<>(), 0D, null, null, components, new Object[0], Map.of(), new String[0], null, null, signalName, signalArguments);
     }
 
     private static Machine machineWithComponentsMethodsAndInvokeResult(final Map<String, String> components, final Map<String, Callback> methods, final Object[] invokeResult) {

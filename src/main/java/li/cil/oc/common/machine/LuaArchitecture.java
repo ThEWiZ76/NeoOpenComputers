@@ -787,21 +787,30 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (machine == null || args.narg() < 1) {
                     return LuaValue.NIL;
                 }
-                final String address = firstComponentAddress(args.arg1().tojstring());
-                return address == null ? LuaValue.NIL : createComponentProxy(address);
+                final String type = args.checkjstring(1);
+                final String address = firstComponentAddress(type);
+                if (address == null) {
+                    throw new LuaError("no primary '" + type + "' available");
+                }
+                return createComponentProxy(address);
             }
         });
         component.set("setPrimary", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || args.narg() < 2) {
+                if (machine == null || args.narg() < 1) {
                     return LuaValue.FALSE;
                 }
-                final String address = args.arg(2).tojstring();
+                final String type = args.checkjstring(1);
+                if (args.narg() < 2 || args.arg(2).isnil()) {
+                    clearPrimaryComponent(type);
+                    return LuaValue.NIL;
+                }
+                final String address = args.checkjstring(2);
                 if (!hasComponent(address)) {
                     return noSuchComponent();
                 }
-                return LuaValue.valueOf(setPrimaryComponent(args.arg(1).tojstring(), address));
+                return LuaValue.valueOf(setPrimaryComponent(type, address));
             }
         });
         component.set("methods", new VarArgFunction() {
@@ -1183,8 +1192,21 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (!type.equals(machine.components().get(address))) {
             return false;
         }
+        if (address.equals(primaryComponents.get(type))) {
+            return false;
+        }
         primaryComponents.put(type, address);
+        machine.signal("component_available", type);
         return true;
+    }
+
+    private void clearPrimaryComponent(final String type) {
+        if (machine == null) {
+            return;
+        }
+        if (primaryComponents.remove(type) != null) {
+            machine.signal("component_unavailable", type);
+        }
     }
 
     private static boolean matchesComponentFilter(final String type, final String filter, final boolean exact) {
