@@ -162,6 +162,12 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             respond(sender, "port", responsePort);
         } else if ("getPowerState".equals(command)) {
             respond(sender, "power", getLocalBuffer(), getLocalBufferSize());
+        } else if ("getTotalInputCount".equals(command)) {
+            respond(sender, "totalInputCount", getTotalInputCount());
+        } else if ("getSafeActiveInputs".equals(command)) {
+            respond(sender, "safeActiveInputs", getSafeActiveInputs());
+        } else if ("getMaxActiveInputs".equals(command)) {
+            respond(sender, "maxActiveInputs", getMaxActiveInputs());
         }
     }
 

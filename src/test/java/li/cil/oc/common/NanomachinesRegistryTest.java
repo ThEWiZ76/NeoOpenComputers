@@ -187,6 +187,34 @@ final class NanomachinesRegistryTest {
         assertArrayEquals(new Object[]{"nanomachines", "power", controller.getLocalBuffer(), controller.getLocalBufferSize()}, sender.lastPacket.data());
     }
 
+    @Test
+    void controllerRespondsToInputCountWirelessCommands() {
+        API.network = new NetworkRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 444}), sender);
+
+        sender.lastPacket = null;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getTotalInputCount"}), sender);
+        assertTrue(sender.lastPacket != null);
+        assertEquals(444, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "totalInputCount", controller.getTotalInputCount()}, sender.lastPacket.data());
+
+        sender.lastPacket = null;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getSafeActiveInputs"}), sender);
+        assertTrue(sender.lastPacket != null);
+        assertEquals(444, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "safeActiveInputs", controller.getSafeActiveInputs()}, sender.lastPacket.data());
+
+        sender.lastPacket = null;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getMaxActiveInputs"}), sender);
+        assertTrue(sender.lastPacket != null);
+        assertEquals(444, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "maxActiveInputs", controller.getMaxActiveInputs()}, sender.lastPacket.data());
+    }
+
     private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {
         for (int i = 0; i < behaviors.size(); i++) {
             if (behaviors.getCompound(i).getIntArray("connectorInputs").length > 0) {
