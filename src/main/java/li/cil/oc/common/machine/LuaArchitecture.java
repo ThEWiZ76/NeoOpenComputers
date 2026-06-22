@@ -1210,6 +1210,35 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return machine.components().values().stream().filter(type::equals).count();
     }
 
+    private String currentOrPendingPrimaryAddress(final String type) {
+        final String primary = primaryComponents.get(type);
+        if (primary != null) {
+            return primary;
+        }
+        final PendingPrimaryComponent pending = pendingPrimaryComponents.get(type);
+        return pending == null ? null : pending.address();
+    }
+
+    private List<String> componentKeyboardAddresses(final String address) {
+        if (machine == null || address == null) {
+            return List.of();
+        }
+        try {
+            final Object[] results = machine.invoke(address, "getKeyboards", new Object[0]);
+            final List<String> keyboards = new ArrayList<>();
+            if (results != null) {
+                for (Object result : results) {
+                    if (result instanceof String keyboard) {
+                        keyboards.add(keyboard);
+                    }
+                }
+            }
+            return keyboards;
+        } catch (Exception ignored) {
+            return List.of();
+        }
+    }
+
     private String componentAddressByPrefix(final String prefix, final String type) {
         if (machine == null) {
             return null;
@@ -1485,7 +1514,24 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return;
         }
         if ("component_added".equals(signal.name())) {
-            if (!primaryComponents.containsKey(type) && !pendingPrimaryComponents.containsKey(type) && componentCount(type) == 1 && type.equals(machine.components().get(address))) {
+            if (!type.equals(machine.components().get(address))) {
+                return;
+            }
+            boolean shouldSelect = !primaryComponents.containsKey(type) && !pendingPrimaryComponents.containsKey(type) && componentCount(type) == 1;
+            final String previous = currentOrPendingPrimaryAddress(type);
+            if (previous != null && "screen".equals(type)) {
+                final List<String> previousKeyboards = componentKeyboardAddresses(previous);
+                final List<String> addedKeyboards = componentKeyboardAddresses(address);
+                if (previousKeyboards.isEmpty() && !addedKeyboards.isEmpty()) {
+                    setPrimaryComponent("keyboard", addedKeyboards.getFirst());
+                    shouldSelect = true;
+                }
+            } else if (previous != null && "keyboard".equals(type) && !address.equals(previous)) {
+                final String currentScreen = currentOrPendingPrimaryAddress("screen");
+                final List<String> screenKeyboards = componentKeyboardAddresses(currentScreen);
+                shouldSelect = !screenKeyboards.isEmpty() && address.equals(screenKeyboards.getFirst());
+            }
+            if (shouldSelect) {
                 setPrimaryComponent(type, address);
             }
         } else if ("component_removed".equals(signal.name())) {
