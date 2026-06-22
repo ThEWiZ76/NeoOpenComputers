@@ -740,7 +740,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("setBootAddress", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                bootAddress = args.isnoneornil(1) ? null : args.checkjstring(1);
+                bootAddress = checkOptionalStringArgument(args, 1);
                 return LuaValue.TRUE;
             }
         });
@@ -812,7 +812,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("addUser", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String name = args.checkjstring(1);
+                final String name = checkStringArgument(args, 1);
                 if (machine == null) {
                     return LuaValue.FALSE;
                 }
@@ -827,7 +827,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("removeUser", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String name = args.checkjstring(1);
+                final String name = checkStringArgument(args, 1);
                 if (machine == null) {
                     return LuaValue.FALSE;
                 }
@@ -856,7 +856,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("pushSignal", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String signalName = args.checkjstring(1);
+                final String signalName = checkStringArgument(args, 1);
                 if (machine == null) {
                     return LuaValue.FALSE;
                 }

@@ -898,6 +898,9 @@ final class LuaArchitectureTest {
             valid, message = pcall(function()
               computer.pushSignal()
             end)
+            numberValid, numberMessage = pcall(function()
+              computer.pushSignal(1)
+            end)
             """);
         architecture.bind(machineWithSignalCapture(new String[]{null}, new Object[][]{null}));
 
@@ -906,6 +909,8 @@ final class LuaArchitectureTest {
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("numberValid"));
+        assertTrue(architecture.globalString("numberMessage").contains("string expected"));
     }
 
     @Test
@@ -938,6 +943,21 @@ final class LuaArchitectureTest {
         assertEquals("fs-address", architecture.globalString("after"));
         assertEquals(true, architecture.globalBoolean("cleared"));
         assertEquals("nil", architecture.globalString("final"));
+    }
+
+    @Test
+    void computerSetBootAddressRejectsNonStringLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid, message = pcall(function()
+              computer.setBootAddress(1)
+            end)
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("string or nil expected"));
     }
 
     @Test
@@ -1208,8 +1228,14 @@ final class LuaArchitectureTest {
             addValid, addMessage = pcall(function()
               computer.addUser()
             end)
+            addNumberValid, addNumberMessage = pcall(function()
+              computer.addUser(1)
+            end)
             removeValid, removeMessage = pcall(function()
               computer.removeUser()
+            end)
+            removeNumberValid, removeNumberMessage = pcall(function()
+              computer.removeUser(1)
             end)
             """);
         architecture.bind(machineWithUserAccess(new String[0], new String[]{null}, new String[]{null}));
@@ -1219,8 +1245,12 @@ final class LuaArchitectureTest {
 
         assertEquals(false, architecture.globalBoolean("addValid"));
         assertTrue(architecture.globalString("addMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("addNumberValid"));
+        assertTrue(architecture.globalString("addNumberMessage").contains("string expected"));
         assertEquals(false, architecture.globalBoolean("removeValid"));
         assertTrue(architecture.globalString("removeMessage").contains("string expected"));
+        assertEquals(false, architecture.globalBoolean("removeNumberValid"));
+        assertTrue(architecture.globalString("removeNumberMessage").contains("string expected"));
     }
 
     @Test
