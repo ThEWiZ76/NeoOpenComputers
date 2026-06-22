@@ -19,6 +19,7 @@ final class DamageTypeResourceTest {
     private static final Path DAMAGE_TYPE = Path.of("src/main/resources/data/neoopencomputers/damage_type/nanomachines_hungry.json");
     private static final Path BYPASSES_ARMOR = Path.of("src/main/resources/data/minecraft/tags/damage_type/bypasses_armor.json");
     private static final Path BYPASSES_EFFECTS = Path.of("src/main/resources/data/minecraft/tags/damage_type/bypasses_effects.json");
+    private static final Path EN_US = Path.of("src/main/resources/assets/neoopencomputers/lang/en_us.json");
 
     @Test
     void nanomachinesHungryDamageTypeUsesUpstreamMessageId() throws IOException {
@@ -33,6 +34,15 @@ final class DamageTypeResourceTest {
     void nanomachinesHungryDamageBypassesArmorAndEffects() throws IOException {
         assertTagContains(BYPASSES_ARMOR, HUNGRY_DAMAGE_TYPE);
         assertTagContains(BYPASSES_EFFECTS, HUNGRY_DAMAGE_TYPE);
+    }
+
+    @Test
+    void nanomachinesHungryDamageHasUpstreamDeathMessages() throws IOException {
+        final JsonObject json = readJson(EN_US);
+
+        assertEquals("%s was eaten by nanomachines.", json.get("death.attack.oc.nanomachinesHungry.1").getAsString());
+        assertEquals("%s didn't keep their nanomachines fed.", json.get("death.attack.oc.nanomachinesHungry.2").getAsString());
+        assertEquals("%s has been digested.", json.get("death.attack.oc.nanomachinesHungry.3").getAsString());
     }
 
     private static void assertTagContains(final Path path, final String value) throws IOException {
