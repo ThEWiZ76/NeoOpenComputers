@@ -1,6 +1,11 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.nanomachines.Behavior;
+import li.cil.oc.api.nanomachines.BehaviorProvider;
+import li.cil.oc.api.nanomachines.DisableReason;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
@@ -102,6 +107,7 @@ final class ModSettingsTest {
         assertEquals(2, ModSettings.hddPlatterCount(-1));
         assertEquals(8, ModSettings.hddPlatterCount(99));
         assertEquals(100_000D, ModSettings.nanomachinesBuffer());
+        assertEquals(0.4D, ModSettings.nanomachineTriggerQuota());
         assertEquals(2, ModSettings.nanomachinesSafeInputsActive());
         assertEquals(4, ModSettings.nanomachinesMaxInputsActive());
     }
@@ -158,6 +164,7 @@ final class ModSettingsTest {
         assertEquals(List.of("hologram", "maxTranslation"), ModSettings.HOLOGRAM_MAX_TRANSLATION.getPath());
         assertEquals(List.of("hologram", "setRawDelay"), ModSettings.HOLOGRAM_SET_RAW_DELAY.getPath());
         assertEquals(List.of("power", "buffer", "nanomachines"), ModSettings.NANOMACHINES_BUFFER.getPath());
+        assertEquals(List.of("nanomachines", "triggerQuota"), ModSettings.NANOMACHINES_TRIGGER_QUOTA.getPath());
         assertEquals(List.of("nanomachines", "safeInputsActive"), ModSettings.NANOMACHINES_SAFE_INPUTS_ACTIVE.getPath());
         assertEquals(List.of("nanomachines", "maxInputsActive"), ModSettings.NANOMACHINES_MAX_INPUTS_ACTIVE.getPath());
     }
@@ -176,6 +183,18 @@ final class ModSettingsTest {
                 })));
     }
 
+    @Test
+    void nanomachinesControllerUsesConfiguredTriggerQuotaForInputCount() throws Exception {
+        withCachedConfig(ModSettings.NANOMACHINES_TRIGGER_QUOTA, 2D, () -> {
+            final NanomachinesRegistry registry = new NanomachinesRegistry();
+            registry.addProvider(new TestBehaviorProvider(3));
+
+            final SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+
+            assertEquals(6, controller.getTotalInputCount());
+        });
+    }
+
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
         final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
         cachedValue.setAccessible(true);
@@ -191,5 +210,43 @@ final class ModSettingsTest {
     @FunctionalInterface
     private interface ThrowingRunnable {
         void run() throws Exception;
+    }
+
+    private record TestBehaviorProvider(int count) implements BehaviorProvider {
+        @Override
+        public Iterable<Behavior> createBehaviors(final Player player) {
+            return java.util.stream.IntStream.range(0, count)
+                .mapToObj(index -> (Behavior) new TestBehavior("behavior" + index))
+                .toList();
+        }
+
+        @Override
+        public CompoundTag writeToNBT(final Behavior behavior) {
+            return new CompoundTag();
+        }
+
+        @Override
+        public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
+            return new TestBehavior("loaded");
+        }
+    }
+
+    private record TestBehavior(String name) implements Behavior {
+        @Override
+        public String getNameHint() {
+            return name;
+        }
+
+        @Override
+        public void onEnable() {
+        }
+
+        @Override
+        public void onDisable(final DisableReason reason) {
+        }
+
+        @Override
+        public void update() {
+        }
     }
 }

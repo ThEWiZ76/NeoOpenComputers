@@ -68,6 +68,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_TRIGGER_QUOTA;
     public static final ModConfigSpec.IntValue NANOMACHINES_SAFE_INPUTS_ACTIVE;
     public static final ModConfigSpec.IntValue NANOMACHINES_MAX_INPUTS_ACTIVE;
 
@@ -248,6 +249,9 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("nanomachines");
+        NANOMACHINES_TRIGGER_QUOTA = builder
+            .comment("Relative nanomachine trigger input count based on behavior count. OpenComputers upstream default is 0.4.")
+            .defineInRange("triggerQuota", 0.4D, 0D, Double.MAX_VALUE);
         NANOMACHINES_SAFE_INPUTS_ACTIVE = builder
             .comment("Number of active nanomachine inputs considered safe. OpenComputers upstream default is 2.")
             .defineInRange("safeInputsActive", 2, 0, Integer.MAX_VALUE);
@@ -280,6 +284,10 @@ public final class ModSettings {
 
     public static double nanomachinesBuffer() {
         return Math.max(0D, doubleValue(NANOMACHINES_BUFFER));
+    }
+
+    public static double nanomachineTriggerQuota() {
+        return Math.max(0D, doubleValue(NANOMACHINES_TRIGGER_QUOTA));
     }
 
     public static int nanomachinesSafeInputsActive() {

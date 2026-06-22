@@ -41,7 +41,7 @@ final class SimpleNanomachineController implements Controller {
         disableActive(DisableReason.Default);
         behaviors = List.copyOf(created);
         activeBehaviors = List.of();
-        inputs = new boolean[Math.max(1, (int) Math.ceil(behaviors.size() * 0.4D))];
+        inputs = new boolean[Math.max(1, (int) Math.ceil(behaviors.size() * ModSettings.nanomachineTriggerQuota()))];
         activeBehaviorsDirty = true;
         return this;
     }
