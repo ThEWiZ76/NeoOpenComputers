@@ -643,7 +643,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         component.set("list", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                final String filter = args.narg() >= 1 && !args.arg1().isnil() ? args.arg1().tojstring() : null;
+                final String filter = args.arg(1).isstring() ? args.arg(1).tojstring() : null;
                 final boolean exact = args.narg() >= 2 && args.arg(2).toboolean();
                 return createComponentList(filter, exact);
             }

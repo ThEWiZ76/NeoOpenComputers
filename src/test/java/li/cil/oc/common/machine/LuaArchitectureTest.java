@@ -767,6 +767,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void ignoresBooleanComponentListFiltersLikeUpstreamLuaJ() {
+        Map<String, String> components = new LinkedHashMap<>();
+        components.put("fs-address", "filesystem");
+        components.put("gpu-address", "gpu");
+        LuaArchitecture architecture = new LuaArchitecture("all = component.list(true); fs = all['fs-address']; gpu = all['gpu-address']");
+        architecture.bind(machineWithComponents(components));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("filesystem", architecture.globalString("fs"));
+        assertEquals("gpu", architecture.globalString("gpu"));
+    }
+
+    @Test
     void iteratesComponentListInLua() {
         LuaArchitecture architecture = new LuaArchitecture("for address, kind in component.list('file', false) do firstAddress = address; firstKind = kind end");
         architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem", "gpu-address", "gpu")));
