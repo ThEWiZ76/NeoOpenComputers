@@ -1516,6 +1516,24 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsNaNLongArgumentsLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            valid, message = pcall(function()
+              return userdata.apply(value, 'long-value', 0 / 0)
+            end)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("number has no integer representation"));
+    }
+
+    @Test
     void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
         TestValue value = new TestValue();
         int[] valueInvokes = {0};
@@ -3270,6 +3288,9 @@ final class LuaArchitectureTest {
             }
             if ("long?".equals(arguments.checkString(0))) {
                 return arguments.isLong(1) ? "long" : "not-long";
+            }
+            if ("long-value".equals(arguments.checkString(0))) {
+                return "long:" + arguments.checkLong(1);
             }
             if ("integer-value".equals(arguments.checkString(0))) {
                 return "integer:" + arguments.checkInteger(1);

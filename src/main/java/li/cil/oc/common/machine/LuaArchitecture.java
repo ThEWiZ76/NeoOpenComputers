@@ -2339,7 +2339,32 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public long checkLong(final int index) {
-            return ((Number) checkAny(index)).longValue();
+            final Object value = checkAny(index);
+            if (value instanceof Double doubleValue) {
+                if (Double.isNaN(doubleValue)) {
+                    throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number has no integer representation)");
+                }
+                if (doubleValue > Long.MAX_VALUE) {
+                    return Long.MAX_VALUE;
+                }
+                if (doubleValue < Long.MIN_VALUE) {
+                    return Long.MIN_VALUE;
+                }
+                return doubleValue.longValue();
+            }
+            if (value instanceof Float floatValue) {
+                if (Float.isNaN(floatValue)) {
+                    throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number has no integer representation)");
+                }
+                if (floatValue > Long.MAX_VALUE) {
+                    return Long.MAX_VALUE;
+                }
+                if (floatValue < Long.MIN_VALUE) {
+                    return Long.MIN_VALUE;
+                }
+                return floatValue.longValue();
+            }
+            return ((Number) value).longValue();
         }
 
         @Override
