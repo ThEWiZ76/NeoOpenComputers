@@ -11,6 +11,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 
 import java.io.IOException;
@@ -37,7 +38,6 @@ import java.util.concurrent.Executors;
 
 public class InternetCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "internet";
-    private static final int MAX_READ_BUFFER = 8192;
     private static final int MAX_CONNECTIONS = 4;
     private static final String DEFAULT_USER_AGENT = "opencomputers/" + API.VERSION;
     private static final ExecutorService HTTP_EXECUTOR = Executors.newCachedThreadPool(runnable -> {
@@ -305,7 +305,8 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             if (offset >= body.length) {
                 return new Object[]{null};
             }
-            final int count = Math.min(Math.max(0, args.optInteger(0, MAX_READ_BUFFER)), MAX_READ_BUFFER);
+            final int maxReadBuffer = ModSettings.maxReadBuffer();
+            final int count = Math.min(Math.max(0, args.optInteger(0, maxReadBuffer)), maxReadBuffer);
             final int length = Math.min(count, body.length - offset);
             final byte[] data = new byte[length];
             System.arraycopy(body, offset, data, 0, length);
@@ -391,7 +392,8 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             if (available <= 0) {
                 return socket.isClosed() ? new Object[]{null} : new Object[]{new byte[0]};
             }
-            final int count = Math.min(Math.max(0, args.optInteger(0, MAX_READ_BUFFER)), Math.min(MAX_READ_BUFFER, available));
+            final int maxReadBuffer = ModSettings.maxReadBuffer();
+            final int count = Math.min(Math.max(0, args.optInteger(0, maxReadBuffer)), Math.min(maxReadBuffer, available));
             final byte[] data = input.readNBytes(count);
             if (data.length == 0) {
                 return new Object[]{null};

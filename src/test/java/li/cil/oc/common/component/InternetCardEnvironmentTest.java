@@ -10,13 +10,16 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.Network;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -83,6 +86,22 @@ final class InternetCardEnvironmentTest {
         assertArrayEquals(new Object[]{200, "OK", Map.of("content-type", List.of("text/plain"))}, request.response(null, new TestArguments()));
         assertArrayEquals("hello".getBytes(StandardCharsets.UTF_8), (byte[]) request.read(null, new TestArguments(32))[0]);
         assertArrayEquals(new Object[]{null}, request.read(null, new TestArguments(32)));
+    }
+
+    @Test
+    void httpRequestReadUsesConfiguredMaxReadBuffer() throws Exception {
+        OpenComputersApi.initialize();
+        byte[] body = "abcdef".getBytes(StandardCharsets.UTF_8);
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) ->
+            CompletableFuture.completedFuture(new InternetCardEnvironment.HttpResponse(200, "OK", Map.of(), body)));
+        InternetCardEnvironment.HttpRequest request = assertInstanceOf(
+            InternetCardEnvironment.HttpRequest.class,
+            card.request(null, new TestArguments("https://example.test/buffer"))[0]);
+
+        withCachedConfig(ModSettings.MAX_READ_BUFFER, 3, () -> {
+            assertArrayEquals("abc".getBytes(StandardCharsets.UTF_8), (byte[]) request.read(null, new TestArguments(10))[0]);
+            assertArrayEquals("def".getBytes(StandardCharsets.UTF_8), (byte[]) request.read(null, new TestArguments())[0]);
+        });
     }
 
     @Test
@@ -210,6 +229,36 @@ final class InternetCardEnvironmentTest {
         }
     }
 
+    @Test
+    void tcpSocketReadUsesConfiguredMaxReadBuffer() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+        ExecutorService serverThread = Executors.newSingleThreadExecutor();
+
+        try (ServerSocket server = new ServerSocket(0)) {
+            serverThread.submit(() -> {
+                try (Socket socket = server.accept()) {
+                    socket.getOutputStream().write("abcdef".getBytes(StandardCharsets.UTF_8));
+                    socket.getOutputStream().flush();
+                    Thread.sleep(200);
+                }
+                return null;
+            });
+
+            InternetCardEnvironment.TcpSocket socket = assertInstanceOf(
+                InternetCardEnvironment.TcpSocket.class,
+                card.connect(null, new TestArguments("127.0.0.1", server.getLocalPort()))[0]);
+            awaitConnected(socket);
+
+            withCachedConfig(ModSettings.MAX_READ_BUFFER, 3, () ->
+                assertArrayEquals("abc".getBytes(StandardCharsets.UTF_8), awaitRead(socket, 10)));
+            socket.close(null, new TestArguments());
+        } finally {
+            serverThread.shutdownNow();
+            assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
+        }
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = InternetCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
@@ -244,6 +293,23 @@ final class InternetCardEnvironmentTest {
             Thread.sleep(10);
         }
         throw new AssertionError("socket did not read data");
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private record TestArguments(Object... values) implements Arguments {
