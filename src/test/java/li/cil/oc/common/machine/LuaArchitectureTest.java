@@ -1476,7 +1476,7 @@ final class LuaArchitectureTest {
     void exposesComponentDocumentationToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
-        LuaArchitecture architecture = new LuaArchitecture("doc = component.doc('fs-address', 'label'); missing = component.doc('fs-address', 'missing'); missingComponent, missingComponentMessage = component.doc('missing', 'label')");
+        LuaArchitecture architecture = new LuaArchitecture("doc = component.doc('fs-address', 'label'); missing, missingMessage = component.doc('fs-address', 'missing'); missingComponent, missingComponentMessage = component.doc('missing', 'label')");
         architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
 
         assertTrue(architecture.initialize());
@@ -1484,6 +1484,7 @@ final class LuaArchitectureTest {
 
         assertEquals("function():string -- Regular callback.", architecture.globalString("doc"));
         assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("no such method", architecture.globalString("missingMessage"));
         assertEquals("nil", architecture.globalString("missingComponent"));
         assertEquals("no such component", architecture.globalString("missingComponentMessage"));
     }

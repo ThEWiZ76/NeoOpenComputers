@@ -1091,7 +1091,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 final String method = args.checkjstring(2);
                 final Callback callback = machine.methods(address).get(method);
-                if (callback == null || callback.doc().isEmpty()) {
+                if (callback == null) {
+                    return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such method"));
+                }
+                if (callback.doc().isEmpty()) {
                     return LuaValue.NIL;
                 }
                 return LuaValue.valueOf(callback.doc());
