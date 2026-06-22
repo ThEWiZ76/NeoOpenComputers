@@ -115,7 +115,8 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
                     simpleController.getLocalBuffer(),
                     simpleController.getLocalBufferSize(),
                     activeInputCount(simpleController),
-                    simpleController.getTotalInputCount()));
+                    simpleController.getTotalInputCount(),
+                    simpleController.activeParticleEffects()));
             }
         }
     }

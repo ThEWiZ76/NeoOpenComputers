@@ -7,7 +7,15 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-public record NanomachinePowerPayload(boolean installed, double buffer, double maxBuffer, int activeInputs, int totalInputs) implements CustomPacketPayload {
+import java.util.List;
+
+public record NanomachinePowerPayload(
+    boolean installed,
+    double buffer,
+    double maxBuffer,
+    int activeInputs,
+    int totalInputs,
+    List<String> activeParticleEffects) implements CustomPacketPayload {
     public static final Type<NanomachinePowerPayload> TYPE = new Type<>(
         ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "nanomachine_power"));
     public static final StreamCodec<RegistryFriendlyByteBuf, NanomachinePowerPayload> STREAM_CODEC = StreamCodec.composite(
@@ -21,7 +29,17 @@ public record NanomachinePowerPayload(boolean installed, double buffer, double m
         NanomachinePowerPayload::activeInputs,
         ByteBufCodecs.INT,
         NanomachinePowerPayload::totalInputs,
+        ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list(32)),
+        NanomachinePowerPayload::activeParticleEffects,
         NanomachinePowerPayload::new);
+
+    public NanomachinePowerPayload {
+        activeParticleEffects = activeParticleEffects == null ? List.of() : List.copyOf(activeParticleEffects);
+    }
+
+    public NanomachinePowerPayload(final boolean installed, final double buffer, final double maxBuffer, final int activeInputs, final int totalInputs) {
+        this(installed, buffer, maxBuffer, activeInputs, totalInputs, List.of());
+    }
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

@@ -8,6 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.connection.ConnectionType;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class NanomachinePowerPayloadTest {
@@ -20,7 +22,7 @@ final class NanomachinePowerPayloadTest {
 
     @Test
     void roundTripsThroughStreamCodec() {
-        final NanomachinePowerPayload payload = new NanomachinePowerPayload(true, 12.5D, 100D, 3, 9);
+        final NanomachinePowerPayload payload = new NanomachinePowerPayload(true, 12.5D, 100D, 3, 9, List.of("flame", "heart"));
         final RegistryFriendlyByteBuf buffer = new RegistryFriendlyByteBuf(
             Unpooled.buffer(),
             RegistryAccess.EMPTY,
@@ -34,5 +36,6 @@ final class NanomachinePowerPayloadTest {
         assertEquals(100D, decoded.maxBuffer());
         assertEquals(3, decoded.activeInputs());
         assertEquals(9, decoded.totalInputs());
+        assertEquals(List.of("flame", "heart"), decoded.activeParticleEffects());
     }
 }

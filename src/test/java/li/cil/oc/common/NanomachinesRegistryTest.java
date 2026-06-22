@@ -355,6 +355,18 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerReportsActiveParticleEffectsForClientSync() {
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(
+            new TestBehavior("particles.flame"),
+            new TestBehavior("speed"))));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        controller.setInput(0, true);
+
+        assertEquals(List.of("flame"), controller.activeParticleEffects());
+    }
+
+    @Test
     void controllerDrainsEnergyForActiveInputsOnPowerTicks() {
         NanomachinesRegistry registry = new NanomachinesRegistry();
         registry.addProvider(new ListBehaviorProvider(List.of(new TestBehavior("active"))));

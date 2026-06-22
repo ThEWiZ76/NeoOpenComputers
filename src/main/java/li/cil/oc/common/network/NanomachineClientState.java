@@ -1,11 +1,14 @@
 package li.cil.oc.common.network;
 
+import java.util.List;
+
 public final class NanomachineClientState {
     private static boolean installed;
     private static double buffer;
     private static double maxBuffer;
     private static int activeInputs;
     private static int totalInputs;
+    private static List<String> activeParticleEffects = List.of();
 
     private NanomachineClientState() {
     }
@@ -23,6 +26,7 @@ public final class NanomachineClientState {
         }
         totalInputs = Math.max(0, payload.totalInputs());
         activeInputs = Math.min(Math.max(0, payload.activeInputs()), totalInputs);
+        activeParticleEffects = List.copyOf(payload.activeParticleEffects());
     }
 
     public static void clear() {
@@ -31,6 +35,7 @@ public final class NanomachineClientState {
         maxBuffer = 0D;
         activeInputs = 0;
         totalInputs = 0;
+        activeParticleEffects = List.of();
     }
 
     public static boolean installed() {
@@ -51,6 +56,10 @@ public final class NanomachineClientState {
 
     public static int totalInputs() {
         return totalInputs;
+    }
+
+    public static List<String> activeParticleEffects() {
+        return activeParticleEffects;
     }
 
     public static double fill() {

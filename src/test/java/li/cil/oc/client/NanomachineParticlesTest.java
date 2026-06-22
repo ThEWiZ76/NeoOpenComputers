@@ -5,6 +5,8 @@ import li.cil.oc.common.network.NanomachinePowerPayload;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class NanomachineParticlesTest {
@@ -39,5 +41,19 @@ final class NanomachineParticlesTest {
         assertEquals(true, NanomachineParticles.shouldSpawn(0.25D, 0.24D));
         assertEquals(false, NanomachineParticles.shouldSpawn(0.25D, 0.25D));
         assertEquals(false, NanomachineParticles.shouldSpawn(0D, 0D));
+    }
+
+    @Test
+    void usesSyncedParticleEffectsWhenAvailable() {
+        NanomachineClientState.apply(new NanomachinePowerPayload(true, 50D, 100D, 1, 2, List.of("flame", "heart")));
+
+        assertEquals(List.of("flame", "heart"), NanomachineParticles.ambientParticleEffects());
+        assertEquals("flame", NanomachineParticles.ambientParticleEffect(0));
+        assertEquals("heart", NanomachineParticles.ambientParticleEffect(1));
+        assertEquals("flame", NanomachineParticles.ambientParticleEffect(2));
+
+        NanomachineClientState.clear();
+
+        assertEquals("portal", NanomachineParticles.ambientParticleEffect(0));
     }
 }

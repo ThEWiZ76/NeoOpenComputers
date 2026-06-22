@@ -232,6 +232,20 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         damageOverloadedPlayer();
     }
 
+    List<String> activeParticleEffects() {
+        final List<String> effects = new ArrayList<>();
+        for (final Behavior behavior : getActiveBehaviors()) {
+            final String name = behavior.getNameHint();
+            if (name != null && name.startsWith("particles.") && name.length() > "particles.".length()) {
+                final String effect = name.substring("particles.".length());
+                if (!effect.isBlank()) {
+                    effects.add(effect);
+                }
+            }
+        }
+        return List.copyOf(effects);
+    }
+
     void save(final CompoundTag tag) {
         tag.putDouble(TAG_ENERGY, buffer);
         tag.putIntArray(TAG_ACTIVE_INPUTS, activeInputs());
