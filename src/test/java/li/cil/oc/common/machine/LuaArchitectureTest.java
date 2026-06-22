@@ -1418,20 +1418,35 @@ final class LuaArchitectureTest {
     }
 
     @Test
-    void changingPrimaryComponentEmitsUnavailableThenAvailableSignals() {
+    void changingPrimaryComponentDelaysReplacementAvailableSignal() {
+        double[] uptime = {12D};
         List<String> signals = new ArrayList<>();
         LuaArchitecture architecture = new LuaArchitecture("""
             component.setPrimary('filesystem', 'fs1')
             component.setPrimary('filesystem', 'fs2')
             """);
-        architecture.bind(machineWithComponentsAndSignalLog(Map.of(
+        architecture.bind(machineWithComponentsUptimeAndSignalLog(Map.of(
             "fs1-address", "filesystem",
             "fs2-address", "filesystem"
-        ), signals));
+        ), uptime, signals));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
+        assertEquals(List.of(
+            "component_available:filesystem",
+            "component_unavailable:filesystem"
+        ), signals);
+
+        uptime[0] = 12.09D;
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        assertEquals(List.of(
+            "component_available:filesystem",
+            "component_unavailable:filesystem"
+        ), signals);
+
+        uptime[0] = 12.1D;
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
         assertEquals(List.of(
             "component_available:filesystem",
             "component_unavailable:filesystem",
@@ -1469,10 +1484,15 @@ final class LuaArchitectureTest {
         LuaArchitecture architecture = new LuaArchitecture("""
             component.setPrimary('filesystem', 'fs1')
             name, address, kind = computer.pullSignal()
+            available = component.isAvailable('filesystem')
+            repeat
+              availableName, availableKind = computer.pullSignal()
+            until availableName == 'component_available'
             primary = component.getPrimary('filesystem')
             primaryAddress = primary.address
             """);
-        architecture.bind(machineWithDynamicComponentsAndSignals(components, signals, () -> components.remove("fs1-address"), emittedSignals));
+        double[] uptime = {20D};
+        architecture.bind(machineWithDynamicComponentsSignalsUptimeAndSignalLoop(components, signals, uptime, () -> components.remove("fs1-address"), emittedSignals));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
@@ -1480,6 +1500,17 @@ final class LuaArchitectureTest {
         assertEquals("component_removed", architecture.globalString("name"));
         assertEquals("fs1-address", architecture.globalString("address"));
         assertEquals("filesystem", architecture.globalString("kind"));
+        assertEquals(false, architecture.globalBoolean("available"));
+        assertEquals(List.of(
+            "component_available:filesystem",
+            "component_unavailable:filesystem"
+        ), emittedSignals);
+
+        uptime[0] = 20.1D;
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("component_available", architecture.globalString("availableName"));
+        assertEquals("filesystem", architecture.globalString("availableKind"));
         assertEquals("fs2-address", architecture.globalString("primaryAddress"));
         assertEquals(List.of(
             "component_available:filesystem",
@@ -1848,6 +1879,25 @@ final class LuaArchitectureTest {
             });
     }
 
+    private static Machine machineWithComponentsUptimeAndSignalLog(final Map<String, String> components, final double[] uptime, final List<String> signals) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "upTime" -> uptime[0];
+                case "components" -> components;
+                case "signal" -> {
+                    Object[] signalArguments = (Object[]) args[1];
+                    signals.add(args[0] + ":" + signalArguments[0]);
+                    yield true;
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
     private static Machine machineWithDynamicComponentsAndSignals(final Map<String, String> components, final Queue<Signal> queuedSignals, final Runnable beforePopSignal, final List<String> emittedSignals) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
@@ -1864,6 +1914,37 @@ final class LuaArchitectureTest {
                 case "signal" -> {
                     Object[] signalArguments = (Object[]) args[1];
                     emittedSignals.add(args[0] + ":" + signalArguments[0]);
+                    yield true;
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithDynamicComponentsSignalsUptimeAndSignalLoop(final Map<String, String> components, final Queue<Signal> queuedSignals, final double[] uptime, final Runnable beforePopSignal, final List<String> emittedSignals) {
+        boolean[] componentRemoved = {false};
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "upTime" -> uptime[0];
+                case "components" -> components;
+                case "popSignal" -> {
+                    Signal signal = queuedSignals.poll();
+                    if (signal != null && "component_removed".equals(signal.name())) {
+                        beforePopSignal.run();
+                        componentRemoved[0] = true;
+                    }
+                    yield signal;
+                }
+                case "signal" -> {
+                    Object[] signalArguments = (Object[]) args[1];
+                    emittedSignals.add(args[0] + ":" + signalArguments[0]);
+                    if (componentRemoved[0]) {
+                        queuedSignals.add(new TestSignal((String) args[0], signalArguments));
+                    }
                     yield true;
                 }
                 case "equals" -> proxy == args[0];

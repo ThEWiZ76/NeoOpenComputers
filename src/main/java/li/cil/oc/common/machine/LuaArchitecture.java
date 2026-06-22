@@ -66,6 +66,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String PULL_SIGNAL_MARKER = "\u0000oc.pullSignal";
     private static final String BUDGET_RETRY_MARKER = "\u0000oc.budgetRetry";
     private static final String VALUE_MARKER = "\u0000oc.value";
+    private static final double PRIMARY_REPLACEMENT_DELAY_SECONDS = 0.1D;
     private boolean initialized;
     private boolean booted;
     private String bootSource;
@@ -81,6 +82,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private double signalDeadlineSeconds;
     private final LongSupplier wallTimeMillis;
     private final Map<String, String> primaryComponents = new HashMap<>();
+    private final Map<String, PendingPrimaryComponent> pendingPrimaryComponents = new HashMap<>();
     private final Map<String, LuaTable> componentProxyCache = new HashMap<>();
 
     public LuaArchitecture() {
@@ -125,6 +127,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     @Override
     public boolean initialize() {
         componentProxyCache.clear();
+        primaryComponents.clear();
+        pendingPrimaryComponents.clear();
         globals = sandboxGlobals();
         pendingResult = null;
         pendingBudgetCall = null;
@@ -156,6 +160,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         pendingBudgetCall = null;
         waitingForSignal = false;
         signalDeadlineSeconds = 0D;
+        primaryComponents.clear();
+        pendingPrimaryComponents.clear();
         componentProxyCache.clear();
     }
 
@@ -168,6 +174,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (!initialized) {
             return new ExecutionResult.Error("Lua architecture is not initialized");
         }
+        processPendingPrimaryComponents();
         if (pendingBudgetCall != null) {
             try {
                 final Varargs results = pendingBudgetCall.invoke();
@@ -749,7 +756,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     return LuaValue.FALSE;
                 }
                 final String type = args.arg1().tojstring();
-                return LuaValue.valueOf(machine.components().containsValue(type));
+                return LuaValue.valueOf(firstComponentAddress(type) != null);
             }
         });
         component.set("isPrimary", new VarArgFunction() {
@@ -1169,6 +1176,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (machine == null) {
             return null;
         }
+        processPendingPrimaryComponents();
+        if (pendingPrimaryComponents.containsKey(type)) {
+            return null;
+        }
         final Map<String, String> components = machine.components();
         final String primary = primaryComponents.get(type);
         if (primary != null && type.equals(components.get(primary))) {
@@ -1177,12 +1188,26 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (primary != null) {
             primaryComponents.remove(type);
         }
-        for (Map.Entry<String, String> entry : components.entrySet()) {
+        return firstAvailableComponentAddress(type);
+    }
+
+    private String firstAvailableComponentAddress(final String type) {
+        if (machine == null) {
+            return null;
+        }
+        for (Map.Entry<String, String> entry : machine.components().entrySet()) {
             if (entry.getValue().equals(type)) {
                 return entry.getKey();
             }
         }
         return null;
+    }
+
+    private long componentCount(final String type) {
+        if (machine == null) {
+            return 0;
+        }
+        return machine.components().values().stream().filter(type::equals).count();
     }
 
     private String componentAddressByPrefix(final String prefix, final String type) {
@@ -1208,11 +1233,21 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (address.equals(previous)) {
             return false;
         }
+        final PendingPrimaryComponent pending = pendingPrimaryComponents.get(type);
+        if (pending != null && address.equals(pending.address())) {
+            return false;
+        }
         if (previous != null) {
             machine.signal("component_unavailable", type);
         }
-        primaryComponents.put(type, address);
-        machine.signal("component_available", type);
+        primaryComponents.remove(type);
+        pendingPrimaryComponents.remove(type);
+        if (previous != null || pending != null) {
+            pendingPrimaryComponents.put(type, new PendingPrimaryComponent(address, machineUpTime() + PRIMARY_REPLACEMENT_DELAY_SECONDS));
+        } else {
+            primaryComponents.put(type, address);
+            machine.signal("component_available", type);
+        }
         return true;
     }
 
@@ -1220,6 +1255,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (machine == null) {
             return;
         }
+        pendingPrimaryComponents.remove(type);
         if (primaryComponents.remove(type) != null) {
             machine.signal("component_unavailable", type);
         }
@@ -1409,6 +1445,26 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return machine == null ? 0D : machine.upTime();
     }
 
+    private void processPendingPrimaryComponents() {
+        if (machine == null || pendingPrimaryComponents.isEmpty()) {
+            return;
+        }
+        final double now = machineUpTime();
+        final List<String> readyTypes = new ArrayList<>();
+        for (Map.Entry<String, PendingPrimaryComponent> entry : pendingPrimaryComponents.entrySet()) {
+            if (now + 1.0e-9D >= entry.getValue().readyAtSeconds()) {
+                readyTypes.add(entry.getKey());
+            }
+        }
+        for (String type : readyTypes) {
+            final PendingPrimaryComponent pending = pendingPrimaryComponents.remove(type);
+            if (pending != null && type.equals(machine.components().get(pending.address()))) {
+                primaryComponents.put(type, pending.address());
+                machine.signal("component_available", type);
+            }
+        }
+    }
+
     private Varargs signalToLuaValues(final Signal signal) {
         processComponentSignal(signal);
         final Object[] signalArgs = signal.args();
@@ -1429,16 +1485,17 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return;
         }
         if ("component_added".equals(signal.name())) {
-            if (!primaryComponents.containsKey(type) && type.equals(machine.components().get(address))) {
+            if (!primaryComponents.containsKey(type) && !pendingPrimaryComponents.containsKey(type) && componentCount(type) == 1 && type.equals(machine.components().get(address))) {
                 setPrimaryComponent(type, address);
             }
         } else if ("component_removed".equals(signal.name())) {
-            if (address.equals(primaryComponents.get(type))) {
-                primaryComponents.remove(type);
-                machine.signal("component_unavailable", type);
-                final String next = firstComponentAddress(type);
+            final PendingPrimaryComponent pending = pendingPrimaryComponents.get(type);
+            if (address.equals(primaryComponents.get(type)) || (pending != null && address.equals(pending.address()))) {
+                final String next = firstAvailableComponentAddress(type);
                 if (next != null) {
                     setPrimaryComponent(type, next);
+                } else {
+                    clearPrimaryComponent(type);
                 }
             }
         }
@@ -2084,5 +2141,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     @FunctionalInterface
     private interface PendingBudgetCall {
         Varargs invoke() throws LimitReachedException;
+    }
+
+    private record PendingPrimaryComponent(String address, double readyAtSeconds) {
     }
 }
