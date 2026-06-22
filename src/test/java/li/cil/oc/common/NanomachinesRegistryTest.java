@@ -9,6 +9,7 @@ import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.WirelessEndpoint;
 import li.cil.oc.common.item.NanomachineItemData;
 import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
+import li.cil.oc.common.nanomachines.provider.NanomachineMagnetProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineParticleProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -43,6 +44,7 @@ final class NanomachinesRegistryTest {
         assertTrue(API.nanomachines instanceof NanomachinesRegistry);
         assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineParticleProvider.class));
         assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineHungryProvider.class));
+        assertTrue(hasProvider((NanomachinesRegistry) API.nanomachines, NanomachineMagnetProvider.class));
     }
 
     @Test

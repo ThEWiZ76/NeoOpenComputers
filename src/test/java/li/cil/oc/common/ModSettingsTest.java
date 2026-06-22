@@ -118,6 +118,7 @@ final class ModSettingsTest {
         assertEquals(2D, ModSettings.nanomachinesCommandRange());
         assertEquals(5D, ModSettings.nanomachinesHungryDamage());
         assertEquals(50D, ModSettings.nanomachinesHungryEnergyRestored());
+        assertEquals(8D, ModSettings.nanomachinesMagnetRange());
     }
 
     @Test
@@ -186,6 +187,7 @@ final class ModSettingsTest {
         assertEquals(List.of("nanomachines", "commandRange"), ModSettings.NANOMACHINES_COMMAND_RANGE.getPath());
         assertEquals(List.of("nanomachines", "hungryDamage"), ModSettings.NANOMACHINES_HUNGRY_DAMAGE.getPath());
         assertEquals(List.of("nanomachines", "hungryEnergyRestored"), ModSettings.NANOMACHINES_HUNGRY_ENERGY_RESTORED.getPath());
+        assertEquals(List.of("nanomachines", "magnetRange"), ModSettings.NANOMACHINES_MAGNET_RANGE.getPath());
     }
 
     @Test

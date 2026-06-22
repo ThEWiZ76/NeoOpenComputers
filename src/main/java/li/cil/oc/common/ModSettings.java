@@ -83,6 +83,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue NANOMACHINES_COMMAND_RANGE;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_HUNGRY_DAMAGE;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_HUNGRY_ENERGY_RESTORED;
+    public static final ModConfigSpec.DoubleValue NANOMACHINES_MAGNET_RANGE;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -306,6 +307,9 @@ public final class ModSettings {
         NANOMACHINES_HUNGRY_ENERGY_RESTORED = builder
             .comment("Energy restored after hungry nanomachine out-of-energy damage. OpenComputers upstream default is 50.")
             .defineInRange("hungryEnergyRestored", 50D, 0D, Double.MAX_VALUE);
+        NANOMACHINES_MAGNET_RANGE = builder
+            .comment("Range of the item magnet behavior added for each active input. OpenComputers upstream default is 8.")
+            .defineInRange("magnetRange", 8D, 0D, Double.MAX_VALUE);
         builder.pop();
 
         SPEC = builder.build();
@@ -380,6 +384,10 @@ public final class ModSettings {
 
     public static double nanomachinesHungryEnergyRestored() {
         return Math.max(0D, doubleValue(NANOMACHINES_HUNGRY_ENERGY_RESTORED));
+    }
+
+    public static double nanomachinesMagnetRange() {
+        return Math.max(0D, doubleValue(NANOMACHINES_MAGNET_RANGE));
     }
 
     public static boolean inputUsername() {
