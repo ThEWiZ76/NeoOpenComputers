@@ -1588,6 +1588,24 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsStringBooleanArgumentsLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            valid, message = pcall(function()
+              return userdata.apply(value, 'boolean-value', 'text')
+            end)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("bad argument #2 (boolean expected, got string)"));
+    }
+
+    @Test
     void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
         TestValue value = new TestValue();
         int[] valueInvokes = {0};
@@ -3348,6 +3366,9 @@ final class LuaArchitectureTest {
             }
             if ("double-value".equals(arguments.checkString(0))) {
                 return "double:" + arguments.checkDouble(1);
+            }
+            if ("boolean-value".equals(arguments.checkString(0))) {
+                return "boolean:" + arguments.checkBoolean(1);
             }
             if ("integer-value".equals(arguments.checkString(0))) {
                 return "integer:" + arguments.checkInteger(1);

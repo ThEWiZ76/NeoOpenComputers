@@ -2304,7 +2304,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public boolean checkBoolean(final int index) {
-            return (Boolean) checkAny(index);
+            final Object value = checkAny(index);
+            if (!(value instanceof Boolean)) {
+                throw new IllegalArgumentException("bad argument #" + (index + 1) + " (boolean expected, got " + argumentTypeName(value) + ")");
+            }
+            return (Boolean) value;
         }
 
         @Override
