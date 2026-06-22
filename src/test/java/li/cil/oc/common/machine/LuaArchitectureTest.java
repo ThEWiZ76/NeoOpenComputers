@@ -1189,13 +1189,29 @@ final class LuaArchitectureTest {
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals("function", architecture.globalString("labelType"));
+        assertEquals("table", architecture.globalString("labelType"));
         assertEquals("nil", architecture.globalString("missingMemberType"));
         assertEquals(true, architecture.globalBoolean("result"));
         assertEquals(List.of("label"), invokedMethods);
         assertArrayEquals(new Object[]{"arg"}, invokedArguments.getFirst());
         assertEquals("nil", architecture.globalString("missing"));
         assertEquals("no such component", architecture.globalString("missingMessage"));
+    }
+
+    @Test
+    void componentProxyMethodToStringReturnsDocumentation() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.proxy('fs-address')
+            labelDescription = tostring(fs.label)
+            """);
+        architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("function():string -- Regular callback.", architecture.globalString("labelDescription"));
     }
 
     @Test
@@ -1217,7 +1233,7 @@ final class LuaArchitectureTest {
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("current", architecture.globalString("value"));
-        assertEquals("function", architecture.globalString("labelType"));
+        assertEquals("table", architecture.globalString("labelType"));
         assertEquals(List.of("accessor", "accessor"), invokedMethods);
         assertEquals(0, invokedArguments.get(0).length);
         assertArrayEquals(new Object[]{"next"}, invokedArguments.get(1));
@@ -1247,7 +1263,7 @@ final class LuaArchitectureTest {
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals("function", architecture.globalString("labelType"));
+        assertEquals("table", architecture.globalString("labelType"));
         assertEquals(true, architecture.globalBoolean("accessorGetter"));
         assertEquals(false, architecture.globalBoolean("fieldsVisible"));
     }

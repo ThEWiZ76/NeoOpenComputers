@@ -1240,18 +1240,35 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return proxy;
     }
 
-    private VarArgFunction componentProxyFunction(final String address, final String method, final LuaTable proxy) {
-        return new VarArgFunction() {
+    private LuaTable componentProxyFunction(final String address, final String method, final LuaTable proxy) {
+        final LuaTable callback = new LuaTable();
+        callback.set("address", address);
+        callback.set("name", method);
+        final LuaTable metatable = new LuaTable();
+        metatable.set("__call", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs callbackArgs) {
-                final int offset = callbackArgs.narg() > 0 && callbackArgs.arg(1).eq_b(proxy) ? 1 : 0;
+                int offset = callbackArgs.narg() > 0 && callbackArgs.arg(1).eq_b(callback) ? 1 : 0;
+                if (callbackArgs.narg() > offset && callbackArgs.arg(offset + 1).eq_b(proxy)) {
+                    offset++;
+                }
                 final Object[] javaArgs = new Object[Math.max(0, callbackArgs.narg() - offset)];
                 for (int index = 0; index < javaArgs.length; index++) {
                     javaArgs[index] = toJavaValue(callbackArgs.arg(index + offset + 1));
                 }
                 return invokeComponent(address, method, javaArgs);
             }
-        };
+        });
+        metatable.set("__tostring", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                final Callback callback = componentCallback(address, method);
+                final String doc = callback == null ? "" : callback.doc();
+                return LuaValue.valueOf(doc == null || doc.isEmpty() ? "function" : doc);
+            }
+        });
+        callback.setmetatable(metatable);
+        return callback;
     }
 
     private LuaTable componentFields(final String address) {
