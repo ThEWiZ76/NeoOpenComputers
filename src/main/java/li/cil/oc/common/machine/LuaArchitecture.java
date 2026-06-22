@@ -280,10 +280,29 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.set("package", LuaValue.NIL);
         installCheckArg(globals);
         installDebugLibrary(globals);
+        installPairsCompatibility(globals);
         installStringCompatibility(globals);
         LoadState.install(globals);
         LuaC.install(globals);
         return globals;
+    }
+
+    private static void installPairsCompatibility(final Globals globals) {
+        final LuaValue originalPairs = globals.get("pairs");
+        globals.set("pairs", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                final LuaTable table = args.checktable(1);
+                final LuaValue metatable = table.getmetatable();
+                if (metatable != null && !metatable.isnil()) {
+                    final LuaValue pairs = metatable.get("__pairs");
+                    if (!pairs.isnil()) {
+                        return pairs.invoke(table);
+                    }
+                }
+                return originalPairs.invoke(args);
+            }
+        });
     }
 
     private static void installDebugLibrary(final Globals globals) {
@@ -1142,7 +1161,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (host != null) {
             proxy.set("slot", host.componentSlot(address));
         }
-        proxy.set("fields", componentFields(address));
+        final LuaTable fields = componentFields(address);
+        proxy.set("fields", fields);
         if (machine != null) {
             final Map<String, Callback> methods = machine.methods(address);
             if (methods != null) {
@@ -1185,6 +1205,34 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 proxy.rawset(key, args.arg(3));
                 return LuaValue.NIL;
+            }
+        });
+        metatable.set("__pairs", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return new VarArgFunction() {
+                    private LuaValue proxyKey = LuaValue.NIL;
+                    private LuaValue fieldKey = LuaValue.NIL;
+                    private boolean fieldsStarted;
+
+                    @Override
+                    public Varargs invoke(final Varargs iteratorArgs) {
+                        while (!fieldsStarted) {
+                            final Varargs next = proxy.next(proxyKey);
+                            proxyKey = next.arg1();
+                            if (proxyKey.isnil()) {
+                                fieldsStarted = true;
+                                break;
+                            }
+                            if (!"fields".equals(proxyKey.tojstring())) {
+                                return next;
+                            }
+                        }
+                        final Varargs next = fields.next(fieldKey);
+                        fieldKey = next.arg1();
+                        return next;
+                    }
+                };
             }
         });
         proxy.setmetatable(metatable);

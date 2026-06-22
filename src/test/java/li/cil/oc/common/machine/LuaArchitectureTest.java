@@ -1183,7 +1183,10 @@ final class LuaArchitectureTest {
                 labelType = type(value)
               end
               if key == 'accessor' then
-                accessorVisible = true
+                accessorGetter = value.getter
+              end
+              if key == 'fields' then
+                fieldsVisible = true
               end
             end
             """);
@@ -1193,7 +1196,8 @@ final class LuaArchitectureTest {
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("function", architecture.globalString("labelType"));
-        assertEquals(false, architecture.globalBoolean("accessorVisible"));
+        assertEquals(true, architecture.globalBoolean("accessorGetter"));
+        assertEquals(false, architecture.globalBoolean("fieldsVisible"));
     }
 
     @Test
