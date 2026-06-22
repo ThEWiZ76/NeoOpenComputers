@@ -1552,6 +1552,24 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void rejectsStringLongArgumentsLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            valid, message = pcall(function()
+              return userdata.apply(value, 'long-value', 'text')
+            end)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("bad argument #2 (integer expected, got string)"));
+    }
+
+    @Test
     void rejectsStaleUserdataCallbackMethodsLikeUpstream() {
         TestValue value = new TestValue();
         int[] valueInvokes = {0};

@@ -2367,6 +2367,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
                 return floatValue.longValue();
             }
+            if (!(value instanceof Number)) {
+                throw new IllegalArgumentException("bad argument #" + (index + 1) + " (integer expected, got " + argumentTypeName(value) + ")");
+            }
             return ((Number) value).longValue();
         }
 
