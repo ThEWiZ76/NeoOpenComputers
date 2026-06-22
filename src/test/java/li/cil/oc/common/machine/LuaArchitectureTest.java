@@ -1635,6 +1635,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void userdataDocReportsMissingMethodMessageLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            missing, message = userdata.doc(value, 'missing')
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("missing"));
+        assertEquals("key not found: missing", architecture.globalString("message"));
+    }
+
+    @Test
     void reusesUserdataProxyForSameValueHandle() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""

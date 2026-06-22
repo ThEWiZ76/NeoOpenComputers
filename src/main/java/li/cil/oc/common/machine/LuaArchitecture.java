@@ -1365,7 +1365,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     return LuaValue.NIL;
                 }
                 final Callback callback = machine.methods(value).get(method);
-                return callback == null || callback.doc().isEmpty() ? LuaValue.NIL : LuaValue.valueOf(callback.doc());
+                if (callback == null) {
+                    return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("key not found: " + method));
+                }
+                return callback.doc().isEmpty() ? LuaValue.NIL : LuaValue.valueOf(callback.doc());
             }
         });
         globals.set("userdata", userdata);
