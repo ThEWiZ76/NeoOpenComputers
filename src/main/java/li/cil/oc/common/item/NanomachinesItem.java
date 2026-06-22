@@ -1,5 +1,8 @@
 package li.cil.oc.common.item;
 
+import li.cil.oc.api.API;
+import li.cil.oc.api.nanomachines.Controller;
+import li.cil.oc.common.NanomachinesRegistry;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
@@ -34,8 +37,16 @@ public class NanomachinesItem extends Item {
     @Override
     public ItemStack finishUsingItem(final ItemStack stack, final Level level, final LivingEntity livingEntity) {
         if (livingEntity instanceof Player player && !level.isClientSide) {
+            final var itemData = NanomachineItemData.dataTag(stack).copy();
             li.cil.oc.api.Nanomachines.uninstallController(player);
-            li.cil.oc.api.Nanomachines.installController(player);
+            if (API.nanomachines instanceof NanomachinesRegistry registry) {
+                registry.installController(player, itemData);
+            } else {
+                final Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+                if (controller != null) {
+                    controller.reconfigure();
+                }
+            }
             stack.shrink(1);
         }
         return stack;

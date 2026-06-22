@@ -7,9 +7,11 @@ import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.nanomachines.DisableReason;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.WirelessEndpoint;
+import li.cil.oc.common.item.NanomachineItemData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import java.nio.charset.StandardCharsets;
@@ -34,7 +36,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private List<Behavior> activeBehaviors = List.of();
     private boolean[] inputs = new boolean[0];
     private boolean activeBehaviorsDirty;
-    private final String uuid = UUID.randomUUID().toString();
+    private String uuid = UUID.randomUUID().toString();
     private int responsePort;
     private int commandDelay;
     private int updateTicks;
@@ -171,6 +173,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             respond(sender, "port", responsePort);
         } else if ("getPowerState".equals(command)) {
             respond(sender, "power", getLocalBuffer(), getLocalBufferSize());
+        } else if ("saveConfiguration".equals(command)) {
+            respond(sender, saveConfigurationResponse());
         } else if ("getTotalInputCount".equals(command)) {
             respond(sender, "totalInputCount", getTotalInputCount());
         } else if ("getSafeActiveInputs".equals(command)) {
@@ -256,6 +260,30 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             }
         }
         activeBehaviorsDirty = true;
+    }
+
+    String uuid() {
+        return uuid;
+    }
+
+    void saveItemConfiguration(final CompoundTag itemData) {
+        final CompoundTag configuration = new CompoundTag();
+        configuration.put(TAG_CONNECTORS, saveConnectorEntries());
+        configuration.put(TAG_BEHAVIORS, saveBehaviorEntries());
+        NanomachineItemData.save(itemData, uuid, configuration);
+    }
+
+    void loadItemConfiguration(final CompoundTag itemData) {
+        if (!NanomachineItemData.hasConfiguration(itemData)) {
+            return;
+        }
+        final String savedUuid = NanomachineItemData.uuid(itemData);
+        if (!savedUuid.isEmpty()) {
+            uuid = savedUuid;
+        }
+        disableActive(DisableReason.Default);
+        load(NanomachineItemData.configuration(itemData));
+        saveState();
     }
 
     private void setBehaviorEntries(final List<BehaviorEntry> entries) {
@@ -497,6 +525,23 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             }
         }
         return builder.append('}').toString();
+    }
+
+    private Object[] saveConfigurationResponse() {
+        if (player == null) {
+            return new Object[]{"saved", false, "no nanomachines"};
+        }
+        try {
+            for (final ItemStack stack : player.getInventory().items) {
+                if (stack.is(ModItems.NANOMACHINES.get()) && !NanomachineItemData.hasConfiguration(NanomachineItemData.dataTag(stack))) {
+                    saveItemConfiguration(NanomachineItemData.dataTag(stack));
+                    return new Object[]{"saved", true};
+                }
+            }
+            return new Object[]{"saved", false, "no nanomachines"};
+        } catch (final RuntimeException e) {
+            return new Object[]{"saved", false, "error"};
+        }
     }
 
     private int activeInputCount() {

@@ -78,6 +78,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
@@ -687,6 +688,63 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(reinstalledController != null, "Nanomachines reinstall did not install controller");
         helper.assertFalse(reinstalledController.getInput(0), "Nanomachines blank reinstall kept stale active input");
         helper.assertTrue(reinstalledController.getLocalBuffer() > firstController.getLocalBuffer(), "Nanomachines blank reinstall kept stale energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void nanomachinesConfiguredItemRestoresSavedConfiguration(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.common.NanomachinesRegistry previous = API.nanomachines instanceof li.cil.oc.common.NanomachinesRegistry registry ? registry : null;
+        final li.cil.oc.common.NanomachinesRegistry registry = new li.cil.oc.common.NanomachinesRegistry();
+        final RecordingNanomachineBehavior behavior = new RecordingNanomachineBehavior();
+        registry.addProvider(new RecordingNanomachineProvider(behavior));
+        final ItemStack stack = new ItemStack(ModItems.NANOMACHINES.get());
+        final CompoundTag root = new CompoundTag();
+        root.putString("oc:uuid", "configured-controller");
+        root.put("oc:configuration", nanomachineConfigurationTag(3));
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+        API.nanomachines = registry;
+        try {
+            stack.getItem().finishUsingItem(stack, helper.getLevel(), player);
+            final li.cil.oc.api.nanomachines.Controller controller = registry.getController(player);
+
+            helper.assertTrue(controller != null, "Configured nanomachines item did not install controller");
+            helper.assertTrue(controller.getTotalInputCount() == 4, "Configured nanomachines item did not restore saved trigger count");
+            helper.assertFalse(controller.getInput(3), "Configured nanomachines item restored active input state");
+            helper.assertTrue(controller.setInput(3, true), "Configured nanomachines item rejected saved trigger input");
+            helper.assertTrue(containsBehavior(controller.getActiveBehaviors(), behavior), "Configured nanomachines item did not restore saved behavior wiring");
+        } finally {
+            API.nanomachines = previous;
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void nanomachinesWirelessSaveConfigurationWritesBlankItem(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final ItemStack blank = new ItemStack(ModItems.NANOMACHINES.get());
+        player.getInventory().add(blank);
+        final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+        final li.cil.oc.api.network.WirelessEndpoint endpoint = (li.cil.oc.api.network.WirelessEndpoint) controller;
+        final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
+        Network.joinWirelessNetwork(sender);
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 563}), sender);
+        runNanomachinesCommandDelay(player);
+        sender.lastPacket = null;
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "saveConfiguration"}), sender);
+        runNanomachinesCommandDelay(player);
+
+        helper.assertTrue(sender.lastPacket != null, "Nanomachines saveConfiguration did not respond");
+        helper.assertTrue(sender.lastPacket.port() == 563, "Nanomachines saveConfiguration used wrong response port");
+        helper.assertTrue(java.util.Arrays.equals(new Object[]{"nanomachines", "saved", true}, sender.lastPacket.data()), "Nanomachines saveConfiguration returned wrong payload");
+        final ItemStack saved = player.getInventory().items.stream()
+            .filter(stack -> stack.is(ModItems.NANOMACHINES.get()))
+            .filter(stack -> stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().contains("oc:configuration", CompoundTag.TAG_COMPOUND))
+            .findFirst()
+            .orElse(ItemStack.EMPTY);
+        helper.assertFalse(saved.isEmpty(), "Nanomachines saveConfiguration did not write configuration to a blank item");
         helper.succeed();
     }
 
@@ -4748,6 +4806,19 @@ public final class NeoOpenComputersGameTests {
             }
         }
         return false;
+    }
+
+    private static CompoundTag nanomachineConfigurationTag(final int triggerInput) {
+        final CompoundTag configuration = new CompoundTag();
+        configuration.put("connectors", new ListTag());
+        final ListTag behaviors = new ListTag();
+        final CompoundTag behavior = new CompoundTag();
+        behavior.put("behavior", new CompoundTag());
+        behavior.putIntArray("triggerInputs", new int[]{triggerInput});
+        behavior.putIntArray("connectorInputs", new int[0]);
+        behaviors.add(behavior);
+        configuration.put("behaviors", behaviors);
+        return configuration;
     }
 
     private static boolean containsStack(final net.minecraft.world.Container inventory, final Item item, final int count) {

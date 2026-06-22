@@ -7,6 +7,7 @@ import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.DisableReason;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.WirelessEndpoint;
+import li.cil.oc.common.item.NanomachineItemData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
@@ -380,6 +381,34 @@ final class NanomachinesRegistryTest {
         controller.reconfigure();
 
         assertEquals(before - ModSettings.nanomachinesReconfigureCost(), controller.getLocalBuffer(), 0.000_001D);
+    }
+
+    @Test
+    void controllerSavesConfigurationForNanomachinesItemWithoutRuntimeState() {
+        TestBehavior behavior = new TestBehavior("saved");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(behavior));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        controller.setInput(0, true);
+        controller.changeBuffer(-123D);
+        final CompoundTag itemData = new CompoundTag();
+
+        controller.saveItemConfiguration(itemData);
+
+        assertEquals(controller.uuid(), NanomachineItemData.uuid(itemData));
+        assertTrue(NanomachineItemData.hasConfiguration(itemData));
+        final CompoundTag configuration = NanomachineItemData.configuration(itemData);
+        assertFalse(configuration.contains("energy"));
+        assertFalse(configuration.contains("activeInputs"));
+        assertTrue(configuration.contains("behaviors", CompoundTag.TAG_LIST));
+
+        final SimpleNanomachineController loaded = new SimpleNanomachineController(null, registry);
+        loaded.loadItemConfiguration(itemData);
+
+        assertEquals(controller.getTotalInputCount(), loaded.getTotalInputCount());
+        assertFalse(loaded.getInput(0));
+        assertEquals(ModSettings.nanomachinesBuffer() * 0.25D, loaded.getLocalBuffer(), 0.000_001D);
+        assertIterableEquals(List.of(), loaded.getActiveBehaviors());
     }
 
     private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {

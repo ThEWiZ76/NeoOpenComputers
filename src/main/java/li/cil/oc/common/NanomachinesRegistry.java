@@ -74,6 +74,18 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
         return getController(player);
     }
 
+    public Controller installController(final Player player, final CompoundTag itemData) {
+        final Controller controller = installController(player);
+        if (controller instanceof SimpleNanomachineController simpleController) {
+            if (li.cil.oc.common.item.NanomachineItemData.hasConfiguration(itemData)) {
+                simpleController.loadItemConfiguration(itemData);
+            }
+        } else if (controller != null) {
+            controller.reconfigure();
+        }
+        return controller;
+    }
+
     @Override
     public void uninstallController(final Player player) {
         if (player == null) {
