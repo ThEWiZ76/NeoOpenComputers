@@ -303,6 +303,7 @@ final class LuaArchitectureTest {
             dofileType = type(dofile)
             loadfileType = type(loadfile)
             printType = type(print)
+            collectgarbageType = type(collectgarbage)
             """);
 
         assertTrue(architecture.initialize());
@@ -319,6 +320,7 @@ final class LuaArchitectureTest {
         assertEquals("nil", architecture.globalString("dofileType"));
         assertEquals("nil", architecture.globalString("loadfileType"));
         assertEquals("nil", architecture.globalString("printType"));
+        assertEquals("nil", architecture.globalString("collectgarbageType"));
     }
 
     @Test

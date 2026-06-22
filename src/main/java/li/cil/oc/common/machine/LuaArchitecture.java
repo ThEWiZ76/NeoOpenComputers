@@ -293,6 +293,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals.set("dofile", LuaValue.NIL);
         globals.set("loadfile", LuaValue.NIL);
         globals.set("print", LuaValue.NIL);
+        globals.set("collectgarbage", LuaValue.NIL);
         installCheckArg(globals);
         installDebugLibrary(globals);
         installPairsCompatibility(globals);
