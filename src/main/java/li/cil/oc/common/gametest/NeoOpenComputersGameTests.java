@@ -786,6 +786,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesWirelessCommandsIgnoreFarSenders(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+        final li.cil.oc.api.network.WirelessEndpoint endpoint = (li.cil.oc.api.network.WirelessEndpoint) controller;
+        final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition().offset(6, 0, 0));
+        Network.joinWirelessNetwork(sender);
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setInput", 1, true}), sender);
+
+        helper.assertTrue(sender.lastPacket == null, "Nanomachines command responded outside command range");
+        helper.assertFalse(controller.getInput(0), "Nanomachines command changed input outside command range");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void mfuLinksRemoteSidedTileEnvironment(final GameTestHelper helper) {
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(2, 1, 0);

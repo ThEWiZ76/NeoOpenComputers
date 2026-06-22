@@ -149,7 +149,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     @Override
     public void receivePacket(final Packet packet, final WirelessEndpoint sender) {
-        if (packet == null || sender == null || getLocalBuffer() <= 0D) {
+        if (packet == null || sender == null || getLocalBuffer() <= 0D || !isSenderInCommandRange(sender)) {
             return;
         }
         final Object[] data = packet.data();
@@ -384,6 +384,21 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     private static int clampPort(final int port) {
         return Math.max(0, Math.min(0xFFFF, port));
+    }
+
+    private boolean isSenderInCommandRange(final WirelessEndpoint sender) {
+        if (player == null) {
+            return true;
+        }
+        if (sender.world() != player.level()) {
+            return false;
+        }
+        final double dx = sender.x() + 0.5D - player.getX();
+        final double dy = sender.y() + 0.5D - player.getY();
+        final double dz = sender.z() + 0.5D - player.getZ();
+        final double range = ModSettings.nanomachinesCommandRange();
+        final double effectiveRange = range * range;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz) <= effectiveRange;
     }
 
     private String activeEffects() {
