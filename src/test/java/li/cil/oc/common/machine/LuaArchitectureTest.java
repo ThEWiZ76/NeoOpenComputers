@@ -703,7 +703,7 @@ final class LuaArchitectureTest {
     void exposesComputerUsersToLua() {
         String[] added = {null};
         String[] removed = {null};
-        LuaArchitecture architecture = new LuaArchitecture("users = computer.users(); first = users[1]; second = users[2]; added = computer.addUser('carol'); removed = computer.removeUser('bob')");
+        LuaArchitecture architecture = new LuaArchitecture("first, second = computer.users(); added = computer.addUser('carol'); removed = computer.removeUser('bob')");
         architecture.bind(machineWithUserAccess(new String[]{"alice", "bob"}, added, removed));
 
         assertTrue(architecture.initialize());
