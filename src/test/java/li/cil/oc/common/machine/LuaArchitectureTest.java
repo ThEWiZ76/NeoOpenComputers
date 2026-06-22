@@ -1172,6 +1172,31 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void exposesComponentProxyMethodsToLuaPairs() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        methods.put("accessor", callback("accessorCallback"));
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.proxy('fs-address')
+            for key, value in pairs(fs) do
+              if key == 'label' then
+                labelType = type(value)
+              end
+              if key == 'accessor' then
+                accessorVisible = true
+              end
+            end
+            """);
+        architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("function", architecture.globalString("labelType"));
+        assertEquals(false, architecture.globalBoolean("accessorVisible"));
+    }
+
+    @Test
     void exposesComponentProxyMetadataToLua() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));

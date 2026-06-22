@@ -1143,6 +1143,17 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             proxy.set("slot", host.componentSlot(address));
         }
         proxy.set("fields", componentFields(address));
+        if (machine != null) {
+            final Map<String, Callback> methods = machine.methods(address);
+            if (methods != null) {
+                for (Map.Entry<String, Callback> entry : methods.entrySet()) {
+                    final Callback callback = entry.getValue();
+                    if (callback != null && !callback.getter() && !callback.setter()) {
+                        proxy.set(entry.getKey(), componentProxyFunction(address, entry.getKey(), proxy));
+                    }
+                }
+            }
+        }
         final LuaTable metatable = new LuaTable();
         metatable.set("__index", new VarArgFunction() {
             @Override
@@ -1158,17 +1169,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (callback == null) {
                     return LuaValue.NIL;
                 }
-                return new VarArgFunction() {
-                    @Override
-                    public Varargs invoke(final Varargs callbackArgs) {
-                        final int offset = callbackArgs.narg() > 0 && callbackArgs.arg(1).eq_b(proxy) ? 1 : 0;
-                        final Object[] javaArgs = new Object[Math.max(0, callbackArgs.narg() - offset)];
-                        for (int index = 0; index < javaArgs.length; index++) {
-                            javaArgs[index] = toJavaValue(callbackArgs.arg(index + offset + 1));
-                        }
-                        return invokeComponent(address, method, javaArgs);
-                    }
-                };
+                return componentProxyFunction(address, method, proxy);
             }
         });
         metatable.set("__newindex", new VarArgFunction() {
@@ -1189,6 +1190,20 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         proxy.setmetatable(metatable);
         componentProxyCache.put(address, proxy);
         return proxy;
+    }
+
+    private VarArgFunction componentProxyFunction(final String address, final String method, final LuaTable proxy) {
+        return new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs callbackArgs) {
+                final int offset = callbackArgs.narg() > 0 && callbackArgs.arg(1).eq_b(proxy) ? 1 : 0;
+                final Object[] javaArgs = new Object[Math.max(0, callbackArgs.narg() - offset)];
+                for (int index = 0; index < javaArgs.length; index++) {
+                    javaArgs[index] = toJavaValue(callbackArgs.arg(index + offset + 1));
+                }
+                return invokeComponent(address, method, javaArgs);
+            }
+        };
     }
 
     private LuaTable componentFields(final String address) {
