@@ -625,6 +625,31 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void osSleepYieldsUntilTimeoutLikeOpenOs() {
+        Queue<Signal> signals = new ArrayDeque<>();
+        double[] uptime = {1D};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            before = computer.uptime()
+            result = os.sleep(0.5)
+            after = computer.uptime()
+            """);
+        architecture.bind(machineWithUptime(signals, uptime));
+
+        assertTrue(architecture.initialize());
+        ExecutionResult firstResult = architecture.runThreaded(false);
+
+        ExecutionResult.Sleep sleep = assertInstanceOf(ExecutionResult.Sleep.class, firstResult);
+        assertEquals(10, sleep.ticks);
+        assertEquals(1D, architecture.globalDouble("before"));
+
+        uptime[0] = 1.5D;
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("result"));
+        assertEquals(1.5D, architecture.globalDouble("after"));
+    }
+
+    @Test
     void exposesComputerPushSignalToLua() {
         String[] signalName = {null};
         Object[][] signalArguments = {null};

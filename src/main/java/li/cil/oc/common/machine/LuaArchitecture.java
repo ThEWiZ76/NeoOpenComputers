@@ -1214,6 +1214,20 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 return LuaValue.valueOf(args.checkdouble(1) - args.checkdouble(2));
             }
         });
+        os.set("sleep", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                if (machine == null) {
+                    return LuaValue.NIL;
+                }
+                final double timeout = args.narg() >= 1 && args.arg(1).isnumber()
+                    ? Math.max(0D, args.arg(1).todouble())
+                    : 0D;
+                waitingForSignal = true;
+                signalDeadlineSeconds = machineUpTime() + timeout;
+                return globals.yield(LuaValue.valueOf(PULL_SIGNAL_MARKER));
+            }
+        });
         globals.set("os", os);
     }
 
