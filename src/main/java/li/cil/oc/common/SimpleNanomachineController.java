@@ -16,7 +16,9 @@ import net.minecraft.world.level.Level;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 final class SimpleNanomachineController implements Controller, WirelessEndpoint {
@@ -30,6 +32,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     private final Player player;
     private final NanomachinesRegistry registry;
+    private final Random graphRandom;
     private List<ConnectorEntry> connectors = List.of();
     private List<BehaviorEntry> behaviorEntries = List.of();
     private List<Behavior> behaviors = List.of();
@@ -45,8 +48,13 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private double buffer;
 
     SimpleNanomachineController(final Player player, final NanomachinesRegistry registry) {
+        this(player, registry, new Random(player == null ? 0L : UUID.randomUUID().getMostSignificantBits()));
+    }
+
+    SimpleNanomachineController(final Player player, final NanomachinesRegistry registry, final Random graphRandom) {
         this.player = player;
         this.registry = registry;
+        this.graphRandom = graphRandom == null ? new Random(0L) : graphRandom;
         buffer = ModSettings.nanomachinesBuffer() * 0.25D;
         reconfigure();
     }
@@ -333,66 +341,112 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     private List<ConnectorEntry> createConnectorEntries(final List<Integer> triggerSourcePool, final int connectorCount) {
         final int maxInputs = Math.max(1, ModSettings.nanomachineMaxInputs());
-        final List<ConnectorEntry> entries = new ArrayList<>(connectorCount);
-        for (int i = 0; i < connectorCount; i++) {
-            final int[] triggerInputs = takeTriggerInputs(triggerSourcePool, maxInputs);
+        final List<int[]> inputs = new ArrayList<>(Collections.nCopies(connectorCount, new int[0]));
+        final List<Integer> sinkPool = shuffledIndices(connectorCount);
+        for (final int sink : sinkPool) {
+            final int[] triggerInputs = takeRandomInputs(triggerSourcePool, maxInputs);
             if (triggerInputs.length > 0) {
-                entries.add(new ConnectorEntry(triggerInputs));
+                inputs.set(sink, triggerInputs);
             }
         }
-        return List.copyOf(entries);
+        return inputs.stream()
+            .filter(triggerInputs -> triggerInputs.length > 0)
+            .map(ConnectorEntry::new)
+            .toList();
     }
 
     private List<BehaviorEntry> assignGeneratedInputs(final List<BehaviorEntry> entries, final List<Integer> triggerSourcePool, final int connectorCount) {
         final int maxInputs = Math.max(1, ModSettings.nanomachineMaxInputs());
         final int maxOutputs = Math.max(1, ModSettings.nanomachineMaxOutputs());
-        final List<Integer> connectorSourcePool = connectorSourcePool(connectorCount, maxOutputs);
-        final int[] connectorUseCounts = new int[connectorCount];
+        final List<SourceRef> sourcePool = behaviorSourcePool(triggerSourcePool, connectorCount, maxOutputs);
+        final int[][] triggerInputs = new int[entries.size()][];
+        final int[][] connectorInputs = new int[entries.size()][];
+        for (int i = 0; i < entries.size(); i++) {
+            triggerInputs[i] = new int[0];
+            connectorInputs[i] = new int[0];
+        }
+        final List<Integer> sinkPool = shuffledIndices(entries.size());
+        for (final int sink : sinkPool) {
+            final List<SourceRef> sources = takeRandomSources(sourcePool, maxInputs);
+            triggerInputs[sink] = sources.stream()
+                .filter(source -> !source.connector())
+                .mapToInt(SourceRef::index)
+                .toArray();
+            connectorInputs[sink] = sources.stream()
+                .filter(SourceRef::connector)
+                .mapToInt(SourceRef::index)
+                .toArray();
+        }
+
         final List<BehaviorEntry> assigned = new ArrayList<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
             final BehaviorEntry entry = entries.get(i);
-            int[] connectorInputs = new int[0];
-            if (connectorCount > 0 && maxInputs > 1 && (i % maxInputs == 1 || triggerSourcePool.isEmpty()) && !connectorSourcePool.isEmpty()) {
-                final int connector = connectorSourcePool.remove(0);
-                if (connectorUseCounts[connector] < maxOutputs) {
-                    connectorUseCounts[connector]++;
-                    connectorInputs = new int[]{connector};
-                }
-            }
-            final int triggerInputLimit = Math.max(1, maxInputs - connectorInputs.length);
-            final int[] triggerInputs = takeTriggerInputs(triggerSourcePool, triggerInputLimit);
-            if (triggerInputs.length > 0 || connectorInputs.length > 0) {
-                assigned.add(new BehaviorEntry(entry.provider(), entry.behavior(), triggerInputs, connectorInputs));
+            if (triggerInputs[i].length > 0 || connectorInputs[i].length > 0) {
+                assigned.add(new BehaviorEntry(entry.provider(), entry.behavior(), triggerInputs[i], connectorInputs[i]));
             }
         }
         return assigned;
     }
 
-    private List<Integer> connectorSourcePool(final int connectorCount, final int maxOutputs) {
-        final List<Integer> sources = new ArrayList<>(connectorCount * maxOutputs);
+    private List<SourceRef> behaviorSourcePool(final List<Integer> triggerSourcePool, final int connectorCount, final int maxOutputs) {
+        final List<SourceRef> sources = new ArrayList<>(triggerSourcePool.size() + connectorCount * maxOutputs);
+        for (final int trigger : triggerSourcePool) {
+            sources.add(new SourceRef(false, trigger));
+        }
+        triggerSourcePool.clear();
         for (int output = 0; output < maxOutputs; output++) {
             for (int connector = 0; connector < connectorCount; connector++) {
-                sources.add(connector);
+                sources.add(new SourceRef(true, connector));
             }
         }
         return sources;
     }
 
-    private int[] takeTriggerInputs(final List<Integer> triggerSourcePool, final int limit) {
-        final List<Integer> inputs = new ArrayList<>(limit);
-        for (int i = 0; i < triggerSourcePool.size() && inputs.size() < limit; i++) {
-            final int input = triggerSourcePool.get(i);
-            if (!inputs.contains(input)) {
-                inputs.add(input);
-                triggerSourcePool.remove(i);
-                i--;
+    private List<Integer> shuffledIndices(final int size) {
+        final List<Integer> indices = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            indices.add(i);
+        }
+        Collections.shuffle(indices, graphRandom);
+        return indices;
+    }
+
+    private int[] takeRandomInputs(final List<Integer> sourcePool, final int maxInputs) {
+        final List<SourceRef> refs = new ArrayList<>(sourcePool.size());
+        for (final int input : sourcePool) {
+            refs.add(new SourceRef(false, input));
+        }
+        final List<SourceRef> selected = takeRandomSources(refs, maxInputs);
+        sourcePool.clear();
+        for (final SourceRef source : refs) {
+            sourcePool.add(source.index());
+        }
+        return selected.stream()
+            .mapToInt(SourceRef::index)
+            .toArray();
+    }
+
+    private List<SourceRef> takeRandomSources(final List<SourceRef> sourcePool, final int maxInputs) {
+        final List<SourceRef> inputs = new ArrayList<>(maxInputs);
+        final int count = graphRandom.nextInt(maxInputs) + 1;
+        for (int i = 0; i < count && !sourcePool.isEmpty(); i++) {
+            final int baseIndex = graphRandom.nextInt(sourcePool.size());
+            final int sourceIndex = firstAvailableSource(sourcePool, inputs, baseIndex);
+            if (sourceIndex >= 0) {
+                inputs.add(sourcePool.remove(sourceIndex));
             }
         }
-        final int[] result = new int[inputs.size()];
-        for (int i = 0; i < inputs.size(); i++) {
-            result[i] = inputs.get(i);
+        return inputs;
+    }
+
+    private int firstAvailableSource(final List<SourceRef> sourcePool, final List<SourceRef> inputs, final int baseIndex) {
+        for (int offset = 0; offset < sourcePool.size(); offset++) {
+            final int index = (baseIndex + offset) % sourcePool.size();
+            if (!inputs.contains(sourcePool.get(index))) {
+                return index;
+            }
         }
-        return result;
+        return -1;
     }
 
     private int computeInputCount(final List<ConnectorEntry> connectors, final List<BehaviorEntry> entries) {
@@ -675,6 +729,9 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             }
             return true;
         }
+    }
+
+    private record SourceRef(boolean connector, int index) {
     }
 
     private record BehaviorEntry(BehaviorProvider provider, Behavior behavior, int[] triggerInputs, int[] connectorInputs) {

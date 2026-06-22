@@ -17,11 +17,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -161,6 +163,27 @@ final class NanomachinesRegistryTest {
         assertTrue(hasConnectorBackedBehavior(behaviors));
         assertFalse(hasBehaviorWithoutInputs(behaviors));
         assertTrue(maxTriggerFanOut(connectors, behaviors) <= ModSettings.nanomachineMaxOutputs());
+    }
+
+    @Test
+    void controllerRandomizesGeneratedGraphOnReconfigure() {
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(java.util.stream.IntStream.range(0, 20)
+            .mapToObj(index -> (Behavior) new TestBehavior("behavior" + index))
+            .toList()));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry, new Random(4L));
+        CompoundTag first = new CompoundTag();
+        CompoundTag second = new CompoundTag();
+
+        controller.save(first);
+        controller.reconfigure();
+        controller.save(second);
+
+        assertNotEquals(graphSignature(first), graphSignature(second));
+        assertFalse(hasBehaviorWithoutInputs(second.getList("behaviors", CompoundTag.TAG_COMPOUND)));
+        assertTrue(maxTriggerFanOut(
+            second.getList("connectors", CompoundTag.TAG_COMPOUND),
+            second.getList("behaviors", CompoundTag.TAG_COMPOUND)) <= ModSettings.nanomachineMaxOutputs());
     }
 
     @Test
@@ -471,6 +494,11 @@ final class NanomachinesRegistryTest {
             }
         }
         return false;
+    }
+
+    private static String graphSignature(final CompoundTag tag) {
+        return tag.getList("connectors", CompoundTag.TAG_COMPOUND).toString() +
+            tag.getList("behaviors", CompoundTag.TAG_COMPOUND);
     }
 
     private static boolean hasProvider(final NanomachinesRegistry registry, final Class<?> providerType) {
