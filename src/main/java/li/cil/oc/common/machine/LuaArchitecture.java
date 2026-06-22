@@ -20,6 +20,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ItemRegistry;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.luaj.vm2.Globals;
@@ -64,10 +65,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String PULL_SIGNAL_MARKER = "\u0000oc.pullSignal";
     private static final String BUDGET_RETRY_MARKER = "\u0000oc.budgetRetry";
     private static final String VALUE_MARKER = "\u0000oc.value";
-    private static final boolean DEFAULT_ALLOW_BYTECODE = false;
-    private static final boolean DEFAULT_ALLOW_GC = false;
-    private static final double DEFAULT_TIMEOUT = 5D;
-
     private boolean initialized;
     private boolean booted;
     private String bootSource;
@@ -1047,19 +1044,19 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         system.set("allowBytecode", new ZeroArgFunction() {
             @Override
             public LuaValue call() {
-                return LuaValue.valueOf(DEFAULT_ALLOW_BYTECODE);
+                return LuaValue.valueOf(ModSettings.allowBytecode());
             }
         });
         system.set("allowGC", new ZeroArgFunction() {
             @Override
             public LuaValue call() {
-                return LuaValue.valueOf(DEFAULT_ALLOW_GC);
+                return LuaValue.valueOf(ModSettings.allowGc());
             }
         });
         system.set("timeout", new ZeroArgFunction() {
             @Override
             public LuaValue call() {
-                return LuaValue.valueOf(DEFAULT_TIMEOUT);
+                return LuaValue.valueOf(ModSettings.computerTimeout());
             }
         });
         globals.set("system", system);

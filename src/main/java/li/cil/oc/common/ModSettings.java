@@ -6,6 +6,9 @@ public final class ModSettings {
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
     public static final ModConfigSpec.BooleanValue INPUT_USERNAME;
+    public static final ModConfigSpec.DoubleValue COMPUTER_TIMEOUT;
+    public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
+    public static final ModConfigSpec.BooleanValue ALLOW_GC;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
@@ -19,6 +22,20 @@ public final class ModSettings {
         INPUT_USERNAME = builder
             .comment("Include player and entity names in input-related signals. OpenComputers upstream default is true.")
             .define("inputUsername", true);
+        builder.pop();
+
+        builder.push("computer");
+        COMPUTER_TIMEOUT = builder
+            .comment("Seconds programs may run without yielding before they are stopped. OpenComputers upstream default is 5.0.")
+            .defineInRange("timeout", 5D, 0D, Double.MAX_VALUE);
+        builder.push("lua");
+        ALLOW_BYTECODE = builder
+            .comment("Allow loading Lua bytecode directly. OpenComputers upstream default is false.")
+            .define("allowBytecode", false);
+        ALLOW_GC = builder
+            .comment("Allow custom Lua __gc callbacks. OpenComputers upstream default is false.")
+            .define("allowGC", false);
+        builder.pop();
         builder.pop();
 
         builder.push("power");
@@ -59,6 +76,18 @@ public final class ModSettings {
 
     public static boolean inputUsername() {
         return booleanValue(INPUT_USERNAME);
+    }
+
+    public static double computerTimeout() {
+        return doubleValue(COMPUTER_TIMEOUT);
+    }
+
+    public static boolean allowBytecode() {
+        return booleanValue(ALLOW_BYTECODE);
+    }
+
+    public static boolean allowGc() {
+        return booleanValue(ALLOW_GC);
     }
 
     private static boolean booleanValue(final ModConfigSpec.BooleanValue value) {

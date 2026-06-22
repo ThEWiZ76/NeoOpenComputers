@@ -14,6 +14,9 @@ final class ModSettingsTest {
         assertEquals(10, ModSettings.mfuTickFrequency());
         assertEquals(0.2D, ModSettings.solarGeneratorEfficiency());
         assertEquals(true, ModSettings.inputUsername());
+        assertEquals(5D, ModSettings.computerTimeout());
+        assertEquals(false, ModSettings.allowBytecode());
+        assertEquals(false, ModSettings.allowGc());
     }
 
     @Test
@@ -23,5 +26,8 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
         assertEquals(List.of("misc", "inputUsername"), ModSettings.INPUT_USERNAME.getPath());
+        assertEquals(List.of("computer", "timeout"), ModSettings.COMPUTER_TIMEOUT.getPath());
+        assertEquals(List.of("computer", "lua", "allowBytecode"), ModSettings.ALLOW_BYTECODE.getPath());
+        assertEquals(List.of("computer", "lua", "allowGC"), ModSettings.ALLOW_GC.getPath());
     }
 }
