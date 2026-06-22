@@ -156,9 +156,12 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         if (data.length < 2 || !isNanomachinesHeader(data[0])) {
             return;
         }
-        if ("setResponsePort".equals(commandValue(data[1])) && data.length >= 3 && commandValue(data[2]) instanceof Number port) {
+        final Object command = commandValue(data[1]);
+        if ("setResponsePort".equals(command) && data.length >= 3 && commandValue(data[2]) instanceof Number port) {
             responsePort = clampPort(port.intValue());
             respond(sender, "port", responsePort);
+        } else if ("getPowerState".equals(command)) {
+            respond(sender, "power", getLocalBuffer(), getLocalBufferSize());
         }
     }
 
