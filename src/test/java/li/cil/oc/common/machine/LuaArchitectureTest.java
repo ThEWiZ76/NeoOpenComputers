@@ -1248,6 +1248,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void componentListIteratorUsesMutatedReturnedTableLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            local list = component.list('file', false)
+            list['fs-address'] = nil
+            firstAddress, firstKind = list()
+            """);
+        architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem", "gpu-address", "gpu")));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("firstAddress"));
+        assertEquals("nil", architecture.globalString("firstKind"));
+    }
+
+    @Test
     void exposesComponentTypeToLua() {
         LuaArchitecture architecture = new LuaArchitecture("kind = component.type('fs-address'); missing, missingMessage = component.type('missing')");
         architecture.bind(machineWithComponents(Map.of("fs-address", "filesystem")));

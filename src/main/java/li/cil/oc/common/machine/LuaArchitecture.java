@@ -1491,26 +1491,25 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private LuaTable createComponentList(final String filter, final boolean exact) {
         final LuaTable components = new LuaTable();
-        final List<String> addresses = new ArrayList<>();
         if (machine != null) {
             for (Map.Entry<String, String> entry : machine.components().entrySet()) {
                 if (matchesComponentFilter(entry.getValue(), filter, exact)) {
                     components.set(entry.getKey(), entry.getValue());
-                    addresses.add(entry.getKey());
                 }
             }
         }
         final LuaTable metatable = new LuaTable();
         metatable.set("__call", new VarArgFunction() {
-            private int index;
+            private LuaValue key = LuaValue.NIL;
 
             @Override
             public Varargs invoke(final Varargs args) {
-                if (index >= addresses.size()) {
+                final Varargs next = components.next(key);
+                key = next.arg1();
+                if (key.isnil()) {
                     return LuaValue.NIL;
                 }
-                final String address = addresses.get(index++);
-                return LuaValue.varargsOf(LuaValue.valueOf(address), components.get(address));
+                return next;
             }
         });
         components.setmetatable(metatable);
