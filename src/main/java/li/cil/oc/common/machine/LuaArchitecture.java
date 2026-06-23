@@ -654,7 +654,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private static String checkStringArgument(final Varargs args, final int index) {
         final LuaValue value = args.arg(index);
-        if (value.type() == LuaValue.TSTRING) {
+        if (value.isstring()) {
             return value.tojstring();
         }
         throw new LuaError("bad argument #" + index + " (string expected, got " + luaTypeName(value) + ")");
@@ -665,7 +665,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (value.isnil()) {
             return null;
         }
-        if (value.type() == LuaValue.TSTRING) {
+        if (value.isstring()) {
             return value.tojstring();
         }
         throw new LuaError("bad argument #" + index + " (string or nil expected, got " + luaTypeName(value) + ")");
