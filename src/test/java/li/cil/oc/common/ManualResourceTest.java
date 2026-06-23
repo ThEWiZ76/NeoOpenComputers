@@ -18,9 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ManualResourceTest {
     private static final Path DOC_ROOT = Path.of("src/main/resources/assets/neoopencomputers/doc");
+    private static final Path ASSET_ROOT = Path.of("src/main/resources/assets/neoopencomputers");
     private static final Path TEXTURE_ROOT = Path.of("src/main/resources/assets/neoopencomputers/textures/gui");
     private static final Path LANG_ROOT = Path.of("src/main/resources/assets/neoopencomputers/lang");
     private static final Pattern INTERNAL_MARKDOWN_LINK = Pattern.compile("(?<!!)\\[[^\\]]+]\\(([^)]+)\\)");
+    private static final Pattern MARKDOWN_IMAGE = Pattern.compile("!\\[[^\\]]*]\\(([^)]+)\\)");
     private static final Pattern URL_SCHEME = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*:");
 
     @Test
@@ -104,6 +106,27 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualMarkdownImageReferencesResolveToAssets() throws Exception {
+        final List<String> brokenImages = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
+            for (final Path file : files.filter(path -> path.getFileName().toString().endsWith(".md")).toList()) {
+                final Path relativeFile = DOC_ROOT.relativize(file);
+                final String content = Files.readString(file);
+                final var matcher = MARKDOWN_IMAGE.matcher(content);
+                while (matcher.find()) {
+                    final String target = matcher.group(1);
+                    final Path resolved = resolveManualImage(relativeFile, target);
+                    if (resolved != null && !Files.exists(resolved)) {
+                        brokenImages.add(relativeFile.toString().replace('\\', '/') + " -> " + target + " -> " + resolved);
+                    }
+                }
+            }
+        }
+
+        assertTrue(brokenImages.isEmpty(), () -> "Broken manual images:\n" + String.join("\n", brokenImages));
+    }
+
+    @Test
     void bundledLanguageIncludesManualTooltipKeys() throws IOException {
         final String english = Files.readString(LANG_ROOT.resolve("en_us.json"));
 
@@ -152,5 +175,27 @@ final class ManualResourceTest {
             return pages.contains("en_us/" + path.substring(separator + 1));
         }
         return false;
+    }
+
+    private static Path resolveManualImage(final Path source, final String target) {
+        final String path = target.split("#", 2)[0].trim();
+        if (path.isEmpty()
+            || path.startsWith("item:")
+            || path.startsWith("block:")
+            || path.startsWith("oredict:")
+            || (URL_SCHEME.matcher(path).find() && !path.startsWith("neoopencomputers:"))) {
+            return null;
+        }
+        if (path.startsWith("neoopencomputers:")) {
+            final String resourcePath = path.substring("neoopencomputers:".length()).replaceFirst("^/+", "");
+            return ASSET_ROOT.resolve(resourcePath.toLowerCase(Locale.ROOT));
+        }
+        if (URL_SCHEME.matcher(path).find()) {
+            return null;
+        }
+        final Path relative = path.startsWith("/")
+            ? Path.of(path.substring(1))
+            : source.getParent().resolve(path);
+        return DOC_ROOT.resolve(relative.normalize().toString().toLowerCase(Locale.ROOT));
     }
 }

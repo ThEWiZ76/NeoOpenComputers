@@ -1,8 +1,8 @@
 # Entête avec plusieurs lignes  [avec un lien](redirect1.md) et *quelques* autres
 
 Voici un peu de texte de test pour la version de Markdown supportée par le système de documenation en jeu prévu pour OpenComputers.
-![Ceci est une info-bulle...](neoopencomputers:textures/gui/printer_ink.png)
-![Ceci est une info-bulle...](neoopencomputers:/textures/gui/printer_material.png)
+![Ceci est une info-bulle...](neoopencomputers:doc/img/manual.png)
+![Ceci est une info-bulle...](neoopencomputers:doc/img/configuration_case1.png)
 *Ceci* est du texte en *italique*, ~~barré~~ peut-être **un peu** de texte **en gras**. Est-ce que _c'est souligné _? Oh, non, _c'est aussi en italique!_ Bon, c'est [un lien](../index.md).
 ![C'est rendu en direct.](oredict:oc:assembler)
 ## Entête plus petite [avec un *lien* aussi mais cette __fois__ plus long](../block/adapter.md)
@@ -38,7 +38,7 @@ n'est pas*.
 * c'est un élément de liste et le texte qui reviendra à la ligne sera indenté correctement
 - ça devrait aussi `fonctionner pour du texte affiché comme du code, si ce n'est pas le cas je` serai une mauvaise personne
 
-asdasd ![oh mon dieu, la récursion !](img/example.png) qweqwe
+asdasd ![oh mon dieu, la récursion !](neoopencomputers:doc/img/configuration_done.png) qweqwe
 
 Et finalement, [c'est un lien !](https://avatars1.githubusercontent.com/u/514903).
 
