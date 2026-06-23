@@ -1984,6 +1984,12 @@ final class LuaArchitectureTest {
             fail(error.message);
         }
         assertInstanceOf(ExecutionResult.Sleep.class, result);
+        architecture.runSynchronized();
+        result = architecture.runThreaded(false);
+        if (result instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+        assertInstanceOf(ExecutionResult.Sleep.class, result);
 
         assertEquals(true, architecture.globalBoolean("direct"));
         assertEquals("function():string -- Direct callback.", architecture.globalString("doc"));
@@ -2566,6 +2572,31 @@ final class LuaArchitectureTest {
         LuaArchitecture architecture = new LuaArchitecture("""
             value = component.invoke('fs-address', 'make')
             result = value.echo('payload')
+            continued = true
+            """);
+        architecture.bind(machineWithNonDirectValueCallback(value, valueInvokes));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(0, valueInvokes[0]);
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        architecture.runSynchronized();
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(1, valueInvokes[0]);
+        assertEquals("invoked:payload", architecture.globalString("result"));
+        assertEquals(true, architecture.globalBoolean("continued"));
+    }
+
+    @Test
+    void schedulesUserdataInvokeCallbacksLikeUpstream() {
+        TestValue value = new TestValue();
+        int[] valueInvokes = {0};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            result = userdata.invoke(value, 'echo', 'payload')
             continued = true
             """);
         architecture.bind(machineWithNonDirectValueCallback(value, valueInvokes));

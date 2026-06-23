@@ -1364,7 +1364,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             public Varargs invoke(final Varargs args) {
                 final Value value = checkValue(args, 1);
                 final String method = args.checkjstring(2);
-                return invokeValue(value, method, toJavaArgs(args, 3));
+                return invokeValueSynchronized(value, method, toJavaArgs(args, 3));
             }
         });
         userdata.set("doc", new VarArgFunction() {
