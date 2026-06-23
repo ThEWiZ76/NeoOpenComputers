@@ -95,6 +95,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private final Map<String, LuaTable> componentProxyCache = new HashMap<>();
     private final Map<Value, LuaValue> valueProxyCache = new IdentityHashMap<>();
     private final Map<LuaTable, Value> valueProxyValues = new IdentityHashMap<>();
+    private final LuaValue synchronizedErrorMarker = LuaValue.userdataOf(new Object());
 
     public LuaArchitecture() {
         this("");
@@ -192,6 +193,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             pendingSynchronizedResults = pendingSynchronizedCall.invoke();
         } catch (LimitReachedException e) {
             pendingSynchronizedResults = LuaValue.NONE;
+        } catch (LuaError e) {
+            pendingSynchronizedResults = LuaValue.varargsOf(
+                synchronizedErrorMarker,
+                LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
         } finally {
             pendingSynchronizedCall = null;
         }
@@ -1316,21 +1321,21 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 final Value value = checkValue(args, 1);
-                return applyValue(value, toJavaArgs(args, 2));
+                return applyValueSynchronized(value, toJavaArgs(args, 2));
             }
         });
         userdata.set("unapply", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
                 final Value value = checkValue(args, 1);
-                return unapplyValue(value, toJavaArgs(args, 2));
+                return unapplyValueSynchronized(value, toJavaArgs(args, 2));
             }
         });
         userdata.set("call", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
                 final Value value = checkValue(args, 1);
-                return callValue(value, toJavaArgs(args, 2));
+                return callValueSynchronized(value, toJavaArgs(args, 2));
             }
         });
         userdata.set("dispose", new VarArgFunction() {
@@ -2014,8 +2019,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private Varargs invokeValueSynchronized(final Value value, final String method, final Object[] javaArgs) {
-        pendingSynchronizedCall = () -> invokeValueOnce(value, method, javaArgs);
-        return globals.yield(LuaValue.valueOf(SYNCHRONIZED_CALLBACK_MARKER));
+        return invokeSynchronized(() -> invokeValueOnce(value, method, javaArgs));
     }
 
     private Varargs invokeValueOnce(final Value value, final String method, final Object[] javaArgs) throws LimitReachedException {
@@ -2050,6 +2054,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         }
     }
 
+    private Varargs callValueSynchronized(final Value value, final Object[] javaArgs) {
+        return invokeSynchronized(() -> callValue(value, javaArgs));
+    }
+
     private Varargs applyValue(final Value value, final Object[] javaArgs) {
         try {
             return toLuaValue(value.apply(machine, new LuaArguments(javaArgs)));
@@ -2058,6 +2066,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         } catch (RuntimeException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
         }
+    }
+
+    private Varargs applyValueSynchronized(final Value value, final Object[] javaArgs) {
+        return invokeSynchronized(() -> applyValue(value, javaArgs));
     }
 
     private Varargs unapplyValue(final Value value, final Object[] javaArgs) {
@@ -2069,6 +2081,19 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         } catch (RuntimeException e) {
             return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf(e.getMessage() == null ? "unknown error" : e.getMessage()));
         }
+    }
+
+    private Varargs unapplyValueSynchronized(final Value value, final Object[] javaArgs) {
+        return invokeSynchronized(() -> unapplyValue(value, javaArgs));
+    }
+
+    private Varargs invokeSynchronized(final PendingBudgetCall call) {
+        pendingSynchronizedCall = call;
+        final Varargs results = globals.yield(LuaValue.valueOf(SYNCHRONIZED_CALLBACK_MARKER));
+        if (results.arg(1).eq_b(synchronizedErrorMarker)) {
+            throw new LuaError(results.arg(2).tojstring());
+        }
+        return results;
     }
 
     private Connector machineConnector() {

@@ -1898,6 +1898,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("string", architecture.globalString("result"));
     }
@@ -1984,12 +1985,10 @@ final class LuaArchitectureTest {
             fail(error.message);
         }
         assertInstanceOf(ExecutionResult.Sleep.class, result);
-        architecture.runSynchronized();
-        result = architecture.runThreaded(false);
-        if (result instanceof ExecutionResult.Error error) {
-            fail(error.message);
-        }
-        assertInstanceOf(ExecutionResult.Sleep.class, result);
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(true, architecture.globalBoolean("direct"));
         assertEquals("function():string -- Direct callback.", architecture.globalString("doc"));
@@ -2036,6 +2035,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("table", architecture.globalString("luaType"));
         assertEquals("userdata", architecture.globalString("valueType"));
@@ -2079,6 +2079,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(2, architecture.globalInteger("keyCount"));
         assertEquals(true, architecture.globalBoolean("hasType"));
@@ -2115,6 +2116,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(0, architecture.globalInteger("count"));
     }
@@ -2170,6 +2172,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(TestValue.class.getName(), architecture.globalString("className"));
         assertEquals("userdata", architecture.globalString("loadedType"));
@@ -2223,6 +2226,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("byte-array", architecture.globalString("result"));
     }
@@ -2238,6 +2242,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("integer", architecture.globalString("result"));
     }
@@ -2253,6 +2258,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("long", architecture.globalString("result"));
     }
@@ -2270,6 +2276,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("number has no integer representation"));
@@ -2288,6 +2295,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad argument #2 (integer expected, got string)"));
@@ -2306,6 +2314,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad arguments #2 (integer expected, got no value)"));
@@ -2324,6 +2333,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("number has no integer representation"));
@@ -2342,6 +2352,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad argument #2 (integer expected, got string)"));
@@ -2360,6 +2371,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad arguments #2 (integer expected, got no value)"));
@@ -2378,6 +2390,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad argument #2 (number expected, got string)"));
@@ -2396,6 +2409,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad arguments #2 (number expected, got no value)"));
@@ -2414,6 +2428,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad argument #2 (boolean expected, got string)"));
@@ -2432,6 +2447,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad arguments #2 (boolean expected, got no value)"));
@@ -2450,6 +2466,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad argument #2 (table expected, got string)"));
@@ -2468,6 +2485,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad arguments #2 (table expected, got no value)"));
@@ -2486,6 +2504,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad argument #2 (string expected, got boolean)"));
@@ -2504,6 +2523,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad arguments #2 (string expected, got no value)"));
@@ -2522,6 +2542,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad argument #2 (string expected, got boolean)"));
@@ -2540,6 +2561,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(false, architecture.globalBoolean("valid"));
         assertTrue(architecture.globalString("message").contains("bad arguments #2 (string expected, got no value)"));
@@ -2612,6 +2634,39 @@ final class LuaArchitectureTest {
 
         assertEquals(1, valueInvokes[0]);
         assertEquals("invoked:payload", architecture.globalString("result"));
+        assertEquals(true, architecture.globalBoolean("continued"));
+    }
+
+    @Test
+    void schedulesUserdataApplyCallAndUnapplyLikeUpstream() {
+        CountingValue value = new CountingValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            applied = userdata.apply(value, 'apply')
+            called = userdata.call(value, 'call')
+            unappliedCount = select('#', userdata.unapply(value, 'key', 'value'))
+            continued = true
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(0, value.applies);
+        assertEquals(0, value.calls);
+        assertEquals(0, value.unapplies);
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
+
+        assertEquals(1, value.applies);
+        assertEquals(1, value.calls);
+        assertEquals(1, value.unapplies);
+        assertEquals("applied:apply", architecture.globalString("applied"));
+        assertEquals("called:call", architecture.globalString("called"));
+        assertEquals(0, architecture.globalInteger("unappliedCount"));
         assertEquals(true, architecture.globalBoolean("continued"));
     }
 
@@ -2697,6 +2752,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("nil", architecture.globalString("directResult"));
         assertEquals("apply failed", architecture.globalString("directMessage"));
@@ -2718,6 +2774,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("nil", architecture.globalString("directResult"));
         assertEquals("unapply failed", architecture.globalString("directMessage"));
@@ -3577,6 +3634,15 @@ final class LuaArchitectureTest {
         assertEquals(false, architecture.globalBoolean("privateFlag"));
         assertEquals(true, architecture.globalBoolean("verified"));
         assertEquals(true, architecture.globalBoolean("restoredVerified"));
+    }
+
+    private static void resumeSynchronizedCallback(final LuaArchitecture architecture) {
+        architecture.runSynchronized();
+        final ExecutionResult result = architecture.runThreaded(false);
+        if (result instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+        assertInstanceOf(ExecutionResult.Sleep.class, result);
     }
 
     private static Machine machineWithUptime(final double uptime) {
@@ -4682,6 +4748,30 @@ final class LuaArchitectureTest {
                 throw new IllegalStateException("broken tostring");
             }
             return "test-value";
+        }
+    }
+
+    private static final class CountingValue extends TestValue {
+        private int applies;
+        private int calls;
+        private int unapplies;
+
+        @Override
+        public Object apply(final Context context, final Arguments arguments) {
+            applies++;
+            return super.apply(context, arguments);
+        }
+
+        @Override
+        public Object[] call(final Context context, final Arguments arguments) {
+            calls++;
+            return super.call(context, arguments);
+        }
+
+        @Override
+        public void unapply(final Context context, final Arguments arguments) {
+            unapplies++;
+            super.unapply(context, arguments);
         }
     }
 
