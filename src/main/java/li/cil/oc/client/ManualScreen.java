@@ -41,6 +41,10 @@ public class ManualScreen extends Screen {
     public static final int SCROLL_THUMB_HEIGHT = 13;
     public static final int SCROLL_TEXTURE_WIDTH = 6;
     public static final int SCROLL_TEXTURE_HEIGHT = 26;
+    public static final int LINK_COLOR = 0xFF66FF66;
+    public static final int LINK_HOVER_COLOR = 0xFFAAFFAA;
+    public static final int LINK_ERROR_COLOR = 0xFFFF6666;
+    public static final int LINK_ERROR_HOVER_COLOR = 0xFFFFAAAA;
     private static final int DOCUMENT_POS_X = 8;
     private static final int DOCUMENT_POS_Y = 8;
     private static final int SCROLL_STEP = LINE_HEIGHT * 3;
@@ -401,6 +405,29 @@ public class ManualScreen extends Screen {
         return null;
     }
 
+    public static boolean isLinkAvailable(
+        final ManualDocument.LinkSegment link,
+        final ManualRegistry registry,
+        final String basePath
+    ) {
+        if (link.href().startsWith("http://") || link.href().startsWith("https://")) {
+            return true;
+        }
+        return registry.contentFor(ManualRegistry.resolveLinkPath(link.href(), basePath)) != null;
+    }
+
+    public static int linkTextColor(
+        final ManualDocument.LinkSegment link,
+        final ManualRegistry registry,
+        final String basePath,
+        final boolean hovered
+    ) {
+        if (isLinkAvailable(link, registry, basePath)) {
+            return hovered ? LINK_HOVER_COLOR : LINK_COLOR;
+        }
+        return hovered ? LINK_ERROR_HOVER_COLOR : LINK_ERROR_COLOR;
+    }
+
     private static boolean isAbsoluteCoordinateOverDocument(final int left, final int top, final int mouseX, final int mouseY) {
         return mouseX >= left && mouseX < left + DOCUMENT_MAX_WIDTH
             && mouseY >= top && mouseY < top + DOCUMENT_MAX_HEIGHT;
@@ -480,7 +507,7 @@ public class ManualScreen extends Screen {
         for (final LayoutEntry entry : layout(document, DOCUMENT_MAX_WIDTH, this::textWidth)) {
             final int y = top + entry.y() - scrollOffset;
             if (entry.segment() instanceof final ManualDocument.TextualSegment text) {
-                renderTextSegment(graphics, text, left + entry.x(), y);
+                renderTextSegment(graphics, text, left + entry.x(), y, isMouseOverEntry(entry, left, y, mouseX, mouseY));
             } else if (entry.segment() instanceof final ManualDocument.ImageSegment image) {
                 graphics.pose().pushPose();
                 graphics.pose().translate(left + entry.x(), y, 0);
@@ -490,12 +517,29 @@ public class ManualScreen extends Screen {
         }
     }
 
-    private void renderTextSegment(final GuiGraphics graphics, final ManualDocument.TextualSegment text, final int x, final int y) {
+    private static boolean isMouseOverEntry(
+        final LayoutEntry entry,
+        final int left,
+        final int y,
+        final int mouseX,
+        final int mouseY
+    ) {
+        return mouseX >= left + entry.x() && mouseX < left + entry.x() + entry.width()
+            && mouseY >= y && mouseY < y + entry.height();
+    }
+
+    private void renderTextSegment(
+        final GuiGraphics graphics,
+        final ManualDocument.TextualSegment text,
+        final int x,
+        final int y,
+        final boolean hovered
+    ) {
         final float scale = textScale(text);
         graphics.pose().pushPose();
         graphics.pose().translate(x, y, 0);
         graphics.pose().scale(scale, scale, 1);
-        graphics.drawString(font, styledComponent(text), 0, 0, textColor(text), false);
+        graphics.drawString(font, styledComponent(text), 0, 0, textColor(text, hovered), false);
         graphics.pose().popPose();
     }
 
@@ -516,9 +560,9 @@ public class ManualScreen extends Screen {
         return component;
     }
 
-    private static int textColor(final ManualDocument.TextualSegment text) {
-        if (text instanceof ManualDocument.LinkSegment) {
-            return 0xFF66FF66;
+    private int textColor(final ManualDocument.TextualSegment text, final boolean hovered) {
+        if (text instanceof final ManualDocument.LinkSegment link) {
+            return linkTextColor(link, registry, registry.currentPath(), hovered);
         }
         if (text.code()) {
             return 0xFFBFCBFF;

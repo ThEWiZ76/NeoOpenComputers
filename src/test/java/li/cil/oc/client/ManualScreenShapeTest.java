@@ -277,6 +277,26 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenColorsManualLinksByUpstreamAvailability() {
+        ManualRegistry registry = new ManualRegistry();
+        registry.addProvider(path -> switch (path) {
+            case "en_us/item/manual.md" -> List.of("Manual page");
+            default -> null;
+        });
+        ManualDocument.LinkSegment existing = new ManualDocument.LinkSegment("manual", "item/manual.md");
+        ManualDocument.LinkSegment missing = new ManualDocument.LinkSegment("missing", "item/missing.md");
+        ManualDocument.LinkSegment external = new ManualDocument.LinkSegment("site", "https://example.com");
+
+        assertTrue(ManualScreen.isLinkAvailable(existing, registry, "%LANGUAGE%/index.md"));
+        assertFalse(ManualScreen.isLinkAvailable(missing, registry, "%LANGUAGE%/index.md"));
+        assertTrue(ManualScreen.isLinkAvailable(external, registry, "%LANGUAGE%/index.md"));
+        assertEquals(0xFF66FF66, ManualScreen.linkTextColor(existing, registry, "%LANGUAGE%/index.md", false));
+        assertEquals(0xFFAAFFAA, ManualScreen.linkTextColor(existing, registry, "%LANGUAGE%/index.md", true));
+        assertEquals(0xFFFF6666, ManualScreen.linkTextColor(missing, registry, "%LANGUAGE%/index.md", false));
+        assertEquals(0xFFFFAAAA, ManualScreen.linkTextColor(missing, registry, "%LANGUAGE%/index.md", true));
+    }
+
+    @Test
     void manualScreenTabClickNavigatesToTabPath() {
         ManualRegistry registry = new ManualRegistry();
         registry.addTab(() -> {}, "home", "index");
