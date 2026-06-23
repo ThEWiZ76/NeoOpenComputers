@@ -804,7 +804,7 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void debugCardWorldValueReportsSeedAndDimensionName(final GameTestHelper helper) {
+    public static void debugCardWorldValueReportsSeedAndDimension(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
         helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
@@ -818,6 +818,9 @@ public final class NeoOpenComputersGameTests {
 
         final Object[] dimensionName = invokeValue(helper, world, "getDimensionName");
         helper.assertTrue(dimensionName.length == 1 && helper.getLevel().dimension().location().toString().equals(dimensionName[0]), "World value did not report dimension name");
+
+        final Object[] dimensionId = invokeValue(helper, world, "getDimensionId");
+        helper.assertTrue(dimensionId.length == 1 && Integer.valueOf(0).equals(dimensionId[0]), "World value did not report legacy overworld dimension id");
         helper.succeed();
     }
 

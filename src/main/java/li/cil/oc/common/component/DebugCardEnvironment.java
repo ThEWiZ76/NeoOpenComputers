@@ -799,6 +799,12 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             this.access = access;
         }
 
+        @Callback(doc = "function():number -- Gets the numeric id of the current dimension.")
+        public Object[] getDimensionId(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{legacyDimensionId(level)};
+        }
+
         @Callback(doc = "function():string -- Get the name of the current dimension.")
         public Object[] getDimensionName(final Context context, final Arguments args) throws Exception {
             checkAccess(access);
@@ -1363,6 +1369,19 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
                 return result;
             }
             throw new IllegalArgumentException("Illegal or missing value.");
+        }
+
+        private static int legacyDimensionId(final Level level) {
+            if (level == null) {
+                return 0;
+            }
+            if (Level.NETHER.equals(level.dimension())) {
+                return -1;
+            }
+            if (Level.END.equals(level.dimension())) {
+                return 1;
+            }
+            return 0;
         }
 
         private static String tagTypeName(final int id) {
