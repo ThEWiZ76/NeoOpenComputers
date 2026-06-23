@@ -1762,6 +1762,28 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void preservesRecursiveMapInvokeResultsToLuaTables() {
+        Map<Object, Object> nested = new LinkedHashMap<>();
+        Map<Object, Object> root = new LinkedHashMap<>();
+        nested.put("a", true);
+        root.put("child", nested);
+        nested.put("c", root);
+        LuaArchitecture architecture = new LuaArchitecture("""
+            root = component.invoke('fs-address', 'test')
+            nested = root.child
+            nestedBoolean = nested.a
+            cyclePreserved = nested.c == root
+            """);
+        architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "debug"), new Object[]{root}));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(true, architecture.globalBoolean("nestedBoolean"));
+        assertEquals(true, architecture.globalBoolean("cyclePreserved"));
+    }
+
+    @Test
     void convertsCharacterInvokeResultsToLuaStringsLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'readChar'); resultType = type(result)");
         architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{'x'}));

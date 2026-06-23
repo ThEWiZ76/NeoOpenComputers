@@ -2145,6 +2145,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private LuaValue toLuaValue(final Object value) {
+        return toLuaValue(value, new IdentityHashMap<>());
+    }
+
+    private LuaValue toLuaValue(final Object value, final IdentityHashMap<Object, LuaValue> processed) {
         if (value == null) {
             return LuaValue.NIL;
         }
@@ -2164,28 +2168,43 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return LuaValue.valueOf(String.valueOf(characterValue));
         }
         if (value instanceof Map<?, ?> mapValue) {
+            final LuaValue cached = processed.get(value);
+            if (cached != null) {
+                return cached;
+            }
             final LuaTable table = new LuaTable();
+            processed.put(value, table);
             for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
-                final LuaValue key = toLuaValue(entry.getKey());
+                final LuaValue key = toLuaValue(entry.getKey(), processed);
                 if (!key.isnil()) {
-                    table.set(key, toLuaValue(entry.getValue()));
+                    table.set(key, toLuaValue(entry.getValue(), processed));
                 }
             }
             return table;
         }
         if (value instanceof Iterable<?> iterableValue) {
+            final LuaValue cached = processed.get(value);
+            if (cached != null) {
+                return cached;
+            }
             final LuaTable table = new LuaTable();
+            processed.put(value, table);
             int index = 1;
             for (Object entry : iterableValue) {
-                table.set(index++, toLuaValue(entry));
+                table.set(index++, toLuaValue(entry, processed));
             }
             return table;
         }
         if (value.getClass().isArray()) {
+            final LuaValue cached = processed.get(value);
+            if (cached != null) {
+                return cached;
+            }
             final LuaTable table = new LuaTable();
+            processed.put(value, table);
             final int length = Array.getLength(value);
             for (int index = 0; index < length; index++) {
-                table.set(index + 1, toLuaValue(Array.get(value, index)));
+                table.set(index + 1, toLuaValue(Array.get(value, index), processed));
             }
             return table;
         }
@@ -2199,9 +2218,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (values == null || values.length == 0) {
             return LuaValue.NIL;
         }
+        final IdentityHashMap<Object, LuaValue> processed = new IdentityHashMap<>();
         final LuaValue[] luaValues = new LuaValue[values.length];
         for (int index = 0; index < values.length; index++) {
-            luaValues[index] = toLuaValue(values[index]);
+            luaValues[index] = toLuaValue(values[index], processed);
         }
         return LuaValue.varargsOf(luaValues);
     }
