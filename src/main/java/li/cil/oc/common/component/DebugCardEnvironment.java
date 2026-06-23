@@ -35,6 +35,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
@@ -620,6 +622,18 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             checkAccess(access);
             if (level instanceof ServerLevel serverLevel) {
                 serverLevel.setDefaultSpawnPos(new BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2)), serverLevel.getSharedSpawnAngle());
+            }
+            return null;
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number, sound:string, range:number) -- Play a sound at the specified coordinates.")
+        public Object[] playSoundAt(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            if (level != null) {
+                final BlockPos pos = blockPos(args);
+                final ResourceLocation soundId = ResourceLocation.parse(args.checkString(3));
+                final float range = args.checkInteger(4);
+                level.playSound(null, pos, SoundEvent.createFixedRangeEvent(soundId, range), SoundSource.MASTER, 1F, 1F);
             }
             return null;
         }
