@@ -13,6 +13,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.template.AssemblerTemplate;
@@ -52,7 +53,6 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     private static final String TAG_OUTPUT = "output";
     private static final String TAG_TOTAL_ENERGY = "totalEnergy";
     private static final String TAG_REMAINING_ENERGY = "remainingEnergy";
-    private static final double BUFFER_SIZE = 32D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Assembler",
@@ -85,6 +85,10 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
             return 100D;
         }
         return (1D - requiredEnergy / totalRequiredEnergy) * 100D;
+    }
+
+    public static double connectorBufferSize() {
+        return ModSettings.converterBuffer();
     }
 
     public boolean start(final boolean finishImmediately) {
@@ -384,7 +388,7 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
 
     private static Node createNode(final ManagedEnvironment host) {
         final var builder = Network.newNode(host, Visibility.Network);
-        return builder == null ? null : builder.withComponent(COMPONENT_NAME, Visibility.Network).withConnector(BUFFER_SIZE).create();
+        return builder == null ? null : builder.withComponent(COMPONENT_NAME, Visibility.Network).withConnector(connectorBufferSize()).create();
     }
 
     private void removeNode() {

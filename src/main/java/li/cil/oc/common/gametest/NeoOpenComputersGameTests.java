@@ -2558,6 +2558,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void assemblerConnectorUsesConfiguredConverterBuffer(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 123D, () -> {
+            final BlockPos pos = new BlockPos(1, 1, 1);
+            helper.setBlock(pos, ModBlocks.ASSEMBLER.get());
+            final AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
+
+            helper.assertTrue(assembler.node() instanceof ComponentConnector, "Assembler node is not a component connector");
+            final ComponentConnector connector = (ComponentConnector) assembler.node();
+            helper.assertTrue(Double.compare(AssemblerBlockEntity.connectorBufferSize(), connector.localBufferSize()) == 0, "Assembler connector capacity did not use configured converter buffer");
+            helper.assertTrue(Double.compare(123D, connector.localBufferSize()) == 0, "Assembler connector capacity did not reflect converter buffer override");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty")
     public static void assemblerProcessesImcTemplates(final GameTestHelper helper) {
         final CompoundTag payload = new CompoundTag();
         payload.putString("name", "imc_test");

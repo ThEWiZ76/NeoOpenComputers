@@ -31,6 +31,7 @@ final class ModSettingsTest {
         assertEquals(20000D, ModSettings.batteryUpgradeBuffer(99));
         assertEquals(500D, ModSettings.powerDistributorBuffer());
         assertEquals(10000D, ModSettings.tabletBuffer());
+        assertEquals(1000D, ModSettings.converterBuffer());
         assertEquals(true, ModSettings.inputUsername());
         assertEquals(25D, ModSettings.disassemblerTickAmount());
         assertEquals(2000D, ModSettings.disassemblerItemCost());
@@ -164,6 +165,7 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "buffer", "batteryUpgrades"), ModSettings.BATTERY_UPGRADE_BUFFERS.getPath());
         assertEquals(List.of("power", "buffer", "distributor"), ModSettings.POWER_DISTRIBUTOR_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "tablet"), ModSettings.TABLET_BUFFER.getPath());
+        assertEquals(List.of("power", "buffer", "converter"), ModSettings.CONVERTER_BUFFER.getPath());
         assertEquals(List.of("power", "disassemblerTickAmount"), ModSettings.DISASSEMBLER_TICK_AMOUNT.getPath());
         assertEquals(List.of("power", "cost", "disassemblerPerItem"), ModSettings.DISASSEMBLER_ITEM_COST.getPath());
         assertEquals(List.of("misc", "inputUsername"), ModSettings.INPUT_USERNAME.getPath());
