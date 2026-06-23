@@ -2033,7 +2033,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private Varargs unapplyValue(final Value value, final Object[] javaArgs) {
         try {
             value.unapply(machine, new LuaArguments(javaArgs));
-            return LuaValue.NIL;
+            return LuaValue.NONE;
         } catch (IllegalArgumentException e) {
             throw new LuaError(e.getMessage() == null ? "bad argument" : e.getMessage());
         } catch (RuntimeException e) {
@@ -2213,7 +2213,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     private Varargs toLuaValues(final Object[] values) {
         if (values == null || values.length == 0) {
-            return LuaValue.NIL;
+            return LuaValue.NONE;
         }
         final IdentityHashMap<Object, LuaValue> processed = new IdentityHashMap<>();
         final LuaValue[] luaValues = new LuaValue[values.length];

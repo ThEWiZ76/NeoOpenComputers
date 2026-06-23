@@ -1768,6 +1768,17 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void componentNullCallbackResultReturnsNoLuaValuesLikeUpstream() {
+        LuaArchitecture architecture = new LuaArchitecture("count = select('#', component.invoke('fs-address', 'clear'))");
+        architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), null));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(0, architecture.globalInteger("count"));
+    }
+
+    @Test
     void convertsArrayInvokeResultsToLuaTables() {
         LuaArchitecture architecture = new LuaArchitecture("items = component.invoke('fs-address', 'list'); first = items[1]; second = items[2]");
         architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), new Object[]{new String[]{"init.lua", "bin"}}));
@@ -2007,6 +2018,21 @@ final class LuaArchitectureTest {
 
         assertEquals("nil", architecture.globalString("missing"));
         assertEquals("key not found: missing", architecture.globalString("message"));
+    }
+
+    @Test
+    void userdataUnapplyReturnsNoLuaValuesLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            count = select('#', userdata.unapply(value, 'key', 'value'))
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(0, architecture.globalInteger("count"));
     }
 
     @Test
