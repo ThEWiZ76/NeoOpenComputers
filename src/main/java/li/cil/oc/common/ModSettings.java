@@ -62,6 +62,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue DATA_CARD_HARD_LIMIT;
     public static final ModConfigSpec.DoubleValue DATA_CARD_TIMEOUT;
     public static final ModConfigSpec.IntValue GEOLYZER_RANGE;
+    public static final ModConfigSpec.IntValue TRANSPOSER_FLUID_TRANSFER_RATE;
     public static final ModConfigSpec.IntValue DEFAULT_RELAY_DELAY;
     public static final ModConfigSpec.DoubleValue RELAY_DELAY_UPGRADE;
     public static final ModConfigSpec.IntValue DEFAULT_MAX_QUEUE_SIZE;
@@ -156,6 +157,9 @@ public final class ModSettings {
         GEOLYZER_RANGE = builder
             .comment("Maximum absolute Geolyzer scan offset. OpenComputers upstream default is 32.")
             .defineInRange("geolyzerRange", 32, 0, Integer.MAX_VALUE);
+        TRANSPOSER_FLUID_TRANSFER_RATE = builder
+            .comment("Transposer fluid transfer rate in millibuckets per second. OpenComputers upstream default is 4000.")
+            .defineInRange("transposerFluidTransferRate", 4000, 1, Integer.MAX_VALUE);
         DEFAULT_RELAY_DELAY = builder
             .comment("Base delay in ticks before a relay forwards queued packets. OpenComputers upstream default is 5.")
             .defineInRange("defaultRelayDelay", 5, 1, Integer.MAX_VALUE);
@@ -639,6 +643,10 @@ public final class ModSettings {
 
     public static int geolyzerRange() {
         return intValue(GEOLYZER_RANGE);
+    }
+
+    public static int transposerFluidTransferRate() {
+        return Math.max(1, intValue(TRANSPOSER_FLUID_TRANSFER_RATE));
     }
 
     public static int defaultRelayDelay() {
