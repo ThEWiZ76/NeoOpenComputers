@@ -82,6 +82,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
@@ -185,6 +186,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.BATTERY_UPGRADE_TIER1.get();
         ModItems.BATTERY_UPGRADE_TIER2.get();
         ModItems.BATTERY_UPGRADE_TIER3.get();
+        ModItems.BARCODE_READER_UPGRADE.get();
         ModItems.CUTTING_WIRE.get();
         ModItems.ACID.get();
         ModItems.RAW_CIRCUIT_BOARD.get();
@@ -4035,6 +4037,26 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(result.getInt("posX") == absoluteTargetPos.getX(), "Tablet navigation analysis did not collect target X");
         helper.assertTrue(result.getInt("posY") == absoluteTargetPos.getY(), "Tablet navigation analysis did not collect target Y");
         helper.assertTrue(result.getInt("posZ") == absoluteTargetPos.getZ(), "Tablet navigation analysis did not collect target Z");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tabletItemAnalyzesBlockWithInstalledBarcodeReaderUpgrade(final GameTestHelper helper) {
+        final BlockPos geolyzerPos = new BlockPos(1, 1, 1);
+        helper.setBlock(geolyzerPos, ModBlocks.GEOLYZER.get());
+        final GeolyzerBlockEntity geolyzer = helper.getBlockEntity(geolyzerPos);
+
+        final TabletItem tablet = ModItems.TABLET.get();
+        final ItemStack stack = new ItemStack(tablet);
+        tablet.setRunning(stack, true);
+        tablet.setComponent(stack, 1, new ItemStack(ModItems.BARCODE_READER_UPGRADE.get()));
+
+        final CompoundTag result = tablet.analyzeBlock(stack, helper.getLevel(), null, helper.absolutePos(geolyzerPos), Direction.NORTH, 0.5F, 0.5F, 0.5F);
+        final ListTag analyzed = result.getList("analyzed", Tag.TAG_COMPOUND);
+        helper.assertTrue(analyzed.size() == 1, "Barcode Reader did not report exactly one analyzed node");
+        final CompoundTag nodeData = analyzed.getCompound(0);
+        helper.assertTrue("geolyzer".equals(nodeData.getString("type")), "Barcode Reader did not report geolyzer node type");
+        helper.assertTrue(geolyzer.node().address().equals(nodeData.getString("address")), "Barcode Reader did not report geolyzer node address");
         helper.succeed();
     }
 

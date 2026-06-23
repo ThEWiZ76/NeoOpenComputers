@@ -6,6 +6,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.common.blockentity.ScreenItemEnvironment;
 import li.cil.oc.common.component.AngelUpgradeEnvironment;
+import li.cil.oc.common.component.BarcodeReaderUpgradeEnvironment;
 import li.cil.oc.common.component.BatteryUpgradeEnvironment;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.CraftingUpgradeEnvironment;
@@ -57,7 +58,7 @@ public final class ModDriverCatalog {
                 ModItems.CARD_CONTAINER_TIER1.get(), ModItems.CARD_CONTAINER_TIER2.get(), ModItems.CARD_CONTAINER_TIER3.get(),
                 ModItems.TABLET.get(),
                 ModItems.SERVER_TIER1.get(), ModItems.SERVER_TIER2.get(), ModItems.SERVER_TIER3.get(), ModItems.TERMINAL_SERVER.get(),
-                ModItems.BATTERY_UPGRADE_TIER1.get(), ModItems.BATTERY_UPGRADE_TIER2.get(), ModItems.BATTERY_UPGRADE_TIER3.get(),
+                ModItems.BATTERY_UPGRADE_TIER1.get(), ModItems.BATTERY_UPGRADE_TIER2.get(), ModItems.BATTERY_UPGRADE_TIER3.get(), ModItems.BARCODE_READER_UPGRADE.get(),
                 ModItems.DATA_CARD_TIER1.get(), ModItems.DATA_CARD_TIER2.get(), ModItems.DATA_CARD_TIER3.get(),
                 ModItems.DATABASE_UPGRADE_TIER1.get(), ModItems.DATABASE_UPGRADE_TIER2.get(), ModItems.DATABASE_UPGRADE_TIER3.get(),
                 new DiskDriveContainerDriver(),
@@ -87,6 +88,7 @@ public final class ModDriverCatalog {
                 providerFor(ModItems.BATTERY_UPGRADE_TIER1.get(), BatteryUpgradeEnvironment.class),
                 providerFor(ModItems.BATTERY_UPGRADE_TIER2.get(), BatteryUpgradeEnvironment.class),
                 providerFor(ModItems.BATTERY_UPGRADE_TIER3.get(), BatteryUpgradeEnvironment.class),
+                providerFor(ModItems.BARCODE_READER_UPGRADE.get(), BarcodeReaderUpgradeEnvironment.class),
                 providerFor(ModItems.DATA_CARD_TIER1.get(), DataCardEnvironment.class),
                 providerFor(ModItems.DATA_CARD_TIER2.get(), DataCardEnvironment.class),
                 providerFor(ModItems.DATA_CARD_TIER3.get(), DataCardEnvironment.class),
