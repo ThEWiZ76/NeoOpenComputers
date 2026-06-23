@@ -50,7 +50,6 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private static final long NANOS_PER_TICK = 50_000_000L;
     private static final int MAX_SIGNAL_QUEUE_SIZE = 256;
     private static final int MAX_SYNCHRONIZED_CALLS_PER_UPDATE = 512;
-    private static final double DEFAULT_BOOT_ENERGY_BUFFER = 1_000D;
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
     private static final String USERS_TAG = "users";
@@ -104,11 +103,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (API.network == null) {
             API.network = new NetworkRegistry();
         }
+        final double computerBuffer = ModSettings.computerBuffer();
         final Connector connector = Network.newNode(this, Visibility.Network)
             .withComponent("computer", Visibility.Neighbors)
-            .withConnector(DEFAULT_BOOT_ENERGY_BUFFER)
+            .withConnector(computerBuffer)
             .create();
-        connector.changeBuffer(DEFAULT_BOOT_ENERGY_BUFFER);
+        connector.changeBuffer(computerBuffer);
         setNode(connector);
         if (API.fileSystem == null) {
             API.fileSystem = new FileSystemRegistry();

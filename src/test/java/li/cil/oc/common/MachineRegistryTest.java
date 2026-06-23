@@ -89,6 +89,18 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void createdMachineUsesConfiguredComputerBuffer() throws Exception {
+        withCachedConfig(ModSettings.COMPUTER_BUFFER, 77D, () -> {
+            OpenComputersApi.initialize();
+            Machine machine = API.machine.create(null);
+
+            Connector connector = assertInstanceOf(Connector.class, machine.node());
+            assertEquals(77D, connector.localBufferSize(), 0.000_001D);
+            assertEquals(77D, connector.localBuffer(), 0.000_001D);
+        });
+    }
+
+    @Test
     void computerComponentIsNeighborVisibleLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
