@@ -2,6 +2,7 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.template.DisassemblerTemplates;
 import net.minecraft.core.BlockPos;
@@ -30,7 +31,6 @@ public class DisassemblerBlockEntity extends BlockEntity implements Container, M
     public static final int SLOT_OUTPUT_START = 1;
     public static final int OUTPUT_SLOT_COUNT = 9;
     public static final int CONTAINER_SIZE = 10;
-    public static final double DEFAULT_BREAK_CHANCE = 0.05D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Disassembler",
@@ -53,7 +53,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Container, M
     }
 
     public boolean disassemble() {
-        return disassemble(level == null ? RandomSource.create() : level.random, DEFAULT_BREAK_CHANCE);
+        return disassemble(level == null ? RandomSource.create() : level.random, defaultBreakChance());
     }
 
     public boolean disassemble(final RandomSource random, final double breakChance) {
@@ -151,6 +151,10 @@ public class DisassemblerBlockEntity extends BlockEntity implements Container, M
     @Override
     public Map<String, String> getDeviceInfo() {
         return DEVICE_INFO;
+    }
+
+    public static double defaultBreakChance() {
+        return ModSettings.disassemblerBreakChance();
     }
 
     @Override

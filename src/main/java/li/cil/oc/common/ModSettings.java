@@ -61,6 +61,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue DATA_CARD_SOFT_LIMIT;
     public static final ModConfigSpec.IntValue DATA_CARD_HARD_LIMIT;
     public static final ModConfigSpec.DoubleValue DATA_CARD_TIMEOUT;
+    public static final ModConfigSpec.DoubleValue DISASSEMBLER_BREAK_CHANCE;
     public static final ModConfigSpec.IntValue GEOLYZER_RANGE;
     public static final ModConfigSpec.IntValue TRANSPOSER_FLUID_TRANSFER_RATE;
     public static final ModConfigSpec.IntValue DEFAULT_RELAY_DELAY;
@@ -156,6 +157,9 @@ public final class ModSettings {
         DATA_CARD_TIMEOUT = builder
             .comment("Pause in seconds for Data Card operations above the soft limit. OpenComputers upstream default is 1.0.")
             .defineInRange("dataCardTimeout", 1D, 0D, Double.MAX_VALUE);
+        DISASSEMBLER_BREAK_CHANCE = builder
+            .comment("Chance for each disassembler output item to break. OpenComputers upstream default is 0.05.")
+            .defineInRange("disassemblerBreakChance", 0.05D, 0D, 1D);
         GEOLYZER_RANGE = builder
             .comment("Maximum absolute Geolyzer scan offset. OpenComputers upstream default is 32.")
             .defineInRange("geolyzerRange", 32, 0, Integer.MAX_VALUE);
@@ -655,6 +659,10 @@ public final class ModSettings {
 
     public static double dataCardTimeout() {
         return doubleValue(DATA_CARD_TIMEOUT);
+    }
+
+    public static double disassemblerBreakChance() {
+        return Math.max(0D, Math.min(1D, doubleValue(DISASSEMBLER_BREAK_CHANCE)));
     }
 
     public static int geolyzerRange() {
