@@ -1730,10 +1730,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (!field.isnil() && field.get("setter").toboolean()) {
                     return LuaValue.NIL;
                 }
-                if (callback == null) {
-                    return LuaValue.NIL;
-                }
-                return componentProxyFunction(address, method, proxy);
+                return LuaValue.NIL;
             }
         });
         metatable.set("__newindex", new VarArgFunction() {
