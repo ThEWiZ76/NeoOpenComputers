@@ -43,7 +43,7 @@ public final class TransposerEnvironment extends AbstractManagedEnvironment impl
 
     public TransposerEnvironment(final EnvironmentHost host) {
         this.host = host;
-        final var builder = Network.newNode(this, Visibility.Neighbors);
+        final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
         }

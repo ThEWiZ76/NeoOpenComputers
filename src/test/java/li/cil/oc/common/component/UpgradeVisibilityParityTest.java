@@ -53,6 +53,17 @@ final class UpgradeVisibilityParityTest {
         assertEquals(Visibility.Network, component.visibility());
     }
 
+    @Test
+    void transposerUpgradeKeepsNetworkReachabilityLikeUpstreamUpgrade() {
+        OpenComputersApi.initialize();
+
+        TransposerEnvironment environment = new TransposerEnvironment(new TestAgent());
+        ComponentConnector connector = assertInstanceOf(ComponentConnector.class, environment.node());
+
+        assertEquals(Visibility.Network, connector.reachability());
+        assertEquals(Visibility.Neighbors, connector.visibility());
+    }
+
     private static final class TestAgent implements Agent {
         @Override public Container equipmentInventory() { return null; }
         @Override public Container mainInventory() { return null; }
