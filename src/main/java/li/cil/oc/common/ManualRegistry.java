@@ -206,6 +206,14 @@ public final class ManualRegistry implements ManualAPI {
         return tabs.size();
     }
 
+    int pathProviderCount() {
+        return pathProviders.size();
+    }
+
+    int contentProviderCount() {
+        return contentProviders.size();
+    }
+
     boolean wasOpened() {
         return opened;
     }

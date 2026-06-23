@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.client.ManualContent;
 import li.cil.oc.api.manual.ImageRenderer;
 import li.cil.oc.api.manual.TabIconRenderer;
 import net.minecraft.core.BlockPos;
@@ -124,6 +125,17 @@ final class ManualRegistryTest {
         assertEquals("next", registry.lastNavigationPath());
         assertTrue(registry.wasOpened());
         assertTrue(registry.wasReset());
+    }
+
+    @Test
+    void defaultManualContentRegistersProvidersAndTabsLikeUpstream() {
+        ManualRegistry registry = new ManualRegistry();
+
+        ManualContent.registerDefaults(registry);
+
+        assertEquals(1, registry.pathProviderCount());
+        assertEquals(1, registry.contentProviderCount());
+        assertEquals(3, registry.tabCount());
     }
 
     private record TestPathProvider(String itemPath, String blockPath) implements li.cil.oc.api.manual.PathProvider {

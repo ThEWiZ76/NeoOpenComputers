@@ -33,6 +33,7 @@ public final class NeoOpenComputersClient {
     static void onClientSetup(final FMLClientSetupEvent event) {
         if (API.manual instanceof final ManualRegistry manualRegistry) {
             manualRegistry.setLanguageSupplier(() -> Minecraft.getInstance().options.languageCode);
+            event.enqueueWork(() -> ManualContent.registerDefaults(manualRegistry));
         }
         NeoOpenComputers.LOGGER.debug("NeoOpenComputers client setup complete.");
     }
