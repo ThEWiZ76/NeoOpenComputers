@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class ManualResourceTest {
     private static final Path DOC_ROOT = Path.of("src/main/resources/assets/neoopencomputers/doc");
     private static final Path TEXTURE_ROOT = Path.of("src/main/resources/assets/neoopencomputers/textures/gui");
+    private static final Path LANG_ROOT = Path.of("src/main/resources/assets/neoopencomputers/lang");
 
     @Test
     void bundledManualResourcesIncludeUpstreamEnglishPagesAndImages() {
@@ -45,6 +46,19 @@ final class ManualResourceTest {
                 })
                 .noneMatch(content -> content.contains("(opencomputers:")));
         }
+    }
+
+    @Test
+    void bundledLanguageIncludesManualTooltipKeys() throws IOException {
+        final String english = Files.readString(LANG_ROOT.resolve("en_us.json"));
+
+        assertTrue(english.contains("\"oc:gui.Manual.Home\""));
+        assertTrue(english.contains("\"oc:gui.Manual.Blocks\""));
+        assertTrue(english.contains("\"oc:gui.Manual.Items\""));
+        assertTrue(english.contains("\"oc:gui.Manual.Warning.ImageMissing\""));
+        assertTrue(english.contains("\"oc:gui.Manual.Warning.ItemMissing\""));
+        assertTrue(english.contains("\"oc:gui.Manual.Warning.BlockMissing\""));
+        assertTrue(english.contains("\"oc:gui.Manual.Warning.OreDictMissing\""));
     }
 
     private static int[] pngDimensions(final Path path) throws IOException {

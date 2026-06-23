@@ -6,6 +6,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -13,6 +14,8 @@ import java.awt.Desktop;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 
 import org.lwjgl.glfw.GLFW;
@@ -462,6 +465,24 @@ public class ManualScreen extends Screen {
         return null;
     }
 
+    public static List<Component> localizedTooltipComponents(final String tooltip) {
+        return localizedTooltipComponents(tooltip, I18n::get, I18n::exists);
+    }
+
+    public static List<Component> localizedTooltipComponents(
+        final String tooltip,
+        final Function<String, String> translator,
+        final Predicate<String> hasTranslation
+    ) {
+        final String key = hasTranslation.test(tooltip) ? tooltip : null;
+        final String localized = key != null ? translator.apply(key) : tooltip;
+        return java.util.Arrays.stream(localized.split(java.util.regex.Pattern.quote("[nl]"), -1))
+            .map(String::trim)
+            .filter(line -> !line.isEmpty())
+            .map(line -> (Component) Component.literal(line))
+            .toList();
+    }
+
     @Override
     protected void init() {
         refreshPage();
@@ -588,7 +609,7 @@ public class ManualScreen extends Screen {
             draggingScrollBar,
             this::textWidth);
         if (tooltip != null && !tooltip.isBlank()) {
-            graphics.renderTooltip(font, Component.literal(tooltip), mouseX, mouseY);
+            graphics.renderComponentTooltip(font, localizedTooltipComponents(tooltip), mouseX, mouseY);
         }
     }
 

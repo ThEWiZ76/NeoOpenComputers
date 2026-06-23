@@ -11,6 +11,7 @@ import org.lwjgl.glfw.GLFW;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -294,6 +295,25 @@ final class ManualScreenShapeTest {
         assertEquals(0xFFAAFFAA, ManualScreen.linkTextColor(existing, registry, "%LANGUAGE%/index.md", true));
         assertEquals(0xFFFF6666, ManualScreen.linkTextColor(missing, registry, "%LANGUAGE%/index.md", false));
         assertEquals(0xFFFFAAAA, ManualScreen.linkTextColor(missing, registry, "%LANGUAGE%/index.md", true));
+    }
+
+    @Test
+    void manualScreenLocalizesAndSplitsTooltipsLikeUpstream() {
+        Map<String, String> translations = Map.of(
+            "oc:gui.Manual.Home", " Home [nl] Main page ",
+            "oc:gui.Manual.Warning.ImageMissing", " Image not found. ");
+
+        List<Component> home = ManualScreen.localizedTooltipComponents(
+            "oc:gui.Manual.Home",
+            translations::get,
+            translations::containsKey);
+        List<Component> fallback = ManualScreen.localizedTooltipComponents(
+            "plain tooltip",
+            translations::get,
+            translations::containsKey);
+
+        assertEquals(List.of("Home", "Main page"), home.stream().map(Component::getString).toList());
+        assertEquals(List.of("plain tooltip"), fallback.stream().map(Component::getString).toList());
     }
 
     @Test
