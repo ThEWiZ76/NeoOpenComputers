@@ -135,6 +135,7 @@ final class ManualRegistryTest {
 
         assertEquals(1, registry.pathProviderCount());
         assertEquals(1, registry.contentProviderCount());
+        assertEquals(4, registry.imageProviderCount());
         assertEquals(3, registry.tabCount());
     }
 

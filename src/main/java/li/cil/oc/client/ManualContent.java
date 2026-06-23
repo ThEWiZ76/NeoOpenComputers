@@ -19,6 +19,10 @@ public final class ManualContent {
     public static void registerDefaults(final ManualRegistry registry) {
         registry.addProvider(new DefinitionPathProvider());
         registry.addProvider(new ResourceContentProvider(NeoOpenComputers.MODID, "doc/"));
+        registry.addProvider("", new TextureImageProvider());
+        registry.addProvider("item", new ItemImageProvider());
+        registry.addProvider("block", new BlockImageProvider());
+        registry.addProvider("oredict", new OreDictImageProvider());
 
         registry.addTab(new TextureTabIconRenderer(HOME_TAB_TEXTURE), "oc:gui.Manual.Home", "%LANGUAGE%/index.md");
         registry.addTab(new ItemStackTabIconRenderer(stackFor(ModContentIds.COMPUTER_CASE_TIER1)), "oc:gui.Manual.Blocks", "%LANGUAGE%/block/index.md");

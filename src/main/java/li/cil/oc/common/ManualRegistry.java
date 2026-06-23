@@ -214,6 +214,10 @@ public final class ManualRegistry implements ManualAPI {
         return contentProviders.size();
     }
 
+    int imageProviderCount() {
+        return imageProviders.size();
+    }
+
     boolean wasOpened() {
         return opened;
     }
