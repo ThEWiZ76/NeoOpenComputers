@@ -1774,17 +1774,27 @@ final class LuaArchitectureTest {
     }
 
     @Test
-    void roundTripsOpaqueJavaHandlesThroughLua() {
+    void convertsUnsupportedJavaInvokeResultsToNilLikeUpstream() {
         Object handle = new Object();
-        boolean[] handleRoundTripped = {false};
-        LuaArchitecture architecture = new LuaArchitecture("handle = component.invoke('fs-address', 'open'); result = component.invoke('fs-address', 'read', handle)");
-        architecture.bind(machineWithComponentsAndHandleInvoke(Map.of("fs-address", "filesystem"), handle, handleRoundTripped));
+        LuaArchitecture architecture = new LuaArchitecture("handle = component.invoke('fs-address', 'open'); result = type(handle)");
+        architecture.bind(machineWithComponentsAndHandleInvoke(Map.of("fs-address", "filesystem"), handle));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals("ok", architecture.globalString("result"));
-        assertEquals(true, handleRoundTripped[0]);
+        assertEquals("nil", architecture.globalString("result"));
+    }
+
+    @Test
+    void convertsUnsupportedJavaCharSequencesToNilLikeUpstream() {
+        StringBuilder value = new StringBuilder("builder");
+        LuaArchitecture architecture = new LuaArchitecture("value = component.invoke('fs-address', 'open'); result = type(value)");
+        architecture.bind(machineWithComponentsAndHandleInvoke(Map.of("fs-address", "filesystem"), value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("nil", architecture.globalString("result"));
     }
 
     @Test
@@ -3573,6 +3583,10 @@ final class LuaArchitectureTest {
         return machineWithComponentsAndHandleInvoke(Map.of(), handle, handleRoundTripped);
     }
 
+    private static Machine machineWithComponentsAndHandleInvoke(final Map<String, String> components, final Object handle) {
+        return machineWithComponentsAndHandleInvoke(components, handle, null);
+    }
+
     private static Machine machineWithComponentsAndHandleInvoke(final Map<String, String> components, final Object handle, final boolean[] handleRoundTripped) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
@@ -3585,8 +3599,11 @@ final class LuaArchitectureTest {
                     if ("open".equals(componentMethod)) {
                         yield new Object[]{handle};
                     }
-                    handleRoundTripped[0] = javaArgs.length == 1 && javaArgs[0] == handle;
-                    yield handleRoundTripped[0] ? new Object[]{"ok"} : new Object[]{"bad"};
+                    final boolean roundTripped = javaArgs.length == 1 && javaArgs[0] == handle;
+                    if (handleRoundTripped != null) {
+                        handleRoundTripped[0] = roundTripped;
+                    }
+                    yield roundTripped ? new Object[]{"ok"} : new Object[]{"bad"};
                 }
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);

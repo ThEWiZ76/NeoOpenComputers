@@ -2188,10 +2188,10 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             }
             return table;
         }
-        if (value instanceof CharSequence text) {
-            return LuaValue.valueOf(text.toString());
+        if (value instanceof String text) {
+            return LuaValue.valueOf(text);
         }
-        return LuaValue.userdataOf(value);
+        return LuaValue.NIL;
     }
 
     private Varargs toLuaValues(final Object[] values) {
