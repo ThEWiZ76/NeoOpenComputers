@@ -3,6 +3,12 @@ package li.cil.oc.common;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Pattern;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -14,6 +20,8 @@ final class ManualResourceTest {
     private static final Path DOC_ROOT = Path.of("src/main/resources/assets/neoopencomputers/doc");
     private static final Path TEXTURE_ROOT = Path.of("src/main/resources/assets/neoopencomputers/textures/gui");
     private static final Path LANG_ROOT = Path.of("src/main/resources/assets/neoopencomputers/lang");
+    private static final Pattern INTERNAL_MARKDOWN_LINK = Pattern.compile("(?<!!)\\[[^\\]]+]\\(([^)]+)\\)");
+    private static final Pattern URL_SCHEME = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*:");
 
     @Test
     void bundledManualResourcesIncludeUpstreamEnglishPagesAndImages() {
@@ -60,6 +68,42 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualMarkdownInternalLinksResolveToPages() throws Exception {
+        final Set<String> pages = new HashSet<>();
+        final Set<String> locales = new HashSet<>();
+        try (Stream<Path> files = Files.list(DOC_ROOT)) {
+            files.filter(Files::isDirectory)
+                .map(path -> path.getFileName().toString().toLowerCase(Locale.ROOT))
+                .filter(locale -> !"img".equals(locale))
+                .forEach(locales::add);
+        }
+        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
+            files.filter(path -> path.getFileName().toString().endsWith(".md"))
+                .map(DOC_ROOT::relativize)
+                .map(path -> path.toString().replace('\\', '/').toLowerCase(Locale.ROOT))
+                .forEach(pages::add);
+        }
+
+        final List<String> brokenLinks = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
+            for (final Path file : files.filter(path -> path.getFileName().toString().endsWith(".md")).toList()) {
+                final Path relativeFile = DOC_ROOT.relativize(file);
+                final String content = Files.readString(file);
+                final var matcher = INTERNAL_MARKDOWN_LINK.matcher(content);
+                while (matcher.find()) {
+                    final String target = matcher.group(1);
+                    final String resolved = resolveManualLink(relativeFile, target);
+                    if (resolved != null && !manualPageExists(resolved, pages, locales)) {
+                        brokenLinks.add(relativeFile.toString().replace('\\', '/') + " -> " + target + " -> " + resolved);
+                    }
+                }
+            }
+        }
+
+        assertTrue(brokenLinks.isEmpty(), () -> "Broken manual links:\n" + String.join("\n", brokenLinks));
+    }
+
+    @Test
     void bundledLanguageIncludesManualTooltipKeys() throws IOException {
         final String english = Files.readString(LANG_ROOT.resolve("en_us.json"));
 
@@ -86,5 +130,27 @@ final class ManualResourceTest {
             | ((bytes[offset + 1] & 0xFF) << 16)
             | ((bytes[offset + 2] & 0xFF) << 8)
             | (bytes[offset + 3] & 0xFF);
+    }
+
+    private static String resolveManualLink(final Path source, final String target) {
+        final String path = target.split("#", 2)[0].trim();
+        if (path.isEmpty() || URL_SCHEME.matcher(path).find()) {
+            return null;
+        }
+        final Path relative = path.startsWith("/")
+            ? Path.of(path.substring(1))
+            : source.getParent().resolve(path);
+        return relative.normalize().toString().replace('\\', '/').toLowerCase(Locale.ROOT);
+    }
+
+    private static boolean manualPageExists(final String path, final Set<String> pages, final Set<String> locales) {
+        if (pages.contains(path)) {
+            return true;
+        }
+        final int separator = path.indexOf('/');
+        if (separator > 0 && locales.contains(path.substring(0, separator))) {
+            return pages.contains("en_us/" + path.substring(separator + 1));
+        }
+        return false;
     }
 }

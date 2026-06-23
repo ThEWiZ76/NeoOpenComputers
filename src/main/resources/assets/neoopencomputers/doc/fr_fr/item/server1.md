@@ -2,7 +2,7 @@
 
 ![Ca te servira de leçon.](oredict:oc:server1)
 
-Les serveurs sont une sorte d'[ordinateur](../general/computer.md) de haut niveau. Ils peuvent être configurés en les tenant en main et en les utilisant en même temps - comme pour ouvrir un sac à dos ou une Bourse du Néant (d'EnderStorage), par exemple. Après avoir inséré un [processeur](cpu1.md), de la [mémoire](ram1.md) et des cartes d'extension, le serveur doit être placé dans un [support de serveur](../block/serverRack.md). Pour plus d'informations, allez voir l'entrée sur le [support de serveur](../block/serverRack.md).
+Les serveurs sont une sorte d'[ordinateur](../general/computer.md) de haut niveau. Ils peuvent être configurés en les tenant en main et en les utilisant en même temps - comme pour ouvrir un sac à dos ou une Bourse du Néant (d'EnderStorage), par exemple. Après avoir inséré un [processeur](cpu1.md), de la [mémoire](ram1.md) et des cartes d'extension, le serveur doit être placé dans un [support de serveur](../block/rack.md). Pour plus d'informations, allez voir l'entrée sur le [support de serveur](../block/rack.md).
 
 Le serveur de niveau 1 est capable d'accueillir les composants suivants :
 - 1x [processeur](cpu2.md) de niveau 2

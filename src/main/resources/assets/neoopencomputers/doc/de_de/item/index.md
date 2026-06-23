@@ -20,14 +20,14 @@ Je nach dem, welches Recipe Set verwendet wird können einzelne Items nicht verf
 
 ### Karten
 * [Abstrakter-Bus-Karte](abstractbuscard.md)
-* [Datenkarte](dataCard.md)
+* [Datenkarte](datacard1.md)
 * [Debug-Karte](debugcard.md) (aka AMI)
 * [Grafikkarte](graphicscard1.md)
 * [Internetkarte](internetcard.md)
 * [Verknüpfte Karte](linkedcard.md)
 * [Netzwerkkarte](lancard.md)
 * [Redstonekarte](redstonecard1.md)
-* [Drahtlosnetzwerkkarte](wlancard.md)
+* [Drahtlosnetzwerkkarte](wlancard1.md)
 * [Weltsensorkarte](worldsensorcard.md)
 
 ### Upgrades

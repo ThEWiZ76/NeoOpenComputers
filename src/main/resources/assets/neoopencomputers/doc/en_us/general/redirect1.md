@@ -1,0 +1,1 @@
+#REDIRECT ../index.md
