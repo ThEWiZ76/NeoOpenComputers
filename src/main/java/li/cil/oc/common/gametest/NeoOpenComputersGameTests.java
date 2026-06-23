@@ -591,6 +591,26 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void debugCardConnectsToBlockNode(final GameTestHelper helper) {
+        final BlockPos targetPos = new BlockPos(1, 1, 1);
+        helper.setBlock(targetPos, ModBlocks.HOLOGRAM_TIER1.get());
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        Network.joinNewNetwork(card.node());
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+
+        final BlockPos absoluteTarget = helper.absolutePos(targetPos);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+        final Object[] result = invokeComponent(helper, component, "connectToBlock", absoluteTarget.getX(), absoluteTarget.getY(), absoluteTarget.getZ());
+        helper.assertTrue(result.length == 1 && Boolean.TRUE.equals(result[0]), "Debug connectToBlock did not report success");
+        helper.assertTrue(reachableComponent(card.node(), "hologram"), "Debug connectToBlock did not connect target component");
+
+        final BlockPos air = helper.absolutePos(targetPos.east());
+        final Object[] missing = invokeComponent(helper, component, "connectToBlock", air.getX(), air.getY(), air.getZ());
+        helper.assertTrue(missing.length == 2 && missing[0] == null && "no node found at this position".equals(missing[1]), "Debug connectToBlock did not report missing node");
+        helper.succeed();
+    }
+
     @SuppressWarnings("removal")
     @GameTest(template = "empty")
     public static void debugCardPlayerValueUpdatesOnlinePlayerState(final GameTestHelper helper) {

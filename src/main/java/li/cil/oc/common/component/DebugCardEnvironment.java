@@ -5,10 +5,11 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
-import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
+import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.AbstractValue;
@@ -17,6 +18,7 @@ import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.network.DebugClipboardPayload;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.ByteArrayTag;
@@ -81,6 +83,7 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
 
     private final EnvironmentHost host;
     private AccessContext access;
+    private Node remoteNode;
 
     public DebugCardEnvironment(final EnvironmentHost host) {
         this(host, null);
@@ -199,6 +202,22 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         return new Object[0];
     }
 
+    @Callback(doc = "function(x:number, y:number, z:number):boolean -- Add a component block at the specified coordinates to the computer network.")
+    public Object[] connectToBlock(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        final BlockPos pos = new BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2));
+        final Node other = findNode(pos);
+        if (other == null) {
+            return new Object[]{null, "no node found at this position"};
+        }
+        if (remoteNode != null) {
+            node().disconnect(remoteNode);
+        }
+        remoteNode = other;
+        node().connect(other);
+        return new Object[]{true};
+    }
+
     @Override
     public void onConnect(final Node node) {
         super.onConnect(node);
@@ -227,6 +246,30 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         signal[3] = 0D;
         System.arraycopy(data, 0, signal, 4, data.length);
         node().sendToReachable("computer.signal", signal);
+    }
+
+    private Node findNode(final BlockPos pos) {
+        if (host == null || host.world() == null || pos == null) {
+            return null;
+        }
+        final Level level = host.world();
+        if (!level.isLoaded(pos)) {
+            return null;
+        }
+        Network.joinOrCreateNetwork(level, pos);
+        final BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity instanceof SidedEnvironment sidedEnvironment) {
+            for (final Direction direction : Direction.values()) {
+                final Node sidedNode = sidedEnvironment.sidedNode(direction);
+                if (sidedNode != null) {
+                    return sidedNode;
+                }
+            }
+        }
+        if (blockEntity instanceof Environment environment) {
+            return environment.node();
+        }
+        return null;
     }
 
     @Override
