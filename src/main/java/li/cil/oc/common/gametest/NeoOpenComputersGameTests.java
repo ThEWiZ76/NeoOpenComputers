@@ -17,6 +17,7 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Signal;
+import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -431,6 +432,25 @@ public final class NeoOpenComputersGameTests {
                 final ItemStack second = first.use(helper.getLevel(), player, InteractionHand.MAIN_HAND).getObject();
                 helper.assertTrue(DebugCardEnvironment.loadAccess(driver.dataTag(second)) == null, "Debug card second shift-use did not unbind access context");
             }));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void debugCardWorldValueReadsAndSetsTime(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        helper.getLevel().setDayTime(1234L);
+        final Object[] getTime = invokeValue(helper, world, "getTime");
+        helper.assertTrue(getTime.length == 1 && Long.valueOf(1234L).equals(getTime[0]), "World value did not report current time");
+
+        invokeValue(helper, world, "setTime", 5678L);
+        helper.assertTrue(helper.getLevel().getDayTime() == 5678L, "World value did not set current time");
         helper.succeed();
     }
 
@@ -5360,6 +5380,15 @@ public final class NeoOpenComputersGameTests {
             return component.invoke(method, null, args);
         } catch (Exception e) {
             helper.fail("Component invocation failed: " + method + " " + e.getMessage());
+            return new Object[0];
+        }
+    }
+
+    private static Object[] invokeValue(final GameTestHelper helper, final Value value, final String method, final Object... args) {
+        try {
+            return API.machine.create(null).invoke(value, method, args);
+        } catch (Exception e) {
+            helper.fail("Value invocation failed: " + method + " " + e.getMessage());
             return new Object[0];
         }
     }

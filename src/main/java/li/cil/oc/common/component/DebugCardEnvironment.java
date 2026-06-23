@@ -8,9 +8,12 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.api.prefab.AbstractValue;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.neoforged.fml.ModList;
 
 import java.util.Locale;
@@ -70,6 +73,12 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         return new Object[]{isLoaded(args.checkString(0))};
     }
 
+    @Callback(doc = "function():userdata -- Get the world object for the container's world.")
+    public Object[] getWorld(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        return new Object[]{new WorldValue(host == null ? null : host.world(), access)};
+    }
+
     @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
@@ -108,15 +117,19 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     }
 
     private void checkAccess() throws Exception {
+        checkAccess(access);
+    }
+
+    private static void checkAccess(final AccessContext access) throws Exception {
         switch (ModSettings.debugCardAccess()) {
             case "allow" -> {
             }
-            case "whitelist" -> checkWhitelistAccess();
+            case "whitelist" -> checkWhitelistAccess(access);
             default -> throw new Exception("debug card is disabled");
         }
     }
 
-    private void checkWhitelistAccess() throws Exception {
+    private static void checkWhitelistAccess(final AccessContext access) throws Exception {
         if (access == null) {
             throw new Exception("debug card is whitelisted, Shift+Click with it to bind card to yourself");
         }
@@ -141,6 +154,31 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             case "minecraft", "neoforge", NeoOpenComputers.MODID, "opencomputers" -> true;
             default -> false;
         };
+    }
+
+    public static final class WorldValue extends AbstractValue {
+        private final Level level;
+        private final AccessContext access;
+
+        private WorldValue(final Level level, final AccessContext access) {
+            this.level = level;
+            this.access = access;
+        }
+
+        @Callback(doc = "function():number -- Get the current world time.")
+        public Object[] getTime(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{level == null ? 0L : level.getDayTime()};
+        }
+
+        @Callback(doc = "function(value:number) -- Set the current world time.")
+        public Object[] setTime(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            if (level instanceof ServerLevel serverLevel) {
+                serverLevel.setDayTime(args.checkLong(0));
+            }
+            return null;
+        }
     }
 
     public record AccessContext(String player, String nonce) {
