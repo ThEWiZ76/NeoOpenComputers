@@ -1989,6 +1989,9 @@ final class LuaArchitectureTest {
         resumeSynchronizedCallback(architecture);
         resumeSynchronizedCallback(architecture);
         resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(true, architecture.globalBoolean("direct"));
         assertEquals("function():string -- Direct callback.", architecture.globalString("doc"));
@@ -2671,6 +2674,40 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void schedulesUserdataProxyMetamethodsLikeUpstream() {
+        CountingValue value = new CountingValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            applied = value.proxyApply
+            called = value('proxyCall')
+            value.proxyKey = 'proxyValue'
+            continued = true
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(0, value.applies);
+        assertEquals(0, value.calls);
+        assertEquals(0, value.unapplies);
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
+
+        assertEquals(1, value.applies);
+        assertEquals(1, value.calls);
+        assertEquals(1, value.unapplies);
+        assertEquals("applied:proxyApply", architecture.globalString("applied"));
+        assertEquals("called:proxyCall", architecture.globalString("called"));
+        assertEquals("proxyKey", value.lastUnapplyArgument);
+        assertEquals("proxyValue", value.lastUnapplyValue);
+        assertEquals(true, architecture.globalBoolean("continued"));
+    }
+
+    @Test
     void retriesComponentInvokeAfterCallBudgetLimit() {
         int[] attempts = {0};
         LuaArchitecture architecture = new LuaArchitecture("""
@@ -2733,6 +2770,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("nil", architecture.globalString("result"));
         assertEquals("call failed", architecture.globalString("message"));
@@ -2752,6 +2790,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
         resumeSynchronizedCallback(architecture);
 
         assertEquals("nil", architecture.globalString("directResult"));
@@ -2774,6 +2813,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
         resumeSynchronizedCallback(architecture);
 
         assertEquals("nil", architecture.globalString("directResult"));
@@ -4755,6 +4795,8 @@ final class LuaArchitectureTest {
         private int applies;
         private int calls;
         private int unapplies;
+        private String lastUnapplyArgument;
+        private String lastUnapplyValue;
 
         @Override
         public Object apply(final Context context, final Arguments arguments) {
@@ -4771,6 +4813,8 @@ final class LuaArchitectureTest {
         @Override
         public void unapply(final Context context, final Arguments arguments) {
             unapplies++;
+            lastUnapplyArgument = arguments.checkString(0);
+            lastUnapplyValue = arguments.count() > 1 ? arguments.checkString(1) : null;
             super.unapply(context, arguments);
         }
     }

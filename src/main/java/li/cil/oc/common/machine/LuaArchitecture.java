@@ -2316,20 +2316,20 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         metatable.set("__call", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                return callValue(value, toJavaArgs(args, 2));
+                return callValueSynchronized(value, toJavaArgs(args, 2));
             }
         });
         metatable.set("__index", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
                 final LuaValue key = args.arg(2);
-                return applyValue(value, new Object[]{toJavaValue(key)});
+                return applyValueSynchronized(value, new Object[]{toJavaValue(key)});
             }
         });
         metatable.set("__newindex", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                return unapplyValue(value, new Object[]{toJavaValue(args.arg(2)), toJavaValue(args.arg(3))});
+                return unapplyValueSynchronized(value, new Object[]{toJavaValue(args.arg(2)), toJavaValue(args.arg(3))});
             }
         });
         metatable.set("__pairs", new VarArgFunction() {
