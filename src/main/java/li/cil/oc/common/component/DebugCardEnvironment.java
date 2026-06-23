@@ -11,6 +11,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.AbstractValue;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.network.DebugClipboardPayload;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -53,6 +54,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -162,6 +164,20 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     public Object[] getScoreboard(final Context context, final Arguments args) throws Exception {
         checkAccess();
         return new Object[]{new ScoreboardValue(host == null ? null : host.world(), access)};
+    }
+
+    @Callback(doc = "function(player:string, text:string) -- Sends text to the specified player's clipboard if possible.")
+    public Object[] sendToClipboard(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        final String playerName = args.checkString(0);
+        final String value = args.checkString(1);
+        if (host != null && host.world() instanceof ServerLevel serverLevel && serverLevel.getServer() != null) {
+            final ServerPlayer player = serverLevel.getServer().getPlayerList().getPlayerByName(playerName);
+            if (player != null && player.connection != null) {
+                PacketDistributor.sendToPlayer(player, new DebugClipboardPayload(value));
+            }
+        }
+        return new Object[0];
     }
 
     @Override

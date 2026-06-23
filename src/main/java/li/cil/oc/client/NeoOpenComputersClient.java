@@ -3,6 +3,7 @@ package li.cil.oc.client;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModMenus;
+import li.cil.oc.common.network.DebugClipboardState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
@@ -50,7 +51,12 @@ public final class NeoOpenComputersClient {
     }
 
     static void onClientTick(final ClientTickEvent.Post event) {
-        NanomachineParticles.spawnAmbient(Minecraft.getInstance());
+        final Minecraft minecraft = Minecraft.getInstance();
+        final String clipboard = DebugClipboardState.consumePendingClipboard();
+        if (clipboard != null) {
+            minecraft.keyboardHandler.setClipboard(clipboard);
+        }
+        NanomachineParticles.spawnAmbient(minecraft);
     }
 
     @SubscribeEvent
