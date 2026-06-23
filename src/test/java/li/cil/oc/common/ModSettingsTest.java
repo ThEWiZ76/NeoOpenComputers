@@ -195,6 +195,7 @@ final class ModSettingsTest {
         assertEquals(List.of("hologram", "maxScale"), ModSettings.HOLOGRAM_MAX_SCALE.getPath());
         assertEquals(List.of("hologram", "maxTranslation"), ModSettings.HOLOGRAM_MAX_TRANSLATION.getPath());
         assertEquals(List.of("hologram", "setRawDelay"), ModSettings.HOLOGRAM_SET_RAW_DELAY.getPath());
+        assertEquals(List.of("power", "cost", "hologram"), ModSettings.HOLOGRAM_COST.getPath());
         assertEquals(List.of("power", "buffer", "nanomachines"), ModSettings.NANOMACHINES_BUFFER.getPath());
         assertEquals(List.of("power", "cost", "nanomachineInput"), ModSettings.NANOMACHINES_INPUT_COST.getPath());
         assertEquals(List.of("power", "cost", "nanomachinesReconfigure"), ModSettings.NANOMACHINES_RECONFIGURE_COST.getPath());

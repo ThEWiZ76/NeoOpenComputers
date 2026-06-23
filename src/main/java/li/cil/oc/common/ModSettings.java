@@ -104,6 +104,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue DATA_CARD_COMPLEX;
     public static final ModConfigSpec.DoubleValue DATA_CARD_COMPLEX_BYTE;
     public static final ModConfigSpec.DoubleValue DATA_CARD_ASYMMETRIC;
+    public static final ModConfigSpec.DoubleValue HOLOGRAM_COST;
     public static final ModConfigSpec.DoubleValue GEOLYZER_SCAN_COST;
     public static final ModConfigSpec.DoubleValue TRANSPOSER_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
@@ -361,6 +362,9 @@ public final class ModSettings {
         DATA_CARD_ASYMMETRIC = builder
             .comment("Base energy cost for asymmetric Data Card operations. OpenComputers upstream default is 10.0.")
             .defineInRange("dataCardAsymmetric", 10D, 0D, Double.MAX_VALUE);
+        HOLOGRAM_COST = builder
+            .comment("Energy consumed per tick by a Hologram projector when every column is lit. OpenComputers upstream default is 0.2.")
+            .defineInRange("hologram", 0.2D, 0D, Double.MAX_VALUE);
         GEOLYZER_SCAN_COST = builder
             .comment("Energy consumed per Geolyzer scan/analyze/store operation. OpenComputers upstream default is 10.")
             .defineInRange("geolyzerScan", 10D, 0D, Double.MAX_VALUE);
@@ -573,6 +577,10 @@ public final class ModSettings {
 
     public static double dataCardAsymmetricCost() {
         return doubleValue(DATA_CARD_ASYMMETRIC);
+    }
+
+    public static double hologramCost() {
+        return Math.max(0D, doubleValue(HOLOGRAM_COST));
     }
 
     public static double geolyzerScanCost() {

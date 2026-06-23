@@ -17,6 +17,7 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.HologramBlock;
+import li.cil.oc.common.util.HologramPower;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -51,7 +52,6 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
     private static final String TAG_ROTATION_SPEED_Y = "oc:rotationSpeedY";
     private static final String TAG_ROTATION_SPEED_Z = "oc:rotationSpeedZ";
     private static final String TAG_HAS_POWER = "oc:hasPower";
-    private static final double HOLOGRAM_COST_PER_TICK = 0.2D;
     private static final String COMPONENT_NAME = "hologram";
 
     private final int[] volume = new int[VOLUME_SIZE];
@@ -432,7 +432,7 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
 
     private void updatePowerState() {
         final double litRatio = litRatio();
-        final double cost = HOLOGRAM_COST_PER_TICK * litRatio * scale;
+        final double cost = HologramPower.energyCost(litRatio, scale);
         final boolean powered = cost <= 0D || node() instanceof Connector connector && connector.tryChangeBuffer(-cost);
         if (hasPower != powered) {
             hasPower = powered;
