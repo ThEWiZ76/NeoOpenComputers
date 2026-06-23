@@ -2036,6 +2036,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void userdataDisposeReturnsNoLuaValuesLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            count = select('#', userdata.dispose(value))
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(0, architecture.globalInteger("count"));
+        assertTrue(value.disposed);
+    }
+
+    @Test
     void reusesUserdataProxyForSameValueHandle() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""
