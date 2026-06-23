@@ -643,32 +643,29 @@ final class LuaArchitectureTest {
     }
 
     @Test
-    void rejectsInvalidOsDateFormatSpecifiersLikeLuaJ() {
+    void ignoresInvalidOsDateFormatSpecifiersLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("""
-            valid, message = pcall(function()
-              os.date('%Q', 86400)
-            end)
+            formatted = os.date('%Q', 86400)
             """);
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals(false, architecture.globalBoolean("valid"));
-        assertTrue(architecture.globalString("message").contains("invalid conversion specifier"));
+        assertEquals("", architecture.globalString("formatted"));
     }
 
     @Test
-    void formatsOsDateTimezoneLikeLuaJ() {
+    void ignoresOsDateTimezoneLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("zone = os.date('%z', 86400)");
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals("+0000", architecture.globalString("zone"));
+        assertEquals("", architecture.globalString("zone"));
     }
 
     @Test
-    void formatsOsDateWeekNumbersLikeLuaJ() {
+    void ignoresOsDateWeekNumbersLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("""
             friday = os.date('%U/%W', 86400)
             sunday = os.date('%U/%W', 259200)
@@ -678,9 +675,9 @@ final class LuaArchitectureTest {
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals("53/53", architecture.globalString("friday"));
-        assertEquals("1/53", architecture.globalString("sunday"));
-        assertEquals("1/1", architecture.globalString("monday"));
+        assertEquals("/", architecture.globalString("friday"));
+        assertEquals("/", architecture.globalString("sunday"));
+        assertEquals("/", architecture.globalString("monday"));
     }
 
     @Test

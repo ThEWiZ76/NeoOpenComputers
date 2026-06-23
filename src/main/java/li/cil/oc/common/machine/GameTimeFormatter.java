@@ -1,9 +1,7 @@
 package li.cil.oc.common.machine;
 
 import java.time.DateTimeException;
-import java.time.DayOfWeek;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -43,14 +41,11 @@ final class GameTimeFormatter {
         Map.entry('S', time -> String.format("%02d", time.second())),
         Map.entry('t', time -> "\t"),
         Map.entry('T', time -> format("%H:%M:%S", time)),
-        Map.entry('U', time -> Integer.toString(weekNumber(time, DayOfWeek.SUNDAY))),
-        Map.entry('W', time -> Integer.toString(weekNumber(time, DayOfWeek.MONDAY))),
         Map.entry('w', time -> Integer.toString(time.weekDay() - 1)),
         Map.entry('x', time -> format("%D", time)),
         Map.entry('X', time -> format("%T", time)),
         Map.entry('y', time -> String.format("%02d", time.year() % 100)),
         Map.entry('Y', time -> String.format("%04d", time.year())),
-        Map.entry('z', time -> "+0000"),
         Map.entry('%', time -> "%"));
 
     private GameTimeFormatter() {
@@ -78,28 +73,12 @@ final class GameTimeFormatter {
                 final Function<DateTime, String> specifier = SPECIFIERS.get(specifierKey);
                 if (specifier != null) {
                     result.append(specifier.apply(time));
-                } else {
-                    throw new LuaError("bad argument #1: invalid conversion specifier '%" + (int) specifierKey + "'");
                 }
             } else {
                 result.append(value);
             }
         }
         return result.toString();
-    }
-
-    private static int weekNumber(final DateTime time, final DayOfWeek firstDayOfWeek) {
-        final LocalDate date = LocalDate.of(time.year(), time.month(), time.day());
-        final LocalDate firstDayOfYear = date.withDayOfYear(1);
-        final int targetDay = dayIndex(firstDayOfWeek);
-        final int firstDay = dayIndex(firstDayOfYear.getDayOfWeek());
-        final int daysUntilFirstWeek = Math.floorMod(targetDay - firstDay, 7);
-        final int dayOfYear = time.yearDay() - 1;
-        return dayOfYear < daysUntilFirstWeek ? 53 : (dayOfYear - daysUntilFirstWeek) / 7 + 1;
-    }
-
-    private static int dayIndex(final DayOfWeek dayOfWeek) {
-        return dayOfWeek.getValue() % 7;
     }
 
     static Long mktime(final int year, final int month, final int day, final int hour, final int minute, final int second) {
