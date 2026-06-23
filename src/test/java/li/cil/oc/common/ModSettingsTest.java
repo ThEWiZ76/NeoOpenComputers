@@ -32,6 +32,8 @@ final class ModSettingsTest {
         assertEquals(20000D, ModSettings.batteryUpgradeBuffer(99));
         assertEquals(500D, ModSettings.powerDistributorBuffer());
         assertEquals(10000D, ModSettings.tabletBuffer());
+        assertEquals(20000D, ModSettings.tabletAssemblyBaseCost());
+        assertEquals(5000D, ModSettings.tabletAssemblyComplexityCost());
         assertEquals(1000D, ModSettings.converterBuffer());
         assertEquals(500D, ModSettings.computerBuffer());
         assertEquals(600D, ModSettings.accessPointBuffer());
@@ -187,6 +189,8 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "buffer", "batteryUpgrades"), ModSettings.BATTERY_UPGRADE_BUFFERS.getPath());
         assertEquals(List.of("power", "buffer", "distributor"), ModSettings.POWER_DISTRIBUTOR_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "tablet"), ModSettings.TABLET_BUFFER.getPath());
+        assertEquals(List.of("power", "cost", "tabletAssemblyBase"), ModSettings.TABLET_ASSEMBLY_BASE_COST.getPath());
+        assertEquals(List.of("power", "cost", "tabletAssemblyComplexity"), ModSettings.TABLET_ASSEMBLY_COMPLEXITY_COST.getPath());
         assertEquals(List.of("power", "buffer", "converter"), ModSettings.CONVERTER_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "computer"), ModSettings.COMPUTER_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "accessPoint"), ModSettings.ACCESS_POINT_BUFFER.getPath());

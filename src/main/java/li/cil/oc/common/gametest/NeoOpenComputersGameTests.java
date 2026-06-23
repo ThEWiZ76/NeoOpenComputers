@@ -2404,6 +2404,36 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tabletAssemblerUsesConfiguredAssemblyEnergy(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.TABLET_ASSEMBLY_BASE_COST, 100D, () ->
+            withCachedConfig(ModSettings.TABLET_ASSEMBLY_COMPLEXITY_COST, 10D, () ->
+                withCachedConfig(ModSettings.ASSEMBLER_TICK_AMOUNT, 200D, () -> {
+                    final BlockPos pos = new BlockPos(1, 1, 1);
+                    helper.setBlock(pos, ModBlocks.ASSEMBLER.get());
+                    final AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
+
+                    assembler.setItem(AssemblerBlockEntity.SLOT_TEMPLATE, new ItemStack(ModItems.TABLET_CASE_TIER2.get()));
+                    assembler.setItem(AssemblerBlockEntity.SLOT_CONTAINER_START, new ItemStack(ModItems.CARD_CONTAINER_TIER1.get()));
+                    assembler.setItem(AssemblerBlockEntity.SLOT_COMPONENT_START, new ItemStack(ModItems.CPU_TIER1.get()));
+                    assembler.setItem(AssemblerBlockEntity.SLOT_COMPONENT_START + 1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+
+                    helper.assertTrue(assembler.canAssemble(), "Assembler did not accept configured-cost tablet inputs");
+                    helper.assertTrue(assembler.start(false), "Assembler did not start configured-cost tablet assembly");
+                    final ComponentConnector connector = (ComponentConnector) assembler.node();
+
+                    connector.changeBuffer(129D);
+                    AssemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), assembler);
+                    helper.assertTrue(assembler.isAssembling(), "Tablet assembly ignored configured complexity energy");
+
+                    connector.changeBuffer(1D);
+                    AssemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), assembler);
+                    helper.assertTrue(!assembler.isAssembling(), "Tablet assembly did not finish after configured energy");
+                    helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).is(ModItems.TABLET.get()), "Configured-cost tablet assembly did not output tablet");
+                    helper.succeed();
+                })));
+    }
+
+    @GameTest(template = "empty")
     public static void assemblerBlockUsesRegisteredTemplates(final GameTestHelper helper) {
         try (AssemblerTemplates.Registration ignored = AssemblerTemplates.register(new AssemblerTemplate() {
             @Override

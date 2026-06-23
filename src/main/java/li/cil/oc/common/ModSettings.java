@@ -122,6 +122,8 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> BATTERY_UPGRADE_BUFFERS;
     public static final ModConfigSpec.DoubleValue POWER_DISTRIBUTOR_BUFFER;
     public static final ModConfigSpec.DoubleValue TABLET_BUFFER;
+    public static final ModConfigSpec.DoubleValue TABLET_ASSEMBLY_BASE_COST;
+    public static final ModConfigSpec.DoubleValue TABLET_ASSEMBLY_COMPLEXITY_COST;
     public static final ModConfigSpec.DoubleValue CONVERTER_BUFFER;
     public static final ModConfigSpec.DoubleValue COMPUTER_BUFFER;
     public static final ModConfigSpec.DoubleValue ACCESS_POINT_BUFFER;
@@ -395,6 +397,12 @@ public final class ModSettings {
         EEPROM_WRITE_COST = builder
             .comment("Energy consumed when writing EEPROM code or data. OpenComputers upstream default is 50.")
             .defineInRange("eepromWrite", 50D, 0D, Double.MAX_VALUE);
+        TABLET_ASSEMBLY_BASE_COST = builder
+            .comment("Base energy consumed when assembling a tablet. OpenComputers upstream default is 20000.")
+            .defineInRange("tabletAssemblyBase", 20_000D, 0D, Double.MAX_VALUE);
+        TABLET_ASSEMBLY_COMPLEXITY_COST = builder
+            .comment("Energy consumed per tablet assembly complexity point. OpenComputers upstream default is 5000.")
+            .defineInRange("tabletAssemblyComplexity", 5_000D, 0D, Double.MAX_VALUE);
         DATA_CARD_TRIVIAL = builder
             .comment("Base energy cost for trivial Data Card operations. OpenComputers upstream default is 0.2.")
             .defineInRange("dataCardTrivial", 0.2D, 0D, Double.MAX_VALUE);
@@ -555,6 +563,14 @@ public final class ModSettings {
 
     public static double tabletBuffer() {
         return Math.max(0D, doubleValue(TABLET_BUFFER));
+    }
+
+    public static double tabletAssemblyBaseCost() {
+        return Math.max(0D, doubleValue(TABLET_ASSEMBLY_BASE_COST));
+    }
+
+    public static double tabletAssemblyComplexityCost() {
+        return Math.max(0D, doubleValue(TABLET_ASSEMBLY_COMPLEXITY_COST));
     }
 
     public static double converterBuffer() {

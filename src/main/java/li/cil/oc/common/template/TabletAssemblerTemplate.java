@@ -3,6 +3,8 @@ package li.cil.oc.common.template;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.driver.item.Processor;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.item.TabletCaseItem;
@@ -56,6 +58,15 @@ final class TabletAssemblerTemplate implements AssemblerTemplate {
         return ModItems.TABLET.get().assembleFromCase(template, container, components);
     }
 
+    @Override
+    public double energyRequired(final AssemblerBlockEntity assembler) {
+        return energyForComplexity(complexity(assembler));
+    }
+
+    static double energyForComplexity(final int complexity) {
+        return ModSettings.tabletAssemblyBaseCost() + Math.max(0, complexity) * ModSettings.tabletAssemblyComplexityCost();
+    }
+
     private static ItemStack[] componentStacks(final AssemblerBlockEntity assembler) {
         final ArrayList<ItemStack> stacks = new ArrayList<>();
         for (int slot = AssemblerBlockEntity.SLOT_COMPONENT_START; slot < AssemblerBlockEntity.SLOT_COMPONENT_START + AssemblerBlockEntity.COMPONENT_SLOT_COUNT; slot++) {
@@ -86,6 +97,28 @@ final class TabletAssemblerTemplate implements AssemblerTemplate {
             }
         }
         return false;
+    }
+
+    private static int complexity(final AssemblerBlockEntity assembler) {
+        int complexity = 0;
+        for (int slot = AssemblerBlockEntity.SLOT_CONTAINER_START; slot < AssemblerBlockEntity.CONTAINER_SIZE; slot++) {
+            final ItemStack stack = assembler.getItem(slot);
+            complexity += complexityOf(Driver.driverFor(stack), stack);
+        }
+        return complexity;
+    }
+
+    static int complexityOf(final DriverItem driver, final ItemStack stack) {
+        if (driver instanceof Processor) {
+            return 0;
+        }
+        if (driver instanceof li.cil.oc.api.driver.item.Container) {
+            return (1 + driver.tier(stack)) * 2;
+        }
+        if (driver != null && !"eeprom".equals(driver.slot(stack))) {
+            return 1 + driver.tier(stack);
+        }
+        return 0;
     }
 
     private static boolean isContainerSlot(final int slot) {
