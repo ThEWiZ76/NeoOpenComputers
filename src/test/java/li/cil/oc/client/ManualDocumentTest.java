@@ -37,6 +37,18 @@ final class ManualDocumentTest {
     }
 
     @Test
+    void parsesMarkdownLinksIntoInteractiveSegmentsLikeUpstream() {
+        ManualDocument document = ManualDocument.parse(List.of("Read [the manual](item/manual.md) now"), href -> null);
+
+        assertEquals(3, document.segments().size());
+        assertText("Read ", document.segments().get(0));
+        ManualDocument.LinkSegment link = assertInstanceOf(ManualDocument.LinkSegment.class, document.segments().get(1));
+        assertEquals("the manual", link.text());
+        assertEquals("item/manual.md", link.href());
+        assertText(" now", document.segments().get(2));
+    }
+
+    @Test
     void missingImageRendererBecomesDiagnosticTextLikeUpstream() {
         ManualDocument document = ManualDocument.parse(List.of("![missing](image:missing)"), href -> null);
 

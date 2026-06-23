@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class ManualDocument {
-    private static final Pattern IMAGE_PATTERN = Pattern.compile("!\\[([^\\[]*)\\]\\(([^\\)]+)\\)");
+    private static final Pattern IMAGE_OR_LINK_PATTERN = Pattern.compile("(!)?\\[([^\\[]*)\\]\\(([^\\)]+)\\)");
 
     private final List<Segment> segments;
 
@@ -29,8 +29,13 @@ public final class ManualDocument {
         Objects.requireNonNull(imageResolver);
 
         final List<Segment> segments = new ArrayList<>();
-        for (final String line : lines) {
+        final var iterator = lines.iterator();
+        while (iterator.hasNext()) {
+            final String line = iterator.next();
             appendLine(segments, trimTrailing(line == null ? "" : line), imageResolver);
+            if (iterator.hasNext()) {
+                segments.add(new LineBreakSegment());
+            }
         }
         return new ManualDocument(segments);
     }
@@ -40,14 +45,18 @@ public final class ManualDocument {
     }
 
     private static void appendLine(final List<Segment> segments, final String line, final Function<String, ImageRenderer> imageResolver) {
-        final Matcher matcher = IMAGE_PATTERN.matcher(line);
+        final Matcher matcher = IMAGE_OR_LINK_PATTERN.matcher(line);
         int textStart = 0;
         while (matcher.find()) {
             if (matcher.start() > textStart) {
                 segments.add(new TextSegment(line.substring(textStart, matcher.start())));
             }
             textStart = matcher.end();
-            segments.add(imageSegment(matcher.group(1), matcher.group(2), imageResolver));
+            if (matcher.group(1) != null) {
+                segments.add(imageSegment(matcher.group(2), matcher.group(3), imageResolver));
+            } else {
+                segments.add(new LinkSegment(matcher.group(2), matcher.group(3)));
+            }
         }
         if (textStart == 0) {
             segments.add(new TextSegment(line));
@@ -80,6 +89,15 @@ public final class ManualDocument {
     }
 
     public record TextSegment(String text) implements Segment {
+    }
+
+    public record LinkSegment(String text, String href) implements Segment {
+        public String tooltip() {
+            return href;
+        }
+    }
+
+    public record LineBreakSegment() implements Segment {
     }
 
     public static final class ImageSegment implements Segment {

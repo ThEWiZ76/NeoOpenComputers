@@ -74,6 +74,35 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenLaysOutInlineLinksWithoutForcingNewRows() {
+        ManualDocument document = ManualDocument.parse(List.of("Read [manual](item/manual.md) now"), href -> null);
+
+        List<ManualScreen.LayoutEntry> entries = ManualScreen.layout(document, 200, text -> text.length() * 5);
+
+        assertEquals(3, entries.size());
+        assertEquals(0, entries.get(0).x());
+        assertEquals(0, entries.get(0).y());
+        assertEquals(25, entries.get(1).x());
+        assertEquals(0, entries.get(1).y());
+        assertTrue(entries.get(1).segment() instanceof ManualDocument.LinkSegment);
+        assertEquals(55, entries.get(2).x());
+        assertEquals(0, entries.get(2).y());
+    }
+
+    @Test
+    void manualScreenWrapsTextUsingMeasuredWidth() {
+        ManualDocument document = ManualDocument.parse(List.of("alpha beta"), href -> null);
+
+        List<ManualScreen.LayoutEntry> entries = ManualScreen.layout(document, 30, text -> text.length() * 6);
+
+        assertEquals(2, entries.size());
+        assertTextEntry("alpha", entries.get(0));
+        assertEquals(0, entries.get(0).y());
+        assertTextEntry("beta", entries.get(1));
+        assertEquals(ManualScreen.LINE_HEIGHT, entries.get(1).y());
+    }
+
+    @Test
     void manualScreenComputesDocumentHeightFromLayoutBottom() {
         ManualDocument document = ManualDocument.parse(
             List.of("alpha", "![tip](image:ok)"),
@@ -111,6 +140,16 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenFindsLinkEntriesUnderMouseAfterScroll() {
+        ManualDocument document = ManualDocument.parse(List.of("Read [manual](item/manual.md)"), href -> null);
+        ManualDocument.LinkSegment link = (ManualDocument.LinkSegment) ManualScreen.layout(document, 230, text -> text.length() * 6).get(1).segment();
+
+        assertSame(link, ManualScreen.interactiveLinkAt(document, 100, 40, 132, 45, 0, text -> text.length() * 6));
+        assertSame(link, ManualScreen.interactiveLinkAt(document, 100, 40, 132, 40, 5, text -> text.length() * 6));
+        assertNull(ManualScreen.interactiveLinkAt(document, 100, 40, 80, 45, 0, text -> text.length() * 6));
+    }
+
+    @Test
     void manualScreenTabClickNavigatesToTabPath() {
         ManualRegistry registry = new ManualRegistry();
         registry.addTab(() -> {}, "home", "index");
@@ -123,6 +162,30 @@ final class ManualScreenShapeTest {
 
         assertTrue(handled);
         assertEquals("item/cpu1.md", registry.currentPath());
+    }
+
+    @Test
+    void manualScreenLinkClickNavigatesRelativeToCurrentPath() {
+        ManualRegistry registry = new ManualRegistry();
+        registry.addProvider(path -> switch (path) {
+            case "en_us/index.md" -> List.of("Read [manual](item/manual.md)");
+            case "en_us/item/manual.md" -> List.of("Manual page");
+            default -> null;
+        });
+        ManualScreen screen = new ManualScreen(registry);
+        screen.width = 400;
+        screen.height = 300;
+        screen.refreshPage();
+
+        boolean handled = screen.mouseClicked(112, 67, 0);
+
+        assertTrue(handled);
+        assertEquals("%LANGUAGE%/item/manual.md", registry.currentPath());
+    }
+
+    private static void assertTextEntry(final String expected, final ManualScreen.LayoutEntry entry) {
+        ManualDocument.TextSegment text = (ManualDocument.TextSegment) entry.segment();
+        assertEquals(expected, text.text());
     }
 
     private record TestImageRenderer(int getWidth, int getHeight) implements ImageRenderer {

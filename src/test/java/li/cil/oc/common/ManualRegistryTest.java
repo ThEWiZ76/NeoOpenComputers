@@ -166,6 +166,13 @@ final class ManualRegistryTest {
     }
 
     @Test
+    void resolvesRelativeManualLinksLikeUpstream() {
+        assertEquals("%LANGUAGE%/item/manual.md", ManualRegistry.resolveLinkPath("item/manual.md", "%LANGUAGE%/index.md"));
+        assertEquals("%LANGUAGE%/block/adapter.md", ManualRegistry.resolveLinkPath("../block/adapter.md", "%LANGUAGE%/item/manual.md"));
+        assertEquals("/absolute/page.md", ManualRegistry.resolveLinkPath("/absolute/page.md", "%LANGUAGE%/item/manual.md"));
+    }
+
+    @Test
     void openForUsesInjectedClientHandler() {
         ManualRegistry registry = new ManualRegistry();
         AtomicBoolean opened = new AtomicBoolean();

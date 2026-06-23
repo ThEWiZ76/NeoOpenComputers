@@ -161,6 +161,10 @@ public final class ManualRegistry implements ManualAPI {
         return simplifyPath(splitAt >= 0 ? base.substring(0, splitAt) + "/" + path : path);
     }
 
+    public static String resolveLinkPath(final String path, final String base) {
+        return makeRelative(path, base);
+    }
+
     private static String simplifyPath(final String path) {
         final boolean absolute = path.startsWith("/");
         final ArrayDeque<String> parts = new ArrayDeque<>();
