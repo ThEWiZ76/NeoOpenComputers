@@ -945,8 +945,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     if (requestedName.equals(li.cil.oc.api.Machine.getArchitectureName(architecture))) {
                         if (architecture != mutableProcessor.architecture(stack)) {
                             mutableProcessor.setArchitecture(stack, architecture);
-                            pendingResult = new ExecutionResult.Shutdown(true);
-                            return globals.yield(LuaValue.NIL);
+                            return LuaValue.TRUE;
                         }
                         return LuaValue.FALSE;
                     }

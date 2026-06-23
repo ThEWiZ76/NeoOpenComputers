@@ -1203,7 +1203,7 @@ final class LuaArchitectureTest {
     }
 
     @Test
-    void changingComputerArchitectureYieldsRebootLikeUpstream() {
+    void changingComputerArchitectureReturnsTrueAndContinuesLikeUpstream() {
         DriverRegistry drivers = new DriverRegistry();
         TestMutableProcessor processor = new TestMutableProcessor(FirstArchitecture.class);
         drivers.add(processor);
@@ -1213,14 +1213,15 @@ final class LuaArchitectureTest {
         machines.add(SecondArchitecture.class);
         API.machine = machines;
         Machine machine = machine(new ArrayDeque<>(), 0D, null, null, Map.of(), new Object[0], Map.of(), new String[0], null, null, null, null, hostWithComponents(Collections.singletonList(null)));
-        LuaArchitecture architecture = new LuaArchitecture("computer.setArchitecture('second'); continued = true");
+        LuaArchitecture architecture = new LuaArchitecture("changed = computer.setArchitecture('second'); continued = true");
         architecture.bind(machine);
 
         assertTrue(architecture.initialize());
-        ExecutionResult.Shutdown result = assertInstanceOf(ExecutionResult.Shutdown.class, architecture.runThreaded(false));
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals(true, result.reboot);
-        assertEquals(false, architecture.globalBoolean("continued"));
+        assertEquals(true, architecture.globalBoolean("changed"));
+        assertEquals(true, architecture.globalBoolean("continued"));
+        assertEquals(SecondArchitecture.class, processor.architecture(null));
     }
 
     @Test
