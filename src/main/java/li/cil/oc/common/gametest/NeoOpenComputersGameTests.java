@@ -573,6 +573,32 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardWorldValueReportsLightAndSkyQueries(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        final BlockPos blockPos = new BlockPos(1, 1, 1);
+        final BlockState state = Blocks.GLOWSTONE.defaultBlockState();
+        helper.setBlock(blockPos, state);
+        final BlockPos absolute = helper.absolutePos(blockPos);
+        final Object[] lightOpacity = invokeValue(helper, world, "getLightOpacity", absolute.getX(), absolute.getY(), absolute.getZ());
+        helper.assertTrue(lightOpacity.length == 1 && Integer.valueOf(state.getLightBlock(helper.getLevel(), absolute)).equals(lightOpacity[0]), "World value did not report light opacity");
+
+        final Object[] lightValue = invokeValue(helper, world, "getLightValue", absolute.getX(), absolute.getY(), absolute.getZ());
+        helper.assertTrue(lightValue.length == 1 && Integer.valueOf(state.getLightEmission()).equals(lightValue[0]), "World value did not report light value");
+
+        final BlockPos air = absolute.above();
+        final Object[] canSeeSky = invokeValue(helper, world, "canSeeSky", air.getX(), air.getY(), air.getZ());
+        helper.assertTrue(canSeeSky.length == 1 && Boolean.valueOf(helper.getLevel().canSeeSky(air)).equals(canSeeSky[0]), "World value did not report sky visibility");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
         final CraftingInput input = CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),

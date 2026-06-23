@@ -245,6 +245,25 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return new Object[]{blockState(blockPos(args))};
         }
 
+        @Callback(doc = "function(x:number, y:number, z:number):number -- Get the light opacity of the block at the specified coordinates.")
+        public Object[] getLightOpacity(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final BlockPos pos = blockPos(args);
+            return new Object[]{level == null ? 0 : blockState(pos).getLightBlock(level, pos)};
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number):number -- Get the light value (emission) of the block at the specified coordinates.")
+        public Object[] getLightValue(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{blockState(blockPos(args)).getLightEmission()};
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number):boolean -- Get whether the block at the specified coordinates is directly under the sky.")
+        public Object[] canSeeSky(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{level != null && level.canSeeSky(blockPos(args))};
+        }
+
         @Callback(doc = "function():boolean -- Get whether it is raining.")
         public Object[] isRaining(final Context context, final Arguments args) throws Exception {
             checkAccess(access);
