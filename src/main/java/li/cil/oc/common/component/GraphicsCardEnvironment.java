@@ -7,10 +7,12 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.LimitReachedException;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
@@ -336,6 +338,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final boolean vertical = args.optBoolean(3, false);
         consumeScreenCallBudget(context, SET_COSTS[tier]);
         return withActiveBuffer(buffer -> {
+            if (!consumeScreenEnergy(value.codePointCount(0, value.length()), ModSettings.gpuSetCost())) {
+                return notEnoughEnergy();
+            }
             buffer.set(x, y, value, vertical);
             return new Object[]{true};
         });
@@ -351,6 +356,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final int ty = args.checkInteger(5);
         consumeScreenCallBudget(context, COPY_COSTS[tier]);
         return withActiveBuffer(buffer -> {
+            if (!consumeScreenEnergy(width * height, ModSettings.gpuCopyCost())) {
+                return notEnoughEnergy();
+            }
             buffer.copy(x, y, width, height, tx, ty);
             return new Object[]{true};
         });
@@ -368,7 +376,12 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         }
         consumeScreenCallBudget(context, FILL_COSTS[tier]);
         return withActiveBuffer(buffer -> {
-            buffer.fill(x, y, width, height, value.codePointAt(0));
+            final int codePoint = value.codePointAt(0);
+            final double cost = codePoint == ' ' ? ModSettings.gpuClearCost() : ModSettings.gpuFillCost();
+            if (!consumeScreenEnergy(width * height, cost)) {
+                return notEnoughEnergy();
+            }
+            buffer.fill(x, y, width, height, codePoint);
             return new Object[]{true};
         });
     }
@@ -496,10 +509,21 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         return new Object[]{null, "invalid buffer index"};
     }
 
+    private static Object[] notEnoughEnergy() {
+        return new Object[]{null, "not enough energy"};
+    }
+
     private void consumeScreenCallBudget(final Context context, final double cost) throws LimitReachedException {
         if (context != null && activeBufferIndex == SCREEN_INDEX) {
             context.consumeCallBudget(cost);
         }
+    }
+
+    private boolean consumeScreenEnergy(final double units, final double cost) {
+        if (activeBufferIndex != SCREEN_INDEX || units <= 0D || cost <= 0D) {
+            return true;
+        }
+        return !(node() instanceof Connector connector) || connector.tryChangeBuffer(-units * cost);
     }
 
     private static Object[] previousColorResult(final TextBuffer buffer, final int previous, final boolean wasPalette) {

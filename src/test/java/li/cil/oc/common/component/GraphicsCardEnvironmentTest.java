@@ -10,12 +10,15 @@ import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map;
@@ -202,6 +205,31 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void screenMutationsConsumeConfiguredEnergy() throws Exception {
+        withCachedConfig(ModSettings.GPU_SET_COST, 80D, () ->
+            withCachedConfig(ModSettings.GPU_COPY_COST, 20D, () ->
+                withCachedConfig(ModSettings.GPU_FILL_COST, 40D, () ->
+                    withCachedConfig(ModSettings.GPU_CLEAR_COST, 8D, () -> {
+                        OpenComputersApi.initialize();
+                        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+                        FakeTextBuffer screen = new FakeTextBuffer();
+                        ComponentConnector connector = assertInstanceOf(ComponentConnector.class, gpu.node());
+                        connector.setLocalBufferSize(10D);
+                        connector.changeBuffer(10D);
+                        Network.joinNewNetwork(gpu.node());
+                        gpu.node().connect(screen.node());
+                        gpu.bind(null, new TestArguments(screen.node().address(), true));
+
+                        gpu.set(null, new TestArguments(1, 1, "ABC"));
+                        gpu.copy(null, new TestArguments(1, 1, 2, 3, 1, 0));
+                        gpu.fill(null, new TestArguments(1, 1, 4, 5, "Z"));
+                        gpu.fill(null, new TestArguments(1, 1, 2, 5, " "));
+
+                        assertEquals(8.45D, connector.localBuffer(), 0.000_001D);
+                    }))));
+    }
+
+    @Test
     void colorSettersReturnPreviousColorAndPaletteIndex() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
@@ -319,6 +347,23 @@ final class GraphicsCardEnvironmentTest {
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = GraphicsCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static final class RecordingContext implements Context {

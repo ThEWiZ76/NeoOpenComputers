@@ -113,6 +113,10 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue DATA_CARD_COMPLEX_BYTE;
     public static final ModConfigSpec.DoubleValue DATA_CARD_ASYMMETRIC;
     public static final ModConfigSpec.DoubleValue HOLOGRAM_COST;
+    public static final ModConfigSpec.DoubleValue GPU_SET_COST;
+    public static final ModConfigSpec.DoubleValue GPU_FILL_COST;
+    public static final ModConfigSpec.DoubleValue GPU_CLEAR_COST;
+    public static final ModConfigSpec.DoubleValue GPU_COPY_COST;
     public static final ModConfigSpec.DoubleValue GEOLYZER_SCAN_COST;
     public static final ModConfigSpec.DoubleValue TRANSPOSER_COST;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_ITEM_COST;
@@ -432,6 +436,18 @@ public final class ModSettings {
         HOLOGRAM_COST = builder
             .comment("Energy consumed per tick by a Hologram projector when every column is lit. OpenComputers upstream default is 0.2.")
             .defineInRange("hologram", 0.2D, 0D, Double.MAX_VALUE);
+        GPU_SET_COST = builder
+            .comment("Energy to change every character on a basic screen with gpu.set. OpenComputers upstream default is 2.0 and is applied per affected cell.")
+            .defineInRange("gpuSet", 2D, 0D, Double.MAX_VALUE);
+        GPU_FILL_COST = builder
+            .comment("Energy to fill every character on a basic screen with a non-space character. OpenComputers upstream default is 1.0 and is applied per affected cell.")
+            .defineInRange("gpuFill", 1D, 0D, Double.MAX_VALUE);
+        GPU_CLEAR_COST = builder
+            .comment("Energy to fill every character on a basic screen with space. OpenComputers upstream default is 0.1 and is applied per affected cell.")
+            .defineInRange("gpuClear", 0.1D, 0D, Double.MAX_VALUE);
+        GPU_COPY_COST = builder
+            .comment("Energy to copy every character on a basic screen. OpenComputers upstream default is 0.25 and is applied per affected cell.")
+            .defineInRange("gpuCopy", 0.25D, 0D, Double.MAX_VALUE);
         GEOLYZER_SCAN_COST = builder
             .comment("Energy consumed per Geolyzer scan/analyze/store operation. OpenComputers upstream default is 10.")
             .defineInRange("geolyzerScan", 10D, 0D, Double.MAX_VALUE);
@@ -930,6 +946,22 @@ public final class ModSettings {
         return doubleValue(HDD_WRITE) / 1024.0D;
     }
 
+    public static double gpuSetCost() {
+        return doubleValue(GPU_SET_COST) / basicScreenPixels();
+    }
+
+    public static double gpuFillCost() {
+        return doubleValue(GPU_FILL_COST) / basicScreenPixels();
+    }
+
+    public static double gpuClearCost() {
+        return doubleValue(GPU_CLEAR_COST) / basicScreenPixels();
+    }
+
+    public static double gpuCopyCost() {
+        return doubleValue(GPU_COPY_COST) / basicScreenPixels();
+    }
+
     public static List<Integer> hddSizes() {
         final List<Integer> sizes = listValue(HDD_SIZES);
         if (sizes.size() != DEFAULT_HDD_SIZES.size()) {
@@ -1152,6 +1184,10 @@ public final class ModSettings {
         } catch (final IllegalStateException ignored) {
             return List.copyOf(value.getDefault());
         }
+    }
+
+    private static double basicScreenPixels() {
+        return (double) screenWidthByTier(0) * (double) screenHeightByTier(0);
     }
 
     private static int clampIndex(final int index, final int size) {
