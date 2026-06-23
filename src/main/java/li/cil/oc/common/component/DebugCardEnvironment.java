@@ -14,11 +14,17 @@ import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.ByteArrayTag;
+import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.DoubleTag;
+import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.NumericTag;
+import net.minecraft.nbt.ShortTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
@@ -30,7 +36,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.ModList;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -251,7 +260,29 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             if (blockEntity == null) {
                 return null;
             }
-            return new Object[]{tagToMap(blockEntity.saveWithFullMetadata(level.registryAccess()))};
+            return new Object[]{tagToTypedMap(blockEntity.saveWithFullMetadata(level.registryAccess()))};
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number, nbt:table):boolean -- Set the NBT of the block entity at the specified coordinates.")
+        public Object[] setTileNBT(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            if (level == null) {
+                return new Object[]{null, "no tile entity"};
+            }
+            final BlockPos pos = blockPos(args);
+            final BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity == null) {
+                return new Object[]{null, "no tile entity"};
+            }
+            final Tag tag = typedMapToTag(args.checkTable(3));
+            if (!(tag instanceof CompoundTag compoundTag)) {
+                return new Object[]{null, "nbt tag compound expected, got '" + tagTypeName(tag.getId()) + "'"};
+            }
+            blockEntity.loadWithComponents(compoundTag, level.registryAccess());
+            blockEntity.setChanged();
+            final BlockState state = level.getBlockState(pos);
+            level.sendBlockUpdated(pos, state, state, 3);
+            return new Object[]{true};
         }
 
         @Callback(doc = "function(x:number, y:number, z:number):number -- Get the registry ID of the block at the specified coordinates.")
@@ -385,15 +416,22 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
                 : "minecraft:air".equals(args.checkString(index)) || "air".equals(args.checkString(index));
         }
 
-        private static Map<String, Object> tagToMap(final CompoundTag tag) {
+        private static Map<String, Object> compoundTagValue(final CompoundTag tag) {
             final Map<String, Object> result = new LinkedHashMap<>();
             for (final String key : tag.getAllKeys()) {
-                result.put(key, tagToObject(tag.get(key)));
+                result.put(key, tagToTypedMap(tag.get(key)));
             }
             return result;
         }
 
-        private static Object tagToObject(final Tag tag) {
+        private static Map<String, Object> tagToTypedMap(final Tag tag) {
+            final Map<String, Object> result = new LinkedHashMap<>();
+            result.put("type", Integer.valueOf(tag.getId()));
+            result.put("value", tagValue(tag));
+            return result;
+        }
+
+        private static Object tagValue(final Tag tag) {
             if (tag instanceof NumericTag numericTag) {
                 return numericTag.getAsNumber();
             }
@@ -413,17 +451,162 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
                 return tagToList(listTag);
             }
             if (tag instanceof CompoundTag compoundTag) {
-                return tagToMap(compoundTag);
+                return compoundTagValue(compoundTag);
             }
             return null;
         }
 
-        private static List<Object> tagToList(final ListTag tag) {
-            final List<Object> result = new ArrayList<>(tag.size());
+        private static List<Map<String, Object>> tagToList(final ListTag tag) {
+            final List<Map<String, Object>> result = new ArrayList<>(tag.size());
             for (int index = 0; index < tag.size(); index++) {
-                result.add(tagToObject(tag.get(index)));
+                result.add(tagToTypedMap(tag.get(index)));
             }
             return result;
+        }
+
+        private static Tag typedMapToTag(final Map<?, ?> map) {
+            final Object typeValue = map.get("type");
+            if (!(typeValue instanceof Number type)) {
+                throw new IllegalArgumentException(typeValue == null ? "Missing NBT type." : "Illegal NBT type '" + typeValue + "'.");
+            }
+            final Object value = map.get("value");
+            return switch (type.intValue()) {
+                case Tag.TAG_BYTE -> ByteTag.valueOf(requireNumber(value).byteValue());
+                case Tag.TAG_SHORT -> ShortTag.valueOf(requireNumber(value).shortValue());
+                case Tag.TAG_INT -> IntTag.valueOf(requireNumber(value).intValue());
+                case Tag.TAG_LONG -> LongTag.valueOf(requireNumber(value).longValue());
+                case Tag.TAG_FLOAT -> FloatTag.valueOf(requireNumber(value).floatValue());
+                case Tag.TAG_DOUBLE -> DoubleTag.valueOf(requireNumber(value).doubleValue());
+                case Tag.TAG_BYTE_ARRAY -> new ByteArrayTag(byteArray(value));
+                case Tag.TAG_STRING -> StringTag.valueOf(stringValue(value));
+                case Tag.TAG_LIST -> listTag(value);
+                case Tag.TAG_COMPOUND -> compoundTag(value);
+                case Tag.TAG_INT_ARRAY -> new IntArrayTag(intArray(value));
+                case Tag.TAG_LONG_ARRAY -> new LongArrayTag(longArray(value));
+                default -> throw new IllegalArgumentException("Unsupported NBT type '" + type + "'.");
+            };
+        }
+
+        private static Number requireNumber(final Object value) {
+            if (value instanceof Number number) {
+                return number;
+            }
+            throw new IllegalArgumentException("Illegal or missing value.");
+        }
+
+        private static String stringValue(final Object value) {
+            if (value instanceof String string) {
+                return string;
+            }
+            if (value instanceof byte[] bytes) {
+                return new String(bytes, StandardCharsets.UTF_8);
+            }
+            throw new IllegalArgumentException("Illegal or missing value.");
+        }
+
+        private static byte[] byteArray(final Object value) {
+            if (value instanceof byte[] bytes) {
+                return bytes;
+            }
+            if (value instanceof String string) {
+                return string.getBytes(StandardCharsets.UTF_8);
+            }
+            final List<Object> values = asIndexedList(value);
+            final byte[] result = new byte[values.size()];
+            for (int index = 0; index < values.size(); index++) {
+                result[index] = requireNumber(values.get(index)).byteValue();
+            }
+            return result;
+        }
+
+        private static int[] intArray(final Object value) {
+            final List<Object> values = asIndexedList(value);
+            final int[] result = new int[values.size()];
+            for (int index = 0; index < values.size(); index++) {
+                result[index] = requireNumber(values.get(index)).intValue();
+            }
+            return result;
+        }
+
+        private static long[] longArray(final Object value) {
+            final List<Object> values = asIndexedList(value);
+            final long[] result = new long[values.size()];
+            for (int index = 0; index < values.size(); index++) {
+                result[index] = requireNumber(values.get(index)).longValue();
+            }
+            return result;
+        }
+
+        private static ListTag listTag(final Object value) {
+            final ListTag result = new ListTag();
+            for (final Object entry : asIndexedList(value)) {
+                if (!(entry instanceof Map<?, ?> map)) {
+                    throw new IllegalArgumentException("Illegal value.");
+                }
+                result.add(typedMapToTag(map));
+            }
+            return result;
+        }
+
+        private static CompoundTag compoundTag(final Object value) {
+            if (!(value instanceof Map<?, ?> map)) {
+                throw new IllegalArgumentException("Illegal value.");
+            }
+            final CompoundTag result = new CompoundTag();
+            for (final Map.Entry<?, ?> entry : map.entrySet()) {
+                if (!(entry.getKey() instanceof String name)) {
+                    continue;
+                }
+                try {
+                    if (!(entry.getValue() instanceof Map<?, ?> typed)) {
+                        throw new IllegalArgumentException("Illegal value.");
+                    }
+                    result.put(name, typedMapToTag(typed));
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Error converting entry '" + name + "': " + e.getMessage(), e);
+                }
+            }
+            return result;
+        }
+
+        private static List<Object> asIndexedList(final Object value) {
+            final List<Object> result = new ArrayList<>();
+            if (value instanceof Collection<?> collection) {
+                result.addAll(collection);
+                return result;
+            }
+            if (value instanceof Object[] array) {
+                result.addAll(List.of(array));
+                return result;
+            }
+            if (value instanceof Map<?, ?> map) {
+                map.entrySet().stream()
+                    .filter(entry -> entry.getKey() instanceof Number)
+                    .sorted(Comparator.comparingInt(entry -> ((Number) entry.getKey()).intValue()))
+                    .map(Map.Entry::getValue)
+                    .forEach(result::add);
+                return result;
+            }
+            throw new IllegalArgumentException("Illegal or missing value.");
+        }
+
+        private static String tagTypeName(final int id) {
+            return switch (id) {
+                case Tag.TAG_END -> "TAG_End";
+                case Tag.TAG_BYTE -> "TAG_Byte";
+                case Tag.TAG_SHORT -> "TAG_Short";
+                case Tag.TAG_INT -> "TAG_Int";
+                case Tag.TAG_LONG -> "TAG_Long";
+                case Tag.TAG_FLOAT -> "TAG_Float";
+                case Tag.TAG_DOUBLE -> "TAG_Double";
+                case Tag.TAG_BYTE_ARRAY -> "TAG_Byte_Array";
+                case Tag.TAG_STRING -> "TAG_String";
+                case Tag.TAG_LIST -> "TAG_List";
+                case Tag.TAG_COMPOUND -> "TAG_Compound";
+                case Tag.TAG_INT_ARRAY -> "TAG_Int_Array";
+                case Tag.TAG_LONG_ARRAY -> "TAG_Long_Array";
+                default -> "UNKNOWN";
+            };
         }
     }
 

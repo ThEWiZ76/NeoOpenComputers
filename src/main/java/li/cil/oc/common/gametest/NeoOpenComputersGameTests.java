@@ -136,6 +136,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -562,10 +563,28 @@ public final class NeoOpenComputersGameTests {
         final Object[] nbtResult = invokeValue(helper, world, "getTileNBT", absoluteChest.getX(), absoluteChest.getY(), absoluteChest.getZ());
         helper.assertTrue(nbtResult.length == 1 && nbtResult[0] instanceof Map<?, ?>, "World value did not return block entity NBT map");
         final Map<?, ?> nbt = (Map<?, ?>) nbtResult[0];
-        helper.assertTrue("minecraft:chest".equals(nbt.get("id")), "World value NBT did not include block entity id");
-        helper.assertTrue(Integer.valueOf(absoluteChest.getX()).equals(nbt.get("x")), "World value NBT did not include x coordinate");
-        helper.assertTrue(Integer.valueOf(absoluteChest.getY()).equals(nbt.get("y")), "World value NBT did not include y coordinate");
-        helper.assertTrue(Integer.valueOf(absoluteChest.getZ()).equals(nbt.get("z")), "World value NBT did not include z coordinate");
+        helper.assertTrue(Integer.valueOf(Tag.TAG_COMPOUND).equals(nbt.get("type")), "World value NBT did not use upstream typed compound schema");
+        helper.assertTrue(nbt.get("value") instanceof Map<?, ?>, "World value NBT did not include typed compound values");
+        final Map<?, ?> values = (Map<?, ?>) nbt.get("value");
+        assertTypedNbtValue(helper, values.get("id"), Tag.TAG_STRING, "minecraft:chest", "block entity id");
+        assertTypedNbtValue(helper, values.get("x"), Tag.TAG_INT, absoluteChest.getX(), "x coordinate");
+        assertTypedNbtValue(helper, values.get("y"), Tag.TAG_INT, absoluteChest.getY(), "y coordinate");
+        assertTypedNbtValue(helper, values.get("z"), Tag.TAG_INT, absoluteChest.getZ(), "z coordinate");
+
+        final Map<String, Object> updatedValues = new LinkedHashMap<>();
+        updatedValues.put("id", typedNbt(Tag.TAG_STRING, "minecraft:chest"));
+        updatedValues.put("x", typedNbt(Tag.TAG_INT, absoluteChest.getX()));
+        updatedValues.put("y", typedNbt(Tag.TAG_INT, absoluteChest.getY()));
+        updatedValues.put("z", typedNbt(Tag.TAG_INT, absoluteChest.getZ()));
+        updatedValues.put("CustomName", typedNbt(Tag.TAG_STRING, "\"NeoOpenComputers\""));
+        final Object[] setResult = invokeValue(helper, world, "setTileNBT", absoluteChest.getX(), absoluteChest.getY(), absoluteChest.getZ(), typedNbt(Tag.TAG_COMPOUND, updatedValues));
+        helper.assertTrue(setResult.length == 1 && Boolean.TRUE.equals(setResult[0]), "World value did not write block entity NBT");
+
+        final Object[] writtenResult = invokeValue(helper, world, "getTileNBT", absoluteChest.getX(), absoluteChest.getY(), absoluteChest.getZ());
+        helper.assertTrue(writtenResult.length == 1 && writtenResult[0] instanceof Map<?, ?>, "World value did not return written block entity NBT");
+        final Map<?, ?> written = (Map<?, ?>) writtenResult[0];
+        final Map<?, ?> writtenValues = (Map<?, ?>) written.get("value");
+        assertTypedNbtValue(helper, writtenValues.get("CustomName"), Tag.TAG_STRING, "\"NeoOpenComputers\"", "custom name");
         helper.succeed();
     }
 
@@ -5581,6 +5600,20 @@ public final class NeoOpenComputersGameTests {
             helper.fail("Value invocation failed: " + method + " " + e.getMessage());
             return new Object[0];
         }
+    }
+
+    private static Map<String, Object> typedNbt(final int type, final Object value) {
+        final Map<String, Object> result = new LinkedHashMap<>();
+        result.put("type", type);
+        result.put("value", value);
+        return result;
+    }
+
+    private static void assertTypedNbtValue(final GameTestHelper helper, final Object entry, final int type, final Object value, final String name) {
+        helper.assertTrue(entry instanceof Map<?, ?>, "NBT entry for " + name + " was not typed");
+        final Map<?, ?> typed = (Map<?, ?>) entry;
+        helper.assertTrue(Integer.valueOf(type).equals(typed.get("type")), "NBT entry for " + name + " had wrong type");
+        helper.assertTrue(value.equals(typed.get("value")), "NBT entry for " + name + " expected " + value + " but got " + typed.get("value"));
     }
 
     private static void assertSingleWaterTankDescription(final GameTestHelper helper, final Object[] result, final String name) {
