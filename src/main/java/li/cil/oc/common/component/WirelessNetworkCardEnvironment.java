@@ -72,7 +72,7 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
     @Override
     public void receivePacket(final Packet packet, final WirelessEndpoint sender) {
         final double distance = distanceTo(sender);
-        if (distance <= maxWirelessRange() && (distance > 0D || isWiredTier())) {
+        if (distance <= maxWirelessRange()) {
             receivePacket(packet, distance);
         }
     }

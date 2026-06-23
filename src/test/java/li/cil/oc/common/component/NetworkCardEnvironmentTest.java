@@ -530,6 +530,23 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void tierOneWirelessBroadcastDeliversToSeparateEndpointAtZeroDistanceLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
+        TestMachineHost receiverHost = new TestMachineHost(0, 0, 0);
+        WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(senderHost, 0);
+        WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(receiverHost, 0);
+        Network.joinNewNetwork(sender.node());
+        Network.joinNewNetwork(receiver.node());
+        receiver.open(null, new TestArguments(123));
+
+        sender.setStrength(null, new TestArguments(5D));
+        assertArrayEquals(new Object[]{true}, sender.broadcast(null, new TestArguments(123, "payload")));
+
+        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
+    }
+
+    @Test
     void wirelessBroadcastRequiresEnergyAndConsumesBuffer() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
