@@ -1,11 +1,13 @@
 package li.cil.oc.client;
 
+import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ManualRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 import java.awt.Desktop;
 import java.net.URI;
@@ -14,6 +16,9 @@ import java.util.Objects;
 import java.util.function.ToIntFunction;
 
 public class ManualScreen extends Screen {
+    public static final ResourceLocation MANUAL_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/manual.png");
+    public static final ResourceLocation TAB_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/manual_tab.png");
+    public static final ResourceLocation SCROLL_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/button_scroll.png");
     public static final int WINDOW_WIDTH = 256;
     public static final int WINDOW_HEIGHT = 192;
     public static final int DOCUMENT_MAX_WIDTH = 230;
@@ -25,11 +30,15 @@ public class ManualScreen extends Screen {
     public static final int TAB_POS_Y = 7;
     public static final int TAB_WIDTH = 23;
     public static final int TAB_HEIGHT = 26;
+    public static final int TAB_TEXTURE_WIDTH = 23;
+    public static final int TAB_TEXTURE_HEIGHT = 52;
     public static final int SCROLL_POS_X = 244;
     public static final int SCROLL_POS_Y = 6;
     public static final int SCROLL_WIDTH = 6;
     public static final int SCROLL_HEIGHT = 180;
     public static final int SCROLL_THUMB_HEIGHT = 13;
+    public static final int SCROLL_TEXTURE_WIDTH = 6;
+    public static final int SCROLL_TEXTURE_HEIGHT = 26;
     private static final int DOCUMENT_POS_X = 8;
     private static final int DOCUMENT_POS_Y = 8;
     private static final int SCROLL_STEP = LINE_HEIGHT * 3;
@@ -409,9 +418,8 @@ public class ManualScreen extends Screen {
         renderBackground(graphics, mouseX, mouseY, partialTick);
         final int left = (width - WINDOW_WIDTH) / 2;
         final int top = (height - WINDOW_HEIGHT) / 2;
-        graphics.fill(left, top, left + WINDOW_WIDTH, top + WINDOW_HEIGHT, 0xFF2E3440);
+        graphics.blit(MANUAL_TEXTURE, left, top, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         renderTabs(graphics, left, top);
-        graphics.fill(left + DOCUMENT_POS_X, top + DOCUMENT_POS_Y, left + DOCUMENT_POS_X + DOCUMENT_MAX_WIDTH, top + DOCUMENT_POS_Y + DOCUMENT_MAX_HEIGHT, 0xFF3B4252);
         renderDocumentClipped(graphics, left, top, mouseX, mouseY);
         renderScrollBar(graphics, left, top);
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -423,7 +431,7 @@ public class ManualScreen extends Screen {
         for (int index = 0; index < Math.min(tabs.size(), MAX_TABS_PER_SIDE); index++) {
             final int x = left + TAB_POS_X;
             final int y = top + TAB_POS_Y + index * (TAB_HEIGHT - 1);
-            graphics.fill(x, y, x + TAB_WIDTH, y + TAB_HEIGHT, 0xFF434C5E);
+            graphics.blit(TAB_TEXTURE, x, y, 0, 0, TAB_WIDTH, TAB_HEIGHT);
             graphics.pose().pushPose();
             graphics.pose().translate(x + 4, y + 5, 0);
             tabs.get(index).renderer().render();
@@ -494,11 +502,9 @@ public class ManualScreen extends Screen {
     private void renderScrollBar(final GuiGraphics graphics, final int left, final int top) {
         final int documentHeight = documentHeight(document, DOCUMENT_MAX_WIDTH);
         final int trackX = left + SCROLL_POS_X;
-        final int trackY = top + SCROLL_POS_Y;
-        graphics.fill(trackX, trackY, trackX + SCROLL_WIDTH, trackY + SCROLL_HEIGHT, 0xFF2E3440);
         final int thumbY = top + scrollbarThumbY(scrollOffset, documentHeight, DOCUMENT_MAX_HEIGHT);
-        final int thumbColor = draggingScrollBar ? 0xFFD8DEE9 : 0xFF81A1C1;
-        graphics.fill(trackX, thumbY, trackX + SCROLL_WIDTH, thumbY + SCROLL_THUMB_HEIGHT, thumbColor);
+        final int textureY = draggingScrollBar ? SCROLL_THUMB_HEIGHT : 0;
+        graphics.blit(SCROLL_TEXTURE, trackX, thumbY, 0, textureY, SCROLL_WIDTH, SCROLL_THUMB_HEIGHT);
     }
 
     private void renderTooltip(final GuiGraphics graphics, final int left, final int top, final int mouseX, final int mouseY) {

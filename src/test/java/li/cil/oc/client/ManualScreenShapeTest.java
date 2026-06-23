@@ -4,6 +4,7 @@ import li.cil.oc.common.ManualRegistry;
 import li.cil.oc.api.manual.ImageRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
@@ -58,6 +59,17 @@ final class ManualScreenShapeTest {
     void manualScreenUsesManualTitle() {
         assertEquals("gui.neoopencomputers.manual", ManualScreen.title().getString());
         assertTrue(ManualScreen.title() instanceof Component);
+    }
+
+    @Test
+    void manualScreenUsesBundledUpstreamGuiTextures() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/manual.png"), ManualScreen.MANUAL_TEXTURE);
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/manual_tab.png"), ManualScreen.TAB_TEXTURE);
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/button_scroll.png"), ManualScreen.SCROLL_TEXTURE);
+        assertEquals(23, ManualScreen.TAB_TEXTURE_WIDTH);
+        assertEquals(52, ManualScreen.TAB_TEXTURE_HEIGHT);
+        assertEquals(6, ManualScreen.SCROLL_TEXTURE_WIDTH);
+        assertEquals(26, ManualScreen.SCROLL_TEXTURE_HEIGHT);
     }
 
     @Test
