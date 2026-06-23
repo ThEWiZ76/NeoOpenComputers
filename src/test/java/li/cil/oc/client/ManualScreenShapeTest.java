@@ -9,9 +9,11 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,6 +38,11 @@ final class ManualScreenShapeTest {
         assertEquals(7, ManualScreen.TAB_POS_Y);
         assertEquals(23, ManualScreen.TAB_WIDTH);
         assertEquals(26, ManualScreen.TAB_HEIGHT);
+        assertEquals(244, ManualScreen.SCROLL_POS_X);
+        assertEquals(6, ManualScreen.SCROLL_POS_Y);
+        assertEquals(6, ManualScreen.SCROLL_WIDTH);
+        assertEquals(180, ManualScreen.SCROLL_HEIGHT);
+        assertEquals(13, ManualScreen.SCROLL_THUMB_HEIGHT);
     }
 
     @Test
@@ -119,6 +126,26 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenMapsScrollbarCoordinatesLikeUpstream() {
+        assertTrue(ManualScreen.isCoordinateOverScrollBar(245, 6));
+        assertTrue(ManualScreen.isCoordinateOverScrollBar(249, 185));
+        assertFalse(ManualScreen.isCoordinateOverScrollBar(244, 6));
+        assertFalse(ManualScreen.isCoordinateOverScrollBar(250, 185));
+        assertFalse(ManualScreen.isCoordinateOverScrollBar(245, 186));
+    }
+
+    @Test
+    void manualScreenMapsScrollThumbAndMouseOffsetLikeUpstream() {
+        assertEquals(ManualScreen.SCROLL_POS_Y, ManualScreen.scrollbarThumbY(0, 356, 176));
+        assertEquals(89, ManualScreen.scrollbarThumbY(90, 356, 176));
+        assertEquals(173, ManualScreen.scrollbarThumbY(180, 356, 176));
+
+        assertEquals(0, ManualScreen.scrollOffsetForMouseY(ManualScreen.SCROLL_POS_Y, 356, 176));
+        assertEquals(90, ManualScreen.scrollOffsetForMouseY(ManualScreen.SCROLL_POS_Y + 90, 356, 176));
+        assertEquals(180, ManualScreen.scrollOffsetForMouseY(ManualScreen.SCROLL_POS_Y + ManualScreen.SCROLL_HEIGHT, 356, 176));
+    }
+
+    @Test
     void manualScreenMapsTabCoordinatesLikeUpstream() {
         assertEquals(0, ManualScreen.tabIndexAt(-22, 8, 3));
         assertEquals(1, ManualScreen.tabIndexAt(-22, 33, 3));
@@ -181,6 +208,21 @@ final class ManualScreenShapeTest {
 
         assertTrue(handled);
         assertEquals("%LANGUAGE%/item/manual.md", registry.currentPath());
+    }
+
+    @Test
+    void manualScreenScrollbarClickUpdatesScrollOffset() {
+        ManualRegistry registry = new ManualRegistry();
+        registry.addProvider(path -> IntStream.range(0, 50).mapToObj(index -> "line " + index).toList());
+        ManualScreen screen = new ManualScreen(registry);
+        screen.width = 400;
+        screen.height = 300;
+        screen.refreshPage();
+
+        boolean handled = screen.mouseClicked(317, 239, 0);
+
+        assertTrue(handled);
+        assertTrue(screen.scrollOffset() > 0);
     }
 
     private static void assertTextEntry(final String expected, final ManualScreen.LayoutEntry entry) {

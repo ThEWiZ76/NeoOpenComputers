@@ -24,6 +24,11 @@ public class ManualScreen extends Screen {
     public static final int TAB_POS_Y = 7;
     public static final int TAB_WIDTH = 23;
     public static final int TAB_HEIGHT = 26;
+    public static final int SCROLL_POS_X = 244;
+    public static final int SCROLL_POS_Y = 6;
+    public static final int SCROLL_WIDTH = 6;
+    public static final int SCROLL_HEIGHT = 180;
+    public static final int SCROLL_THUMB_HEIGHT = 13;
     private static final int DOCUMENT_POS_X = 8;
     private static final int DOCUMENT_POS_Y = 8;
     private static final int SCROLL_STEP = LINE_HEIGHT * 3;
@@ -32,6 +37,7 @@ public class ManualScreen extends Screen {
     private final ManualRegistry registry;
     private ManualDocument document = ManualDocument.parse(List.of());
     private int scrollOffset;
+    private boolean draggingScrollBar;
 
     public ManualScreen(final ManualRegistry registry) {
         super(title());
@@ -54,6 +60,10 @@ public class ManualScreen extends Screen {
 
     public ManualDocument document() {
         return document;
+    }
+
+    public int scrollOffset() {
+        return scrollOffset;
     }
 
     public static List<LayoutEntry> layout(final ManualDocument document, final int maxWidth) {
@@ -179,6 +189,27 @@ public class ManualScreen extends Screen {
         return Math.max(0, Math.min(requestedOffset, Math.max(0, documentHeight - viewportHeight)));
     }
 
+    public static boolean isCoordinateOverScrollBar(final int x, final int y) {
+        return x > SCROLL_POS_X && x < SCROLL_POS_X + SCROLL_WIDTH && y >= SCROLL_POS_Y && y < SCROLL_POS_Y + SCROLL_HEIGHT;
+    }
+
+    public static int scrollbarThumbY(final int scrollOffset, final int documentHeight, final int viewportHeight) {
+        final int maxOffset = Math.max(0, documentHeight - viewportHeight);
+        if (maxOffset == 0) {
+            return SCROLL_POS_Y;
+        }
+        return SCROLL_POS_Y + (SCROLL_HEIGHT - SCROLL_THUMB_HEIGHT) * clampScrollOffset(scrollOffset, documentHeight, viewportHeight) / maxOffset;
+    }
+
+    public static int scrollOffsetForMouseY(final int mouseY, final int documentHeight, final int viewportHeight) {
+        final int maxOffset = Math.max(0, documentHeight - viewportHeight);
+        if (maxOffset == 0) {
+            return 0;
+        }
+        final double offset = (mouseY - SCROLL_POS_Y - SCROLL_THUMB_HEIGHT / 2.0) * maxOffset / (SCROLL_HEIGHT - (double) SCROLL_THUMB_HEIGHT);
+        return clampScrollOffset((int) Math.round(offset), documentHeight, viewportHeight);
+    }
+
     public static int tabIndexAt(final int x, final int y, final int tabCount) {
         if (tabCount <= 0 || tabCount > MAX_TABS_PER_SIDE) {
             return -1;
@@ -262,6 +293,7 @@ public class ManualScreen extends Screen {
         renderTabs(graphics, left, top);
         graphics.fill(left + DOCUMENT_POS_X, top + DOCUMENT_POS_Y, left + DOCUMENT_POS_X + DOCUMENT_MAX_WIDTH, top + DOCUMENT_POS_Y + DOCUMENT_MAX_HEIGHT, 0xFF3B4252);
         renderDocument(graphics, left + DOCUMENT_POS_X, top + DOCUMENT_POS_Y, mouseX, mouseY);
+        renderScrollBar(graphics, left, top);
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
@@ -294,6 +326,16 @@ public class ManualScreen extends Screen {
         }
     }
 
+    private void renderScrollBar(final GuiGraphics graphics, final int left, final int top) {
+        final int documentHeight = documentHeight(document, DOCUMENT_MAX_WIDTH);
+        final int trackX = left + SCROLL_POS_X;
+        final int trackY = top + SCROLL_POS_Y;
+        graphics.fill(trackX, trackY, trackX + SCROLL_WIDTH, trackY + SCROLL_HEIGHT, 0xFF2E3440);
+        final int thumbY = top + scrollbarThumbY(scrollOffset, documentHeight, DOCUMENT_MAX_HEIGHT);
+        final int thumbColor = draggingScrollBar ? 0xFFD8DEE9 : 0xFF81A1C1;
+        graphics.fill(trackX, thumbY, trackX + SCROLL_WIDTH, thumbY + SCROLL_THUMB_HEIGHT, thumbColor);
+    }
+
     @Override
     public boolean mouseScrolled(final double mouseX, final double mouseY, final double scrollX, final double scrollY) {
         final int documentHeight = documentHeight(document, DOCUMENT_MAX_WIDTH);
@@ -310,6 +352,11 @@ public class ManualScreen extends Screen {
         if (button == 0) {
             final int left = (width - WINDOW_WIDTH) / 2;
             final int top = (height - WINDOW_HEIGHT) / 2;
+            if (canScroll() && isCoordinateOverScrollBar((int) mouseX - left, (int) mouseY - top)) {
+                draggingScrollBar = true;
+                scrollToMouse((int) mouseY - top);
+                return true;
+            }
             final int tabIndex = tabIndexAt((int) mouseX - left, (int) mouseY - top, registry.tabs().size());
             if (tabIndex >= 0) {
                 registry.navigate(registry.tabs().get(tabIndex).path());
@@ -348,6 +395,33 @@ public class ManualScreen extends Screen {
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(final double mouseX, final double mouseY, final int button, final double dragX, final double dragY) {
+        if (draggingScrollBar && button == 0) {
+            final int top = (height - WINDOW_HEIGHT) / 2;
+            scrollToMouse((int) mouseY - top);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(final double mouseX, final double mouseY, final int button) {
+        if (button == 0 && draggingScrollBar) {
+            draggingScrollBar = false;
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    private boolean canScroll() {
+        return documentHeight(document, DOCUMENT_MAX_WIDTH) > DOCUMENT_MAX_HEIGHT;
+    }
+
+    private void scrollToMouse(final int mouseY) {
+        scrollOffset = scrollOffsetForMouseY(mouseY, documentHeight(document, DOCUMENT_MAX_WIDTH), DOCUMENT_MAX_HEIGHT);
     }
 
     private int textWidth(final String text) {
