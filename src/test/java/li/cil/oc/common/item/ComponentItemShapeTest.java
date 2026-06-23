@@ -12,7 +12,9 @@ import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
@@ -20,6 +22,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
@@ -439,6 +442,25 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void leashUpgradeItemCreatesUpstreamLeashComponentEnvironment() throws Exception {
+        OpenComputersApi.initialize();
+        final LeashUpgradeItem item = allocate(LeashUpgradeItem.class);
+
+        final ManagedEnvironment environment = item.createEnvironment(null, new TestEnvironmentHost());
+        assertNotNull(environment);
+        final Component component = assertInstanceOf(Component.class, environment.node());
+        final DeviceInfo deviceInfo = assertInstanceOf(DeviceInfo.class, environment);
+        final Map<String, String> metadata = deviceInfo.getDeviceInfo();
+
+        assertEquals("leash", component.name());
+        assertEquals(Visibility.Network, component.visibility());
+        assertEquals(DeviceInfo.DeviceClass.Generic, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Leash", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("FlockControl (FC-3LS)", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("8", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+    }
+
+    @Test
     void angelUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<AngelUpgradeItem> constructor = AngelUpgradeItem.class.getConstructor(Item.Properties.class);
 
@@ -541,6 +563,32 @@ final class ComponentItemShapeTest {
         connector.setLocalBufferSize(energy);
         connector.changeBuffer(energy);
         return connector;
+    }
+
+    private static final class TestEnvironmentHost implements EnvironmentHost {
+        @Override
+        public Level world() {
+            return null;
+        }
+
+        @Override
+        public double xPosition() {
+            return 0;
+        }
+
+        @Override
+        public double yPosition() {
+            return 0;
+        }
+
+        @Override
+        public double zPosition() {
+            return 0;
+        }
+
+        @Override
+        public void markChanged() {
+        }
     }
 
     @FunctionalInterface
