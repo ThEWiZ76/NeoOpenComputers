@@ -9,6 +9,7 @@ import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -16,8 +17,10 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
@@ -74,6 +77,18 @@ final class ExperienceUpgradeEnvironmentTest {
     }
 
     @Test
+    void usesConfiguredBufferPerLevel() throws Exception {
+        withCachedConfig(ModSettings.EXPERIENCE_BUFFER_PER_LEVEL, 123D, () -> {
+            OpenComputersApi.initialize();
+            ExperienceUpgradeEnvironment environment = new ExperienceUpgradeEnvironment(new TestAgent());
+
+            environment.addExperience(ExperienceUpgradeEnvironment.xpForLevel(2));
+
+            assertEquals(246D, assertInstanceOf(ComponentConnector.class, environment.node()).localBufferSize(), 0.000_001D);
+        });
+    }
+
+    @Test
     void exposesDeviceInfoMetadata() {
         OpenComputersApi.initialize();
         ExperienceUpgradeEnvironment environment = new ExperienceUpgradeEnvironment(new TestAgent());
@@ -99,6 +114,23 @@ final class ExperienceUpgradeEnvironmentTest {
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = ExperienceUpgradeEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static final class TestAgent implements Agent {

@@ -9,6 +9,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
@@ -26,7 +27,6 @@ public class ExperienceUpgradeEnvironment extends AbstractManagedEnvironment imp
     private static final double BASE_XP_TO_LEVEL = 50D;
     private static final double CONSTANT_XP_GROWTH = 8D;
     private static final double EXPONENTIAL_XP_GROWTH = 2D;
-    private static final double BUFFER_PER_LEVEL = 5_000D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Knowledge database",
@@ -124,7 +124,7 @@ public class ExperienceUpgradeEnvironment extends AbstractManagedEnvironment imp
     private void updateXpInfo() {
         level = calculateLevelFromExperience(experience);
         if (node() instanceof Connector connector) {
-            connector.setLocalBufferSize(BUFFER_PER_LEVEL * level);
+            connector.setLocalBufferSize(ModSettings.experienceBufferPerLevel() * level);
         }
     }
 

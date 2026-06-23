@@ -137,6 +137,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue NANOMACHINES_MAGNET_RANGE;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_DISINTEGRATION_RANGE;
     public static final ModConfigSpec.ConfigValue<List<? extends Object>> NANOMACHINES_POTION_WHITELIST;
+    public static final ModConfigSpec.DoubleValue EXPERIENCE_BUFFER_PER_LEVEL;
     public static final ModConfigSpec.ConfigValue<String> DEBUG_CARD_ACCESS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> DEBUG_CARD_WHITELIST;
 
@@ -258,6 +259,14 @@ public final class ModSettings {
         ALLOW_GC = builder
             .comment("Allow custom Lua __gc callbacks. OpenComputers upstream default is false.")
             .define("allowGC", false);
+        builder.pop();
+        builder.pop();
+
+        builder.push("robot");
+        builder.push("xp");
+        EXPERIENCE_BUFFER_PER_LEVEL = builder
+            .comment("Additional energy buffer per robot experience level. OpenComputers upstream default is 5000.")
+            .defineInRange("bufferPerLevel", 5_000D, 0D, Double.MAX_VALUE);
         builder.pop();
         builder.pop();
 
@@ -539,6 +548,10 @@ public final class ModSettings {
 
     public static double accessPointBuffer() {
         return Math.max(0D, doubleValue(ACCESS_POINT_BUFFER));
+    }
+
+    public static double experienceBufferPerLevel() {
+        return Math.max(0D, doubleValue(EXPERIENCE_BUFFER_PER_LEVEL));
     }
 
     public static double nanomachinesBuffer() {

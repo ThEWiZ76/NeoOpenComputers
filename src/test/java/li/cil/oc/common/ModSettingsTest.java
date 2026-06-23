@@ -34,6 +34,7 @@ final class ModSettingsTest {
         assertEquals(1000D, ModSettings.converterBuffer());
         assertEquals(500D, ModSettings.computerBuffer());
         assertEquals(600D, ModSettings.accessPointBuffer());
+        assertEquals(5000D, ModSettings.experienceBufferPerLevel());
         assertEquals(true, ModSettings.inputUsername());
         assertEquals(25D, ModSettings.disassemblerTickAmount());
         assertEquals(2000D, ModSettings.disassemblerItemCost());
@@ -170,6 +171,7 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "buffer", "converter"), ModSettings.CONVERTER_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "computer"), ModSettings.COMPUTER_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "accessPoint"), ModSettings.ACCESS_POINT_BUFFER.getPath());
+        assertEquals(List.of("robot", "xp", "bufferPerLevel"), ModSettings.EXPERIENCE_BUFFER_PER_LEVEL.getPath());
         assertEquals(List.of("power", "disassemblerTickAmount"), ModSettings.DISASSEMBLER_TICK_AMOUNT.getPath());
         assertEquals(List.of("power", "cost", "disassemblerPerItem"), ModSettings.DISASSEMBLER_ITEM_COST.getPath());
         assertEquals(List.of("misc", "inputUsername"), ModSettings.INPUT_USERNAME.getPath());
