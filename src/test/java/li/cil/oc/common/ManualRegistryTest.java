@@ -56,6 +56,20 @@ final class ManualRegistryTest {
     }
 
     @Test
+    void triesCurrentManualLanguageBeforeFallbackLanguageLikeUpstream() {
+        ManualRegistry registry = new ManualRegistry(() -> "nl_nl");
+
+        registry.addProvider(new MapContentProvider(Map.of(
+            "nl_nl/index.md", List.of("dutch page"),
+            "en_us/index.md", List.of("english page"),
+            "en_us/fallback.md", List.of("fallback page")
+        )));
+
+        assertIterableEquals(List.of("dutch page"), registry.contentFor("%LANGUAGE%/index.md"));
+        assertIterableEquals(List.of("fallback page"), registry.contentFor("%LANGUAGE%/fallback.md"));
+    }
+
+    @Test
     void reportsManualContentRedirectLoopsLikeUpstream() {
         ManualRegistry registry = new ManualRegistry();
 

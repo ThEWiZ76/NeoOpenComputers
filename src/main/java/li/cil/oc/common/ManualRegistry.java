@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 public final class ManualRegistry implements ManualAPI {
     private static final String LANGUAGE_KEY = "%LANGUAGE%";
@@ -28,6 +30,19 @@ public final class ManualRegistry implements ManualAPI {
     private boolean opened;
     private boolean reset;
     private String lastNavigationPath;
+    private Supplier<String> languageSupplier;
+
+    public ManualRegistry() {
+        this(() -> FALLBACK_LANGUAGE);
+    }
+
+    ManualRegistry(final Supplier<String> languageSupplier) {
+        this.languageSupplier = Objects.requireNonNull(languageSupplier);
+    }
+
+    public void setLanguageSupplier(final Supplier<String> languageSupplier) {
+        this.languageSupplier = Objects.requireNonNull(languageSupplier);
+    }
 
     @Override
     public void addTab(final TabIconRenderer renderer, final String tooltip, final String path) {
@@ -75,11 +90,22 @@ public final class ManualRegistry implements ManualAPI {
     @Override
     public Iterable<String> contentFor(final String path) {
         final String cleanPath = simplifyPath(path);
-        final Iterable<String> content = contentForWithRedirects(cleanPath.replace(LANGUAGE_KEY, FALLBACK_LANGUAGE), new ArrayList<>());
+        final Iterable<String> content = contentForWithRedirects(cleanPath.replace(LANGUAGE_KEY, currentLanguage()), new ArrayList<>());
         if (content != null) {
             return content;
         }
-        return contentForWithRedirects(cleanPath, new ArrayList<>());
+        return contentForWithRedirects(cleanPath.replace(LANGUAGE_KEY, FALLBACK_LANGUAGE), new ArrayList<>());
+    }
+
+    private String currentLanguage() {
+        try {
+            final String language = languageSupplier.get();
+            if (language != null && !language.isBlank()) {
+                return language;
+            }
+        } catch (final RuntimeException ignored) {
+        }
+        return FALLBACK_LANGUAGE;
     }
 
     private Iterable<String> contentForWithRedirects(final String path, final List<String> seen) {

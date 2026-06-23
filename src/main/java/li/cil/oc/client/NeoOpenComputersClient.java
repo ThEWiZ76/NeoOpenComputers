@@ -1,6 +1,8 @@
 package li.cil.oc.client;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.api.API;
+import li.cil.oc.common.ManualRegistry;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.network.DebugClipboardState;
@@ -29,6 +31,9 @@ public final class NeoOpenComputersClient {
 
     @SubscribeEvent
     static void onClientSetup(final FMLClientSetupEvent event) {
+        if (API.manual instanceof final ManualRegistry manualRegistry) {
+            manualRegistry.setLanguageSupplier(() -> Minecraft.getInstance().options.languageCode);
+        }
         NeoOpenComputers.LOGGER.debug("NeoOpenComputers client setup complete.");
     }
 
