@@ -32,6 +32,7 @@ import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
+import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
@@ -91,7 +92,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private final Map<String, String> primaryComponents = new HashMap<>();
     private final Map<String, PendingPrimaryComponent> pendingPrimaryComponents = new HashMap<>();
     private final Map<String, LuaTable> componentProxyCache = new HashMap<>();
-    private final Map<Value, LuaTable> valueProxyCache = new IdentityHashMap<>();
+    private final Map<Value, LuaValue> valueProxyCache = new IdentityHashMap<>();
 
     public LuaArchitecture() {
         this("");
@@ -2226,18 +2227,18 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return (Value) userdata;
     }
 
-    private LuaTable valueProxy(final Value value) {
-        final LuaTable cached = valueProxyCache.get(value);
+    private LuaValue valueProxy(final Value value) {
+        final LuaValue cached = valueProxyCache.get(value);
         if (cached != null) {
             return cached;
         }
-        final LuaTable table = new LuaTable();
-        valueProxyCache.put(value, table);
-        table.set(VALUE_MARKER, LuaValue.userdataOf(value));
-        table.set("type", "userdata");
+        final LuaTable entries = new LuaTable();
+        entries.set("type", "userdata");
+        final LuaUserdata proxy = LuaValue.userdataOf(value);
+        valueProxyCache.put(value, proxy);
         final Map<String, Callback> methods = machine == null ? Map.of() : machine.methods(value);
         for (String methodName : methods.keySet()) {
-            table.set(methodName, valueCallbackFunction(value, methodName, table));
+            entries.set(methodName, valueCallbackFunction(value, methodName, proxy));
         }
         final LuaTable metatable = new LuaTable();
         metatable.set("__call", new VarArgFunction() {
@@ -2249,7 +2250,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         metatable.set("__index", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                return applyValue(value, new Object[]{toJavaValue(args.arg(2))});
+                final LuaValue key = args.arg(2);
+                final LuaValue entry = entries.get(key);
+                if (!entry.isnil()) {
+                    return entry;
+                }
+                return applyValue(value, new Object[]{toJavaValue(key)});
             }
         });
         metatable.set("__newindex", new VarArgFunction() {
@@ -2269,30 +2275,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 }
             }
         });
-        metatable.set("__pairs", new VarArgFunction() {
-            @Override
-            public Varargs invoke(final Varargs args) {
-                return new VarArgFunction() {
-                    private LuaValue key = LuaValue.NIL;
-
-                    @Override
-                    public Varargs invoke(final Varargs iteratorArgs) {
-                        while (true) {
-                            final Varargs next = table.next(key);
-                            key = next.arg1();
-                            if (key.isnil() || !VALUE_MARKER.equals(key.tojstring())) {
-                                return next;
-                            }
-                        }
-                    }
-                };
-            }
-        });
-        table.setmetatable(metatable);
-        return table;
+        proxy.setmetatable(metatable);
+        return proxy;
     }
 
-    private LuaTable valueCallbackFunction(final Value value, final String methodName, final LuaTable proxy) {
+    private LuaTable valueCallbackFunction(final Value value, final String methodName, final LuaValue proxy) {
         final LuaTable callback = new LuaTable();
         callback.set("name", methodName);
         callback.set("proxy", proxy);

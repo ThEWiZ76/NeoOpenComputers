@@ -1872,17 +1872,13 @@ final class LuaArchitectureTest {
             metaCalled = value('meta-call')
             metaApplied = value.metaApply
             value.metaUnapply = 'meta-unapply'
+            luaType = type(value)
             valueType = value.type
             valueString = tostring(value)
             metatableValue = getmetatable(value)
-            unexpectedKeys = 0
-            for key in pairs(value) do
-              if key == 'echo' then
-                echoVisible = true
-              elseif key ~= 'type' then
-                unexpectedKeys = unexpectedKeys + 1
-              end
-            end
+            pairsValid, pairsMessage = pcall(function()
+              for key in pairs(value) do end
+            end)
             disposed = userdata.dispose(value)
             invalidValid, invalidMessage = pcall(function()
               userdata.invoke({}, 'echo')
@@ -1891,7 +1887,11 @@ final class LuaArchitectureTest {
         architecture.bind(machineWithValueSupport(value));
 
         assertTrue(architecture.initialize());
-        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        ExecutionResult result = architecture.runThreaded(false);
+        if (result instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+        assertInstanceOf(ExecutionResult.Sleep.class, result);
 
         assertEquals(true, architecture.globalBoolean("direct"));
         assertEquals("function():string -- Direct callback.", architecture.globalString("doc"));
@@ -1900,11 +1900,12 @@ final class LuaArchitectureTest {
         assertEquals("applied:apply", architecture.globalString("applied"));
         assertEquals("called:meta-call", architecture.globalString("metaCalled"));
         assertEquals("applied:metaApply", architecture.globalString("metaApplied"));
+        assertEquals("userdata", architecture.globalString("luaType"));
         assertEquals("userdata", architecture.globalString("valueType"));
         assertEquals("test-value", architecture.globalString("valueString"));
         assertEquals("userdata", architecture.globalString("metatableValue"));
-        assertEquals(true, architecture.globalBoolean("echoVisible"));
-        assertEquals(0, architecture.globalInteger("unexpectedKeys"));
+        assertEquals(false, architecture.globalBoolean("pairsValid"));
+        assertTrue(architecture.globalString("pairsMessage").contains("table expected"));
         assertEquals("nil", architecture.globalString("unapplied"));
         assertTrue(value.unapplied);
         assertEquals("metaUnapply", value.unapplyArgument);
