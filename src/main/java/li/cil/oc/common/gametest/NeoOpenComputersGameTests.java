@@ -2709,6 +2709,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void disassemblerConnectorUsesConfiguredConverterBuffer(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 321D, () -> {
+            final BlockPos pos = new BlockPos(1, 1, 1);
+            helper.setBlock(pos, ModBlocks.DISASSEMBLER.get());
+            final DisassemblerBlockEntity disassembler = helper.getBlockEntity(pos);
+
+            helper.assertTrue(disassembler.sidedNode(Direction.NORTH) instanceof Connector, "Disassembler side node is not a connector");
+            final Connector connector = (Connector) disassembler.sidedNode(Direction.NORTH);
+            helper.assertTrue(Double.compare(DisassemblerBlockEntity.connectorBufferSize(), connector.localBufferSize()) == 0, "Disassembler connector capacity did not use configured converter buffer");
+            helper.assertTrue(Double.compare(321D, connector.localBufferSize()) == 0, "Disassembler connector capacity did not reflect converter buffer override");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty")
     public static void disassemblerMenuReportsInputState(final GameTestHelper helper) {
         final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
         final ItemStack memory = new ItemStack(ModItems.MEMORY_TIER1.get());

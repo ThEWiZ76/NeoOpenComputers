@@ -41,7 +41,6 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     public static final int SLOT_OUTPUT_START = 1;
     public static final int OUTPUT_SLOT_COUNT = 9;
     public static final int CONTAINER_SIZE = 10;
-    public static final double CONNECTOR_BUFFER_SIZE = 50D;
     private static final String TAG_NODE = "oc:node";
     private static final String TAG_QUEUE = "oc:queue";
     private static final String TAG_BUFFER = "oc:buffer";
@@ -232,6 +231,10 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     public static double defaultBreakChance() {
         return ModSettings.disassemblerBreakChance();
+    }
+
+    public static double connectorBufferSize() {
+        return ModSettings.converterBuffer();
     }
 
     @Override
@@ -446,7 +449,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     private static Node createNode(final Environment host) {
         return Network.newNode(host, Visibility.None)
-            .withConnector(CONNECTOR_BUFFER_SIZE)
+            .withConnector(connectorBufferSize())
             .create();
     }
 
