@@ -6450,8 +6450,24 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(name.equals(signal.name()), "Expected signal " + name + " but got " + signal.name());
         helper.assertTrue(signal.args().length == args.length, "Expected signal " + name + " to have " + args.length + " arguments but got " + signal.args().length);
         for (int index = 0; index < args.length; index++) {
-            helper.assertTrue(args[index].equals(signal.args()[index]), "Expected signal " + name + " argument " + index + " to be " + args[index] + " but got " + signal.args()[index]);
+            final Object expected = args[index];
+            final Object actual = signal.args()[index];
+            helper.assertTrue(signalArgumentEquals(expected, actual), "Expected signal " + name + " argument " + index + " to be " + expected + " but got " + signalArgumentText(actual));
         }
+    }
+
+    private static boolean signalArgumentEquals(final Object expected, final Object actual) {
+        if (expected instanceof String text && actual instanceof byte[] bytes) {
+            return text.equals(new String(bytes, StandardCharsets.UTF_8));
+        }
+        return expected.equals(actual);
+    }
+
+    private static String signalArgumentText(final Object value) {
+        if (value instanceof byte[] bytes) {
+            return new String(bytes, StandardCharsets.UTF_8);
+        }
+        return String.valueOf(value);
     }
 
     public static boolean selectDiamondTemplate(final ItemStack stack) {

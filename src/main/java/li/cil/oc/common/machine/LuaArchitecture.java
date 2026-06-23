@@ -2341,9 +2341,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return value.todouble();
         }
         if (value instanceof LuaString string) {
-            if (string.isValidUtf8()) {
-                return string.tojstring();
-            }
             return Arrays.copyOfRange(string.m_bytes, string.m_offset, string.m_offset + string.m_length);
         }
         if (value instanceof LuaTable table) {

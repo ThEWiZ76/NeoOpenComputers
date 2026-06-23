@@ -906,7 +906,9 @@ final class LuaArchitectureTest {
 
         assertEquals(true, architecture.globalBoolean("result"));
         assertEquals("event", signalName[0]);
-        assertArrayEquals(new Object[]{"payload", 7D, true}, signalArguments[0]);
+        assertArrayEquals(utf8("payload"), (byte[]) signalArguments[0][0]);
+        assertEquals(7D, signalArguments[0][1]);
+        assertEquals(true, signalArguments[0][2]);
     }
 
     @Test
@@ -1786,6 +1788,23 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void passesLuaStringArgumentsAsByteArraysLikeUpstream() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        List<String> invokedMethods = new ArrayList<>();
+        List<Object[]> invokedArguments = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'label', 'arg')");
+        architecture.bind(machineWithMethodsAndInvokeCapture(Map.of("fs-address", "filesystem"), methods, invokedMethods, invokedArguments));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(List.of("label"), invokedMethods);
+        assertArrayEquals(utf8("arg"), (byte[]) invokedArguments.getFirst()[0]);
+        assertEquals(true, architecture.globalBoolean("result"));
+    }
+
+    @Test
     void convertsLuaTableArgumentsToJavaMaps() {
         Object[] capturedArgument = {null};
         LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'configure', {label = 'disk', size = 4})");
@@ -1796,8 +1815,8 @@ final class LuaArchitectureTest {
 
         assertEquals("ok", architecture.globalString("result"));
         Map<?, ?> argument = (Map<?, ?>) capturedArgument[0];
-        assertEquals("disk", argument.get("label"));
-        assertEquals(4D, argument.get("size"));
+        assertArrayEquals(utf8("disk"), (byte[]) valueForUtf8Key(argument, "label"));
+        assertEquals(4D, valueForUtf8Key(argument, "size"));
     }
 
     @Test
@@ -2461,7 +2480,7 @@ final class LuaArchitectureTest {
         assertEquals("nil", architecture.globalString("missingMemberType"));
         assertEquals(true, architecture.globalBoolean("result"));
         assertEquals(List.of("label"), invokedMethods);
-        assertArrayEquals(new Object[]{"arg"}, invokedArguments.getFirst());
+        assertArrayEquals(utf8("arg"), (byte[]) invokedArguments.getFirst()[0]);
         assertEquals("nil", architecture.globalString("missing"));
         assertEquals("no such component", architecture.globalString("missingMessage"));
     }
@@ -2485,7 +2504,7 @@ final class LuaArchitectureTest {
         assertEquals(List.of("label"), invokedMethods);
         assertEquals(1, invokedArguments.getFirst().length);
         Map<?, ?> argument = (Map<?, ?>) invokedArguments.getFirst()[0];
-        assertTrue(argument == argument.get("self"));
+        assertTrue(argument == valueForUtf8Key(argument, "self"));
         assertEquals(true, architecture.globalBoolean("result"));
     }
 
@@ -2584,7 +2603,7 @@ final class LuaArchitectureTest {
         assertEquals("table", architecture.globalString("labelType"));
         assertEquals(List.of("accessor", "accessor"), invokedMethods);
         assertEquals(0, invokedArguments.get(0).length);
-        assertArrayEquals(new Object[]{"next"}, invokedArguments.get(1));
+        assertArrayEquals(utf8("next"), (byte[]) invokedArguments.get(1)[0]);
     }
 
     @Test
@@ -3680,7 +3699,7 @@ final class LuaArchitectureTest {
                 case "invoke" -> {
                     if (args[0] == value) {
                         Object[] javaArgs = (Object[]) args[2];
-                        yield new Object[]{"invoked:" + javaArgs[0]};
+                        yield new Object[]{"invoked:" + luaString(javaArgs[0])};
                     }
                     yield new Object[]{value};
                 }
@@ -4183,6 +4202,28 @@ final class LuaArchitectureTest {
         if (type == double.class) {
             return 0D;
         }
+        return null;
+    }
+
+    private static byte[] utf8(final String value) {
+        return value.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static String luaString(final Object value) {
+        if (value instanceof byte[] bytes) {
+            return new String(bytes, StandardCharsets.UTF_8);
+        }
+        return (String) value;
+    }
+
+    private static Object valueForUtf8Key(final Map<?, ?> map, final String key) {
+        final byte[] expected = utf8(key);
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            if (entry.getKey() instanceof byte[] bytes && Arrays.equals(expected, bytes)) {
+                return entry.getValue();
+            }
+        }
+        fail("missing byte-array key: " + key);
         return null;
     }
 
