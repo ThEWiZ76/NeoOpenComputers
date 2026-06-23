@@ -101,7 +101,7 @@ public class MotionSensorBlockEntity extends BlockEntity implements Environment,
             node().load(nbt.getCompound(TAG_NODE));
         }
         if (nbt.contains(TAG_SENSITIVITY)) {
-            sensitivity = Math.max(MINIMUM_SENSITIVITY, nbt.getDouble(TAG_SENSITIVITY));
+            sensitivity = nbt.getDouble(TAG_SENSITIVITY);
         }
     }
 
