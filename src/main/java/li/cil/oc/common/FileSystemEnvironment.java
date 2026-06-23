@@ -22,6 +22,7 @@ import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -129,43 +130,43 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     }
 
     @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether an object exists at the specified absolute path.")
-    public Object[] exists(final Context context, final Arguments arguments) {
+    public Object[] exists(final Context context, final Arguments arguments) throws FileNotFoundException {
         return new Object[]{fileSystem.exists(clean(arguments.checkString(0)))};
     }
 
     @Callback(direct = true, doc = "function(path:string):number -- Returns the size of the object at the specified path.")
-    public Object[] size(final Context context, final Arguments arguments) {
+    public Object[] size(final Context context, final Arguments arguments) throws FileNotFoundException {
         return new Object[]{fileSystem.size(clean(arguments.checkString(0)))};
     }
 
     @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether the object at the specified path is a directory.")
-    public Object[] isDirectory(final Context context, final Arguments arguments) {
+    public Object[] isDirectory(final Context context, final Arguments arguments) throws FileNotFoundException {
         return new Object[]{fileSystem.isDirectory(clean(arguments.checkString(0)))};
     }
 
     @Callback(direct = true, doc = "function(path:string):number -- Returns the timestamp of when the object at the path was modified.")
-    public Object[] lastModified(final Context context, final Arguments arguments) {
+    public Object[] lastModified(final Context context, final Arguments arguments) throws FileNotFoundException {
         return new Object[]{fileSystem.lastModified(clean(arguments.checkString(0)))};
     }
 
     @Callback(doc = "function(path:string):table -- Returns names of objects in the directory at the specified path.")
-    public Object[] list(final Context context, final Arguments arguments) {
+    public Object[] list(final Context context, final Arguments arguments) throws FileNotFoundException {
         final String[] contents = fileSystem.list(clean(arguments.checkString(0)));
         return contents == null ? null : new Object[]{contents};
     }
 
     @Callback(doc = "function(path:string):boolean -- Creates a directory at the specified path, including parent directories.")
-    public Object[] makeDirectory(final Context context, final Arguments arguments) {
+    public Object[] makeDirectory(final Context context, final Arguments arguments) throws FileNotFoundException {
         return new Object[]{makeDirectory(clean(arguments.checkString(0)))};
     }
 
     @Callback(doc = "function(path:string):boolean -- Removes the object at the specified path.")
-    public Object[] remove(final Context context, final Arguments arguments) {
+    public Object[] remove(final Context context, final Arguments arguments) throws FileNotFoundException {
         return new Object[]{remove(clean(arguments.checkString(0)))};
     }
 
     @Callback(doc = "function(from:string,to:string):boolean -- Renames or moves an object.")
-    public Object[] rename(final Context context, final Arguments arguments) throws java.io.FileNotFoundException {
+    public Object[] rename(final Context context, final Arguments arguments) throws FileNotFoundException {
         return new Object[]{fileSystem.rename(clean(arguments.checkString(0)), clean(arguments.checkString(1)))};
     }
 
@@ -317,7 +318,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         return snapshot;
     }
 
-    private String clean(final String path) {
+    private String clean(final String path) throws FileNotFoundException {
         if (path == null || path.isEmpty() || "/".equals(path) || ".".equals(path)) {
             return "";
         }
@@ -329,7 +330,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
             }
             if ("..".equals(segment)) {
                 if (segments.isEmpty()) {
-                    throw new IllegalArgumentException("path escapes file system root");
+                    throw new FileNotFoundException(path);
                 }
                 segments.removeLast();
             } else {
@@ -353,7 +354,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         return fileSystem.makeDirectory(path);
     }
 
-    private boolean remove(final String path) {
+    private boolean remove(final String path) throws FileNotFoundException {
         if (fileSystem.isDirectory(path)) {
             final String[] children = fileSystem.list(path);
             if (children != null) {

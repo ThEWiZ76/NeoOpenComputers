@@ -304,6 +304,17 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentRejectsEscapingPathsLikeUpstream() {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+
+        FileNotFoundException error = assertThrows(FileNotFoundException.class, () -> component.invoke("exists", null, "../secret"));
+        assertEquals("../secret", error.getMessage());
+    }
+
+    @Test
     void managedFileSystemEnvironmentReportsInfiniteCapacityForUnlimitedFileSystems() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(-1);
