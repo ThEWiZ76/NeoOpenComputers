@@ -513,6 +513,45 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardRunsServerCommands(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+        final net.minecraft.world.scores.Scoreboard scoreboard = helper.getLevel().getScoreboard();
+        final net.minecraft.world.scores.Objective oldObjective = scoreboard.getObjective("neo_cmd");
+        if (oldObjective != null) {
+            scoreboard.removeObjective(oldObjective);
+        }
+        final net.minecraft.world.scores.Objective oldTableObjective = scoreboard.getObjective("neo_cmd_table");
+        if (oldTableObjective != null) {
+            scoreboard.removeObjective(oldTableObjective);
+        }
+        final net.minecraft.world.scores.Objective oldTableSecondObjective = scoreboard.getObjective("neo_cmd_table_second");
+        if (oldTableSecondObjective != null) {
+            scoreboard.removeObjective(oldTableSecondObjective);
+        }
+
+        final Object[] result = invokeComponent(helper, component, "runCommand", "scoreboard objectives add neo_cmd dummy");
+        helper.assertTrue(result.length == 2 && result[0] instanceof Integer, "Debug runCommand did not return command result");
+        helper.assertTrue(((Integer) result[0]) > 0, "Debug runCommand returned non-positive result");
+        helper.assertTrue(result[1] == null, "Debug runCommand unexpectedly returned messages");
+        helper.assertTrue(scoreboard.getObjective("neo_cmd") != null, "Debug runCommand did not execute scoreboard command");
+        scoreboard.removeObjective(scoreboard.getObjective("neo_cmd"));
+
+        final Map<String, Object> commands = new LinkedHashMap<>();
+        commands.put("1", "scoreboard objectives add neo_cmd_table dummy");
+        commands.put("2", "scoreboard objectives add neo_cmd_table_second dummy");
+        final Object[] tableResult = invokeComponent(helper, component, "runCommand", commands);
+        helper.assertTrue(tableResult.length == 2 && tableResult[0] instanceof Integer, "Debug runCommand did not return table command result");
+        helper.assertTrue(((Integer) tableResult[0]) > 0, "Debug runCommand returned non-positive table result");
+        helper.assertTrue(scoreboard.getObjective("neo_cmd_table") != null, "Debug runCommand did not execute first table command");
+        helper.assertTrue(scoreboard.getObjective("neo_cmd_table_second") != null, "Debug runCommand did not execute second table command");
+        scoreboard.removeObjective(scoreboard.getObjective("neo_cmd_table"));
+        scoreboard.removeObjective(scoreboard.getObjective("neo_cmd_table_second"));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardWorldValueReadsAndSetsWeather(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
         helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");

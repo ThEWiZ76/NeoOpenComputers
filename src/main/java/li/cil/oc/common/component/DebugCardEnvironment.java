@@ -11,6 +11,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.AbstractValue;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModSettings;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.ByteArrayTag;
@@ -41,6 +42,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
 
 import java.nio.charset.StandardCharsets;
@@ -105,6 +107,25 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     public Object[] isModLoaded(final Context context, final Arguments args) throws Exception {
         checkAccess();
         return new Object[]{isLoaded(args.checkString(0))};
+    }
+
+    @Callback(doc = "function(command:string|table):number, table -- Runs arbitrary command(s) using a server command source.")
+    public Object[] runCommand(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        if (!(host != null && host.world() instanceof ServerLevel serverLevel) || serverLevel.getServer() == null) {
+            return new Object[]{0, null};
+        }
+        final CommandSourceStack source = serverLevel.getServer()
+            .createCommandSourceStack()
+            .withLevel(serverLevel)
+            .withPosition(new Vec3(host.xPosition(), host.yPosition(), host.zPosition()))
+            .withPermission(4)
+            .withSuppressedOutput();
+        int value = 0;
+        for (final Object command : commands(args)) {
+            value = serverLevel.getServer().getCommands().getDispatcher().execute(normalizedCommand(command), source);
+        }
+        return new Object[]{value, null};
     }
 
     @Callback(doc = "function():userdata -- Get the world object for the container's world.")
@@ -194,6 +215,22 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             case "minecraft", "neoforge", NeoOpenComputers.MODID, "opencomputers" -> true;
             default -> false;
         };
+    }
+
+    private static List<Object> commands(final Arguments args) {
+        if (!args.isTable(0)) {
+            return List.of(args.checkString(0));
+        }
+        final List<Object> result = new ArrayList<>();
+        for (final Object command : args.checkTable(0).values()) {
+            result.add(command);
+        }
+        return result;
+    }
+
+    private static String normalizedCommand(final Object command) {
+        final String value = String.valueOf(command);
+        return value.startsWith("/") ? value.substring(1) : value;
     }
 
     public static final class ScoreboardValue extends AbstractValue {
