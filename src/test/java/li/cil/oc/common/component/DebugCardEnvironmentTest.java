@@ -4,11 +4,13 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,9 +40,30 @@ final class DebugCardEnvironmentTest {
         });
     }
 
+    @Test
+    void whitelistAccessAllowsMatchingPersistedNonce() throws Exception {
+        OpenComputersApi.initialize();
+        withCachedConfig(debugCardAccessConfig(), "whitelist", () ->
+            withCachedConfig(debugCardWhitelistConfig(), List.of("alice nonce-1"), () -> {
+                DebugCardEnvironment saved = new DebugCardEnvironment(new TestEnvironmentHost(), new DebugCardEnvironment.AccessContext("Alice", "nonce-1"));
+                CompoundTag tag = new CompoundTag();
+                saved.save(tag);
+                DebugCardEnvironment loaded = new DebugCardEnvironment(new TestEnvironmentHost());
+                loaded.load(tag);
+                Component component = assertInstanceOf(Component.class, loaded.node());
+
+                assertArrayEquals(new Object[]{10.5D}, component.invoke("getX", null));
+            }));
+    }
+
     private static ModConfigSpec.ConfigValue<String> debugCardAccessConfig() throws Exception {
         Field field = ModSettings.class.getDeclaredField("DEBUG_CARD_ACCESS");
         return (ModConfigSpec.ConfigValue<String>) field.get(null);
+    }
+
+    private static ModConfigSpec.ConfigValue<List<? extends String>> debugCardWhitelistConfig() throws Exception {
+        Field field = ModSettings.class.getDeclaredField("DEBUG_CARD_WHITELIST");
+        return (ModConfigSpec.ConfigValue<List<? extends String>>) field.get(null);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

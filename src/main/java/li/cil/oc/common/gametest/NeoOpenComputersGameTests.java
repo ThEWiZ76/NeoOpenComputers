@@ -61,6 +61,7 @@ import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.component.LinkedCardEnvironment;
+import li.cil.oc.common.component.DebugCardEnvironment;
 import li.cil.oc.common.component.MfuEnvironment;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
@@ -387,6 +388,25 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment instanceof LinkedCardEnvironment, "Linked card did not create linked environment");
         final LinkedCardEnvironment linked = (LinkedCardEnvironment) environment;
         helper.assertTrue("pair".equals(linked.linkedChannel()), "Linked card environment did not use persisted tunnel");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void debugCardDriverDataTagCarriesAccessContext(final GameTestHelper helper) throws Exception {
+        final ItemStack stack = new ItemStack(ModItems.DEBUG_CARD.get());
+        final DriverItem driver = Driver.driverFor(stack);
+
+        helper.assertTrue(driver != null, "No driver for debug card");
+        DebugCardEnvironment.saveAccess(driver.dataTag(stack), new DebugCardEnvironment.AccessContext("Alice", "nonce-1"));
+
+        withCachedConfig(ModSettings.DEBUG_CARD_ACCESS, "whitelist", () ->
+            withCachedConfig(ModSettings.DEBUG_CARD_WHITELIST, List.of("alice nonce-1"), () -> {
+                final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+                helper.assertTrue(environment instanceof DebugCardEnvironment, "Debug card did not create debug environment");
+                helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Debug card did not create component node");
+                final Object[] result = ((li.cil.oc.api.network.Component) environment.node()).invoke("getX", null);
+                helper.assertTrue(result.length == 1 && Double.valueOf(0D).equals(result[0]), "Debug card did not use persisted access context");
+            }));
         helper.succeed();
     }
 

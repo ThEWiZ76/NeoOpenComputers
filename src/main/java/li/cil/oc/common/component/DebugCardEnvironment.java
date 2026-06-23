@@ -9,14 +9,24 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ModSettings;
+import net.minecraft.nbt.CompoundTag;
 
 public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static final String COMPONENT_NAME = "debug";
+    private static final String DATA_TAG = "oc:data";
+    private static final String PLAYER_TAG = "oc:player";
+    private static final String ACCESS_NONCE_TAG = "oc:accessNonce";
 
     private final EnvironmentHost host;
+    private AccessContext access;
 
     public DebugCardEnvironment(final EnvironmentHost host) {
+        this(host, null);
+    }
+
+    public DebugCardEnvironment(final EnvironmentHost host, final AccessContext access) {
         this.host = host;
+        this.access = access;
         final var builder = Network.newNode(this, Visibility.Neighbors);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME).withConnector().create());
@@ -50,12 +60,65 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         return new Object[]{host == null ? 0D : host.zPosition()};
     }
 
-    private static void checkAccess() throws Exception {
+    @Override
+    public void load(final CompoundTag nbt) {
+        super.load(nbt);
+        access = loadAccess(nbt);
+    }
+
+    @Override
+    public void save(final CompoundTag nbt) {
+        super.save(nbt);
+        saveAccess(nbt, access);
+    }
+
+    public static AccessContext loadAccess(final CompoundTag root) {
+        if (root == null || !root.contains(DATA_TAG)) {
+            return null;
+        }
+        final CompoundTag data = root.getCompound(DATA_TAG);
+        if (!data.contains(PLAYER_TAG)) {
+            return null;
+        }
+        return new AccessContext(data.getString(PLAYER_TAG), data.getString(ACCESS_NONCE_TAG));
+    }
+
+    public static void saveAccess(final CompoundTag root, final AccessContext access) {
+        if (root == null) {
+            return;
+        }
+        final CompoundTag data = root.contains(DATA_TAG) ? root.getCompound(DATA_TAG) : new CompoundTag();
+        data.remove(PLAYER_TAG);
+        data.remove(ACCESS_NONCE_TAG);
+        if (access != null) {
+            data.putString(PLAYER_TAG, access.player());
+            data.putString(ACCESS_NONCE_TAG, access.nonce());
+        }
+        root.put(DATA_TAG, data);
+    }
+
+    private void checkAccess() throws Exception {
         switch (ModSettings.debugCardAccess()) {
             case "allow" -> {
             }
-            case "whitelist" -> throw new Exception("debug card is whitelisted, Shift+Click with it to bind card to yourself");
+            case "whitelist" -> checkWhitelistAccess();
             default -> throw new Exception("debug card is disabled");
         }
+    }
+
+    private void checkWhitelistAccess() throws Exception {
+        if (access == null) {
+            throw new Exception("debug card is whitelisted, Shift+Click with it to bind card to yourself");
+        }
+        final var nonce = ModSettings.debugCardWhitelistNonce(access.player());
+        if (nonce.isEmpty()) {
+            throw new Exception("you are not whitelisted to use debug card");
+        }
+        if (!nonce.get().equals(access.nonce())) {
+            throw new Exception("debug card is invalidated, please re-bind it to yourself");
+        }
+    }
+
+    public record AccessContext(String player, String nonce) {
     }
 }

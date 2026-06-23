@@ -5,9 +5,11 @@ import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.DebugCardEnvironment;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 public class DebugCardItem extends Item implements DriverItem {
     public DebugCardItem(final Properties properties) {
@@ -24,7 +26,7 @@ public class DebugCardItem extends Item implements DriverItem {
         if (host != null && host.world() != null && host.world().isClientSide) {
             return null;
         }
-        return new DebugCardEnvironment(host);
+        return new DebugCardEnvironment(host, DebugCardEnvironment.loadAccess(dataTag(stack)));
     }
 
     @Override
@@ -38,7 +40,16 @@ public class DebugCardItem extends Item implements DriverItem {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        if (stack == null || stack.isEmpty()) {
+            return new CompoundTag();
+        }
+        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(new CompoundTag()));
+            customData = stack.get(DataComponents.CUSTOM_DATA);
+        }
+        return customData.getUnsafe();
     }
 }

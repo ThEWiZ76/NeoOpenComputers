@@ -4,6 +4,8 @@ import li.cil.oc.api.API;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 public final class ModSettings {
     private static final List<Integer> DEFAULT_HDD_SIZES = List.of(1024, 2048, 4096);
@@ -17,6 +19,7 @@ public final class ModSettings {
     private static final List<Double> DEFAULT_HOLOGRAM_MAX_TRANSLATION = List.of(1D, 2D);
     private static final List<Double> DEFAULT_NANOMACHINE_HUD_POS = List.of(-1D, -1D);
     private static final List<String> DEFAULT_FILTERING_RULES = List.of("removeme", "deny private", "deny bogon", "allow default");
+    private static final List<String> DEFAULT_DEBUG_CARD_WHITELIST = List.of();
     private static final List<Object> DEFAULT_NANOMACHINES_POTION_WHITELIST = List.of(
         "speed",
         "haste",
@@ -106,6 +109,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue NANOMACHINES_DISINTEGRATION_RANGE;
     public static final ModConfigSpec.ConfigValue<List<? extends Object>> NANOMACHINES_POTION_WHITELIST;
     public static final ModConfigSpec.ConfigValue<String> DEBUG_CARD_ACCESS;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> DEBUG_CARD_WHITELIST;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -164,6 +168,9 @@ public final class ModSettings {
         DEBUG_CARD_ACCESS = builder
             .comment("Debug card access mode. Allowed values: allow, deny, whitelist. OpenComputers upstream default is allow.")
             .define("debugCardAccess", "allow");
+        DEBUG_CARD_WHITELIST = builder
+            .comment("Debug card whitelist entries as '<player> <nonce>'. Used by the port until the upstream whitelist file command is fully ported.")
+            .defineList("debugCardWhitelist", DEFAULT_DEBUG_CARD_WHITELIST, value -> value instanceof String);
         builder.pop();
 
         builder.push("computer");
@@ -706,13 +713,27 @@ public final class ModSettings {
     }
 
     public static String debugCardAccess() {
-        final String value = stringValue(DEBUG_CARD_ACCESS).trim().toLowerCase();
+        final String value = stringValue(DEBUG_CARD_ACCESS).trim().toLowerCase(Locale.ROOT);
         return switch (value) {
             case "true", "allow" -> "allow";
             case "false", "deny" -> "deny";
             case "whitelist" -> "whitelist";
             default -> "deny";
         };
+    }
+
+    public static Optional<String> debugCardWhitelistNonce(final String player) {
+        if (player == null || player.isBlank()) {
+            return Optional.empty();
+        }
+        final String normalizedPlayer = player.toLowerCase(Locale.ROOT);
+        for (final String entry : stringListValue(DEBUG_CARD_WHITELIST)) {
+            final String[] parts = entry.split(" ", 2);
+            if (parts.length == 2 && normalizedPlayer.equals(parts[0].toLowerCase(Locale.ROOT))) {
+                return Optional.of(parts[1]);
+            }
+        }
+        return Optional.empty();
     }
 
     private static boolean booleanValue(final ModConfigSpec.BooleanValue value) {
