@@ -91,6 +91,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue IGNORE_POWER;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
+    public static final ModConfigSpec.DoubleValue EEPROM_WRITE_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
@@ -303,6 +304,9 @@ public final class ModSettings {
         WIRELESS_COST_PER_RANGE = builder
             .comment("Wireless card energy cost per block of signal strength for tier one and tier two. OpenComputers upstream default is [0.05, 0.05].")
             .defineList("wirelessCostPerRange", DEFAULT_WIRELESS_COST_PER_RANGE, value -> value instanceof Double && (Double) value >= 0D);
+        EEPROM_WRITE_COST = builder
+            .comment("Energy consumed when writing EEPROM code or data. OpenComputers upstream default is 50.")
+            .defineInRange("eepromWrite", 50D, 0D, Double.MAX_VALUE);
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
@@ -473,6 +477,10 @@ public final class ModSettings {
 
     public static int eepromDataSize() {
         return intValue(EEPROM_DATA_SIZE);
+    }
+
+    public static double eepromWriteCost() {
+        return doubleValue(EEPROM_WRITE_COST);
     }
 
     public static List<Integer> cpuComponentCount() {

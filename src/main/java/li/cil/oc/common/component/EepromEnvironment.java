@@ -18,7 +18,6 @@ import java.util.zip.CRC32;
 
 public final class EepromEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final int MAX_LABEL_LENGTH = 24;
-    private static final double WRITE_COST = 50D;
 
     private final CompoundTag data;
     private final Runnable onChanged;
@@ -151,7 +150,7 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
     }
 
     private boolean consumeEnergy() {
-        return !(node() instanceof Connector connector) || connector.tryChangeBuffer(-WRITE_COST);
+        return !(node() instanceof Connector connector) || connector.tryChangeBuffer(-ModSettings.eepromWriteCost());
     }
 
     private static void pause(final Context context, final double seconds) {

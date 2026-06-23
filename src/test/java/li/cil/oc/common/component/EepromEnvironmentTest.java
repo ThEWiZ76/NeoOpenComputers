@@ -103,6 +103,25 @@ final class EepromEnvironmentTest {
     }
 
     @Test
+    void eepromWritesUseConfiguredUpstreamEnergyCost() throws Exception {
+        OpenComputersApi.initialize();
+        withCachedConfig(ModSettings.EEPROM_WRITE_COST, 12.5D, () -> {
+            CompoundTag data = data("Lua BIOS", "code", "data", false);
+            EepromEnvironment environment = new EepromEnvironment(data);
+            Component component = (Component) environment.node();
+            Connector eepromConnector = assertInstanceOf(Connector.class, environment.node());
+            eepromConnector.setLocalBufferSize(20);
+            eepromConnector.changeBuffer(20);
+            RecordingContext context = new RecordingContext(connectorWithEnergy(100));
+
+            component.invoke("set", context, "next");
+
+            assertEquals(7.5D, eepromConnector.localBuffer());
+            assertArrayEquals(bytes("next"), data.getByteArray(ItemRegistry.EEPROM_CODE_TAG));
+        });
+    }
+
+    @Test
     void eepromWritesFailWithoutEnoughEnergy() throws Exception {
         OpenComputersApi.initialize();
         CompoundTag data = data("Lua BIOS", "code", "data", false);
