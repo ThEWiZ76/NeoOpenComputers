@@ -970,6 +970,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardWorldValueManipulatesFluids(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        final BlockPos cauldronRelative = new BlockPos(1, 1, 1);
+        helper.setBlock(cauldronRelative, Blocks.CAULDRON.defaultBlockState());
+        final BlockPos cauldron = helper.absolutePos(cauldronRelative);
+
+        final Object[] inserted = invokeValue(helper, world, "insertFluid", "minecraft:water", 1000, cauldron.getX(), cauldron.getY(), cauldron.getZ(), Direction.UP.get3DDataValue());
+        helper.assertTrue(inserted.length == 1 && Boolean.TRUE.equals(inserted[0]), "World insertFluid did not report success");
+        helper.assertTrue(helper.getBlockState(cauldronRelative).is(Blocks.WATER_CAULDRON), "World insertFluid did not fill cauldron");
+
+        final Object[] removed = invokeValue(helper, world, "removeFluid", 1000, cauldron.getX(), cauldron.getY(), cauldron.getZ(), Direction.UP.get3DDataValue());
+        helper.assertTrue(removed.length == 1 && Boolean.TRUE.equals(removed[0]), "World removeFluid did not report success");
+        helper.assertTrue(helper.getBlockState(cauldronRelative).is(Blocks.CAULDRON), "World removeFluid did not drain cauldron");
+
+        final BlockPos air = helper.absolutePos(cauldronRelative.east());
+        final Object[] missing = invokeValue(helper, world, "removeFluid", 1000, air.getX(), air.getY(), air.getZ(), Direction.UP.get3DDataValue());
+        helper.assertTrue(missing.length == 2 && missing[0] == null && "no tank".equals(missing[1]), "World removeFluid did not report missing tank");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
         final CraftingInput input = CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),

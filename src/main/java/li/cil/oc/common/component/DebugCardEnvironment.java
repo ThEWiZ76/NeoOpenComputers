@@ -62,10 +62,15 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -938,6 +943,34 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return new Object[]{null, "no inventory"};
         }
 
+        @Callback(doc = "function(id:string, amount:number, x:number, y:number, z:number, side:number):boolean -- Insert some fluid into the tank at the specified location.")
+        public Object[] insertFluid(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final Fluid fluid = fluid(args.checkString(0));
+            final int amount = Math.max(0, args.checkInteger(1));
+            final BlockPos pos = new BlockPos(args.checkInteger(2), args.checkInteger(3), args.checkInteger(4));
+            final Direction side = Direction.from3DDataValue(args.checkInteger(5));
+            final IFluidHandler handler = fluidHandler(pos, side);
+            if (handler == null) {
+                return new Object[]{null, "no tank"};
+            }
+            final int filled = handler.fill(new FluidStack(fluid, amount), FluidAction.EXECUTE);
+            return new Object[]{filled > 0};
+        }
+
+        @Callback(doc = "function(amount:number, x:number, y:number, z:number, side:number):boolean -- Remove some fluid from a tank at the specified location.")
+        public Object[] removeFluid(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final int amount = Math.max(0, args.checkInteger(0));
+            final BlockPos pos = new BlockPos(args.checkInteger(1), args.checkInteger(2), args.checkInteger(3));
+            final Direction side = Direction.from3DDataValue(args.checkInteger(4));
+            final IFluidHandler handler = fluidHandler(pos, side);
+            if (handler == null) {
+                return new Object[]{null, "no tank"};
+            }
+            return new Object[]{!handler.drain(amount, FluidAction.EXECUTE).isEmpty()};
+        }
+
         @Callback(doc = "function():boolean -- Get whether it is raining.")
         public Object[] isRaining(final Context context, final Arguments args) throws Exception {
             checkAccess(access);
@@ -987,6 +1020,14 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return level.getCapability(Capabilities.ItemHandler.BLOCK, pos, side);
         }
 
+        private IFluidHandler fluidHandler(final BlockPos pos, final Direction side) {
+            if (level == null || !level.isLoaded(pos)) {
+                return null;
+            }
+            final IFluidHandler sided = level.getCapability(Capabilities.FluidHandler.BLOCK, pos, side);
+            return sided != null ? sided : level.getCapability(Capabilities.FluidHandler.BLOCK, pos, null);
+        }
+
         private Container container(final BlockPos pos) {
             if (level == null || !level.isLoaded(pos)) {
                 return null;
@@ -1007,6 +1048,18 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
                 throw new IllegalArgumentException("invalid item id");
             }
             return BuiltInRegistries.ITEM.get(key);
+        }
+
+        private static Fluid fluid(final String id) {
+            final ResourceLocation key = id.indexOf(':') >= 0 ? ResourceLocation.parse(id) : ResourceLocation.withDefaultNamespace(id);
+            if (!BuiltInRegistries.FLUID.containsKey(key)) {
+                throw new IllegalArgumentException("invalid fluid id");
+            }
+            final Fluid fluid = BuiltInRegistries.FLUID.get(key);
+            if (fluid == Fluids.EMPTY) {
+                throw new IllegalArgumentException("invalid fluid id");
+            }
+            return fluid;
         }
 
         private static boolean isAir(final Arguments args, final int index) {
