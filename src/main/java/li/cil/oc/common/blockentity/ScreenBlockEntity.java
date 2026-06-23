@@ -10,6 +10,7 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.component.ScreenEnvironment;
@@ -28,11 +29,9 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo, Tiered {
-    private static final int[] MAXIMUM_WIDTHS_BY_TIER = {50, 80, 160};
-    private static final int[] MAXIMUM_HEIGHTS_BY_TIER = {16, 25, 50};
     private static final ColorDepth[] MAXIMUM_COLOR_DEPTHS_BY_TIER = {ColorDepth.OneBit, ColorDepth.FourBit, ColorDepth.EightBit};
-    private static final int DEFAULT_WIDTH = MAXIMUM_WIDTHS_BY_TIER[0];
-    private static final int DEFAULT_HEIGHT = MAXIMUM_HEIGHTS_BY_TIER[0];
+    private static final int DEFAULT_WIDTH = 50;
+    private static final int DEFAULT_HEIGHT = 16;
     private static final int DEFAULT_FOREGROUND = 0xFFFFFF;
     private static final int DEFAULT_BACKGROUND = 0x000000;
     private static final String TAG_BUFFER = "buffer";
@@ -596,9 +595,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     }
 
     private void configureTier(final int tier) {
-        this.tier = Math.clamp(tier, 0, MAXIMUM_WIDTHS_BY_TIER.length - 1);
-        maximumWidth = MAXIMUM_WIDTHS_BY_TIER[this.tier];
-        maximumHeight = MAXIMUM_HEIGHTS_BY_TIER[this.tier];
+        this.tier = Math.clamp(tier, 0, ModSettings.screenWidthsByTier().size() - 1);
+        maximumWidth = ModSettings.screenWidthByTier(this.tier);
+        maximumHeight = ModSettings.screenHeightByTier(this.tier);
         maximumColorDepth = MAXIMUM_COLOR_DEPTHS_BY_TIER[this.tier];
         colorDepth = maximumColorDepth;
         width = maximumWidth;

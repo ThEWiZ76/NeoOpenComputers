@@ -13,6 +13,8 @@ public final class ModSettings {
     private static final List<Integer> DEFAULT_CPU_COMPONENT_COUNT = List.of(8, 12, 16, 1024);
     private static final List<Double> DEFAULT_CALL_BUDGETS = List.of(0.5D, 1.0D, 1.5D);
     private static final List<Double> DEFAULT_BATTERY_UPGRADE_BUFFERS = List.of(10_000D, 15_000D, 20_000D);
+    private static final List<Integer> DEFAULT_SCREEN_WIDTHS_BY_TIER = List.of(50, 80, 160);
+    private static final List<Integer> DEFAULT_SCREEN_HEIGHTS_BY_TIER = List.of(16, 25, 50);
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
     private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
     private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
@@ -138,6 +140,8 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue NANOMACHINES_DISINTEGRATION_RANGE;
     public static final ModConfigSpec.ConfigValue<List<? extends Object>> NANOMACHINES_POTION_WHITELIST;
     public static final ModConfigSpec.DoubleValue EXPERIENCE_BUFFER_PER_LEVEL;
+    public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_WIDTHS_BY_TIER;
+    public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_HEIGHTS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<String> DEBUG_CARD_ACCESS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> DEBUG_CARD_WHITELIST;
 
@@ -433,6 +437,15 @@ public final class ModSettings {
         builder.pop();
         builder.pop();
 
+        builder.push("screen");
+        SCREEN_WIDTHS_BY_TIER = builder
+            .comment("Maximum screen widths for tiers one, two, and three. OpenComputers upstream default is [50, 80, 160].")
+            .defineList("widthsByTier", DEFAULT_SCREEN_WIDTHS_BY_TIER, value -> value instanceof Integer && (Integer) value >= 1);
+        SCREEN_HEIGHTS_BY_TIER = builder
+            .comment("Maximum screen heights for tiers one, two, and three. OpenComputers upstream default is [16, 25, 50].")
+            .defineList("heightsByTier", DEFAULT_SCREEN_HEIGHTS_BY_TIER, value -> value instanceof Integer && (Integer) value >= 1);
+        builder.pop();
+
         builder.push("nanomachines");
         NANOMACHINES_TRIGGER_QUOTA = builder
             .comment("Relative nanomachine trigger input count based on behavior count. OpenComputers upstream default is 0.4.")
@@ -552,6 +565,24 @@ public final class ModSettings {
 
     public static double experienceBufferPerLevel() {
         return Math.max(0D, doubleValue(EXPERIENCE_BUFFER_PER_LEVEL));
+    }
+
+    public static List<Integer> screenWidthsByTier() {
+        return positiveTierList(SCREEN_WIDTHS_BY_TIER, DEFAULT_SCREEN_WIDTHS_BY_TIER);
+    }
+
+    public static int screenWidthByTier(final int tier) {
+        final List<Integer> widths = screenWidthsByTier();
+        return widths.get(clampIndex(tier, widths.size()));
+    }
+
+    public static List<Integer> screenHeightsByTier() {
+        return positiveTierList(SCREEN_HEIGHTS_BY_TIER, DEFAULT_SCREEN_HEIGHTS_BY_TIER);
+    }
+
+    public static int screenHeightByTier(final int tier) {
+        final List<Integer> heights = screenHeightsByTier();
+        return heights.get(clampIndex(tier, heights.size()));
     }
 
     public static double nanomachinesBuffer() {
@@ -1017,6 +1048,14 @@ public final class ModSettings {
         } catch (final IllegalStateException ignored) {
             return List.copyOf(value.getDefault());
         }
+    }
+
+    private static List<Integer> positiveTierList(final ModConfigSpec.ConfigValue<List<? extends Integer>> value, final List<Integer> defaults) {
+        final List<Integer> values = listValue(value);
+        if (values.size() != defaults.size()) {
+            return defaults;
+        }
+        return values.stream().map(entry -> Math.max(1, entry)).toList();
     }
 
     private static List<Double> doubleListValue(final ModConfigSpec.ConfigValue<List<? extends Double>> value) {

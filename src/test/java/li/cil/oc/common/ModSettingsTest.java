@@ -35,6 +35,18 @@ final class ModSettingsTest {
         assertEquals(500D, ModSettings.computerBuffer());
         assertEquals(600D, ModSettings.accessPointBuffer());
         assertEquals(5000D, ModSettings.experienceBufferPerLevel());
+        assertEquals(List.of(50, 80, 160), ModSettings.screenWidthsByTier());
+        assertEquals(50, ModSettings.screenWidthByTier(0));
+        assertEquals(80, ModSettings.screenWidthByTier(1));
+        assertEquals(160, ModSettings.screenWidthByTier(2));
+        assertEquals(50, ModSettings.screenWidthByTier(-1));
+        assertEquals(160, ModSettings.screenWidthByTier(99));
+        assertEquals(List.of(16, 25, 50), ModSettings.screenHeightsByTier());
+        assertEquals(16, ModSettings.screenHeightByTier(0));
+        assertEquals(25, ModSettings.screenHeightByTier(1));
+        assertEquals(50, ModSettings.screenHeightByTier(2));
+        assertEquals(16, ModSettings.screenHeightByTier(-1));
+        assertEquals(50, ModSettings.screenHeightByTier(99));
         assertEquals(true, ModSettings.inputUsername());
         assertEquals(25D, ModSettings.disassemblerTickAmount());
         assertEquals(2000D, ModSettings.disassemblerItemCost());
@@ -172,6 +184,8 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "buffer", "computer"), ModSettings.COMPUTER_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "accessPoint"), ModSettings.ACCESS_POINT_BUFFER.getPath());
         assertEquals(List.of("robot", "xp", "bufferPerLevel"), ModSettings.EXPERIENCE_BUFFER_PER_LEVEL.getPath());
+        assertEquals(List.of("screen", "widthsByTier"), ModSettings.SCREEN_WIDTHS_BY_TIER.getPath());
+        assertEquals(List.of("screen", "heightsByTier"), ModSettings.SCREEN_HEIGHTS_BY_TIER.getPath());
         assertEquals(List.of("power", "disassemblerTickAmount"), ModSettings.DISASSEMBLER_TICK_AMOUNT.getPath());
         assertEquals(List.of("power", "cost", "disassemblerPerItem"), ModSettings.DISASSEMBLER_ITEM_COST.getPath());
         assertEquals(List.of("misc", "inputUsername"), ModSettings.INPUT_USERNAME.getPath());

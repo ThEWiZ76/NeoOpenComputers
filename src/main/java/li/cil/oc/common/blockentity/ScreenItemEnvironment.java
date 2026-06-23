@@ -10,6 +10,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.ScreenEnvironment;
 import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.nbt.CompoundTag;
@@ -19,8 +20,6 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public final class ScreenItemEnvironment extends AbstractManagedEnvironment implements TextBuffer, DeviceInfo, Tiered {
-    private static final int[] MAXIMUM_WIDTHS_BY_TIER = {50, 80, 160};
-    private static final int[] MAXIMUM_HEIGHTS_BY_TIER = {16, 25, 50};
     private static final ColorDepth[] MAXIMUM_COLOR_DEPTHS_BY_TIER = {ColorDepth.OneBit, ColorDepth.FourBit, ColorDepth.EightBit};
     private static final String TAG_BUFFER = "buffer";
 
@@ -51,9 +50,9 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
 
     public ScreenItemEnvironment(final EnvironmentHost host, final int tier) {
         this.host = host;
-        this.tier = Math.clamp(tier, 0, MAXIMUM_WIDTHS_BY_TIER.length - 1);
-        maximumWidth = MAXIMUM_WIDTHS_BY_TIER[this.tier];
-        maximumHeight = MAXIMUM_HEIGHTS_BY_TIER[this.tier];
+        this.tier = Math.clamp(tier, 0, ModSettings.screenWidthsByTier().size() - 1);
+        maximumWidth = ModSettings.screenWidthByTier(this.tier);
+        maximumHeight = ModSettings.screenHeightByTier(this.tier);
         maximumColorDepth = MAXIMUM_COLOR_DEPTHS_BY_TIER[this.tier];
         colorDepth = maximumColorDepth;
         width = maximumWidth;

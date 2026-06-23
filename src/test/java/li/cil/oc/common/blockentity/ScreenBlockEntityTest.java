@@ -5,17 +5,20 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.KeyboardEnvironment;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.HolderLookup;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -114,6 +117,24 @@ final class ScreenBlockEntityTest {
         assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("saveAdditional", CompoundTag.class, HolderLookup.Provider.class).getDeclaringClass());
     }
 
+    @Test
+    void usesConfiguredScreenResolutionTiers() throws Exception {
+        withCachedConfig(ModSettings.SCREEN_WIDTHS_BY_TIER, List.of(7, 9, 11), () ->
+            withCachedConfig(ModSettings.SCREEN_HEIGHTS_BY_TIER, List.of(3, 5, 13), () -> {
+                ScreenBlockEntity screen = allocateScreen();
+                initializeBuffer(screen);
+                Method configureTier = ScreenBlockEntity.class.getDeclaredMethod("configureTier", int.class);
+                configureTier.setAccessible(true);
+
+                configureTier.invoke(screen, 2);
+
+                assertEquals(11, screen.getMaximumWidth());
+                assertEquals(13, screen.getMaximumHeight());
+                assertEquals(11, screen.getWidth());
+                assertEquals(13, screen.getHeight());
+            }));
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = ScreenBlockEntity.class.getMethod(methodName, Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
@@ -129,6 +150,23 @@ final class ScreenBlockEntityTest {
         Field field = ScreenBlockEntity.class.getDeclaredField("buffer");
         field.setAccessible(true);
         field.set(screen, new TextBufferState(1, 1));
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static final class TestKeyboard implements li.cil.oc.api.internal.Keyboard {
