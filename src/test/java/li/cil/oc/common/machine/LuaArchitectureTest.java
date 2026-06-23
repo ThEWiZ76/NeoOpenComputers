@@ -3197,6 +3197,40 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void realFilesystemHandlesSurviveUserdataSaveLoadLikeUpstream() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        ((Connector) machine.node()).setLocalBufferSize(1);
+        ((Connector) machine.node()).changeBuffer(1);
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
+        ManagedEnvironment fileSystemEnvironment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(fileSystemEnvironment.node());
+        LuaArchitecture architecture = new LuaArchitecture("""
+            fs = component.getPrimary('filesystem')
+            handle = fs.open('data.txt', 'w')
+            className, data = userdata.save(handle)
+            loaded = userdata.load(className, data)
+            wrote = fs.write(loaded, 'persisted')
+            fs.close(loaded)
+            handle = fs.open('data.txt', 'r')
+            text = fs.read(handle, 9)
+            fs.close(handle)
+            """);
+        architecture.bind(machine);
+
+        assertTrue(architecture.initialize());
+        ExecutionResult result = architecture.runThreaded(false);
+        if (result instanceof ExecutionResult.Error error) {
+            fail(error.message);
+        }
+        assertInstanceOf(ExecutionResult.Sleep.class, result);
+
+        assertEquals(true, architecture.globalBoolean("wrote"));
+        assertEquals("persisted", architecture.globalString("text"));
+    }
+
+    @Test
     void bundledLuaBiosBootsInitFromFilesystemComponent() throws IOException {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);

@@ -385,7 +385,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         if (value instanceof Map<?, ?> table && table.get("handle") instanceof Number number) {
             return number.intValue();
         }
-        if (value instanceof FileHandleValue handleValue && handleValue.owner == this) {
+        if (value instanceof FileHandleValue handleValue && handleValue.belongsTo(this)) {
             return handleValue.handle;
         }
         throw new IOException("bad file descriptor");
@@ -492,18 +492,44 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     }
 
     private static final class FileHandleValue extends AbstractValue {
-        private final FileSystemEnvironment owner;
-        private final int handle;
+        private static final String OWNER_TAG = "owner";
+        private static final String HANDLE_TAG = "handle";
+
+        private FileSystemEnvironment owner;
+        private String ownerAddress = "";
+        private int handle;
+
+        private FileHandleValue() {
+        }
 
         private FileHandleValue(final FileSystemEnvironment owner, final int handle) {
             this.owner = owner;
+            this.ownerAddress = owner.node() == null || owner.node().address() == null ? "" : owner.node().address();
             this.handle = handle;
         }
 
         @Override
+        public void load(final CompoundTag nbt) {
+            super.load(nbt);
+            ownerAddress = nbt.getString(OWNER_TAG);
+            handle = nbt.getInt(HANDLE_TAG);
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+            super.save(nbt);
+            nbt.putString(OWNER_TAG, ownerAddress);
+            nbt.putInt(HANDLE_TAG, handle);
+        }
+
+        @Override
         public void dispose(final Context context) {
+            final FileSystemEnvironment target = owner == null ? resolveOwner(context) : owner;
+            if (target == null) {
+                return;
+            }
             try {
-                owner.close(context, handle);
+                target.close(context, handle);
             } catch (IOException ignored) {
                 // Already closed.
             }
@@ -512,6 +538,23 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         @Override
         public String toString() {
             return Integer.toString(handle);
+        }
+
+        private boolean belongsTo(final FileSystemEnvironment environment) {
+            if (owner == environment) {
+                return true;
+            }
+            return environment.node() != null
+                && environment.node().address() != null
+                && environment.node().address().equals(ownerAddress);
+        }
+
+        private FileSystemEnvironment resolveOwner(final Context context) {
+            if (context == null || context.node() == null || context.node().network() == null || ownerAddress.isEmpty()) {
+                return null;
+            }
+            final Node node = context.node().network().node(ownerAddress);
+            return node != null && node.host() instanceof FileSystemEnvironment fileSystem ? fileSystem : null;
         }
     }
 }
