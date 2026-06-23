@@ -1768,6 +1768,31 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void schedulesNonDirectComponentInvokeLikeUpstream() {
+        Map<String, Callback> methods = Map.of("label", callback("labelCallback"));
+        List<String> invokedMethods = new ArrayList<>();
+        List<Object[]> invokedArguments = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            result = component.invoke('fs-address', 'label', 'arg')
+            continued = true
+            """);
+        architecture.bind(machineWithMethodsAndInvokeCapture(Map.of("fs-address", "filesystem"), methods, invokedMethods, invokedArguments));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(List.of(), invokedMethods);
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        resumeSynchronizedCallback(architecture);
+
+        assertEquals(List.of("label"), invokedMethods);
+        assertArrayEquals(utf8("arg"), (byte[]) invokedArguments.getFirst()[0]);
+        assertEquals(true, architecture.globalBoolean("result"));
+        assertEquals(true, architecture.globalBoolean("continued"));
+    }
+
+    @Test
     void componentNullCallbackResultReturnsNoLuaValuesLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("count = select('#', component.invoke('fs-address', 'clear'))");
         architecture.bind(machineWithComponentsAndInvokeResult(Map.of("fs-address", "filesystem"), null));
@@ -1859,6 +1884,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(List.of("label"), invokedMethods);
         assertArrayEquals(utf8("arg"), (byte[]) invokedArguments.getFirst()[0]);
@@ -1879,6 +1905,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(List.of("label"), invokedMethods);
         assertEquals(2, invokedArguments.getFirst().length);
@@ -1911,6 +1938,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("ok", architecture.globalString("result"));
         Map<?, ?> argument = (Map<?, ?>) capturedArgument[0];
@@ -1925,6 +1953,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("nil", architecture.globalString("result"));
         assertEquals("bad argument", architecture.globalString("message"));
@@ -2736,6 +2765,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("nil", architecture.globalString("result"));
         assertEquals("i/o error", architecture.globalString("message"));
@@ -2838,6 +2868,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("table", architecture.globalString("labelType"));
         assertEquals("nil", architecture.globalString("missingMemberType"));
@@ -2863,6 +2894,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals(List.of("label"), invokedMethods);
         assertEquals(1, invokedArguments.getFirst().length);
@@ -2961,6 +2993,8 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("current", architecture.globalString("value"));
         assertEquals("table", architecture.globalString("labelType"));
@@ -3044,6 +3078,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("tmp", architecture.globalString("result"));
         assertEquals(false, architecture.globalBoolean("missingValid"));
@@ -3072,6 +3107,7 @@ final class LuaArchitectureTest {
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
 
         assertEquals("nil", architecture.globalString("selected"));
         assertEquals(false, architecture.globalBoolean("wrongTypeValid"));
@@ -3466,6 +3502,7 @@ final class LuaArchitectureTest {
             fail(error.message);
         }
         assertInstanceOf(ExecutionResult.Sleep.class, result);
+        resumeSynchronizedCallbacks(architecture, 12);
 
         assertEquals(true, architecture.globalBoolean("wrote"));
         assertEquals("hello", architecture.globalString("data"));
@@ -3502,6 +3539,7 @@ final class LuaArchitectureTest {
             fail(error.message);
         }
         assertInstanceOf(ExecutionResult.Sleep.class, result);
+        resumeSynchronizedCallbacks(architecture, 8);
 
         assertEquals(true, architecture.globalBoolean("wrote"));
         assertEquals("persisted", architecture.globalString("text"));
@@ -3528,6 +3566,7 @@ final class LuaArchitectureTest {
         }
 
         assertInstanceOf(ExecutionResult.Sleep.class, result);
+        resumeSynchronizedCallbacks(architecture, 8);
         assertEquals(true, architecture.globalBoolean("bootedFromBios"));
     }
 
@@ -3554,6 +3593,7 @@ final class LuaArchitectureTest {
         if (result instanceof ExecutionResult.Error error) {
             fail(error.message);
         }
+        resumeSynchronizedCallbacks(architecture, 8);
 
         assertEquals(true, architecture.globalBoolean("bootedFromBios"));
         assertEquals(fileSystemEnvironment.node().address(), new String(eepromData.getByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG), StandardCharsets.UTF_8));
@@ -3584,6 +3624,7 @@ final class LuaArchitectureTest {
         if (result instanceof ExecutionResult.Error error) {
             fail(error.message);
         }
+        resumeSynchronizedCallbacks(architecture, 2);
 
         assertEquals("string", architecture.globalString("bootAddressType"));
         assertEquals("filesystem", architecture.globalString("bootAddressKind"));
@@ -3609,6 +3650,7 @@ final class LuaArchitectureTest {
             if (result instanceof ExecutionResult.Error error) {
                 fail(error.message);
             }
+            architecture.runSynchronized();
         }
     }
 
@@ -3636,6 +3678,7 @@ final class LuaArchitectureTest {
             if (result instanceof ExecutionResult.Error error) {
                 fail(error.message);
             }
+            architecture.runSynchronized();
         }
 
         assertArrayEquals(new Object[]{screen.node().address()}, gpu.getScreen(null, null));
@@ -3683,6 +3726,12 @@ final class LuaArchitectureTest {
             fail(error.message);
         }
         assertInstanceOf(ExecutionResult.Sleep.class, result);
+    }
+
+    private static void resumeSynchronizedCallbacks(final LuaArchitecture architecture, final int count) {
+        for (int index = 0; index < count; index++) {
+            resumeSynchronizedCallback(architecture);
+        }
     }
 
     private static Machine machineWithUptime(final double uptime) {

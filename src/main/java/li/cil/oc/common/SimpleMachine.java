@@ -26,6 +26,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.machine.MachineBoundArchitecture;
 import li.cil.oc.common.machine.ProgramLocations;
+import li.cil.oc.common.machine.SynchronizedCallAware;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -48,6 +49,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private static final double NANOS_PER_SECOND = 1_000_000_000D;
     private static final long NANOS_PER_TICK = 50_000_000L;
     private static final int MAX_SIGNAL_QUEUE_SIZE = 256;
+    private static final int MAX_SYNCHRONIZED_CALLS_PER_UPDATE = 512;
     private static final double DEFAULT_BOOT_ENERGY_BUFFER = 1_000D;
     private static final String RUNNING_TAG = "running";
     private static final String LAST_ERROR_TAG = "lastError";
@@ -84,6 +86,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private boolean inSynchronizedCall;
     private long startedAtNanos = -1L;
     private long sleepUntilNanos = -1L;
+    private long sleepUntilWorldTime = -1L;
     private long pauseUntilNanos = -1L;
     private long pauseUntilWorldTime = -1L;
     private long cpuTimeNanos;
@@ -143,6 +146,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         paused = false;
         startedAtNanos = -1L;
         sleepUntilNanos = -1L;
+        sleepUntilWorldTime = -1L;
         pauseUntilNanos = -1L;
         pauseUntilWorldTime = -1L;
 
@@ -427,6 +431,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         signals.clear();
         startedAtNanos = -1L;
         sleepUntilNanos = -1L;
+        sleepUntilWorldTime = -1L;
         pauseUntilNanos = -1L;
         pauseUntilWorldTime = -1L;
         if (wasRunning) {
@@ -583,17 +588,28 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             pauseUntilNanos = -1L;
             pauseUntilWorldTime = -1L;
         }
-        if (sleepUntilNanos > updateStartedAt) {
+        final SynchronizedCallAware synchronizedCallAware = architecture instanceof SynchronizedCallAware aware ? aware : null;
+        final boolean hasPendingSynchronizedCall = hasPendingSynchronizedCall(synchronizedCallAware);
+        if (sleepUntilWorldTime >= 0 && host != null && host.world() != null && host.world().getGameTime() < sleepUntilWorldTime && !hasPendingSynchronizedCall) {
             return;
         }
+        if (sleepUntilWorldTime < 0 && sleepUntilNanos > updateStartedAt && !hasPendingSynchronizedCall) {
+            return;
+        }
+        sleepUntilNanos = -1L;
+        sleepUntilWorldTime = -1L;
         try {
-            inSynchronizedCall = true;
-            try {
-                architecture.runSynchronized();
-            } finally {
-                inSynchronizedCall = false;
-            }
-            final ExecutionResult result = architecture.runThreaded(false);
+            ExecutionResult result;
+            int synchronizedCalls = 0;
+            do {
+                runArchitectureSynchronized();
+                final boolean isSynchronizedReturn = synchronizedCallAware != null && synchronizedCallAware.hasSynchronizedReturn();
+                result = architecture.runThreaded(isSynchronizedReturn);
+                if (!(result instanceof ExecutionResult.Sleep) || !hasPendingSynchronizedCall(synchronizedCallAware)) {
+                    break;
+                }
+                synchronizedCalls++;
+            } while (synchronizedCalls < MAX_SYNCHRONIZED_CALLS_PER_UPDATE);
             if (result instanceof ExecutionResult.Shutdown shutdown) {
                 stop();
                 if (shutdown.reboot) {
@@ -605,14 +621,37 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             } else if (result instanceof ExecutionResult.Error error) {
                 crash(error.message);
             } else if (result instanceof ExecutionResult.Sleep sleep) {
-                sleepUntilNanos = sleep.ticks <= 0
-                    ? nanoTime.getAsLong() + TimeUnit.MILLISECONDS.toNanos(ModSettings.executionDelay())
-                    : nanoTime.getAsLong() + sleep.ticks * NANOS_PER_TICK;
+                setSleepDelay(sleep);
             }
         } catch (RuntimeException e) {
             crash(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
         } finally {
             cpuTimeNanos += Math.max(0, nanoTime.getAsLong() - updateStartedAt);
+        }
+    }
+
+    private boolean hasPendingSynchronizedCall(final SynchronizedCallAware synchronizedCallAware) {
+        return synchronizedCallAware != null && synchronizedCallAware.hasPendingSynchronizedCall();
+    }
+
+    private void runArchitectureSynchronized() {
+        inSynchronizedCall = true;
+        try {
+            architecture.runSynchronized();
+        } finally {
+            inSynchronizedCall = false;
+        }
+    }
+
+    private void setSleepDelay(final ExecutionResult.Sleep sleep) {
+        if (sleep.ticks > 0 && host != null && host.world() != null) {
+            sleepUntilWorldTime = host.world().getGameTime() + sleep.ticks;
+            sleepUntilNanos = -1L;
+        } else {
+            sleepUntilNanos = sleep.ticks <= 0
+                ? nanoTime.getAsLong() + TimeUnit.MILLISECONDS.toNanos(ModSettings.executionDelay())
+                : nanoTime.getAsLong() + sleep.ticks * NANOS_PER_TICK;
+            sleepUntilWorldTime = -1L;
         }
     }
 
@@ -633,6 +672,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         pauseUntilNanos = -1L;
         pauseUntilWorldTime = -1L;
         sleepUntilNanos = -1L;
+        sleepUntilWorldTime = -1L;
         if (!wasRunning) {
             startedAtNanos = nanoTime.getAsLong();
             sendLifecycleMessage(COMPUTER_STARTED_MESSAGE);
@@ -668,6 +708,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         signals.clear();
         startedAtNanos = -1L;
         sleepUntilNanos = -1L;
+        sleepUntilWorldTime = -1L;
         pauseUntilNanos = -1L;
         pauseUntilWorldTime = -1L;
         if (wasRunning) {
@@ -694,6 +735,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         }
         signals.addLast(new SimpleSignal(name, normalizeSignalArgs(args)));
         sleepUntilNanos = -1L;
+        sleepUntilWorldTime = -1L;
         if (running && architecture != null) {
             architecture.onSignal();
         }

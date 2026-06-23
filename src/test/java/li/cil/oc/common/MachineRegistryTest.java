@@ -24,6 +24,7 @@ import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.machine.ProgramLocations;
 import li.cil.oc.common.machine.MachineBoundArchitecture;
+import li.cil.oc.common.machine.SynchronizedCallAware;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -763,6 +764,23 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void updateDrainsPendingSynchronizedArchitectureCalls() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new ChainedSynchronizedProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        machine.onHostChanged();
+        assertTrue(machine.start());
+
+        machine.update();
+
+        assertEquals(3, ChainedSynchronizedArchitecture.synchronizedRuns);
+        assertEquals(4, ChainedSynchronizedArchitecture.threadedRuns);
+        assertTrue(ChainedSynchronizedArchitecture.completed);
+    }
+
+    @Test
     void threadedArchitectureCallsConsumeDirectBudget() throws Exception {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();
@@ -1150,6 +1168,72 @@ final class MachineRegistryTest {
         @Override
         public double getCallBudget(final ItemStack stack) {
             return 0.5D;
+        }
+    }
+
+    private static final class ChainedSynchronizedProcessorDriver extends TestDriver implements Processor {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return ChainedSynchronizedArchitecture.class;
+        }
+    }
+
+    public static final class ChainedSynchronizedArchitecture extends TrackingArchitecture implements SynchronizedCallAware {
+        private static int synchronizedRuns;
+        private static int threadedRuns;
+        private static boolean completed;
+        private int pendingCalls;
+        private boolean synchronizedReturn;
+
+        @Override
+        public boolean initialize() {
+            synchronizedRuns = 0;
+            threadedRuns = 0;
+            completed = false;
+            pendingCalls = 0;
+            synchronizedReturn = false;
+            return super.initialize();
+        }
+
+        @Override
+        public void runSynchronized() {
+            if (pendingCalls > 0) {
+                synchronizedRuns++;
+                pendingCalls--;
+                synchronizedReturn = true;
+            }
+        }
+
+        @Override
+        public ExecutionResult runThreaded(final boolean isSynchronizedReturn) {
+            threadedRuns++;
+            synchronizedReturn = false;
+            if (threadedRuns <= 3) {
+                pendingCalls++;
+            } else {
+                completed = true;
+            }
+            return new ExecutionResult.Sleep(1);
+        }
+
+        @Override
+        public boolean hasPendingSynchronizedCall() {
+            return pendingCalls > 0;
+        }
+
+        @Override
+        public boolean hasSynchronizedReturn() {
+            return synchronizedReturn;
         }
     }
 

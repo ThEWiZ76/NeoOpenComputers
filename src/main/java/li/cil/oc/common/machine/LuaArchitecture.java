@@ -62,7 +62,7 @@ import java.util.Map;
 import java.util.function.LongSupplier;
 
 @Architecture.Name("Lua")
-public final class LuaArchitecture implements Architecture, MachineBoundArchitecture {
+public final class LuaArchitecture implements Architecture, MachineBoundArchitecture, SynchronizedCallAware {
     private static final String EEPROM_SLOT = "eeprom";
     private static final String INITIALIZED_TAG = "initialized";
     private static final String BOOTED_TAG = "booted";
@@ -200,6 +200,16 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         } finally {
             pendingSynchronizedCall = null;
         }
+    }
+
+    @Override
+    public boolean hasPendingSynchronizedCall() {
+        return pendingSynchronizedCall != null;
+    }
+
+    @Override
+    public boolean hasSynchronizedReturn() {
+        return pendingSynchronizedResults != null;
     }
 
     @Override
@@ -1979,12 +1989,24 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private Varargs invokeComponent(final String address, final String method, final Object[] javaArgs) {
+        final Callback callback = componentCallback(address, method);
+        if (callback != null && !callback.direct()) {
+            return invokeComponentSynchronized(address, method, javaArgs);
+        }
+        return invokeComponentDirect(address, method, javaArgs);
+    }
+
+    private Varargs invokeComponentDirect(final String address, final String method, final Object[] javaArgs) {
         try {
             return invokeComponentOnce(address, method, javaArgs);
         } catch (LimitReachedException e) {
             pendingBudgetCall = () -> invokeComponentOnce(address, method, javaArgs);
             return globals.yield(LuaValue.valueOf(BUDGET_RETRY_MARKER));
         }
+    }
+
+    private Varargs invokeComponentSynchronized(final String address, final String method, final Object[] javaArgs) {
+        return invokeSynchronized(() -> invokeComponentOnce(address, method, javaArgs));
     }
 
     private Varargs invokeComponentOnce(final String address, final String method, final Object[] javaArgs) throws LimitReachedException {

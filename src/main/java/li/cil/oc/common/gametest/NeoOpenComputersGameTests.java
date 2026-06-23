@@ -5175,11 +5175,15 @@ public final class NeoOpenComputersGameTests {
         computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
 
         helper.assertTrue(computer.toggleMachine(), "Computer case did not start with OpenOS terminal setup");
-        helper.runAtTickTime(120, () -> {
-            typeKey(screen, 'z', 0x2C);
-            typeKey(screen, 'z', 0x2C);
-        });
+        final AtomicBoolean typed = new AtomicBoolean(false);
         helper.succeedWhen(() -> {
+            final String text = screenText(screen);
+            if (!typed.get() && text.contains("/home # ")) {
+                typed.set(true);
+                typeKey(screen, 'z', 0x2C);
+                typeKey(screen, 'z', 0x2C);
+                helper.assertTrue(false, "OpenOS terminal prompt is ready; waiting for typed text:\n" + text);
+            }
             helper.assertTrue(screenText(screen).contains("zz"), "OpenOS terminal did not echo keyboard input:\n" + screenText(screen));
         });
     }
@@ -5205,16 +5209,18 @@ public final class NeoOpenComputersGameTests {
         computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
         computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
 
-        helper.assertTrue(computer.toggleMachine(), "Computer case did not start with OpenOS terminal command setup");
         final String command = "echo ocok";
-        for (int index = 0; index < command.length(); index++) {
-            final char character = command.charAt(index);
-            helper.runAtTickTime(120L + index * 80L, () -> screen.keyDown(character, keyCode(character), null));
-        }
+        helper.assertTrue(computer.toggleMachine(), "Computer case did not start with OpenOS terminal command setup");
+        final AtomicBoolean typed = new AtomicBoolean(false);
         final AtomicBoolean submitted = new AtomicBoolean(false);
         final AtomicInteger checksAfterSubmit = new AtomicInteger(0);
         helper.succeedWhen(() -> {
             final String text = screenText(screen);
+            if (!typed.get() && text.contains("/home # ")) {
+                typed.set(true);
+                typeText(screen, command);
+                helper.assertTrue(false, "OpenOS terminal prompt is ready; waiting for typed command:\n" + text);
+            }
             if (!submitted.get() && text.contains("/home # " + command)) {
                 submitted.set(true);
                 typeKey(screen, '\r', 0x1C);
