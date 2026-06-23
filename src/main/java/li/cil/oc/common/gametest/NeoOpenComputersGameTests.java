@@ -941,6 +941,35 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardWorldValueManipulatesInventories(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        final BlockPos chestRelative = new BlockPos(1, 1, 1);
+        helper.setBlock(chestRelative, Blocks.CHEST.defaultBlockState());
+        final ChestBlockEntity chestEntity = helper.getBlockEntity(chestRelative);
+        final BlockPos chest = helper.absolutePos(chestRelative);
+
+        final Object[] inserted = invokeValue(helper, world, "insertItem", "minecraft:diamond", 5, 0, "", chest.getX(), chest.getY(), chest.getZ(), Direction.UP.get3DDataValue());
+        helper.assertTrue(inserted.length == 1 && Boolean.TRUE.equals(inserted[0]), "World insertItem did not report success");
+        helper.assertTrue(chestEntity.getItem(0).is(Items.DIAMOND) && chestEntity.getItem(0).getCount() == 5, "World insertItem did not insert diamonds");
+
+        final Object[] removed = invokeValue(helper, world, "removeItem", chest.getX(), chest.getY(), chest.getZ(), 1, 2);
+        helper.assertTrue(removed.length == 1 && Integer.valueOf(2).equals(removed[0]), "World removeItem did not report removed count");
+        helper.assertTrue(chestEntity.getItem(0).is(Items.DIAMOND) && chestEntity.getItem(0).getCount() == 3, "World removeItem did not remove from chest");
+
+        final BlockPos air = helper.absolutePos(chestRelative.east());
+        final Object[] missing = invokeValue(helper, world, "removeItem", air.getX(), air.getY(), air.getZ(), 1, 1);
+        helper.assertTrue(missing.length == 2 && missing[0] == null && "no inventory".equals(missing[1]), "World removeItem did not report missing inventory");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
         final CraftingInput input = CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),

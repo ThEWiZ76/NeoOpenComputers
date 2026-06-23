@@ -65,6 +65,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.nio.charset.StandardCharsets;
@@ -894,6 +896,48 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return null;
         }
 
+        @Callback(doc = "function(id:string, count:number, damage:number, nbt:string, x:number, y:number, z:number, side:number):boolean -- Insert an item stack into the inventory at the specified location.")
+        public Object[] insertItem(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final Item item = item(args.checkString(0));
+            final int count = args.checkInteger(1);
+            args.checkInteger(2); // Legacy metadata, kept for upstream signature compatibility.
+            final String tagJson = args.optString(3, "");
+            final ItemStack stack = new ItemStack(item, count);
+            if (!tagJson.isEmpty()) {
+                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(TagParser.parseTag(tagJson)));
+            }
+            final BlockPos pos = new BlockPos(args.checkInteger(4), args.checkInteger(5), args.checkInteger(6));
+            final Direction side = Direction.from3DDataValue(args.checkInteger(7));
+            final IItemHandler handler = itemHandler(pos, side);
+            if (handler != null) {
+                return new Object[]{insertIntoHandler(handler, stack).isEmpty()};
+            }
+            final Container container = container(pos);
+            if (container != null) {
+                return new Object[]{insertIntoContainer(container, stack).isEmpty()};
+            }
+            return new Object[]{null, "no inventory"};
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number, slot:number[, count:number]):number -- Reduce the size of an item stack in the inventory at the specified location.")
+        public Object[] removeItem(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final BlockPos pos = blockPos(args);
+            final int count = Math.max(0, args.optInteger(4, 64));
+            final IItemHandler handler = itemHandler(pos, null);
+            if (handler != null) {
+                final int slot = checkSlot(handler.getSlots(), args.checkInteger(3));
+                return new Object[]{handler.extractItem(slot, count, false).getCount()};
+            }
+            final Container container = container(pos);
+            if (container != null) {
+                final int slot = checkSlot(container.getContainerSize(), args.checkInteger(3));
+                return new Object[]{container.removeItem(slot, count).getCount()};
+            }
+            return new Object[]{null, "no inventory"};
+        }
+
         @Callback(doc = "function():boolean -- Get whether it is raining.")
         public Object[] isRaining(final Context context, final Arguments args) throws Exception {
             checkAccess(access);
@@ -936,6 +980,20 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return level == null ? Blocks.AIR.defaultBlockState() : level.getBlockState(pos);
         }
 
+        private IItemHandler itemHandler(final BlockPos pos, final Direction side) {
+            if (level == null || !level.isLoaded(pos)) {
+                return null;
+            }
+            return level.getCapability(Capabilities.ItemHandler.BLOCK, pos, side);
+        }
+
+        private Container container(final BlockPos pos) {
+            if (level == null || !level.isLoaded(pos)) {
+                return null;
+            }
+            return level.getBlockEntity(pos) instanceof Container container ? container : null;
+        }
+
         private static Block block(final Arguments args, final int index) {
             if (args.isInteger(index)) {
                 return BuiltInRegistries.BLOCK.byId(args.checkInteger(index));
@@ -943,10 +1001,64 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return BuiltInRegistries.BLOCK.get(ResourceLocation.parse(args.checkString(index)));
         }
 
+        private static Item item(final String id) {
+            final ResourceLocation key = id.indexOf(':') >= 0 ? ResourceLocation.parse(id) : ResourceLocation.withDefaultNamespace(id);
+            if (!BuiltInRegistries.ITEM.containsKey(key)) {
+                throw new IllegalArgumentException("invalid item id");
+            }
+            return BuiltInRegistries.ITEM.get(key);
+        }
+
         private static boolean isAir(final Arguments args, final int index) {
             return args.isInteger(index)
                 ? args.checkInteger(index) == BuiltInRegistries.BLOCK.getId(Blocks.AIR)
                 : "minecraft:air".equals(args.checkString(index)) || "air".equals(args.checkString(index));
+        }
+
+        private static ItemStack insertIntoHandler(final IItemHandler handler, final ItemStack stack) {
+            ItemStack remaining = stack.copy();
+            for (int slot = 0; slot < handler.getSlots() && !remaining.isEmpty(); slot++) {
+                remaining = handler.insertItem(slot, remaining, false);
+            }
+            return remaining;
+        }
+
+        private static ItemStack insertIntoContainer(final Container container, final ItemStack stack) {
+            final ItemStack remaining = stack.copy();
+            for (int slot = 0; slot < container.getContainerSize() && !remaining.isEmpty(); slot++) {
+                final ItemStack existing = container.getItem(slot);
+                if (existing.isEmpty() || !ItemStack.isSameItemSameComponents(existing, remaining)) {
+                    continue;
+                }
+                final int limit = Math.min(existing.getMaxStackSize(), container.getMaxStackSize());
+                final int inserted = Math.min(remaining.getCount(), limit - existing.getCount());
+                if (inserted > 0 && container.canPlaceItem(slot, remaining)) {
+                    existing.grow(inserted);
+                    remaining.shrink(inserted);
+                }
+            }
+            for (int slot = 0; slot < container.getContainerSize() && !remaining.isEmpty(); slot++) {
+                if (!container.getItem(slot).isEmpty()) {
+                    continue;
+                }
+                final int inserted = Math.min(remaining.getCount(), Math.min(remaining.getMaxStackSize(), container.getMaxStackSize()));
+                final ItemStack insertedStack = remaining.copy();
+                insertedStack.setCount(inserted);
+                if (container.canPlaceItem(slot, insertedStack)) {
+                    container.setItem(slot, insertedStack);
+                    remaining.shrink(inserted);
+                }
+            }
+            container.setChanged();
+            return remaining;
+        }
+
+        private static int checkSlot(final int slots, final int slot) {
+            final int index = slot - 1;
+            if (index < 0 || index >= slots) {
+                throw new IllegalArgumentException("slot index out of bounds");
+            }
+            return index;
         }
 
         private static Map<String, Object> compoundTagValue(final CompoundTag tag) {
