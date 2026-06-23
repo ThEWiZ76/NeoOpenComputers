@@ -31,12 +31,14 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.ScoreAccess;
 import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -132,6 +134,21 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     public Object[] getWorld(final Context context, final Arguments args) throws Exception {
         checkAccess();
         return new Object[]{new WorldValue(host == null ? null : host.world(), access)};
+    }
+
+    @Callback(doc = "function(name:string):userdata -- Get the entity of a player.")
+    public Object[] getPlayer(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        return new Object[]{new PlayerValue(host == null ? null : host.world(), access, args.checkString(0))};
+    }
+
+    @Callback(doc = "function():table -- Get a list of currently logged-in players.")
+    public Object[] getPlayers(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        if (!(host != null && host.world() instanceof ServerLevel serverLevel) || serverLevel.getServer() == null) {
+            return new Object[]{new String[0]};
+        }
+        return new Object[]{serverLevel.getServer().getPlayerList().getPlayerNamesArray()};
     }
 
     @Callback(doc = "function():userdata -- Get the scoreboard object for the container's world.")
@@ -231,6 +248,121 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static String normalizedCommand(final Object command) {
         final String value = String.valueOf(command);
         return value.startsWith("/") ? value.substring(1) : value;
+    }
+
+    public static final class PlayerValue extends AbstractValue {
+        private final Level level;
+        private final AccessContext access;
+        private final String name;
+
+        private PlayerValue(final Level level, final AccessContext access, final String name) {
+            this.level = level;
+            this.access = access;
+            this.name = name;
+        }
+
+        @Callback(doc = "function():userdata -- Get the player's world object.")
+        public Object[] getWorld(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> new Object[]{new WorldValue(player.level(), access)});
+        }
+
+        @Callback(doc = "function():string -- Get the player's game type.")
+        public Object[] getGameType(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> new Object[]{player.gameMode.getGameModeForPlayer().getName()});
+        }
+
+        @Callback(doc = "function(gametype:string) -- Set the player's game type.")
+        public Object[] setGameType(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> {
+                player.setGameMode(GameType.byName(args.checkString(0), GameType.SURVIVAL));
+                return null;
+            });
+        }
+
+        @Callback(doc = "function():number, number, number -- Get the player's position.")
+        public Object[] getPosition(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> new Object[]{player.getX(), player.getY(), player.getZ()});
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number) -- Set the player's position.")
+        public Object[] setPosition(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> {
+                player.teleportTo(args.checkDouble(0), args.checkDouble(1), args.checkDouble(2));
+                return null;
+            });
+        }
+
+        @Callback(doc = "function():number -- Get the player's health.")
+        public Object[] getHealth(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> new Object[]{player.getHealth()});
+        }
+
+        @Callback(doc = "function():number -- Get the player's max health.")
+        public Object[] getMaxHealth(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> new Object[]{player.getMaxHealth()});
+        }
+
+        @Callback(doc = "function(health:number) -- Set the player's health.")
+        public Object[] setHealth(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> {
+                player.setHealth((float) args.checkDouble(0));
+                return null;
+            });
+        }
+
+        @Callback(doc = "function():number -- Get the player's level.")
+        public Object[] getLevel(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> new Object[]{player.experienceLevel});
+        }
+
+        @Callback(doc = "function():number -- Get the player's total experience.")
+        public Object[] getExperienceTotal(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> new Object[]{player.totalExperience});
+        }
+
+        @Callback(doc = "function(level:number) -- Add a level to the player's experience level.")
+        public Object[] addExperienceLevel(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> {
+                player.giveExperienceLevels(args.checkInteger(0));
+                return null;
+            });
+        }
+
+        @Callback(doc = "function(level:number) -- Remove a level from the player's experience level.")
+        public Object[] removeExperienceLevel(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> {
+                player.giveExperienceLevels(-args.checkInteger(0));
+                return null;
+            });
+        }
+
+        @Callback(doc = "function() -- Clear the player's inventory.")
+        public Object[] clearInventory(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> {
+                player.getInventory().clearContent();
+                return null;
+            });
+        }
+
+        private Object[] withPlayer(final PlayerOperation operation) throws Exception {
+            checkAccess(access);
+            final ServerPlayer player = player();
+            if (player == null) {
+                return new Object[]{null, "player is offline"};
+            }
+            return operation.apply(player);
+        }
+
+        private ServerPlayer player() {
+            if (!(level instanceof ServerLevel serverLevel) || serverLevel.getServer() == null) {
+                return null;
+            }
+            return serverLevel.getServer().getPlayerList().getPlayerByName(name);
+        }
+    }
+
+    private interface PlayerOperation {
+        Object[] apply(ServerPlayer player) throws Exception;
     }
 
     public static final class ScoreboardValue extends AbstractValue {

@@ -551,6 +551,55 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @SuppressWarnings("removal")
+    @GameTest(template = "empty")
+    public static void debugCardPlayerValueUpdatesOnlinePlayerState(final GameTestHelper helper) {
+        final net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(GameType.SURVIVAL);
+        final String playerName = player.getGameProfile().getName();
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] players = invokeComponent(helper, component, "getPlayers");
+        helper.assertTrue(players.length == 1 && contains(players[0], playerName), "Debug card getPlayers did not include online player");
+        final Object[] playerResult = invokeComponent(helper, component, "getPlayer", playerName);
+        helper.assertTrue(playerResult.length == 1 && playerResult[0] instanceof Value, "Debug card getPlayer did not return a player value");
+        final Value playerValue = (Value) playerResult[0];
+
+        assertSingleResult(helper, invokeValue(helper, playerValue, "getGameType"), "survival", "Debug player game type");
+        invokeValue(helper, playerValue, "setGameType", "creative");
+        helper.assertTrue(player.gameMode.getGameModeForPlayer() == GameType.CREATIVE, "Debug player did not set game type");
+
+        invokeValue(helper, playerValue, "setPosition", 4.5D, 65D, 6.5D);
+        final Object[] position = invokeValue(helper, playerValue, "getPosition");
+        helper.assertTrue(position.length == 3, "Debug player did not return position");
+        helper.assertTrue(Math.abs(((Number) position[0]).doubleValue() - 4.5D) < 0.01D, "Debug player x position was wrong");
+        helper.assertTrue(Math.abs(((Number) position[1]).doubleValue() - 65D) < 0.01D, "Debug player y position was wrong");
+        helper.assertTrue(Math.abs(((Number) position[2]).doubleValue() - 6.5D) < 0.01D, "Debug player z position was wrong");
+
+        invokeValue(helper, playerValue, "setHealth", 7.5D);
+        assertSingleClose(helper, invokeValue(helper, playerValue, "getHealth"), 7.5D, "Debug player health");
+        helper.assertTrue(invokeValue(helper, playerValue, "getMaxHealth").length == 1, "Debug player did not return max health");
+
+        final int oldLevel = player.experienceLevel;
+        invokeValue(helper, playerValue, "addExperienceLevel", 3);
+        helper.assertTrue(player.experienceLevel == oldLevel + 3, "Debug player did not add experience levels");
+        invokeValue(helper, playerValue, "removeExperienceLevel", 2);
+        helper.assertTrue(player.experienceLevel == oldLevel + 1, "Debug player did not remove experience levels");
+        assertSingleResult(helper, invokeValue(helper, playerValue, "getLevel"), player.experienceLevel, "Debug player level");
+        assertSingleResult(helper, invokeValue(helper, playerValue, "getExperienceTotal"), player.totalExperience, "Debug player total experience");
+
+        final Object[] worldResult = invokeValue(helper, playerValue, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug player did not return world value");
+        player.getInventory().add(new ItemStack(Items.DIAMOND));
+        invokeValue(helper, playerValue, "clearInventory");
+        helper.assertTrue(player.getInventory().isEmpty(), "Debug player did not clear inventory");
+
+        helper.getLevel().getServer().getPlayerList().remove(player);
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void debugCardWorldValueReadsAndSetsWeather(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
@@ -5743,6 +5792,29 @@ public final class NeoOpenComputersGameTests {
 
     private static void assertSingleResult(final GameTestHelper helper, final Object[] result, final Object expected, final String name) {
         helper.assertTrue(result.length == 1 && expected.equals(result[0]), name + " expected " + expected + " but got " + (result.length == 0 ? "<empty>" : result[0]));
+    }
+
+    private static void assertSingleClose(final GameTestHelper helper, final Object[] result, final double expected, final String name) {
+        helper.assertTrue(result.length == 1 && result[0] instanceof Number, name + " did not return one numeric result");
+        assertClose(helper, ((Number) result[0]).doubleValue(), expected, name);
+    }
+
+    private static boolean contains(final Object values, final Object expected) {
+        if (values instanceof Object[] array) {
+            for (final Object value : array) {
+                if (expected.equals(value)) {
+                    return true;
+                }
+            }
+        }
+        if (values instanceof Iterable<?> iterable) {
+            for (final Object value : iterable) {
+                if (expected.equals(value)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static Direction rotateHorizontal(final Direction value, final int steps) {
