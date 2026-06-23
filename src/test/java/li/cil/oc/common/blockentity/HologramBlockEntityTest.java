@@ -4,6 +4,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModSettings;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,17 @@ final class HologramBlockEntityTest {
                     assertArrayEquals(new Object[]{-3.0D, 6.0D, 3.0D}, tierTwo.getTranslation(null, new TestArguments()));
                     assertEquals(0.125D, context.pauseSeconds, 0.000_001D);
                 })));
+    }
+
+    @Test
+    void loadedScalePreservesSavedValueLikeUpstream() throws Exception {
+        HologramBlockEntity hologram = allocateHologram(1);
+        CompoundTag tag = new CompoundTag();
+        tag.putDouble("oc:scale", 9.0D);
+
+        hologram.loadAdditional(tag, null);
+
+        assertArrayEquals(new Object[]{9.0D}, hologram.getScale(null, new TestArguments()));
     }
 
     private static HologramBlockEntity allocateHologram(final int tier) throws Exception {

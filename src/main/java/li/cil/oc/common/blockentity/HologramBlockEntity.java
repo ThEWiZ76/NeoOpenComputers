@@ -368,7 +368,7 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
         copyInto(tag.getIntArray(TAG_VOLUME), volume);
         copyInto(tag.getIntArray(TAG_COLORS), colors);
         if (tag.contains(TAG_SCALE)) {
-            scale = Math.max(0.333333D, Math.min(maxScale(), tag.getDouble(TAG_SCALE)));
+            scale = tag.getDouble(TAG_SCALE);
         }
         translationX = tag.getDouble(TAG_TRANSLATION_X);
         translationY = tag.getDouble(TAG_TRANSLATION_Y);
