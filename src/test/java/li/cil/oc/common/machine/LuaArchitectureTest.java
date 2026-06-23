@@ -1324,12 +1324,13 @@ final class LuaArchitectureTest {
         Map<String, String> components = new LinkedHashMap<>();
         components.put("fs-address", "filesystem");
         components.put("gpu-address", "gpu");
-        LuaArchitecture architecture = new LuaArchitecture("partial = component.list('system'); fs = partial['fs-address']; exactMiss = component.list('file', true)['fs-address']; exact = component.list('filesystem', true)['fs-address']; gpu = partial['gpu-address']");
+        LuaArchitecture architecture = new LuaArchitecture("exactDefault = component.list('system')['fs-address']; partial = component.list('system', false); fs = partial['fs-address']; exactMiss = component.list('file', true)['fs-address']; exact = component.list('filesystem', true)['fs-address']; gpu = partial['gpu-address']");
         architecture.bind(machineWithComponents(components));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
+        assertEquals("nil", architecture.globalString("exactDefault"));
         assertEquals("filesystem", architecture.globalString("fs"));
         assertEquals("nil", architecture.globalString("exactMiss"));
         assertEquals("filesystem", architecture.globalString("exact"));
