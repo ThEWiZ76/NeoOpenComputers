@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -40,6 +41,32 @@ final class ManualRegistryTest {
         assertEquals("stack/path", registry.pathFor(null));
         assertEquals("block/path", registry.pathFor(null, BlockPos.ZERO));
         assertIterableEquals(List.of("line"), registry.contentFor("index"));
+    }
+
+    @Test
+    void resolvesManualContentLanguageFallbackAndRedirectsLikeUpstream() {
+        ManualRegistry registry = new ManualRegistry();
+
+        registry.addProvider(new MapContentProvider(Map.of(
+            "en_us/index.md", List.of("#redirect block/../item/start.md"),
+            "en_us/item/start.md", List.of("manual page")
+        )));
+
+        assertIterableEquals(List.of("manual page"), registry.contentFor("%LANGUAGE%/./index.md"));
+    }
+
+    @Test
+    void reportsManualContentRedirectLoopsLikeUpstream() {
+        ManualRegistry registry = new ManualRegistry();
+
+        registry.addProvider(new MapContentProvider(Map.of(
+            "en_us/a.md", List.of("#redirect b.md"),
+            "en_us/b.md", List.of("#redirect a.md")
+        )));
+
+        Iterable<String> content = registry.contentFor("%LANGUAGE%/a.md");
+
+        assertTrue(content.iterator().next().startsWith("Redirection loop: "));
     }
 
     @Test
@@ -101,5 +128,12 @@ final class ManualRegistryTest {
         @Override public int getWidth() { return 1; }
         @Override public int getHeight() { return 1; }
         @Override public void render(final int mouseX, final int mouseY) {}
+    }
+
+    private record MapContentProvider(Map<String, List<String>> content) implements li.cil.oc.api.manual.ContentProvider {
+        @Override
+        public Iterable<String> getContent(final String path) {
+            return content.get(path);
+        }
     }
 }

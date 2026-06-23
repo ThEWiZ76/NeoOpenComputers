@@ -12,9 +12,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Locale;
 
 public final class ManualRegistry implements ManualAPI {
+    private static final String LANGUAGE_KEY = "%LANGUAGE%";
+    private static final String FALLBACK_LANGUAGE = "en_us";
+    private static final String REDIRECT_PREFIX = "#redirect ";
+
     private final List<Tab> tabs = new ArrayList<>();
     private final List<PathProvider> pathProviders = new ArrayList<>();
     private final List<ContentProvider> contentProviders = new ArrayList<>();
@@ -68,6 +74,36 @@ public final class ManualRegistry implements ManualAPI {
 
     @Override
     public Iterable<String> contentFor(final String path) {
+        final String cleanPath = simplifyPath(path);
+        final Iterable<String> content = contentForWithRedirects(cleanPath.replace(LANGUAGE_KEY, FALLBACK_LANGUAGE), new ArrayList<>());
+        if (content != null) {
+            return content;
+        }
+        return contentForWithRedirects(cleanPath, new ArrayList<>());
+    }
+
+    private Iterable<String> contentForWithRedirects(final String path, final List<String> seen) {
+        if (seen.contains(path)) {
+            final List<String> loop = new ArrayList<>();
+            loop.add("Redirection loop: ");
+            loop.addAll(seen);
+            loop.add(path);
+            return loop;
+        }
+        final Iterable<String> content = doContentLookup(path);
+        if (content == null) {
+            return null;
+        }
+        final String firstLine = firstLine(content);
+        if (firstLine != null && firstLine.toLowerCase(Locale.ROOT).startsWith(REDIRECT_PREFIX)) {
+            final List<String> nextSeen = new ArrayList<>(seen);
+            nextSeen.add(path);
+            return contentForWithRedirects(makeRelative(firstLine.substring(REDIRECT_PREFIX.length()), path), nextSeen);
+        }
+        return content;
+    }
+
+    private Iterable<String> doContentLookup(final String path) {
         for (final ContentProvider provider : contentProviders) {
             final Iterable<String> content = provider.getContent(path);
             if (content != null) {
@@ -75,6 +111,40 @@ public final class ManualRegistry implements ManualAPI {
             }
         }
         return null;
+    }
+
+    private static String firstLine(final Iterable<String> content) {
+        final var iterator = content.iterator();
+        return iterator.hasNext() ? iterator.next() : null;
+    }
+
+    private static String makeRelative(final String path, final String base) {
+        if (path.startsWith("/")) {
+            return simplifyPath(path);
+        }
+        final int splitAt = base.lastIndexOf('/');
+        return simplifyPath(splitAt >= 0 ? base.substring(0, splitAt) + "/" + path : path);
+    }
+
+    private static String simplifyPath(final String path) {
+        final boolean absolute = path.startsWith("/");
+        final ArrayDeque<String> parts = new ArrayDeque<>();
+        for (final String part : path.replace('\\', '/').split("/+")) {
+            if (part.isEmpty() || ".".equals(part)) {
+                continue;
+            }
+            if ("..".equals(part)) {
+                if (!parts.isEmpty() && !"..".equals(parts.peekLast())) {
+                    parts.removeLast();
+                } else if (!absolute) {
+                    parts.addLast(part);
+                }
+            } else {
+                parts.addLast(part);
+            }
+        }
+        final String simplified = String.join("/", parts);
+        return absolute ? "/" + simplified : simplified;
     }
 
     @Override
