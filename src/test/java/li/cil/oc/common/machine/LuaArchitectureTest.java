@@ -616,33 +616,28 @@ final class LuaArchitectureTest {
     }
 
     @Test
-    void validatesOsDateTimeArgumentLikeUpstream() {
+    void osDateIgnoresNonNumberTimeLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("""
-            valid, message = pcall(function()
-              os.date('%F', 'soon')
-            end)
+            formatted = os.date('%F %T', 'soon')
             """);
+        architecture.bind(machineWithTimes(18_000L, 1.25D));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals(false, architecture.globalBoolean("valid"));
-        assertTrue(architecture.globalString("message").contains("bad argument #2 (number or nil expected, got string)"));
+        assertEquals("1970-01-02 00:00:00", architecture.globalString("formatted"));
     }
 
     @Test
-    void validatesOsDateFormatArgumentLikeUpstream() {
+    void osDateIgnoresNonStringFormatLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("""
-            valid, message = pcall(function()
-              os.date(false)
-            end)
+            formatted = os.date(false, 86400)
             """);
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
-        assertEquals(false, architecture.globalBoolean("valid"));
-        assertTrue(architecture.globalString("message").contains("bad argument #1 (string or nil expected, got boolean)"));
+        assertEquals("02/01/70 00:00:00", architecture.globalString("formatted"));
     }
 
     @Test
