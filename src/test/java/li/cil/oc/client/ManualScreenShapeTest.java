@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
+import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -310,6 +311,58 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenRightClickReturnsToPreviousHistoryEntryLikeUpstream() {
+        ManualRegistry registry = new ManualRegistry();
+        registry.navigate("general/computer.md");
+        registry.navigate("item/cpu1.md");
+        TestManualScreen screen = new TestManualScreen(registry);
+        screen.width = 400;
+        screen.height = 300;
+
+        boolean handled = screen.mouseClicked(200, 150, 1);
+
+        assertTrue(handled);
+        assertEquals("general/computer.md", registry.currentPath());
+        assertEquals(0, screen.closeCount);
+    }
+
+    @Test
+    void manualScreenRightClickClosesWhenNoHistoryLikeUpstream() {
+        TestManualScreen screen = new TestManualScreen(new ManualRegistry());
+        screen.width = 400;
+        screen.height = 300;
+
+        boolean handled = screen.mouseClicked(200, 150, 1);
+
+        assertTrue(handled);
+        assertEquals(1, screen.closeCount);
+    }
+
+    @Test
+    void manualScreenJumpKeyReturnsToPreviousHistoryEntryLikeUpstream() {
+        ManualRegistry registry = new ManualRegistry();
+        registry.navigate("general/computer.md");
+        registry.navigate("item/cpu1.md");
+        TestManualScreen screen = new TestManualScreen(registry);
+
+        boolean handled = screen.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0);
+
+        assertTrue(handled);
+        assertEquals("general/computer.md", registry.currentPath());
+        assertEquals(0, screen.closeCount);
+    }
+
+    @Test
+    void manualScreenJumpKeyClosesWhenNoHistoryLikeUpstream() {
+        TestManualScreen screen = new TestManualScreen(new ManualRegistry());
+
+        boolean handled = screen.keyPressed(GLFW.GLFW_KEY_SPACE, 0, 0);
+
+        assertTrue(handled);
+        assertEquals(1, screen.closeCount);
+    }
+
+    @Test
     void manualScreenScrollbarClickUpdatesScrollOffset() {
         ManualRegistry registry = new ManualRegistry();
         registry.addProvider(path -> IntStream.range(0, 50).mapToObj(index -> "line " + index).toList());
@@ -328,6 +381,19 @@ final class ManualScreenShapeTest {
         assertTrue(entry.segment() instanceof ManualDocument.TextualSegment);
         ManualDocument.TextualSegment text = (ManualDocument.TextualSegment) entry.segment();
         assertEquals(expected, text.text());
+    }
+
+    private static final class TestManualScreen extends ManualScreen {
+        private int closeCount;
+
+        private TestManualScreen(final ManualRegistry registry) {
+            super(registry);
+        }
+
+        @Override
+        public void onClose() {
+            closeCount++;
+        }
     }
 
     private record TestImageRenderer(int getWidth, int getHeight) implements ImageRenderer {

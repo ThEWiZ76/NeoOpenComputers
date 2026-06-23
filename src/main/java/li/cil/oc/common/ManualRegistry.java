@@ -220,6 +220,14 @@ public final class ManualRegistry implements ManualAPI {
         }
     }
 
+    public boolean goBack() {
+        if (history.size() <= 1) {
+            return false;
+        }
+        history.pop();
+        return true;
+    }
+
     int tabCount() {
         return tabs.size();
     }

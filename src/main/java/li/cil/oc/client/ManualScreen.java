@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.ToIntFunction;
 
+import org.lwjgl.glfw.GLFW;
+
 public class ManualScreen extends Screen {
     public static final ResourceLocation MANUAL_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/manual.png");
     public static final ResourceLocation TAB_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/manual_tab.png");
@@ -559,6 +561,9 @@ public class ManualScreen extends Screen {
 
     @Override
     public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
+        if (button == 1) {
+            return goBackOrClose();
+        }
         if (button == 0) {
             final int left = (width - WINDOW_WIDTH) / 2;
             final int top = (height - WINDOW_HEIGHT) / 2;
@@ -605,6 +610,31 @@ public class ManualScreen extends Screen {
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean keyPressed(final int keyCode, final int scanCode, final int modifiers) {
+        if (isJumpKey(keyCode, scanCode)) {
+            return goBackOrClose();
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private boolean isJumpKey(final int keyCode, final int scanCode) {
+        if (keyCode == GLFW.GLFW_KEY_SPACE) {
+            return true;
+        }
+        return minecraft != null && minecraft.options.keyJump.matches(keyCode, scanCode);
+    }
+
+    private boolean goBackOrClose() {
+        if (registry.goBack()) {
+            scrollOffset = 0;
+            refreshPage();
+        } else {
+            onClose();
+        }
+        return true;
     }
 
     @Override

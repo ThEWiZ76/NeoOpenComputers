@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -161,6 +162,26 @@ final class ManualRegistryTest {
 
         registry.reset();
 
+        assertEquals("%LANGUAGE%/index.md", registry.currentPath());
+        assertEquals(1, registry.historySize());
+    }
+
+    @Test
+    void popsManualHistoryLikeUpstreamBackNavigation() {
+        ManualRegistry registry = new ManualRegistry();
+
+        registry.navigate("general/computer.md");
+        registry.navigate("item/cpu1.md");
+
+        assertTrue(registry.goBack());
+        assertEquals("general/computer.md", registry.currentPath());
+        assertEquals(2, registry.historySize());
+
+        assertTrue(registry.goBack());
+        assertEquals("%LANGUAGE%/index.md", registry.currentPath());
+        assertEquals(1, registry.historySize());
+
+        assertFalse(registry.goBack());
         assertEquals("%LANGUAGE%/index.md", registry.currentPath());
         assertEquals(1, registry.historySize());
     }
