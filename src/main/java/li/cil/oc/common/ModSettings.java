@@ -110,6 +110,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue TRANSPOSER_COST;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_ITEM_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
+    public static final ModConfigSpec.DoubleValue GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
@@ -326,6 +327,9 @@ public final class ModSettings {
         IGNORE_POWER = builder
             .comment("Disable energy requirements. OpenComputers upstream default is false.")
             .define("ignorePower", false);
+        GENERATOR_EFFICIENCY = builder
+            .comment("Energy produced per tick by generator upgrades. OpenComputers upstream default is 0.8.")
+            .defineInRange("generatorEfficiency", 0.8D, 0D, Double.MAX_VALUE);
         SOLAR_GENERATOR_EFFICIENCY = builder
             .comment("Energy produced per tick by solar generator upgrades. OpenComputers upstream default is 0.2.")
             .defineInRange("solarGeneratorEfficiency", 0.2D, 0D, Double.MAX_VALUE);
@@ -461,6 +465,10 @@ public final class ModSettings {
 
     public static double solarGeneratorEfficiency() {
         return doubleValue(SOLAR_GENERATOR_EFFICIENCY);
+    }
+
+    public static double generatorEfficiency() {
+        return doubleValue(GENERATOR_EFFICIENCY);
     }
 
     public static double assemblerTickAmount() {

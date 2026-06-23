@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.Container;
@@ -21,7 +22,6 @@ import java.util.Map;
 public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "generator";
     private static final double BUFFER_SIZE = 1D;
-    private static final double ENERGY_PER_TICK = 1D;
     private static final String TAG_INVENTORY = "inventory";
     private static final String TAG_REMAINING_TICKS = "remainingTicks";
 
@@ -198,7 +198,7 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
         if (remainingTicks > 0) {
             remainingTicks--;
             if (node() instanceof Connector connector) {
-                connector.changeBuffer(ENERGY_PER_TICK);
+                connector.changeBuffer(generatedEnergyPerTick());
             }
             host.markChanged();
         }
@@ -241,5 +241,9 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
 
     private static int burnTime(final ItemStack stack) {
         return stack.getBurnTime(null);
+    }
+
+    static double generatedEnergyPerTick() {
+        return ModSettings.generatorEfficiency();
     }
 }

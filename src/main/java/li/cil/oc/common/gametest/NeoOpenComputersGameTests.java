@@ -2891,7 +2891,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Integer.valueOf(1).equals(count[0]), "Generator queue count mismatch");
 
         environment.update();
-        helper.assertTrue(connector.localBuffer() > 0D, "Generator did not produce energy while burning");
+        helper.assertTrue(Double.compare(ModSettings.generatorEfficiency(), connector.localBuffer()) == 0, "Generator did not use upstream default efficiency");
         helper.succeed();
     }
 
