@@ -14,6 +14,7 @@ import java.awt.Desktop;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
@@ -754,12 +755,35 @@ public class ManualScreen extends Screen {
     }
 
     private static void openExternalLink(final String href) {
-        try {
-            if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().browse(URI.create(href));
+        openExternalLink(href, ManualScreen::browseExternalLink, warning -> {
+            final Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.player != null) {
+                minecraft.player.displayClientMessage(warning, false);
             }
-        } catch (final RuntimeException | java.io.IOException ignored) {
+        });
+    }
+
+    public static boolean openExternalLink(
+        final String href,
+        final ExternalLinkOpener opener,
+        final Consumer<Component> warningSink
+    ) {
+        Objects.requireNonNull(opener);
+        Objects.requireNonNull(warningSink);
+        try {
+            opener.open(new URI(href));
+            return true;
+        } catch (final Throwable throwable) {
+            warningSink.accept(Component.translatable("oc:gui.Chat.WarningLink", Objects.toString(throwable)));
+            return false;
         }
+    }
+
+    private static void browseExternalLink(final URI uri) throws java.io.IOException {
+        if (!Desktop.isDesktopSupported()) {
+            throw new UnsupportedOperationException("Desktop browsing is not supported");
+        }
+        Desktop.getDesktop().browse(uri);
     }
 
     public record LayoutEntry(ManualDocument.Segment segment, int x, int y, int width, int height) {
@@ -769,5 +793,10 @@ public class ManualScreen extends Screen {
     }
 
     private record TextFlow(int x, int y, int lineHeight) {
+    }
+
+    @FunctionalInterface
+    public interface ExternalLinkOpener {
+        void open(URI uri) throws Exception;
     }
 }

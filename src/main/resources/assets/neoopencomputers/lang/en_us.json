@@ -148,6 +148,7 @@
   "oc:gui.Manual.Home": "Home",
   "oc:gui.Manual.Items": "OpenComputers Items",
   "oc:gui.Manual.Warning.BlockMissing": "Block unavailable.",
+  "oc:gui.Chat.WarningLink": "Could not open link: %s",
   "oc:gui.Manual.Warning.ImageMissing": "Image not found.",
   "oc:gui.Manual.Warning.ItemMissing": "Item unavailable.",
   "oc:gui.Manual.Warning.OreDictMissing": "Ore dictionary entry unavailable.",

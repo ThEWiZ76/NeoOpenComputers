@@ -4,10 +4,13 @@ import li.cil.oc.common.ManualRegistry;
 import li.cil.oc.api.manual.ImageRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -331,6 +334,25 @@ final class ManualScreenShapeTest {
 
         assertEquals(List.of("Home", "Main page"), home.stream().map(Component::getString).toList());
         assertEquals(List.of("plain tooltip"), fallback.stream().map(Component::getString).toList());
+    }
+
+    @Test
+    void manualScreenReportsExternalLinkOpenFailuresLikeUpstream() {
+        final List<Component> warnings = new ArrayList<>();
+
+        final boolean opened = ManualScreen.openExternalLink(
+            "https://example.com",
+            uri -> {
+                throw new IOException("boom");
+            },
+            warnings::add);
+
+        assertFalse(opened);
+        assertEquals(1, warnings.size());
+        assertTrue(warnings.get(0).getContents() instanceof TranslatableContents);
+        final TranslatableContents contents = (TranslatableContents) warnings.get(0).getContents();
+        assertEquals("oc:gui.Chat.WarningLink", contents.getKey());
+        assertEquals("java.io.IOException: boom", contents.getArgs()[0]);
     }
 
     @Test

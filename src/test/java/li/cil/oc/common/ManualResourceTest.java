@@ -59,6 +59,7 @@ final class ManualResourceTest {
         assertTrue(english.contains("\"oc:gui.Manual.Warning.ItemMissing\""));
         assertTrue(english.contains("\"oc:gui.Manual.Warning.BlockMissing\""));
         assertTrue(english.contains("\"oc:gui.Manual.Warning.OreDictMissing\""));
+        assertTrue(english.contains("\"oc:gui.Chat.WarningLink\""));
     }
 
     private static int[] pngDimensions(final Path path) throws IOException {
