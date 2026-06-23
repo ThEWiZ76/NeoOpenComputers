@@ -457,6 +457,31 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardScoreboardValueUpdatesPlayerScores(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] scoreboardResult = invokeComponent(helper, component, "getScoreboard");
+        helper.assertTrue(scoreboardResult.length == 1 && scoreboardResult[0] instanceof Value, "Debug card getScoreboard did not return a value");
+        final Value scoreboard = (Value) scoreboardResult[0];
+
+        invokeValue(helper, scoreboard, "addObjective", "neo_points", "dummy");
+        invokeValue(helper, scoreboard, "setPlayerScore", "Alice", "neo_points", 5);
+        assertSingleResult(helper, invokeValue(helper, scoreboard, "getPlayerScore", "Alice", "neo_points"), 5, "Debug scoreboard set score");
+
+        invokeValue(helper, scoreboard, "increasePlayerScore", "Alice", "neo_points", 3);
+        assertSingleResult(helper, invokeValue(helper, scoreboard, "getPlayerScore", "Alice", "neo_points"), 8, "Debug scoreboard increased score");
+
+        invokeValue(helper, scoreboard, "decreasePlayerScore", "Alice", "neo_points", 2);
+        assertSingleResult(helper, invokeValue(helper, scoreboard, "getPlayerScore", "Alice", "neo_points"), 6, "Debug scoreboard decreased score");
+
+        invokeValue(helper, scoreboard, "removeObjective", "neo_points");
+        helper.assertTrue(helper.getLevel().getScoreboard().getObjective("neo_points") == null, "Debug scoreboard did not remove objective");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardWorldValueReadsAndSetsWeather(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
         helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");

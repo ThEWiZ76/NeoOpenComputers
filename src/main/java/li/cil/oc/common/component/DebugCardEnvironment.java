@@ -27,8 +27,14 @@ import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.ShortTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.ScoreAccess;
+import net.minecraft.world.scores.ScoreHolder;
+import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -106,6 +112,12 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         return new Object[]{new WorldValue(host == null ? null : host.world(), access)};
     }
 
+    @Callback(doc = "function():userdata -- Get the scoreboard object for the container's world.")
+    public Object[] getScoreboard(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        return new Object[]{new ScoreboardValue(host == null ? null : host.world(), access)};
+    }
+
     @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
@@ -181,6 +193,80 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             case "minecraft", "neoforge", NeoOpenComputers.MODID, "opencomputers" -> true;
             default -> false;
         };
+    }
+
+    public static final class ScoreboardValue extends AbstractValue {
+        private final Scoreboard scoreboard;
+        private final AccessContext access;
+
+        private ScoreboardValue(final Level level, final AccessContext access) {
+            this.scoreboard = level == null ? null : level.getScoreboard();
+            this.access = access;
+        }
+
+        @Callback(doc = "function(objectiveName:string, objectiveCriteria:string) -- Create a new objective for the scoreboard.")
+        public Object[] addObjective(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final String name = args.checkString(0);
+            final ObjectiveCriteria criteria = ObjectiveCriteria.byName(args.checkString(1))
+                .orElseThrow(() -> new IllegalArgumentException("Unknown objective criteria."));
+            scoreboard().addObjective(name, criteria, Component.literal(name), criteria.getDefaultRenderType(), false, null);
+            return null;
+        }
+
+        @Callback(doc = "function(objectiveName:string) -- Remove an objective from the scoreboard.")
+        public Object[] removeObjective(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final Objective objective = objective(args.checkString(0));
+            scoreboard().removeObjective(objective);
+            return null;
+        }
+
+        @Callback(doc = "function(playerName:string, objectiveName:string, score:number) -- Sets the score of a player for a certain objective.")
+        public Object[] setPlayerScore(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            score(args.checkString(0), args.checkString(1)).set(args.checkInteger(2));
+            return null;
+        }
+
+        @Callback(doc = "function(playerName:string, objectiveName:string):number -- Gets the score of a player for a certain objective.")
+        public Object[] getPlayerScore(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{score(args.checkString(0), args.checkString(1)).get()};
+        }
+
+        @Callback(doc = "function(playerName:string, objectiveName:string, score:number) -- Increases the score of a player for a certain objective.")
+        public Object[] increasePlayerScore(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            score(args.checkString(0), args.checkString(1)).add(args.checkInteger(2));
+            return null;
+        }
+
+        @Callback(doc = "function(playerName:string, objectiveName:string, score:number) -- Decrease the score of a player for a certain objective.")
+        public Object[] decreasePlayerScore(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            score(args.checkString(0), args.checkString(1)).add(-args.checkInteger(2));
+            return null;
+        }
+
+        private ScoreAccess score(final String playerName, final String objectiveName) throws Exception {
+            return scoreboard().getOrCreatePlayerScore(ScoreHolder.forNameOnly(playerName), objective(objectiveName));
+        }
+
+        private Objective objective(final String name) throws Exception {
+            final Objective objective = scoreboard().getObjective(name);
+            if (objective == null) {
+                throw new IllegalArgumentException("Unknown objective '" + name + "'.");
+            }
+            return objective;
+        }
+
+        private Scoreboard scoreboard() throws Exception {
+            if (scoreboard == null) {
+                throw new IllegalStateException("No scoreboard available.");
+            }
+            return scoreboard;
+        }
     }
 
     public static final class WorldValue extends AbstractValue {
