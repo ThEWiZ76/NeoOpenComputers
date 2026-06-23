@@ -153,6 +153,7 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_WIDTHS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_HEIGHTS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_DEPTHS_BY_TIER;
+    public static final ModConfigSpec.DoubleValue GPU_BITBLT_COST;
     public static final ModConfigSpec.ConfigValue<String> DEBUG_CARD_ACCESS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> DEBUG_CARD_WHITELIST;
 
@@ -479,6 +480,12 @@ public final class ModSettings {
         SCREEN_DEPTHS_BY_TIER = builder
             .comment("Maximum screen color depths in bits for tiers one, two, and three. OpenComputers upstream default is [1, 4, 8].")
             .defineList("depthsByTier", DEFAULT_SCREEN_DEPTHS_BY_TIER, value -> value instanceof Integer && ((Integer) value == 1 || (Integer) value == 4 || (Integer) value == 8));
+        builder.pop();
+
+        builder.push("gpu");
+        GPU_BITBLT_COST = builder
+            .comment("Direct-call budget cost for blitting one full tier-one GPU page to a screen. OpenComputers upstream default is 0.5 and scales by GPU tier.")
+            .defineInRange("bitbltCost", 0.5D, 0D, Double.MAX_VALUE);
         builder.pop();
 
         builder.push("nanomachines");
@@ -960,6 +967,10 @@ public final class ModSettings {
 
     public static double gpuCopyCost() {
         return doubleValue(GPU_COPY_COST) / basicScreenPixels();
+    }
+
+    public static double gpuBitbltCost() {
+        return Math.max(0D, doubleValue(GPU_BITBLT_COST));
     }
 
     public static List<Integer> hddSizes() {

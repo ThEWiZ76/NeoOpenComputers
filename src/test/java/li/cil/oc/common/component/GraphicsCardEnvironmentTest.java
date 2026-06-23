@@ -293,6 +293,52 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void bitbltDirtyVideoBufferToScreenConsumesConfiguredBudget() throws Exception {
+        withCachedConfig(ModSettings.GPU_BITBLT_COST, 8D, () -> {
+            OpenComputersApi.initialize();
+            GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+            FakeTextBuffer screen = new FakeTextBuffer();
+            ComponentConnector connector = assertInstanceOf(ComponentConnector.class, gpu.node());
+            RecordingContext context = new RecordingContext();
+            connector.setLocalBufferSize(1D);
+            connector.changeBuffer(1D);
+            Network.joinNewNetwork(gpu.node());
+            gpu.node().connect(screen.node());
+            gpu.bind(null, new TestArguments(screen.node().address(), true));
+            gpu.allocateBuffer(null, new TestArguments(10, 5));
+            gpu.setActiveBuffer(null, new TestArguments(1));
+            gpu.set(null, new TestArguments(1, 1, "A"));
+
+            assertArrayEquals(new Object[]{true}, gpu.bitblt(context, new TestArguments(0, 1, 1, 10, 5, 1, 1, 1)));
+
+            assertEquals(0.5D, context.callBudget, 0.000_001D);
+        });
+    }
+
+    @Test
+    void bitbltIntoVideoBufferMarksItDirtyForScreenBudget() throws Exception {
+        withCachedConfig(ModSettings.GPU_BITBLT_COST, 8D, () -> {
+            OpenComputersApi.initialize();
+            GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+            FakeTextBuffer screen = new FakeTextBuffer();
+            ComponentConnector connector = assertInstanceOf(ComponentConnector.class, gpu.node());
+            RecordingContext context = new RecordingContext();
+            connector.setLocalBufferSize(1D);
+            connector.changeBuffer(1D);
+            Network.joinNewNetwork(gpu.node());
+            gpu.node().connect(screen.node());
+            gpu.bind(null, new TestArguments(screen.node().address(), true));
+            gpu.allocateBuffer(null, new TestArguments(10, 5));
+            gpu.save(new CompoundTag());
+
+            assertArrayEquals(new Object[]{true}, gpu.bitblt(null, new TestArguments(1, 1, 1, 10, 5, 0, 1, 1)));
+            assertArrayEquals(new Object[]{true}, gpu.bitblt(context, new TestArguments(0, 1, 1, 10, 5, 1, 1, 1)));
+
+            assertEquals(0.5D, context.callBudget, 0.000_001D);
+        });
+    }
+
+    @Test
     void colorSettersReturnPreviousColorAndPaletteIndex() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);

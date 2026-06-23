@@ -378,28 +378,31 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Callback(direct = true, doc = "function([dst:number, x:number, y:number, width:number, height:number, src:number, fromX:number, fromY:number]):boolean -- Copies between video buffers and screens.")
-    public Object[] bitblt(final Context context, final Arguments args) {
+    public Object[] bitblt(final Context context, final Arguments args) throws LimitReachedException {
         final int dstIndex = args.optInteger(0, SCREEN_INDEX);
-        return withBuffer(dstIndex, dst -> {
-            final int x = args.optInteger(1, 1) - 1;
-            final int y = args.optInteger(2, 1) - 1;
-            final int width = Math.max(0, args.optInteger(3, dst.getWidth()));
-            final int height = Math.max(0, args.optInteger(4, dst.getHeight()));
-            final int srcIndex = args.optInteger(5, activeBufferIndex);
-            final TextBuffer src = buffer(srcIndex);
-            if (src == null) {
-                return srcIndex == SCREEN_INDEX ? noScreen() : invalidBufferIndex();
-            }
-            final int fromX = args.optInteger(6, 1) - 1;
-            final int fromY = args.optInteger(7, 1) - 1;
-            if (!consumeScreenEnergy(dstIndex, width * height, ModSettings.gpuCopyCost() / 15D)) {
-                return notEnoughEnergy();
-            }
-            dst.rawSetText(x, y, textSnapshot(src, fromX, fromY, width, height));
-            dst.rawSetForeground(x, y, foregroundSnapshot(src, fromX, fromY, width, height));
-            dst.rawSetBackground(x, y, backgroundSnapshot(src, fromX, fromY, width, height));
-            return new Object[]{true};
-        });
+        final TextBuffer dst = buffer(dstIndex);
+        if (dst == null) {
+            return dstIndex == SCREEN_INDEX ? noScreen() : invalidBufferIndex();
+        }
+        final int x = args.optInteger(1, 1) - 1;
+        final int y = args.optInteger(2, 1) - 1;
+        final int width = Math.max(0, args.optInteger(3, dst.getWidth()));
+        final int height = Math.max(0, args.optInteger(4, dst.getHeight()));
+        final int srcIndex = args.optInteger(5, activeBufferIndex);
+        final TextBuffer src = buffer(srcIndex);
+        if (src == null) {
+            return srcIndex == SCREEN_INDEX ? noScreen() : invalidBufferIndex();
+        }
+        final int fromX = args.optInteger(6, 1) - 1;
+        final int fromY = args.optInteger(7, 1) - 1;
+        consumeBitbltCallBudget(context, dstIndex, src);
+        if (!consumeScreenEnergy(dstIndex, width * height, ModSettings.gpuCopyCost() / 15D)) {
+            return notEnoughEnergy();
+        }
+        dst.rawSetText(x, y, textSnapshot(src, fromX, fromY, width, height));
+        dst.rawSetForeground(x, y, foregroundSnapshot(src, fromX, fromY, width, height));
+        dst.rawSetBackground(x, y, backgroundSnapshot(src, fromX, fromY, width, height));
+        return new Object[]{true};
     }
 
     @Override
@@ -509,6 +512,15 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     private void consumeScreenCallBudget(final Context context, final double cost) throws LimitReachedException {
         if (context != null && activeBufferIndex == SCREEN_INDEX) {
+            context.consumeCallBudget(cost);
+        }
+    }
+
+    private void consumeBitbltCallBudget(final Context context, final int dstIndex, final TextBuffer src) throws LimitReachedException {
+        if (context != null && dstIndex == SCREEN_INDEX && src instanceof VideoBuffer buffer) {
+            final double cost = buffer.isDirty()
+                ? ModSettings.gpuBitbltCost() * Math.pow(2D, tier) * buffer.size() / ((double) maxWidth * (double) maxHeight)
+                : 0.001D;
             context.consumeCallBudget(cost);
         }
     }
@@ -655,6 +667,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         private int[][] text;
         private int[][] foreground;
         private int[][] background;
+        private boolean dirty = true;
 
         private VideoBuffer(final int width, final int height, final ColorDepth maximumDepth) {
             this.maximumWidth = Math.max(1, width);
@@ -674,6 +687,10 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
         private int size() {
             return width * height;
+        }
+
+        private boolean isDirty() {
+            return dirty;
         }
 
         @Override
@@ -723,6 +740,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                 return false;
             }
             resize(width, height);
+            dirty = true;
             return true;
         }
 
@@ -743,6 +761,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             }
             viewportWidth = width;
             viewportHeight = height;
+            dirty = true;
             return true;
         }
 
@@ -771,6 +790,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                 return false;
             }
             colorDepth = depth;
+            dirty = true;
             return true;
         }
 
@@ -783,6 +803,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         public void setPaletteColor(final int index, final int color) {
             if (index >= 0 && index < palette.length) {
                 palette[index] = color;
+                dirty = true;
             }
         }
 
@@ -800,6 +821,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         public void setForegroundColor(final int color, final boolean isFromPalette) {
             foregroundColor = color;
             foregroundFromPalette = isFromPalette;
+            dirty = true;
         }
 
         @Override
@@ -821,6 +843,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         public void setBackgroundColor(final int color, final boolean isFromPalette) {
             backgroundColor = color;
             backgroundFromPalette = isFromPalette;
+            dirty = true;
         }
 
         @Override
@@ -841,6 +864,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             rawSetText(column + horizontalTranslation, row + verticalTranslation, textSnapshot);
             rawSetForeground(column + horizontalTranslation, row + verticalTranslation, foregroundSnapshot);
             rawSetBackground(column + horizontalTranslation, row + verticalTranslation, backgroundSnapshot);
+            dirty = true;
         }
 
         @Override
@@ -855,6 +879,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                     put(column + x, row + y, value, foregroundColor, backgroundColor);
                 }
             }
+            dirty = true;
         }
 
         @Override
@@ -868,6 +893,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                 final int y = vertical ? row + index : row;
                 put(x, y, codePoints[index], foregroundColor, backgroundColor);
             }
+            dirty = true;
         }
 
         @Override
@@ -910,6 +936,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                     putText(column + x, row + y, text[y][x]);
                 }
             }
+            dirty = true;
         }
 
         @Override
@@ -922,16 +949,19 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                     putText(column + x, row + y, text[y][x]);
                 }
             }
+            dirty = true;
         }
 
         @Override
         public void rawSetForeground(final int column, final int row, final int[][] color) {
             rawSetColor(foreground, column, row, color);
+            dirty = true;
         }
 
         @Override
         public void rawSetBackground(final int column, final int row, final int[][] color) {
             rawSetColor(background, column, row, color);
+            dirty = true;
         }
 
         @Override
@@ -1009,6 +1039,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             loadRows(nbt.getList(TEXT_TAG, Tag.TAG_INT_ARRAY), text);
             loadRows(nbt.getList(CELL_FOREGROUND_TAG, Tag.TAG_INT_ARRAY), foreground);
             loadRows(nbt.getList(CELL_BACKGROUND_TAG, Tag.TAG_INT_ARRAY), background);
+            dirty = true;
         }
 
         @Override
@@ -1028,6 +1059,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             nbt.put(TEXT_TAG, saveRows(text));
             nbt.put(CELL_FOREGROUND_TAG, saveRows(foreground));
             nbt.put(CELL_BACKGROUND_TAG, saveRows(background));
+            dirty = false;
         }
 
         private void resize(final int width, final int height) {

@@ -144,6 +144,7 @@ final class ModSettingsTest {
         assertEquals(1D / (50D * 16D), ModSettings.gpuFillCost(), 0.000_001D);
         assertEquals(0.1D / (50D * 16D), ModSettings.gpuClearCost(), 0.000_001D);
         assertEquals(0.25D / (50D * 16D), ModSettings.gpuCopyCost(), 0.000_001D);
+        assertEquals(0.5D, ModSettings.gpuBitbltCost(), 0.000_001D);
         assertEquals(List.of(1024, 2048, 4096), ModSettings.hddSizes());
         assertEquals(1024, ModSettings.hddSize(0));
         assertEquals(2048, ModSettings.hddSize(1));
@@ -248,6 +249,7 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "cost", "gpuFill"), ModSettings.GPU_FILL_COST.getPath());
         assertEquals(List.of("power", "cost", "gpuClear"), ModSettings.GPU_CLEAR_COST.getPath());
         assertEquals(List.of("power", "cost", "gpuCopy"), ModSettings.GPU_COPY_COST.getPath());
+        assertEquals(List.of("gpu", "bitbltCost"), ModSettings.GPU_BITBLT_COST.getPath());
         assertEquals(List.of("filesystem", "maxHandles"), ModSettings.MAX_HANDLES.getPath());
         assertEquals(List.of("filesystem", "maxReadBuffer"), ModSettings.MAX_READ_BUFFER.getPath());
         assertEquals(List.of("filesystem", "hddSizes"), ModSettings.HDD_SIZES.getPath());
