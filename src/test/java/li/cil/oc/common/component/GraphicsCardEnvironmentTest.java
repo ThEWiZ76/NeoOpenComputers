@@ -272,6 +272,27 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void bitbltToScreenConsumesConfiguredEnergy() throws Exception {
+        withCachedConfig(ModSettings.GPU_COPY_COST, 120D, () -> {
+            OpenComputersApi.initialize();
+            GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+            FakeTextBuffer screen = new FakeTextBuffer();
+            ComponentConnector connector = assertInstanceOf(ComponentConnector.class, gpu.node());
+            connector.setLocalBufferSize(1D);
+            connector.changeBuffer(1D);
+            Network.joinNewNetwork(gpu.node());
+            gpu.node().connect(screen.node());
+            gpu.bind(null, new TestArguments(screen.node().address(), true));
+            gpu.allocateBuffer(null, new TestArguments(3, 2));
+            gpu.setActiveBuffer(null, new TestArguments(1));
+
+            assertArrayEquals(new Object[]{true}, gpu.bitblt(null, new TestArguments(0, 1, 1, 3, 2, 1, 1, 1)));
+
+            assertEquals(0.94D, connector.localBuffer(), 0.000_001D);
+        });
+    }
+
+    @Test
     void colorSettersReturnPreviousColorAndPaletteIndex() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);

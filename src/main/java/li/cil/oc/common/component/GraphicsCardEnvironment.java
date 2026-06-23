@@ -392,6 +392,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             }
             final int fromX = args.optInteger(6, 1) - 1;
             final int fromY = args.optInteger(7, 1) - 1;
+            if (!consumeScreenEnergy(dstIndex, width * height, ModSettings.gpuCopyCost() / 15D)) {
+                return notEnoughEnergy();
+            }
             dst.rawSetText(x, y, textSnapshot(src, fromX, fromY, width, height));
             dst.rawSetForeground(x, y, foregroundSnapshot(src, fromX, fromY, width, height));
             dst.rawSetBackground(x, y, backgroundSnapshot(src, fromX, fromY, width, height));
@@ -511,7 +514,11 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     private boolean consumeScreenEnergy(final double units, final double cost) {
-        if (activeBufferIndex != SCREEN_INDEX || units <= 0D || cost <= 0D) {
+        return consumeScreenEnergy(activeBufferIndex, units, cost);
+    }
+
+    private boolean consumeScreenEnergy(final int bufferIndex, final double units, final double cost) {
+        if (bufferIndex != SCREEN_INDEX || units <= 0D || cost <= 0D) {
             return true;
         }
         return !(node() instanceof Connector connector) || connector.tryChangeBuffer(-units * cost);
