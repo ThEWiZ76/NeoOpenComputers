@@ -2,6 +2,7 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.internal.Adapter;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -30,7 +31,8 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         this.host = host;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
-            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Network).create());
+            final Visibility visibility = host instanceof Adapter ? Visibility.Network : Visibility.Neighbors;
+            setNode(builder.withComponent(COMPONENT_NAME, visibility).create());
         }
     }
 
