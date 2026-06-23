@@ -177,6 +177,28 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenReportsLinkImageTabAndScrollbarTooltips() {
+        ManualDocument document = ManualDocument.parse(
+            List.of("Read [manual](item/manual.md)", "![tip](image:ok)"),
+            href -> new TestImageRenderer(50, 20));
+        List<ManualRegistry.ManualTab> tabs = List.of(new ManualRegistry.ManualTab(() -> {}, "tab.home", "index.md"));
+
+        assertEquals(
+            "item/manual.md",
+            ManualScreen.tooltipAt(document, tabs, 8 + 32, 8 + 5, 0, false, text -> text.length() * 6));
+        assertEquals(
+            "tip",
+            ManualScreen.tooltipAt(document, tabs, 8 + 91, 8 + ManualScreen.LINE_HEIGHT + ManualScreen.SEGMENT_PADDING + 1, 0, false, text -> text.length() * 6));
+        assertEquals(
+            "tab.home",
+            ManualScreen.tooltipAt(document, tabs, -22, 8, 0, false, text -> text.length() * 6));
+        ManualDocument longDocument = ManualDocument.parse(IntStream.range(0, 36).mapToObj(index -> "line " + index).toList(), href -> null);
+        assertEquals(
+            "50%",
+            ManualScreen.tooltipAt(longDocument, tabs, 245, 100, 92, false, text -> text.length() * 6));
+    }
+
+    @Test
     void manualScreenTabClickNavigatesToTabPath() {
         ManualRegistry registry = new ManualRegistry();
         registry.addTab(() -> {}, "home", "index");

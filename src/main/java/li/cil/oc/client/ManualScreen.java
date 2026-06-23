@@ -279,6 +279,35 @@ public class ManualScreen extends Screen {
         return null;
     }
 
+    public static String tooltipAt(
+        final ManualDocument document,
+        final List<ManualRegistry.ManualTab> tabs,
+        final int mouseX,
+        final int mouseY,
+        final int scrollOffset,
+        final boolean draggingScrollBar,
+        final ToIntFunction<String> textWidth
+    ) {
+        final ManualDocument.LinkSegment link = interactiveLinkAt(document, DOCUMENT_POS_X, DOCUMENT_POS_Y, mouseX, mouseY, scrollOffset, textWidth);
+        if (link != null) {
+            return link.tooltip();
+        }
+        final ManualDocument.ImageSegment image = interactiveImageAt(document, DOCUMENT_POS_X, DOCUMENT_POS_Y, mouseX, mouseY, scrollOffset, textWidth);
+        if (image != null) {
+            return image.tooltip();
+        }
+        final int tabIndex = tabIndexAt(mouseX, mouseY, tabs.size());
+        if (tabIndex >= 0) {
+            return tabs.get(tabIndex).tooltip();
+        }
+        final int documentHeight = documentHeight(document, DOCUMENT_MAX_WIDTH);
+        final int maxOffset = Math.max(0, documentHeight - DOCUMENT_MAX_HEIGHT);
+        if (maxOffset > 0 && (draggingScrollBar || isCoordinateOverScrollBar(mouseX, mouseY))) {
+            return 100 * clampScrollOffset(scrollOffset, documentHeight, DOCUMENT_MAX_HEIGHT) / maxOffset + "%";
+        }
+        return null;
+    }
+
     @Override
     protected void init() {
         refreshPage();
@@ -295,6 +324,7 @@ public class ManualScreen extends Screen {
         renderDocument(graphics, left + DOCUMENT_POS_X, top + DOCUMENT_POS_Y, mouseX, mouseY);
         renderScrollBar(graphics, left, top);
         super.render(graphics, mouseX, mouseY, partialTick);
+        renderTooltip(graphics, left, top, mouseX, mouseY);
     }
 
     private void renderTabs(final GuiGraphics graphics, final int left, final int top) {
@@ -334,6 +364,20 @@ public class ManualScreen extends Screen {
         final int thumbY = top + scrollbarThumbY(scrollOffset, documentHeight, DOCUMENT_MAX_HEIGHT);
         final int thumbColor = draggingScrollBar ? 0xFFD8DEE9 : 0xFF81A1C1;
         graphics.fill(trackX, thumbY, trackX + SCROLL_WIDTH, thumbY + SCROLL_THUMB_HEIGHT, thumbColor);
+    }
+
+    private void renderTooltip(final GuiGraphics graphics, final int left, final int top, final int mouseX, final int mouseY) {
+        final String tooltip = tooltipAt(
+            document,
+            registry.tabs(),
+            mouseX - left,
+            mouseY - top,
+            scrollOffset,
+            draggingScrollBar,
+            this::textWidth);
+        if (tooltip != null && !tooltip.isBlank()) {
+            graphics.renderTooltip(font, Component.literal(tooltip), mouseX, mouseY);
+        }
     }
 
     @Override
