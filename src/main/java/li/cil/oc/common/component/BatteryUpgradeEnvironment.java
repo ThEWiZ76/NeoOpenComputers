@@ -4,6 +4,7 @@ import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class BatteryUpgradeEnvironment extends AbstractManagedEnvironment implem
     }
 
     public static double capacity(final int tier) {
-        return CAPACITIES[clampTier(tier)];
+        return ModSettings.batteryUpgradeBuffer(tier);
     }
 
     private static int clampTier(final int tier) {

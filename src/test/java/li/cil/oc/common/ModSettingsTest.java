@@ -23,6 +23,12 @@ final class ModSettingsTest {
         assertEquals(10, ModSettings.mfuTickFrequency());
         assertEquals(0.2D, ModSettings.solarGeneratorEfficiency());
         assertEquals(0.8D, ModSettings.generatorEfficiency());
+        assertEquals(List.of(10000D, 15000D, 20000D), ModSettings.batteryUpgradeBuffers());
+        assertEquals(10000D, ModSettings.batteryUpgradeBuffer(0));
+        assertEquals(15000D, ModSettings.batteryUpgradeBuffer(1));
+        assertEquals(20000D, ModSettings.batteryUpgradeBuffer(2));
+        assertEquals(10000D, ModSettings.batteryUpgradeBuffer(-1));
+        assertEquals(20000D, ModSettings.batteryUpgradeBuffer(99));
         assertEquals(true, ModSettings.inputUsername());
         assertEquals(25D, ModSettings.disassemblerTickAmount());
         assertEquals(2000D, ModSettings.disassemblerItemCost());
@@ -153,6 +159,7 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
         assertEquals(List.of("power", "generatorEfficiency"), ModSettings.GENERATOR_EFFICIENCY.getPath());
+        assertEquals(List.of("power", "buffer", "batteryUpgrades"), ModSettings.BATTERY_UPGRADE_BUFFERS.getPath());
         assertEquals(List.of("power", "disassemblerTickAmount"), ModSettings.DISASSEMBLER_TICK_AMOUNT.getPath());
         assertEquals(List.of("power", "cost", "disassemblerPerItem"), ModSettings.DISASSEMBLER_ITEM_COST.getPath());
         assertEquals(List.of("misc", "inputUsername"), ModSettings.INPUT_USERNAME.getPath());

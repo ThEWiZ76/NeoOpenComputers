@@ -2828,9 +2828,9 @@ public final class NeoOpenComputersGameTests {
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), 9);
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER2.get()), 25);
         assertDatabaseCapacity(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER3.get()), 81);
-        assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER1.get()), 10000D);
-        assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER2.get()), 15000D);
-        assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER3.get()), 20000D);
+        assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER1.get()), ModSettings.batteryUpgradeBuffer(0));
+        assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER2.get()), ModSettings.batteryUpgradeBuffer(1));
+        assertBatteryCharge(helper, new ItemStack(ModItems.BATTERY_UPGRADE_TIER3.get()), ModSettings.batteryUpgradeBuffer(2));
         assertInventoryCapacity(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()), 16);
         assertSolarGenerator(helper, new ItemStack(ModItems.SOLAR_GENERATOR_UPGRADE.get()));
         assertTankCapacity(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), 16000);

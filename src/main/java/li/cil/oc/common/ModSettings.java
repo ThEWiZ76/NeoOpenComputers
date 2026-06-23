@@ -12,6 +12,7 @@ public final class ModSettings {
     private static final List<Integer> DEFAULT_HDD_PLATTER_COUNTS = List.of(2, 4, 8);
     private static final List<Integer> DEFAULT_CPU_COMPONENT_COUNT = List.of(8, 12, 16, 1024);
     private static final List<Double> DEFAULT_CALL_BUDGETS = List.of(0.5D, 1.0D, 1.5D);
+    private static final List<Double> DEFAULT_BATTERY_UPGRADE_BUFFERS = List.of(10_000D, 15_000D, 20_000D);
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
     private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
     private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
@@ -114,6 +115,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
+    public static final ModConfigSpec.ConfigValue<List<? extends Double>> BATTERY_UPGRADE_BUFFERS;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_INPUT_COST;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_RECONFIGURE_COST;
@@ -343,6 +345,9 @@ public final class ModSettings {
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
         builder.push("buffer");
+        BATTERY_UPGRADE_BUFFERS = builder
+            .comment("Energy stored by battery upgrade tiers one, two, and three. OpenComputers upstream default is [10000, 15000, 20000].")
+            .defineList("batteryUpgrades", DEFAULT_BATTERY_UPGRADE_BUFFERS, value -> value instanceof Double && (Double) value >= 0D);
         NANOMACHINES_BUFFER = builder
             .comment("Nanomachines local energy buffer. OpenComputers upstream default is 100000.")
             .defineInRange("nanomachines", 100_000D, 0D, Double.MAX_VALUE);
@@ -481,6 +486,19 @@ public final class ModSettings {
 
     public static double disassemblerItemCost() {
         return Math.max(0D, doubleValue(DISASSEMBLER_ITEM_COST));
+    }
+
+    public static List<Double> batteryUpgradeBuffers() {
+        final List<Double> buffers = doubleListValue(BATTERY_UPGRADE_BUFFERS);
+        if (buffers.size() != DEFAULT_BATTERY_UPGRADE_BUFFERS.size()) {
+            return DEFAULT_BATTERY_UPGRADE_BUFFERS;
+        }
+        return buffers;
+    }
+
+    public static double batteryUpgradeBuffer(final int tier) {
+        final List<Double> buffers = batteryUpgradeBuffers();
+        return buffers.get(clampIndex(tier, buffers.size()));
     }
 
     public static double nanomachinesBuffer() {
