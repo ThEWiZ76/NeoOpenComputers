@@ -23,6 +23,8 @@ final class ModSettingsTest {
         assertEquals(10, ModSettings.mfuTickFrequency());
         assertEquals(0.2D, ModSettings.solarGeneratorEfficiency());
         assertEquals(true, ModSettings.inputUsername());
+        assertEquals(25D, ModSettings.disassemblerTickAmount());
+        assertEquals(2000D, ModSettings.disassemblerItemCost());
         assertEquals(true, ModSettings.canComputersBeOwned());
         assertEquals(16, ModSettings.maxUsers());
         assertEquals(32, ModSettings.maxUsernameLength());
@@ -149,6 +151,8 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "ignorePower"), ModSettings.IGNORE_POWER.getPath());
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
+        assertEquals(List.of("power", "disassemblerTickAmount"), ModSettings.DISASSEMBLER_TICK_AMOUNT.getPath());
+        assertEquals(List.of("power", "cost", "disassemblerPerItem"), ModSettings.DISASSEMBLER_ITEM_COST.getPath());
         assertEquals(List.of("misc", "inputUsername"), ModSettings.INPUT_USERNAME.getPath());
         assertEquals(List.of("computer", "canComputersBeOwned"), ModSettings.CAN_COMPUTERS_BE_OWNED.getPath());
         assertEquals(List.of("computer", "maxUsers"), ModSettings.MAX_USERS.getPath());

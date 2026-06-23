@@ -2650,6 +2650,47 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void disassemblerDefaultPathUsesConfiguredEnergyPerOutput(final GameTestHelper helper) throws Exception {
+        try (DisassemblerTemplates.Registration ignored = DisassemblerTemplates.register(new DisassemblerTemplate() {
+            @Override
+            public String name() {
+                return "energy_test";
+            }
+
+            @Override
+            public boolean matches(final ItemStack stack) {
+                return stack.is(Items.DIAMOND);
+            }
+
+            @Override
+            public ItemStack[] disassemble(final ItemStack stack) {
+                return new ItemStack[]{new ItemStack(Items.EMERALD)};
+            }
+        })) {
+            withCachedConfig(ModSettings.DISASSEMBLER_TICK_AMOUNT, 3D, () ->
+                withCachedConfig(ModSettings.DISASSEMBLER_ITEM_COST, 6D, () -> {
+                    final BlockPos pos = new BlockPos(1, 1, 1);
+                    helper.setBlock(pos, ModBlocks.DISASSEMBLER.get());
+                    final DisassemblerBlockEntity disassembler = helper.getBlockEntity(pos);
+                    disassembler.setItem(DisassemblerBlockEntity.SLOT_INPUT, new ItemStack(Items.DIAMOND));
+
+                    helper.assertTrue(disassembler.disassemble(), "Disassembler did not start powered disassembly");
+                    helper.assertTrue(!disassembler.containsOutput(Items.EMERALD), "Disassembler produced output before receiving energy");
+
+                    final Connector connector = (Connector) disassembler.sidedNode(Direction.NORTH);
+                    connector.changeBuffer(3D);
+                    DisassemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), disassembler);
+                    helper.assertTrue(!disassembler.containsOutput(Items.EMERALD), "Disassembler produced output before per-item energy was reached");
+
+                    connector.changeBuffer(3D);
+                    DisassemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), disassembler);
+                    helper.assertTrue(disassembler.containsOutput(Items.EMERALD), "Disassembler did not release output after configured item energy");
+                    helper.succeed();
+                }));
+        }
+    }
+
+    @GameTest(template = "empty")
     public static void disassemblerMenuReportsInputState(final GameTestHelper helper) {
         final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
         final ItemStack memory = new ItemStack(ModItems.MEMORY_TIER1.get());

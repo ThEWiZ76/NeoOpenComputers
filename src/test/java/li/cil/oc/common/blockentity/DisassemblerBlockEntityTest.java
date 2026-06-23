@@ -1,7 +1,12 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.common.ModSettings;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
@@ -24,6 +29,15 @@ final class DisassemblerBlockEntityTest {
         assertEquals("Disassembler", metadata.get(DeviceInfo.DeviceAttribute.Description));
         assertEquals("MightyPirates", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("Break.3R-100", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
+    void exposesPoweredEnvironmentShapeLikeUpstream() throws NoSuchMethodException {
+        assertTrue(Environment.class.isAssignableFrom(DisassemblerBlockEntity.class));
+        assertTrue(SidedEnvironment.class.isAssignableFrom(DisassemblerBlockEntity.class));
+        assertEquals(
+            void.class,
+            DisassemblerBlockEntity.class.getMethod("serverTick", Level.class, BlockPos.class, BlockState.class, DisassemblerBlockEntity.class).getReturnType());
     }
 
     @Test

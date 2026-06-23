@@ -108,9 +108,11 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue HOLOGRAM_COST;
     public static final ModConfigSpec.DoubleValue GEOLYZER_SCAN_COST;
     public static final ModConfigSpec.DoubleValue TRANSPOSER_COST;
+    public static final ModConfigSpec.DoubleValue DISASSEMBLER_ITEM_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
+    public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_INPUT_COST;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_RECONFIGURE_COST;
@@ -330,6 +332,9 @@ public final class ModSettings {
         ASSEMBLER_TICK_AMOUNT = builder
             .comment("Energy the assembler can apply per tick. OpenComputers upstream default is 50.")
             .defineInRange("assemblerTickAmount", 50D, 1D, Double.MAX_VALUE);
+        DISASSEMBLER_TICK_AMOUNT = builder
+            .comment("Energy the disassembler can apply per tick. OpenComputers upstream default is 25.")
+            .defineInRange("disassemblerTickAmount", 25D, 1D, Double.MAX_VALUE);
         MFU_TICK_FREQUENCY = builder
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
@@ -375,6 +380,9 @@ public final class ModSettings {
         TRANSPOSER_COST = builder
             .comment("Energy consumed per Transposer item/fluid transfer. OpenComputers upstream default is 1.")
             .defineInRange("transposer", 1D, 0D, Double.MAX_VALUE);
+        DISASSEMBLER_ITEM_COST = builder
+            .comment("Energy consumed for each disassembler output item. OpenComputers upstream default is 2000.")
+            .defineInRange("disassemblerPerItem", 2000D, 0D, Double.MAX_VALUE);
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
@@ -457,6 +465,14 @@ public final class ModSettings {
 
     public static double assemblerTickAmount() {
         return Math.max(1D, doubleValue(ASSEMBLER_TICK_AMOUNT));
+    }
+
+    public static double disassemblerTickAmount() {
+        return Math.max(1D, doubleValue(DISASSEMBLER_TICK_AMOUNT));
+    }
+
+    public static double disassemblerItemCost() {
+        return Math.max(0D, doubleValue(DISASSEMBLER_ITEM_COST));
     }
 
     public static double nanomachinesBuffer() {
