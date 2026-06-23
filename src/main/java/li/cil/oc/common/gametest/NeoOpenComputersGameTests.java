@@ -600,6 +600,40 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @SuppressWarnings("removal")
+    @GameTest(template = "empty")
+    public static void debugCardPlayerValueInsertsItemsIntoInventory(final GameTestHelper helper) {
+        final net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(GameType.SURVIVAL);
+        final String playerName = player.getGameProfile().getName();
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+        final Object[] playerResult = invokeComponent(helper, component, "getPlayer", playerName);
+        helper.assertTrue(playerResult.length == 1 && playerResult[0] instanceof Value, "Debug card getPlayer did not return a player value");
+        final Value playerValue = (Value) playerResult[0];
+
+        assertSingleResult(helper, invokeValue(helper, playerValue, "insertItem", "minecraft:diamond", 5, 0, ""), 0, "Debug player insert item remainder");
+        helper.assertTrue(containsStack(player.getInventory(), Items.DIAMOND, 5), "Debug player insertItem did not add diamonds");
+
+        player.getInventory().clearContent();
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            player.getInventory().setItem(slot, new ItemStack(Items.DIRT, 64));
+        }
+        assertSingleResult(helper, invokeValue(helper, playerValue, "insertItem", "minecraft:diamond", 2, 0, ""), 2, "Debug player full inventory insert remainder");
+        helper.assertTrue(!containsStack(player.getInventory(), Items.DIAMOND, 1), "Debug player insertItem inserted into full inventory");
+        int droppedDiamonds = 0;
+        for (final ItemEntity entity : helper.getLevel().getEntities(EntityType.ITEM, new net.minecraft.world.phys.AABB(player.blockPosition()).inflate(4D), entity -> entity.isAlive())) {
+            if (entity.getItem().is(Items.DIAMOND)) {
+                droppedDiamonds += entity.getItem().getCount();
+            }
+        }
+        helper.assertTrue(droppedDiamonds >= 2, "Debug player insertItem did not drop overflow items");
+
+        helper.getLevel().getServer().getPlayerList().remove(player);
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void debugCardWorldValueReadsAndSetsWeather(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));

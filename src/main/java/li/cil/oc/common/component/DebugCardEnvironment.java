@@ -13,6 +13,7 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.ByteArrayTag;
 import net.minecraft.nbt.ByteTag;
@@ -28,10 +29,16 @@ import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.ShortTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.ScoreAccess;
@@ -344,6 +351,22 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             });
         }
 
+        @Callback(doc = "function(id:string, amount:number, meta:number[, nbt:string]):number -- Adds the item stack to the player's inventory.")
+        public Object[] insertItem(final Context context, final Arguments args) throws Exception {
+            return withPlayer(player -> {
+                final Item item = item(args.checkString(0));
+                final int amount = args.checkInteger(1);
+                args.checkInteger(2); // Legacy metadata, kept for upstream signature compatibility.
+                final ItemStack stack = new ItemStack(item, amount);
+                final String tagJson = args.optString(3, "");
+                if (!tagJson.isEmpty()) {
+                    stack.set(DataComponents.CUSTOM_DATA, CustomData.of(TagParser.parseTag(tagJson)));
+                }
+                final int remaining = addToPlayerInventory(stack, player);
+                return new Object[]{remaining};
+            });
+        }
+
         private Object[] withPlayer(final PlayerOperation operation) throws Exception {
             checkAccess(access);
             final ServerPlayer player = player();
@@ -358,6 +381,58 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
                 return null;
             }
             return serverLevel.getServer().getPlayerList().getPlayerByName(name);
+        }
+
+        private static Item item(final String id) {
+            final ResourceLocation key = id.indexOf(':') >= 0 ? ResourceLocation.parse(id) : ResourceLocation.withDefaultNamespace(id);
+            if (!BuiltInRegistries.ITEM.containsKey(key)) {
+                throw new IllegalArgumentException("invalid item id");
+            }
+            return BuiltInRegistries.ITEM.get(key);
+        }
+
+        private static int addToPlayerInventory(final ItemStack stack, final ServerPlayer player) {
+            final int remaining = insertIntoInventory(player.getInventory(), stack);
+            if (remaining > 0) {
+                final ItemStack dropped = stack.copy();
+                dropped.setCount(remaining);
+                final ItemEntity entity = new ItemEntity(player.level(), player.getX(), player.getY() + 0.5D, player.getZ(), dropped);
+                entity.setPickUpDelay(40);
+                player.level().addFreshEntity(entity);
+            }
+            player.getInventory().setChanged();
+            player.containerMenu.broadcastChanges();
+            return remaining;
+        }
+
+        private static int insertIntoInventory(final Container inventory, final ItemStack stack) {
+            int remaining = stack.getCount();
+            final int size = inventory.getContainerSize();
+            for (int slot = 0; slot < size && remaining > 0; slot++) {
+                final ItemStack existing = inventory.getItem(slot);
+                if (existing.isEmpty() || !ItemStack.isSameItemSameComponents(existing, stack)) {
+                    continue;
+                }
+                final int limit = Math.min(existing.getMaxStackSize(), inventory.getMaxStackSize());
+                final int inserted = Math.min(remaining, limit - existing.getCount());
+                if (inserted > 0 && inventory.canPlaceItem(slot, stack)) {
+                    existing.grow(inserted);
+                    remaining -= inserted;
+                }
+            }
+            for (int slot = 0; slot < size && remaining > 0; slot++) {
+                if (!inventory.getItem(slot).isEmpty()) {
+                    continue;
+                }
+                final int inserted = Math.min(remaining, Math.min(stack.getMaxStackSize(), inventory.getMaxStackSize()));
+                final ItemStack insertedStack = stack.copy();
+                insertedStack.setCount(inserted);
+                if (inventory.canPlaceItem(slot, insertedStack)) {
+                    inventory.setItem(slot, insertedStack);
+                    remaining -= inserted;
+                }
+            }
+            return remaining;
         }
     }
 
