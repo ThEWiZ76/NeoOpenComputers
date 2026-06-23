@@ -12,15 +12,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public final class ManualRegistry implements ManualAPI {
     private final List<Tab> tabs = new ArrayList<>();
     private final List<PathProvider> pathProviders = new ArrayList<>();
     private final List<ContentProvider> contentProviders = new ArrayList<>();
-    private final Map<String, ImageProvider> imageProviders = new LinkedHashMap<>();
+    private final List<ImageProviderEntry> imageProviders = new ArrayList<>();
     private boolean opened;
     private boolean reset;
     private String lastNavigationPath;
@@ -42,7 +40,8 @@ public final class ManualRegistry implements ManualAPI {
 
     @Override
     public void addProvider(final String prefix, final ImageProvider provider) {
-        imageProviders.put(prefix, provider);
+        final String normalizedPrefix = prefix == null || prefix.isEmpty() ? "" : prefix + ":";
+        imageProviders.add(new ImageProviderEntry(normalizedPrefix, provider));
     }
 
     @Override
@@ -80,13 +79,16 @@ public final class ManualRegistry implements ManualAPI {
 
     @Override
     public ImageRenderer imageFor(final String path) {
-        final int separator = path.indexOf(':');
-        if (separator < 1) {
-            return null;
+        for (int index = imageProviders.size() - 1; index >= 0; index--) {
+            final ImageProviderEntry entry = imageProviders.get(index);
+            if (path.startsWith(entry.prefix())) {
+                final ImageRenderer image = entry.provider().getImage(path.substring(entry.prefix().length()));
+                if (image != null) {
+                    return image;
+                }
+            }
         }
-
-        final ImageProvider provider = imageProviders.get(path.substring(0, separator));
-        return provider == null ? null : provider.getImage(path.substring(separator + 1));
+        return null;
     }
 
     @Override
@@ -121,5 +123,8 @@ public final class ManualRegistry implements ManualAPI {
     }
 
     private record Tab(TabIconRenderer renderer, String tooltip, String path) {
+    }
+
+    private record ImageProviderEntry(String prefix, ImageProvider provider) {
     }
 }

@@ -55,6 +55,21 @@ final class ManualRegistryTest {
     }
 
     @Test
+    void resolvesManualImagesLikeUpstreamPrefixRegistry() {
+        ManualRegistry registry = new ManualRegistry();
+        ImageRenderer fallback = new TestImageRenderer();
+        ImageRenderer firstItem = new TestImageRenderer();
+        ImageRenderer secondItem = new TestImageRenderer();
+
+        registry.addProvider("", data -> fallback);
+        registry.addProvider("item", data -> firstItem);
+        registry.addProvider("item", data -> secondItem);
+
+        assertSame(fallback, registry.imageFor("textures/gui/manual/home.png"));
+        assertSame(secondItem, registry.imageFor("item:cpu1"));
+    }
+
+    @Test
     void storesTabsAndNavigationStateUntilGuiExists() {
         ManualRegistry registry = new ManualRegistry();
         TabIconRenderer tab = () -> {};
