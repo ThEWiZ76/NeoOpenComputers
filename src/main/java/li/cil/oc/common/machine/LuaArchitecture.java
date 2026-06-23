@@ -71,6 +71,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String MEMORY_TAG = "memory";
     private static final String PULL_SIGNAL_MARKER = "\u0000oc.pullSignal";
     private static final String BUDGET_RETRY_MARKER = "\u0000oc.budgetRetry";
+    private static final String SYNCHRONIZED_CALLBACK_MARKER = "\u0000oc.synchronizedCallback";
     private static final double PRIMARY_REPLACEMENT_DELAY_SECONDS = 0.1D;
     private boolean initialized;
     private boolean booted;
@@ -82,6 +83,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private LuaThread bootThread;
     private ExecutionResult pendingResult;
     private PendingBudgetCall pendingBudgetCall;
+    private PendingBudgetCall pendingSynchronizedCall;
+    private Varargs pendingSynchronizedResults;
     private double memoryBytes;
     private boolean waitingForSignal;
     private boolean waitingForSleep;
@@ -140,6 +143,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         globals = sandboxGlobals();
         pendingResult = null;
         pendingBudgetCall = null;
+        pendingSynchronizedCall = null;
+        pendingSynchronizedResults = null;
         valueProxyCache.clear();
         valueProxyValues.clear();
         installComputerLibrary();
@@ -168,6 +173,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         bootThread = null;
         pendingResult = null;
         pendingBudgetCall = null;
+        pendingSynchronizedCall = null;
+        pendingSynchronizedResults = null;
         waitingForSignal = false;
         waitingForSleep = false;
         signalDeadlineSeconds = 0D;
@@ -178,6 +185,16 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     @Override
     public void runSynchronized() {
+        if (pendingSynchronizedCall == null) {
+            return;
+        }
+        try {
+            pendingSynchronizedResults = pendingSynchronizedCall.invoke();
+        } catch (LimitReachedException e) {
+            pendingSynchronizedResults = LuaValue.NONE;
+        } finally {
+            pendingSynchronizedCall = null;
+        }
     }
 
     @Override
@@ -186,6 +203,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return new ExecutionResult.Error("Lua architecture is not initialized");
         }
         processPendingPrimaryComponents();
+        if (pendingSynchronizedResults != null) {
+            final Varargs results = pendingSynchronizedResults;
+            pendingSynchronizedResults = null;
+            return resumeBoot(results);
+        }
         if (pendingBudgetCall != null) {
             try {
                 final Varargs results = pendingBudgetCall.invoke();
@@ -1823,6 +1845,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (waitingForSignal && PULL_SIGNAL_MARKER.equals(result.arg(2).tojstring())) {
             return sleepUntilSignalDeadline();
         }
+        if (SYNCHRONIZED_CALLBACK_MARKER.equals(result.arg(2).tojstring())) {
+            return new ExecutionResult.Sleep(1);
+        }
         return new ExecutionResult.Sleep(1);
     }
 
@@ -1986,6 +2011,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             pendingBudgetCall = () -> invokeValueOnce(value, method, javaArgs);
             return globals.yield(LuaValue.valueOf(BUDGET_RETRY_MARKER));
         }
+    }
+
+    private Varargs invokeValueSynchronized(final Value value, final String method, final Object[] javaArgs) {
+        pendingSynchronizedCall = () -> invokeValueOnce(value, method, javaArgs);
+        return globals.yield(LuaValue.valueOf(SYNCHRONIZED_CALLBACK_MARKER));
     }
 
     private Varargs invokeValueOnce(final Value value, final String method, final Object[] javaArgs) throws LimitReachedException {
@@ -2315,7 +2345,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         metatable.set("__call", new VarArgFunction() {
             @Override
             public Varargs invoke(final Varargs args) {
-                if (machine == null || !machine.methods(value).containsKey(methodName)) {
+                final Callback methodCallback = machine == null ? null : machine.methods(value).get(methodName);
+                if (methodCallback == null) {
                     throw new LuaError("no such method");
                 }
                 int offset = args.narg() > 0 && args.arg(1).eq_b(callback) ? 1 : 0;
@@ -2326,7 +2357,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 for (int index = 0; index < javaArgs.length; index++) {
                     javaArgs[index] = toJavaValue(args.arg(index + offset + 1));
                 }
-                return invokeValue(value, methodName, javaArgs);
+                return methodCallback.direct()
+                    ? invokeValue(value, methodName, javaArgs)
+                    : invokeValueSynchronized(value, methodName, javaArgs);
             }
         });
         metatable.set("__tostring", new ZeroArgFunction() {

@@ -2560,6 +2560,31 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void schedulesNonDirectUserdataCallbacksLikeUpstream() {
+        TestValue value = new TestValue();
+        int[] valueInvokes = {0};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            result = value.echo('payload')
+            continued = true
+            """);
+        architecture.bind(machineWithNonDirectValueCallback(value, valueInvokes));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(0, valueInvokes[0]);
+        assertEquals(false, architecture.globalBoolean("continued"));
+
+        architecture.runSynchronized();
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(1, valueInvokes[0]);
+        assertEquals("invoked:payload", architecture.globalString("result"));
+        assertEquals(true, architecture.globalBoolean("continued"));
+    }
+
+    @Test
     void retriesComponentInvokeAfterCallBudgetLimit() {
         int[] attempts = {0};
         LuaArchitecture architecture = new LuaArchitecture("""
@@ -2603,6 +2628,8 @@ final class LuaArchitectureTest {
         architecture.bind(machineWithThrowingValueInvoke(value, new IOException("disk failed")));
 
         assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        architecture.runSynchronized();
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals("nil", architecture.globalString("result"));
@@ -3953,6 +3980,30 @@ final class LuaArchitectureTest {
                     if ("checkValue".equals(args[1])) {
                         Object[] javaArgs = (Object[]) args[2];
                         yield new Object[]{javaArgs.length == 1 && javaArgs[0] == value ? "same-value" : "other-value"};
+                    }
+                    yield new Object[]{value};
+                }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machineWithNonDirectValueCallback(final TestValue value, final int[] valueInvokes) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "components" -> Map.of("fs-address", "filesystem");
+                case "methods" -> args[0] == value
+                    ? Map.of("echo", callback("labelCallback"))
+                    : Map.of("make", callback("directCallback"));
+                case "invoke" -> {
+                    if (args[0] == value) {
+                        valueInvokes[0]++;
+                        Object[] javaArgs = (Object[]) args[2];
+                        yield new Object[]{"invoked:" + luaString(javaArgs[0])};
                     }
                     yield new Object[]{value};
                 }
