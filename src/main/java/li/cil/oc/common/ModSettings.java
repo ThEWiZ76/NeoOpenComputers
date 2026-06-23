@@ -69,6 +69,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue DATA_CARD_HARD_LIMIT;
     public static final ModConfigSpec.DoubleValue DATA_CARD_TIMEOUT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_BREAK_CHANCE;
+    public static final ModConfigSpec.DoubleValue REDSTONE_DELAY;
     public static final ModConfigSpec.IntValue GEOLYZER_RANGE;
     public static final ModConfigSpec.IntValue TRANSPOSER_FLUID_TRANSFER_RATE;
     public static final ModConfigSpec.IntValue DEFAULT_RELAY_DELAY;
@@ -187,6 +188,9 @@ public final class ModSettings {
         DISASSEMBLER_BREAK_CHANCE = builder
             .comment("Chance for each disassembler output item to break. OpenComputers upstream default is 0.05.")
             .defineInRange("disassemblerBreakChance", 0.05D, 0D, 1D);
+        REDSTONE_DELAY = builder
+            .comment("Seconds redstone output changes pause the calling context. OpenComputers upstream default is 0.1.")
+            .defineInRange("redstoneDelay", 0.1D, 0D, Double.MAX_VALUE);
         GEOLYZER_RANGE = builder
             .comment("Maximum absolute Geolyzer scan offset. OpenComputers upstream default is 32.")
             .defineInRange("geolyzerRange", 32, 0, Integer.MAX_VALUE);
@@ -730,6 +734,10 @@ public final class ModSettings {
 
     public static double startupDelay() {
         return Math.max(0.05D, doubleValue(STARTUP_DELAY));
+    }
+
+    public static double redstoneDelay() {
+        return Math.max(0D, doubleValue(REDSTONE_DELAY));
     }
 
     public static int eepromSize() {

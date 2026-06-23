@@ -8,6 +8,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
@@ -18,7 +19,6 @@ import java.util.Map;
 
 public class RedstoneCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "redstone";
-    private static final double REDSTONE_DELAY = 0.1D;
 
     private final EnvironmentHost host;
 
@@ -78,8 +78,9 @@ public class RedstoneCardEnvironment extends AbstractManagedEnvironment implemen
         } else {
             throw new IllegalArgumentException("invalid number of arguments, expected 1 or 2");
         }
-        if (changed && context != null && REDSTONE_DELAY > 0D) {
-            context.pause(REDSTONE_DELAY);
+        final double redstoneDelay = ModSettings.redstoneDelay();
+        if (changed && context != null && redstoneDelay > 0D) {
+            context.pause(redstoneDelay);
         }
         return new Object[]{result};
     }

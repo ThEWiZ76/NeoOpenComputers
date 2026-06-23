@@ -94,6 +94,7 @@ final class ModSettingsTest {
         assertEquals(8192, ModSettings.maxNetworkPacketSize());
         assertEquals(8, ModSettings.maxNetworkPacketParts());
         assertEquals(0.05D, ModSettings.disassemblerBreakChance());
+        assertEquals(0.1D, ModSettings.redstoneDelay());
         assertEquals(5, ModSettings.defaultRelayDelay());
         assertEquals(1.5D, ModSettings.relayDelayUpgrade());
         assertEquals(20, ModSettings.defaultMaxQueueSize());
@@ -231,6 +232,7 @@ final class ModSettingsTest {
         assertEquals(List.of("misc", "maxNetworkPacketSize"), ModSettings.MAX_NETWORK_PACKET_SIZE.getPath());
         assertEquals(List.of("misc", "maxNetworkPacketParts"), ModSettings.MAX_NETWORK_PACKET_PARTS.getPath());
         assertEquals(List.of("misc", "disassemblerBreakChance"), ModSettings.DISASSEMBLER_BREAK_CHANCE.getPath());
+        assertEquals(List.of("misc", "redstoneDelay"), ModSettings.REDSTONE_DELAY.getPath());
         assertEquals(List.of("misc", "defaultRelayDelay"), ModSettings.DEFAULT_RELAY_DELAY.getPath());
         assertEquals(List.of("misc", "relayDelayUpgrade"), ModSettings.RELAY_DELAY_UPGRADE.getPath());
         assertEquals(List.of("misc", "defaultMaxQueueSize"), ModSettings.DEFAULT_MAX_QUEUE_SIZE.getPath());
