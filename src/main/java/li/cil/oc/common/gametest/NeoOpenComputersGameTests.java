@@ -78,6 +78,7 @@ import li.cil.oc.common.template.DisassemblerTemplates;
 import net.neoforged.fml.InterModComms;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
@@ -542,6 +543,32 @@ public final class NeoOpenComputersGameTests {
         final BlockPos absoluteAir = helper.absolutePos(chestPos.east());
         final Object[] noTileEntity = invokeValue(helper, world, "hasTileEntity", absoluteAir.getX(), absoluteAir.getY(), absoluteAir.getZ());
         helper.assertTrue(noTileEntity.length == 1 && Boolean.FALSE.equals(noTileEntity[0]), "World value reported block entity for air");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void debugCardWorldValueReportsBlockQueries(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        final BlockPos blockPos = new BlockPos(1, 1, 1);
+        final BlockState state = Blocks.STONE.defaultBlockState();
+        helper.setBlock(blockPos, state);
+        final BlockPos absolute = helper.absolutePos(blockPos);
+
+        final Object[] blockId = invokeValue(helper, world, "getBlockId", absolute.getX(), absolute.getY(), absolute.getZ());
+        helper.assertTrue(blockId.length == 1 && Integer.valueOf(BuiltInRegistries.BLOCK.getId(Blocks.STONE)).equals(blockId[0]), "World value did not report block id");
+
+        final Object[] metadata = invokeValue(helper, world, "getMetadata", absolute.getX(), absolute.getY(), absolute.getZ());
+        helper.assertTrue(metadata.length == 1 && Integer.valueOf(0).equals(metadata[0]), "World value did not report metadata");
+
+        final Object[] blockState = invokeValue(helper, world, "getBlockState", absolute.getX(), absolute.getY(), absolute.getZ());
+        helper.assertTrue(blockState.length == 1 && state.equals(blockState[0]), "World value did not report block state");
         helper.succeed();
     }
 

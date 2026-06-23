@@ -12,9 +12,12 @@ import li.cil.oc.api.prefab.AbstractValue;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.ModList;
 
 import java.util.Locale;
@@ -224,6 +227,24 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return new Object[]{level != null && level.isLoaded(pos) && level.getBlockState(pos).hasBlockEntity()};
         }
 
+        @Callback(doc = "function(x:number, y:number, z:number):number -- Get the registry ID of the block at the specified coordinates.")
+        public Object[] getBlockId(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{BuiltInRegistries.BLOCK.getId(blockState(blockPos(args)).getBlock())};
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number):number -- Get the metadata of the block at the specified coordinates. Always zero on Minecraft 1.21.")
+        public Object[] getMetadata(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{0};
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number[, actualState:boolean=false]):userdata -- Get the block state for the block at the specified coordinates.")
+        public Object[] getBlockState(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{blockState(blockPos(args))};
+        }
+
         @Callback(doc = "function():boolean -- Get whether it is raining.")
         public Object[] isRaining(final Context context, final Arguments args) throws Exception {
             checkAccess(access);
@@ -260,6 +281,10 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
 
         private static BlockPos blockPos(final Arguments args) {
             return new BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2));
+        }
+
+        private BlockState blockState(final BlockPos pos) {
+            return level == null ? Blocks.AIR.defaultBlockState() : level.getBlockState(pos);
         }
     }
 
