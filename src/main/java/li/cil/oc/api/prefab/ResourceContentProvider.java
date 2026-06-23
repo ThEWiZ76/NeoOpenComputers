@@ -7,6 +7,7 @@ import net.minecraft.server.packs.resources.Resource;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Optional;
 
 public class ResourceContentProvider implements ContentProvider {
@@ -47,6 +48,6 @@ public class ResourceContentProvider implements ContentProvider {
 
     protected ResourceLocation resourceLocation(final String path) {
         final String normalizedPath = path.startsWith("/") ? path.substring(1) : path;
-        return ResourceLocation.fromNamespaceAndPath(resourceDomain, basePath + normalizedPath);
+        return ResourceLocation.fromNamespaceAndPath(resourceDomain, (basePath + normalizedPath).toLowerCase(Locale.ROOT));
     }
 }

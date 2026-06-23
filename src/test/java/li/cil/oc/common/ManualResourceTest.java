@@ -49,6 +49,17 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualMarkdownResourcePathsAreLowercase() throws Exception {
+        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
+            assertTrue(files
+                .filter(path -> path.getFileName().toString().endsWith(".md"))
+                .map(DOC_ROOT::relativize)
+                .map(path -> path.toString().replace('\\', '/'))
+                .noneMatch(path -> !path.equals(path.toLowerCase(java.util.Locale.ROOT))));
+        }
+    }
+
+    @Test
     void bundledLanguageIncludesManualTooltipKeys() throws IOException {
         final String english = Files.readString(LANG_ROOT.resolve("en_us.json"));
 

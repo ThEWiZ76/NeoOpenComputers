@@ -21,6 +21,15 @@ final class ResourceContentProviderTest {
         assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "manual/index.md"), provider.location("/index.md"));
     }
 
+    @Test
+    void normalizesManualPathsForMinecraftResourceLocations() {
+        TestResourceContentProvider provider = new TestResourceContentProvider("neoopencomputers", "doc/");
+
+        assertEquals(
+            ResourceLocation.fromNamespaceAndPath("neoopencomputers", "doc/en_us/item/batteryupgrade1.md"),
+            provider.location("en_us/item/batteryUpgrade1.md"));
+    }
+
     private static final class TestResourceContentProvider extends ResourceContentProvider {
         private TestResourceContentProvider(final String resourceDomain) {
             super(resourceDomain);
