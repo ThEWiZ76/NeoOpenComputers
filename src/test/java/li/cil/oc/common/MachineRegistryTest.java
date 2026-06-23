@@ -165,6 +165,22 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void callbackArgumentSnapshotsDecodeByteArraysLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        SnapshotArgumentsEnvironment environment = new SnapshotArgumentsEnvironment();
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+
+        Object[] result = machine.invoke(
+            environment.node().address(),
+            "snapshotFirst",
+            new Object[]{"payload".getBytes(StandardCharsets.UTF_8)});
+
+        assertArrayEquals(new Object[]{"payload"}, result);
+    }
+
+    @Test
     void machineInvokeRejectsMissingComponentsLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1451,6 +1467,19 @@ final class MachineRegistryTest {
         @li.cil.oc.api.machine.Callback
         public Object[] regular(final li.cil.oc.api.machine.Context context, final li.cil.oc.api.machine.Arguments arguments) {
             return new Object[]{"regular"};
+        }
+    }
+
+    private static final class SnapshotArgumentsEnvironment extends AbstractManagedEnvironment {
+        private SnapshotArgumentsEnvironment() {
+            setNode(Network.newNode(this, Visibility.Network)
+                .withComponent("snapshot_component", Visibility.Network)
+                .create());
+        }
+
+        @li.cil.oc.api.machine.Callback
+        public Object[] snapshotFirst(final li.cil.oc.api.machine.Context context, final li.cil.oc.api.machine.Arguments arguments) {
+            return new Object[]{arguments.toArray()[0]};
         }
     }
 

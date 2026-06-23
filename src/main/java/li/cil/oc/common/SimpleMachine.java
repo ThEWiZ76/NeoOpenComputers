@@ -34,6 +34,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -1054,13 +1055,13 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         @Override public String checkString(final int index) {
             final Object value = checkAny(index);
             if (value instanceof String string) return string;
-            if (value instanceof byte[] bytes) return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+            if (value instanceof byte[] bytes) return new String(bytes, StandardCharsets.UTF_8);
             throw new IllegalArgumentException("bad argument #" + (index + 1) + " (string expected)");
         }
         @Override public byte[] checkByteArray(final int index) {
             final Object value = checkAny(index);
             if (value instanceof byte[] bytes) return bytes;
-            if (value instanceof String string) return string.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            if (value instanceof String string) return string.getBytes(StandardCharsets.UTF_8);
             throw new IllegalArgumentException("bad argument #" + (index + 1) + " (byte array expected)");
         }
         @Override public Map checkTable(final int index) { return (Map) checkAny(index); }
@@ -1082,7 +1083,15 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         @Override public boolean isByteArray(final int index) { return index >= 0 && index < values.length && values[index] instanceof byte[]; }
         @Override public boolean isTable(final int index) { return index >= 0 && index < values.length && values[index] instanceof Map; }
         @Override public boolean isItemStack(final int index) { return index >= 0 && index < values.length && values[index] instanceof ItemStack; }
-        @Override public Object[] toArray() { return Arrays.copyOf(values, values.length); }
+        @Override public Object[] toArray() {
+            final Object[] result = Arrays.copyOf(values, values.length);
+            for (int index = 0; index < result.length; index++) {
+                if (result[index] instanceof byte[] bytes) {
+                    result[index] = new String(bytes, StandardCharsets.UTF_8);
+                }
+            }
+            return result;
+        }
         @Override public java.util.Iterator<Object> iterator() { return Arrays.asList(values).iterator(); }
     }
 }

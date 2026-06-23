@@ -35,6 +35,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1219,7 +1220,7 @@ final class NetworkRegistry implements NetworkAPI {
                 return typedValue;
             }
             if (value instanceof byte[] typedValue) {
-                return new String(typedValue, java.nio.charset.StandardCharsets.UTF_8);
+                return new String(typedValue, StandardCharsets.UTF_8);
             }
             throw new IllegalArgumentException("bad argument #" + (index + 1) + " (string expected)");
         }
@@ -1231,7 +1232,7 @@ final class NetworkRegistry implements NetworkAPI {
                 return typedValue;
             }
             if (value instanceof String typedValue) {
-                return typedValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                return typedValue.getBytes(StandardCharsets.UTF_8);
             }
             throw new IllegalArgumentException("bad argument #" + (index + 1) + " (byte array expected)");
         }
@@ -1341,7 +1342,13 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public Object[] toArray() {
-            return Arrays.copyOf(values, values.length);
+            final Object[] result = Arrays.copyOf(values, values.length);
+            for (int index = 0; index < result.length; index++) {
+                if (result[index] instanceof byte[] bytes) {
+                    result[index] = new String(bytes, StandardCharsets.UTF_8);
+                }
+            }
+            return result;
         }
 
         @Override
