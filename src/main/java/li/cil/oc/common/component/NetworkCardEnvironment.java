@@ -221,7 +221,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         if (node().reachability() == Visibility.Neighbors) {
             node().sendToNeighbors(NETWORK_MESSAGE, packet);
         } else {
-            node().sendToAddress(address, NETWORK_MESSAGE, packet);
+            node().sendToReachable(NETWORK_MESSAGE, packet);
         }
     }
 

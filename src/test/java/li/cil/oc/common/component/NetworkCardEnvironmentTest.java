@@ -424,6 +424,31 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void wiredSendPublishesAddressedPacketToReachableNodesLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost receiverHost = new TestMachineHost();
+        NetworkCardEnvironment sender = new NetworkCardEnvironment(new TestMachineHost());
+        NetworkCardEnvironment receiver = new NetworkCardEnvironment(receiverHost);
+        RecordingEnvironment observer = new RecordingEnvironment();
+        Network.joinNewNetwork(sender.node());
+        sender.node().connect(receiver.node());
+        sender.node().connect(observer.node());
+        receiver.open(null, new TestArguments(123));
+
+        assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments(receiver.node().address(), 123, "payload")));
+
+        assertEquals(1, observer.messages.size());
+        Message message = observer.messages.get(0);
+        assertEquals("network.message", message.name());
+        Packet packet = assertInstanceOf(Packet.class, message.data()[0]);
+        assertEquals(sender.node().address(), packet.source());
+        assertEquals(receiver.node().address(), packet.destination());
+        assertEquals(123, packet.port());
+        assertArrayEquals(new Object[]{"payload"}, packet.data());
+        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
+    }
+
+    @Test
     void sendDoesNotRequireSenderPortToBeOpen() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost receiverHost = new TestMachineHost();
