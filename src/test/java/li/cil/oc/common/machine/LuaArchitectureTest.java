@@ -1210,6 +1210,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void computerBeepReturnsNoValuesLikeUpstream() {
+        String[] beepPattern = {null};
+        LuaArchitecture architecture = new LuaArchitecture("""
+            patternCount = select('#', computer.beep('..-'))
+            """);
+        architecture.bind(machineWithBeep(beepPattern));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("..-", beepPattern[0]);
+        assertEquals(0, architecture.globalInteger("patternCount"));
+    }
+
+    @Test
     void exposesComputerUsersToLua() {
         String[] added = {null};
         String[] removed = {null};

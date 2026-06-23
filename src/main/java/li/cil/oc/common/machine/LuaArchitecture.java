@@ -792,7 +792,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     final int durationInMilliseconds = Math.max(50, Math.min(5000, (int) (duration * 1000D)));
                     machine.beep((short) frequency, (short) durationInMilliseconds);
                 }
-                return LuaValue.TRUE;
+                return LuaValue.NONE;
             }
         });
         computer.set("users", new VarArgFunction() {
