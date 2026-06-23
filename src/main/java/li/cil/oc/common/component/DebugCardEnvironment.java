@@ -211,6 +211,19 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return null;
         }
 
+        @Callback(doc = "function(x:number, y:number, z:number):boolean -- Check whether the block at the specified coordinates is loaded.")
+        public Object[] isLoaded(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{level != null && level.isLoaded(blockPos(args))};
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number):boolean -- Check whether the block at the specified coordinates has a block entity.")
+        public Object[] hasTileEntity(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final BlockPos pos = blockPos(args);
+            return new Object[]{level != null && level.isLoaded(pos) && level.getBlockState(pos).hasBlockEntity()};
+        }
+
         @Callback(doc = "function():boolean -- Get whether it is raining.")
         public Object[] isRaining(final Context context, final Arguments args) throws Exception {
             checkAccess(access);
@@ -243,6 +256,10 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
 
         private static void setWeather(final ServerLevel level, final boolean raining, final boolean thundering) {
             level.setWeatherParameters(0, raining || thundering ? WEATHER_TIME : 0, raining, thundering);
+        }
+
+        private static BlockPos blockPos(final Arguments args) {
+            return new BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2));
         }
     }
 
