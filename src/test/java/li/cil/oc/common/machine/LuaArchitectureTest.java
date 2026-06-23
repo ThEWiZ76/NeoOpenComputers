@@ -1837,6 +1837,21 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void decodesLuaStringsInArgumentsToArrayLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            result = userdata.apply(value, 'array-string?', 'payload')
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("string", architecture.globalString("result"));
+    }
+
+    @Test
     void convertsLuaTableArgumentsToJavaMaps() {
         Object[] capturedArgument = {null};
         LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'configure', {label = 'disk', size = 4})");
@@ -4302,6 +4317,10 @@ final class LuaArchitectureTest {
             }
             if ("byte-array?".equals(arguments.checkString(0))) {
                 return arguments.isByteArray(0) ? "byte-array" : "not-byte-array";
+            }
+            if ("array-string?".equals(arguments.checkString(0))) {
+                final Object value = arguments.toArray()[1];
+                return value instanceof String ? "string" : value instanceof byte[] ? "byte-array" : "other";
             }
             if ("integer?".equals(arguments.checkString(0))) {
                 return arguments.isInteger(1) ? "integer" : "not-integer";

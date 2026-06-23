@@ -2641,7 +2641,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public Object[] toArray() {
-            return Arrays.copyOf(values, values.length);
+            final Object[] result = Arrays.copyOf(values, values.length);
+            for (int index = 0; index < result.length; index++) {
+                if (result[index] instanceof byte[] bytes) {
+                    result[index] = new String(bytes, StandardCharsets.UTF_8);
+                }
+            }
+            return result;
         }
 
         @Override
