@@ -8,8 +8,12 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
+import net.neoforged.fml.ModList;
+
+import java.util.Locale;
 
 public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static final String COMPONENT_NAME = "debug";
@@ -58,6 +62,12 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     public Object[] getZ(final Context context, final Arguments args) throws Exception {
         checkAccess();
         return new Object[]{host == null ? 0D : host.zPosition()};
+    }
+
+    @Callback(doc = "function(name:string):boolean -- Get whether a mod or API is loaded.")
+    public Object[] isModLoaded(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        return new Object[]{isLoaded(args.checkString(0))};
     }
 
     @Override
@@ -117,6 +127,20 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         if (!nonce.get().equals(access.nonce())) {
             throw new Exception("debug card is invalidated, please re-bind it to yourself");
         }
+    }
+
+    private static boolean isLoaded(final String name) {
+        final String id = name.toLowerCase(Locale.ROOT);
+        try {
+            if (ModList.get().isLoaded(id)) {
+                return true;
+            }
+        } catch (RuntimeException ignored) {
+        }
+        return switch (id) {
+            case "minecraft", "neoforge", NeoOpenComputers.MODID, "opencomputers" -> true;
+            default -> false;
+        };
     }
 
     public record AccessContext(String player, String nonce) {
