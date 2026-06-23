@@ -2668,7 +2668,8 @@ public final class NeoOpenComputersGameTests {
             }
         })) {
             withCachedConfig(ModSettings.DISASSEMBLER_TICK_AMOUNT, 3D, () ->
-                withCachedConfig(ModSettings.DISASSEMBLER_ITEM_COST, 6D, () -> {
+                withCachedConfig(ModSettings.DISASSEMBLER_ITEM_COST, 6D, () ->
+                    withCachedConfig(ModSettings.DISASSEMBLER_BREAK_CHANCE, 0D, () -> {
                     final BlockPos pos = new BlockPos(1, 1, 1);
                     helper.setBlock(pos, ModBlocks.DISASSEMBLER.get());
                     final DisassemblerBlockEntity disassembler = helper.getBlockEntity(pos);
@@ -2686,7 +2687,7 @@ public final class NeoOpenComputersGameTests {
                     DisassemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), disassembler);
                     helper.assertTrue(disassembler.containsOutput(Items.EMERALD), "Disassembler did not release output after configured item energy");
                     helper.succeed();
-                }));
+                })));
         }
     }
 
@@ -3767,12 +3768,12 @@ public final class NeoOpenComputersGameTests {
         final Connector east = (Connector) distributor.sidedNode(Direction.EAST);
         final Connector west = (Connector) distributor.sidedNode(Direction.WEST);
         helper.assertTrue(east != null && west != null, "Power distributor did not expose sided connectors");
-        helper.assertTrue(Double.compare(PowerDistributorBlockEntity.CONNECTOR_BUFFER_SIZE, east.localBufferSize()) == 0, "Power distributor connector capacity mismatch");
-        east.changeBuffer(PowerDistributorBlockEntity.CONNECTOR_BUFFER_SIZE);
+        helper.assertTrue(Double.compare(PowerDistributorBlockEntity.connectorBufferSize(), east.localBufferSize()) == 0, "Power distributor connector capacity mismatch");
+        east.changeBuffer(PowerDistributorBlockEntity.connectorBufferSize());
 
         PowerDistributorBlockEntity.serverTick(helper.getLevel(), distributorPos, helper.getBlockState(distributorPos), distributor);
 
-        final double expected = PowerDistributorBlockEntity.CONNECTOR_BUFFER_SIZE / Direction.values().length;
+        final double expected = PowerDistributorBlockEntity.connectorBufferSize() / Direction.values().length;
         assertClose(helper, east.localBuffer(), expected, "Power distributor east buffer");
         assertClose(helper, west.localBuffer(), expected, "Power distributor west buffer");
         helper.succeed();

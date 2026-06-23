@@ -116,6 +116,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> BATTERY_UPGRADE_BUFFERS;
+    public static final ModConfigSpec.DoubleValue POWER_DISTRIBUTOR_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_INPUT_COST;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_RECONFIGURE_COST;
@@ -348,6 +349,9 @@ public final class ModSettings {
         BATTERY_UPGRADE_BUFFERS = builder
             .comment("Energy stored by battery upgrade tiers one, two, and three. OpenComputers upstream default is [10000, 15000, 20000].")
             .defineList("batteryUpgrades", DEFAULT_BATTERY_UPGRADE_BUFFERS, value -> value instanceof Double && (Double) value >= 0D);
+        POWER_DISTRIBUTOR_BUFFER = builder
+            .comment("Energy each face of a power distributor can store. OpenComputers upstream default is 500.")
+            .defineInRange("distributor", 500D, 0D, Double.MAX_VALUE);
         NANOMACHINES_BUFFER = builder
             .comment("Nanomachines local energy buffer. OpenComputers upstream default is 100000.")
             .defineInRange("nanomachines", 100_000D, 0D, Double.MAX_VALUE);
@@ -499,6 +503,10 @@ public final class ModSettings {
     public static double batteryUpgradeBuffer(final int tier) {
         final List<Double> buffers = batteryUpgradeBuffers();
         return buffers.get(clampIndex(tier, buffers.size()));
+    }
+
+    public static double powerDistributorBuffer() {
+        return Math.max(0D, doubleValue(POWER_DISTRIBUTOR_BUFFER));
     }
 
     public static double nanomachinesBuffer() {

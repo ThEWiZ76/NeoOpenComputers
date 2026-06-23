@@ -9,6 +9,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,8 +32,7 @@ public class PowerDistributorBlockEntity extends BlockEntity implements Environm
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Power,
         DeviceInfo.DeviceAttribute.Description, "Power distributor",
         DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "Power Distributor",
-        DeviceInfo.DeviceAttribute.Capacity, Double.toString(CONNECTOR_BUFFER_SIZE)
+        DeviceInfo.DeviceAttribute.Product, "Power Distributor"
     );
 
     private final Node[] nodes = new Node[Direction.values().length];
@@ -78,7 +78,9 @@ public class PowerDistributorBlockEntity extends BlockEntity implements Environm
 
     @Override
     public Map<String, String> getDeviceInfo() {
-        return DEVICE_INFO;
+        final Map<String, String> metadata = new java.util.HashMap<>(DEVICE_INFO);
+        metadata.put(DeviceInfo.DeviceAttribute.Capacity, Double.toString(connectorBufferSize()));
+        return metadata;
     }
 
     @Override
@@ -163,7 +165,11 @@ public class PowerDistributorBlockEntity extends BlockEntity implements Environm
 
     private static Node createNode(final Environment environment) {
         return Network.newNode(environment, Visibility.None)
-            .withConnector(CONNECTOR_BUFFER_SIZE)
+            .withConnector(connectorBufferSize())
             .create();
+    }
+
+    public static double connectorBufferSize() {
+        return ModSettings.powerDistributorBuffer();
     }
 }
