@@ -574,6 +574,28 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void wirelessBroadcastConsumesCardConnectorWithMachineContextLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
+        TestMachineHost receiverHost = new TestMachineHost(3, 4, 0);
+        WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(senderHost, 0);
+        WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(receiverHost, 0);
+        ComponentConnector connector = assertInstanceOf(ComponentConnector.class, sender.node());
+        RecordingContext context = new RecordingContext(senderHost.machine.node());
+        Network.joinNewNetwork(sender.node());
+        Network.joinNewNetwork(receiver.node());
+        receiver.open(null, new TestArguments(123));
+        sender.setStrength(null, new TestArguments(5D));
+        connector.setLocalBufferSize(1D);
+        connector.changeBuffer(1D);
+
+        assertArrayEquals(new Object[]{true}, sender.broadcast(context, new TestArguments(123, "payload")));
+
+        assertEquals(0.75D, connector.localBuffer(), 0.000_001D);
+        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 5D, "payload")), receiverHost.signals);
+    }
+
+    @Test
     void wirelessBroadcastUsesConfiguredRangeCost() throws Exception {
         OpenComputersApi.initialize();
 
