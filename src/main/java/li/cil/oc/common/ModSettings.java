@@ -117,6 +117,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> BATTERY_UPGRADE_BUFFERS;
     public static final ModConfigSpec.DoubleValue POWER_DISTRIBUTOR_BUFFER;
+    public static final ModConfigSpec.DoubleValue TABLET_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_INPUT_COST;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_RECONFIGURE_COST;
@@ -352,6 +353,9 @@ public final class ModSettings {
         POWER_DISTRIBUTOR_BUFFER = builder
             .comment("Energy each face of a power distributor can store. OpenComputers upstream default is 500.")
             .defineInRange("distributor", 500D, 0D, Double.MAX_VALUE);
+        TABLET_BUFFER = builder
+            .comment("Energy a tablet can store. OpenComputers upstream default is 10000.")
+            .defineInRange("tablet", 10_000D, 0D, Double.MAX_VALUE);
         NANOMACHINES_BUFFER = builder
             .comment("Nanomachines local energy buffer. OpenComputers upstream default is 100000.")
             .defineInRange("nanomachines", 100_000D, 0D, Double.MAX_VALUE);
@@ -507,6 +511,10 @@ public final class ModSettings {
 
     public static double powerDistributorBuffer() {
         return Math.max(0D, doubleValue(POWER_DISTRIBUTOR_BUFFER));
+    }
+
+    public static double tabletBuffer() {
+        return Math.max(0D, doubleValue(TABLET_BUFFER));
     }
 
     public static double nanomachinesBuffer() {

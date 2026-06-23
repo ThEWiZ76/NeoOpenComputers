@@ -9,6 +9,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -132,8 +133,9 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
         final ItemStack stack = new ItemStack(this);
         setTier(stack, caseTier(caseStack));
         setContainer(stack, container);
-        setMaxCharge(stack, DEFAULT_MAX_CHARGE);
-        setCharge(stack, DEFAULT_MAX_CHARGE);
+        final double maxCharge = ModSettings.tabletBuffer();
+        setMaxCharge(stack, maxCharge);
+        setCharge(stack, maxCharge);
         setComponent(stack, 0, new ItemStack(ModItems.SCREEN_TIER1.get()));
         if (components != null) {
             for (int index = 0; index < components.length && index + 1 < COMPONENT_SLOTS; index++) {
