@@ -159,7 +159,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     @Override
     public void onMessage(final Message message) {
         if ("computer.started".equals(message.name()) || "computer.stopped".equals(message.name())) {
-            if (isOwnComputerMessage(message) && !openPorts.isEmpty()) {
+            if (isNeighborComputerMessage(message) && !openPorts.isEmpty()) {
                 openPorts.clear();
                 markChanged();
             }
@@ -213,12 +213,8 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         return host instanceof Rack ? Visibility.Neighbors : Visibility.Network;
     }
 
-    private boolean isOwnComputerMessage(final Message message) {
-        if (!(host instanceof MachineHost machineHost)) {
-            return false;
-        }
-        final var machine = machineHost.machine();
-        return machine != null && message.source() == machine.node();
+    private boolean isNeighborComputerMessage(final Message message) {
+        return node() != null && message.source() != null && node().isNeighborOf(message.source());
     }
 
     protected void doSend(final Context context, final String address, final Packet packet) throws IOException {

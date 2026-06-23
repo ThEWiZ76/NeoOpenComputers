@@ -105,9 +105,25 @@ final class NetworkCardEnvironmentTest {
         OpenComputersApi.initialize();
         TestMachineHost host = new TestMachineHost();
         NetworkCardEnvironment card = new NetworkCardEnvironment(host);
+        Network.joinNewNetwork(host.machine.node());
+        host.machine.node().connect(card.node());
         card.open(null, new TestArguments(123));
 
         card.onMessage(new TestMessage(host.machine.node(), "computer.started", new Object[0]));
+
+        assertArrayEquals(new Object[]{false}, card.isOpen(null, new TestArguments(123)));
+    }
+
+    @Test
+    void rackNetworkCardClearsOpenPortsWhenNeighborComputerStartsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(rackHost());
+        RecordingEnvironment computer = new RecordingEnvironment();
+        Network.joinNewNetwork(card.node());
+        card.node().connect(computer.node());
+        card.open(null, new TestArguments(123));
+
+        card.onMessage(new TestMessage(computer.node(), "computer.started", new Object[0]));
 
         assertArrayEquals(new Object[]{false}, card.isOpen(null, new TestArguments(123)));
     }
