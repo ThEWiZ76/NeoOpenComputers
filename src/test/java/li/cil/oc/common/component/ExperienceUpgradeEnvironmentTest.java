@@ -8,6 +8,7 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -83,6 +84,16 @@ final class ExperienceUpgradeEnvironmentTest {
         assertEquals("Knowledge database", metadata.get(DeviceInfo.DeviceAttribute.Description));
         assertEquals("ERSO (Event Recorder and Self-Optimizer)", metadata.get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("30", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+    }
+
+    @Test
+    void componentIsNetworkVisibleLikeUpstreamExperienceUpgrade() {
+        OpenComputersApi.initialize();
+
+        ExperienceUpgradeEnvironment environment = new ExperienceUpgradeEnvironment(new TestAgent());
+        ComponentConnector connector = assertInstanceOf(ComponentConnector.class, environment.node());
+
+        assertEquals(Visibility.Network, connector.visibility());
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {

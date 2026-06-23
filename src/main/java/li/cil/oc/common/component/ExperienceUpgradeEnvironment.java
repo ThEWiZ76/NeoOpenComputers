@@ -43,7 +43,7 @@ public class ExperienceUpgradeEnvironment extends AbstractManagedEnvironment imp
         this.host = host;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
-            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector(0D).create());
+            setNode(builder.withComponent(COMPONENT_NAME).withConnector(0D).create());
         }
     }
 
