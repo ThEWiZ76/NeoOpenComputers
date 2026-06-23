@@ -67,7 +67,7 @@ public class ManualScreen extends Screen {
     public void refreshPage() {
         final Iterable<String> content = registry.contentFor(registry.currentPath());
         document = ManualDocument.parse(content == null ? List.of("Document not found: " + registry.currentPath()) : content);
-        scrollOffset = clampScrollOffset(scrollOffset, documentHeight(document, DOCUMENT_MAX_WIDTH), DOCUMENT_MAX_HEIGHT);
+        setScrollOffset(registry.currentOffset());
     }
 
     public ManualDocument document() {
@@ -553,7 +553,7 @@ public class ManualScreen extends Screen {
         final int documentHeight = documentHeight(document, DOCUMENT_MAX_WIDTH);
         final int nextOffset = clampScrollOffset(scrollOffset - (int) Math.signum(scrollY) * SCROLL_STEP, documentHeight, DOCUMENT_MAX_HEIGHT);
         if (nextOffset != scrollOffset) {
-            scrollOffset = nextOffset;
+            setScrollOffset(nextOffset);
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
@@ -575,7 +575,6 @@ public class ManualScreen extends Screen {
             final int tabIndex = tabIndexAt((int) mouseX - left, (int) mouseY - top, registry.tabs().size());
             if (tabIndex >= 0) {
                 registry.navigate(registry.tabs().get(tabIndex).path());
-                scrollOffset = 0;
                 refreshPage();
                 return true;
             }
@@ -592,7 +591,6 @@ public class ManualScreen extends Screen {
                     openExternalLink(link.href());
                 } else {
                     registry.navigate(ManualRegistry.resolveLinkPath(link.href(), registry.currentPath()));
-                    scrollOffset = 0;
                     refreshPage();
                 }
                 return true;
@@ -617,6 +615,10 @@ public class ManualScreen extends Screen {
         if (isJumpKey(keyCode, scanCode)) {
             return goBackOrClose();
         }
+        if (isInventoryKey(keyCode, scanCode)) {
+            onClose();
+            return true;
+        }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -627,9 +629,15 @@ public class ManualScreen extends Screen {
         return minecraft != null && minecraft.options.keyJump.matches(keyCode, scanCode);
     }
 
+    private boolean isInventoryKey(final int keyCode, final int scanCode) {
+        if (keyCode == GLFW.GLFW_KEY_E) {
+            return true;
+        }
+        return minecraft != null && minecraft.options.keyInventory.matches(keyCode, scanCode);
+    }
+
     private boolean goBackOrClose() {
         if (registry.goBack()) {
-            scrollOffset = 0;
             refreshPage();
         } else {
             onClose();
@@ -661,7 +669,12 @@ public class ManualScreen extends Screen {
     }
 
     private void scrollToMouse(final int mouseY) {
-        scrollOffset = scrollOffsetForMouseY(mouseY, documentHeight(document, DOCUMENT_MAX_WIDTH), DOCUMENT_MAX_HEIGHT);
+        setScrollOffset(scrollOffsetForMouseY(mouseY, documentHeight(document, DOCUMENT_MAX_WIDTH), DOCUMENT_MAX_HEIGHT));
+    }
+
+    private void setScrollOffset(final int offset) {
+        scrollOffset = clampScrollOffset(offset, documentHeight(document, DOCUMENT_MAX_WIDTH), DOCUMENT_MAX_HEIGHT);
+        registry.setCurrentOffset(scrollOffset);
     }
 
     private int textWidth(final String text) {

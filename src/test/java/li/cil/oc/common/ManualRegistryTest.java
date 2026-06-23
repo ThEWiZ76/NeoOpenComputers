@@ -187,6 +187,29 @@ final class ManualRegistryTest {
     }
 
     @Test
+    void keepsScrollOffsetPerManualHistoryEntryLikeUpstream() {
+        ManualRegistry registry = new ManualRegistry();
+
+        registry.setCurrentOffset(42);
+        registry.navigate("general/computer.md");
+        registry.setCurrentOffset(128);
+        registry.navigate("item/cpu1.md");
+        registry.setCurrentOffset(7);
+
+        assertEquals(7, registry.currentOffset());
+        assertTrue(registry.goBack());
+        assertEquals("general/computer.md", registry.currentPath());
+        assertEquals(128, registry.currentOffset());
+        assertTrue(registry.goBack());
+        assertEquals("%LANGUAGE%/index.md", registry.currentPath());
+        assertEquals(42, registry.currentOffset());
+
+        registry.reset();
+
+        assertEquals(0, registry.currentOffset());
+    }
+
+    @Test
     void resolvesRelativeManualLinksLikeUpstream() {
         assertEquals("%LANGUAGE%/item/manual.md", ManualRegistry.resolveLinkPath("item/manual.md", "%LANGUAGE%/index.md"));
         assertEquals("%LANGUAGE%/block/adapter.md", ManualRegistry.resolveLinkPath("../block/adapter.md", "%LANGUAGE%/item/manual.md"));

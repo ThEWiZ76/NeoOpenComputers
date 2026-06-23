@@ -228,6 +228,15 @@ public final class ManualRegistry implements ManualAPI {
         return true;
     }
 
+    public int currentOffset() {
+        return history.peek().offset();
+    }
+
+    public void setCurrentOffset(final int offset) {
+        final History current = history.pop();
+        history.push(new History(current.path(), Math.max(0, offset)));
+    }
+
     int tabCount() {
         return tabs.size();
     }

@@ -363,6 +363,61 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenInventoryKeyClosesLikeUpstream() {
+        TestManualScreen screen = new TestManualScreen(new ManualRegistry());
+
+        boolean handled = screen.keyPressed(GLFW.GLFW_KEY_E, 0, 0);
+
+        assertTrue(handled);
+        assertEquals(1, screen.closeCount);
+    }
+
+    @Test
+    void manualScreenRefreshRestoresCurrentHistoryScrollOffset() {
+        ManualRegistry registry = new ManualRegistry();
+        registry.addProvider(path -> IntStream.range(0, 50).mapToObj(index -> "line " + index).toList());
+        registry.setCurrentOffset(90);
+        ManualScreen screen = new ManualScreen(registry);
+
+        screen.refreshPage();
+
+        assertEquals(90, screen.scrollOffset());
+    }
+
+    @Test
+    void manualScreenStoresScrollOffsetInCurrentHistoryEntry() {
+        ManualRegistry registry = new ManualRegistry();
+        registry.addProvider(path -> IntStream.range(0, 50).mapToObj(index -> "line " + index).toList());
+        ManualScreen screen = new ManualScreen(registry);
+        screen.width = 400;
+        screen.height = 300;
+        screen.refreshPage();
+
+        boolean handled = screen.mouseClicked(317, 239, 0);
+
+        assertTrue(handled);
+        assertEquals(screen.scrollOffset(), registry.currentOffset());
+    }
+
+    @Test
+    void manualScreenBackNavigationRestoresPreviousPageScrollOffset() {
+        ManualRegistry registry = new ManualRegistry();
+        registry.addProvider(path -> IntStream.range(0, 50).mapToObj(index -> "line " + index).toList());
+        registry.setCurrentOffset(75);
+        registry.navigate("item/cpu1.md");
+        registry.setCurrentOffset(0);
+        ManualScreen screen = new ManualScreen(registry);
+        screen.width = 400;
+        screen.height = 300;
+
+        boolean handled = screen.mouseClicked(200, 150, 1);
+
+        assertTrue(handled);
+        assertEquals("%LANGUAGE%/index.md", registry.currentPath());
+        assertEquals(75, screen.scrollOffset());
+    }
+
+    @Test
     void manualScreenScrollbarClickUpdatesScrollOffset() {
         ManualRegistry registry = new ManualRegistry();
         registry.addProvider(path -> IntStream.range(0, 50).mapToObj(index -> "line " + index).toList());
