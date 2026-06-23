@@ -482,6 +482,37 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardScoreboardValueUpdatesTeams(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] scoreboardResult = invokeComponent(helper, component, "getScoreboard");
+        helper.assertTrue(scoreboardResult.length == 1 && scoreboardResult[0] instanceof Value, "Debug card getScoreboard did not return a value");
+        final Value scoreboard = (Value) scoreboardResult[0];
+
+        invokeValue(helper, scoreboard, "addTeam", "neo_team");
+        helper.assertTrue(helper.getLevel().getScoreboard().getPlayerTeam("neo_team") != null, "Debug scoreboard did not add team");
+
+        assertSingleResult(helper, invokeValue(helper, scoreboard, "addPlayerToTeam", "Alice", "neo_team"), Boolean.TRUE, "Debug scoreboard add player to team");
+        final var aliceTeam = helper.getLevel().getScoreboard().getPlayersTeam("Alice");
+        helper.assertTrue(aliceTeam != null && "neo_team".equals(aliceTeam.getName()), "Debug scoreboard did not place player on team");
+
+        invokeValue(helper, scoreboard, "removePlayerFromTeam", "Alice", "neo_team");
+        helper.assertTrue(helper.getLevel().getScoreboard().getPlayersTeam("Alice") == null, "Debug scoreboard did not remove player from specific team");
+
+        invokeValue(helper, scoreboard, "addPlayerToTeam", "Bob", "neo_team");
+        assertSingleResult(helper, invokeValue(helper, scoreboard, "removePlayerFromTeams", "Bob"), Boolean.TRUE, "Debug scoreboard remove player from teams");
+        helper.assertTrue(helper.getLevel().getScoreboard().getPlayersTeam("Bob") == null, "Debug scoreboard did not remove player from teams");
+
+        invokeValue(helper, scoreboard, "addPlayerToTeam", "Carol", "neo_team");
+        invokeValue(helper, scoreboard, "removeTeam", "neo_team");
+        helper.assertTrue(helper.getLevel().getScoreboard().getPlayerTeam("neo_team") == null, "Debug scoreboard did not remove team");
+        helper.assertTrue(helper.getLevel().getScoreboard().getPlayersTeam("Carol") == null, "Debug scoreboard did not clear removed team members");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardWorldValueReadsAndSetsWeather(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
         helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");

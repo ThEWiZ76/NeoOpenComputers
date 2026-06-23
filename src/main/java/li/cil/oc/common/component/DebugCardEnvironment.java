@@ -31,6 +31,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.ScoreAccess;
 import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.Scoreboard;
@@ -202,6 +203,46 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         private ScoreboardValue(final Level level, final AccessContext access) {
             this.scoreboard = level == null ? null : level.getScoreboard();
             this.access = access;
+        }
+
+        @Callback(doc = "function(team:string) -- Add a team to the scoreboard.")
+        public Object[] addTeam(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            scoreboard().addPlayerTeam(args.checkString(0));
+            return null;
+        }
+
+        @Callback(doc = "function(teamName:string) -- Remove a team from the scoreboard.")
+        public Object[] removeTeam(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final PlayerTeam team = scoreboard().getPlayerTeam(args.checkString(0));
+            if (team != null) {
+                scoreboard().removePlayerTeam(team);
+            }
+            return null;
+        }
+
+        @Callback(doc = "function(player:string, team:string):boolean -- Add a player to a team.")
+        public Object[] addPlayerToTeam(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final PlayerTeam team = scoreboard().getPlayerTeam(args.checkString(1));
+            return new Object[]{team != null && scoreboard().addPlayerToTeam(args.checkString(0), team)};
+        }
+
+        @Callback(doc = "function(player:string):boolean -- Remove a player from their team.")
+        public Object[] removePlayerFromTeams(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{scoreboard().removePlayerFromTeam(args.checkString(0))};
+        }
+
+        @Callback(doc = "function(player:string, team:string):boolean -- Remove a player from a specific team.")
+        public Object[] removePlayerFromTeam(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final PlayerTeam team = scoreboard().getPlayerTeam(args.checkString(1));
+            if (team != null) {
+                scoreboard().removePlayerFromTeam(args.checkString(0), team);
+            }
+            return null;
         }
 
         @Callback(doc = "function(objectiveName:string, objectiveCriteria:string) -- Create a new objective for the scoreboard.")
