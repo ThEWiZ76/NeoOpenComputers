@@ -51,21 +51,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     public GraphicsCardEnvironment(final int tier) {
         final int clampedTier = Math.max(0, Math.min(2, tier));
         this.tier = clampedTier;
-        maxWidth = switch (clampedTier) {
-            case 0 -> 50;
-            case 1 -> 80;
-            default -> 160;
-        };
-        maxHeight = switch (clampedTier) {
-            case 0 -> 16;
-            case 1 -> 25;
-            default -> 50;
-        };
-        maxDepth = switch (clampedTier) {
-            case 0 -> TextBuffer.ColorDepth.OneBit;
-            case 1 -> TextBuffer.ColorDepth.FourBit;
-            default -> TextBuffer.ColorDepth.EightBit;
-        };
+        maxWidth = ModSettings.screenWidthByTier(clampedTier);
+        maxHeight = ModSettings.screenHeightByTier(clampedTier);
+        maxDepth = ModSettings.screenDepthByTier(clampedTier);
         totalVideoMemory = maxWidth * maxHeight * 4;
 
         final var builder = Network.newNode(this, Visibility.Neighbors);

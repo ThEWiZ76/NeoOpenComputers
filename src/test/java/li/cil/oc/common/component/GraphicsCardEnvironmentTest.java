@@ -91,6 +91,26 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void gpuLimitsUseConfiguredScreenTierSettings() throws Exception {
+        withCachedConfig(ModSettings.SCREEN_WIDTHS_BY_TIER, java.util.List.of(11, 13, 17), () ->
+            withCachedConfig(ModSettings.SCREEN_HEIGHTS_BY_TIER, java.util.List.of(3, 5, 7), () ->
+                withCachedConfig(ModSettings.SCREEN_DEPTHS_BY_TIER, java.util.List.of(1, 1, 4), () -> {
+                    OpenComputersApi.initialize();
+                    GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(1);
+
+                    assertEquals(13 * 5 * 4, ((Number) gpu.totalMemory(null, new TestArguments())[0]).intValue());
+                    assertArrayEquals(new Object[]{1}, gpu.allocateBuffer(null, new TestArguments()));
+                    assertArrayEquals(new Object[]{13, 5}, gpu.getBufferSize(null, new TestArguments(1)));
+                    assertArrayEquals(new Object[]{0}, gpu.setActiveBuffer(null, new TestArguments(1)));
+                    assertArrayEquals(new Object[]{1}, gpu.maxDepth(null, new TestArguments()));
+
+                    DeviceInfo info = assertInstanceOf(DeviceInfo.class, gpu);
+                    assertEquals("65", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Capacity));
+                    assertEquals("1", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Width));
+                })));
+    }
+
+    @Test
     void reportsNoScreenBeforeBind() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
