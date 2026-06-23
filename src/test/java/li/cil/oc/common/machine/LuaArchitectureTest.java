@@ -1815,6 +1815,28 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void convertsUnsupportedLuaArgumentsToNullLikeUpstream() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        List<String> invokedMethods = new ArrayList<>();
+        List<Object[]> invokedArguments = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            local thread = coroutine.create(function() end)
+            result = component.invoke('fs-address', 'label', function() end, thread)
+            """);
+        architecture.bind(machineWithMethodsAndInvokeCapture(Map.of("fs-address", "filesystem"), methods, invokedMethods, invokedArguments));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(List.of("label"), invokedMethods);
+        assertEquals(2, invokedArguments.getFirst().length);
+        assertEquals(null, invokedArguments.getFirst()[0]);
+        assertEquals(null, invokedArguments.getFirst()[1]);
+        assertEquals(true, architecture.globalBoolean("result"));
+    }
+
+    @Test
     void convertsLuaTableArgumentsToJavaMaps() {
         Object[] capturedArgument = {null};
         LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'configure', {label = 'disk', size = 4})");

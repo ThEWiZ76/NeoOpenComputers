@@ -2355,7 +2355,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (value.isuserdata()) {
             return value.touserdata();
         }
-        return value.tojstring();
+        return null;
     }
 
     private static String reverseUnicode(final String value) {
