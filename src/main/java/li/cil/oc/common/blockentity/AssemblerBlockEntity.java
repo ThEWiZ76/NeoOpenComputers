@@ -17,6 +17,7 @@ import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplates;
+import li.cil.oc.common.util.AssemblerWork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -52,7 +53,6 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     private static final String TAG_TOTAL_ENERGY = "totalEnergy";
     private static final String TAG_REMAINING_ENERGY = "remainingEnergy";
     private static final double BUFFER_SIZE = 32D;
-    private static final double ENERGY_PER_TICK = 1D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Assembler",
@@ -363,9 +363,9 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
         if (!isAssembling() || pendingOutput.isEmpty() || !(node() instanceof ComponentConnector connector)) {
             return;
         }
-        final double want = Math.min(requiredEnergy, ENERGY_PER_TICK);
-        final double missing = connector.changeBuffer(-want);
-        final double consumed = want - missing;
+        final double want = AssemblerWork.energyToApply(requiredEnergy);
+        final double remainingDelta = connector.changeBuffer(-want);
+        final double consumed = AssemblerWork.energyConsumed(want, remainingDelta);
         if (consumed <= 0D) {
             return;
         }

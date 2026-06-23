@@ -150,6 +150,9 @@ import java.util.concurrent.atomic.AtomicReference;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class NeoOpenComputersGameTests {
+    private static final double ASSEMBLER_TEST_TICK_ENERGY = 32D;
+    private static final double ASSEMBLER_TWO_TICK_ENERGY = ASSEMBLER_TEST_TICK_ENERGY * 2D;
+
     @GameTest(template = "empty")
     public static void registeredContentAvailable(final GameTestHelper helper) {
         ModBlocks.ADAPTER.get();
@@ -2469,7 +2472,7 @@ public final class NeoOpenComputersGameTests {
 
             @Override
             public double energyRequired(final AssemblerBlockEntity assembler) {
-                return 2D;
+                return ASSEMBLER_TWO_TICK_ENERGY;
             }
         })) {
             final BlockPos pos = new BlockPos(1, 1, 1);
@@ -2484,9 +2487,10 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(assembler.node() instanceof ComponentConnector, "Assembler node is not a component connector");
 
             final ComponentConnector connector = (ComponentConnector) assembler.node();
-            connector.changeBuffer(2D);
+            connector.changeBuffer(ASSEMBLER_TEST_TICK_ENERGY);
             AssemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), assembler);
             helper.assertTrue(assembler.isAssembling(), "Assembler finished after partial energy");
+            connector.changeBuffer(ASSEMBLER_TEST_TICK_ENERGY);
             AssemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), assembler);
 
             helper.assertTrue(!assembler.isAssembling(), "Assembler did not finish after required energy");
@@ -2525,7 +2529,7 @@ public final class NeoOpenComputersGameTests {
 
             @Override
             public double energyRequired(final AssemblerBlockEntity assembler) {
-                return 4D;
+                return ASSEMBLER_TWO_TICK_ENERGY;
             }
         })) {
             final BlockPos pos = new BlockPos(1, 1, 1);
@@ -2542,7 +2546,7 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(AssemblerMenu.stateFor(assembler) == AssemblerMenu.STATE_BUSY, "Started assembler did not report busy state");
 
             final ComponentConnector connector = (ComponentConnector) assembler.node();
-            connector.changeBuffer(2D);
+            connector.changeBuffer(ASSEMBLER_TEST_TICK_ENERGY);
             AssemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), assembler);
 
             final int progress = AssemblerMenu.progressFor(assembler);

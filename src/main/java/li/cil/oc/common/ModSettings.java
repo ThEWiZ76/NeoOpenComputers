@@ -108,6 +108,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue TRANSPOSER_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
+    public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_INPUT_COST;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_RECONFIGURE_COST;
@@ -321,6 +322,9 @@ public final class ModSettings {
         SOLAR_GENERATOR_EFFICIENCY = builder
             .comment("Energy produced per tick by solar generator upgrades. OpenComputers upstream default is 0.2.")
             .defineInRange("solarGeneratorEfficiency", 0.2D, 0D, Double.MAX_VALUE);
+        ASSEMBLER_TICK_AMOUNT = builder
+            .comment("Energy the assembler can apply per tick. OpenComputers upstream default is 50.")
+            .defineInRange("assemblerTickAmount", 50D, 1D, Double.MAX_VALUE);
         MFU_TICK_FREQUENCY = builder
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
@@ -441,6 +445,10 @@ public final class ModSettings {
 
     public static double solarGeneratorEfficiency() {
         return doubleValue(SOLAR_GENERATOR_EFFICIENCY);
+    }
+
+    public static double assemblerTickAmount() {
+        return Math.max(1D, doubleValue(ASSEMBLER_TICK_AMOUNT));
     }
 
     public static double nanomachinesBuffer() {
