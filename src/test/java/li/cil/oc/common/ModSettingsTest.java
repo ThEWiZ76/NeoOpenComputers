@@ -70,6 +70,7 @@ final class ModSettingsTest {
         assertEquals(16, ModSettings.maxUsers());
         assertEquals(32, ModSettings.maxUsernameLength());
         assertEquals(5D, ModSettings.computerTimeout());
+        assertEquals(0.25D, ModSettings.startupDelay());
         assertEquals(4096, ModSettings.eepromSize());
         assertEquals(256, ModSettings.eepromDataSize());
         assertEquals(List.of(8, 12, 16, 1024), ModSettings.cpuComponentCount());
@@ -212,6 +213,7 @@ final class ModSettingsTest {
         assertEquals(List.of("computer", "maxUsers"), ModSettings.MAX_USERS.getPath());
         assertEquals(List.of("computer", "maxUsernameLength"), ModSettings.MAX_USERNAME_LENGTH.getPath());
         assertEquals(List.of("computer", "timeout"), ModSettings.COMPUTER_TIMEOUT.getPath());
+        assertEquals(List.of("computer", "startupDelay"), ModSettings.STARTUP_DELAY.getPath());
         assertEquals(List.of("computer", "eepromSize"), ModSettings.EEPROM_SIZE.getPath());
         assertEquals(List.of("computer", "eepromDataSize"), ModSettings.EEPROM_DATA_SIZE.getPath());
         assertEquals(List.of("computer", "cpuComponentCount"), ModSettings.CPU_COMPONENT_COUNT.getPath());

@@ -53,6 +53,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MAX_USERS;
     public static final ModConfigSpec.IntValue MAX_USERNAME_LENGTH;
     public static final ModConfigSpec.DoubleValue COMPUTER_TIMEOUT;
+    public static final ModConfigSpec.DoubleValue STARTUP_DELAY;
     public static final ModConfigSpec.IntValue EEPROM_SIZE;
     public static final ModConfigSpec.IntValue EEPROM_DATA_SIZE;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> CPU_COMPONENT_COUNT;
@@ -244,6 +245,9 @@ public final class ModSettings {
         COMPUTER_TIMEOUT = builder
             .comment("Seconds programs may run without yielding before they are stopped. OpenComputers upstream default is 5.0.")
             .defineInRange("timeout", 5D, 0D, Double.MAX_VALUE);
+        STARTUP_DELAY = builder
+            .comment("Seconds a loaded computer waits before resuming after world load. OpenComputers upstream default is 0.25 and minimum is 0.05.")
+            .defineInRange("startupDelay", 0.25D, 0.05D, Double.MAX_VALUE);
         EEPROM_SIZE = builder
             .comment("EEPROM code storage size in bytes. OpenComputers upstream default is 4096.")
             .defineInRange("eepromSize", 4096, 0, Integer.MAX_VALUE);
@@ -699,6 +703,10 @@ public final class ModSettings {
 
     public static double computerTimeout() {
         return doubleValue(COMPUTER_TIMEOUT);
+    }
+
+    public static double startupDelay() {
+        return Math.max(0.05D, doubleValue(STARTUP_DELAY));
     }
 
     public static int eepromSize() {

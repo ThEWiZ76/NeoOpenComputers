@@ -763,6 +763,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (architecture != null && nbt.contains(ARCHITECTURE_TAG)) {
             architecture.load(nbt.getCompound(ARCHITECTURE_TAG));
         }
+        if (running) {
+            pause(ModSettings.startupDelay());
+        }
     }
 
     @Override

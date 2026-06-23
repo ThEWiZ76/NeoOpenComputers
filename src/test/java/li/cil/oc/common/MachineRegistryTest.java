@@ -569,6 +569,43 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void loadedRunningMachineHonorsConfiguredStartupDelay() throws Exception {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        SimpleMachine saved = new SimpleMachine(new TestHost(), new MutableClock());
+        saved.onHostChanged();
+        saved.start();
+        CompoundTag tag = new CompoundTag();
+        saved.save(tag);
+
+        withCachedConfig(ModSettings.STARTUP_DELAY, 0.25D, () -> {
+            MutableClock clock = new MutableClock();
+            SimpleMachine loaded = new SimpleMachine(new TestHost(), clock);
+            loaded.onHostChanged();
+            TrackingArchitecture architecture = (TrackingArchitecture) loaded.architecture();
+
+            loaded.load(tag);
+            loaded.update();
+            clock.nanos += TimeUnit.MILLISECONDS.toNanos(249);
+            loaded.update();
+
+            assertTrue(loaded.isRunning());
+            assertTrue(loaded.isPaused());
+            assertEquals(0, architecture.synchronizedRuns);
+            assertEquals(0, architecture.threadedRuns);
+
+            clock.nanos += TimeUnit.MILLISECONDS.toNanos(1);
+            loaded.update();
+
+            assertFalse(loaded.isPaused());
+            assertEquals(1, architecture.synchronizedRuns);
+            assertEquals(1, architecture.threadedRuns);
+        });
+    }
+
+    @Test
     void savesAndLoadsMachineUsers() throws Exception {
         OpenComputersApi.initialize();
         Machine saved = API.machine.create(null);
