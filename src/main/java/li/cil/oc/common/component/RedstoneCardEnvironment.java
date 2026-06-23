@@ -24,7 +24,7 @@ public class RedstoneCardEnvironment extends AbstractManagedEnvironment implemen
 
     public RedstoneCardEnvironment(final EnvironmentHost host) {
         this.host = host;
-        final var builder = Network.newNode(this, Visibility.Neighbors);
+        final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create());
         }

@@ -4,6 +4,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -26,6 +27,14 @@ final class RedstoneCardEnvironmentTest {
         assertCallback("getOutput");
         assertCallback("setOutput");
         assertCallback("getComparatorInput");
+    }
+
+    @Test
+    void redstoneCardNodeUsesNetworkReachabilityLikeUpstream() {
+        OpenComputersApi.initialize();
+        RedstoneCardEnvironment card = new RedstoneCardEnvironment(new TestRedstoneHost());
+
+        assertEquals(Visibility.Network, card.node().reachability());
     }
 
     @Test
