@@ -21,6 +21,7 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.util.FontWidths;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
@@ -2429,21 +2430,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     }
 
     private static int wcwidth(final int codePoint) {
-        return isWideCodePoint(codePoint) ? 2 : 1;
-    }
-
-    private static boolean isWideCodePoint(final int codePoint) {
-        return (codePoint >= 0x1100 && codePoint <= 0x115F)
-            || (codePoint >= 0x2329 && codePoint <= 0x232A)
-            || (codePoint >= 0x2E80 && codePoint <= 0xA4CF)
-            || (codePoint >= 0xAC00 && codePoint <= 0xD7A3)
-            || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
-            || (codePoint >= 0xFE10 && codePoint <= 0xFE19)
-            || (codePoint >= 0xFE30 && codePoint <= 0xFE6F)
-            || (codePoint >= 0xFF00 && codePoint <= 0xFF60)
-            || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6)
-            || (codePoint >= 0x1F300 && codePoint <= 0x1FAFF)
-            || (codePoint >= 0x20000 && codePoint <= 0x3FFFD);
+        return FontWidths.wcwidth(codePoint);
     }
 
     private record ProcessorCandidate(ItemStack stack, Processor processor) {

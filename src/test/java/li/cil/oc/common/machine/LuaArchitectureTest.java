@@ -445,6 +445,26 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void unicodeCharWidthUsesUpstreamDoubleWidthTable() {
+        LuaArchitecture architecture = new LuaArchitecture("""
+            missedWide = unicode.charWidth(unicode.char(0x231A))
+            falseWide = unicode.charWidth(unicode.char(0x2E9A))
+            missedWideFlag = unicode.isWide(unicode.char(0x231A))
+            falseWideFlag = unicode.isWide(unicode.char(0x2E9A))
+            totalWidth = unicode.wlen(unicode.char(0x231A) .. unicode.char(0x2E9A))
+            """);
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(2, architecture.globalInteger("missedWide"));
+        assertEquals(1, architecture.globalInteger("falseWide"));
+        assertEquals(true, architecture.globalBoolean("missedWideFlag"));
+        assertEquals(false, architecture.globalBoolean("falseWideFlag"));
+        assertEquals(3, architecture.globalInteger("totalWidth"));
+    }
+
+    @Test
     void unicodeWtruncRejectsCountsPastStringWidthLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("""
             valid, message = pcall(function()
