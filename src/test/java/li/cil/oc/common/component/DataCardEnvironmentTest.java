@@ -38,20 +38,20 @@ final class DataCardEnvironmentTest {
     @Test
     void exposesTierOneCallbacks() throws NoSuchMethodException {
         assertCallback("getLimit");
-        assertCallback("encode64");
-        assertCallback("decode64");
-        assertDirectCallback("deflate");
-        assertDirectCallback("inflate");
-        assertCallback("crc32");
-        assertCallback("md5");
-        assertCallback("sha256");
+        assertDirectCallback("encode64", 32);
+        assertDirectCallback("decode64", 32);
+        assertDirectCallback("deflate", 4);
+        assertDirectCallback("inflate", 4);
+        assertDirectCallback("crc32", 32);
+        assertDirectCallback("md5", 8);
+        assertDirectCallback("sha256", 4);
     }
 
     @Test
     void exposesTierTwoCallbacks() throws NoSuchMethodException {
-        assertCallback("encrypt");
-        assertCallback("decrypt");
-        assertCallback("random");
+        assertDirectCallback("encrypt", 8);
+        assertDirectCallback("decrypt", 8);
+        assertDirectCallback("random", 4);
     }
 
     @Test
@@ -154,10 +154,10 @@ final class DataCardEnvironmentTest {
 
     @Test
     void exposesTierThreeCallbacks() throws NoSuchMethodException {
-        assertCallback("generateKeyPair");
-        assertCallback("deserializeKey");
-        assertCallback("ecdh");
-        assertCallback("ecdsa");
+        assertDirectCallback("generateKeyPair", 1);
+        assertDirectCallback("deserializeKey", 8);
+        assertDirectCallback("ecdh", 1);
+        assertDirectCallback("ecdsa", 1);
     }
 
     @Test
@@ -194,6 +194,15 @@ final class DataCardEnvironmentTest {
         assertEquals(true, alice.ecdsa(null, new TestArguments(data, restoredPublic, signature))[0]);
     }
 
+    @Test
+    void ecKeySerializeUsesUpstreamCallbackLimit() throws NoSuchMethodException {
+        Method method = DataCardEnvironment.ECKey.class.getMethod("serialize", Context.class, Arguments.class);
+        Callback callback = method.getAnnotation(Callback.class);
+
+        assertTrue(callback.direct());
+        assertEquals(4, callback.limit());
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = DataCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
@@ -203,6 +212,13 @@ final class DataCardEnvironmentTest {
         Method method = DataCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         Callback callback = method.getAnnotation(Callback.class);
         assertTrue(callback.direct());
+    }
+
+    private static void assertDirectCallback(final String methodName, final int limit) throws NoSuchMethodException {
+        Method method = DataCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
+        Callback callback = method.getAnnotation(Callback.class);
+        assertTrue(callback.direct());
+        assertEquals(limit, callback.limit());
     }
 
     private static byte[] crc32(final byte[] data) {

@@ -98,17 +98,17 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         return new Object[]{HARD_LIMIT};
     }
 
-    @Callback(direct = true, doc = "function(data:string):string -- Encodes bytes as base64.")
+    @Callback(direct = true, limit = 32, doc = "function(data:string):string -- Encodes bytes as base64.")
     public Object[] encode64(final Context context, final Arguments args) throws Exception {
         return new Object[]{Base64.getEncoder().encode(costedData(context, args, TRIVIAL_COST, TRIVIAL_BYTE_COST))};
     }
 
-    @Callback(direct = true, doc = "function(data:string):string -- Decodes base64 bytes.")
+    @Callback(direct = true, limit = 32, doc = "function(data:string):string -- Decodes base64 bytes.")
     public Object[] decode64(final Context context, final Arguments args) throws Exception {
         return new Object[]{Base64.getDecoder().decode(costedData(context, args, TRIVIAL_COST, TRIVIAL_BYTE_COST))};
     }
 
-    @Callback(direct = true, doc = "function(data:string):string -- Compresses bytes using zlib deflate.")
+    @Callback(direct = true, limit = 4, doc = "function(data:string):string -- Compresses bytes using zlib deflate.")
     public Object[] deflate(final Context context, final Arguments args) throws Exception {
         final byte[] data = costedData(context, args, COMPLEX_COST, COMPLEX_BYTE_COST);
         try {
@@ -122,7 +122,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         }
     }
 
-    @Callback(direct = true, doc = "function(data:string):string -- Decompresses zlib deflate bytes.")
+    @Callback(direct = true, limit = 4, doc = "function(data:string):string -- Decompresses zlib deflate bytes.")
     public Object[] inflate(final Context context, final Arguments args) throws Exception {
         final byte[] data = costedData(context, args, COMPLEX_COST, COMPLEX_BYTE_COST);
         try (InflaterInputStream inflater = new InflaterInputStream(new ByteArrayInputStream(data))) {
@@ -132,7 +132,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         }
     }
 
-    @Callback(direct = true, doc = "function(data:string):string -- Computes CRC32.")
+    @Callback(direct = true, limit = 32, doc = "function(data:string):string -- Computes CRC32.")
     public Object[] crc32(final Context context, final Arguments args) throws Exception {
         final CRC32 crc = new CRC32();
         crc.update(costedData(context, args, TRIVIAL_COST, TRIVIAL_BYTE_COST));
@@ -145,29 +145,29 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         }};
     }
 
-    @Callback(direct = true, doc = "function(data:string[, key:string]):string -- Computes MD5 or HMAC-MD5.")
+    @Callback(direct = true, limit = 8, doc = "function(data:string[, key:string]):string -- Computes MD5 or HMAC-MD5.")
     public Object[] md5(final Context context, final Arguments args) throws Exception {
         return new Object[]{hash("MD5", "HmacMD5", context, args, SIMPLE_COST, SIMPLE_BYTE_COST)};
     }
 
-    @Callback(direct = true, doc = "function(data:string[, key:string]):string -- Computes SHA-256 or HMAC-SHA256.")
+    @Callback(direct = true, limit = 4, doc = "function(data:string[, key:string]):string -- Computes SHA-256 or HMAC-SHA256.")
     public Object[] sha256(final Context context, final Arguments args) throws Exception {
         return new Object[]{hash("SHA-256", "HmacSHA256", context, args, COMPLEX_COST, COMPLEX_BYTE_COST)};
     }
 
-    @Callback(doc = "function(data:string, key:string, iv:string):string -- Encrypts bytes using AES/CBC/PKCS5Padding.")
+    @Callback(direct = true, limit = 8, doc = "function(data:string, key:string, iv:string):string -- Encrypts bytes using AES/CBC/PKCS5Padding.")
     public Object[] encrypt(final Context context, final Arguments args) throws Exception {
         requireTier(1);
         return new Object[]{aes(Cipher.ENCRYPT_MODE, context, args)};
     }
 
-    @Callback(doc = "function(data:string, key:string, iv:string):string -- Decrypts bytes using AES/CBC/PKCS5Padding.")
+    @Callback(direct = true, limit = 8, doc = "function(data:string, key:string, iv:string):string -- Decrypts bytes using AES/CBC/PKCS5Padding.")
     public Object[] decrypt(final Context context, final Arguments args) throws Exception {
         requireTier(1);
         return new Object[]{aes(Cipher.DECRYPT_MODE, context, args)};
     }
 
-    @Callback(direct = true, doc = "function(length:number):string -- Returns cryptographically random bytes.")
+    @Callback(direct = true, limit = 4, doc = "function(length:number):string -- Returns cryptographically random bytes.")
     public Object[] random(final Context context, final Arguments args) throws Exception {
         requireTier(1);
         final int length = args.checkInteger(0);
@@ -180,7 +180,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         return new Object[]{data};
     }
 
-    @Callback(direct = true, doc = "function([bits:number]):userdata, userdata -- Generates an EC public/private key pair.")
+    @Callback(direct = true, limit = 1, doc = "function([bits:number]):userdata, userdata -- Generates an EC public/private key pair.")
     public Object[] generateKeyPair(final Context context, final Arguments args) throws Exception {
         requireTier(2);
         consumeEnergy(ASYMMETRIC_COST);
@@ -198,13 +198,13 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         }
     }
 
-    @Callback(direct = true, doc = "function(data:string, type:string):userdata -- Restores an EC key from its binary representation.")
+    @Callback(direct = true, limit = 8, doc = "function(data:string, type:string):userdata -- Restores an EC key from its binary representation.")
     public Object[] deserializeKey(final Context context, final Arguments args) throws Exception {
         requireTier(2);
         return new Object[]{new ECKey(deserializeKey(args.checkString(1), costedData(context, args, SIMPLE_COST, SIMPLE_BYTE_COST)))};
     }
 
-    @Callback(direct = true, doc = "function(private:userdata, public:userdata):string -- Generates an ECDH shared secret.")
+    @Callback(direct = true, limit = 1, doc = "function(private:userdata, public:userdata):string -- Generates an ECDH shared secret.")
     public Object[] ecdh(final Context context, final Arguments args) throws Exception {
         requireTier(2);
         consumeEnergy(ASYMMETRIC_COST);
@@ -220,7 +220,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         }
     }
 
-    @Callback(direct = true, doc = "function(data:string, key:userdata[, signature:string]):string or boolean -- Signs or verifies data using ECDSA.")
+    @Callback(direct = true, limit = 1, doc = "function(data:string, key:userdata[, signature:string]):string or boolean -- Signs or verifies data using ECDSA.")
     public Object[] ecdsa(final Context context, final Arguments args) throws Exception {
         requireTier(2);
         final byte[] data = costedData(context, args, ASYMMETRIC_COST, COMPLEX_BYTE_COST);
@@ -357,7 +357,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
             return new Object[]{keyType()};
         }
 
-        @Callback(direct = true, doc = "function():string -- Returns the binary encoded key.")
+        @Callback(direct = true, limit = 4, doc = "function():string -- Returns the binary encoded key.")
         public Object[] serialize(final Context context, final Arguments args) {
             return new Object[]{key.getEncoded()};
         }
