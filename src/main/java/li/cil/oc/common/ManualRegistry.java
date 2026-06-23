@@ -16,6 +16,7 @@ import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class ManualRegistry implements ManualAPI {
@@ -33,6 +34,7 @@ public final class ManualRegistry implements ManualAPI {
     private boolean reset;
     private String lastNavigationPath;
     private Supplier<String> languageSupplier;
+    private Consumer<Player> openHandler = player -> {};
 
     public ManualRegistry() {
         this(() -> FALLBACK_LANGUAGE);
@@ -45,6 +47,10 @@ public final class ManualRegistry implements ManualAPI {
 
     public void setLanguageSupplier(final Supplier<String> languageSupplier) {
         this.languageSupplier = Objects.requireNonNull(languageSupplier);
+    }
+
+    public void setOpenHandler(final Consumer<Player> openHandler) {
+        this.openHandler = Objects.requireNonNull(openHandler);
     }
 
     @Override
@@ -193,6 +199,7 @@ public final class ManualRegistry implements ManualAPI {
     @Override
     public void openFor(final Player player) {
         opened = true;
+        openHandler.accept(player);
     }
 
     @Override
@@ -237,7 +244,7 @@ public final class ManualRegistry implements ManualAPI {
         return lastNavigationPath;
     }
 
-    String currentPath() {
+    public String currentPath() {
         return history.peek().path();
     }
 

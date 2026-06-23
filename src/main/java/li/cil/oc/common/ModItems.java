@@ -27,6 +27,7 @@ import li.cil.oc.common.item.InventoryUpgradeItem;
 import li.cil.oc.common.item.InternetCardItem;
 import li.cil.oc.common.item.LeashUpgradeItem;
 import li.cil.oc.common.item.LinkedCardItem;
+import li.cil.oc.common.item.ManualItem;
 import li.cil.oc.common.item.MemoryItem;
 import li.cil.oc.common.item.MfuItem;
 import li.cil.oc.common.item.NanomachinesItem;
@@ -349,7 +350,9 @@ public final class ModItems {
         ModContentIds.LINKED_CARD,
         () -> new LinkedCardItem(new Item.Properties()));
 
-    public static final DeferredItem<Item> MANUAL = ITEMS.registerSimpleItem(ModContentIds.MANUAL, new Item.Properties());
+    public static final DeferredItem<ManualItem> MANUAL = ITEMS.register(
+        ModContentIds.MANUAL,
+        () -> new ManualItem(new Item.Properties()));
 
     public static final DeferredItem<MemoryItem> MEMORY_TIER1 = ITEMS.register(
         ModContentIds.MEMORY_TIER1,

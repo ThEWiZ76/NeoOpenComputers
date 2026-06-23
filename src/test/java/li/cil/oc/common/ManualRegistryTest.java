@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -144,6 +145,18 @@ final class ManualRegistryTest {
 
         assertEquals("%LANGUAGE%/index.md", registry.currentPath());
         assertEquals(1, registry.historySize());
+    }
+
+    @Test
+    void openForUsesInjectedClientHandler() {
+        ManualRegistry registry = new ManualRegistry();
+        AtomicBoolean opened = new AtomicBoolean();
+        registry.setOpenHandler(player -> opened.set(true));
+
+        registry.openFor(null);
+
+        assertTrue(opened.get());
+        assertTrue(registry.wasOpened());
     }
 
     @Test
