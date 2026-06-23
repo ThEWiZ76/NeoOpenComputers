@@ -11,6 +11,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.AbstractValue;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModSettings;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -190,6 +191,22 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             checkAccess(access);
             if (level instanceof ServerLevel serverLevel) {
                 serverLevel.setDayTime(args.checkLong(0));
+            }
+            return null;
+        }
+
+        @Callback(doc = "function():number, number, number -- Get the current spawn point coordinates.")
+        public Object[] getSpawnPoint(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            final BlockPos pos = level == null ? BlockPos.ZERO : level.getLevelData().getSpawnPos();
+            return new Object[]{pos.getX(), pos.getY(), pos.getZ()};
+        }
+
+        @Callback(doc = "function(x:number, y:number, z:number) -- Set the spawn point coordinates.")
+        public Object[] setSpawnPoint(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            if (level instanceof ServerLevel serverLevel) {
+                serverLevel.setDefaultSpawnPos(new BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2)), serverLevel.getSharedSpawnAngle());
             }
             return null;
         }

@@ -501,6 +501,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardWorldValueReadsAndSetsSpawnPoint(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        final BlockPos initial = new BlockPos(3, 65, 7);
+        helper.getLevel().setDefaultSpawnPos(initial, 0F);
+        final Object[] spawn = invokeValue(helper, world, "getSpawnPoint");
+        helper.assertTrue(spawn.length == 3 && Integer.valueOf(3).equals(spawn[0]) && Integer.valueOf(65).equals(spawn[1]) && Integer.valueOf(7).equals(spawn[2]), "World value did not report spawn point");
+
+        invokeValue(helper, world, "setSpawnPoint", 12, 66, 18);
+        helper.assertTrue(new BlockPos(12, 66, 18).equals(helper.getLevel().getSharedSpawnPos()), "World value did not set spawn point");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
         final CraftingInput input = CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),
