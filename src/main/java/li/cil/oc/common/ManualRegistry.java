@@ -21,12 +21,14 @@ import java.util.function.Supplier;
 public final class ManualRegistry implements ManualAPI {
     private static final String LANGUAGE_KEY = "%LANGUAGE%";
     private static final String FALLBACK_LANGUAGE = "en_us";
+    private static final String DEFAULT_PATH = LANGUAGE_KEY + "/index.md";
     private static final String REDIRECT_PREFIX = "#redirect ";
 
     private final List<Tab> tabs = new ArrayList<>();
     private final List<PathProvider> pathProviders = new ArrayList<>();
     private final List<ContentProvider> contentProviders = new ArrayList<>();
     private final List<ImageProviderEntry> imageProviders = new ArrayList<>();
+    private final ArrayDeque<History> history = new ArrayDeque<>();
     private boolean opened;
     private boolean reset;
     private String lastNavigationPath;
@@ -38,6 +40,7 @@ public final class ManualRegistry implements ManualAPI {
 
     ManualRegistry(final Supplier<String> languageSupplier) {
         this.languageSupplier = Objects.requireNonNull(languageSupplier);
+        resetHistory();
     }
 
     public void setLanguageSupplier(final Supplier<String> languageSupplier) {
@@ -195,11 +198,15 @@ public final class ManualRegistry implements ManualAPI {
     @Override
     public void reset() {
         reset = true;
+        resetHistory();
     }
 
     @Override
     public void navigate(final String path) {
         lastNavigationPath = path;
+        if (!Objects.equals(currentPath(), path)) {
+            history.push(new History(path, 0));
+        }
     }
 
     int tabCount() {
@@ -230,9 +237,25 @@ public final class ManualRegistry implements ManualAPI {
         return lastNavigationPath;
     }
 
+    String currentPath() {
+        return history.peek().path();
+    }
+
+    int historySize() {
+        return history.size();
+    }
+
+    private void resetHistory() {
+        history.clear();
+        history.push(new History(DEFAULT_PATH, 0));
+    }
+
     private record Tab(TabIconRenderer renderer, String tooltip, String path) {
     }
 
     private record ImageProviderEntry(String prefix, ImageProvider provider) {
+    }
+
+    private record History(String path, int offset) {
     }
 }

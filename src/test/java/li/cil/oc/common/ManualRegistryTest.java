@@ -128,6 +128,25 @@ final class ManualRegistryTest {
     }
 
     @Test
+    void tracksManualHistoryLikeUpstream() {
+        ManualRegistry registry = new ManualRegistry();
+
+        assertEquals("%LANGUAGE%/index.md", registry.currentPath());
+        assertEquals(1, registry.historySize());
+
+        registry.navigate("general/computer.md");
+        registry.navigate("item/cpu1.md");
+
+        assertEquals("item/cpu1.md", registry.currentPath());
+        assertEquals(3, registry.historySize());
+
+        registry.reset();
+
+        assertEquals("%LANGUAGE%/index.md", registry.currentPath());
+        assertEquals(1, registry.historySize());
+    }
+
+    @Test
     void defaultManualContentRegistersProvidersAndTabsLikeUpstream() {
         ManualRegistry registry = new ManualRegistry();
 
