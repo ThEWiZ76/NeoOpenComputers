@@ -37,7 +37,7 @@ public class TradingUpgradeEnvironment extends AbstractManagedEnvironment implem
         this.host = host;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
-            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create());
+            setNode(builder.withComponent(COMPONENT_NAME).create());
         }
     }
 

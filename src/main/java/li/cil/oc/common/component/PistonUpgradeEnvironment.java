@@ -45,7 +45,7 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
         this.sticky = sticky;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
-            setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
+            setNode(builder.withComponent(COMPONENT_NAME).withConnector().create());
         }
     }
 
