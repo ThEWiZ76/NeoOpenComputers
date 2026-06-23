@@ -167,6 +167,18 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             this.access = access;
         }
 
+        @Callback(doc = "function():string -- Get the name of the current dimension.")
+        public Object[] getDimensionName(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{level == null ? "" : level.dimension().location().toString()};
+        }
+
+        @Callback(doc = "function():number -- Get the seed of the world.")
+        public Object[] getSeed(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{level instanceof ServerLevel serverLevel ? serverLevel.getSeed() : 0L};
+        }
+
         @Callback(doc = "function():number -- Get the current world time.")
         public Object[] getTime(final Context context, final Arguments args) throws Exception {
             checkAccess(access);

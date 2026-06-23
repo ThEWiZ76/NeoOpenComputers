@@ -483,6 +483,24 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardWorldValueReportsSeedAndDimensionName(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        final Object[] seed = invokeValue(helper, world, "getSeed");
+        helper.assertTrue(seed.length == 1 && Long.valueOf(helper.getLevel().getSeed()).equals(seed[0]), "World value did not report seed");
+
+        final Object[] dimensionName = invokeValue(helper, world, "getDimensionName");
+        helper.assertTrue(dimensionName.length == 1 && helper.getLevel().dimension().location().toString().equals(dimensionName[0]), "World value did not report dimension name");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
         final CraftingInput input = CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),
