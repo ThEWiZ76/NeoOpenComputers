@@ -547,6 +547,29 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardWorldValueReportsBlockEntityNbt(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        final BlockPos chestPos = new BlockPos(1, 1, 1);
+        helper.setBlock(chestPos, Blocks.CHEST.defaultBlockState());
+        final BlockPos absoluteChest = helper.absolutePos(chestPos);
+        final Object[] nbtResult = invokeValue(helper, world, "getTileNBT", absoluteChest.getX(), absoluteChest.getY(), absoluteChest.getZ());
+        helper.assertTrue(nbtResult.length == 1 && nbtResult[0] instanceof Map<?, ?>, "World value did not return block entity NBT map");
+        final Map<?, ?> nbt = (Map<?, ?>) nbtResult[0];
+        helper.assertTrue("minecraft:chest".equals(nbt.get("id")), "World value NBT did not include block entity id");
+        helper.assertTrue(Integer.valueOf(absoluteChest.getX()).equals(nbt.get("x")), "World value NBT did not include x coordinate");
+        helper.assertTrue(Integer.valueOf(absoluteChest.getY()).equals(nbt.get("y")), "World value NBT did not include y coordinate");
+        helper.assertTrue(Integer.valueOf(absoluteChest.getZ()).equals(nbt.get("z")), "World value NBT did not include z coordinate");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardWorldValueReportsBlockQueries(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
         helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");

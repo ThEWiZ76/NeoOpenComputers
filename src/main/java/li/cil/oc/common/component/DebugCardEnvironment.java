@@ -13,16 +13,28 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.ByteArrayTag;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.NumericTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.ModList;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static final String COMPONENT_NAME = "debug";
@@ -229,6 +241,19 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return new Object[]{level != null && level.isLoaded(pos) && level.getBlockState(pos).hasBlockEntity()};
         }
 
+        @Callback(doc = "function(x:number, y:number, z:number):table -- Get the NBT of the block entity at the specified coordinates.")
+        public Object[] getTileNBT(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            if (level == null) {
+                return null;
+            }
+            final BlockEntity blockEntity = level.getBlockEntity(blockPos(args));
+            if (blockEntity == null) {
+                return null;
+            }
+            return new Object[]{tagToMap(blockEntity.saveWithFullMetadata(level.registryAccess()))};
+        }
+
         @Callback(doc = "function(x:number, y:number, z:number):number -- Get the registry ID of the block at the specified coordinates.")
         public Object[] getBlockId(final Context context, final Arguments args) throws Exception {
             checkAccess(access);
@@ -358,6 +383,47 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return args.isInteger(index)
                 ? args.checkInteger(index) == BuiltInRegistries.BLOCK.getId(Blocks.AIR)
                 : "minecraft:air".equals(args.checkString(index)) || "air".equals(args.checkString(index));
+        }
+
+        private static Map<String, Object> tagToMap(final CompoundTag tag) {
+            final Map<String, Object> result = new LinkedHashMap<>();
+            for (final String key : tag.getAllKeys()) {
+                result.put(key, tagToObject(tag.get(key)));
+            }
+            return result;
+        }
+
+        private static Object tagToObject(final Tag tag) {
+            if (tag instanceof NumericTag numericTag) {
+                return numericTag.getAsNumber();
+            }
+            if (tag instanceof StringTag stringTag) {
+                return stringTag.getAsString();
+            }
+            if (tag instanceof ByteArrayTag byteArrayTag) {
+                return byteArrayTag.getAsByteArray();
+            }
+            if (tag instanceof IntArrayTag intArrayTag) {
+                return intArrayTag.getAsIntArray();
+            }
+            if (tag instanceof LongArrayTag longArrayTag) {
+                return longArrayTag.getAsLongArray();
+            }
+            if (tag instanceof ListTag listTag) {
+                return tagToList(listTag);
+            }
+            if (tag instanceof CompoundTag compoundTag) {
+                return tagToMap(compoundTag);
+            }
+            return null;
+        }
+
+        private static List<Object> tagToList(final ListTag tag) {
+            final List<Object> result = new ArrayList<>(tag.size());
+            for (int index = 0; index < tag.size(); index++) {
+                result.add(tagToObject(tag.get(index)));
+            }
+            return result;
         }
     }
 
