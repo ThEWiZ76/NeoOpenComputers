@@ -73,6 +73,28 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenSelectsUpstreamButtonTextureRowsForHoverState() {
+        assertEquals(0, ManualScreen.buttonTextureYOffset(false, ManualScreen.TAB_HEIGHT));
+        assertEquals(ManualScreen.TAB_HEIGHT, ManualScreen.buttonTextureYOffset(true, ManualScreen.TAB_HEIGHT));
+        assertEquals(ManualScreen.TAB_HEIGHT, ManualScreen.tabTextureYOffset(0, ManualScreen.TAB_POS_X, ManualScreen.TAB_POS_Y));
+        assertEquals(0, ManualScreen.tabTextureYOffset(0, ManualScreen.TAB_POS_X + ManualScreen.TAB_WIDTH, ManualScreen.TAB_POS_Y));
+        assertEquals(ManualScreen.TAB_HEIGHT, ManualScreen.tabTextureYOffset(1, ManualScreen.TAB_POS_X + 1, ManualScreen.TAB_POS_Y + ManualScreen.TAB_HEIGHT - 1));
+    }
+
+    @Test
+    void manualScreenSelectsUpstreamScrollTextureRowForHoverAndDragState() {
+        assertEquals(
+            ManualScreen.SCROLL_THUMB_HEIGHT,
+            ManualScreen.scrollTextureYOffset(false, ManualScreen.SCROLL_POS_X, 89, 90, 356, 176));
+        assertEquals(
+            0,
+            ManualScreen.scrollTextureYOffset(false, ManualScreen.SCROLL_POS_X, 88, 90, 356, 176));
+        assertEquals(
+            ManualScreen.SCROLL_THUMB_HEIGHT,
+            ManualScreen.scrollTextureYOffset(true, 0, 0, 90, 356, 176));
+    }
+
+    @Test
     void manualScreenComputesDocumentClipRectangleForScissorRendering() {
         ManualScreen.ClipRect clip = ManualScreen.documentClipRect(100, 40);
 

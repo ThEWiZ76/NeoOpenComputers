@@ -302,6 +302,31 @@ public class ManualScreen extends Screen {
         return -1;
     }
 
+    public static int buttonTextureYOffset(final boolean hovered, final int buttonHeight) {
+        return hovered ? buttonHeight : 0;
+    }
+
+    public static int tabTextureYOffset(final int tabIndex, final int mouseX, final int mouseY) {
+        final int tabY = TAB_POS_Y + tabIndex * (TAB_HEIGHT - 1);
+        final boolean hovered = mouseX >= TAB_POS_X && mouseX < TAB_POS_X + TAB_WIDTH
+            && mouseY >= tabY && mouseY < tabY + TAB_HEIGHT;
+        return buttonTextureYOffset(hovered, TAB_HEIGHT);
+    }
+
+    public static int scrollTextureYOffset(
+        final boolean draggingScrollBar,
+        final int mouseX,
+        final int mouseY,
+        final int scrollOffset,
+        final int documentHeight,
+        final int viewportHeight
+    ) {
+        final int thumbY = scrollbarThumbY(scrollOffset, documentHeight, viewportHeight);
+        final boolean hovered = mouseX >= SCROLL_POS_X && mouseX < SCROLL_POS_X + SCROLL_WIDTH
+            && mouseY >= thumbY && mouseY < thumbY + SCROLL_THUMB_HEIGHT;
+        return buttonTextureYOffset(draggingScrollBar || hovered, SCROLL_THUMB_HEIGHT);
+    }
+
     public static ClipRect documentClipRect(final int left, final int top) {
         return new ClipRect(
             left + DOCUMENT_POS_X,
@@ -419,19 +444,19 @@ public class ManualScreen extends Screen {
         final int left = (width - WINDOW_WIDTH) / 2;
         final int top = (height - WINDOW_HEIGHT) / 2;
         graphics.blit(MANUAL_TEXTURE, left, top, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-        renderTabs(graphics, left, top);
+        renderTabs(graphics, left, top, mouseX - left, mouseY - top);
         renderDocumentClipped(graphics, left, top, mouseX, mouseY);
-        renderScrollBar(graphics, left, top);
+        renderScrollBar(graphics, left, top, mouseX - left, mouseY - top);
         super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, left, top, mouseX, mouseY);
     }
 
-    private void renderTabs(final GuiGraphics graphics, final int left, final int top) {
+    private void renderTabs(final GuiGraphics graphics, final int left, final int top, final int mouseX, final int mouseY) {
         final List<ManualRegistry.ManualTab> tabs = registry.tabs();
         for (int index = 0; index < Math.min(tabs.size(), MAX_TABS_PER_SIDE); index++) {
             final int x = left + TAB_POS_X;
             final int y = top + TAB_POS_Y + index * (TAB_HEIGHT - 1);
-            graphics.blit(TAB_TEXTURE, x, y, 0, 0, TAB_WIDTH, TAB_HEIGHT);
+            graphics.blit(TAB_TEXTURE, x, y, 0, tabTextureYOffset(index, mouseX, mouseY), TAB_WIDTH, TAB_HEIGHT);
             graphics.pose().pushPose();
             graphics.pose().translate(x + 4, y + 5, 0);
             tabs.get(index).renderer().render();
@@ -499,11 +524,11 @@ public class ManualScreen extends Screen {
         return 0xFFE5E9F0;
     }
 
-    private void renderScrollBar(final GuiGraphics graphics, final int left, final int top) {
+    private void renderScrollBar(final GuiGraphics graphics, final int left, final int top, final int mouseX, final int mouseY) {
         final int documentHeight = documentHeight(document, DOCUMENT_MAX_WIDTH);
         final int trackX = left + SCROLL_POS_X;
         final int thumbY = top + scrollbarThumbY(scrollOffset, documentHeight, DOCUMENT_MAX_HEIGHT);
-        final int textureY = draggingScrollBar ? SCROLL_THUMB_HEIGHT : 0;
+        final int textureY = scrollTextureYOffset(draggingScrollBar, mouseX, mouseY, scrollOffset, documentHeight, DOCUMENT_MAX_HEIGHT);
         graphics.blit(SCROLL_TEXTURE, trackX, thumbY, 0, textureY, SCROLL_WIDTH, SCROLL_THUMB_HEIGHT);
     }
 
