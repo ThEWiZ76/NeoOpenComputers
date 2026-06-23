@@ -1203,9 +1203,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 final int day = intField(time, "day", -1);
                 final int month = intField(time, "month", -1);
                 final int year = intField(time, "year", -1);
-                final boolean isDaylightSavingTime = time.get("isdst").isboolean() && time.get("isdst").toboolean();
                 final Long timestamp = GameTimeFormatter.mktime(year, month, day, hour, minute, second);
-                return timestamp == null ? LuaValue.NIL : LuaValue.valueOf(timestamp - (isDaylightSavingTime ? 3600D : 0D));
+                return timestamp == null ? LuaValue.NIL : LuaValue.valueOf(timestamp);
             }
         });
         os.set("date", new VarArgFunction() {
@@ -1233,7 +1232,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                     table.set("sec", dateTime.second());
                     table.set("wday", dateTime.weekDay());
                     table.set("yday", dateTime.yearDay());
-                    table.set("isdst", LuaValue.FALSE);
                     return table;
                 }
                 return LuaValue.valueOf(GameTimeFormatter.format(format, dateTime));

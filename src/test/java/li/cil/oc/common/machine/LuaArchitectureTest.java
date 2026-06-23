@@ -552,7 +552,7 @@ final class LuaArchitectureTest {
         assertEquals("1970-01-02 00:00:00", architecture.globalString("formatted"));
         assertEquals(2, architecture.globalInteger("day"));
         assertEquals(0, architecture.globalInteger("hour"));
-        assertEquals("boolean", architecture.globalString("isdstType"));
+        assertEquals("nil", architecture.globalString("isdstType"));
         assertEquals(false, architecture.globalBoolean("isdst"));
         assertEquals(86_400D, architecture.globalDouble("fromTable"), 0.000_001D);
     }
@@ -583,7 +583,7 @@ final class LuaArchitectureTest {
     }
 
     @Test
-    void osTimeHonorsDaylightSavingFlagLikeLuaJ() {
+    void osTimeIgnoresDaylightSavingFlagLikeUpstream() {
         LuaArchitecture architecture = new LuaArchitecture("""
             standard = os.time({year = 1970, month = 1, day = 1, hour = 0, min = 0, sec = 0, isdst = false})
             daylight = os.time({year = 1970, month = 1, day = 1, hour = 0, min = 0, sec = 0, isdst = true})
@@ -593,7 +593,7 @@ final class LuaArchitectureTest {
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals(0D, architecture.globalDouble("standard"), 0.000_001D);
-        assertEquals(-3600D, architecture.globalDouble("daylight"), 0.000_001D);
+        assertEquals(0D, architecture.globalDouble("daylight"), 0.000_001D);
     }
 
     @Test
