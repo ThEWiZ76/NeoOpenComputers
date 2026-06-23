@@ -32,7 +32,6 @@ import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
-import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
@@ -2249,13 +2248,13 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (cached != null) {
             return cached;
         }
-        final LuaTable entries = new LuaTable();
-        entries.set("type", "userdata");
-        final LuaUserdata proxy = LuaValue.userdataOf(value);
+        final LuaTable proxy = new LuaTable();
+        proxy.set("type", "userdata");
+        proxy.set(VALUE_MARKER, LuaValue.userdataOf(value));
         valueProxyCache.put(value, proxy);
         final Map<String, Callback> methods = machine == null ? Map.of() : machine.methods(value);
         for (String methodName : methods.keySet()) {
-            entries.set(methodName, valueCallbackFunction(value, methodName, proxy));
+            proxy.set(methodName, valueCallbackFunction(value, methodName, proxy));
         }
         final LuaTable metatable = new LuaTable();
         metatable.set("__call", new VarArgFunction() {
@@ -2268,10 +2267,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 final LuaValue key = args.arg(2);
-                final LuaValue entry = entries.get(key);
-                if (!entry.isnil()) {
-                    return entry;
-                }
                 return applyValue(value, new Object[]{toJavaValue(key)});
             }
         });
@@ -2279,6 +2274,25 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             @Override
             public Varargs invoke(final Varargs args) {
                 return unapplyValue(value, new Object[]{toJavaValue(args.arg(2)), toJavaValue(args.arg(3))});
+            }
+        });
+        metatable.set("__pairs", new VarArgFunction() {
+            @Override
+            public Varargs invoke(final Varargs args) {
+                return new VarArgFunction() {
+                    private LuaValue key = LuaValue.NIL;
+
+                    @Override
+                    public Varargs invoke(final Varargs iteratorArgs) {
+                        while (true) {
+                            final Varargs next = proxy.next(key);
+                            key = next.arg1();
+                            if (key.isnil() || !VALUE_MARKER.equals(key.tojstring())) {
+                                return next;
+                            }
+                        }
+                    }
+                };
             }
         });
         metatable.set("__metatable", "userdata");

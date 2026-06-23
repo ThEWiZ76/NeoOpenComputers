@@ -1964,8 +1964,12 @@ final class LuaArchitectureTest {
             valueType = value.type
             valueString = tostring(value)
             metatableValue = getmetatable(value)
-            pairsValid, pairsMessage = pcall(function()
-              for key in pairs(value) do end
+            pairsValid = pcall(function()
+              for key in pairs(value) do
+                if key == 'echo' then
+                  sawEcho = true
+                end
+              end
             end)
             disposed = userdata.dispose(value)
             invalidValid, invalidMessage = pcall(function()
@@ -1988,12 +1992,12 @@ final class LuaArchitectureTest {
         assertEquals("applied:apply", architecture.globalString("applied"));
         assertEquals("called:meta-call", architecture.globalString("metaCalled"));
         assertEquals("applied:metaApply", architecture.globalString("metaApplied"));
-        assertEquals("userdata", architecture.globalString("luaType"));
+        assertEquals("table", architecture.globalString("luaType"));
         assertEquals("userdata", architecture.globalString("valueType"));
         assertEquals("test-value", architecture.globalString("valueString"));
         assertEquals("userdata", architecture.globalString("metatableValue"));
-        assertEquals(false, architecture.globalBoolean("pairsValid"));
-        assertTrue(architecture.globalString("pairsMessage").contains("table expected"));
+        assertEquals(true, architecture.globalBoolean("pairsValid"));
+        assertEquals(true, architecture.globalBoolean("sawEcho"));
         assertEquals("nil", architecture.globalString("unapplied"));
         assertTrue(value.unapplied);
         assertEquals("metaUnapply", value.unapplyArgument);
@@ -2002,6 +2006,38 @@ final class LuaArchitectureTest {
         assertTrue(value.disposed);
         assertEquals(false, architecture.globalBoolean("invalidValid"));
         assertTrue(architecture.globalString("invalidMessage").contains("userdata expected"));
+    }
+
+    @Test
+    void wrapsValueHandlesAsLuaTablesLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            luaType = type(value)
+            valueType = value.type
+            metatableValue = getmetatable(value)
+            applied = userdata.apply(value, 'apply')
+            invoked = value.echo('payload')
+            pairsValid = pcall(function()
+              for key in pairs(value) do
+                if key == 'echo' then
+                  sawEcho = true
+                end
+              end
+            end)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals("table", architecture.globalString("luaType"));
+        assertEquals("userdata", architecture.globalString("valueType"));
+        assertEquals("userdata", architecture.globalString("metatableValue"));
+        assertEquals("applied:apply", architecture.globalString("applied"));
+        assertEquals("invoked:payload", architecture.globalString("invoked"));
+        assertEquals(true, architecture.globalBoolean("pairsValid"));
+        assertEquals(true, architecture.globalBoolean("sawEcho"));
     }
 
     @Test
