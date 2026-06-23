@@ -61,6 +61,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue DATA_CARD_SOFT_LIMIT;
     public static final ModConfigSpec.IntValue DATA_CARD_HARD_LIMIT;
     public static final ModConfigSpec.DoubleValue DATA_CARD_TIMEOUT;
+    public static final ModConfigSpec.IntValue GEOLYZER_RANGE;
     public static final ModConfigSpec.IntValue DEFAULT_RELAY_DELAY;
     public static final ModConfigSpec.DoubleValue RELAY_DELAY_UPGRADE;
     public static final ModConfigSpec.IntValue DEFAULT_MAX_QUEUE_SIZE;
@@ -102,6 +103,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue DATA_CARD_COMPLEX;
     public static final ModConfigSpec.DoubleValue DATA_CARD_COMPLEX_BYTE;
     public static final ModConfigSpec.DoubleValue DATA_CARD_ASYMMETRIC;
+    public static final ModConfigSpec.DoubleValue GEOLYZER_SCAN_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
@@ -150,6 +152,9 @@ public final class ModSettings {
         DATA_CARD_TIMEOUT = builder
             .comment("Pause in seconds for Data Card operations above the soft limit. OpenComputers upstream default is 1.0.")
             .defineInRange("dataCardTimeout", 1D, 0D, Double.MAX_VALUE);
+        GEOLYZER_RANGE = builder
+            .comment("Maximum absolute Geolyzer scan offset. OpenComputers upstream default is 32.")
+            .defineInRange("geolyzerRange", 32, 0, Integer.MAX_VALUE);
         DEFAULT_RELAY_DELAY = builder
             .comment("Base delay in ticks before a relay forwards queued packets. OpenComputers upstream default is 5.")
             .defineInRange("defaultRelayDelay", 5, 1, Integer.MAX_VALUE);
@@ -347,6 +352,9 @@ public final class ModSettings {
         DATA_CARD_ASYMMETRIC = builder
             .comment("Base energy cost for asymmetric Data Card operations. OpenComputers upstream default is 10.0.")
             .defineInRange("dataCardAsymmetric", 10D, 0D, Double.MAX_VALUE);
+        GEOLYZER_SCAN_COST = builder
+            .comment("Energy consumed per Geolyzer scan/analyze/store operation. OpenComputers upstream default is 10.")
+            .defineInRange("geolyzerScan", 10D, 0D, Double.MAX_VALUE);
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
@@ -551,6 +559,10 @@ public final class ModSettings {
         return doubleValue(DATA_CARD_ASYMMETRIC);
     }
 
+    public static double geolyzerScanCost() {
+        return doubleValue(GEOLYZER_SCAN_COST);
+    }
+
     public static List<Integer> cpuComponentCount() {
         final List<Integer> counts = listValue(CPU_COMPONENT_COUNT);
         if (counts.size() != DEFAULT_CPU_COMPONENT_COUNT.size()) {
@@ -615,6 +627,10 @@ public final class ModSettings {
 
     public static double dataCardTimeout() {
         return doubleValue(DATA_CARD_TIMEOUT);
+    }
+
+    public static int geolyzerRange() {
+        return intValue(GEOLYZER_RANGE);
     }
 
     public static int defaultRelayDelay() {

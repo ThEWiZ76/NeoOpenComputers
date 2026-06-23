@@ -15,6 +15,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,16 +34,7 @@ import java.util.Map;
 
 public class GeolyzerBlockEntity extends BlockEntity implements Environment, EnvironmentHost, DeviceInfo {
     private static final String TAG_NODE = "node";
-    private static final int RANGE = 32;
     private static final int MAX_VOLUME = 64;
-    private static final double SCAN_COST = 10D;
-    private static final Map<String, String> DEVICE_INFO = Map.of(
-        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
-        DeviceInfo.DeviceAttribute.Description, "Geolyzer",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "Terrain Analyzer MkII",
-        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(RANGE)
-    );
 
     private Node node;
 
@@ -98,7 +90,13 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
 
     @Override
     public Map<String, String> getDeviceInfo() {
-        return DEVICE_INFO;
+        return Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
+            DeviceInfo.DeviceAttribute.Description, "Geolyzer",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Product, "Terrain Analyzer MkII",
+            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.geolyzerRange())
+        );
     }
 
     @Override
@@ -198,7 +196,7 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
     }
 
     private boolean consumeEnergy() {
-        return node() instanceof Connector connector && connector.tryChangeBuffer(-SCAN_COST);
+        return node() instanceof Connector connector && connector.tryChangeBuffer(-ModSettings.geolyzerScanCost());
     }
 
     private static Object[] noEnergy() {
@@ -357,7 +355,8 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
         }
 
         boolean outOfRange() {
-            return Math.abs(minX) > RANGE || Math.abs(maxX) > RANGE || Math.abs(minY) > RANGE || Math.abs(maxY) > RANGE || Math.abs(minZ) > RANGE || Math.abs(maxZ) > RANGE;
+            final int range = ModSettings.geolyzerRange();
+            return Math.abs(minX) > range || Math.abs(maxX) > range || Math.abs(minY) > range || Math.abs(maxY) > range || Math.abs(minZ) > range || Math.abs(maxZ) > range;
         }
     }
 }

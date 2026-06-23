@@ -14,6 +14,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -28,17 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class GeolyzerEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
-    private static final int RANGE = 32;
     private static final int MAX_VOLUME = 64;
-    private static final double SCAN_COST = 10D;
     private static final String COMPONENT_NAME = "geolyzer";
-    private static final Map<String, String> DEVICE_INFO = Map.of(
-        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
-        DeviceInfo.DeviceAttribute.Description, "Geolyzer",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "Terrain Analyzer MkII",
-        DeviceInfo.DeviceAttribute.Capacity, Integer.toString(RANGE)
-    );
 
     private final EnvironmentHost host;
 
@@ -52,7 +44,13 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
 
     @Override
     public Map<String, String> getDeviceInfo() {
-        return DEVICE_INFO;
+        return Map.of(
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
+            DeviceInfo.DeviceAttribute.Description, "Geolyzer",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Product, "Terrain Analyzer MkII",
+            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.geolyzerRange())
+        );
     }
 
     @Override
@@ -158,7 +156,7 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
     }
 
     private boolean consumeEnergy() {
-        return node() instanceof ComponentConnector connector && connector.tryChangeBuffer(-SCAN_COST);
+        return node() instanceof ComponentConnector connector && connector.tryChangeBuffer(-ModSettings.geolyzerScanCost());
     }
 
     private void fillScan(final GeolyzerEvent.Scan event, final boolean includeReplaceable) {
@@ -284,7 +282,8 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
         }
 
         boolean outOfRange() {
-            return Math.abs(minX) > RANGE || Math.abs(maxX) > RANGE || Math.abs(minY) > RANGE || Math.abs(maxY) > RANGE || Math.abs(minZ) > RANGE || Math.abs(maxZ) > RANGE;
+            final int range = ModSettings.geolyzerRange();
+            return Math.abs(minX) > range || Math.abs(maxX) > range || Math.abs(minY) > range || Math.abs(maxY) > range || Math.abs(minZ) > range || Math.abs(maxZ) > range;
         }
     }
 }
