@@ -2041,6 +2041,48 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void keepsUserdataHostMarkerOutOfLuaProxyTableLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            local keys = {}
+            local key = nil
+            repeat
+              key = next(value, key)
+              if key ~= nil then
+                keys[#keys + 1] = key
+              end
+            until key == nil
+            keyCount = #keys
+            hasType = false
+            hasEcho = false
+            hasPrivateMarker = false
+            for i = 1, #keys do
+              if keys[i] == 'type' then
+                hasType = true
+              elseif keys[i] == 'echo' then
+                hasEcho = true
+              elseif string.sub(keys[i], 1, 1) == '\\0' then
+                hasPrivateMarker = true
+              end
+            end
+            applied = userdata.apply(value, 'apply')
+            unwrapped = component.invoke('fs-address', 'checkValue', value)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(2, architecture.globalInteger("keyCount"));
+        assertEquals(true, architecture.globalBoolean("hasType"));
+        assertEquals(true, architecture.globalBoolean("hasEcho"));
+        assertEquals(false, architecture.globalBoolean("hasPrivateMarker"));
+        assertEquals("applied:apply", architecture.globalString("applied"));
+        assertEquals("same-value", architecture.globalString("unwrapped"));
+    }
+
+    @Test
     void userdataDocReportsMissingMethodMessageLikeUpstream() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""
@@ -3907,6 +3949,10 @@ final class LuaArchitectureTest {
                     if (args[0] == value) {
                         Object[] javaArgs = (Object[]) args[2];
                         yield new Object[]{"invoked:" + luaString(javaArgs[0])};
+                    }
+                    if ("checkValue".equals(args[1])) {
+                        Object[] javaArgs = (Object[]) args[2];
+                        yield new Object[]{javaArgs.length == 1 && javaArgs[0] == value ? "same-value" : "other-value"};
                     }
                     yield new Object[]{value};
                 }

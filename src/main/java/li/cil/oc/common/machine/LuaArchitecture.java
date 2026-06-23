@@ -71,7 +71,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String MEMORY_TAG = "memory";
     private static final String PULL_SIGNAL_MARKER = "\u0000oc.pullSignal";
     private static final String BUDGET_RETRY_MARKER = "\u0000oc.budgetRetry";
-    private static final String VALUE_MARKER = "\u0000oc.value";
     private static final double PRIMARY_REPLACEMENT_DELAY_SECONDS = 0.1D;
     private boolean initialized;
     private boolean booted;
@@ -92,6 +91,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private final Map<String, PendingPrimaryComponent> pendingPrimaryComponents = new HashMap<>();
     private final Map<String, LuaTable> componentProxyCache = new HashMap<>();
     private final Map<Value, LuaValue> valueProxyCache = new IdentityHashMap<>();
+    private final Map<LuaTable, Value> valueProxyValues = new IdentityHashMap<>();
 
     public LuaArchitecture() {
         this("");
@@ -141,6 +141,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         pendingResult = null;
         pendingBudgetCall = null;
         valueProxyCache.clear();
+        valueProxyValues.clear();
         installComputerLibrary();
         installComponentLibrary();
         installUserdataLibrary();
@@ -2222,7 +2223,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return LuaValue.varargsOf(luaValues);
     }
 
-    private static Object[] toJavaArgs(final Varargs args, final int offset) {
+    private Object[] toJavaArgs(final Varargs args, final int offset) {
         final Object[] javaArgs = new Object[Math.max(0, args.narg() - offset + 1)];
         for (int index = 0; index < javaArgs.length; index++) {
             javaArgs[index] = toJavaValue(args.arg(index + offset));
@@ -2230,11 +2231,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return javaArgs;
     }
 
-    private static Value checkValue(final Varargs args, final int index) {
+    private Value checkValue(final Varargs args, final int index) {
         final LuaValue arg = args.arg(index);
         if (arg instanceof LuaTable table) {
-            final LuaValue marker = table.get(VALUE_MARKER);
-            if (marker.isuserdata() && marker.touserdata() instanceof Value value) {
+            final Value value = valueProxyValues.get(table);
+            if (value != null) {
                 return value;
             }
             throw new LuaError("bad argument #" + index + " (userdata expected)");
@@ -2250,8 +2251,8 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         }
         final LuaTable proxy = new LuaTable();
         proxy.set("type", "userdata");
-        proxy.set(VALUE_MARKER, LuaValue.userdataOf(value));
         valueProxyCache.put(value, proxy);
+        valueProxyValues.put(proxy, value);
         final Map<String, Callback> methods = machine == null ? Map.of() : machine.methods(value);
         for (String methodName : methods.keySet()) {
             proxy.set(methodName, valueCallbackFunction(value, methodName, proxy));
@@ -2284,13 +2285,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
                     @Override
                     public Varargs invoke(final Varargs iteratorArgs) {
-                        while (true) {
-                            final Varargs next = proxy.next(key);
-                            key = next.arg1();
-                            if (key.isnil() || !VALUE_MARKER.equals(key.tojstring())) {
-                                return next;
-                            }
-                        }
+                        final Varargs next = proxy.next(key);
+                        key = next.arg1();
+                        return next;
                     }
                 };
             }
@@ -2344,11 +2341,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         return callback;
     }
 
-    private static Object toJavaValue(final LuaValue value) {
+    private Object toJavaValue(final LuaValue value) {
         return toJavaValue(value, new IdentityHashMap<>());
     }
 
-    private static Object toJavaValue(final LuaValue value, final IdentityHashMap<LuaTable, Map<Object, Object>> processed) {
+    private Object toJavaValue(final LuaValue value, final IdentityHashMap<LuaTable, Map<Object, Object>> processed) {
         if (value.isnil()) {
             return null;
         }
@@ -2362,9 +2359,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             return Arrays.copyOfRange(string.m_bytes, string.m_offset, string.m_offset + string.m_length);
         }
         if (value instanceof LuaTable table) {
-            final LuaValue rawValue = table.get(VALUE_MARKER);
-            if (rawValue.isuserdata()) {
-                return rawValue.touserdata();
+            final Value machineValue = valueProxyValues.get(table);
+            if (machineValue != null) {
+                return machineValue;
             }
             final Map<Object, Object> cached = processed.get(table);
             if (cached != null) {
