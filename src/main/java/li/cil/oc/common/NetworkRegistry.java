@@ -626,11 +626,20 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public double changeBuffer(final double delta) {
+            if (ModSettings.ignorePower()) {
+                return delta < 0 ? 0 : delta;
+            }
             return changeConnectorBuffers(this, connectorBuffers(this, this), delta);
         }
 
         @Override
         public boolean tryChangeBuffer(final double delta) {
+            if (Math.abs(delta) <= BUFFER_EPSILON) {
+                return true;
+            }
+            if (ModSettings.ignorePower()) {
+                return delta < 0;
+            }
             final double newBuffer = globalBuffer() + delta;
             if (newBuffer < -BUFFER_EPSILON || newBuffer - globalBufferSize() > BUFFER_EPSILON) {
                 return false;
@@ -705,11 +714,20 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public double changeBuffer(final double delta) {
+            if (ModSettings.ignorePower()) {
+                return delta < 0 ? 0 : delta;
+            }
             return changeConnectorBuffers(this, connectorBuffers(this, this), delta);
         }
 
         @Override
         public boolean tryChangeBuffer(final double delta) {
+            if (Math.abs(delta) <= ConnectorNode.BUFFER_EPSILON) {
+                return true;
+            }
+            if (ModSettings.ignorePower()) {
+                return delta < 0;
+            }
             final double newBuffer = globalBuffer() + delta;
             if (newBuffer < -ConnectorNode.BUFFER_EPSILON || newBuffer - globalBufferSize() > ConnectorNode.BUFFER_EPSILON) {
                 return false;

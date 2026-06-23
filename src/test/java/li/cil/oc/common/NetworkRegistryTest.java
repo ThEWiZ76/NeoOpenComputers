@@ -184,6 +184,34 @@ final class NetworkRegistryTest {
         assertEquals(1, connector.localBuffer());
     }
 
+    @Test
+    void ignoredPowerAllowsConnectorDrainsWithoutChangingBuffer() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+        Connector connector = registry.newNode(new TestEnvironment(), Visibility.Network).withConnector(10).create();
+        connector.changeBuffer(5);
+
+        withCachedConfig(ModSettings.IGNORE_POWER, true, () -> {
+            assertEquals(5, connector.localBuffer());
+            assertEquals(0, connector.changeBuffer(-8));
+            assertEquals(5, connector.localBuffer());
+            assertTrue(connector.tryChangeBuffer(-8));
+            assertEquals(5, connector.localBuffer());
+        });
+    }
+
+    @Test
+    void ignoredPowerRejectsConnectorChargesWithoutChangingBuffer() throws Exception {
+        withCachedConfig(ModSettings.IGNORE_POWER, true, () -> {
+            NetworkRegistry registry = new NetworkRegistry();
+            Connector connector = registry.newNode(new TestEnvironment(), Visibility.Network).withConnector(10).create();
+
+            assertEquals(3, connector.changeBuffer(3));
+            assertEquals(0, connector.localBuffer());
+            assertFalse(connector.tryChangeBuffer(3));
+            assertEquals(0, connector.localBuffer());
+        });
+    }
+
     private static final class TestEnvironment implements Environment {
         private final List<Message> messages = new ArrayList<>();
         private Node node;
