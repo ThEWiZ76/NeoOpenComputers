@@ -6,6 +6,7 @@ import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -335,6 +336,36 @@ final class GraphicsCardEnvironmentTest {
             assertArrayEquals(new Object[]{true}, gpu.bitblt(context, new TestArguments(0, 1, 1, 10, 5, 1, 1, 1)));
 
             assertEquals(0.5D, context.callBudget, 0.000_001D);
+        });
+    }
+
+    @Test
+    void expensiveBitbltThrowsOnceThenPausesAndSkipsBudgetCost() throws Exception {
+        withCachedConfig(ModSettings.GPU_BITBLT_COST, 32D, () -> {
+            OpenComputersApi.initialize();
+            GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+            FakeTextBuffer screen = new FakeTextBuffer();
+            ComponentConnector connector = assertInstanceOf(ComponentConnector.class, gpu.node());
+            RecordingContext context = new RecordingContext();
+            connector.setLocalBufferSize(20D);
+            connector.changeBuffer(20D);
+            Network.joinNewNetwork(gpu.node());
+            gpu.node().connect(screen.node());
+            gpu.bind(null, new TestArguments(screen.node().address(), true));
+            gpu.allocateBuffer(null, new TestArguments(10, 5));
+            gpu.setActiveBuffer(null, new TestArguments(1));
+            gpu.set(null, new TestArguments(1, 1, "A"));
+
+            assertThrows(LimitReachedException.class,
+                () -> gpu.bitblt(context, new TestArguments(0, 1, 1, 10, 5, 1, 1, 1)));
+
+            assertEquals(0D, context.callBudget, 0.000_001D);
+            assertEquals(-1D, context.pauseSeconds, 0.000_001D);
+
+            assertArrayEquals(new Object[]{true}, gpu.bitblt(context, new TestArguments(0, 1, 1, 10, 5, 1, 1, 1)));
+
+            assertEquals(0D, context.callBudget, 0.000_001D);
+            assertEquals(0.1D, context.pauseSeconds, 0.000_001D);
         });
     }
 

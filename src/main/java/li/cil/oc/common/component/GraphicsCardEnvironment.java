@@ -47,6 +47,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     private String screenAddress;
     private TextBuffer screen;
     private int activeBufferIndex = SCREEN_INDEX;
+    private boolean bitbltBudgetExhausted;
 
     public GraphicsCardEnvironment(final int tier) {
         final int clampedTier = Math.max(0, Math.min(2, tier));
@@ -521,8 +522,29 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             final double cost = buffer.isDirty()
                 ? ModSettings.gpuBitbltCost() * Math.pow(2D, tier) * buffer.size() / ((double) maxWidth * (double) maxHeight)
                 : 0.001D;
-            context.consumeCallBudget(cost);
+            final double adjustedCost = throttleBitbltBudget(context, cost);
+            if (adjustedCost > 0D) {
+                context.consumeCallBudget(adjustedCost);
+            }
         }
+    }
+
+    private double throttleBitbltBudget(final Context context, final double cost) throws LimitReachedException {
+        final double tierCredit = (tier + 1) * 0.5D;
+        final double overBudget = cost - tierCredit;
+        if (overBudget > 0D) {
+            if (bitbltBudgetExhausted) {
+                if (overBudget > tierCredit) {
+                    context.pause((overBudget - tierCredit) / tierCredit / 20D);
+                }
+                bitbltBudgetExhausted = false;
+                return 0D;
+            }
+            bitbltBudgetExhausted = true;
+            throw new LimitReachedException();
+        }
+        bitbltBudgetExhausted = false;
+        return cost;
     }
 
     private boolean consumeScreenEnergy(final double units, final double cost) {
