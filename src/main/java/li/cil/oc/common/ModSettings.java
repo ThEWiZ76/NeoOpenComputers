@@ -58,6 +58,9 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
     public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_SIZE;
     public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_PARTS;
+    public static final ModConfigSpec.IntValue DATA_CARD_SOFT_LIMIT;
+    public static final ModConfigSpec.IntValue DATA_CARD_HARD_LIMIT;
+    public static final ModConfigSpec.DoubleValue DATA_CARD_TIMEOUT;
     public static final ModConfigSpec.IntValue DEFAULT_RELAY_DELAY;
     public static final ModConfigSpec.DoubleValue RELAY_DELAY_UPGRADE;
     public static final ModConfigSpec.IntValue DEFAULT_MAX_QUEUE_SIZE;
@@ -92,6 +95,13 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
     public static final ModConfigSpec.DoubleValue EEPROM_WRITE_COST;
+    public static final ModConfigSpec.DoubleValue DATA_CARD_TRIVIAL;
+    public static final ModConfigSpec.DoubleValue DATA_CARD_TRIVIAL_BYTE;
+    public static final ModConfigSpec.DoubleValue DATA_CARD_SIMPLE;
+    public static final ModConfigSpec.DoubleValue DATA_CARD_SIMPLE_BYTE;
+    public static final ModConfigSpec.DoubleValue DATA_CARD_COMPLEX;
+    public static final ModConfigSpec.DoubleValue DATA_CARD_COMPLEX_BYTE;
+    public static final ModConfigSpec.DoubleValue DATA_CARD_ASYMMETRIC;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
@@ -131,6 +141,15 @@ public final class ModSettings {
         MAX_NETWORK_PACKET_PARTS = builder
             .comment("Maximum number of data parts in one network packet. OpenComputers upstream default is 8 and minimum is 4.")
             .defineInRange("maxNetworkPacketParts", 8, 4, Integer.MAX_VALUE);
+        DATA_CARD_SOFT_LIMIT = builder
+            .comment("Data Card input size in bytes above which operations pause. OpenComputers upstream default is 8192.")
+            .defineInRange("dataCardSoftLimit", 8192, 0, Integer.MAX_VALUE);
+        DATA_CARD_HARD_LIMIT = builder
+            .comment("Maximum Data Card input size in bytes. OpenComputers upstream default is 1048576.")
+            .defineInRange("dataCardHardLimit", 1_048_576, 0, Integer.MAX_VALUE);
+        DATA_CARD_TIMEOUT = builder
+            .comment("Pause in seconds for Data Card operations above the soft limit. OpenComputers upstream default is 1.0.")
+            .defineInRange("dataCardTimeout", 1D, 0D, Double.MAX_VALUE);
         DEFAULT_RELAY_DELAY = builder
             .comment("Base delay in ticks before a relay forwards queued packets. OpenComputers upstream default is 5.")
             .defineInRange("defaultRelayDelay", 5, 1, Integer.MAX_VALUE);
@@ -307,6 +326,27 @@ public final class ModSettings {
         EEPROM_WRITE_COST = builder
             .comment("Energy consumed when writing EEPROM code or data. OpenComputers upstream default is 50.")
             .defineInRange("eepromWrite", 50D, 0D, Double.MAX_VALUE);
+        DATA_CARD_TRIVIAL = builder
+            .comment("Base energy cost for trivial Data Card operations. OpenComputers upstream default is 0.2.")
+            .defineInRange("dataCardTrivial", 0.2D, 0D, Double.MAX_VALUE);
+        DATA_CARD_TRIVIAL_BYTE = builder
+            .comment("Per-byte energy cost for trivial Data Card operations. OpenComputers upstream default is 0.005.")
+            .defineInRange("dataCardTrivialByte", 0.005D, 0D, Double.MAX_VALUE);
+        DATA_CARD_SIMPLE = builder
+            .comment("Base energy cost for simple Data Card operations. OpenComputers upstream default is 1.0.")
+            .defineInRange("dataCardSimple", 1D, 0D, Double.MAX_VALUE);
+        DATA_CARD_SIMPLE_BYTE = builder
+            .comment("Per-byte energy cost for simple Data Card operations. OpenComputers upstream default is 0.01.")
+            .defineInRange("dataCardSimpleByte", 0.01D, 0D, Double.MAX_VALUE);
+        DATA_CARD_COMPLEX = builder
+            .comment("Base energy cost for complex Data Card operations. OpenComputers upstream default is 6.0.")
+            .defineInRange("dataCardComplex", 6D, 0D, Double.MAX_VALUE);
+        DATA_CARD_COMPLEX_BYTE = builder
+            .comment("Per-byte energy cost for complex Data Card operations. OpenComputers upstream default is 0.1.")
+            .defineInRange("dataCardComplexByte", 0.1D, 0D, Double.MAX_VALUE);
+        DATA_CARD_ASYMMETRIC = builder
+            .comment("Base energy cost for asymmetric Data Card operations. OpenComputers upstream default is 10.0.")
+            .defineInRange("dataCardAsymmetric", 10D, 0D, Double.MAX_VALUE);
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
@@ -483,6 +523,34 @@ public final class ModSettings {
         return doubleValue(EEPROM_WRITE_COST);
     }
 
+    public static double dataCardTrivialCost() {
+        return doubleValue(DATA_CARD_TRIVIAL);
+    }
+
+    public static double dataCardTrivialByteCost() {
+        return doubleValue(DATA_CARD_TRIVIAL_BYTE);
+    }
+
+    public static double dataCardSimpleCost() {
+        return doubleValue(DATA_CARD_SIMPLE);
+    }
+
+    public static double dataCardSimpleByteCost() {
+        return doubleValue(DATA_CARD_SIMPLE_BYTE);
+    }
+
+    public static double dataCardComplexCost() {
+        return doubleValue(DATA_CARD_COMPLEX);
+    }
+
+    public static double dataCardComplexByteCost() {
+        return doubleValue(DATA_CARD_COMPLEX_BYTE);
+    }
+
+    public static double dataCardAsymmetricCost() {
+        return doubleValue(DATA_CARD_ASYMMETRIC);
+    }
+
     public static List<Integer> cpuComponentCount() {
         final List<Integer> counts = listValue(CPU_COMPONENT_COUNT);
         if (counts.size() != DEFAULT_CPU_COMPONENT_COUNT.size()) {
@@ -535,6 +603,18 @@ public final class ModSettings {
 
     public static int maxNetworkPacketParts() {
         return Math.max(4, intValue(MAX_NETWORK_PACKET_PARTS));
+    }
+
+    public static int dataCardSoftLimit() {
+        return intValue(DATA_CARD_SOFT_LIMIT);
+    }
+
+    public static int dataCardHardLimit() {
+        return intValue(DATA_CARD_HARD_LIMIT);
+    }
+
+    public static double dataCardTimeout() {
+        return doubleValue(DATA_CARD_TIMEOUT);
     }
 
     public static int defaultRelayDelay() {

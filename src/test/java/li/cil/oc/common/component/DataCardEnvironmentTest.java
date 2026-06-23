@@ -11,14 +11,17 @@ import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -115,6 +118,26 @@ final class DataCardEnvironmentTest {
         assertEquals(8.835D, connector.localBuffer(), 0.000_001D);
         assertEquals(100D, machineConnector.localBuffer(), 0.000_001D);
         assertArrayEquals(new Object[]{1048576}, card.getLimit(null, new TestArguments()));
+    }
+
+    @Test
+    void usesConfiguredLimitsAndEnergyCostsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        withCachedConfig(ModSettings.DATA_CARD_HARD_LIMIT, 4, () ->
+            withCachedConfig(ModSettings.DATA_CARD_TRIVIAL, 1.5D, () ->
+                withCachedConfig(ModSettings.DATA_CARD_TRIVIAL_BYTE, 0.25D, () -> {
+                    DataCardEnvironment card = new DataCardEnvironment(0);
+                    ComponentConnector connector = assertInstanceOf(ComponentConnector.class, card.node());
+                    connector.setLocalBufferSize(10);
+                    connector.changeBuffer(10);
+
+                    assertArrayEquals(new Object[]{4}, card.getLimit(null, new TestArguments()));
+                    assertArrayEquals(Base64.getEncoder().encode(bytes("abc")), (byte[]) card.encode64(null, new TestArguments(bytes("abc")))[0]);
+                    assertEquals(7.75D, connector.localBuffer(), 0.000_001D);
+
+                    IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> card.encode64(null, new TestArguments(bytes("abcde"))));
+                    assertEquals("data size limit exceeded", error.getMessage());
+                })));
     }
 
     @Test
@@ -249,6 +272,26 @@ final class DataCardEnvironmentTest {
         ComponentConnector connector = assertInstanceOf(ComponentConnector.class, card.node());
         connector.setLocalBufferSize(amount);
         connector.changeBuffer(amount);
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    private static byte[] bytes(final String value) {
+        return value.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static final class RecordingContext implements Context {
