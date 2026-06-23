@@ -105,6 +105,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue NANOMACHINES_MAGNET_RANGE;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_DISINTEGRATION_RANGE;
     public static final ModConfigSpec.ConfigValue<List<? extends Object>> NANOMACHINES_POTION_WHITELIST;
+    public static final ModConfigSpec.ConfigValue<String> DEBUG_CARD_ACCESS;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -157,6 +158,12 @@ public final class ModSettings {
         NANOMACHINE_HUD_POS = builder
             .comment("Position of the nanomachines power HUD indicator. OpenComputers upstream default is [-1, -1].")
             .defineList("nanomachineHudPos", DEFAULT_NANOMACHINE_HUD_POS, value -> value instanceof Double);
+        builder.pop();
+
+        builder.push("debug");
+        DEBUG_CARD_ACCESS = builder
+            .comment("Debug card access mode. Allowed values: allow, deny, whitelist. OpenComputers upstream default is allow.")
+            .define("debugCardAccess", "allow");
         builder.pop();
 
         builder.push("computer");
@@ -696,6 +703,16 @@ public final class ModSettings {
 
     public static double hologramSetRawDelay() {
         return doubleValue(HOLOGRAM_SET_RAW_DELAY);
+    }
+
+    public static String debugCardAccess() {
+        final String value = stringValue(DEBUG_CARD_ACCESS).trim().toLowerCase();
+        return switch (value) {
+            case "true", "allow" -> "allow";
+            case "false", "deny" -> "deny";
+            case "whitelist" -> "whitelist";
+            default -> "deny";
+        };
     }
 
     private static boolean booleanValue(final ModConfigSpec.BooleanValue value) {

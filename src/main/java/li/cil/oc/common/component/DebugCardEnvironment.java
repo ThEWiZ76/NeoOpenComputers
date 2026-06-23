@@ -8,6 +8,7 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 
 public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static final String COMPONENT_NAME = "debug";
@@ -23,7 +24,8 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     }
 
     @Callback(doc = "function(value:number):number -- Changes the component network's energy buffer by the specified delta.")
-    public Object[] changeBuffer(final Context context, final Arguments args) {
+    public Object[] changeBuffer(final Context context, final Arguments args) throws Exception {
+        checkAccess();
         if (node() instanceof Connector connector) {
             return new Object[]{connector.changeBuffer(args.checkDouble(0))};
         }
@@ -31,17 +33,29 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     }
 
     @Callback(doc = "function():number -- Get the container's X position in the world.")
-    public Object[] getX(final Context context, final Arguments args) {
+    public Object[] getX(final Context context, final Arguments args) throws Exception {
+        checkAccess();
         return new Object[]{host == null ? 0D : host.xPosition()};
     }
 
     @Callback(doc = "function():number -- Get the container's Y position in the world.")
-    public Object[] getY(final Context context, final Arguments args) {
+    public Object[] getY(final Context context, final Arguments args) throws Exception {
+        checkAccess();
         return new Object[]{host == null ? 0D : host.yPosition()};
     }
 
     @Callback(doc = "function():number -- Get the container's Z position in the world.")
-    public Object[] getZ(final Context context, final Arguments args) {
+    public Object[] getZ(final Context context, final Arguments args) throws Exception {
+        checkAccess();
         return new Object[]{host == null ? 0D : host.zPosition()};
+    }
+
+    private static void checkAccess() throws Exception {
+        switch (ModSettings.debugCardAccess()) {
+            case "allow" -> {
+            }
+            case "whitelist" -> throw new Exception("debug card is whitelisted, Shift+Click with it to bind card to yourself");
+            default -> throw new Exception("debug card is disabled");
+        }
     }
 }
