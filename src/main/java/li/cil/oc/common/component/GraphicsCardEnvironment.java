@@ -208,6 +208,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final int color = args.checkInteger(1);
         checkPaletteIndex(index);
         consumeScreenCallBudget(context, SET_PALETTE_COLOR_COSTS[tier]);
+        if (context != null && activeBufferIndex == SCREEN_INDEX) {
+            context.pause(0.1D);
+        }
         return withActiveBuffer(buffer -> {
             final int previous = buffer.getPaletteColor(index);
             buffer.setPaletteColor(index, color);

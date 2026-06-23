@@ -205,6 +205,28 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void paletteColorMutationPausesOnlyWhenWritingScreen() throws Exception {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        FakeTextBuffer screen = new FakeTextBuffer();
+        RecordingContext context = new RecordingContext();
+        Network.joinNewNetwork(gpu.node());
+        gpu.node().connect(screen.node());
+        gpu.bind(null, new TestArguments(screen.node().address(), true));
+
+        gpu.setPaletteColor(context, new TestArguments(2, 0x333333));
+
+        assertEquals(0.1D, context.pauseSeconds, 0.000_001D);
+
+        context.pauseSeconds = -1D;
+        gpu.allocateBuffer(null, new TestArguments(2, 1));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+        gpu.setPaletteColor(context, new TestArguments(2, 0x444444));
+
+        assertEquals(-1D, context.pauseSeconds, 0.000_001D);
+    }
+
+    @Test
     void screenMutationsConsumeConfiguredEnergy() throws Exception {
         withCachedConfig(ModSettings.GPU_SET_COST, 80D, () ->
             withCachedConfig(ModSettings.GPU_COPY_COST, 20D, () ->
@@ -368,13 +390,14 @@ final class GraphicsCardEnvironmentTest {
 
     private static final class RecordingContext implements Context {
         private double callBudget;
+        private double pauseSeconds = -1D;
 
         @Override public Node node() { return null; }
         @Override public boolean canInteract(final String player) { return true; }
         @Override public boolean isRunning() { return true; }
         @Override public boolean isPaused() { return false; }
         @Override public boolean start() { return true; }
-        @Override public boolean pause(final double seconds) { return true; }
+        @Override public boolean pause(final double seconds) { pauseSeconds = seconds; return true; }
         @Override public boolean stop() { return true; }
         @Override public void consumeCallBudget(final double callCost) { callBudget += callCost; }
         @Override public boolean signal(final String name, final Object... args) { return true; }
