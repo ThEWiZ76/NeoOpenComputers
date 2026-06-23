@@ -25,7 +25,9 @@ final class TabletAssemblerTemplate implements AssemblerTemplate {
 
     @Override
     public boolean validate(final AssemblerBlockEntity assembler) {
-        return hasDriverSlot(assembler, Slot.CPU) && hasDriverSlot(assembler, Slot.Memory);
+        return hasDriverSlot(assembler, Slot.CPU)
+            && hasDriverSlot(assembler, Slot.Memory)
+            && isComplexityAllowed(caseTier(assembler), cpuTier(assembler), complexity(assembler));
     }
 
     @Override
@@ -67,6 +69,14 @@ final class TabletAssemblerTemplate implements AssemblerTemplate {
         return ModSettings.tabletAssemblyBaseCost() + Math.max(0, complexity) * ModSettings.tabletAssemblyComplexityCost();
     }
 
+    static int maxComplexity(final int caseTier, final int cpuTier) {
+        return deviceMaxComplexity(caseTier, cpuTier) / 2 + 5;
+    }
+
+    static boolean isComplexityAllowed(final int caseTier, final int cpuTier, final int complexity) {
+        return complexity <= maxComplexity(caseTier, cpuTier);
+    }
+
     private static ItemStack[] componentStacks(final AssemblerBlockEntity assembler) {
         final ArrayList<ItemStack> stacks = new ArrayList<>();
         for (int slot = AssemblerBlockEntity.SLOT_COMPONENT_START; slot < AssemblerBlockEntity.SLOT_COMPONENT_START + AssemblerBlockEntity.COMPONENT_SLOT_COUNT; slot++) {
@@ -99,6 +109,23 @@ final class TabletAssemblerTemplate implements AssemblerTemplate {
         return false;
     }
 
+    private static int caseTier(final AssemblerBlockEntity assembler) {
+        final ItemStack stack = assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE);
+        return stack.getItem() instanceof TabletCaseItem item ? item.tier() : -1;
+    }
+
+    private static int cpuTier(final AssemblerBlockEntity assembler) {
+        int tier = 0;
+        for (int slot = 0; slot < AssemblerBlockEntity.CONTAINER_SIZE; slot++) {
+            final ItemStack stack = assembler.getItem(slot);
+            final DriverItem driver = Driver.driverFor(stack);
+            if (driver instanceof Processor) {
+                tier += driver.tier(stack);
+            }
+        }
+        return tier;
+    }
+
     private static int complexity(final AssemblerBlockEntity assembler) {
         int complexity = 0;
         for (int slot = AssemblerBlockEntity.SLOT_CONTAINER_START; slot < AssemblerBlockEntity.CONTAINER_SIZE; slot++) {
@@ -119,6 +146,13 @@ final class TabletAssemblerTemplate implements AssemblerTemplate {
             return 1 + driver.tier(stack);
         }
         return 0;
+    }
+
+    private static int deviceMaxComplexity(final int caseTier, final int cpuTier) {
+        if (caseTier < 0 || cpuTier < 0) {
+            return 0;
+        }
+        return ModSettings.deviceComplexityByTier(caseTier) - (Math.min(2, caseTier) - cpuTier) * 6;
     }
 
     private static boolean isContainerSlot(final int slot) {

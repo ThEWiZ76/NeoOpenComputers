@@ -30,6 +30,13 @@ final class ModSettingsTest {
         assertEquals(20000D, ModSettings.batteryUpgradeBuffer(2));
         assertEquals(10000D, ModSettings.batteryUpgradeBuffer(-1));
         assertEquals(20000D, ModSettings.batteryUpgradeBuffer(99));
+        assertEquals(List.of(12, 24, 32, 9001), ModSettings.deviceComplexityByTier());
+        assertEquals(12, ModSettings.deviceComplexityByTier(0));
+        assertEquals(24, ModSettings.deviceComplexityByTier(1));
+        assertEquals(32, ModSettings.deviceComplexityByTier(2));
+        assertEquals(9001, ModSettings.deviceComplexityByTier(3));
+        assertEquals(12, ModSettings.deviceComplexityByTier(-1));
+        assertEquals(9001, ModSettings.deviceComplexityByTier(99));
         assertEquals(500D, ModSettings.powerDistributorBuffer());
         assertEquals(10000D, ModSettings.tabletBuffer());
         assertEquals(20000D, ModSettings.tabletAssemblyBaseCost());

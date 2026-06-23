@@ -12,6 +12,7 @@ public final class ModSettings {
     private static final List<Integer> DEFAULT_HDD_SIZES = List.of(1024, 2048, 4096);
     private static final List<Integer> DEFAULT_HDD_PLATTER_COUNTS = List.of(2, 4, 8);
     private static final List<Integer> DEFAULT_CPU_COMPONENT_COUNT = List.of(8, 12, 16, 1024);
+    private static final List<Integer> DEFAULT_DEVICE_COMPLEXITY_BY_TIER = List.of(12, 24, 32, 9001);
     private static final List<Double> DEFAULT_CALL_BUDGETS = List.of(0.5D, 1.0D, 1.5D);
     private static final List<Double> DEFAULT_BATTERY_UPGRADE_BUFFERS = List.of(10_000D, 15_000D, 20_000D);
     private static final List<Integer> DEFAULT_SCREEN_WIDTHS_BY_TIER = List.of(50, 80, 160);
@@ -763,6 +764,14 @@ public final class ModSettings {
     public static int cpuComponentCount(final int tier) {
         final List<Integer> counts = cpuComponentCount();
         return counts.get(clampIndex(tier, counts.size()));
+    }
+
+    public static List<Integer> deviceComplexityByTier() {
+        return DEFAULT_DEVICE_COMPLEXITY_BY_TIER;
+    }
+
+    public static int deviceComplexityByTier(final int tier) {
+        return DEFAULT_DEVICE_COMPLEXITY_BY_TIER.get(clampIndex(tier, DEFAULT_DEVICE_COMPLEXITY_BY_TIER.size()));
     }
 
     public static List<Double> callBudgets() {

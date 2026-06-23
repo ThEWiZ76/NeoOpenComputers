@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class AssemblerTemplatesTest {
@@ -32,6 +33,19 @@ final class AssemblerTemplatesTest {
                 assertEquals(0, TabletAssemblerTemplate.complexityOf(new ItemDriver("eeprom", 0), null));
                 assertEquals(180D, TabletAssemblerTemplate.energyForComplexity(8));
             }));
+    }
+
+    @Test
+    void tabletAssemblerLimitsComplexityLikeUpstream() {
+        assertEquals(11, TabletAssemblerTemplate.maxComplexity(0, 0));
+        assertEquals(14, TabletAssemblerTemplate.maxComplexity(1, 0));
+        assertEquals(17, TabletAssemblerTemplate.maxComplexity(1, 1));
+        assertEquals(4505, TabletAssemblerTemplate.maxComplexity(3, 2));
+
+        assertTrue(TabletAssemblerTemplate.isComplexityAllowed(0, 0, 11));
+        assertFalse(TabletAssemblerTemplate.isComplexityAllowed(0, 0, 12));
+        assertTrue(TabletAssemblerTemplate.isComplexityAllowed(1, 0, 14));
+        assertFalse(TabletAssemblerTemplate.isComplexityAllowed(1, 0, 15));
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
