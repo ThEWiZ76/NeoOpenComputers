@@ -372,6 +372,15 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void debugCardItemIdIsStable() {
+        try {
+            assertEquals("debug_card", ModContentIds.class.getField("DEBUG_CARD").get(null));
+        } catch (final ReflectiveOperationException e) {
+            throw new AssertionError("missing Debug Card content id", e);
+        }
+    }
+
+    @Test
     void inventoryUpgradeItemIdIsStable() {
         assertEquals("inventory_upgrade", ModContentIds.INVENTORY_UPGRADE);
     }

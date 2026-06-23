@@ -224,6 +224,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.DATA_CARD_TIER1.get();
         ModItems.DATA_CARD_TIER2.get();
         ModItems.DATA_CARD_TIER3.get();
+        ModItems.DEBUG_CARD.get();
         ModItems.DATABASE_UPGRADE_TIER1.get();
         ModItems.DATABASE_UPGRADE_TIER2.get();
         ModItems.DATABASE_UPGRADE_TIER3.get();

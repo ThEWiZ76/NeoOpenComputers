@@ -12,6 +12,7 @@ import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.CraftingUpgradeEnvironment;
 import li.cil.oc.common.component.DatabaseEnvironment;
 import li.cil.oc.common.component.DataCardEnvironment;
+import li.cil.oc.common.component.DebugCardEnvironment;
 import li.cil.oc.common.component.EepromEnvironment;
 import li.cil.oc.common.component.ExperienceUpgradeEnvironment;
 import li.cil.oc.common.component.GeneratorUpgradeEnvironment;
@@ -59,7 +60,7 @@ public final class ModDriverCatalog {
                 ModItems.TABLET.get(),
                 ModItems.SERVER_TIER1.get(), ModItems.SERVER_TIER2.get(), ModItems.SERVER_TIER3.get(), ModItems.TERMINAL_SERVER.get(),
                 ModItems.BATTERY_UPGRADE_TIER1.get(), ModItems.BATTERY_UPGRADE_TIER2.get(), ModItems.BATTERY_UPGRADE_TIER3.get(), ModItems.BARCODE_READER_UPGRADE.get(),
-                ModItems.DATA_CARD_TIER1.get(), ModItems.DATA_CARD_TIER2.get(), ModItems.DATA_CARD_TIER3.get(),
+                ModItems.DATA_CARD_TIER1.get(), ModItems.DATA_CARD_TIER2.get(), ModItems.DATA_CARD_TIER3.get(), ModItems.DEBUG_CARD.get(),
                 ModItems.DATABASE_UPGRADE_TIER1.get(), ModItems.DATABASE_UPGRADE_TIER2.get(), ModItems.DATABASE_UPGRADE_TIER3.get(),
                 new DiskDriveContainerDriver(),
                 ModItems.MEMORY_TIER1.get(), ModItems.MEMORY_TIER2.get(), ModItems.MEMORY_TIER3.get(),
@@ -92,6 +93,7 @@ public final class ModDriverCatalog {
                 providerFor(ModItems.DATA_CARD_TIER1.get(), DataCardEnvironment.class),
                 providerFor(ModItems.DATA_CARD_TIER2.get(), DataCardEnvironment.class),
                 providerFor(ModItems.DATA_CARD_TIER3.get(), DataCardEnvironment.class),
+                providerFor(ModItems.DEBUG_CARD.get(), DebugCardEnvironment.class),
                 providerFor(ModItems.DATABASE_UPGRADE_TIER1.get(), DatabaseEnvironment.class),
                 providerFor(ModItems.DATABASE_UPGRADE_TIER2.get(), DatabaseEnvironment.class),
                 providerFor(ModItems.DATABASE_UPGRADE_TIER3.get(), DatabaseEnvironment.class),

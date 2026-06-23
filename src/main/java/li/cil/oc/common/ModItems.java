@@ -13,6 +13,7 @@ import li.cil.oc.common.item.CraftingUpgradeItem;
 import li.cil.oc.common.item.CpuItem;
 import li.cil.oc.common.item.DataCardItem;
 import li.cil.oc.common.item.DatabaseUpgradeItem;
+import li.cil.oc.common.item.DebugCardItem;
 import li.cil.oc.common.item.EepromItem;
 import li.cil.oc.common.item.ExperienceUpgradeItem;
 import li.cil.oc.common.item.FloppyItem;
@@ -263,6 +264,10 @@ public final class ModItems {
     public static final DeferredItem<DataCardItem> DATA_CARD_TIER3 = ITEMS.register(
         ModContentIds.DATA_CARD_TIER3,
         () -> new DataCardItem(new Item.Properties(), 2));
+
+    public static final DeferredItem<DebugCardItem> DEBUG_CARD = ITEMS.register(
+        ModContentIds.DEBUG_CARD,
+        () -> new DebugCardItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
 
     public static final DeferredItem<DatabaseUpgradeItem> DATABASE_UPGRADE_TIER1 = ITEMS.register(
         ModContentIds.DATABASE_UPGRADE_TIER1,

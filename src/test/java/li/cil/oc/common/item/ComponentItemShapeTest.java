@@ -480,6 +480,22 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void debugCardItemCreatesUpstreamDebugComponentEnvironment() throws Exception {
+        OpenComputersApi.initialize();
+        final Class<?> itemClass = Class.forName("li.cil.oc.common.item.DebugCardItem");
+        final Item item = (Item) allocate(itemClass.asSubclass(Item.class));
+        final DriverItem driver = assertInstanceOf(DriverItem.class, item);
+
+        final ManagedEnvironment environment = driver.createEnvironment(null, new TestEnvironmentHost());
+        assertNotNull(environment);
+        final Component component = assertInstanceOf(Component.class, environment.node());
+
+        assertEquals("card", driver.slot(null));
+        assertEquals("debug", component.name());
+        assertEquals(Visibility.Neighbors, component.visibility());
+    }
+
+    @Test
     void angelUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<AngelUpgradeItem> constructor = AngelUpgradeItem.class.getConstructor(Item.Properties.class);
 
