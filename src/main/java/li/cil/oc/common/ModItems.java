@@ -4,6 +4,7 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.item.AngelUpgradeItem;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.ApuItem;
+import li.cil.oc.common.item.BarcodeReaderUpgradeItem;
 import li.cil.oc.common.item.BatteryUpgradeItem;
 import li.cil.oc.common.item.CardContainerItem;
 import li.cil.oc.common.item.ChunkloaderUpgradeItem;
@@ -206,6 +207,10 @@ public final class ModItems {
     public static final DeferredItem<BatteryUpgradeItem> BATTERY_UPGRADE_TIER3 = ITEMS.register(
         ModContentIds.BATTERY_UPGRADE_TIER3,
         () -> new BatteryUpgradeItem(new Item.Properties(), 2));
+
+    public static final DeferredItem<BarcodeReaderUpgradeItem> BARCODE_READER_UPGRADE = ITEMS.register(
+        ModContentIds.BARCODE_READER_UPGRADE,
+        () -> new BarcodeReaderUpgradeItem(new Item.Properties()));
 
     public static final DeferredItem<CardContainerItem> CARD_CONTAINER_TIER1 = ITEMS.register(
         ModContentIds.CARD_CONTAINER_TIER1,

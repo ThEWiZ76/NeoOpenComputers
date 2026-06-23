@@ -16,6 +16,7 @@ public final class ModContentIds {
     public static final String BATTERY_UPGRADE_TIER1 = "battery_upgrade_tier1";
     public static final String BATTERY_UPGRADE_TIER2 = "battery_upgrade_tier2";
     public static final String BATTERY_UPGRADE_TIER3 = "battery_upgrade_tier3";
+    public static final String BARCODE_READER_UPGRADE = "barcode_reader_upgrade";
     public static final String BUTTON_GROUP = "button_group";
     public static final String CABLE = "cable";
     public static final String CABLE_BLOCK_ENTITY = "cable";

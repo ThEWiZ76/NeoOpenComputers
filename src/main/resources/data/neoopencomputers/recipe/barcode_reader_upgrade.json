@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "pattern": [
+    "GRG",
+    "RCR",
+    "GBG"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:barcode_reader_upgrade"
+  }
+}

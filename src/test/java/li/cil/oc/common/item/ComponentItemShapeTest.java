@@ -461,6 +461,25 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void barcodeReaderUpgradeItemCreatesUpstreamComponentEnvironment() throws Exception {
+        OpenComputersApi.initialize();
+        final Class<?> itemClass = Class.forName("li.cil.oc.common.item.BarcodeReaderUpgradeItem");
+        final Item item = (Item) allocate(itemClass.asSubclass(Item.class));
+
+        final ManagedEnvironment environment = ((HostAware) item).createEnvironment(null, new TestEnvironmentHost());
+        assertNotNull(environment);
+        final Component component = assertInstanceOf(Component.class, environment.node());
+        final DeviceInfo deviceInfo = assertInstanceOf(DeviceInfo.class, environment);
+        final Map<String, String> metadata = deviceInfo.getDeviceInfo();
+
+        assertEquals("barcode_reader", component.name());
+        assertEquals(Visibility.Network, component.visibility());
+        assertEquals(DeviceInfo.DeviceClass.Generic, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Barcode reader upgrade", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("Readerizer Deluxe", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
     void angelUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<AngelUpgradeItem> constructor = AngelUpgradeItem.class.getConstructor(Item.Properties.class);
 

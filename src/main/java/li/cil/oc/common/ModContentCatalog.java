@@ -8,6 +8,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_BATTERY_UPGRADE_TIER1 = "batteryUpgrade1";
     public static final String COMPAT_BATTERY_UPGRADE_TIER2 = "batteryUpgrade2";
     public static final String COMPAT_BATTERY_UPGRADE_TIER3 = "batteryUpgrade3";
+    public static final String COMPAT_BARCODE_READER_UPGRADE = "barcodeReader";
     public static final String COMPAT_ANGEL_UPGRADE = "angelUpgrade";
     public static final String COMPAT_APU_TIER1 = "apu1";
     public static final String COMPAT_APU_TIER2 = "apu2";
@@ -190,6 +191,7 @@ public final class ModContentCatalog {
                 ModItems.BATTERY_UPGRADE_TIER1.get(),
                 ModItems.BATTERY_UPGRADE_TIER2.get(),
                 ModItems.BATTERY_UPGRADE_TIER3.get(),
+                ModItems.BARCODE_READER_UPGRADE.get(),
                 ModItems.MEMORY_TIER1.get(),
                 ModItems.MEMORY_TIER2.get(),
                 ModItems.MEMORY_TIER3.get(),
@@ -414,6 +416,7 @@ public final class ModContentCatalog {
         final Item batteryUpgradeTier1Item,
         final Item batteryUpgradeTier2Item,
         final Item batteryUpgradeTier3Item,
+        final Item barcodeReaderUpgradeItem,
         final Item memoryTier1Item,
         final Item memoryTier2Item,
         final Item memoryTier3Item,
@@ -528,6 +531,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.BATTERY_UPGRADE_TIER1, null, batteryUpgradeTier1Item);
         registry.register(ModContentIds.BATTERY_UPGRADE_TIER2, null, batteryUpgradeTier2Item);
         registry.register(ModContentIds.BATTERY_UPGRADE_TIER3, null, batteryUpgradeTier3Item);
+        registry.register(ModContentIds.BARCODE_READER_UPGRADE, null, barcodeReaderUpgradeItem);
         registry.register(ModContentIds.MEMORY_TIER1, null, memoryTier1Item);
         registry.register(ModContentIds.MEMORY_TIER2, null, memoryTier2Item);
         registry.register(ModContentIds.MEMORY_TIER3, null, memoryTier3Item);
@@ -587,6 +591,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_BATTERY_UPGRADE_TIER1, null, batteryUpgradeTier1Item);
         registry.register(COMPAT_BATTERY_UPGRADE_TIER2, null, batteryUpgradeTier2Item);
         registry.register(COMPAT_BATTERY_UPGRADE_TIER3, null, batteryUpgradeTier3Item);
+        registry.register(COMPAT_BARCODE_READER_UPGRADE, null, barcodeReaderUpgradeItem);
         registry.register(COMPAT_MEMORY_TIER1, null, memoryTier1Item);
         registry.register(COMPAT_MEMORY_TIER2, null, memoryTier2Item);
         registry.register(COMPAT_MEMORY_TIER3, null, memoryTier3Item);

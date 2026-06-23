@@ -391,12 +391,21 @@ final class ModContentRegistrationTest {
         assertEquals("piston_upgrade", ModContentIds.PISTON_UPGRADE);
         assertEquals("sticky_piston_upgrade", ModContentIds.STICKY_PISTON_UPGRADE);
         assertEquals("sign_upgrade", ModContentIds.SIGN_UPGRADE);
+        assertEquals("barcode_reader_upgrade", barcodeReaderUpgradeId());
         assertEquals("trading_upgrade", ModContentIds.TRADING_UPGRADE);
         assertEquals("tractor_beam_upgrade", ModContentIds.TRACTOR_BEAM_UPGRADE);
         assertEquals("leash_upgrade", ModContentIds.LEASH_UPGRADE);
         assertEquals("angel_upgrade", ModContentIds.ANGEL_UPGRADE);
         assertEquals("chunkloader_upgrade", ModContentIds.CHUNKLOADER_UPGRADE);
         assertEquals("mfu", ModContentIds.MFU);
+    }
+
+    private static String barcodeReaderUpgradeId() {
+        try {
+            return (String) ModContentIds.class.getField("BARCODE_READER_UPGRADE").get(null);
+        } catch (final ReflectiveOperationException e) {
+            throw new AssertionError("missing Barcode Reader Upgrade content id", e);
+        }
     }
 
     @Test
