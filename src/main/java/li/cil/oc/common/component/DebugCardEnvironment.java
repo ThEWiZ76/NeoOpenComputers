@@ -14,8 +14,10 @@ import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.ModList;
@@ -264,6 +266,45 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return new Object[]{level != null && level.canSeeSky(blockPos(args))};
         }
 
+        @Callback(doc = "function(x:number, y:number, z:number, id:number|string, meta:number):boolean -- Set the block at the specified coordinates.")
+        public Object[] setBlock(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            if (level == null) {
+                return new Object[]{false};
+            }
+            final Block block = block(args, 3);
+            if (block == Blocks.AIR && args.count() > 3 && !isAir(args, 3)) {
+                return new Object[]{false};
+            }
+            return new Object[]{level.setBlock(blockPos(args), block.defaultBlockState(), 3)};
+        }
+
+        @Callback(doc = "function(x1:number, y1:number, z1:number, x2:number, y2:number, z2:number, id:number|string, meta:number) -- Set all blocks in the area defined by two corner points.")
+        public Object[] setBlocks(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            if (level == null) {
+                return null;
+            }
+            final Block block = block(args, 6);
+            if (block == Blocks.AIR && args.count() > 6 && !isAir(args, 6)) {
+                return null;
+            }
+            final int xMin = Math.min(args.checkInteger(0), args.checkInteger(3));
+            final int yMin = Math.min(args.checkInteger(1), args.checkInteger(4));
+            final int zMin = Math.min(args.checkInteger(2), args.checkInteger(5));
+            final int xMax = Math.max(args.checkInteger(0), args.checkInteger(3));
+            final int yMax = Math.max(args.checkInteger(1), args.checkInteger(4));
+            final int zMax = Math.max(args.checkInteger(2), args.checkInteger(5));
+            for (int x = xMin; x <= xMax; x++) {
+                for (int y = yMin; y <= yMax; y++) {
+                    for (int z = zMin; z <= zMax; z++) {
+                        level.setBlock(new BlockPos(x, y, z), block.defaultBlockState(), 3);
+                    }
+                }
+            }
+            return null;
+        }
+
         @Callback(doc = "function():boolean -- Get whether it is raining.")
         public Object[] isRaining(final Context context, final Arguments args) throws Exception {
             checkAccess(access);
@@ -304,6 +345,19 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
 
         private BlockState blockState(final BlockPos pos) {
             return level == null ? Blocks.AIR.defaultBlockState() : level.getBlockState(pos);
+        }
+
+        private static Block block(final Arguments args, final int index) {
+            if (args.isInteger(index)) {
+                return BuiltInRegistries.BLOCK.byId(args.checkInteger(index));
+            }
+            return BuiltInRegistries.BLOCK.get(ResourceLocation.parse(args.checkString(index)));
+        }
+
+        private static boolean isAir(final Arguments args, final int index) {
+            return args.isInteger(index)
+                ? args.checkInteger(index) == BuiltInRegistries.BLOCK.getId(Blocks.AIR)
+                : "minecraft:air".equals(args.checkString(index)) || "air".equals(args.checkString(index));
         }
     }
 

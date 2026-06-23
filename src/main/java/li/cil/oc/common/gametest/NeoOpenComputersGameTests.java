@@ -599,6 +599,29 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardWorldValueSetsBlocks(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        final BlockPos single = helper.absolutePos(new BlockPos(1, 1, 1));
+        final Object[] setBlock = invokeValue(helper, world, "setBlock", single.getX(), single.getY(), single.getZ(), "minecraft:diamond_block", 0);
+        helper.assertTrue(setBlock.length == 1 && Boolean.TRUE.equals(setBlock[0]), "World value did not report setBlock success");
+        helper.assertTrue(helper.getLevel().getBlockState(single).is(Blocks.DIAMOND_BLOCK), "World value did not set block by name");
+
+        final BlockPos first = helper.absolutePos(new BlockPos(2, 1, 1));
+        final BlockPos second = helper.absolutePos(new BlockPos(3, 1, 1));
+        invokeValue(helper, world, "setBlocks", first.getX(), first.getY(), first.getZ(), second.getX(), second.getY(), second.getZ(), BuiltInRegistries.BLOCK.getId(Blocks.GOLD_BLOCK), 0);
+        helper.assertTrue(helper.getLevel().getBlockState(first).is(Blocks.GOLD_BLOCK), "World value did not set first block in area");
+        helper.assertTrue(helper.getLevel().getBlockState(second).is(Blocks.GOLD_BLOCK), "World value did not set second block in area");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
         final CraftingInput input = CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),
