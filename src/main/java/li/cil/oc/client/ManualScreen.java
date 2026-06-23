@@ -139,7 +139,7 @@ public class ManualScreen extends Screen {
         int y = startY;
         int lineHeight = startLineHeight;
         while (!remaining.isEmpty()) {
-            if (x == 0) {
+            if (x == 0 && shouldStripLeading(segment)) {
                 remaining = remaining.stripLeading();
             }
             if (remaining.isEmpty()) {
@@ -182,6 +182,10 @@ public class ManualScreen extends Screen {
             return textPixelWidth(segment, text.substring(0, 2), textWidth);
         }
         return 0;
+    }
+
+    private static boolean shouldStripLeading(final ManualDocument.Segment segment) {
+        return !(segment instanceof ManualDocument.CodeSegment);
     }
 
     private static ManualDocument.Segment copyTextSegment(final ManualDocument.Segment segment, final String text) {

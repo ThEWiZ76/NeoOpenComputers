@@ -196,6 +196,18 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenPreservesLeadingSpacesInCodeSegmentsLikeUpstream() {
+        ManualDocument document = ManualDocument.parse(List.of("`  indented`"), href -> null);
+
+        List<ManualScreen.LayoutEntry> entries = ManualScreen.layout(document, 120, text -> text.length() * 6);
+
+        assertEquals(1, entries.size());
+        assertTrue(entries.get(0).segment() instanceof ManualDocument.CodeSegment);
+        assertTextEntry("  indented", entries.get(0));
+        assertEquals(0, entries.get(0).x());
+    }
+
+    @Test
     void manualScreenWrapsStyledLinksWithoutDroppingStyle() {
         ManualDocument document = ManualDocument.parse(List.of("[**alpha beta**](item/manual.md)"), href -> null);
 
