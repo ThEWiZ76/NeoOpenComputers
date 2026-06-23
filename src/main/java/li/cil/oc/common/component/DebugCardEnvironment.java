@@ -6,6 +6,9 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.AbstractValue;
@@ -60,18 +63,21 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static final String COMPONENT_NAME = "debug";
     private static final String DATA_TAG = "oc:data";
     private static final String PLAYER_TAG = "oc:player";
     private static final String ACCESS_NONCE_TAG = "oc:accessNonce";
+    private static final Map<String, DebugCardEnvironment> ENDPOINTS = new ConcurrentHashMap<>();
 
     private final EnvironmentHost host;
     private AccessContext access;
@@ -180,6 +186,47 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             }
         }
         return new Object[0];
+    }
+
+    @Callback(doc = "function(address:string, data...) -- Sends data to the debug card with the specified address.")
+    public Object[] sendToDebugCard(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        final String destination = args.checkString(0);
+        final DebugCardEnvironment endpoint = ENDPOINTS.get(destination);
+        if (endpoint != null && endpoint != this && node() != null) {
+            endpoint.receiveDebugPacket(Network.newPacket(node().address(), destination, 0, Arrays.copyOfRange(args.toArray(), 1, args.count())));
+        }
+        return new Object[0];
+    }
+
+    @Override
+    public void onConnect(final Node node) {
+        super.onConnect(node);
+        if (node == node() && node != null && node.address() != null) {
+            ENDPOINTS.put(node.address(), this);
+        }
+    }
+
+    @Override
+    public void onDisconnect(final Node node) {
+        super.onDisconnect(node);
+        if (node == node() && node != null && node.address() != null) {
+            ENDPOINTS.remove(node.address(), this);
+        }
+    }
+
+    private void receiveDebugPacket(final Packet packet) {
+        if (packet == null || node() == null) {
+            return;
+        }
+        final Object[] data = packet.data() == null ? new Object[0] : packet.data();
+        final Object[] signal = new Object[data.length + 4];
+        signal[0] = "debug_message";
+        signal[1] = packet.source();
+        signal[2] = packet.port();
+        signal[3] = 0D;
+        System.arraycopy(data, 0, signal, 4, data.length);
+        node().sendToReachable("computer.signal", signal);
     }
 
     @Override

@@ -563,6 +563,34 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void debugCardSendsRemoteDebugMessages(final GameTestHelper helper) {
+        final DebugCardEnvironment source = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        final DebugCardEnvironment target = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        final RecordingSignalEnvironment receiver = new RecordingSignalEnvironment();
+        Network.joinNewNetwork(source.node());
+        Network.joinNewNetwork(target.node());
+        Network.joinNewNetwork(receiver.node());
+        target.node().connect(receiver.node());
+        helper.assertTrue(source.node() instanceof li.cil.oc.api.network.Component, "Source debug card did not expose component");
+
+        final li.cil.oc.api.network.Component sourceComponent = (li.cil.oc.api.network.Component) source.node();
+        final Object[] result = invokeComponent(helper, sourceComponent, "sendToDebugCard", target.node().address(), "alpha", 42);
+        helper.assertTrue(result.length == 0, "Debug sendToDebugCard returned unexpected values");
+
+        final Message message = receiver.lastMessage;
+        helper.assertTrue(message != null, "Debug target did not emit remote debug signal");
+        helper.assertTrue("computer.signal".equals(message.name()), "Debug target emitted wrong message");
+        helper.assertTrue(message.data().length == 6, "Debug target emitted wrong signal arity");
+        helper.assertTrue("debug_message".equals(message.data()[0]), "Debug target emitted wrong signal name");
+        helper.assertTrue(source.node().address().equals(message.data()[1]), "Debug target emitted wrong source address");
+        helper.assertTrue(Integer.valueOf(0).equals(message.data()[2]), "Debug target emitted wrong port");
+        helper.assertTrue(Double.valueOf(0D).equals(message.data()[3]), "Debug target emitted wrong distance");
+        helper.assertTrue("alpha".equals(message.data()[4]), "Debug target emitted wrong payload string");
+        helper.assertTrue(Integer.valueOf(42).equals(message.data()[5]), "Debug target emitted wrong payload number");
+        helper.succeed();
+    }
+
     @SuppressWarnings("removal")
     @GameTest(template = "empty")
     public static void debugCardPlayerValueUpdatesOnlinePlayerState(final GameTestHelper helper) {
@@ -6087,6 +6115,29 @@ public final class NeoOpenComputersGameTests {
             if ("network.message".equals(message.name()) && message.data().length == 1 && message.data()[0] instanceof li.cil.oc.api.network.Packet packet) {
                 lastPacket = packet;
             }
+        }
+    }
+
+    private static final class RecordingSignalEnvironment implements li.cil.oc.api.network.Environment {
+        private final Node node = Network.newNode(this, Visibility.Network).create();
+        private Message lastMessage;
+
+        @Override
+        public Node node() {
+            return node;
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
+            lastMessage = message;
         }
     }
 
