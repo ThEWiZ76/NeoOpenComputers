@@ -76,6 +76,7 @@ import li.cil.oc.common.template.DisassemblerTemplate;
 import li.cil.oc.common.template.DisassemblerTemplateImc;
 import li.cil.oc.common.template.DisassemblerTemplates;
 import net.neoforged.fml.InterModComms;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -434,6 +435,40 @@ public final class NeoOpenComputersGameTests {
                 final ItemStack second = first.use(helper.getLevel(), player, InteractionHand.MAIN_HAND).getObject();
                 helper.assertTrue(DebugCardEnvironment.loadAccess(driver.dataTag(second)) == null, "Debug card second shift-use did not unbind access context");
             }));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void debugCardWhitelistCommandManagesFileBackedAccess(final GameTestHelper helper) throws Exception {
+        final String playerName = "NeoWhitelistTest";
+        final CommandSourceStack source = helper.getLevel().getServer()
+            .createCommandSourceStack()
+            .withPermission(4)
+            .withSuppressedOutput();
+
+        withCachedConfig(ModSettings.DEBUG_CARD_ACCESS, "whitelist", () -> {
+            try {
+                helper.getLevel().getServer().getCommands().performPrefixedCommand(source, "oc_debugWhitelist remove " + playerName);
+                helper.getLevel().getServer().getCommands().performPrefixedCommand(source, "oc_debugWhitelist add " + playerName);
+
+                final Optional<String> firstNonce = ModSettings.debugCardWhitelistNonce(playerName);
+                helper.assertTrue(firstNonce.isPresent(), "Debug whitelist command did not write nonce");
+
+                final ManagedEnvironment environment = new DebugCardEnvironment(new StaticEnvironmentHost(helper), new DebugCardEnvironment.AccessContext(playerName, firstNonce.get()));
+                helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+                final Object[] result = ((li.cil.oc.api.network.Component) environment.node()).invoke("getX", null);
+                helper.assertTrue(result.length == 1, "Debug card did not allow file-whitelisted access");
+
+                helper.getLevel().getServer().getCommands().performPrefixedCommand(source, "oc_debugWhitelist revoke " + playerName);
+                final Optional<String> revokedNonce = ModSettings.debugCardWhitelistNonce(playerName);
+                helper.assertTrue(revokedNonce.isPresent() && !revokedNonce.get().equals(firstNonce.get()), "Debug whitelist revoke did not rotate nonce");
+
+                helper.getLevel().getServer().getCommands().performPrefixedCommand(source, "oc_debugWhitelist remove " + playerName);
+                helper.assertTrue(ModSettings.debugCardWhitelistNonce(playerName).isEmpty(), "Debug whitelist remove did not delete nonce");
+            } finally {
+                helper.getLevel().getServer().getCommands().performPrefixedCommand(source, "oc_debugWhitelist remove " + playerName);
+            }
+        });
         helper.succeed();
     }
 

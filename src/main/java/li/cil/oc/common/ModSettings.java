@@ -169,7 +169,7 @@ public final class ModSettings {
             .comment("Debug card access mode. Allowed values: allow, deny, whitelist. OpenComputers upstream default is allow.")
             .define("debugCardAccess", "allow");
         DEBUG_CARD_WHITELIST = builder
-            .comment("Debug card whitelist entries as '<player> <nonce>'. Used by the port until the upstream whitelist file command is fully ported.")
+            .comment("Extra debug card whitelist entries as '<player> <nonce>'. Upstream-compatible file entries live in config/opencomputers/debug_card_whitelist.txt and can be managed with /oc_debugWhitelist.")
             .defineList("debugCardWhitelist", DEFAULT_DEBUG_CARD_WHITELIST, value -> value instanceof String);
         builder.pop();
 
@@ -725,6 +725,10 @@ public final class ModSettings {
     public static Optional<String> debugCardWhitelistNonce(final String player) {
         if (player == null || player.isBlank()) {
             return Optional.empty();
+        }
+        final Optional<String> fileNonce = DebugCardWhitelist.instance().nonce(player);
+        if (fileNonce.isPresent()) {
+            return fileNonce;
         }
         final String normalizedPlayer = player.toLowerCase(Locale.ROOT);
         for (final String entry : stringListValue(DEBUG_CARD_WHITELIST)) {

@@ -16,6 +16,7 @@ import li.cil.oc.common.NanomachinesRegistry;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.MfuTargetEvents;
+import li.cil.oc.common.command.ModCommands;
 import li.cil.oc.common.machine.ProgramLocationImc;
 import li.cil.oc.common.network.DebugNetworking;
 import li.cil.oc.common.network.NanomachinesNetworking;
@@ -30,6 +31,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.InterModProcessEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
 
 @Mod(NeoOpenComputers.MODID)
@@ -47,6 +49,7 @@ public final class NeoOpenComputers {
         ModCreativeTabs.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
         MfuTargetEvents.register();
+        NeoForge.EVENT_BUS.addListener(ModCommands::register);
         NanomachinesRegistry.registerTickHandler();
         modEventBus.addListener(ChunkloaderUpgradeEnvironment::registerTicketController);
         modEventBus.addListener(DebugNetworking::register);
