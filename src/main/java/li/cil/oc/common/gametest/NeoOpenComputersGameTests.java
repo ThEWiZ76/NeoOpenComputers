@@ -569,7 +569,8 @@ public final class NeoOpenComputersGameTests {
         final Object[] result = invokeComponent(helper, component, "runCommand", "scoreboard objectives add neo_cmd dummy");
         helper.assertTrue(result.length == 2 && result[0] instanceof Integer, "Debug runCommand did not return command result");
         helper.assertTrue(((Integer) result[0]) > 0, "Debug runCommand returned non-positive result");
-        helper.assertTrue(result[1] == null, "Debug runCommand unexpectedly returned messages");
+        helper.assertTrue(result[1] instanceof String, "Debug runCommand did not return command messages");
+        helper.assertTrue(((String) result[1]).contains("neo_cmd"), "Debug runCommand messages did not include objective name");
         helper.assertTrue(scoreboard.getObjective("neo_cmd") != null, "Debug runCommand did not execute scoreboard command");
         scoreboard.removeObjective(scoreboard.getObjective("neo_cmd"));
 

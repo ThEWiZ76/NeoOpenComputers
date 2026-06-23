@@ -16,6 +16,7 @@ import li.cil.oc.api.prefab.AbstractValue;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.network.DebugClipboardPayload;
+import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -148,17 +149,18 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         if (!(host != null && host.world() instanceof ServerLevel serverLevel) || serverLevel.getServer() == null) {
             return new Object[]{0, null};
         }
+        final CapturingCommandSource commandSource = new CapturingCommandSource();
         final CommandSourceStack source = serverLevel.getServer()
             .createCommandSourceStack()
+            .withSource(commandSource)
             .withLevel(serverLevel)
             .withPosition(new Vec3(host.xPosition(), host.yPosition(), host.zPosition()))
-            .withPermission(4)
-            .withSuppressedOutput();
+            .withPermission(4);
         int value = 0;
         for (final Object command : commands(args)) {
             value = serverLevel.getServer().getCommands().getDispatcher().execute(normalizedCommand(command), source);
         }
-        return new Object[]{value, null};
+        return new Object[]{value, commandSource.messagesOrNull()};
     }
 
     @Callback(doc = "function():userdata -- Get the world object for the container's world.")
@@ -412,6 +414,37 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static String normalizedCommand(final Object command) {
         final String value = String.valueOf(command);
         return value.startsWith("/") ? value.substring(1) : value;
+    }
+
+    private static final class CapturingCommandSource implements CommandSource {
+        private final StringBuilder messages = new StringBuilder();
+
+        @Override
+        public void sendSystemMessage(final Component component) {
+            if (messages.length() > 0) {
+                messages.append('\n');
+            }
+            messages.append(component.getString());
+        }
+
+        @Override
+        public boolean acceptsSuccess() {
+            return true;
+        }
+
+        @Override
+        public boolean acceptsFailure() {
+            return true;
+        }
+
+        @Override
+        public boolean shouldInformAdmins() {
+            return false;
+        }
+
+        private String messagesOrNull() {
+            return messages.length() == 0 ? null : messages.toString();
+        }
     }
 
     public static final class PlayerValue extends AbstractValue {
