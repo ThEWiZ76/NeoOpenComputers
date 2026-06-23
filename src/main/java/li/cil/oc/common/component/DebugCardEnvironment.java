@@ -91,6 +91,7 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static final String DATA_TAG = "oc:data";
     private static final String PLAYER_TAG = "oc:player";
     private static final String ACCESS_NONCE_TAG = "oc:accessNonce";
+    private static final Integer[] VANILLA_WORLD_IDS = new Integer[]{0, -1, 1};
     private static final Map<String, DebugCardEnvironment> ENDPOINTS = new ConcurrentHashMap<>();
 
     private final EnvironmentHost host;
@@ -163,10 +164,20 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         return new Object[]{value, commandSource.messagesOrNull()};
     }
 
-    @Callback(doc = "function():userdata -- Get the world object for the container's world.")
+    @Callback(doc = "function([id:number]):userdata -- Get the world object for the specified dimension ID, or the container's.")
     public Object[] getWorld(final Context context, final Arguments args) throws Exception {
         checkAccess();
-        return new Object[]{new WorldValue(host == null ? null : host.world(), access)};
+        final Level level = host == null ? null : host.world();
+        if (args.count() == 0) {
+            return new Object[]{new WorldValue(level, access)};
+        }
+        return new Object[]{new WorldValue(worldByLegacyDimensionId(level, args.checkInteger(0)), access)};
+    }
+
+    @Callback(doc = "function():table -- Get a list of vanilla legacy world IDs.")
+    public Object[] getWorlds(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        return new Object[]{Arrays.copyOf(VANILLA_WORLD_IDS, VANILLA_WORLD_IDS.length)};
     }
 
     @Callback(doc = "function(name:string):userdata -- Get the entity of a player.")
@@ -427,6 +438,18 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static String normalizedCommand(final Object command) {
         final String value = String.valueOf(command);
         return value.startsWith("/") ? value.substring(1) : value;
+    }
+
+    private static Level worldByLegacyDimensionId(final Level level, final int id) {
+        if (!(level instanceof ServerLevel serverLevel) || serverLevel.getServer() == null) {
+            return null;
+        }
+        return switch (id) {
+            case -1 -> serverLevel.getServer().getLevel(Level.NETHER);
+            case 0 -> serverLevel.getServer().getLevel(Level.OVERWORLD);
+            case 1 -> serverLevel.getServer().getLevel(Level.END);
+            default -> null;
+        };
     }
 
     private static final class CapturingCommandSource implements CommandSource {

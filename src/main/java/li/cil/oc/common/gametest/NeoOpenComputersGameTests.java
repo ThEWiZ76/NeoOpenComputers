@@ -821,6 +821,18 @@ public final class NeoOpenComputersGameTests {
 
         final Object[] dimensionId = invokeValue(helper, world, "getDimensionId");
         helper.assertTrue(dimensionId.length == 1 && Integer.valueOf(0).equals(dimensionId[0]), "World value did not report legacy overworld dimension id");
+
+        final Object[] worlds = invokeComponent(helper, component, "getWorlds");
+        helper.assertTrue(worlds.length == 1 && worlds[0] instanceof Object[], "Debug card getWorlds did not return a world id list");
+        final List<?> worldIds = List.of((Object[]) worlds[0]);
+        helper.assertTrue(worldIds.contains(Integer.valueOf(0)), "Debug card getWorlds did not include overworld id");
+        helper.assertTrue(worldIds.contains(Integer.valueOf(-1)), "Debug card getWorlds did not include nether id");
+        helper.assertTrue(worldIds.contains(Integer.valueOf(1)), "Debug card getWorlds did not include end id");
+
+        final Object[] netherResult = invokeComponent(helper, component, "getWorld", -1);
+        helper.assertTrue(netherResult.length == 1 && netherResult[0] instanceof Value, "Debug card getWorld(-1) did not return a value");
+        final Object[] netherId = invokeValue(helper, (Value) netherResult[0], "getDimensionId");
+        helper.assertTrue(netherId.length == 1 && Integer.valueOf(-1).equals(netherId[0]), "Debug card getWorld(-1) did not return nether world");
         helper.succeed();
     }
 
