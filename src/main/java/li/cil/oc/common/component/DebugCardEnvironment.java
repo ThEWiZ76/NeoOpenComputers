@@ -157,6 +157,8 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     }
 
     public static final class WorldValue extends AbstractValue {
+        private static final int WEATHER_TIME = Integer.MAX_VALUE;
+
         private final Level level;
         private final AccessContext access;
 
@@ -178,6 +180,40 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
                 serverLevel.setDayTime(args.checkLong(0));
             }
             return null;
+        }
+
+        @Callback(doc = "function():boolean -- Get whether it is raining.")
+        public Object[] isRaining(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{level != null && level.getLevelData().isRaining()};
+        }
+
+        @Callback(doc = "function(value:boolean) -- Set whether it is raining.")
+        public Object[] setRaining(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            if (level instanceof ServerLevel serverLevel) {
+                setWeather(serverLevel, args.checkBoolean(0), serverLevel.getLevelData().isThundering());
+            }
+            return null;
+        }
+
+        @Callback(doc = "function():boolean -- Get whether it is thundering.")
+        public Object[] isThundering(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            return new Object[]{level != null && level.getLevelData().isThundering()};
+        }
+
+        @Callback(doc = "function(value:boolean) -- Set whether it is thundering.")
+        public Object[] setThundering(final Context context, final Arguments args) throws Exception {
+            checkAccess(access);
+            if (level instanceof ServerLevel serverLevel) {
+                setWeather(serverLevel, serverLevel.getLevelData().isRaining(), args.checkBoolean(0));
+            }
+            return null;
+        }
+
+        private static void setWeather(final ServerLevel level, final boolean raining, final boolean thundering) {
+            level.setWeatherParameters(0, raining || thundering ? WEATHER_TIME : 0, raining, thundering);
         }
     }
 

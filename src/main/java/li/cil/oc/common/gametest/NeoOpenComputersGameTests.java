@@ -455,6 +455,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardWorldValueReadsAndSetsWeather(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] worldResult = invokeComponent(helper, component, "getWorld");
+        helper.assertTrue(worldResult.length == 1 && worldResult[0] instanceof Value, "Debug card getWorld did not return a value");
+        final Value world = (Value) worldResult[0];
+
+        invokeValue(helper, world, "setRaining", true);
+        final Object[] raining = invokeValue(helper, world, "isRaining");
+        helper.assertTrue(raining.length == 1 && Boolean.TRUE.equals(raining[0]), "World value did not report rain");
+
+        invokeValue(helper, world, "setRaining", false);
+        final Object[] clear = invokeValue(helper, world, "isRaining");
+        helper.assertTrue(clear.length == 1 && Boolean.FALSE.equals(clear[0]), "World value did not clear rain");
+
+        invokeValue(helper, world, "setThundering", true);
+        final Object[] thundering = invokeValue(helper, world, "isThundering");
+        helper.assertTrue(thundering.length == 1 && Boolean.TRUE.equals(thundering[0]), "World value did not report thunder");
+
+        invokeValue(helper, world, "setThundering", false);
+        final Object[] quiet = invokeValue(helper, world, "isThundering");
+        helper.assertTrue(quiet.length == 1 && Boolean.FALSE.equals(quiet[0]), "World value did not clear thunder");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
         final CraftingInput input = CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),
