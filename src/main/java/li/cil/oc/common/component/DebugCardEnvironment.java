@@ -269,6 +269,19 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         return new Object[]{true};
     }
 
+    @Callback(doc = "function():userdata -- Test method for user-data and general value conversion.")
+    public Object[] test(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        final Map<Object, Object> nested = new LinkedHashMap<>();
+        final Map<Object, Object> root = new LinkedHashMap<>();
+        nested.put("a", true);
+        nested.put("b", "test");
+        root.put(10, "zxc");
+        root.put(false, nested);
+        nested.put("c", root);
+        return new Object[]{root, new TestValue(), host == null ? null : host.world()};
+    }
+
     @Override
     public void onConnect(final Node node) {
         super.onConnect(node);
@@ -628,6 +641,37 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
 
     private interface PlayerOperation {
         Object[] apply(ServerPlayer player) throws Exception;
+    }
+
+    public static final class TestValue extends AbstractValue {
+        private static final String VALUE_TAG = "value";
+
+        private String value = "hello";
+
+        @Override
+        public Object apply(final Context context, final Arguments arguments) {
+            return value;
+        }
+
+        @Override
+        public void unapply(final Context context, final Arguments arguments) {
+            value = arguments.checkString(1);
+        }
+
+        @Override
+        public Object[] call(final Context context, final Arguments arguments) {
+            return arguments.toArray();
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+            value = nbt.getString(VALUE_TAG);
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+            nbt.putString(VALUE_TAG, value);
+        }
     }
 
     public static final class ScoreboardValue extends AbstractValue {

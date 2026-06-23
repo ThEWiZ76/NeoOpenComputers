@@ -671,6 +671,27 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void debugCardTestCallbackReturnsConversionFixtures(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final Object[] result = invokeComponent(helper, component, "test");
+        helper.assertTrue(result.length == 3, "Debug test did not return three values");
+        helper.assertTrue(result[0] instanceof Map<?, ?>, "Debug test did not return conversion map");
+        final Map<?, ?> map = (Map<?, ?>) result[0];
+        helper.assertTrue("zxc".equals(map.get(10)), "Debug test map did not include numeric key");
+        helper.assertTrue(map.get(Boolean.FALSE) instanceof Map<?, ?>, "Debug test map did not include nested map");
+        final Map<?, ?> nested = (Map<?, ?>) map.get(Boolean.FALSE);
+        helper.assertTrue(Boolean.TRUE.equals(nested.get("a")), "Debug test nested map did not include boolean value");
+        helper.assertTrue("test".equals(nested.get("b")), "Debug test nested map did not include string value");
+        helper.assertTrue(nested.get("c") == map, "Debug test nested map did not preserve cycle");
+        helper.assertTrue(result[1] instanceof Value, "Debug test did not return a value handle");
+        helper.assertTrue(result[2] == helper.getLevel(), "Debug test did not return host world");
+        helper.succeed();
+    }
+
     @SuppressWarnings("removal")
     @GameTest(template = "empty")
     public static void debugCardPlayerValueUpdatesOnlinePlayerState(final GameTestHelper helper) {
