@@ -245,11 +245,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     }
 
     protected void receivePacket(final Packet packet, final double distance) {
-        if (!(host instanceof MachineHost machineHost) || node() == null) {
-            return;
-        }
-        final var machine = machineHost.machine();
-        if (machine == null) {
+        if (node() == null) {
             return;
         }
         final String localAddress = node().address();
@@ -260,6 +256,19 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
 
         final Object[] packetData = packet.data();
         if (openPorts.contains(packet.port())) {
+            emitModemMessage(packet, distance, packetData);
+        }
+        if (isWakePacket(packetData)) {
+            emitWakeMessage();
+        }
+    }
+
+    private void emitModemMessage(final Packet packet, final double distance, final Object[] packetData) {
+        if (host instanceof MachineHost machineHost) {
+            final var machine = machineHost.machine();
+            if (machine == null) {
+                return;
+            }
             final Object[] signalArgs = new Object[4 + packetData.length];
             signalArgs[0] = node().address();
             signalArgs[1] = packet.source();
@@ -267,9 +276,25 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             signalArgs[3] = distance;
             System.arraycopy(packetData, 0, signalArgs, 4, packetData.length);
             machine.signal(MODEM_MESSAGE_SIGNAL, signalArgs);
+        } else {
+            final Object[] signalArgs = new Object[4 + packetData.length];
+            signalArgs[0] = MODEM_MESSAGE_SIGNAL;
+            signalArgs[1] = packet.source();
+            signalArgs[2] = packet.port();
+            signalArgs[3] = distance;
+            System.arraycopy(packetData, 0, signalArgs, 4, packetData.length);
+            node().sendToReachable("computer.signal", signalArgs);
         }
-        if (isWakePacket(packetData)) {
-            machine.start();
+    }
+
+    private void emitWakeMessage() {
+        if (host instanceof MachineHost machineHost) {
+            final var machine = machineHost.machine();
+            if (machine != null) {
+                machine.start();
+            }
+        } else {
+            node().sendToNeighbors("computer.start");
         }
     }
 

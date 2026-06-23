@@ -277,6 +277,41 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void rackWakeMessageSendsComputerStartToNeighborsLikeUpstream() {
+        OpenComputersApi.initialize();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(rackHost());
+        RecordingEnvironment computer = new RecordingEnvironment();
+        Network.joinNewNetwork(card.node());
+        card.node().connect(computer.node());
+        card.setWakeMessage(null, new TestArguments("boot", false));
+
+        card.onMessage(new TestMessage(null, "network.message", new Object[]{
+            new TestPacket("remote", card.node().address(), 123, new Object[]{"boot"})
+        }));
+
+        assertEquals(List.of("computer.start"), computer.messages.stream().map(Message::name).toList());
+    }
+
+    @Test
+    void rackModemMessageSendsComputerSignalToReachableNeighborsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(rackHost());
+        RecordingEnvironment computer = new RecordingEnvironment();
+        Network.joinNewNetwork(card.node());
+        card.node().connect(computer.node());
+        card.open(null, new TestArguments(123));
+
+        card.onMessage(new TestMessage(null, "network.message", new Object[]{
+            new TestPacket("remote", card.node().address(), 123, new Object[]{"payload"})
+        }));
+
+        assertEquals(1, computer.messages.size());
+        Message message = computer.messages.get(0);
+        assertEquals("computer.signal", message.name());
+        assertArrayEquals(new Object[]{"modem_message", "remote", 123, 0D, "payload"}, message.data());
+    }
+
+    @Test
     void exposesDeviceInfoMetadata() {
         OpenComputersApi.initialize();
         NetworkCardEnvironment card = new NetworkCardEnvironment(new TestHost());
@@ -676,6 +711,16 @@ final class NetworkCardEnvironmentTest {
         @Override public void onConnect(final Node node) {}
         @Override public void onDisconnect(final Node node) {}
         @Override public void onMessage(final Message message) {}
+    }
+
+    private static final class RecordingEnvironment implements li.cil.oc.api.network.Environment {
+        private final List<Message> messages = new ArrayList<>();
+        private final Node node = Network.newNode(this, Visibility.Network).create();
+
+        @Override public Node node() { return node; }
+        @Override public void onConnect(final Node node) {}
+        @Override public void onDisconnect(final Node node) {}
+        @Override public void onMessage(final Message message) { messages.add(message); }
     }
 
     private record TestMessage(Node source, String name, Object[] data) implements Message {
