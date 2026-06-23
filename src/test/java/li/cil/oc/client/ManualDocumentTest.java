@@ -49,6 +49,27 @@ final class ManualDocumentTest {
     }
 
     @Test
+    void parsesMarkdownFormattingSegmentsLikeUpstream() {
+        ManualDocument document = ManualDocument.parse(List.of(
+            "# Heading",
+            "**Bold** *Italic* `code` ~~Gone~~"),
+            href -> null);
+
+        ManualDocument.HeaderSegment header = assertInstanceOf(ManualDocument.HeaderSegment.class, document.segments().get(0));
+        assertEquals("Heading", header.text());
+        assertEquals(1, header.level());
+
+        ManualDocument.BoldSegment bold = assertInstanceOf(ManualDocument.BoldSegment.class, document.segments().get(2));
+        assertEquals("Bold", bold.text());
+        ManualDocument.ItalicSegment italic = assertInstanceOf(ManualDocument.ItalicSegment.class, document.segments().get(4));
+        assertEquals("Italic", italic.text());
+        ManualDocument.CodeSegment code = assertInstanceOf(ManualDocument.CodeSegment.class, document.segments().get(6));
+        assertEquals("code", code.text());
+        ManualDocument.StrikethroughSegment strike = assertInstanceOf(ManualDocument.StrikethroughSegment.class, document.segments().get(8));
+        assertEquals("Gone", strike.text());
+    }
+
+    @Test
     void missingImageRendererBecomesDiagnosticTextLikeUpstream() {
         ManualDocument document = ManualDocument.parse(List.of("![missing](image:missing)"), href -> null);
 

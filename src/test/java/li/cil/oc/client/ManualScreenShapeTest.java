@@ -110,6 +110,29 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenLayoutsHeadersWithUpstreamScaleAndPreservesInlineStyle() {
+        ManualDocument headerDocument = ManualDocument.parse(List.of("# Title", "next"), href -> null);
+
+        List<ManualScreen.LayoutEntry> headerEntries = ManualScreen.layout(headerDocument, 100, text -> text.length() * 6);
+
+        assertTrue(headerEntries.get(0).segment() instanceof ManualDocument.HeaderSegment);
+        assertEquals(60, headerEntries.get(0).width());
+        assertEquals(ManualScreen.LINE_HEIGHT * 2, headerEntries.get(0).height());
+        assertEquals(ManualScreen.LINE_HEIGHT * 2, headerEntries.get(1).y());
+
+        ManualDocument boldDocument = ManualDocument.parse(List.of("**alpha beta**"), href -> null);
+
+        List<ManualScreen.LayoutEntry> boldEntries = ManualScreen.layout(boldDocument, 42, text -> text.length() * 6);
+
+        assertEquals(2, boldEntries.size());
+        assertTrue(boldEntries.get(0).segment() instanceof ManualDocument.BoldSegment);
+        assertTextEntry("alpha", boldEntries.get(0));
+        assertEquals(ManualScreen.LINE_HEIGHT, boldEntries.get(1).y());
+        assertTrue(boldEntries.get(1).segment() instanceof ManualDocument.BoldSegment);
+        assertTextEntry("beta", boldEntries.get(1));
+    }
+
+    @Test
     void manualScreenComputesDocumentHeightFromLayoutBottom() {
         ManualDocument document = ManualDocument.parse(
             List.of("alpha", "![tip](image:ok)"),
@@ -248,7 +271,8 @@ final class ManualScreenShapeTest {
     }
 
     private static void assertTextEntry(final String expected, final ManualScreen.LayoutEntry entry) {
-        ManualDocument.TextSegment text = (ManualDocument.TextSegment) entry.segment();
+        assertTrue(entry.segment() instanceof ManualDocument.TextualSegment);
+        ManualDocument.TextualSegment text = (ManualDocument.TextualSegment) entry.segment();
         assertEquals(expected, text.text());
     }
 

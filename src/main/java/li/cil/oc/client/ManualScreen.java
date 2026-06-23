@@ -1,6 +1,7 @@
 package li.cil.oc.client;
 
 import li.cil.oc.common.ManualRegistry;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -73,12 +74,14 @@ public class ManualScreen extends Screen {
     public static List<LayoutEntry> layout(final ManualDocument document, final int maxWidth, final ToIntFunction<String> textWidth) {
         int y = 0;
         int x = 0;
+        int lineHeight = LINE_HEIGHT;
         final var entries = new java.util.ArrayList<LayoutEntry>();
         for (final ManualDocument.Segment segment : document.segments()) {
             if (segment instanceof final ManualDocument.ImageSegment image) {
                 if (x > 0) {
-                    y += LINE_HEIGHT;
+                    y += lineHeight;
                     x = 0;
+                    lineHeight = LINE_HEIGHT;
                 }
                 y += entries.isEmpty() ? 2 : SEGMENT_PADDING;
                 final int width = Math.min(maxWidth, image.renderer().getWidth());
@@ -86,12 +89,14 @@ public class ManualScreen extends Screen {
                 entries.add(new LayoutEntry(segment, (maxWidth - width) / 2, y, width, height));
                 y += height;
             } else if (segment instanceof ManualDocument.LineBreakSegment) {
-                y += LINE_HEIGHT;
+                y += lineHeight;
                 x = 0;
+                lineHeight = LINE_HEIGHT;
             } else {
-                final TextFlow flow = appendTextEntries(entries, segment, x, y, maxWidth, textWidth);
+                final TextFlow flow = appendTextEntries(entries, segment, x, y, lineHeight, maxWidth, textWidth);
                 x = flow.x();
                 y = flow.y();
+                lineHeight = flow.lineHeight();
             }
         }
         return List.copyOf(entries);
@@ -102,15 +107,17 @@ public class ManualScreen extends Screen {
         final ManualDocument.Segment segment,
         final int startX,
         final int startY,
+        final int startLineHeight,
         final int maxWidth,
         final ToIntFunction<String> textWidth
     ) {
         String remaining = segmentText(segment);
         if (remaining.isEmpty()) {
-            return new TextFlow(startX, startY);
+            return new TextFlow(startX, startY, startLineHeight);
         }
         int x = startX;
         int y = startY;
+        int lineHeight = startLineHeight;
         while (!remaining.isEmpty()) {
             if (x == 0) {
                 remaining = remaining.stripLeading();
@@ -118,46 +125,78 @@ public class ManualScreen extends Screen {
             if (remaining.isEmpty()) {
                 break;
             }
-            final String part = fittingText(remaining, maxWidth - x, textWidth);
+            final String part = fittingText(remaining, maxWidth - x, maxWidth, segment, textWidth);
             if (part.isEmpty()) {
-                y += LINE_HEIGHT;
+                y += lineHeight;
                 x = 0;
+                lineHeight = LINE_HEIGHT;
                 continue;
             }
             final String segmentText = segmentText(segment);
-            final ManualDocument.Segment entrySegment = part.equals(segmentText)
-                ? segment
-                : segment instanceof ManualDocument.LinkSegment link
-                    ? new ManualDocument.LinkSegment(part, link.href())
-                    : new ManualDocument.TextSegment(part);
-            final int width = textWidth.applyAsInt(part);
-            entries.add(new LayoutEntry(entrySegment, x, y, width, LINE_HEIGHT));
+            final ManualDocument.Segment entrySegment = part.equals(segmentText) ? segment : copyTextSegment(segment, part);
+            final int width = textPixelWidth(entrySegment, textWidth);
+            final int height = textLineHeight(entrySegment);
+            entries.add(new LayoutEntry(entrySegment, x, y, width, height));
             remaining = remaining.substring(part.length()).stripLeading();
             x += width;
+            lineHeight = Math.max(lineHeight, height);
             if (x >= maxWidth && !remaining.isEmpty()) {
-                y += LINE_HEIGHT;
+                y += lineHeight;
                 x = 0;
+                lineHeight = LINE_HEIGHT;
             }
         }
-        return new TextFlow(x, y);
+        return new TextFlow(x, y, lineHeight);
     }
 
     private static String segmentText(final ManualDocument.Segment segment) {
-        if (segment instanceof final ManualDocument.TextSegment text) {
+        if (segment instanceof final ManualDocument.TextualSegment text) {
             return text.text();
-        }
-        if (segment instanceof final ManualDocument.LinkSegment link) {
-            return link.text();
         }
         return "";
     }
 
-    private static String fittingText(final String text, final int availableWidth, final ToIntFunction<String> textWidth) {
+    private static ManualDocument.Segment copyTextSegment(final ManualDocument.Segment segment, final String text) {
+        if (segment instanceof final ManualDocument.LinkSegment link) {
+            return new ManualDocument.LinkSegment(text, link.href(), link.headerLevel());
+        }
+        if (segment instanceof final ManualDocument.HeaderSegment header) {
+            return new ManualDocument.HeaderSegment(text, header.level());
+        }
+        if (segment instanceof final ManualDocument.BoldSegment bold) {
+            return new ManualDocument.BoldSegment(text, bold.headerLevel());
+        }
+        if (segment instanceof final ManualDocument.ItalicSegment italic) {
+            return new ManualDocument.ItalicSegment(text, italic.headerLevel());
+        }
+        if (segment instanceof final ManualDocument.CodeSegment code) {
+            return new ManualDocument.CodeSegment(text, code.headerLevel());
+        }
+        if (segment instanceof final ManualDocument.StrikethroughSegment strike) {
+            return new ManualDocument.StrikethroughSegment(text, strike.headerLevel());
+        }
+        return new ManualDocument.TextSegment(text);
+    }
+
+    private static String fittingText(
+        final String text,
+        final int availableWidth,
+        final int maxWidth,
+        final ManualDocument.Segment segment,
+        final ToIntFunction<String> textWidth
+    ) {
         if (availableWidth <= 0) {
             return "";
         }
-        if (textWidth.applyAsInt(text) <= availableWidth) {
+        if (textPixelWidth(segment, text, textWidth) <= availableWidth) {
             return text;
+        }
+        final int firstWhitespace = firstWhitespace(text);
+        final String firstWord = firstWhitespace < 0 ? text : text.substring(0, firstWhitespace);
+        if (!firstWord.isEmpty()
+            && textPixelWidth(segment, firstWord, textWidth) > availableWidth
+            && textPixelWidth(segment, firstWord, textWidth) <= maxWidth) {
+            return "";
         }
         int bestLength = 0;
         int lastWhitespace = -1;
@@ -166,15 +205,43 @@ public class ManualScreen extends Screen {
             if (Character.isWhitespace(current)) {
                 lastWhitespace = index - 1;
             }
-            if (textWidth.applyAsInt(text.substring(0, index)) > availableWidth) {
+            if (textPixelWidth(segment, text.substring(0, index), textWidth) > availableWidth) {
                 break;
             }
             bestLength = index;
         }
-        if (lastWhitespace > 0 && textWidth.applyAsInt(text.substring(0, lastWhitespace)) <= availableWidth) {
+        if (lastWhitespace > 0 && textPixelWidth(segment, text.substring(0, lastWhitespace), textWidth) <= availableWidth) {
             return text.substring(0, lastWhitespace);
         }
         return bestLength > 0 ? text.substring(0, bestLength) : "";
+    }
+
+    private static int firstWhitespace(final String text) {
+        for (int index = 0; index < text.length(); index++) {
+            if (Character.isWhitespace(text.charAt(index))) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private static int textPixelWidth(final ManualDocument.Segment segment, final ToIntFunction<String> textWidth) {
+        return textPixelWidth(segment, segmentText(segment), textWidth);
+    }
+
+    private static int textPixelWidth(final ManualDocument.Segment segment, final String text, final ToIntFunction<String> textWidth) {
+        return (int) Math.ceil(textWidth.applyAsInt(text) * textScale(segment));
+    }
+
+    private static int textLineHeight(final ManualDocument.Segment segment) {
+        return (int) Math.ceil(LINE_HEIGHT * textScale(segment));
+    }
+
+    private static float textScale(final ManualDocument.Segment segment) {
+        if (segment instanceof final ManualDocument.TextualSegment text && text.headerLevel() > 0) {
+            return Math.max(2, 5 - text.headerLevel()) / 2.0f;
+        }
+        return 1.0f;
     }
 
     public static int documentHeight(final ManualDocument document, final int maxWidth) {
@@ -343,10 +410,8 @@ public class ManualScreen extends Screen {
     private void renderDocument(final GuiGraphics graphics, final int left, final int top, final int mouseX, final int mouseY) {
         for (final LayoutEntry entry : layout(document, DOCUMENT_MAX_WIDTH, this::textWidth)) {
             final int y = top + entry.y() - scrollOffset;
-            if (entry.segment() instanceof final ManualDocument.TextSegment text) {
-                graphics.drawString(font, text.text(), left + entry.x(), y, 0xFFE5E9F0, false);
-            } else if (entry.segment() instanceof final ManualDocument.LinkSegment link) {
-                graphics.drawString(font, link.text(), left + entry.x(), y, 0xFF66FF66, false);
+            if (entry.segment() instanceof final ManualDocument.TextualSegment text) {
+                renderTextSegment(graphics, text, left + entry.x(), y);
             } else if (entry.segment() instanceof final ManualDocument.ImageSegment image) {
                 graphics.pose().pushPose();
                 graphics.pose().translate(left + entry.x(), y, 0);
@@ -354,6 +419,42 @@ public class ManualScreen extends Screen {
                 graphics.pose().popPose();
             }
         }
+    }
+
+    private void renderTextSegment(final GuiGraphics graphics, final ManualDocument.TextualSegment text, final int x, final int y) {
+        final float scale = textScale(text);
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 0);
+        graphics.pose().scale(scale, scale, 1);
+        graphics.drawString(font, styledComponent(text), 0, 0, textColor(text), false);
+        graphics.pose().popPose();
+    }
+
+    private static Component styledComponent(final ManualDocument.TextualSegment text) {
+        Component component = Component.literal(text.text());
+        if (text.headerLevel() > 0) {
+            component = component.copy().withStyle(ChatFormatting.UNDERLINE);
+        }
+        if (text.bold()) {
+            component = component.copy().withStyle(ChatFormatting.BOLD);
+        }
+        if (text.italic()) {
+            component = component.copy().withStyle(ChatFormatting.ITALIC);
+        }
+        if (text.strikethrough()) {
+            component = component.copy().withStyle(ChatFormatting.STRIKETHROUGH);
+        }
+        return component;
+    }
+
+    private static int textColor(final ManualDocument.TextualSegment text) {
+        if (text instanceof ManualDocument.LinkSegment) {
+            return 0xFF66FF66;
+        }
+        if (text.code()) {
+            return 0xFFBFCBFF;
+        }
+        return 0xFFE5E9F0;
     }
 
     private void renderScrollBar(final GuiGraphics graphics, final int left, final int top) {
@@ -484,6 +585,6 @@ public class ManualScreen extends Screen {
     public record LayoutEntry(ManualDocument.Segment segment, int x, int y, int width, int height) {
     }
 
-    private record TextFlow(int x, int y) {
+    private record TextFlow(int x, int y, int lineHeight) {
     }
 }

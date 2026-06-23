@@ -12,7 +12,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class ManualDocument {
-    private static final Pattern IMAGE_OR_LINK_PATTERN = Pattern.compile("(!)?\\[([^\\[]*)\\]\\(([^\\)]+)\\)");
+    private static final Pattern HEADER_PATTERN = Pattern.compile("^(#+)\\s(.*)");
+    private static final Pattern CODE_PATTERN = Pattern.compile("`(.*?)`");
+    private static final Pattern IMAGE_PATTERN = Pattern.compile("!\\[([^\\[]*)\\]\\(([^\\)]+)\\)");
+    private static final Pattern LINK_PATTERN = Pattern.compile("\\[([^\\[]+)\\]\\(([^\\)]+)\\)");
+    private static final Pattern BOLD_PATTERN = Pattern.compile("(\\*\\*|__)(\\S.*?\\S|$)\\1");
+    private static final Pattern ITALIC_PATTERN = Pattern.compile("(\\*|_)(\\S.*?\\S|$)\\1");
+    private static final Pattern STRIKETHROUGH_PATTERN = Pattern.compile("~~(\\S.*?\\S|$)~~");
 
     private final List<Segment> segments;
 
@@ -45,23 +51,57 @@ public final class ManualDocument {
     }
 
     private static void appendLine(final List<Segment> segments, final String line, final Function<String, ImageRenderer> imageResolver) {
-        final Matcher matcher = IMAGE_OR_LINK_PATTERN.matcher(line);
-        int textStart = 0;
-        while (matcher.find()) {
-            if (matcher.start() > textStart) {
-                segments.add(new TextSegment(line.substring(textStart, matcher.start())));
+        final Matcher header = HEADER_PATTERN.matcher(line);
+        if (header.matches()) {
+            appendInlineSegments(segments, header.group(2), imageResolver, Integer.min(header.group(1).length(), 6));
+        } else {
+            appendInlineSegments(segments, line, imageResolver, 0);
+        }
+    }
+
+    private static void appendInlineSegments(
+        final List<Segment> segments,
+        final String text,
+        final Function<String, ImageRenderer> imageResolver,
+        final int headerLevel
+    ) {
+        int index = 0;
+        while (index < text.length()) {
+            final TokenMatch token = nextToken(text, index);
+            if (token == null) {
+                addTextSegment(segments, text.substring(index), headerLevel);
+                return;
             }
-            textStart = matcher.end();
-            if (matcher.group(1) != null) {
-                segments.add(imageSegment(matcher.group(2), matcher.group(3), imageResolver));
-            } else {
-                segments.add(new LinkSegment(matcher.group(2), matcher.group(3)));
+            if (token.start() > index) {
+                addTextSegment(segments, text.substring(index, token.start()), headerLevel);
+            }
+            token.addTo(segments, imageResolver, headerLevel);
+            index = token.end();
+        }
+        if (text.isEmpty()) {
+            addTextSegment(segments, text, headerLevel);
+        }
+    }
+
+    private static TokenMatch nextToken(final String text, final int start) {
+        TokenMatch best = null;
+        for (final TokenType type : TokenType.values()) {
+            final Matcher matcher = type.pattern.matcher(text);
+            if (matcher.find(start)) {
+                final TokenMatch candidate = new TokenMatch(type, matcher.start(), matcher.end(), matcher);
+                if (best == null || candidate.start < best.start || (candidate.start == best.start && type.ordinal() < best.type.ordinal())) {
+                    best = candidate;
+                }
             }
         }
-        if (textStart == 0) {
-            segments.add(new TextSegment(line));
-        } else if (textStart < line.length()) {
-            segments.add(new TextSegment(line.substring(textStart)));
+        return best;
+    }
+
+    private static void addTextSegment(final List<Segment> segments, final String text, final int headerLevel) {
+        if (headerLevel > 0) {
+            segments.add(new HeaderSegment(text, headerLevel));
+        } else {
+            segments.add(new TextSegment(text));
         }
     }
 
@@ -88,12 +128,91 @@ public final class ManualDocument {
     public interface Segment {
     }
 
-    public record TextSegment(String text) implements Segment {
+    public interface TextualSegment extends Segment {
+        String text();
+
+        default int headerLevel() {
+            return 0;
+        }
+
+        default boolean bold() {
+            return false;
+        }
+
+        default boolean italic() {
+            return false;
+        }
+
+        default boolean code() {
+            return false;
+        }
+
+        default boolean strikethrough() {
+            return false;
+        }
     }
 
-    public record LinkSegment(String text, String href) implements Segment {
+    public record TextSegment(String text) implements TextualSegment {
+    }
+
+    public record LinkSegment(String text, String href, int headerLevel) implements TextualSegment {
+        public LinkSegment(final String text, final String href) {
+            this(text, href, 0);
+        }
+
         public String tooltip() {
             return href;
+        }
+    }
+
+    public record HeaderSegment(String text, int level) implements TextualSegment {
+        @Override
+        public int headerLevel() {
+            return level;
+        }
+    }
+
+    public record BoldSegment(String text, int headerLevel) implements TextualSegment {
+        public BoldSegment(final String text) {
+            this(text, 0);
+        }
+
+        @Override
+        public boolean bold() {
+            return true;
+        }
+    }
+
+    public record ItalicSegment(String text, int headerLevel) implements TextualSegment {
+        public ItalicSegment(final String text) {
+            this(text, 0);
+        }
+
+        @Override
+        public boolean italic() {
+            return true;
+        }
+    }
+
+    public record CodeSegment(String text, int headerLevel) implements TextualSegment {
+        public CodeSegment(final String text) {
+            this(text, 0);
+        }
+
+        @Override
+        public boolean code() {
+            return true;
+        }
+    }
+
+    public record StrikethroughSegment(String text, int headerLevel) implements TextualSegment {
+        public StrikethroughSegment(final String text) {
+            this(text, 0);
+        }
+
+        @Override
+        public boolean strikethrough() {
+            return true;
         }
     }
 
@@ -143,6 +262,34 @@ public final class ManualDocument {
                 return interactive.onMouseClick(mouseX - lastX, mouseY - lastY);
             }
             return false;
+        }
+    }
+
+    private enum TokenType {
+        CODE(CODE_PATTERN),
+        IMAGE(IMAGE_PATTERN),
+        LINK(LINK_PATTERN),
+        BOLD(BOLD_PATTERN),
+        ITALIC(ITALIC_PATTERN),
+        STRIKETHROUGH(STRIKETHROUGH_PATTERN);
+
+        private final Pattern pattern;
+
+        TokenType(final Pattern pattern) {
+            this.pattern = pattern;
+        }
+    }
+
+    private record TokenMatch(TokenType type, int start, int end, Matcher matcher) {
+        private void addTo(final List<Segment> segments, final Function<String, ImageRenderer> imageResolver, final int headerLevel) {
+            switch (type) {
+                case CODE -> segments.add(new CodeSegment(matcher.group(1), headerLevel));
+                case IMAGE -> segments.add(imageSegment(matcher.group(1), matcher.group(2), imageResolver));
+                case LINK -> segments.add(new LinkSegment(matcher.group(1), matcher.group(2), headerLevel));
+                case BOLD -> segments.add(new BoldSegment(matcher.group(2), headerLevel));
+                case ITALIC -> segments.add(new ItalicSegment(matcher.group(2), headerLevel));
+                case STRIKETHROUGH -> segments.add(new StrikethroughSegment(matcher.group(1), headerLevel));
+            }
         }
     }
 }
