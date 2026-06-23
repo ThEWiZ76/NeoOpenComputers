@@ -61,6 +61,16 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenComputesDocumentClipRectangleForScissorRendering() {
+        ManualScreen.ClipRect clip = ManualScreen.documentClipRect(100, 40);
+
+        assertEquals(108, clip.left());
+        assertEquals(48, clip.top());
+        assertEquals(338, clip.right());
+        assertEquals(224, clip.bottom());
+    }
+
+    @Test
     void manualScreenLayoutsTextAndImagesForRendering() {
         ManualDocument document = ManualDocument.parse(
             List.of("alpha ![tip](image:ok)"),
@@ -197,6 +207,16 @@ final class ManualScreenShapeTest {
         assertSame(link, ManualScreen.interactiveLinkAt(document, 100, 40, 132, 45, 0, text -> text.length() * 6));
         assertSame(link, ManualScreen.interactiveLinkAt(document, 100, 40, 132, 40, 5, text -> text.length() * 6));
         assertNull(ManualScreen.interactiveLinkAt(document, 100, 40, 80, 45, 0, text -> text.length() * 6));
+    }
+
+    @Test
+    void manualScreenIgnoresInteractiveEntriesOutsideDocumentViewport() {
+        ManualDocument document = ManualDocument.parse(
+            List.of("Read [manual](item/manual.md)", "![tip](image:ok)"),
+            href -> new TestImageRenderer(50, 20));
+
+        assertNull(ManualScreen.interactiveLinkAt(document, 100, 40, 132, 25, 20, text -> text.length() * 6));
+        assertNull(ManualScreen.interactiveImageAt(document, 100, 40, 191, 230, -160, text -> text.length() * 6));
     }
 
     @Test

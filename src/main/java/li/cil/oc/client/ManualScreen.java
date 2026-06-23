@@ -293,6 +293,19 @@ public class ManualScreen extends Screen {
         return -1;
     }
 
+    public static ClipRect documentClipRect(final int left, final int top) {
+        return new ClipRect(
+            left + DOCUMENT_POS_X,
+            top + DOCUMENT_POS_Y,
+            left + DOCUMENT_POS_X + DOCUMENT_MAX_WIDTH,
+            top + DOCUMENT_POS_Y + DOCUMENT_MAX_HEIGHT);
+    }
+
+    public static boolean isCoordinateOverDocument(final int x, final int y) {
+        return x >= DOCUMENT_POS_X && x < DOCUMENT_POS_X + DOCUMENT_MAX_WIDTH
+            && y >= DOCUMENT_POS_Y && y < DOCUMENT_POS_Y + DOCUMENT_MAX_HEIGHT;
+    }
+
     public static ManualDocument.ImageSegment interactiveImageAt(
         final ManualDocument document,
         final int left,
@@ -313,6 +326,9 @@ public class ManualScreen extends Screen {
         final int scrollOffset,
         final ToIntFunction<String> textWidth
     ) {
+        if (!isAbsoluteCoordinateOverDocument(left, top, mouseX, mouseY)) {
+            return null;
+        }
         for (final LayoutEntry entry : layout(document, DOCUMENT_MAX_WIDTH, textWidth)) {
             if (entry.segment() instanceof final ManualDocument.ImageSegment image) {
                 final int x = left + entry.x();
@@ -334,6 +350,9 @@ public class ManualScreen extends Screen {
         final int scrollOffset,
         final ToIntFunction<String> textWidth
     ) {
+        if (!isAbsoluteCoordinateOverDocument(left, top, mouseX, mouseY)) {
+            return null;
+        }
         for (final LayoutEntry entry : layout(document, DOCUMENT_MAX_WIDTH, textWidth)) {
             if (entry.segment() instanceof final ManualDocument.LinkSegment link) {
                 final int x = left + entry.x();
@@ -344,6 +363,11 @@ public class ManualScreen extends Screen {
             }
         }
         return null;
+    }
+
+    private static boolean isAbsoluteCoordinateOverDocument(final int left, final int top, final int mouseX, final int mouseY) {
+        return mouseX >= left && mouseX < left + DOCUMENT_MAX_WIDTH
+            && mouseY >= top && mouseY < top + DOCUMENT_MAX_HEIGHT;
     }
 
     public static String tooltipAt(
@@ -388,7 +412,7 @@ public class ManualScreen extends Screen {
         graphics.fill(left, top, left + WINDOW_WIDTH, top + WINDOW_HEIGHT, 0xFF2E3440);
         renderTabs(graphics, left, top);
         graphics.fill(left + DOCUMENT_POS_X, top + DOCUMENT_POS_Y, left + DOCUMENT_POS_X + DOCUMENT_MAX_WIDTH, top + DOCUMENT_POS_Y + DOCUMENT_MAX_HEIGHT, 0xFF3B4252);
-        renderDocument(graphics, left + DOCUMENT_POS_X, top + DOCUMENT_POS_Y, mouseX, mouseY);
+        renderDocumentClipped(graphics, left, top, mouseX, mouseY);
         renderScrollBar(graphics, left, top);
         super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, left, top, mouseX, mouseY);
@@ -404,6 +428,16 @@ public class ManualScreen extends Screen {
             graphics.pose().translate(x + 4, y + 5, 0);
             tabs.get(index).renderer().render();
             graphics.pose().popPose();
+        }
+    }
+
+    private void renderDocumentClipped(final GuiGraphics graphics, final int left, final int top, final int mouseX, final int mouseY) {
+        final ClipRect clip = documentClipRect(left, top);
+        graphics.enableScissor(clip.left(), clip.top(), clip.right(), clip.bottom());
+        try {
+            renderDocument(graphics, clip.left(), clip.top(), mouseX, mouseY);
+        } finally {
+            graphics.disableScissor();
         }
     }
 
@@ -583,6 +617,9 @@ public class ManualScreen extends Screen {
     }
 
     public record LayoutEntry(ManualDocument.Segment segment, int x, int y, int width, int height) {
+    }
+
+    public record ClipRect(int left, int top, int right, int bottom) {
     }
 
     private record TextFlow(int x, int y, int lineHeight) {
