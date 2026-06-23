@@ -239,10 +239,13 @@ public class ManualScreen extends Screen {
         }
         int bestLength = 0;
         int lastWhitespace = -1;
+        int lastSoftBreak = -1;
         for (int index = 1; index <= text.length(); index++) {
             final char current = text.charAt(index - 1);
             if (Character.isWhitespace(current)) {
                 lastWhitespace = index - 1;
+            } else if (isSoftBreak(current)) {
+                lastSoftBreak = index;
             }
             if (textPixelWidth(segment, text.substring(0, index), textWidth) > availableWidth) {
                 break;
@@ -252,7 +255,17 @@ public class ManualScreen extends Screen {
         if (lastWhitespace > 0 && textPixelWidth(segment, text.substring(0, lastWhitespace), textWidth) <= availableWidth) {
             return text.substring(0, lastWhitespace);
         }
+        if (lastSoftBreak > 0) {
+            return text.substring(0, lastSoftBreak);
+        }
         return bestLength > 0 ? text.substring(0, bestLength) : "";
+    }
+
+    private static boolean isSoftBreak(final char value) {
+        return switch (value) {
+            case '.', ',', ':', ';', '!', '?', '_', '=', '-', '+', '*', '/', '\\' -> true;
+            default -> false;
+        };
     }
 
     private static int firstWhitespace(final String text) {
