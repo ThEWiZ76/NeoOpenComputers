@@ -12,6 +12,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ManualScreenShapeTest {
@@ -30,6 +32,10 @@ final class ManualScreenShapeTest {
         assertEquals(230, ManualScreen.DOCUMENT_MAX_WIDTH);
         assertEquals(176, ManualScreen.DOCUMENT_MAX_HEIGHT);
         assertEquals(7, ManualScreen.MAX_TABS_PER_SIDE);
+        assertEquals(-23, ManualScreen.TAB_POS_X);
+        assertEquals(7, ManualScreen.TAB_POS_Y);
+        assertEquals(23, ManualScreen.TAB_WIDTH);
+        assertEquals(26, ManualScreen.TAB_HEIGHT);
     }
 
     @Test
@@ -65,6 +71,58 @@ final class ManualScreenShapeTest {
         assertEquals(ManualScreen.LINE_HEIGHT + ManualScreen.SEGMENT_PADDING, entries.get(1).y());
         assertEquals(50, entries.get(1).width());
         assertEquals(20, entries.get(1).height());
+    }
+
+    @Test
+    void manualScreenComputesDocumentHeightFromLayoutBottom() {
+        ManualDocument document = ManualDocument.parse(
+            List.of("alpha", "![tip](image:ok)"),
+            href -> new TestImageRenderer(50, 20));
+
+        assertEquals(ManualScreen.LINE_HEIGHT + ManualScreen.SEGMENT_PADDING + 20, ManualScreen.documentHeight(document, 230));
+    }
+
+    @Test
+    void manualScreenClampsScrollOffsetToDocumentBounds() {
+        assertEquals(0, ManualScreen.clampScrollOffset(-5, 300, 176));
+        assertEquals(124, ManualScreen.clampScrollOffset(999, 300, 176));
+        assertEquals(0, ManualScreen.clampScrollOffset(12, 100, 176));
+    }
+
+    @Test
+    void manualScreenMapsTabCoordinatesLikeUpstream() {
+        assertEquals(0, ManualScreen.tabIndexAt(-22, 8, 3));
+        assertEquals(1, ManualScreen.tabIndexAt(-22, 33, 3));
+        assertEquals(-1, ManualScreen.tabIndexAt(-24, 8, 3));
+        assertEquals(-1, ManualScreen.tabIndexAt(-22, 8, 0));
+        assertEquals(-1, ManualScreen.tabIndexAt(-22, 8, 8));
+    }
+
+    @Test
+    void manualScreenFindsImageEntriesUnderMouseAfterScroll() {
+        ManualDocument document = ManualDocument.parse(
+            List.of("alpha ![tip](image:ok)"),
+            href -> new TestImageRenderer(50, 20));
+        ManualDocument.ImageSegment image = (ManualDocument.ImageSegment) ManualScreen.layout(document, 230).get(1).segment();
+
+        assertSame(image, ManualScreen.interactiveImageAt(document, 100, 40, 191, 55, 0));
+        assertSame(image, ManualScreen.interactiveImageAt(document, 100, 40, 191, 50, 5));
+        assertNull(ManualScreen.interactiveImageAt(document, 100, 40, 80, 55, 0));
+    }
+
+    @Test
+    void manualScreenTabClickNavigatesToTabPath() {
+        ManualRegistry registry = new ManualRegistry();
+        registry.addTab(() -> {}, "home", "index");
+        registry.addTab(() -> {}, "items", "item/cpu1.md");
+        ManualScreen screen = new ManualScreen(registry);
+        screen.width = 400;
+        screen.height = 300;
+
+        boolean handled = screen.mouseClicked(50, 87, 0);
+
+        assertTrue(handled);
+        assertEquals("item/cpu1.md", registry.currentPath());
     }
 
     private record TestImageRenderer(int getWidth, int getHeight) implements ImageRenderer {

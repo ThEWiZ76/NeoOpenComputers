@@ -25,7 +25,7 @@ public final class ManualRegistry implements ManualAPI {
     private static final String DEFAULT_PATH = LANGUAGE_KEY + "/index.md";
     private static final String REDIRECT_PREFIX = "#redirect ";
 
-    private final List<Tab> tabs = new ArrayList<>();
+    private final List<ManualTab> tabs = new ArrayList<>();
     private final List<PathProvider> pathProviders = new ArrayList<>();
     private final List<ContentProvider> contentProviders = new ArrayList<>();
     private final List<ImageProviderEntry> imageProviders = new ArrayList<>();
@@ -55,7 +55,7 @@ public final class ManualRegistry implements ManualAPI {
 
     @Override
     public void addTab(final TabIconRenderer renderer, final String tooltip, final String path) {
-        tabs.add(new Tab(renderer, tooltip, path));
+        tabs.add(new ManualTab(renderer, tooltip, path));
     }
 
     @Override
@@ -220,6 +220,10 @@ public final class ManualRegistry implements ManualAPI {
         return tabs.size();
     }
 
+    public List<ManualTab> tabs() {
+        return List.copyOf(tabs);
+    }
+
     int pathProviderCount() {
         return pathProviders.size();
     }
@@ -257,7 +261,7 @@ public final class ManualRegistry implements ManualAPI {
         history.push(new History(DEFAULT_PATH, 0));
     }
 
-    private record Tab(TabIconRenderer renderer, String tooltip, String path) {
+    public record ManualTab(TabIconRenderer renderer, String tooltip, String path) {
     }
 
     private record ImageProviderEntry(String prefix, ImageProvider provider) {

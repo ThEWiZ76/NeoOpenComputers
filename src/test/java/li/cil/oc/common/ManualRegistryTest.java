@@ -129,6 +129,24 @@ final class ManualRegistryTest {
     }
 
     @Test
+    void exposesManualTabsForScreenNavigation() {
+        ManualRegistry registry = new ManualRegistry();
+        TabIconRenderer first = () -> {};
+        TabIconRenderer second = () -> {};
+
+        registry.addTab(first, "home", "index");
+        registry.addTab(second, "items", "item/cpu1.md");
+
+        assertEquals(2, registry.tabs().size());
+        assertSame(first, registry.tabs().get(0).renderer());
+        assertEquals("home", registry.tabs().get(0).tooltip());
+        assertEquals("index", registry.tabs().get(0).path());
+        assertSame(second, registry.tabs().get(1).renderer());
+        assertEquals("items", registry.tabs().get(1).tooltip());
+        assertEquals("item/cpu1.md", registry.tabs().get(1).path());
+    }
+
+    @Test
     void tracksManualHistoryLikeUpstream() {
         ManualRegistry registry = new ManualRegistry();
 
