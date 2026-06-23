@@ -88,6 +88,7 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_SCALE;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_TRANSLATION;
     public static final ModConfigSpec.DoubleValue HOLOGRAM_SET_RAW_DELAY;
+    public static final ModConfigSpec.BooleanValue IGNORE_POWER;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
@@ -284,6 +285,9 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("power");
+        IGNORE_POWER = builder
+            .comment("Disable energy requirements. OpenComputers upstream default is false.")
+            .define("ignorePower", false);
         SOLAR_GENERATOR_EFFICIENCY = builder
             .comment("Energy produced per tick by solar generator upgrades. OpenComputers upstream default is 0.2.")
             .defineInRange("solarGeneratorEfficiency", 0.2D, 0D, Double.MAX_VALUE);
@@ -365,6 +369,10 @@ public final class ModSettings {
 
     public static double mfuRelayCost() {
         return doubleValue(MFU_RELAY_COST);
+    }
+
+    public static boolean ignorePower() {
+        return booleanValue(IGNORE_POWER);
     }
 
     public static int mfuTickFrequency() {

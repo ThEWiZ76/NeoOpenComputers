@@ -722,6 +722,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         computer.set("energy", new ZeroArgFunction() {
             @Override
             public LuaValue call() {
+                if (ModSettings.ignorePower()) {
+                    return LuaValue.valueOf(Double.POSITIVE_INFINITY);
+                }
                 final Connector connector = machineConnector();
                 return LuaValue.valueOf(connector == null ? 0D : connector.globalBuffer());
             }

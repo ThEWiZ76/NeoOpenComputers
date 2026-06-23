@@ -218,6 +218,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Callback(direct = true, doc = "function():number -- Returns the amount of energy stored in the computer.")
     public Object[] energy(final Context context, final Arguments arguments) {
+        if (ModSettings.ignorePower()) {
+            return new Object[]{Double.POSITIVE_INFINITY};
+        }
         return new Object[]{node() instanceof Connector connector ? connector.globalBuffer() : 0D};
     }
 

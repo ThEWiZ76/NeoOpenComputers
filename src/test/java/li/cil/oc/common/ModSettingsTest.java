@@ -145,6 +145,7 @@ final class ModSettingsTest {
     void mfuConfigUsesUpstreamCompatiblePaths() {
         assertEquals(List.of("misc", "mfuRange"), ModSettings.MFU_RANGE.getPath());
         assertEquals(List.of("power", "cost", "mfuRelay"), ModSettings.MFU_RELAY_COST.getPath());
+        assertEquals(List.of("power", "ignorePower"), ModSettings.IGNORE_POWER.getPath());
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
         assertEquals(List.of("misc", "inputUsername"), ModSettings.INPUT_USERNAME.getPath());

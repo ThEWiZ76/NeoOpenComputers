@@ -29,6 +29,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.MachineRegistry;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.OpenComputersApi;
@@ -42,8 +43,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
@@ -1035,6 +1038,24 @@ final class LuaArchitectureTest {
 
         assertEquals(7D, architecture.globalDouble("energy"), 0.000_001D);
         assertEquals(20D, architecture.globalDouble("maxEnergy"), 0.000_001D);
+    }
+
+    @Test
+    void reportsInfiniteComputerEnergyWhenPowerIsIgnoredLikeUpstream() throws Exception {
+        withCachedConfig(ModSettings.IGNORE_POWER, true, () -> {
+            OpenComputersApi.initialize();
+            Machine machine = API.machine.create(null);
+            Connector connector = (Connector) machine.node();
+            connector.setLocalBufferSize(20D);
+            LuaArchitecture architecture = new LuaArchitecture("energy = computer.energy(); maxEnergy = computer.maxEnergy()");
+            architecture.bind(machine);
+
+            assertTrue(architecture.initialize());
+            assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+            assertTrue(Double.isInfinite(architecture.globalDouble("energy")));
+            assertEquals(20D, architecture.globalDouble("maxEnergy"), 0.000_001D);
+        });
     }
 
     @Test
@@ -4264,6 +4285,23 @@ final class LuaArchitectureTest {
             }
             return value;
         }
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static Object defaultValue(final Class<?> type) {
