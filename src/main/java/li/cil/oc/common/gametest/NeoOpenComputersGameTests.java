@@ -411,6 +411,30 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardShiftUseBindsAndUnbindsAccessContext(final GameTestHelper helper) throws Exception {
+        final ItemStack stack = new ItemStack(ModItems.DEBUG_CARD.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final String playerName = player.getGameProfile().getName();
+        player.setShiftKeyDown(true);
+        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+
+        helper.assertTrue(driver != null, "No driver for debug card");
+        withCachedConfig(ModSettings.DEBUG_CARD_ACCESS, "whitelist", () ->
+            withCachedConfig(ModSettings.DEBUG_CARD_WHITELIST, List.of(playerName.toLowerCase(java.util.Locale.ROOT) + " nonce-1"), () -> {
+                final ItemStack first = stack.use(helper.getLevel(), player, InteractionHand.MAIN_HAND).getObject();
+                final DebugCardEnvironment.AccessContext access = DebugCardEnvironment.loadAccess(driver.dataTag(first));
+                helper.assertTrue(access != null, "Debug card shift-use did not bind access context");
+                helper.assertTrue(playerName.equals(access.player()), "Debug card bound wrong player");
+                helper.assertTrue("nonce-1".equals(access.nonce()), "Debug card bound wrong nonce");
+
+                final ItemStack second = first.use(helper.getLevel(), player, InteractionHand.MAIN_HAND).getObject();
+                helper.assertTrue(DebugCardEnvironment.loadAccess(driver.dataTag(second)) == null, "Debug card second shift-use did not unbind access context");
+            }));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
         final CraftingInput input = CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),
