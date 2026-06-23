@@ -47,7 +47,6 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, Container, MenuProvider, WirelessEndpoint, Analyzable, LinkedNetwork.Endpoint {
-    public static final double CONNECTOR_BUFFER_SIZE = 600D;
     public static final int CONTAINER_SIZE = 4;
     public static final int CPU_SLOT = 0;
     public static final int MEMORY_SLOT = 1;
@@ -458,9 +457,13 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
 
     private static Node createNode(final Environment environment) {
         return Network.newNode(environment, Visibility.Network)
-            .withConnector(CONNECTOR_BUFFER_SIZE)
+            .withConnector(connectorBufferSize())
             .withComponent("relay", Visibility.Network)
             .create();
+    }
+
+    public static double connectorBufferSize() {
+        return ModSettings.accessPointBuffer();
     }
 
     private void updateLimits() {

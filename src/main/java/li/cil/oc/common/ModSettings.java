@@ -120,6 +120,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue TABLET_BUFFER;
     public static final ModConfigSpec.DoubleValue CONVERTER_BUFFER;
     public static final ModConfigSpec.DoubleValue COMPUTER_BUFFER;
+    public static final ModConfigSpec.DoubleValue ACCESS_POINT_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_INPUT_COST;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_RECONFIGURE_COST;
@@ -364,6 +365,9 @@ public final class ModSettings {
         COMPUTER_BUFFER = builder
             .comment("Energy a computer can store. OpenComputers upstream default is 500.")
             .defineInRange("computer", 500D, 0D, Double.MAX_VALUE);
+        ACCESS_POINT_BUFFER = builder
+            .comment("Energy an access point can store. OpenComputers upstream default is 600.")
+            .defineInRange("accessPoint", 600D, 0D, Double.MAX_VALUE);
         NANOMACHINES_BUFFER = builder
             .comment("Nanomachines local energy buffer. OpenComputers upstream default is 100000.")
             .defineInRange("nanomachines", 100_000D, 0D, Double.MAX_VALUE);
@@ -531,6 +535,10 @@ public final class ModSettings {
 
     public static double computerBuffer() {
         return Math.max(0D, doubleValue(COMPUTER_BUFFER));
+    }
+
+    public static double accessPointBuffer() {
+        return Math.max(0D, doubleValue(ACCESS_POINT_BUFFER));
     }
 
     public static double nanomachinesBuffer() {

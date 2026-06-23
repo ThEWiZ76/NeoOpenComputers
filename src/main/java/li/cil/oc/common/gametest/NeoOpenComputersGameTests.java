@@ -3910,7 +3910,7 @@ public final class NeoOpenComputersGameTests {
         Network.joinNewNetwork(receiver.node());
         source.node().connect(firstRelay.sidedNode(Direction.WEST));
         receiver.node().connect(secondRelay.sidedNode(Direction.EAST));
-        ((Connector) firstRelay.sidedNode(Direction.WEST)).changeBuffer(RelayBlockEntity.CONNECTOR_BUFFER_SIZE);
+        ((Connector) firstRelay.sidedNode(Direction.WEST)).changeBuffer(RelayBlockEntity.connectorBufferSize());
 
         final li.cil.oc.api.network.Packet packet = Network.newPacket(source.node().address(), null, 225, new Object[]{"linked"});
         source.node().sendToReachable("network.message", packet);
@@ -3999,6 +3999,19 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(analysis.contains("Component: relay"), "Analyzer did not report wireless relay component:\n" + analysis);
         helper.assertTrue(analysis.contains("Stored energy: 0.00/600.00"), "Analyzer did not report relay connector energy:\n" + analysis);
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void relayUsesConfiguredAccessPointBuffer(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.ACCESS_POINT_BUFFER, 42D, () -> {
+            final BlockPos relayPos = new BlockPos(1, 1, 1);
+            helper.setBlock(relayPos, ModBlocks.RELAY.get());
+            final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+            final Connector connector = (Connector) relay.sidedNode(Direction.WEST);
+
+            helper.assertTrue(Double.compare(42D, connector.localBufferSize()) == 0, "Relay ignored configured access point buffer");
+            helper.succeed();
+        });
     }
 
     @GameTest(template = "empty")
