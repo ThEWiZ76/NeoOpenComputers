@@ -265,12 +265,11 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             if (machine == null) {
                 return;
             }
-            final Object[] signalArgs = new Object[4 + packetData.length];
-            signalArgs[0] = node().address();
-            signalArgs[1] = packet.source();
-            signalArgs[2] = packet.port();
-            signalArgs[3] = distance;
-            System.arraycopy(packetData, 0, signalArgs, 4, packetData.length);
+            final Object[] signalArgs = new Object[3 + packetData.length];
+            signalArgs[0] = packet.source();
+            signalArgs[1] = packet.port();
+            signalArgs[2] = distance;
+            System.arraycopy(packetData, 0, signalArgs, 3, packetData.length);
             machine.signal(MODEM_MESSAGE_SIGNAL, signalArgs);
         } else {
             final Object[] signalArgs = new Object[4 + packetData.length];

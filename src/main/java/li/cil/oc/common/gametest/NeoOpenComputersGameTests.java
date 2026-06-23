@@ -5594,7 +5594,7 @@ public final class NeoOpenComputersGameTests {
             local modem = component.proxy(component.list('modem')())
             modem.open(123)
             while true do
-              local event, localAddress, remoteAddress, port, distance, payload = computer.pullSignal(1)
+              local event, remoteAddress, port, distance, payload = computer.pullSignal(1)
               if event == 'modem_message' and port == 123 then
                 computer.pushSignal('modem_received', payload)
                 break

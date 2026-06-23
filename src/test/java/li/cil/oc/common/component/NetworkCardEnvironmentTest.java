@@ -373,7 +373,7 @@ final class NetworkCardEnvironmentTest {
             new TestPacket("remote", card.node().address(), 123, new Object[]{"payload"})
         }));
 
-        assertEquals(List.of(Arrays.asList("modem_message", card.node().address(), "remote", 123, 0D, "payload")), host.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", "remote", 123, 0D, "payload")), host.signals);
     }
 
     @Test
@@ -420,7 +420,7 @@ final class NetworkCardEnvironmentTest {
 
         assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments(receiver.node().address(), 123, "payload")));
 
-        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
     }
 
     @Test
@@ -445,7 +445,7 @@ final class NetworkCardEnvironmentTest {
         assertEquals(receiver.node().address(), packet.destination());
         assertEquals(123, packet.port());
         assertArrayEquals(new Object[]{"payload"}, packet.data());
-        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
     }
 
     @Test
@@ -460,7 +460,7 @@ final class NetworkCardEnvironmentTest {
 
         assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments(receiver.node().address(), 123, "payload")));
 
-        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
     }
 
     @Test
@@ -475,7 +475,7 @@ final class NetworkCardEnvironmentTest {
 
         assertArrayEquals(new Object[]{true}, sender.broadcast(null, new TestArguments(123, "payload")));
 
-        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
     }
 
     @Test
@@ -526,7 +526,7 @@ final class NetworkCardEnvironmentTest {
         sender.setStrength(null, new TestArguments(5D));
         assertArrayEquals(new Object[]{true}, sender.broadcast(null, new TestArguments(123, "payload")));
 
-        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 5D, "payload")), receiverHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", sender.node().address(), 123, 5D, "payload")), receiverHost.signals);
     }
 
     @Test
@@ -560,7 +560,7 @@ final class NetworkCardEnvironmentTest {
         sender.setStrength(null, new TestArguments(5D));
         assertArrayEquals(new Object[]{true}, sender.broadcast(null, new TestArguments(123, "payload")));
 
-        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", sender.node().address(), 123, 0D, "payload")), receiverHost.signals);
     }
 
     @Test
@@ -587,7 +587,7 @@ final class NetworkCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, sender.broadcast(context, new TestArguments(123, "payload")));
 
         assertEquals(0.75D, connector.localBuffer(), 0.000_001D);
-        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 5D, "payload")), receiverHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", sender.node().address(), 123, 5D, "payload")), receiverHost.signals);
     }
 
     @Test
@@ -609,7 +609,7 @@ final class NetworkCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, sender.broadcast(context, new TestArguments(123, "payload")));
 
         assertEquals(0.75D, connector.localBuffer(), 0.000_001D);
-        assertEquals(List.of(Arrays.asList("modem_message", receiver.node().address(), sender.node().address(), 123, 5D, "payload")), receiverHost.signals);
+        assertEquals(List.of(Arrays.asList("modem_message", sender.node().address(), 123, 5D, "payload")), receiverHost.signals);
     }
 
     @Test
