@@ -94,6 +94,7 @@ public class ManualScreen extends Screen {
         int y = 0;
         int x = 0;
         int lineHeight = LINE_HEIGHT;
+        int wrapIndent = 0;
         final var entries = new java.util.ArrayList<LayoutEntry>();
         for (final ManualDocument.Segment segment : document.segments()) {
             if (segment instanceof final ManualDocument.ImageSegment image) {
@@ -101,21 +102,25 @@ public class ManualScreen extends Screen {
                     y += lineHeight;
                     x = 0;
                     lineHeight = LINE_HEIGHT;
+                    wrapIndent = 0;
                 }
                 y += entries.isEmpty() ? 2 : SEGMENT_PADDING;
                 final int width = Math.min(maxWidth, image.renderer().getWidth());
                 final int height = image.renderer().getHeight();
                 entries.add(new LayoutEntry(segment, (maxWidth - width) / 2, y, width, height));
                 y += height;
+                wrapIndent = 0;
             } else if (segment instanceof ManualDocument.LineBreakSegment) {
                 y += lineHeight;
                 x = 0;
                 lineHeight = LINE_HEIGHT;
+                wrapIndent = 0;
             } else {
-                final TextFlow flow = appendTextEntries(entries, segment, x, y, lineHeight, maxWidth, textWidth);
+                final TextFlow flow = appendTextEntries(entries, segment, x, y, lineHeight, maxWidth, wrapIndent, textWidth);
                 x = flow.x();
                 y = flow.y();
                 lineHeight = flow.lineHeight();
+                wrapIndent = flow.wrapIndent();
             }
         }
         return List.copyOf(entries);
@@ -128,13 +133,14 @@ public class ManualScreen extends Screen {
         final int startY,
         final int startLineHeight,
         final int maxWidth,
+        final int startWrapIndent,
         final ToIntFunction<String> textWidth
     ) {
         String remaining = segmentText(segment);
         if (remaining.isEmpty()) {
-            return new TextFlow(startX, startY, startLineHeight);
+            return new TextFlow(startX, startY, startLineHeight, startWrapIndent);
         }
-        final int wrapIndent = listWrapIndent(segment, textWidth);
+        final int wrapIndent = Math.max(startWrapIndent, listWrapIndent(segment, textWidth));
         int x = startX;
         int y = startY;
         int lineHeight = startLineHeight;
@@ -166,7 +172,7 @@ public class ManualScreen extends Screen {
                 lineHeight = LINE_HEIGHT;
             }
         }
-        return new TextFlow(x, y, lineHeight);
+        return new TextFlow(x, y, lineHeight, wrapIndent);
     }
 
     private static String segmentText(final ManualDocument.Segment segment) {
@@ -818,7 +824,7 @@ public class ManualScreen extends Screen {
     public record ClipRect(int left, int top, int right, int bottom) {
     }
 
-    private record TextFlow(int x, int y, int lineHeight) {
+    private record TextFlow(int x, int y, int lineHeight, int wrapIndent) {
     }
 
     @FunctionalInterface
