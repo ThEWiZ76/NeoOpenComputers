@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public final class ScreenItemEnvironment extends AbstractManagedEnvironment implements TextBuffer, DeviceInfo, Tiered {
-    private static final ColorDepth[] MAXIMUM_COLOR_DEPTHS_BY_TIER = {ColorDepth.OneBit, ColorDepth.FourBit, ColorDepth.EightBit};
     private static final String TAG_BUFFER = "buffer";
 
     private final EnvironmentHost host;
@@ -53,7 +52,7 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
         this.tier = Math.clamp(tier, 0, ModSettings.screenWidthsByTier().size() - 1);
         maximumWidth = ModSettings.screenWidthByTier(this.tier);
         maximumHeight = ModSettings.screenHeightByTier(this.tier);
-        maximumColorDepth = MAXIMUM_COLOR_DEPTHS_BY_TIER[this.tier];
+        maximumColorDepth = ModSettings.screenDepthByTier(this.tier);
         colorDepth = maximumColorDepth;
         width = maximumWidth;
         height = maximumHeight;

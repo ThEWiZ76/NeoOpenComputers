@@ -3,6 +3,7 @@ package li.cil.oc.common.blockentity;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModSettings;
@@ -133,6 +134,21 @@ final class ScreenBlockEntityTest {
                 assertEquals(11, screen.getWidth());
                 assertEquals(13, screen.getHeight());
             }));
+    }
+
+    @Test
+    void usesConfiguredScreenDepthTiers() throws Exception {
+        withCachedConfig(ModSettings.SCREEN_DEPTHS_BY_TIER, List.of(8, 4, 1), () -> {
+            ScreenBlockEntity screen = allocateScreen();
+            initializeBuffer(screen);
+            Method configureTier = ScreenBlockEntity.class.getDeclaredMethod("configureTier", int.class);
+            configureTier.setAccessible(true);
+
+            configureTier.invoke(screen, 0);
+
+            assertEquals(TextBuffer.ColorDepth.EightBit, screen.getMaximumColorDepth());
+            assertEquals(TextBuffer.ColorDepth.EightBit, screen.getColorDepth());
+        });
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {

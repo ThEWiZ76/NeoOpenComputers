@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo, Tiered {
-    private static final ColorDepth[] MAXIMUM_COLOR_DEPTHS_BY_TIER = {ColorDepth.OneBit, ColorDepth.FourBit, ColorDepth.EightBit};
     private static final int DEFAULT_WIDTH = 50;
     private static final int DEFAULT_HEIGHT = 16;
     private static final int DEFAULT_FOREGROUND = 0xFFFFFF;
@@ -598,7 +597,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         this.tier = Math.clamp(tier, 0, ModSettings.screenWidthsByTier().size() - 1);
         maximumWidth = ModSettings.screenWidthByTier(this.tier);
         maximumHeight = ModSettings.screenHeightByTier(this.tier);
-        maximumColorDepth = MAXIMUM_COLOR_DEPTHS_BY_TIER[this.tier];
+        maximumColorDepth = ModSettings.screenDepthByTier(this.tier);
         colorDepth = maximumColorDepth;
         width = maximumWidth;
         height = maximumHeight;

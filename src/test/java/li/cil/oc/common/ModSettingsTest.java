@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.nanomachines.BehaviorProvider;
 import li.cil.oc.api.nanomachines.DisableReason;
@@ -47,6 +48,12 @@ final class ModSettingsTest {
         assertEquals(50, ModSettings.screenHeightByTier(2));
         assertEquals(16, ModSettings.screenHeightByTier(-1));
         assertEquals(50, ModSettings.screenHeightByTier(99));
+        assertEquals(List.of(TextBuffer.ColorDepth.OneBit, TextBuffer.ColorDepth.FourBit, TextBuffer.ColorDepth.EightBit), ModSettings.screenDepthsByTier());
+        assertEquals(TextBuffer.ColorDepth.OneBit, ModSettings.screenDepthByTier(0));
+        assertEquals(TextBuffer.ColorDepth.FourBit, ModSettings.screenDepthByTier(1));
+        assertEquals(TextBuffer.ColorDepth.EightBit, ModSettings.screenDepthByTier(2));
+        assertEquals(TextBuffer.ColorDepth.OneBit, ModSettings.screenDepthByTier(-1));
+        assertEquals(TextBuffer.ColorDepth.EightBit, ModSettings.screenDepthByTier(99));
         assertEquals(true, ModSettings.inputUsername());
         assertEquals(25D, ModSettings.disassemblerTickAmount());
         assertEquals(2000D, ModSettings.disassemblerItemCost());
@@ -186,6 +193,7 @@ final class ModSettingsTest {
         assertEquals(List.of("robot", "xp", "bufferPerLevel"), ModSettings.EXPERIENCE_BUFFER_PER_LEVEL.getPath());
         assertEquals(List.of("screen", "widthsByTier"), ModSettings.SCREEN_WIDTHS_BY_TIER.getPath());
         assertEquals(List.of("screen", "heightsByTier"), ModSettings.SCREEN_HEIGHTS_BY_TIER.getPath());
+        assertEquals(List.of("screen", "depthsByTier"), ModSettings.SCREEN_DEPTHS_BY_TIER.getPath());
         assertEquals(List.of("power", "disassemblerTickAmount"), ModSettings.DISASSEMBLER_TICK_AMOUNT.getPath());
         assertEquals(List.of("power", "cost", "disassemblerPerItem"), ModSettings.DISASSEMBLER_ITEM_COST.getPath());
         assertEquals(List.of("misc", "inputUsername"), ModSettings.INPUT_USERNAME.getPath());

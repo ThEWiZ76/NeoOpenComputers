@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.internal.TextBuffer;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.List;
@@ -15,6 +16,7 @@ public final class ModSettings {
     private static final List<Double> DEFAULT_BATTERY_UPGRADE_BUFFERS = List.of(10_000D, 15_000D, 20_000D);
     private static final List<Integer> DEFAULT_SCREEN_WIDTHS_BY_TIER = List.of(50, 80, 160);
     private static final List<Integer> DEFAULT_SCREEN_HEIGHTS_BY_TIER = List.of(16, 25, 50);
+    private static final List<Integer> DEFAULT_SCREEN_DEPTHS_BY_TIER = List.of(1, 4, 8);
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
     private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
     private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
@@ -142,6 +144,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue EXPERIENCE_BUFFER_PER_LEVEL;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_WIDTHS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_HEIGHTS_BY_TIER;
+    public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_DEPTHS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<String> DEBUG_CARD_ACCESS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> DEBUG_CARD_WHITELIST;
 
@@ -444,6 +447,9 @@ public final class ModSettings {
         SCREEN_HEIGHTS_BY_TIER = builder
             .comment("Maximum screen heights for tiers one, two, and three. OpenComputers upstream default is [16, 25, 50].")
             .defineList("heightsByTier", DEFAULT_SCREEN_HEIGHTS_BY_TIER, value -> value instanceof Integer && (Integer) value >= 1);
+        SCREEN_DEPTHS_BY_TIER = builder
+            .comment("Maximum screen color depths in bits for tiers one, two, and three. OpenComputers upstream default is [1, 4, 8].")
+            .defineList("depthsByTier", DEFAULT_SCREEN_DEPTHS_BY_TIER, value -> value instanceof Integer && ((Integer) value == 1 || (Integer) value == 4 || (Integer) value == 8));
         builder.pop();
 
         builder.push("nanomachines");
@@ -583,6 +589,15 @@ public final class ModSettings {
     public static int screenHeightByTier(final int tier) {
         final List<Integer> heights = screenHeightsByTier();
         return heights.get(clampIndex(tier, heights.size()));
+    }
+
+    public static List<TextBuffer.ColorDepth> screenDepthsByTier() {
+        return screenDepthBitsByTier().stream().map(ModSettings::screenDepth).toList();
+    }
+
+    public static TextBuffer.ColorDepth screenDepthByTier(final int tier) {
+        final List<TextBuffer.ColorDepth> depths = screenDepthsByTier();
+        return depths.get(clampIndex(tier, depths.size()));
     }
 
     public static double nanomachinesBuffer() {
@@ -1056,6 +1071,22 @@ public final class ModSettings {
             return defaults;
         }
         return values.stream().map(entry -> Math.max(1, entry)).toList();
+    }
+
+    private static List<Integer> screenDepthBitsByTier() {
+        final List<Integer> depths = listValue(SCREEN_DEPTHS_BY_TIER);
+        if (depths.size() != DEFAULT_SCREEN_DEPTHS_BY_TIER.size() || depths.stream().anyMatch(depth -> depth != 1 && depth != 4 && depth != 8)) {
+            return DEFAULT_SCREEN_DEPTHS_BY_TIER;
+        }
+        return depths;
+    }
+
+    private static TextBuffer.ColorDepth screenDepth(final int bits) {
+        return switch (bits) {
+            case 4 -> TextBuffer.ColorDepth.FourBit;
+            case 8 -> TextBuffer.ColorDepth.EightBit;
+            default -> TextBuffer.ColorDepth.OneBit;
+        };
     }
 
     private static List<Double> doubleListValue(final ModConfigSpec.ConfigValue<List<? extends Double>> value) {

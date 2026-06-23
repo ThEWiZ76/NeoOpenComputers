@@ -2,6 +2,7 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.api.internal.TextBuffer;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +28,21 @@ final class ScreenItemEnvironmentTest {
                 assertEquals(11, tierThree.getMaximumWidth());
                 assertEquals(13, tierThree.getMaximumHeight());
             }));
+    }
+
+    @Test
+    void usesConfiguredScreenDepthTiers() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.SCREEN_DEPTHS_BY_TIER, List.of(8, 4, 1), () -> {
+            final ScreenItemEnvironment tierOne = new ScreenItemEnvironment(null, 0);
+            final ScreenItemEnvironment tierThree = new ScreenItemEnvironment(null, 2);
+
+            assertEquals(TextBuffer.ColorDepth.EightBit, tierOne.getMaximumColorDepth());
+            assertEquals(TextBuffer.ColorDepth.EightBit, tierOne.getColorDepth());
+            assertEquals(TextBuffer.ColorDepth.OneBit, tierThree.getMaximumColorDepth());
+            assertEquals(TextBuffer.ColorDepth.OneBit, tierThree.getColorDepth());
+        });
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
