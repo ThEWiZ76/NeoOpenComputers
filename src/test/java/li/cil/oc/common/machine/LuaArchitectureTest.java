@@ -2950,6 +2950,27 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void keepsNumericLookingLuaStringsAsByteArraysForCallbacksLikeUpstream() {
+        Map<String, Callback> methods = new LinkedHashMap<>();
+        methods.put("label", callback("labelCallback"));
+        List<String> invokedMethods = new ArrayList<>();
+        List<Object[]> invokedArguments = new ArrayList<>();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            result = component.invoke('fs-address', 'label', '123')
+            """);
+        architecture.bind(machineWithMethodsAndInvokeCapture(Map.of("fs-address", "filesystem"), methods, invokedMethods, invokedArguments));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
+
+        assertEquals(List.of("label"), invokedMethods);
+        assertEquals(1, invokedArguments.getFirst().length);
+        assertArrayEquals(utf8("123"), (byte[]) invokedArguments.getFirst()[0]);
+        assertEquals(true, architecture.globalBoolean("result"));
+    }
+
+    @Test
     void componentProxyMethodToStringReturnsDocumentation() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));

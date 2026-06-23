@@ -2425,11 +2425,11 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         if (value.isboolean()) {
             return value.toboolean();
         }
-        if (value.isnumber()) {
-            return value.todouble();
-        }
         if (value instanceof LuaString string) {
             return Arrays.copyOfRange(string.m_bytes, string.m_offset, string.m_offset + string.m_length);
+        }
+        if (value.isnumber()) {
+            return value.todouble();
         }
         if (value instanceof LuaTable table) {
             final Value machineValue = valueProxyValues.get(table);
