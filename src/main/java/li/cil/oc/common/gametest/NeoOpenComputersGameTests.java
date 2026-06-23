@@ -611,6 +611,30 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void debugCardScansBlockContents(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final BlockPos air = helper.absolutePos(new BlockPos(1, 1, 1));
+        final Object[] airResult = invokeComponent(helper, component, "scanContentsAt", air.getX(), air.getY(), air.getZ());
+        helper.assertTrue(airResult.length == 3 && Boolean.FALSE.equals(airResult[0]) && "air".equals(airResult[1]) && airResult[2] == Blocks.AIR, "Debug scanContentsAt did not report air");
+
+        final BlockPos stoneRelative = new BlockPos(2, 1, 1);
+        helper.setBlock(stoneRelative, Blocks.STONE.defaultBlockState());
+        final BlockPos stone = helper.absolutePos(stoneRelative);
+        final Object[] solidResult = invokeComponent(helper, component, "scanContentsAt", stone.getX(), stone.getY(), stone.getZ());
+        helper.assertTrue(solidResult.length == 3 && Boolean.TRUE.equals(solidResult[0]) && "solid".equals(solidResult[1]) && solidResult[2] == Blocks.STONE, "Debug scanContentsAt did not report solid block");
+
+        final BlockPos waterRelative = new BlockPos(3, 1, 1);
+        helper.setBlock(waterRelative, Blocks.WATER.defaultBlockState());
+        final BlockPos water = helper.absolutePos(waterRelative);
+        final Object[] liquidResult = invokeComponent(helper, component, "scanContentsAt", water.getX(), water.getY(), water.getZ());
+        helper.assertTrue(liquidResult.length == 3 && Boolean.FALSE.equals(liquidResult[0]) && "liquid".equals(liquidResult[1]) && liquidResult[2] == Blocks.WATER, "Debug scanContentsAt did not report liquid block");
+        helper.succeed();
+    }
+
     @SuppressWarnings("removal")
     @GameTest(template = "empty")
     public static void debugCardPlayerValueUpdatesOnlinePlayerState(final GameTestHelper helper) {

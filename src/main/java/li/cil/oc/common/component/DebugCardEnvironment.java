@@ -43,7 +43,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -59,6 +62,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -200,6 +204,44 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             endpoint.receiveDebugPacket(Network.newPacket(node().address(), destination, 0, Arrays.copyOfRange(args.toArray(), 1, args.count())));
         }
         return new Object[0];
+    }
+
+    @Callback(doc = "function(x:number, y:number, z:number[, worldId:number]):boolean, string, table -- Returns contents at the location.")
+    public Object[] scanContentsAt(final Context context, final Arguments args) throws Exception {
+        checkAccess();
+        final Level level = host == null ? null : host.world();
+        if (level == null) {
+            return new Object[]{false, "air", Blocks.AIR};
+        }
+        final BlockPos pos = new BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2));
+        if (!level.isLoaded(pos)) {
+            return new Object[]{false, "air", Blocks.AIR};
+        }
+
+        for (final Entity entity : level.getEntitiesOfClass(Entity.class, new AABB(pos), Entity::isAlive)) {
+            if (entity instanceof LivingEntity) {
+                return new Object[]{true, "EntityLivingBase", entity};
+            }
+            if (entity instanceof AbstractMinecart) {
+                return new Object[]{true, "EntityMinecart", entity};
+            }
+        }
+
+        final BlockState state = level.getBlockState(pos);
+        final Block block = state.getBlock();
+        if (state.isAir()) {
+            return new Object[]{false, "air", block};
+        }
+        if (!state.getFluidState().isEmpty()) {
+            return new Object[]{false, "liquid", block};
+        }
+        if (state.canBeReplaced()) {
+            return new Object[]{false, "replaceable", block};
+        }
+        if (state.getCollisionShape(level, pos).isEmpty()) {
+            return new Object[]{true, "passable", block};
+        }
+        return new Object[]{true, "solid", block};
     }
 
     @Callback(doc = "function(x:number, y:number, z:number):boolean -- Add a component block at the specified coordinates to the computer network.")
