@@ -47,7 +47,7 @@ final class ExperienceUpgradeEnvironmentTest {
 
         ComponentConnector connector = assertInstanceOf(ComponentConnector.class, environment.node());
         assertArrayEquals(new Object[]{0D}, environment.level(null, new TestArguments()));
-        assertEquals(0D, connector.localBufferSize(), 0.000_001D);
+        assertEquals(150_000D, connector.localBufferSize(), 0.000_001D);
 
         environment.addExperience(ExperienceUpgradeEnvironment.xpForLevel(2));
 
