@@ -1768,6 +1768,23 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void componentInvokeMissingMethodRaisesLuaErrorLikeUpstream() {
+        Map<String, Callback> methods = Map.of("label", callback("labelCallback"));
+        LuaArchitecture architecture = new LuaArchitecture("""
+            valid, message = pcall(function()
+              component.invoke('fs-address', 'missing')
+            end)
+            """);
+        architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertEquals(false, architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalString("message").contains("no such method"));
+    }
+
+    @Test
     void schedulesNonDirectComponentInvokeLikeUpstream() {
         Map<String, Callback> methods = Map.of("label", callback("labelCallback"));
         List<String> invokedMethods = new ArrayList<>();

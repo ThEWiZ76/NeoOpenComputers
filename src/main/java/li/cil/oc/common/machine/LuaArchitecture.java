@@ -1152,6 +1152,9 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 if (!hasComponent(address)) {
                     return noSuchComponent();
                 }
+                if (hasKnownMissingComponentCallback(address, method)) {
+                    throw new LuaError("no such method");
+                }
                 final Object[] javaArgs = new Object[Math.max(0, args.narg() - 2)];
                 for (int index = 0; index < javaArgs.length; index++) {
                     javaArgs[index] = toJavaValue(args.arg(index + 3));
@@ -1982,6 +1985,14 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         }
         final Map<String, Callback> methods = machine.methods(address);
         return methods == null ? null : methods.get(method);
+    }
+
+    private boolean hasKnownMissingComponentCallback(final String address, final String method) {
+        if (machine == null) {
+            return false;
+        }
+        final Map<String, Callback> methods = machine.methods(address);
+        return methods != null && !methods.isEmpty() && !methods.containsKey(method);
     }
 
     private static Varargs noSuchComponent() {
