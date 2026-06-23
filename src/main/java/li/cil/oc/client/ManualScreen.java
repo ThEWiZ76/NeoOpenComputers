@@ -134,6 +134,7 @@ public class ManualScreen extends Screen {
         if (remaining.isEmpty()) {
             return new TextFlow(startX, startY, startLineHeight);
         }
+        final int wrapIndent = listWrapIndent(segment, textWidth);
         int x = startX;
         int y = startY;
         int lineHeight = startLineHeight;
@@ -147,7 +148,7 @@ public class ManualScreen extends Screen {
             final String part = fittingText(remaining, maxWidth - x, maxWidth, segment, textWidth);
             if (part.isEmpty()) {
                 y += lineHeight;
-                x = 0;
+                x = wrapIndent;
                 lineHeight = LINE_HEIGHT;
                 continue;
             }
@@ -161,7 +162,7 @@ public class ManualScreen extends Screen {
             lineHeight = Math.max(lineHeight, height);
             if (x >= maxWidth && !remaining.isEmpty()) {
                 y += lineHeight;
-                x = 0;
+                x = wrapIndent;
                 lineHeight = LINE_HEIGHT;
             }
         }
@@ -173,6 +174,14 @@ public class ManualScreen extends Screen {
             return text.text();
         }
         return "";
+    }
+
+    private static int listWrapIndent(final ManualDocument.Segment segment, final ToIntFunction<String> textWidth) {
+        final String text = segmentText(segment);
+        if (text.startsWith("- ") || text.startsWith("* ")) {
+            return textPixelWidth(segment, text.substring(0, 2), textWidth);
+        }
+        return 0;
     }
 
     private static ManualDocument.Segment copyTextSegment(final ManualDocument.Segment segment, final String text) {

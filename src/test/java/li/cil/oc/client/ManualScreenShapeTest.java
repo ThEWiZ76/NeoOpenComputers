@@ -159,6 +159,20 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenIndentsWrappedListLinesLikeUpstream() {
+        ManualDocument document = ManualDocument.parse(List.of("- alpha beta"), href -> null);
+
+        List<ManualScreen.LayoutEntry> entries = ManualScreen.layout(document, 42, text -> text.length() * 6);
+
+        assertEquals(2, entries.size());
+        assertTextEntry("- alpha", entries.get(0));
+        assertEquals(0, entries.get(0).x());
+        assertTextEntry("beta", entries.get(1));
+        assertEquals(12, entries.get(1).x());
+        assertEquals(ManualScreen.LINE_HEIGHT, entries.get(1).y());
+    }
+
+    @Test
     void manualScreenLayoutsHeadersWithUpstreamScaleAndPreservesInlineStyle() {
         ManualDocument headerDocument = ManualDocument.parse(List.of("# Title", "next"), href -> null);
 
