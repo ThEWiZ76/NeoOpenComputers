@@ -2754,7 +2754,7 @@ final class LuaArchitectureTest {
     }
 
     @Test
-    void retriesComponentInvokeAfterCallBudgetLimit() {
+    void fallsBackToSynchronizedComponentInvokeAfterCallBudgetLimit() {
         int[] attempts = {0};
         LuaArchitecture architecture = new LuaArchitecture("""
             result = component.invoke('fs-address', 'label')
@@ -2767,7 +2767,9 @@ final class LuaArchitectureTest {
 
         assertEquals(1, attempts[0]);
         assertEquals(false, architecture.globalBoolean("continued"));
+        assertEquals(true, architecture.hasPendingSynchronizedCall());
 
+        architecture.runSynchronized();
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
         assertEquals(2, attempts[0]);

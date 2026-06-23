@@ -70,7 +70,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private static final String BOOT_ADDRESS_TAG = "bootAddress";
     private static final String MEMORY_TAG = "memory";
     private static final String PULL_SIGNAL_MARKER = "\u0000oc.pullSignal";
-    private static final String BUDGET_RETRY_MARKER = "\u0000oc.budgetRetry";
     private static final String SYNCHRONIZED_CALLBACK_MARKER = "\u0000oc.synchronizedCallback";
     private static final double PRIMARY_REPLACEMENT_DELAY_SECONDS = 0.1D;
     private boolean initialized;
@@ -82,7 +81,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     private LuaValue bootChunk;
     private LuaThread bootThread;
     private ExecutionResult pendingResult;
-    private PendingBudgetCall pendingBudgetCall;
     private PendingBudgetCall pendingSynchronizedCall;
     private Varargs pendingSynchronizedResults;
     private double memoryBytes;
@@ -143,7 +141,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         pendingPrimaryComponents.clear();
         globals = sandboxGlobals();
         pendingResult = null;
-        pendingBudgetCall = null;
         pendingSynchronizedCall = null;
         pendingSynchronizedResults = null;
         valueProxyCache.clear();
@@ -173,7 +170,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         bootChunk = null;
         bootThread = null;
         pendingResult = null;
-        pendingBudgetCall = null;
         pendingSynchronizedCall = null;
         pendingSynchronizedResults = null;
         waitingForSignal = false;
@@ -222,15 +218,6 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             final Varargs results = pendingSynchronizedResults;
             pendingSynchronizedResults = null;
             return resumeBoot(results);
-        }
-        if (pendingBudgetCall != null) {
-            try {
-                final Varargs results = pendingBudgetCall.invoke();
-                pendingBudgetCall = null;
-                return resumeBoot(results);
-            } catch (LimitReachedException e) {
-                return new ExecutionResult.Sleep(1);
-            }
         }
         if (waitingForSignal) {
             final Signal signal = machine == null ? null : machine.popSignal();
@@ -2008,8 +1995,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         try {
             return invokeComponentOnce(address, method, javaArgs);
         } catch (LimitReachedException e) {
-            pendingBudgetCall = () -> invokeComponentOnce(address, method, javaArgs);
-            return globals.yield(LuaValue.valueOf(BUDGET_RETRY_MARKER));
+            return invokeComponentSynchronized(address, method, javaArgs);
         }
     }
 
@@ -2043,8 +2029,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         try {
             return invokeValueOnce(value, method, javaArgs);
         } catch (LimitReachedException e) {
-            pendingBudgetCall = () -> invokeValueOnce(value, method, javaArgs);
-            return globals.yield(LuaValue.valueOf(BUDGET_RETRY_MARKER));
+            return invokeValueSynchronized(value, method, javaArgs);
         }
     }
 
