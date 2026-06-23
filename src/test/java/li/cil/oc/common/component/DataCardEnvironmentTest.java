@@ -40,8 +40,8 @@ final class DataCardEnvironmentTest {
         assertCallback("getLimit");
         assertCallback("encode64");
         assertCallback("decode64");
-        assertCallback("deflate");
-        assertCallback("inflate");
+        assertDirectCallback("deflate");
+        assertDirectCallback("inflate");
         assertCallback("crc32");
         assertCallback("md5");
         assertCallback("sha256");
@@ -197,6 +197,12 @@ final class DataCardEnvironmentTest {
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = DataCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static void assertDirectCallback(final String methodName) throws NoSuchMethodException {
+        Method method = DataCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
+        Callback callback = method.getAnnotation(Callback.class);
+        assertTrue(callback.direct());
     }
 
     private static byte[] crc32(final byte[] data) {

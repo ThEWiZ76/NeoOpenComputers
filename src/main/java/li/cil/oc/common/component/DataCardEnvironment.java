@@ -108,7 +108,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         return new Object[]{Base64.getDecoder().decode(costedData(context, args, TRIVIAL_COST, TRIVIAL_BYTE_COST))};
     }
 
-    @Callback(doc = "function(data:string):string -- Compresses bytes using zlib deflate.")
+    @Callback(direct = true, doc = "function(data:string):string -- Compresses bytes using zlib deflate.")
     public Object[] deflate(final Context context, final Arguments args) throws Exception {
         final byte[] data = costedData(context, args, COMPLEX_COST, COMPLEX_BYTE_COST);
         try {
@@ -122,7 +122,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         }
     }
 
-    @Callback(doc = "function(data:string):string -- Decompresses zlib deflate bytes.")
+    @Callback(direct = true, doc = "function(data:string):string -- Decompresses zlib deflate bytes.")
     public Object[] inflate(final Context context, final Arguments args) throws Exception {
         final byte[] data = costedData(context, args, COMPLEX_COST, COMPLEX_BYTE_COST);
         try (InflaterInputStream inflater = new InflaterInputStream(new ByteArrayInputStream(data))) {
