@@ -530,12 +530,29 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
-    void tierOneWirelessBroadcastDeliversToSeparateEndpointAtZeroDistanceLikeUpstream() throws Exception {
+    void tierOneWirelessBroadcastIgnoresZeroDistanceLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
         TestMachineHost receiverHost = new TestMachineHost(0, 0, 0);
         WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(senderHost, 0);
         WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(receiverHost, 0);
+        Network.joinNewNetwork(sender.node());
+        Network.joinNewNetwork(receiver.node());
+        receiver.open(null, new TestArguments(123));
+
+        sender.setStrength(null, new TestArguments(5D));
+        assertArrayEquals(new Object[]{true}, sender.broadcast(null, new TestArguments(123, "payload")));
+
+        assertEquals(List.of(), receiverHost.signals);
+    }
+
+    @Test
+    void tierTwoWirelessBroadcastDeliversAtZeroDistanceViaWiredModeLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
+        TestMachineHost receiverHost = new TestMachineHost(0, 0, 0);
+        WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(senderHost, 1);
+        WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(receiverHost, 1);
         Network.joinNewNetwork(sender.node());
         Network.joinNewNetwork(receiver.node());
         receiver.open(null, new TestArguments(123));
