@@ -155,9 +155,21 @@ public final class ManualDocument {
     public record TextSegment(String text) implements TextualSegment {
     }
 
-    public record LinkSegment(String text, String href, int headerLevel) implements TextualSegment {
+    public record LinkSegment(
+        String text,
+        String href,
+        int headerLevel,
+        boolean bold,
+        boolean italic,
+        boolean code,
+        boolean strikethrough
+    ) implements TextualSegment {
         public LinkSegment(final String text, final String href) {
             this(text, href, 0);
+        }
+
+        public LinkSegment(final String text, final String href, final int headerLevel) {
+            this(text, href, headerLevel, false, false, false, false);
         }
 
         public String tooltip() {
@@ -280,16 +292,55 @@ public final class ManualDocument {
         }
     }
 
+    private static LinkSegment linkSegment(final String text, final String href, final int headerLevel) {
+        StyledText styled = styledLinkText(text);
+        return new LinkSegment(
+            styled.text(),
+            href,
+            headerLevel,
+            styled.bold(),
+            styled.italic(),
+            false,
+            styled.strikethrough());
+    }
+
+    private static StyledText styledLinkText(final String text) {
+        StyledText styled = new StyledText(text, false, false, false);
+        boolean changed;
+        do {
+            changed = false;
+            final Matcher bold = BOLD_PATTERN.matcher(styled.text());
+            if (bold.matches()) {
+                styled = new StyledText(bold.group(2), true, styled.italic(), styled.strikethrough());
+                changed = true;
+            }
+            final Matcher italic = ITALIC_PATTERN.matcher(styled.text());
+            if (italic.matches()) {
+                styled = new StyledText(italic.group(2), styled.bold(), true, styled.strikethrough());
+                changed = true;
+            }
+            final Matcher strikethrough = STRIKETHROUGH_PATTERN.matcher(styled.text());
+            if (strikethrough.matches()) {
+                styled = new StyledText(strikethrough.group(1), styled.bold(), styled.italic(), true);
+                changed = true;
+            }
+        } while (changed);
+        return styled;
+    }
+
     private record TokenMatch(TokenType type, int start, int end, Matcher matcher) {
         private void addTo(final List<Segment> segments, final Function<String, ImageRenderer> imageResolver, final int headerLevel) {
             switch (type) {
                 case CODE -> segments.add(new CodeSegment(matcher.group(1), headerLevel));
                 case IMAGE -> segments.add(imageSegment(matcher.group(1), matcher.group(2), imageResolver));
-                case LINK -> segments.add(new LinkSegment(matcher.group(1), matcher.group(2), headerLevel));
+                case LINK -> segments.add(linkSegment(matcher.group(1), matcher.group(2), headerLevel));
                 case BOLD -> segments.add(new BoldSegment(matcher.group(2), headerLevel));
                 case ITALIC -> segments.add(new ItalicSegment(matcher.group(2), headerLevel));
                 case STRIKETHROUGH -> segments.add(new StrikethroughSegment(matcher.group(1), headerLevel));
             }
         }
+    }
+
+    private record StyledText(String text, boolean bold, boolean italic, boolean strikethrough) {
     }
 }

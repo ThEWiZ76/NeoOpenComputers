@@ -179,6 +179,23 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenWrapsStyledLinksWithoutDroppingStyle() {
+        ManualDocument document = ManualDocument.parse(List.of("[**alpha beta**](item/manual.md)"), href -> null);
+
+        List<ManualScreen.LayoutEntry> entries = ManualScreen.layout(document, 42, text -> text.length() * 6);
+
+        assertEquals(2, entries.size());
+        ManualDocument.LinkSegment first = (ManualDocument.LinkSegment) entries.get(0).segment();
+        ManualDocument.LinkSegment second = (ManualDocument.LinkSegment) entries.get(1).segment();
+        assertEquals("alpha", first.text());
+        assertEquals("beta", second.text());
+        assertEquals("item/manual.md", first.href());
+        assertEquals("item/manual.md", second.href());
+        assertTrue(first.bold());
+        assertTrue(second.bold());
+    }
+
+    @Test
     void manualScreenComputesDocumentHeightFromLayoutBottom() {
         ManualDocument document = ManualDocument.parse(
             List.of("alpha", "![tip](image:ok)"),

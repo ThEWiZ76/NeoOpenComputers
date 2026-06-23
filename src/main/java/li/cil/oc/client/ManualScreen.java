@@ -176,7 +176,14 @@ public class ManualScreen extends Screen {
 
     private static ManualDocument.Segment copyTextSegment(final ManualDocument.Segment segment, final String text) {
         if (segment instanceof final ManualDocument.LinkSegment link) {
-            return new ManualDocument.LinkSegment(text, link.href(), link.headerLevel());
+            return new ManualDocument.LinkSegment(
+                text,
+                link.href(),
+                link.headerLevel(),
+                link.bold(),
+                link.italic(),
+                link.code(),
+                link.strikethrough());
         }
         if (segment instanceof final ManualDocument.HeaderSegment header) {
             return new ManualDocument.HeaderSegment(text, header.level());

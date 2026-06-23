@@ -49,6 +49,16 @@ final class ManualDocumentTest {
     }
 
     @Test
+    void preservesInlineFormattingInsideLinksLikeUpstream() {
+        ManualDocument document = ManualDocument.parse(List.of("Read [**manual**](item/manual.md)"), href -> null);
+
+        ManualDocument.LinkSegment link = assertInstanceOf(ManualDocument.LinkSegment.class, document.segments().get(1));
+        assertEquals("manual", link.text());
+        assertEquals("item/manual.md", link.href());
+        assertTrue(link.bold());
+    }
+
+    @Test
     void parsesMarkdownFormattingSegmentsLikeUpstream() {
         ManualDocument document = ManualDocument.parse(List.of(
             "# Heading",
