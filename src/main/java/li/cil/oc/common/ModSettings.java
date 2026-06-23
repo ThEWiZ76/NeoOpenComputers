@@ -104,6 +104,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue DATA_CARD_COMPLEX_BYTE;
     public static final ModConfigSpec.DoubleValue DATA_CARD_ASYMMETRIC;
     public static final ModConfigSpec.DoubleValue GEOLYZER_SCAN_COST;
+    public static final ModConfigSpec.DoubleValue TRANSPOSER_COST;
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
@@ -355,6 +356,9 @@ public final class ModSettings {
         GEOLYZER_SCAN_COST = builder
             .comment("Energy consumed per Geolyzer scan/analyze/store operation. OpenComputers upstream default is 10.")
             .defineInRange("geolyzerScan", 10D, 0D, Double.MAX_VALUE);
+        TRANSPOSER_COST = builder
+            .comment("Energy consumed per Transposer item/fluid transfer. OpenComputers upstream default is 1.")
+            .defineInRange("transposer", 1D, 0D, Double.MAX_VALUE);
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
@@ -561,6 +565,10 @@ public final class ModSettings {
 
     public static double geolyzerScanCost() {
         return doubleValue(GEOLYZER_SCAN_COST);
+    }
+
+    public static double transposerCost() {
+        return doubleValue(TRANSPOSER_COST);
     }
 
     public static List<Integer> cpuComponentCount() {

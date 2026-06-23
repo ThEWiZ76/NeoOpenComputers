@@ -12,6 +12,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.util.FluidDescriptions;
 import li.cil.oc.common.util.InventoryComparison;
 import net.minecraft.core.BlockPos;
@@ -30,7 +31,6 @@ import java.util.Map;
 
 public final class TransposerEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "transposer";
-    private static final double TRANSFER_COST = 1D;
     private static final double FLUID_TRANSFER_RATE = 4000D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
@@ -247,7 +247,7 @@ public final class TransposerEnvironment extends AbstractManagedEnvironment impl
     }
 
     private boolean consumeTransferEnergy() {
-        return node() instanceof Connector connector && connector.tryChangeBuffer(-TRANSFER_COST);
+        return node() instanceof Connector connector && connector.tryChangeBuffer(-ModSettings.transposerCost());
     }
 
     private static Object[] noEnergy() {

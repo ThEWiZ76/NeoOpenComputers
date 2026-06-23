@@ -15,6 +15,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.util.FluidDescriptions;
 import li.cil.oc.common.util.InventoryComparison;
@@ -38,7 +39,6 @@ import java.util.Map;
 public class TransposerBlockEntity extends BlockEntity implements Environment, EnvironmentHost, DeviceInfo {
     private static final String TAG_NODE = "node";
     private static final String COMPONENT_NAME = "transposer";
-    private static final double TRANSFER_COST = 1D;
     private static final double FLUID_TRANSFER_RATE = 4000D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
@@ -330,7 +330,7 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
     }
 
     private boolean consumeTransferEnergy() {
-        return node() instanceof Connector connector && connector.tryChangeBuffer(-TRANSFER_COST);
+        return node() instanceof Connector connector && connector.tryChangeBuffer(-ModSettings.transposerCost());
     }
 
     private static Object[] noEnergy() {
