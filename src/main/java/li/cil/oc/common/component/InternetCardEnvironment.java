@@ -126,10 +126,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     private void checkOwner(final Context context) {
-        if (owner == null && context != null) {
-            owner = context;
-        }
-        if (owner != null && context != null && context.node() != owner.node()) {
+        if (context != null && (owner == null || context.node() != owner.node())) {
             throw new IllegalArgumentException("can only be used by the owning computer");
         }
     }

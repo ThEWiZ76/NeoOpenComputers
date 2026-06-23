@@ -354,12 +354,25 @@ final class InternetCardEnvironmentTest {
         InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> pending);
         TestComputerContext owner = new TestComputerContext();
         TestComputerContext intruder = new TestComputerContext();
+        Network.joinNewNetwork(owner.node());
         owner.node().connect(card.node());
 
         Object handle = card.request(owner, new TestArguments("https://example.test/owner"))[0];
         assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> card.request(intruder, new TestArguments("https://example.test/intruder")));
+        assertEquals("can only be used by the owning computer", error.getMessage());
+    }
+
+    @Test
+    void rejectsCallsFromUnownedContextLikeUpstream() {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
+            throw new AssertionError("unowned card must not start requests");
+        });
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> card.request(new TestComputerContext(), new TestArguments("https://example.test/unowned")));
         assertEquals("can only be used by the owning computer", error.getMessage());
     }
 
