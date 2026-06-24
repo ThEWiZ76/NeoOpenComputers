@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.LongSupplier;
 import java.util.concurrent.TimeUnit;
@@ -486,7 +487,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     public Object[] invoke(final String address, final String method, final Object[] args) throws Exception {
         final Component component = component(address);
         if (component != null) {
-            final Callback callback = component.annotation(method);
+            final Callback callback;
+            try {
+                callback = component.annotation(method);
+            } catch (NoSuchElementException e) {
+                return component.invoke(method, this, args == null ? new Object[0] : args);
+            }
             if (callback.direct()) {
                 consumeCallBudget(1D / callback.limit());
             }

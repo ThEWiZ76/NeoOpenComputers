@@ -259,6 +259,22 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void machineInvokeRejectsMissingComponentMethodsLikeUpstream() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(
+            API.fileSystem.fromMemory(128),
+            "tmp",
+            null,
+            null,
+            1);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+
+        assertThrows(NoSuchMethodException.class, () -> machine.invoke(environment.node().address(), "missing", new Object[0]));
+    }
+
+    @Test
     void componentCountWeightsFilesystemsLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
