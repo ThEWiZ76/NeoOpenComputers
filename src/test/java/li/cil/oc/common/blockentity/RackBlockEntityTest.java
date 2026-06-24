@@ -184,6 +184,41 @@ final class RackBlockEntityTest {
     }
 
     @Test
+    void rackReconnectsLoadedBusMappingsWhenSideBusIsCreatedLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final RackBlockEntity saved = allocateRack();
+        setField(saved, "mountables", new RackMountable[RackBlockEntity.CONTAINER_SIZE]);
+        final Method connect = RackBlockEntity.class.getMethod("connect", int.class, int.class, Direction.class);
+        connect.invoke(saved, 0, -1, Direction.SOUTH);
+        connect.invoke(saved, 0, 0, Direction.SOUTH);
+        final CompoundTag tag = new CompoundTag();
+        invokeNodeMappingMethod(saved, "saveNodeMappings", tag);
+
+        final RackBlockEntity loaded = allocateRack();
+        final TestRackBusConnectable connectable = new TestRackBusConnectable();
+        final TestRackMountable mountable = new TestRackMountable("server", connectable);
+        final RackMountable[] mountables = new RackMountable[RackBlockEntity.CONTAINER_SIZE];
+        mountables[0] = mountable;
+        setField(loaded, "mountables", mountables);
+        invokeNodeMappingMethod(loaded, "loadNodeMappings", tag);
+
+        final Node bus = loaded.sidedNode(Direction.SOUTH);
+
+        assertTrue(mountable.node().isNeighborOf(bus));
+
+        final TestEnvironment external = new TestEnvironment();
+        final Node externalNode = Network.newNode(external, Visibility.Network).create();
+        Network.joinNewNetwork(bus);
+        externalNode.connect(bus);
+
+        final TestPacket outbound = new TestPacket(connectable.node().address(), null, 127, new Object[]{"loaded"});
+        connectable.node().sendToReachable("network.message", outbound);
+
+        assertSame(outbound, external.packet);
+        assertFalse(connectable.node().canBeReachedFrom(bus));
+    }
+
+    @Test
     void onAnalyzeFrontFaceUsesClickedSlotLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         final RackBlockEntity rack = allocateRack();

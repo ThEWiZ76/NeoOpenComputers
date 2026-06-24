@@ -522,6 +522,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         final int index = side.ordinal();
         if (sidePlugs[index] == null) {
             sidePlugs[index] = new SidePlug(side);
+            reconnect(side);
         }
         return sidePlugs[index];
     }
@@ -570,6 +571,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         if (environment instanceof RackMountable rackMountable) {
             rackMountable.load(mountableData[slot]);
             mountables[slot] = rackMountable;
+            reconnectMountable(slot, rackMountable);
         }
     }
 
@@ -619,6 +621,55 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
                 removeSecondaryPlug(slot, mappingIndex - 1);
             }
             nodeMapping[slot][mappingIndex] = null;
+        }
+    }
+
+    private void reconnect(final Direction side) {
+        if (nodeMapping == null || sidePlugs == null || !canConnect(side)) {
+            return;
+        }
+        final SidePlug plug = sidePlugs[side.ordinal()];
+        if (plug == null) {
+            return;
+        }
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            reconnectMountable(slot, mountables[slot], side, plug.node());
+        }
+    }
+
+    private void reconnectMountable(final int slot, final RackMountable mountable) {
+        if (nodeMapping == null || sidePlugs == null || mountable == null) {
+            return;
+        }
+        for (final Direction side : Direction.values()) {
+            if (!canConnect(side)) {
+                continue;
+            }
+            final SidePlug plug = sidePlugs[side.ordinal()];
+            if (plug != null) {
+                reconnectMountable(slot, mountable, side, plug.node());
+            }
+        }
+    }
+
+    private void reconnectMountable(final int slot, final RackMountable mountable, final Direction side, final Node busNode) {
+        if (mountable == null) {
+            return;
+        }
+        if (nodeMapping[slot][0] == side && mountable.node() != null && mountable.node() != busNode) {
+            Network.joinNewNetwork(busNode);
+            Network.joinNewNetwork(mountable.node());
+            mountable.node().connect(busNode);
+        }
+        for (int connectableIndex = 0; connectableIndex < 3; connectableIndex++) {
+            if (nodeMapping[slot][connectableIndex + 1] != side || connectableIndex >= mountable.getConnectableCount()) {
+                continue;
+            }
+            final RackBusConnectable connectable = mountable.getConnectableAt(connectableIndex);
+            if (connectable != null && connectable.node() != null) {
+                Network.joinNewNetwork(connectable.node());
+                connectable.node().connect(secondaryPlug(slot, connectableIndex).node());
+            }
         }
     }
 
