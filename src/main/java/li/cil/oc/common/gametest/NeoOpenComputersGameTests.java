@@ -1915,6 +1915,16 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesPotionProviderSkipsInvalidWhitelistEntriesLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.NANOMACHINES_POTION_WHITELIST, List.of("neoopencomputers:missing_effect"), () -> {
+            final NanomachinePotionProvider provider = new NanomachinePotionProvider();
+
+            helper.assertFalse(provider.createBehaviors(null).iterator().hasNext(), "Potion provider did not skip invalid whitelist entry");
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesMagnetMatchesInventoryItemsIgnoringComponentsLikeUpstream(final GameTestHelper helper) {
         final BlockPos playerPos = new BlockPos(1, 1, 1);
         final BlockPos itemPos = playerPos.relative(Direction.NORTH, 2);

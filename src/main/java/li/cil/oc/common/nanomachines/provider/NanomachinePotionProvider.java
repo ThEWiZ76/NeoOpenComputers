@@ -57,12 +57,24 @@ public final class NanomachinePotionProvider extends AbstractProvider {
 
     private static Optional<ResourceLocation> effectIdFromConfigEntry(final Object entry) {
         if (entry instanceof String id) {
-            return Optional.of(resourceLocation(id));
+            return effectIdFromString(id);
         }
         if (entry instanceof Number number) {
             return effectFromNumericId(number.intValue());
         }
         return Optional.empty();
+    }
+
+    private static Optional<ResourceLocation> effectIdFromString(final String id) {
+        final ResourceLocation effectId = resourceLocation(id);
+        try {
+            return BuiltInRegistries.MOB_EFFECT.getHolder(effectId)
+                .map(NanomachinePotionProvider::effectId);
+        } catch (final ExceptionInInitializerError | NoClassDefFoundError ignored) {
+            return Optional.of(effectId);
+        } catch (final IllegalArgumentException ignored) {
+            return Optional.empty();
+        }
     }
 
     private static Optional<ResourceLocation> effectFromNumericId(final int id) {
