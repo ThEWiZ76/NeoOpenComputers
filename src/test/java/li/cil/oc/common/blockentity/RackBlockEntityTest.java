@@ -124,6 +124,43 @@ final class RackBlockEntityTest {
     }
 
     @Test
+    void removingRackMountableClearsBusMappingsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final RackBlockEntity rack = allocateRack();
+        final TestRackBusConnectable oldConnectable = new TestRackBusConnectable();
+        final TestRackMountable oldMountable = new TestRackMountable("old_server", oldConnectable);
+        final RackMountable[] mountables = new RackMountable[RackBlockEntity.CONTAINER_SIZE];
+        mountables[0] = oldMountable;
+        setField(rack, "mountables", mountables);
+        setField(rack, "mountableData", emptyMountableData());
+
+        final Method connect = RackBlockEntity.class.getMethod("connect", int.class, int.class, Direction.class);
+        connect.invoke(rack, 0, 0, Direction.SOUTH);
+
+        final Node bus = rack.sidedNode(Direction.SOUTH);
+        final TestEnvironment external = new TestEnvironment();
+        final Node externalNode = Network.newNode(external, Visibility.Network).create();
+        Network.joinNewNetwork(bus);
+        externalNode.connect(bus);
+
+        final Method removeMountable = RackBlockEntity.class.getDeclaredMethod("removeMountable", int.class);
+        removeMountable.setAccessible(true);
+        removeMountable.invoke(rack, 0);
+
+        final TestPacket staleOutbound = new TestPacket(oldConnectable.node().address(), null, 125, new Object[]{"stale"});
+        oldConnectable.node().sendToReachable("network.message", staleOutbound);
+
+        assertNull(external.packet);
+
+        final TestRackBusConnectable replacementConnectable = new TestRackBusConnectable();
+        mountables[0] = new TestRackMountable("replacement_server", replacementConnectable);
+        final TestPacket staleInbound = new TestPacket("remote", null, 126, new Object[]{"stale-inbound"});
+        externalNode.sendToReachable("network.message", staleInbound);
+
+        assertNull(replacementConnectable.packet);
+    }
+
+    @Test
     void onAnalyzeFrontFaceUsesClickedSlotLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         final RackBlockEntity rack = allocateRack();
@@ -147,6 +184,14 @@ final class RackBlockEntityTest {
         final Field field = RackBlockEntity.class.getDeclaredField(name);
         field.setAccessible(true);
         field.set(rack, value);
+    }
+
+    private static CompoundTag[] emptyMountableData() {
+        final CompoundTag[] data = new CompoundTag[RackBlockEntity.CONTAINER_SIZE];
+        for (int slot = 0; slot < RackBlockEntity.CONTAINER_SIZE; slot++) {
+            data[slot] = new CompoundTag();
+        }
+        return data;
     }
 
     private static final class TestRackMountable implements RackMountable, Analyzable {

@@ -519,7 +519,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     private void refreshMountable(final int slot) {
-        removeMountable(slot);
+        removeMountable(slot, false);
         final ItemStack stack = items.get(slot);
         final DriverItem driver = Driver.driverFor(stack);
         if (driver == null || !acceptsDriverSlot(driver.slot(stack))) {
@@ -534,16 +534,23 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
     private void removeMountables() {
         for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
-            removeMountable(slot);
+            removeMountable(slot, false);
         }
     }
 
     private void removeMountable(final int slot) {
+        removeMountable(slot, true);
+    }
+
+    private void removeMountable(final int slot, final boolean clearMappings) {
         if (!isValidSlot(slot)) {
             return;
         }
         saveMountableData(slot);
         final RackMountable mountable = mountables[slot];
+        if (clearMappings) {
+            clearNodeMappings(slot, mountable);
+        }
         if (mountable instanceof TerminalServerRackMountableEnvironment terminalServer) {
             terminalServer.removeVirtualNodes();
         }
@@ -551,6 +558,27 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             mountable.node().remove();
         }
         mountables[slot] = null;
+    }
+
+    private void clearNodeMappings(final int slot, final RackMountable mountable) {
+        if (nodeMapping == null) {
+            return;
+        }
+        for (int mappingIndex = 0; mappingIndex < 4; mappingIndex++) {
+            final Direction side = nodeMapping[slot][mappingIndex];
+            if (side == null) {
+                continue;
+            }
+            if (mappingIndex == 0 && mountable != null && mountable.node() != null) {
+                final Node plug = sidedNode(side);
+                if (plug != null) {
+                    mountable.node().disconnect(plug);
+                }
+            } else if (mappingIndex > 0) {
+                removeSecondaryPlug(slot, mappingIndex - 1);
+            }
+            nodeMapping[slot][mappingIndex] = null;
+        }
     }
 
     private void saveMountableData() {
