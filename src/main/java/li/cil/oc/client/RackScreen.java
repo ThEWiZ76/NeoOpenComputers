@@ -19,6 +19,17 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int SLOT_SPACING = 18;
     private static final int CONTROL_Y = 50;
     private static final int CONTROL_SIZE = 10;
+    private static final int MAPPING_Y = 64;
+    private static final int MAPPING_CELL_SIZE = 3;
+    private static final int MAPPING_BUS_STEP = 3;
+    private static final int MAPPING_ROW_STEP = 3;
+    private static final Direction[] BUS_SIDES = new Direction[]{
+        Direction.DOWN,
+        Direction.UP,
+        Direction.SOUTH,
+        Direction.WEST,
+        Direction.EAST
+    };
 
     public RackScreen(final RackMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
@@ -35,6 +46,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
             drawSlot(guiGraphics, left + FIRST_SLOT_X - 1 + slot * SLOT_SPACING, top + SLOT_Y - 1);
             drawControl(guiGraphics, left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING, top + CONTROL_Y, controlColor(menu.rackState(slot)));
+            drawMappingControls(guiGraphics, menu, left, top, slot);
         }
     }
 
@@ -51,6 +63,14 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
 
     @Override
     public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
+        if (button == 0) {
+            final MappingControl mappingControl = mappingControlAt(mouseX, mouseY, leftPos, topPos);
+            final RackControlPayload payload = mappingPayload(menu, mappingControl);
+            if (payload != null) {
+                PacketDistributor.sendToServer(payload);
+                return true;
+            }
+        }
         final int slot = controlSlotAt(mouseX, mouseY, leftPos, topPos);
         if (button == 0 && slot >= 0) {
             PacketDistributor.sendToServer(controlPayload(menu, slot, RackControlPayload.TOGGLE));
@@ -71,8 +91,52 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         return RackControlPayload.map(menu.containerId, slot, connectableIndex, side);
     }
 
+    static RackControlPayload mappingPayload(final RackMenu menu, final MappingControl control) {
+        if (control == null || !menu.rackNodePresent(control.slot(), control.connectableIndex())) {
+            return null;
+        }
+        final Direction side = busSide(control.busIndex());
+        if (side == null) {
+            return null;
+        }
+        final int selectedSide = menu.rackNodeMapping(control.slot(), control.connectableIndex());
+        return mappingPayload(
+            menu,
+            control.slot(),
+            control.connectableIndex() - 1,
+            selectedSide == side.ordinal() ? null : side);
+    }
+
     static RackOpenServerPayload openServerPayload(final RackMenu menu, final int slot) {
         return new RackOpenServerPayload(menu.containerId, slot);
+    }
+
+    static MappingControl mappingControlAt(final double mouseX, final double mouseY, final int left, final int top) {
+        for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
+            for (int connectableIndex = 0; connectableIndex < 4; connectableIndex++) {
+                for (int busIndex = 0; busIndex < BUS_SIDES.length; busIndex++) {
+                    final int x = left + FIRST_SLOT_X + slot * SLOT_SPACING + busIndex * MAPPING_BUS_STEP;
+                    final int y = top + MAPPING_Y + connectableIndex * MAPPING_ROW_STEP;
+                    if (mouseX >= x && mouseX < x + MAPPING_CELL_SIZE && mouseY >= y && mouseY < y + MAPPING_CELL_SIZE) {
+                        return new MappingControl(slot, connectableIndex, busIndex);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    static Direction busSide(final int busIndex) {
+        return busIndex >= 0 && busIndex < BUS_SIDES.length ? BUS_SIDES[busIndex] : null;
+    }
+
+    static int busIndex(final Direction side) {
+        for (int index = 0; index < BUS_SIDES.length; index++) {
+            if (BUS_SIDES[index] == side) {
+                return index;
+            }
+        }
+        return -1;
     }
 
     static int controlSlotAt(final double mouseX, final double mouseY, final int left, final int top) {
@@ -134,5 +198,23 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         guiGraphics.fill(left + 3, top + 2, left + 5, top + 8, color);
         guiGraphics.fill(left + 5, top + 3, left + 7, top + 7, color);
         guiGraphics.fill(left + 7, top + 4, left + 8, top + 6, color);
+    }
+
+    private static void drawMappingControls(final GuiGraphics guiGraphics, final RackMenu menu, final int left, final int top, final int slot) {
+        for (int connectableIndex = 0; connectableIndex < 4; connectableIndex++) {
+            if (!menu.rackNodePresent(slot, connectableIndex)) {
+                continue;
+            }
+            final int selectedSide = menu.rackNodeMapping(slot, connectableIndex);
+            for (int busIndex = 0; busIndex < BUS_SIDES.length; busIndex++) {
+                final int x = left + FIRST_SLOT_X + slot * SLOT_SPACING + busIndex * MAPPING_BUS_STEP;
+                final int y = top + MAPPING_Y + connectableIndex * MAPPING_ROW_STEP;
+                final int color = selectedSide == BUS_SIDES[busIndex].ordinal() ? 0xFFA3BE8C : 0xFF6C7480;
+                guiGraphics.fill(x, y, x + MAPPING_CELL_SIZE, y + MAPPING_CELL_SIZE, color);
+            }
+        }
+    }
+
+    record MappingControl(int slot, int connectableIndex, int busIndex) {
     }
 }

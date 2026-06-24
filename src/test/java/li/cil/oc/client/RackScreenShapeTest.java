@@ -8,6 +8,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ContainerData;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class RackScreenShapeTest {
@@ -55,6 +57,43 @@ final class RackScreenShapeTest {
         assertEquals(0, payload.connectableIndex());
         assertEquals(Direction.SOUTH.ordinal(), payload.side());
         assertEquals(RackControlPayload.NO_SIDE, cleared.side());
+    }
+
+    @Test
+    void rackScreenMapsBusGridCoordinatesLikeUpstreamButtons() {
+        final RackScreen.MappingControl first = RackScreen.mappingControlAt(53, 64, 0, 0);
+        final RackScreen.MappingControl last = RackScreen.mappingControlAt(53 + 3 * 18 + 4 * 3 + 2, 64 + 3 * 3 + 2, 0, 0);
+
+        assertEquals(new RackScreen.MappingControl(0, 0, 0), first);
+        assertEquals(new RackScreen.MappingControl(3, 3, 4), last);
+        assertNull(RackScreen.mappingControlAt(52, 64, 0, 0));
+    }
+
+    @Test
+    void rackScreenBuildsMappingPayloadForClickedBusAndClearsSelectedBus() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14, rackDataWithMappingAndPresence(1, 2, Direction.UP));
+        final RackScreen.MappingControl selected = new RackScreen.MappingControl(1, 2, RackScreen.busIndex(Direction.UP));
+        final RackScreen.MappingControl remapped = new RackScreen.MappingControl(1, 2, RackScreen.busIndex(Direction.SOUTH));
+
+        final RackControlPayload cleared = RackScreen.mappingPayload(menu, selected);
+        final RackControlPayload changed = RackScreen.mappingPayload(menu, remapped);
+
+        assertEquals(14, cleared.containerId());
+        assertEquals(1, cleared.slot());
+        assertEquals(1, cleared.connectableIndex());
+        assertEquals(RackControlPayload.NO_SIDE, cleared.side());
+
+        assertEquals(14, changed.containerId());
+        assertEquals(1, changed.slot());
+        assertEquals(1, changed.connectableIndex());
+        assertEquals(Direction.SOUTH.ordinal(), changed.side());
+    }
+
+    @Test
+    void rackScreenDoesNotBuildMappingPayloadForAbsentConnectable() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14, rackDataWithMappingAndPresence(1, 2, Direction.UP));
+
+        assertNull(RackScreen.mappingPayload(menu, new RackScreen.MappingControl(1, 3, RackScreen.busIndex(Direction.SOUTH))));
     }
 
     @Test
@@ -99,13 +138,48 @@ final class RackScreenShapeTest {
     }
 
     private static RackMenu allocateMenu(final int containerId) throws ReflectiveOperationException {
+        return allocateMenu(containerId, null);
+    }
+
+    private static RackMenu allocateMenu(final int containerId, final ContainerData rackData) throws ReflectiveOperationException {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
         final RackMenu menu = (RackMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(RackMenu.class);
         final Field containerIdField = net.minecraft.world.inventory.AbstractContainerMenu.class.getDeclaredField("containerId");
         containerIdField.setAccessible(true);
         containerIdField.setInt(menu, containerId);
+        if (rackData != null) {
+            final Field rackDataField = RackMenu.class.getDeclaredField("rackData");
+            rackDataField.setAccessible(true);
+            rackDataField.set(menu, rackData);
+        }
         return menu;
+    }
+
+    private static ContainerData rackDataWithMappingAndPresence(final int slot, final int connectable, final Direction mappedSide) {
+        return new ContainerData() {
+            @Override
+            public int get(final int index) {
+                final int mappingIndex = RackMenu.RACK_NODE_MAPPING_OFFSET + slot * 4 + connectable;
+                final int presenceIndex = RackMenu.RACK_NODE_PRESENCE_OFFSET + slot * 4 + connectable;
+                if (index == mappingIndex) {
+                    return mappedSide.ordinal();
+                }
+                if (index == presenceIndex) {
+                    return 1;
+                }
+                return 0;
+            }
+
+            @Override
+            public void set(final int index, final int value) {
+            }
+
+            @Override
+            public int getCount() {
+                return RackMenu.RACK_DATA_COUNT;
+            }
+        };
     }
 
     private static void assertTranslationKey(final String expected, final Component component) {
