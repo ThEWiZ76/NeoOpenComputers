@@ -43,7 +43,7 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Transposer",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
         DeviceInfo.DeviceAttribute.Product, "TP4k-iX"
     );
 

@@ -1,5 +1,6 @@
 package li.cil.oc.common.component;
 
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
@@ -8,12 +9,26 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class TransposerEnvironmentTest {
+    @Test
+    void exposesUpstreamDeviceInfoMetadata() {
+        OpenComputersApi.initialize();
+        final TransposerEnvironment environment = new TransposerEnvironment(null);
+
+        Map<String, String> metadata = environment.getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Generic, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Transposer", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("TP4k-iX", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
     @Test
     void usesConfiguredTransferCostLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
