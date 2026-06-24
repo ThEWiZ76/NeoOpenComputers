@@ -161,6 +161,29 @@ final class RackBlockEntityTest {
     }
 
     @Test
+    void rackPersistsBusMappingsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final RackBlockEntity rack = allocateRack();
+        setField(rack, "mountables", new RackMountable[RackBlockEntity.CONTAINER_SIZE]);
+
+        final Method connect = RackBlockEntity.class.getMethod("connect", int.class, int.class, Direction.class);
+        connect.invoke(rack, 0, -1, Direction.SOUTH);
+        connect.invoke(rack, 0, 0, Direction.UP);
+
+        final CompoundTag tag = new CompoundTag();
+        invokeNodeMappingMethod(rack, "saveNodeMappings", tag);
+
+        final RackBlockEntity loaded = allocateRack();
+        invokeNodeMappingMethod(loaded, "loadNodeMappings", tag);
+
+        final Direction[][] mapping = getNodeMapping(loaded);
+        assertEquals(Direction.SOUTH, mapping[0][0]);
+        assertEquals(Direction.UP, mapping[0][1]);
+        assertNull(mapping[0][2]);
+        assertNull(mapping[0][3]);
+    }
+
+    @Test
     void onAnalyzeFrontFaceUsesClickedSlotLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         final RackBlockEntity rack = allocateRack();
@@ -184,6 +207,18 @@ final class RackBlockEntityTest {
         final Field field = RackBlockEntity.class.getDeclaredField(name);
         field.setAccessible(true);
         field.set(rack, value);
+    }
+
+    private static Direction[][] getNodeMapping(final RackBlockEntity rack) throws Exception {
+        final Method nodeMapping = RackBlockEntity.class.getDeclaredMethod("nodeMapping");
+        nodeMapping.setAccessible(true);
+        return (Direction[][]) nodeMapping.invoke(rack);
+    }
+
+    private static void invokeNodeMappingMethod(final RackBlockEntity rack, final String name, final CompoundTag tag) throws Exception {
+        final Method method = RackBlockEntity.class.getDeclaredMethod(name, CompoundTag.class);
+        method.setAccessible(true);
+        method.invoke(rack, tag);
     }
 
     private static CompoundTag[] emptyMountableData() {

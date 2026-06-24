@@ -23,7 +23,9 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.ContainerHelper;
@@ -48,6 +50,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
     private static final String TAG_MOUNTABLE_DATA = "oc:mountableData";
     private static final String TAG_SIDE_NODES = "oc:sideNodes";
+    private static final String TAG_NODE_MAPPING = "oc:nodeMapping";
     private static final String STACK_MOUNTABLE_DATA_TAG = "oc:rackMountable";
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
@@ -419,6 +422,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
     private void loadRackData(final CompoundTag tag, final HolderLookup.Provider registries) {
         loadSideNodes(tag);
+        loadNodeMappings(tag);
         removeMountables();
         for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
             items.set(slot, ItemStack.EMPTY);
@@ -436,6 +440,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
     private void saveRackData(final CompoundTag tag, final HolderLookup.Provider registries) {
         saveSideNodes(tag);
+        saveNodeMappings(tag);
         saveMountableData();
         ContainerHelper.saveAllItems(tag, items, registries);
         final ListTag data = new ListTag();
@@ -472,6 +477,42 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             sideNodes.add(sideNode);
         }
         tag.put(TAG_SIDE_NODES, sideNodes);
+    }
+
+    private void loadNodeMappings(final CompoundTag tag) {
+        if (!tag.contains(TAG_NODE_MAPPING)) {
+            return;
+        }
+        final Direction[][] mappings = nodeMapping();
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            for (int mappingIndex = 0; mappingIndex < 4; mappingIndex++) {
+                mappings[slot][mappingIndex] = null;
+            }
+        }
+
+        final ListTag nodeMappings = tag.getList(TAG_NODE_MAPPING, Tag.TAG_INT_ARRAY);
+        final Direction[] directions = Direction.values();
+        for (int slot = 0; slot < Math.min(nodeMappings.size(), CONTAINER_SIZE); slot++) {
+            final int[] sideOrdinals = nodeMappings.getIntArray(slot);
+            for (int mappingIndex = 0; mappingIndex < Math.min(sideOrdinals.length, 4); mappingIndex++) {
+                final int sideOrdinal = sideOrdinals[mappingIndex];
+                final Direction side = sideOrdinal >= 0 && sideOrdinal < directions.length ? directions[sideOrdinal] : null;
+                mappings[slot][mappingIndex] = canConnect(side) ? side : null;
+            }
+        }
+    }
+
+    private void saveNodeMappings(final CompoundTag tag) {
+        final ListTag nodeMappings = new ListTag();
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            final int[] sideOrdinals = new int[4];
+            for (int mappingIndex = 0; mappingIndex < 4; mappingIndex++) {
+                final Direction side = nodeMapping == null ? null : nodeMapping[slot][mappingIndex];
+                sideOrdinals[mappingIndex] = side == null ? -1 : side.ordinal();
+            }
+            nodeMappings.add(new IntArrayTag(sideOrdinals));
+        }
+        tag.put(TAG_NODE_MAPPING, nodeMappings);
     }
 
     private SidePlug sidePlug(final Direction side) {
