@@ -56,4 +56,25 @@ final class TerminalScreenDeltaTest {
         assertEquals(2, applied.height());
         assertEquals(true, current.contentEquals(applied));
     }
+
+    @Test
+    void appliesMalformedRowsAsFixedWidthTerminalRows() {
+        final TerminalScreenSnapshot previous = new TerminalScreenSnapshot(4, 1, new String[]{"base"});
+        final TerminalScreenDelta delta = new TerminalScreenDelta(
+            4,
+            1,
+            new TerminalScreenDelta.Row[]{
+                new TerminalScreenDelta.Row(0, "xy", new int[]{0x112233}, new int[]{0x445566})
+            });
+
+        final TerminalScreenSnapshot applied = delta.applyTo(previous);
+
+        assertEquals("xy  ", applied.line(0));
+        assertEquals(0x112233, applied.foregroundColor(0, 0));
+        assertEquals(0xFFFFFF, applied.foregroundColor(1, 0));
+        assertEquals(0xFFFFFF, applied.foregroundColor(3, 0));
+        assertEquals(0x445566, applied.backgroundColor(0, 0));
+        assertEquals(0x000000, applied.backgroundColor(1, 0));
+        assertEquals(0x000000, applied.backgroundColor(3, 0));
+    }
 }

@@ -7,6 +7,8 @@ import net.minecraft.nbt.ListTag;
 import java.util.Arrays;
 
 public record TerminalScreenDelta(int width, int height, Row[] rows) {
+    private static final int DEFAULT_FOREGROUND = 0xFFFFFF;
+    private static final int DEFAULT_BACKGROUND = 0x000000;
     private static final String TAG_WIDTH = "width";
     private static final String TAG_HEIGHT = "height";
     private static final String TAG_ROWS = "rows";
@@ -50,9 +52,9 @@ public record TerminalScreenDelta(int width, int height, Row[] rows) {
         }
         for (final Row row : rows) {
             if (row.index() >= 0 && row.index() < height) {
-                lines[row.index()] = row.line();
-                foreground[row.index()] = Arrays.copyOf(row.foreground(), width);
-                background[row.index()] = Arrays.copyOf(row.background(), width);
+                lines[row.index()] = normalizeLine(row.line(), width);
+                foreground[row.index()] = normalizeColors(row.foreground(), width, DEFAULT_FOREGROUND);
+                background[row.index()] = normalizeColors(row.background(), width, DEFAULT_BACKGROUND);
             }
         }
         return new TerminalScreenSnapshot(width, height, lines, foreground, background);
@@ -110,6 +112,23 @@ public record TerminalScreenDelta(int width, int height, Row[] rows) {
                 rowTag.getIntArray(TAG_BACKGROUND));
         }
         return new TerminalScreenDelta(width, height, rows);
+    }
+
+    private static String normalizeLine(final String line, final int width) {
+        if (line.length() == width) {
+            return line;
+        }
+        if (line.length() > width) {
+            return line.substring(0, width);
+        }
+        return line + " ".repeat(width - line.length());
+    }
+
+    private static int[] normalizeColors(final int[] colors, final int width, final int fallback) {
+        final int[] normalized = new int[width];
+        Arrays.fill(normalized, fallback);
+        System.arraycopy(colors, 0, normalized, 0, Math.min(width, colors.length));
+        return normalized;
     }
 
     public record Row(int index, String line, int[] foreground, int[] background) {
