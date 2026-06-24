@@ -191,7 +191,9 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     @Callback(direct = true, limit = 8, doc = "function(data:string, type:string):userdata -- Restores an EC key from its binary representation.")
     public Object[] deserializeKey(final Context context, final Arguments args) throws Exception {
         requireTier(2);
-        return new Object[]{new ECKey(deserializeKey(args.checkString(1), costedData(context, args, ModSettings.dataCardSimpleCost(), ModSettings.dataCardSimpleByteCost())))};
+        final byte[] data = costedData(context, args, ModSettings.dataCardSimpleCost(), ModSettings.dataCardSimpleByteCost());
+        final String type = args.checkString(1);
+        return new Object[]{new ECKey(deserializeKey(type, data))};
     }
 
     @Callback(direct = true, limit = 1, doc = "function(private:userdata, public:userdata):string -- Generates an ECDH shared secret.")

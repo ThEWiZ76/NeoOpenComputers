@@ -273,6 +273,21 @@ final class DataCardEnvironmentTest {
     }
 
     @Test
+    void deserializeKeyChecksDataBeforeTypeLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        withCachedConfig(ModSettings.DATA_CARD_HARD_LIMIT, 1, () -> {
+            DataCardEnvironment card = new DataCardEnvironment(2);
+            charge(card, 100D);
+
+            IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> card.deserializeKey(null, new TestArguments(bytes("too long"))));
+
+            assertEquals("data size limit exceeded", error.getMessage());
+        });
+    }
+
+    @Test
     void ecKeySerializeUsesUpstreamCallbackLimit() throws NoSuchMethodException {
         Method method = DataCardEnvironment.ECKey.class.getMethod("serialize", Context.class, Arguments.class);
         Callback callback = method.getAnnotation(Callback.class);
