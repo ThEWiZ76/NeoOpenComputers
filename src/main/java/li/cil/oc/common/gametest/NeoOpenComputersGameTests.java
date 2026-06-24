@@ -3974,6 +3974,22 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void normalClickRackServerSlotIsHandledLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setShiftKeyDown(false);
+
+        final boolean handled = mountable.onActivate(player, InteractionHand.MAIN_HAND, player.getMainHandItem(), 0.5F, 0.5F);
+
+        helper.assertTrue(handled, "Rack server normal click was not handled by server mountable");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void rackMenuDistinguishesEmptyAndIncompleteServerStates(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

@@ -16,9 +16,11 @@ import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.menu.ServerRackMenu;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionHand;
@@ -223,8 +225,14 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public boolean onActivate(final Player player, final InteractionHand hand, final ItemStack heldItem, final float hitX, final float hitY) {
-        if (player == null || !player.isShiftKeyDown()) {
+        if (player == null) {
             return false;
+        }
+        if (!player.isShiftKeyDown()) {
+            player.openMenu(new SimpleMenuProvider(
+                (containerId, playerInventory, menuPlayer) -> new ServerRackMenu(containerId, playerInventory, this),
+                net.minecraft.network.chat.Component.translatable("gui.neoopencomputers.server_rack")));
+            return true;
         }
         if (!machine.isRunning() && !machine.isPaused() && stillValid(player) && canStartMachine()) {
             final boolean changed = machine.start();
