@@ -145,6 +145,9 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     @Override
     public double changeBuffer(final double delta) {
+        if (delta < 0D && (ModSettings.ignorePower() || isCreativePlayer())) {
+            return 0D;
+        }
         final double requested = buffer + delta;
         buffer = Math.clamp(requested, 0D, getLocalBufferSize());
         saveState();
@@ -651,7 +654,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     private void damageOverloadedPlayer() {
-        if (player == null || player.getAbilities().instabuild || getLocalBuffer() <= 0D || updateTicks % 20 != 0) {
+        if (player == null || isCreativePlayer() || getLocalBuffer() <= 0D || updateTicks % 20 != 0) {
             return;
         }
         final int overload = activeInputCount() - getSafeActiveInputs();
@@ -739,6 +742,10 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
         activeBehaviors = List.of();
         activeBehaviorsDirty = false;
+    }
+
+    private boolean isCreativePlayer() {
+        return player != null && (player.isCreative() || player.getAbilities().instabuild);
     }
 
     private record ConnectorEntry(int[] triggerInputs) {

@@ -1383,6 +1383,18 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesCreativePlayersDoNotConsumeEnergyLikeUpstream(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.CREATIVE);
+        final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+        final double before = controller.getLocalBuffer();
+
+        controller.changeBuffer(-1D);
+
+        helper.assertTrue(controller.getLocalBuffer() == before, "Creative nanomachines consumed energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesConfiguredItemRestoresSavedConfiguration(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         final li.cil.oc.common.NanomachinesRegistry previous = API.nanomachines instanceof li.cil.oc.common.NanomachinesRegistry registry ? registry : null;
