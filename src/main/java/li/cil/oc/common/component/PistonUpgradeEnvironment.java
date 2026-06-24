@@ -102,7 +102,11 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
         if (side < 0 || side > 5) {
             throw new IllegalArgumentException("invalid side");
         }
-        return rotatable.toGlobal(Direction.from3DDataValue(side));
+        final Direction localSide = Direction.from3DDataValue(side);
+        if (localSide != Direction.SOUTH && localSide != Direction.UP && localSide != Direction.DOWN) {
+            throw new IllegalArgumentException("unsupported side");
+        }
+        return rotatable.toGlobal(localSide);
     }
 
     private BlockPos hostPosition() {
