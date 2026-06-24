@@ -309,8 +309,11 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
 
     private static ECKey checkKey(final Arguments args, final int index, final Boolean expectedPublic) {
         final Object value = args.checkAny(index);
+        if (value == null) {
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (userdata expected, got no value)");
+        }
         if (!(value instanceof ECKey key)) {
-            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (userdata expected)");
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (userdata expected, got " + value.getClass().getName() + ")");
         }
         if (expectedPublic != null && key.isPublicKey() != expectedPublic) {
             throw new IllegalArgumentException((expectedPublic ? "public" : "private") + " key expected at " + (index + 1));

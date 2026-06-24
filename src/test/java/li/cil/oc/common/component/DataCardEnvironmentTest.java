@@ -251,6 +251,20 @@ final class DataCardEnvironmentTest {
     }
 
     @Test
+    void tierThreeReportsMissingEcUserdataLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        DataCardEnvironment card = new DataCardEnvironment(2);
+        charge(card, 1000D);
+        Object[] keys = card.generateKeyPair(null, new TestArguments(256));
+
+        IllegalArgumentException error = assertThrows(
+            IllegalArgumentException.class,
+            () -> card.ecdh(null, new TestArguments(null, keys[0])));
+
+        assertEquals("bad argument #1 (userdata expected, got no value)", error.getMessage());
+    }
+
+    @Test
     void ecKeySerializeUsesUpstreamCallbackLimit() throws NoSuchMethodException {
         Method method = DataCardEnvironment.ECKey.class.getMethod("serialize", Context.class, Arguments.class);
         Callback callback = method.getAnnotation(Callback.class);
