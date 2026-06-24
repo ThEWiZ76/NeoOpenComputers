@@ -44,6 +44,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private List<Behavior> activeBehaviors = List.of();
     private boolean[] inputs = new boolean[0];
     private boolean activeBehaviorsDirty;
+    private boolean hadPower = true;
     private String uuid = UUID.randomUUID().toString();
     private int responsePort;
     private int commandDelay;
@@ -243,9 +244,13 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
                 runQueuedCommand();
             }
         }
-        updateActiveBehaviors();
-        drainActiveInputEnergy();
-        damageOverloadedPlayer();
+        final boolean hasPower = updatePowerState();
+        if (hasPower) {
+            updateActiveBehaviors();
+            drainActiveInputEnergy();
+            damageOverloadedPlayer();
+        }
+        hadPower = hasPower;
     }
 
     List<String> activeParticleEffects() {
@@ -664,12 +669,30 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     private void updateActiveBehaviors() {
-        if (getLocalBuffer() <= 0D) {
-            return;
-        }
         for (final Behavior behavior : getActiveBehaviors()) {
             behavior.update();
         }
+    }
+
+    private boolean updatePowerState() {
+        boolean hasPower = getLocalBuffer() > 0D || ModSettings.ignorePower();
+        if (hasPower != hadPower) {
+            final List<Behavior> active = new ArrayList<>();
+            for (final Behavior behavior : getActiveBehaviors()) {
+                active.add(behavior);
+            }
+            if (!hasPower) {
+                for (final Behavior behavior : active) {
+                    behavior.onDisable(DisableReason.OutOfEnergy);
+                }
+                hasPower = getLocalBuffer() > 0D || ModSettings.ignorePower();
+            } else {
+                for (final Behavior behavior : active) {
+                    behavior.onEnable();
+                }
+            }
+        }
+        return hasPower;
     }
 
     private void drainActiveInputEnergy() {

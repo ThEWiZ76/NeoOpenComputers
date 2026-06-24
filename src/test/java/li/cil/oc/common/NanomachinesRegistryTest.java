@@ -485,6 +485,33 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerDisablesAndReenablesActiveBehaviorsOnPowerStateChangesLikeUpstream() {
+        CountingBehavior behavior = new CountingBehavior("active");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(behavior)));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        controller.setInput(0, true);
+
+        controller.update();
+
+        assertEquals(1, behavior.enableCount);
+        assertEquals(1, behavior.updateCount);
+
+        controller.changeBuffer(-controller.getLocalBuffer());
+        controller.update();
+
+        assertEquals(1, behavior.disableCount);
+        assertEquals(DisableReason.OutOfEnergy, behavior.lastDisableReason);
+        assertEquals(1, behavior.updateCount);
+
+        controller.changeBuffer(1D);
+        controller.update();
+
+        assertEquals(2, behavior.enableCount);
+        assertEquals(2, behavior.updateCount);
+    }
+
+    @Test
     void controllerDrainsEnergyWhenReconfigured() {
         NanomachinesRegistry registry = new NanomachinesRegistry();
         registry.addProvider(new ListBehaviorProvider(List.of(new TestBehavior("active"))));
@@ -727,6 +754,9 @@ final class NanomachinesRegistryTest {
 
     private static final class CountingBehavior implements Behavior {
         private final String name;
+        private int enableCount;
+        private int disableCount;
+        private DisableReason lastDisableReason;
         private int updateCount;
 
         private CountingBehavior(final String name) {
@@ -740,10 +770,13 @@ final class NanomachinesRegistryTest {
 
         @Override
         public void onEnable() {
+            enableCount++;
         }
 
         @Override
         public void onDisable(final DisableReason reason) {
+            disableCount++;
+            lastDisableReason = reason;
         }
 
         @Override
