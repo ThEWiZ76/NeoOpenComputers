@@ -319,6 +319,9 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         if (node().network() == null) {
             Network.joinNewNetwork(node());
         }
+        if (diskEnvironment.node() instanceof li.cil.oc.api.network.Component component) {
+            component.setVisibility(Visibility.Network);
+        }
         node().connect(diskEnvironment.node());
     }
 
