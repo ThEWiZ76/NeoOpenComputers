@@ -6,6 +6,7 @@ import li.cil.oc.common.network.ServerRackControlPayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
@@ -16,6 +17,8 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -34,6 +37,12 @@ final class ServerRackScreenShapeTest {
 
         assertTrue(AbstractContainerScreen.class.isAssignableFrom(ServerRackScreen.class));
         assertArrayEquals(new Class<?>[]{ServerRackMenu.class, Inventory.class, Component.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void serverRackScreenUsesUpstreamTextureAsset() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/server.png"), ServerRackScreen.SERVER_TEXTURE);
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/gui/server.png")));
     }
 
     @Test

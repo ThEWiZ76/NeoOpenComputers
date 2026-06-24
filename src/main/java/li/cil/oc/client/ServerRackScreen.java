@@ -1,11 +1,13 @@
 package li.cil.oc.client;
 
+import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.menu.ServerRackMenu;
 import li.cil.oc.common.network.RackControlPayload;
 import li.cil.oc.common.network.ServerRackControlPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
@@ -15,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
+    public static final ResourceLocation SERVER_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/server.png");
+
     private static final int SERVER_SLOT_SIZE = 16;
     private static final int STATUS_CONTROL_X = 48;
     private static final int STATUS_CONTROL_Y = 33;
@@ -30,8 +34,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     protected void renderBg(final GuiGraphics guiGraphics, final float partialTick, final int mouseX, final int mouseY) {
         final int left = leftPos;
         final int top = topPos;
-        guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
-        guiGraphics.fill(left + 7, top + 16, left + 169, top + 58, 0xFF3B4252);
+        guiGraphics.blit(SERVER_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
         final int tier = serverTier(menu);
         for (int slot = 0; slot < ServerRackMenu.SERVER_SLOT_COUNT; slot++) {
             final ServerRackMenu.ServerSlotPosition position = slotPositionForTier(tier, slot);
