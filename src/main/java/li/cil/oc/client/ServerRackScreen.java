@@ -43,7 +43,9 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             }
         }
         guiGraphics.drawString(font, statusLabel(menu.serverState()), left + 8, top + 62, 0xFFD8DEE9, false);
-        drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, top + STATUS_CONTROL_Y, menu.serverState());
+        if (statusControlVisible(menu)) {
+            drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, top + STATUS_CONTROL_Y, menu.serverState());
+        }
     }
 
     @Override
@@ -54,7 +56,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         final int slot = serverSlotAt(mouseX, mouseY, leftPos, topPos, serverTier(menu));
         if (slot >= 0) {
             guiGraphics.renderComponentTooltip(font, slotTooltip(menu.slotKind(slot), menu.slotTierLimit(slot), menu.getSlot(slot).hasItem()), mouseX, mouseY);
-        } else if (statusControlAt(mouseX, mouseY, leftPos, topPos)) {
+        } else if (statusControlVisible(menu) && statusControlAt(mouseX, mouseY, leftPos, topPos)) {
             guiGraphics.renderComponentTooltip(font, statusControlTooltip(menu.serverState()), mouseX, mouseY);
         } else if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
             guiGraphics.renderComponentTooltip(font, statusTooltip(menu.serverState(), menu.missingRequirements(), menu.componentCount(), menu.maxComponents()), mouseX, mouseY);
@@ -63,7 +65,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
 
     @Override
     public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
-        if (button == 0 && statusControlAt((int) mouseX, (int) mouseY, leftPos, topPos)) {
+        if (button == 0 && statusControlVisible(menu) && statusControlAt((int) mouseX, (int) mouseY, leftPos, topPos)) {
             PacketDistributor.sendToServer(controlPayload(menu, RackControlPayload.TOGGLE));
             return true;
         }
@@ -149,6 +151,10 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         final int x = mouseX - left;
         final int y = mouseY - top;
         return x >= STATUS_CONTROL_X && x < STATUS_CONTROL_X + STATUS_CONTROL_SIZE && y >= STATUS_CONTROL_Y && y < STATUS_CONTROL_Y + STATUS_CONTROL_SIZE;
+    }
+
+    static boolean statusControlVisible(final ServerRackMenu menu) {
+        return !menu.isItem();
     }
 
     public static int serverSlotAt(final int mouseX, final int mouseY, final int left, final int top) {

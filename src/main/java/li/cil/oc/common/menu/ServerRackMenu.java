@@ -21,7 +21,8 @@ public class ServerRackMenu extends AbstractContainerMenu {
     public static final int SERVER_MISSING_REQUIREMENTS_INDEX = SERVER_STATUS_INDEX + 1;
     public static final int SERVER_COMPONENT_COUNT_INDEX = SERVER_MISSING_REQUIREMENTS_INDEX + 1;
     public static final int SERVER_MAX_COMPONENTS_INDEX = SERVER_COMPONENT_COUNT_INDEX + 1;
-    public static final int SERVER_DATA_COUNT = SERVER_MAX_COMPONENTS_INDEX + 1;
+    public static final int SERVER_IS_ITEM_INDEX = SERVER_MAX_COMPONENTS_INDEX + 1;
+    public static final int SERVER_DATA_COUNT = SERVER_IS_ITEM_INDEX + 1;
 
     public static final int STATE_EMPTY = 0;
     public static final int STATE_READY = 1;
@@ -137,6 +138,10 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return serverData.get(SERVER_MAX_COMPONENTS_INDEX);
     }
 
+    public boolean isItem() {
+        return serverData.get(SERVER_IS_ITEM_INDEX) != 0;
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -211,6 +216,10 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return serverInventory instanceof ServerRackMountableEnvironment server ? server.machine().maxComponents() : 0;
     }
 
+    public static boolean isItemFor(final Container serverInventory) {
+        return !(serverInventory instanceof ServerRackMountableEnvironment server) || server.rack() == null;
+    }
+
     public static int slotKindCode(final String type) {
         return switch (type) {
             case li.cil.oc.api.driver.item.Slot.Card -> SLOT_KIND_CARD;
@@ -245,7 +254,10 @@ public class ServerRackMenu extends AbstractContainerMenu {
                 if (index == SERVER_COMPONENT_COUNT_INDEX) {
                     return componentCountFor(serverInventory);
                 }
-                return maxComponentsFor(serverInventory);
+                if (index == SERVER_MAX_COMPONENTS_INDEX) {
+                    return maxComponentsFor(serverInventory);
+                }
+                return isItemFor(serverInventory) ? 1 : 0;
             }
 
             @Override

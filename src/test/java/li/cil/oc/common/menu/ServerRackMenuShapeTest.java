@@ -1,6 +1,7 @@
 package li.cil.oc.common.menu;
 
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import net.minecraft.world.Container;
@@ -18,6 +19,7 @@ import java.lang.reflect.Proxy;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ServerRackMenuShapeTest {
@@ -38,7 +40,8 @@ final class ServerRackMenuShapeTest {
         assertEquals(17, ServerRackMenu.SERVER_SLOT_COUNT);
         assertEquals(36, ServerRackMenu.PLAYER_SLOT_COUNT);
         assertEquals(53, ServerRackMenu.TOTAL_SLOT_COUNT);
-        assertEquals(38, ServerRackMenu.SERVER_DATA_COUNT);
+        assertEquals(39, ServerRackMenu.SERVER_DATA_COUNT);
+        assertEquals(ServerRackMenu.SERVER_MAX_COMPONENTS_INDEX + 1, ServerRackMenu.SERVER_IS_ITEM_INDEX);
         assertEquals(0, ServerRackMenu.STATE_EMPTY);
         assertEquals(1, ServerRackMenu.STATE_READY);
         assertEquals(2, ServerRackMenu.STATE_RUNNING);
@@ -61,10 +64,12 @@ final class ServerRackMenuShapeTest {
         final Method missing = ServerRackMenu.class.getMethod("missingRequirements");
         final Method componentCount = ServerRackMenu.class.getMethod("componentCount");
         final Method maxComponents = ServerRackMenu.class.getMethod("maxComponents");
+        final Method isItem = ServerRackMenu.class.getMethod("isItem");
         final Method stateFor = ServerRackMenu.class.getMethod("serverStateFor", Container.class);
         final Method missingFor = ServerRackMenu.class.getMethod("missingRequirementsFor", Container.class);
         final Method componentCountFor = ServerRackMenu.class.getMethod("componentCountFor", Container.class);
         final Method maxComponentsFor = ServerRackMenu.class.getMethod("maxComponentsFor", Container.class);
+        final Method isItemFor = ServerRackMenu.class.getMethod("isItemFor", Container.class);
 
         assertEquals(int.class, kind.getReturnType());
         assertEquals(int.class, tier.getReturnType());
@@ -72,10 +77,12 @@ final class ServerRackMenuShapeTest {
         assertEquals(int.class, missing.getReturnType());
         assertEquals(int.class, componentCount.getReturnType());
         assertEquals(int.class, maxComponents.getReturnType());
+        assertEquals(boolean.class, isItem.getReturnType());
         assertEquals(int.class, stateFor.getReturnType());
         assertEquals(int.class, missingFor.getReturnType());
         assertEquals(int.class, componentCountFor.getReturnType());
         assertEquals(int.class, maxComponentsFor.getReturnType());
+        assertEquals(boolean.class, isItemFor.getReturnType());
     }
 
     @Test
@@ -84,6 +91,7 @@ final class ServerRackMenuShapeTest {
         assertEquals(0, ServerRackMenu.missingRequirementsFor(null));
         assertEquals(0, ServerRackMenu.componentCountFor(null));
         assertEquals(0, ServerRackMenu.maxComponentsFor(null));
+        assertTrue(ServerRackMenu.isItemFor(null));
     }
 
     @Test
@@ -92,6 +100,12 @@ final class ServerRackMenuShapeTest {
 
         assertEquals(5, ServerRackMenu.componentCountFor(server));
         assertEquals(12, ServerRackMenu.maxComponentsFor(server));
+    }
+
+    @Test
+    void serverItemModeFollowsRackPresenceLikeUpstream() throws ReflectiveOperationException {
+        assertTrue(ServerRackMenu.isItemFor(fakeServerWithRack(null)));
+        assertFalse(ServerRackMenu.isItemFor(fakeServerWithRack(fakeRack())));
     }
 
     @Test
@@ -133,10 +147,7 @@ final class ServerRackMenuShapeTest {
     }
 
     private static Container fakeServerWithMachineCapacity(final int componentCount, final int maxComponents) throws ReflectiveOperationException {
-        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-        unsafeField.setAccessible(true);
-        final Unsafe unsafe = (Unsafe) unsafeField.get(null);
-        final ServerRackMountableEnvironment server = (ServerRackMountableEnvironment) unsafe.allocateInstance(ServerRackMountableEnvironment.class);
+        final ServerRackMountableEnvironment server = fakeServerWithRack(null);
         final Machine machine = (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -160,7 +171,41 @@ final class ServerRackMenuShapeTest {
                 return null;
             });
         final Field machineField = ServerRackMountableEnvironment.class.getDeclaredField("machine");
+        final Unsafe unsafe = unsafe();
         unsafe.putObject(server, unsafe.objectFieldOffset(machineField), machine);
         return server;
+    }
+
+    private static ServerRackMountableEnvironment fakeServerWithRack(final Rack rack) throws ReflectiveOperationException {
+        final Unsafe unsafe = unsafe();
+        final ServerRackMountableEnvironment server = (ServerRackMountableEnvironment) unsafe.allocateInstance(ServerRackMountableEnvironment.class);
+        final Field rackField = ServerRackMountableEnvironment.class.getDeclaredField("rack");
+        unsafe.putObject(server, unsafe.objectFieldOffset(rackField), rack);
+        return server;
+    }
+
+    private static Rack fakeRack() {
+        return (Rack) Proxy.newProxyInstance(
+            Rack.class.getClassLoader(),
+            new Class<?>[]{Rack.class},
+            (proxy, method, args) -> {
+                final Class<?> returnType = method.getReturnType();
+                if (returnType == boolean.class) {
+                    return true;
+                }
+                if (returnType == int.class || returnType == long.class || returnType == short.class || returnType == byte.class) {
+                    return 0;
+                }
+                if (returnType == double.class || returnType == float.class) {
+                    return 0D;
+                }
+                return null;
+            });
+    }
+
+    private static Unsafe unsafe() throws ReflectiveOperationException {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        return (Unsafe) unsafeField.get(null);
     }
 }
