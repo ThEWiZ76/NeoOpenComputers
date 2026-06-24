@@ -21,6 +21,7 @@ import net.minecraft.world.level.Level;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -408,7 +409,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         final int connectorCount = (int) Math.ceil(entries.size() * ModSettings.nanomachineConnectorQuota());
         final List<Integer> triggerSourcePool = triggerSourcePool(inputCount);
         connectors = createConnectorEntries(triggerSourcePool, connectorCount);
-        setBehaviorEntries(assignGeneratedInputs(entries, triggerSourcePool, connectors.size()));
+        setBehaviorEntries(cleanGeneratedGraph(assignGeneratedInputs(entries, triggerSourcePool, connectors.size())));
     }
 
     private int generatedTriggerCount(final int behaviorCount) {
@@ -437,7 +438,6 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             }
         }
         return inputs.stream()
-            .filter(triggerInputs -> triggerInputs.length > 0)
             .map(ConnectorEntry::new)
             .toList();
     }
@@ -473,6 +473,33 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             }
         }
         return assigned;
+    }
+
+    private List<BehaviorEntry> cleanGeneratedGraph(final List<BehaviorEntry> entries) {
+        final int[] connectorRemap = new int[connectors.size()];
+        Arrays.fill(connectorRemap, -1);
+        final List<ConnectorEntry> liveConnectors = new ArrayList<>(connectors.size());
+        for (int i = 0; i < connectors.size(); i++) {
+            final ConnectorEntry connector = connectors.get(i);
+            if (connector.triggerInputs().length > 0) {
+                connectorRemap[i] = liveConnectors.size();
+                liveConnectors.add(connector);
+            }
+        }
+
+        final List<BehaviorEntry> liveEntries = new ArrayList<>(entries.size());
+        for (final BehaviorEntry entry : entries) {
+            final int[] connectorInputs = Arrays.stream(entry.connectorInputs())
+                .filter(input -> input >= 0 && input < connectorRemap.length && connectorRemap[input] >= 0)
+                .map(input -> connectorRemap[input])
+                .toArray();
+            if (entry.triggerInputs().length > 0 || connectorInputs.length > 0) {
+                liveEntries.add(new BehaviorEntry(entry.provider(), entry.behavior(), entry.triggerInputs(), connectorInputs));
+            }
+        }
+
+        connectors = List.copyOf(liveConnectors);
+        return liveEntries;
     }
 
     private List<SourceRef> behaviorSourcePool(final List<Integer> triggerSourcePool, final int connectorCount, final int maxOutputs) {

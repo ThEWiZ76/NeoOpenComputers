@@ -17,9 +17,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Random;
 
@@ -336,6 +338,27 @@ final class NanomachinesRegistryTest {
         assertTrue(maxTriggerFanOut(
             second.getList("connectors", CompoundTag.TAG_COMPOUND),
             second.getList("behaviors", CompoundTag.TAG_COMPOUND)) <= ModSettings.nanomachineMaxOutputs());
+    }
+
+    @Test
+    void generatedGraphCleansDeadConnectorsAfterBehaviorAssignmentLikeUpstream() throws Exception {
+        withCachedConfig(ModSettings.NANOMACHINES_TRIGGER_QUOTA, 0.16D, () ->
+            withCachedConfig(ModSettings.NANOMACHINES_CONNECTOR_QUOTA, 4D / 6D, () ->
+                withCachedConfig(ModSettings.NANOMACHINE_MAX_INPUTS, 1, () ->
+                    withCachedConfig(ModSettings.NANOMACHINE_MAX_OUTPUTS, 2, () -> {
+                        NanomachinesRegistry registry = new NanomachinesRegistry();
+                        registry.addProvider(new ListBehaviorProvider(java.util.stream.IntStream.range(0, 6)
+                            .mapToObj(index -> (Behavior) new TestBehavior("behavior" + index))
+                            .toList()));
+                        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry, new Random(2L));
+                        CompoundTag tag = new CompoundTag();
+
+                        controller.save(tag);
+
+                        assertEquals(1, tag.getList("triggers", CompoundTag.TAG_COMPOUND).size());
+                        assertEquals(2, tag.getList("connectors", CompoundTag.TAG_COMPOUND).size());
+                        assertEquals(2, tag.getList("behaviors", CompoundTag.TAG_COMPOUND).size());
+                    }))));
     }
 
     @Test
@@ -783,11 +806,32 @@ final class NanomachinesRegistryTest {
         return false;
     }
 
+    private static <T> void withCachedConfig(
+        final ModConfigSpec.ConfigValue<T> value,
+        final T override,
+        final ThrowingRunnable action
+    ) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
     private static void runNanomachineCommandDelay(final SimpleNanomachineController controller) {
         final int ticks = Math.max(1, (int) (ModSettings.nanomachinesCommandDelay() * 20D));
         for (int i = 0; i < ticks; i++) {
             controller.update();
         }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static final class RecordingWirelessEndpoint implements WirelessEndpoint {
