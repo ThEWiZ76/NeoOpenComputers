@@ -77,6 +77,19 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
         }
     }
 
+    @Override
+    public boolean canUpdate() {
+        return true;
+    }
+
+    @Override
+    public void update() {
+        final Level level = world();
+        if (level == null || level.getGameTime() % 20 == 0) {
+            Network.updateWirelessNetwork(this);
+        }
+    }
+
     @Callback(direct = true, doc = "function():number -- Get the signal strength (range) used when sending messages.")
     public Object[] getStrength(final Context context, final Arguments args) {
         return new Object[]{strength};

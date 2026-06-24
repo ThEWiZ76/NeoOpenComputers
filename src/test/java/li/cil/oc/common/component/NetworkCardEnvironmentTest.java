@@ -592,6 +592,29 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void wirelessCardUpdateRefreshesWirelessNetworkLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost receiverHost = new TestMachineHost();
+        WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(new TestHost(1, 0, 0), 1);
+        WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(receiverHost, 0);
+        receiver.open(null, new TestArguments(123));
+        Network.joinWirelessNetwork(sender);
+
+        Packet packet = Network.newPacket("remote", null, 123, new Object[]{"payload"});
+        Network.sendWirelessPacket(sender, 16D, packet);
+        assertTrue(receiverHost.signals.isEmpty());
+
+        assertTrue(receiver.canUpdate());
+        receiver.update();
+        Network.sendWirelessPacket(sender, 16D, packet);
+
+        assertEquals(List.of(List.of("modem_message", "remote", 123, 1D, "payload")), receiverHost.signals);
+
+        Network.leaveWirelessNetwork(sender);
+        Network.leaveWirelessNetwork(receiver);
+    }
+
+    @Test
     void wirelessBroadcastRequiresEnergyAndConsumesBuffer() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
