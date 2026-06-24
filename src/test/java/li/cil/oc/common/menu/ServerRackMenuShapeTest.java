@@ -45,8 +45,9 @@ final class ServerRackMenuShapeTest {
         assertEquals(17, ServerRackMenu.SERVER_SLOT_COUNT);
         assertEquals(36, ServerRackMenu.PLAYER_SLOT_COUNT);
         assertEquals(53, ServerRackMenu.TOTAL_SLOT_COUNT);
-        assertEquals(39, ServerRackMenu.SERVER_DATA_COUNT);
+        assertEquals(40, ServerRackMenu.SERVER_DATA_COUNT);
         assertEquals(ServerRackMenu.SERVER_MAX_COMPONENTS_INDEX + 1, ServerRackMenu.SERVER_IS_ITEM_INDEX);
+        assertEquals(ServerRackMenu.SERVER_IS_ITEM_INDEX + 1, ServerRackMenu.SERVER_PRESENT_INDEX);
         assertEquals(0, ServerRackMenu.STATE_EMPTY);
         assertEquals(1, ServerRackMenu.STATE_READY);
         assertEquals(2, ServerRackMenu.STATE_RUNNING);
@@ -85,11 +86,13 @@ final class ServerRackMenuShapeTest {
         final Method componentCount = ServerRackMenu.class.getMethod("componentCount");
         final Method maxComponents = ServerRackMenu.class.getMethod("maxComponents");
         final Method isItem = ServerRackMenu.class.getMethod("isItem");
+        final Method serverPresent = ServerRackMenu.class.getMethod("serverPresent");
         final Method stateFor = ServerRackMenu.class.getMethod("serverStateFor", Container.class);
         final Method missingFor = ServerRackMenu.class.getMethod("missingRequirementsFor", Container.class);
         final Method componentCountFor = ServerRackMenu.class.getMethod("componentCountFor", Container.class);
         final Method maxComponentsFor = ServerRackMenu.class.getMethod("maxComponentsFor", Container.class);
         final Method isItemFor = ServerRackMenu.class.getMethod("isItemFor", Container.class);
+        final Method serverPresentFor = ServerRackMenu.class.getMethod("serverPresentFor", Container.class);
 
         assertEquals(int.class, kind.getReturnType());
         assertEquals(int.class, tier.getReturnType());
@@ -98,11 +101,13 @@ final class ServerRackMenuShapeTest {
         assertEquals(int.class, componentCount.getReturnType());
         assertEquals(int.class, maxComponents.getReturnType());
         assertEquals(boolean.class, isItem.getReturnType());
+        assertEquals(boolean.class, serverPresent.getReturnType());
         assertEquals(int.class, stateFor.getReturnType());
         assertEquals(int.class, missingFor.getReturnType());
         assertEquals(int.class, componentCountFor.getReturnType());
         assertEquals(int.class, maxComponentsFor.getReturnType());
         assertEquals(boolean.class, isItemFor.getReturnType());
+        assertEquals(boolean.class, serverPresentFor.getReturnType());
     }
 
     @Test
@@ -112,6 +117,16 @@ final class ServerRackMenuShapeTest {
         assertEquals(0, ServerRackMenu.componentCountFor(null));
         assertEquals(0, ServerRackMenu.maxComponentsFor(null));
         assertTrue(ServerRackMenu.isItemFor(null));
+        assertFalse(ServerRackMenu.serverPresentFor(null));
+    }
+
+    @Test
+    void clientDataKeepsRackServerPresentUntilFirstSync() {
+        final ContainerData data = ServerRackMenu.clientData();
+
+        assertEquals(ServerRackMenu.SERVER_DATA_COUNT, data.getCount());
+        assertEquals(0, data.get(ServerRackMenu.SERVER_IS_ITEM_INDEX));
+        assertEquals(1, data.get(ServerRackMenu.SERVER_PRESENT_INDEX));
     }
 
     @Test
@@ -126,6 +141,19 @@ final class ServerRackMenuShapeTest {
     void serverItemModeFollowsRackPresenceLikeUpstream() throws ReflectiveOperationException {
         assertTrue(ServerRackMenu.isItemFor(fakeServerWithRack(null)));
         assertFalse(ServerRackMenu.isItemFor(fakeServerWithRack(fakeRack())));
+    }
+
+    @Test
+    void rackServerPresenceTracksRackSlotIdentityLikeUpstream() throws ReflectiveOperationException {
+        final ServerRackMountableEnvironment server = fakeServerWithRack(null);
+        final Rack rackWithServer = fakeRack(server);
+        setRack(server, rackWithServer);
+
+        assertTrue(ServerRackMenu.serverPresentFor(server));
+
+        final ServerRackMountableEnvironment removedServer = fakeServerWithRack(fakeRack(null));
+        assertFalse(ServerRackMenu.serverPresentFor(removedServer));
+        assertFalse(ServerRackMenu.serverPresentFor(fakeServerWithRack(null)));
     }
 
     @Test
@@ -199,16 +227,28 @@ final class ServerRackMenuShapeTest {
     private static ServerRackMountableEnvironment fakeServerWithRack(final Rack rack) throws ReflectiveOperationException {
         final Unsafe unsafe = unsafe();
         final ServerRackMountableEnvironment server = (ServerRackMountableEnvironment) unsafe.allocateInstance(ServerRackMountableEnvironment.class);
-        final Field rackField = ServerRackMountableEnvironment.class.getDeclaredField("rack");
-        unsafe.putObject(server, unsafe.objectFieldOffset(rackField), rack);
+        setRack(server, rack);
         return server;
     }
 
+    private static void setRack(final ServerRackMountableEnvironment server, final Rack rack) throws ReflectiveOperationException {
+        final Field rackField = ServerRackMountableEnvironment.class.getDeclaredField("rack");
+        final Unsafe unsafe = unsafe();
+        unsafe.putObject(server, unsafe.objectFieldOffset(rackField), rack);
+    }
+
     private static Rack fakeRack() {
+        return fakeRack(null);
+    }
+
+    private static Rack fakeRack(final ServerRackMountableEnvironment mountable) {
         return (Rack) Proxy.newProxyInstance(
             Rack.class.getClassLoader(),
             new Class<?>[]{Rack.class},
             (proxy, method, args) -> {
+                if ("getMountable".equals(method.getName())) {
+                    return mountable;
+                }
                 final Class<?> returnType = method.getReturnType();
                 if (returnType == boolean.class) {
                     return true;

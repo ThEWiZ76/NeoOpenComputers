@@ -95,6 +95,7 @@ final class ServerRackScreenShapeTest {
         final Method slotAt = ServerRackScreen.class.getMethod("serverSlotAt", int.class, int.class, int.class, int.class);
         final Method controlAt = ServerRackScreen.class.getDeclaredMethod("statusControlAt", int.class, int.class, int.class, int.class);
         final Method controlVisible = ServerRackScreen.class.getDeclaredMethod("statusControlVisible", ServerRackMenu.class);
+        final Method closeMissingServer = ServerRackScreen.class.getDeclaredMethod("shouldCloseForMissingRackServer", ServerRackMenu.class);
         final Method controlPayload = ServerRackScreen.class.getDeclaredMethod("controlPayload", ServerRackMenu.class, int.class);
 
         assertEquals(Component.class, label.getReturnType());
@@ -107,6 +108,7 @@ final class ServerRackScreenShapeTest {
         assertEquals(int.class, slotAt.getReturnType());
         assertEquals(boolean.class, controlAt.getReturnType());
         assertEquals(boolean.class, controlVisible.getReturnType());
+        assertEquals(boolean.class, closeMissingServer.getReturnType());
         assertEquals(ServerRackControlPayload.class, controlPayload.getReturnType());
     }
 
@@ -237,6 +239,13 @@ final class ServerRackScreenShapeTest {
     }
 
     @Test
+    void serverRackScreenClosesWhenRackServerDisappearsLikeUpstream() throws ReflectiveOperationException {
+        assertTrue(ServerRackScreen.shouldCloseForMissingRackServer(allocateMenu(1, false, false)));
+        assertFalse(ServerRackScreen.shouldCloseForMissingRackServer(allocateMenu(1, false, true)));
+        assertFalse(ServerRackScreen.shouldCloseForMissingRackServer(allocateMenu(1, true, false)));
+    }
+
+    @Test
     void serverRackScreenLocksHotbarKeysLikeUpstream() throws ReflectiveOperationException {
         final Method hotbarGuard = ServerRackScreen.class.getDeclaredMethod("checkHotbarKeyPressed", int.class, int.class);
         final ServerRackScreen screen = allocateScreen();
@@ -281,6 +290,10 @@ final class ServerRackScreenShapeTest {
     }
 
     private static ServerRackMenu allocateMenu(final int containerId, final boolean isItem) throws ReflectiveOperationException {
+        return allocateMenu(containerId, isItem, true);
+    }
+
+    private static ServerRackMenu allocateMenu(final int containerId, final boolean isItem, final boolean serverPresent) throws ReflectiveOperationException {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
         final ServerRackMenu menu = (ServerRackMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(ServerRackMenu.class);
@@ -292,7 +305,13 @@ final class ServerRackScreenShapeTest {
         serverDataField.set(menu, new ContainerData() {
             @Override
             public int get(final int index) {
-                return index == ServerRackMenu.SERVER_IS_ITEM_INDEX && isItem ? 1 : 0;
+                if (index == ServerRackMenu.SERVER_IS_ITEM_INDEX) {
+                    return isItem ? 1 : 0;
+                }
+                if (index == ServerRackMenu.SERVER_PRESENT_INDEX) {
+                    return serverPresent ? 1 : 0;
+                }
+                return 0;
             }
 
             @Override

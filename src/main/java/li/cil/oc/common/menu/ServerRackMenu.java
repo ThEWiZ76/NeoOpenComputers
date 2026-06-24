@@ -23,7 +23,8 @@ public class ServerRackMenu extends AbstractContainerMenu {
     public static final int SERVER_COMPONENT_COUNT_INDEX = SERVER_MISSING_REQUIREMENTS_INDEX + 1;
     public static final int SERVER_MAX_COMPONENTS_INDEX = SERVER_COMPONENT_COUNT_INDEX + 1;
     public static final int SERVER_IS_ITEM_INDEX = SERVER_MAX_COMPONENTS_INDEX + 1;
-    public static final int SERVER_DATA_COUNT = SERVER_IS_ITEM_INDEX + 1;
+    public static final int SERVER_PRESENT_INDEX = SERVER_IS_ITEM_INDEX + 1;
+    public static final int SERVER_DATA_COUNT = SERVER_PRESENT_INDEX + 1;
 
     public static final int STATE_EMPTY = 0;
     public static final int STATE_READY = 1;
@@ -57,7 +58,7 @@ public class ServerRackMenu extends AbstractContainerMenu {
     private final ItemStack lockedStack;
 
     public ServerRackMenu(final int containerId, final Inventory playerInventory) {
-        this(containerId, playerInventory, new SimpleContainer(SERVER_SLOT_COUNT), new SimpleContainerData(SERVER_DATA_COUNT));
+        this(containerId, playerInventory, new SimpleContainer(SERVER_SLOT_COUNT), clientData());
     }
 
     public ServerRackMenu(final int containerId, final Inventory playerInventory, final Container serverInventory) {
@@ -175,6 +176,10 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return serverData.get(SERVER_IS_ITEM_INDEX) != 0;
     }
 
+    public boolean serverPresent() {
+        return serverData.get(SERVER_PRESENT_INDEX) != 0;
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -253,6 +258,19 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return !(serverInventory instanceof ServerRackMountableEnvironment server) || server.rack() == null;
     }
 
+    static ContainerData clientData() {
+        final SimpleContainerData data = new SimpleContainerData(SERVER_DATA_COUNT);
+        data.set(SERVER_PRESENT_INDEX, 1);
+        return data;
+    }
+
+    public static boolean serverPresentFor(final Container serverInventory) {
+        if (!(serverInventory instanceof ServerRackMountableEnvironment server)) {
+            return false;
+        }
+        return server.rack() != null && server.rack().getMountable(server.slot()) == server;
+    }
+
     public static int slotKindCode(final String type) {
         return switch (type) {
             case li.cil.oc.api.driver.item.Slot.Card -> SLOT_KIND_CARD;
@@ -290,7 +308,10 @@ public class ServerRackMenu extends AbstractContainerMenu {
                 if (index == SERVER_MAX_COMPONENTS_INDEX) {
                     return maxComponentsFor(serverInventory);
                 }
-                return isItemFor(serverInventory) ? 1 : 0;
+                if (index == SERVER_IS_ITEM_INDEX) {
+                    return isItemFor(serverInventory) ? 1 : 0;
+                }
+                return serverPresentFor(serverInventory) ? 1 : 0;
             }
 
             @Override

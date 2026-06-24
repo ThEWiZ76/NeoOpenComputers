@@ -62,6 +62,10 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
 
     @Override
     public void render(final GuiGraphics guiGraphics, final int mouseX, final int mouseY, final float partialTick) {
+        if (shouldCloseForMissingRackServer(menu)) {
+            onClose();
+            return;
+        }
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTransferHighlights(guiGraphics);
@@ -219,6 +223,10 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
 
     static boolean statusControlVisible(final ServerRackMenu menu) {
         return !menu.isItem();
+    }
+
+    static boolean shouldCloseForMissingRackServer(final ServerRackMenu menu) {
+        return !menu.isItem() && !menu.serverPresent();
     }
 
     static boolean isPlayerInventorySlot(final int slotIndex) {
