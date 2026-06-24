@@ -2,6 +2,7 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModSettings;
 import org.junit.jupiter.api.Test;
 
@@ -9,6 +10,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class TerminalServerRackMountableEnvironmentTest {
+    @Test
+    void terminalServerRackNodeIsHiddenLikeUpstream() {
+        final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment();
+
+        assertEquals(Visibility.None, terminal.node().reachability());
+    }
+
     @Test
     void terminalServerVirtualScreenUsesTierThreeCapacityLikeUpstream() {
         final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment();

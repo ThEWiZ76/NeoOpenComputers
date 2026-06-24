@@ -47,7 +47,7 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         screen.setMaximumResolution(ModSettings.screenWidthByTier(2), ModSettings.screenHeightByTier(2));
         screen.setMaximumColorDepth(ModSettings.screenDepthByTier(2));
         keyboard = new KeyboardItemEnvironment();
-        final var builder = Network.newNode(this, Visibility.Network);
+        final var builder = Network.newNode(this, Visibility.None);
         if (builder != null) {
             setNode(builder.create());
         }
