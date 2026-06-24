@@ -129,10 +129,16 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
 
     public TerminalScreenSnapshot screenSnapshot() {
         final String[] lines = new String[screen.renderHeight()];
+        final int[][] foreground = new int[screen.renderHeight()][screen.renderWidth()];
+        final int[][] background = new int[screen.renderHeight()][screen.renderWidth()];
         for (int row = 0; row < lines.length; row++) {
             lines[row] = line(row);
+            for (int column = 0; column < screen.renderWidth(); column++) {
+                foreground[row][column] = screen.getForegroundColor(column, row);
+                background[row][column] = screen.getBackgroundColor(column, row);
+            }
         }
-        return new TerminalScreenSnapshot(screen.renderWidth(), screen.renderHeight(), lines);
+        return new TerminalScreenSnapshot(screen.renderWidth(), screen.renderHeight(), lines, foreground, background);
     }
 
     @Override
