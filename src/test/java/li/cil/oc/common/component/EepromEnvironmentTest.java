@@ -79,6 +79,14 @@ final class EepromEnvironmentTest {
     }
 
     @Test
+    void eepromChecksumUsesUpstreamGuavaLittleEndianFormat() throws Exception {
+        OpenComputersApi.initialize();
+        Component component = (Component) new EepromEnvironment(data("ROM", "code", "data", false)).node();
+
+        assertArrayEquals(new Object[]{"98301577"}, component.invoke("getChecksum", null));
+    }
+
+    @Test
     void eepromWritesConsumeOwnConnectorEnergyAndPauseLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         CompoundTag data = data("Lua BIOS", "code", "data", false);

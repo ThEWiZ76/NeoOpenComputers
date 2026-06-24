@@ -103,7 +103,12 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
     public Object[] getChecksum(final Context context, final Arguments arguments) {
         final CRC32 crc32 = new CRC32();
         crc32.update(data.getByteArray(ItemRegistry.EEPROM_CODE_TAG));
-        return new Object[]{String.format("%08x", crc32.getValue())};
+        final long value = crc32.getValue();
+        return new Object[]{String.format("%02x%02x%02x%02x",
+            value & 0xFF,
+            (value >>> 8) & 0xFF,
+            (value >>> 16) & 0xFF,
+            (value >>> 24) & 0xFF)};
     }
 
     @Callback(direct = true, doc = "function(checksum:string):boolean -- Make this EEPROM readonly if it isn't already.")
