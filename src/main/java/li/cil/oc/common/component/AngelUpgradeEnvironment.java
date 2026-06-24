@@ -21,7 +21,7 @@ public final class AngelUpgradeEnvironment extends AbstractManagedEnvironment im
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
             DeviceInfo.DeviceAttribute.Description, "Angel upgrade",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "FreePlacer (TM)",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize())
         );

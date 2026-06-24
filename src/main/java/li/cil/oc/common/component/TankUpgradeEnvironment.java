@@ -39,7 +39,7 @@ public class TankUpgradeEnvironment extends AbstractManagedEnvironment implement
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
             DeviceInfo.DeviceAttribute.Description, "Tank upgrade",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Superblubb V10",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(CAPACITY)
         );

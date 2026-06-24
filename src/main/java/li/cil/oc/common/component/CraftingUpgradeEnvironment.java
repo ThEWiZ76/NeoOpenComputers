@@ -43,7 +43,7 @@ public class CraftingUpgradeEnvironment extends AbstractManagedEnvironment imple
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
             DeviceInfo.DeviceAttribute.Description, "Assembly controller",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "MultiCombinator-9S"
         );
     }
