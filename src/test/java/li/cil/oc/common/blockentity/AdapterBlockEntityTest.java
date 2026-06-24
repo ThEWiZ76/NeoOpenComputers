@@ -20,7 +20,7 @@ final class AdapterBlockEntityTest {
 
         assertEquals(DeviceInfo.DeviceClass.Bus, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Adapter", metadata.get(DeviceInfo.DeviceAttribute.Description));
-        assertEquals("MightyPirates", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("Multiplug Ext.1", metadata.get(DeviceInfo.DeviceAttribute.Product));
     }
 

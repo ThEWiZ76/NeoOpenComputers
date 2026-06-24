@@ -45,7 +45,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Bus,
         DeviceInfo.DeviceAttribute.Description, "Adapter",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
         DeviceInfo.DeviceAttribute.Product, "Multiplug Ext.1"
     );
 
