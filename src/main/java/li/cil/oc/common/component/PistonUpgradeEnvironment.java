@@ -96,7 +96,7 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
 
     private Direction direction(final Arguments arguments) {
         if (arguments.count() <= 0) {
-            return rotatable.facing();
+            return rotatable.toGlobal(Direction.SOUTH);
         }
         final int side = arguments.checkInteger(0);
         if (side < 0 || side > 5) {
