@@ -261,6 +261,38 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void valueCallbackArgumentsTreatNonNaNNumbersAsIntegersLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        NumericArgumentsValue value = new NumericArgumentsValue();
+
+        Object[] result = machine.invoke(value, "integerFlags", new Object[]{1.5D, Float.POSITIVE_INFINITY});
+
+        assertArrayEquals(new Object[]{true, true, true, true}, result);
+    }
+
+    @Test
+    void valueCallbackArgumentsClampLongIntegerOverflowLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        NumericArgumentsValue value = new NumericArgumentsValue();
+
+        Object[] result = machine.invoke(value, "clampIntegers", new Object[]{Long.MAX_VALUE, Long.MIN_VALUE});
+
+        assertArrayEquals(new Object[]{Integer.MAX_VALUE, Integer.MIN_VALUE}, result);
+    }
+
+    @Test
+    void valueCallbackArgumentsRejectNaNIntegersLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        NumericArgumentsValue value = new NumericArgumentsValue();
+
+        assertThrows(IllegalArgumentException.class, () -> machine.invoke(value, "checkInteger", new Object[]{Double.NaN}));
+        assertThrows(IllegalArgumentException.class, () -> machine.invoke(value, "checkLong", new Object[]{Float.NaN}));
+    }
+
+    @Test
     void machineInvokeRejectsMissingComponentsLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1767,6 +1799,36 @@ final class MachineRegistryTest {
                 throw new NoSuchMethodException(method);
             }
             return new Object[]{"dynamic", args.checkString(0)};
+        }
+    }
+
+    private static final class NumericArgumentsValue extends AbstractValue {
+        @Callback
+        public Object[] integerFlags(final Context context, final Arguments arguments) {
+            return new Object[]{
+                arguments.isInteger(0),
+                arguments.isInteger(1),
+                arguments.isLong(0),
+                arguments.isLong(1)
+            };
+        }
+
+        @Callback
+        public Object[] clampIntegers(final Context context, final Arguments arguments) {
+            return new Object[]{
+                arguments.checkInteger(0),
+                arguments.checkInteger(1)
+            };
+        }
+
+        @Callback
+        public Object[] checkInteger(final Context context, final Arguments arguments) {
+            return new Object[]{arguments.checkInteger(0)};
+        }
+
+        @Callback
+        public Object[] checkLong(final Context context, final Arguments arguments) {
+            return new Object[]{arguments.checkLong(0)};
         }
     }
 

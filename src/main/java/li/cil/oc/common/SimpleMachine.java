@@ -1195,8 +1195,25 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             return values[index];
         }
         @Override public boolean checkBoolean(final int index) { return (Boolean) checkAny(index); }
-        @Override public int checkInteger(final int index) { return ((Number) checkAny(index)).intValue(); }
-        @Override public long checkLong(final int index) { return ((Number) checkAny(index)).longValue(); }
+        @Override public int checkInteger(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Double number) return checkInteger(index, number);
+            if (value instanceof Float number) return checkInteger(index, number.doubleValue());
+            if (value instanceof Long number) {
+                if (number > Integer.MAX_VALUE) return Integer.MAX_VALUE;
+                if (number < Integer.MIN_VALUE) return Integer.MIN_VALUE;
+                return number.intValue();
+            }
+            if (value instanceof Number number) return number.intValue();
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (integer expected)");
+        }
+        @Override public long checkLong(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Double number) return checkLong(index, number);
+            if (value instanceof Float number) return checkLong(index, number.doubleValue());
+            if (value instanceof Number number) return number.longValue();
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (integer expected)");
+        }
         @Override public double checkDouble(final int index) { return ((Number) checkAny(index)).doubleValue(); }
         @Override public String checkString(final int index) {
             final Object value = checkAny(index);
@@ -1222,9 +1239,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         @Override public Map optTable(final int index, final Map def) { return index >= 0 && index < values.length ? checkTable(index) : def; }
         @Override public ItemStack optItemStack(final int index, final ItemStack def) { return index >= 0 && index < values.length ? checkItemStack(index) : def; }
         @Override public boolean isBoolean(final int index) { return index >= 0 && index < values.length && values[index] instanceof Boolean; }
-        @Override public boolean isInteger(final int index) { return index >= 0 && index < values.length && values[index] instanceof Integer; }
-        @Override public boolean isLong(final int index) { return index >= 0 && index < values.length && values[index] instanceof Long; }
-        @Override public boolean isDouble(final int index) { return index >= 0 && index < values.length && values[index] instanceof Double; }
+        @Override public boolean isInteger(final int index) { return index >= 0 && index < values.length && isNonNaNNumber(values[index]); }
+        @Override public boolean isLong(final int index) { return index >= 0 && index < values.length && isNonNaNNumber(values[index]); }
+        @Override public boolean isDouble(final int index) { return index >= 0 && index < values.length && values[index] instanceof Number; }
         @Override public boolean isString(final int index) { return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]); }
         @Override public boolean isByteArray(final int index) { return index >= 0 && index < values.length && values[index] instanceof byte[]; }
         @Override public boolean isTable(final int index) { return index >= 0 && index < values.length && values[index] instanceof Map; }
@@ -1239,5 +1256,29 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             return result;
         }
         @Override public java.util.Iterator<Object> iterator() { return Arrays.asList(values).iterator(); }
+
+        private static int checkInteger(final int index, final double value) {
+            if (Double.isNaN(value)) {
+                throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number has no integer representation)");
+            }
+            if (value > Integer.MAX_VALUE) return Integer.MAX_VALUE;
+            if (value < Integer.MIN_VALUE) return Integer.MIN_VALUE;
+            return (int) value;
+        }
+
+        private static long checkLong(final int index, final double value) {
+            if (Double.isNaN(value)) {
+                throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number has no integer representation)");
+            }
+            if (value > Long.MAX_VALUE) return Long.MAX_VALUE;
+            if (value < Long.MIN_VALUE) return Long.MIN_VALUE;
+            return (long) value;
+        }
+
+        private static boolean isNonNaNNumber(final Object value) {
+            if (value instanceof Double number) return !number.isNaN();
+            if (value instanceof Float number) return !number.isNaN();
+            return value instanceof Number;
+        }
     }
 }
