@@ -12,6 +12,7 @@ import li.cil.oc.common.item.NanomachineItemData;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -34,6 +35,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private static final String TAG_TRIGGERS = "triggers";
     private static final String TAG_IS_ACTIVE = "isActive";
     private static final String TAG_ACTIVE_INPUTS = "activeInputs";
+    private static final String TAG_CONFIGURATION = "configuration";
     private static final String TAG_CONNECTORS = "connectors";
     private static final String TAG_BEHAVIORS = "behaviors";
     private static final String TAG_BEHAVIOR = "behavior";
@@ -337,7 +339,10 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         tag.putString(TAG_UUID, uuid);
         tag.putInt(TAG_PORT, responsePort);
         tag.putDouble(TAG_ENERGY, buffer);
-        saveGraph(tag, false);
+        final CompoundTag configuration = new CompoundTag();
+        saveGraph(configuration, false);
+        copyGraphTags(configuration, tag);
+        tag.put(TAG_CONFIGURATION, configuration);
         tag.putIntArray(TAG_ACTIVE_INPUTS, activeInputs());
     }
 
@@ -351,14 +356,17 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         if (tag.contains(TAG_ENERGY)) {
             buffer = Math.clamp(tag.getDouble(TAG_ENERGY), 0D, getLocalBufferSize());
         }
-        connectors = tag.contains(TAG_CONNECTORS, CompoundTag.TAG_LIST)
-            ? loadConnectorEntries(tag.getList(TAG_CONNECTORS, CompoundTag.TAG_COMPOUND))
+        final CompoundTag graphTag = tag.contains(TAG_CONFIGURATION, CompoundTag.TAG_COMPOUND)
+            ? tag.getCompound(TAG_CONFIGURATION)
+            : tag;
+        connectors = graphTag.contains(TAG_CONNECTORS, CompoundTag.TAG_LIST)
+            ? loadConnectorEntries(graphTag.getList(TAG_CONNECTORS, CompoundTag.TAG_COMPOUND))
             : List.of();
-        if (tag.contains(TAG_BEHAVIORS, CompoundTag.TAG_LIST)) {
+        if (graphTag.contains(TAG_BEHAVIORS, CompoundTag.TAG_LIST)) {
             disableActive(DisableReason.Default);
-            setBehaviorEntries(loadBehaviorEntries(tag.getList(TAG_BEHAVIORS, CompoundTag.TAG_COMPOUND)));
+            setBehaviorEntries(loadBehaviorEntries(graphTag.getList(TAG_BEHAVIORS, CompoundTag.TAG_COMPOUND)));
         }
-        loadTriggerStates(tag);
+        loadTriggerStates(graphTag);
         activeBehaviorsDirty = true;
     }
 
@@ -591,6 +599,15 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         tag.put(TAG_TRIGGERS, saveTriggerEntries(forItem));
         tag.put(TAG_CONNECTORS, saveConnectorEntries());
         tag.put(TAG_BEHAVIORS, saveBehaviorEntries());
+    }
+
+    private void copyGraphTags(final CompoundTag source, final CompoundTag target) {
+        for (final String key : source.getAllKeys()) {
+            final Tag value = source.get(key);
+            if (value != null) {
+                target.put(key, value.copy());
+            }
+        }
     }
 
     private ListTag saveTriggerEntries(final boolean forItem) {

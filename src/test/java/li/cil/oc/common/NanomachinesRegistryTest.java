@@ -172,6 +172,51 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerSavesUpstreamNestedRuntimeConfiguration() {
+        TestBehavior behavior = new TestBehavior("nested");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(behavior));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("nested", new int[]{0}, new int[0]));
+        tag.put("behaviors", behaviors);
+        tag.putIntArray("activeInputs", new int[]{0});
+        controller.load(tag);
+
+        CompoundTag saved = new CompoundTag();
+        controller.save(saved);
+
+        assertTrue(saved.contains("configuration", CompoundTag.TAG_COMPOUND));
+        CompoundTag configuration = saved.getCompound("configuration");
+        assertEquals(1, configuration.getList("triggers", CompoundTag.TAG_COMPOUND).size());
+        assertEquals(1, configuration.getList("behaviors", CompoundTag.TAG_COMPOUND).size());
+        assertTrue(configuration.getList("triggers", CompoundTag.TAG_COMPOUND).getCompound(0).getBoolean("isActive"));
+    }
+
+    @Test
+    void controllerLoadsUpstreamNestedRuntimeConfiguration() {
+        TestBehavior behavior = new TestBehavior("nested");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(behavior));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        CompoundTag configuration = new CompoundTag();
+        ListTag triggers = new ListTag();
+        triggers.add(triggerTag(true));
+        configuration.put("triggers", triggers);
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("nested", new int[]{0}, new int[0]));
+        configuration.put("behaviors", behaviors);
+        tag.put("configuration", configuration);
+
+        controller.load(tag);
+
+        assertTrue(controller.getInput(0));
+        assertIterableEquals(List.of(behavior), controller.getActiveBehaviors());
+    }
+
+    @Test
     void controllerSetInputTrueFailsWhenAlreadyAtMaxActiveLikeUpstream() {
         SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
         CompoundTag tag = new CompoundTag();
