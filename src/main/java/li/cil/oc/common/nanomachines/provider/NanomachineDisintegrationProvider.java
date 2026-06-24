@@ -209,7 +209,7 @@ public final class NanomachineDisintegrationProvider extends AbstractProvider {
             if (current.isEmpty() && original.isEmpty()) {
                 return true;
             }
-            if (!ItemStack.isSameItemSameComponents(current, original)) {
+            if (!current.is(original.getItem())) {
                 return false;
             }
             return current.isDamageableItem() || current.getDamageValue() == original.getDamageValue();

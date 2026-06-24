@@ -1983,6 +1983,46 @@ public final class NeoOpenComputersGameTests {
         }
     }
 
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void nanomachinesDisintegrationKeepsProgressWhenDamageableToolDurabilityChanges(final GameTestHelper helper) {
+        final BlockPos playerPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = playerPos.relative(Direction.NORTH);
+        helper.setBlock(targetPos, Blocks.DIRT.defaultBlockState());
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.getAbilities().mayBuild = true;
+        final ItemStack shovel = new ItemStack(Items.DIAMOND_SHOVEL);
+        shovel.setDamageValue(1);
+        player.setItemInHand(InteractionHand.MAIN_HAND, shovel);
+        player.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(playerPos)));
+        final li.cil.oc.api.nanomachines.Behavior behavior = new NanomachineDisintegrationProvider().createBehaviors(player).iterator().next();
+        final li.cil.oc.api.nanomachines.Controller controller = fixedInputController(behavior, 1);
+        final li.cil.oc.api.detail.NanomachinesAPI nanomachines = singleControllerNanomachinesApi(player, controller);
+        final li.cil.oc.api.detail.NanomachinesAPI previous = API.nanomachines;
+        try {
+            API.nanomachines = nanomachines;
+            behavior.update();
+            shovel.setDamageValue(2);
+            behavior.update();
+            API.nanomachines = previous;
+            helper.startSequence()
+                .thenIdle(40)
+                .thenExecute(() -> {
+                    API.nanomachines = nanomachines;
+                    behavior.update();
+                    API.nanomachines = previous;
+                    try {
+                        helper.assertTrue(helper.getBlockState(targetPos).isAir(), "Disintegration lost progress after damageable tool durability changed");
+                    } finally {
+                        API.nanomachines = previous;
+                    }
+                })
+                .thenSucceed();
+        } catch (RuntimeException e) {
+            API.nanomachines = previous;
+            throw e;
+        }
+    }
+
     private static li.cil.oc.api.detail.NanomachinesAPI singleControllerNanomachinesApi(
         final Player owner,
         final li.cil.oc.api.nanomachines.Controller controller
