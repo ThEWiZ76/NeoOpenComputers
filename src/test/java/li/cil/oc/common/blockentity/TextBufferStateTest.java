@@ -28,6 +28,37 @@ final class TextBufferStateTest {
     }
 
     @Test
+    void setRespectsWideCharactersLikeUpstream() {
+        TextBufferState buffer = new TextBufferState(4, 2);
+        String wide = new String(Character.toChars(0x6c34));
+
+        buffer.set(0, 0, wide + "b", false, 0x112233, false, 0x445566, false);
+        buffer.set(3, 0, wide, false, 0x778899, false, 0xAABBCC, false);
+        buffer.set(3, 1, wide, true, 0x778899, false, 0xAABBCC, false);
+
+        assertEquals(0x6c34, buffer.getCodePoint(0, 0));
+        assertEquals(' ', buffer.getCodePoint(1, 0));
+        assertEquals('b', buffer.getCodePoint(2, 0));
+        assertEquals(' ', buffer.getCodePoint(3, 0));
+        assertEquals(' ', buffer.getCodePoint(3, 1));
+        assertEquals(0x112233, buffer.getForegroundColor(1, 0));
+        assertEquals(0x445566, buffer.getBackgroundColor(1, 0));
+    }
+
+    @Test
+    void fillRespectsWideCharactersLikeUpstream() {
+        TextBufferState buffer = new TextBufferState(4, 1);
+        String wide = new String(Character.toChars(0x6c34));
+
+        buffer.fill(0, 0, 4, 1, wide.codePointAt(0), 0x112233, false, 0x445566, false);
+
+        assertEquals(0x6c34, buffer.getCodePoint(0, 0));
+        assertEquals(' ', buffer.getCodePoint(1, 0));
+        assertEquals(0x6c34, buffer.getCodePoint(2, 0));
+        assertEquals(' ', buffer.getCodePoint(3, 0));
+    }
+
+    @Test
     void fillWritesRectWithinBounds() {
         TextBufferState buffer = new TextBufferState(4, 3);
 
@@ -57,6 +88,19 @@ final class TextBufferStateTest {
         assertEquals(0x445566, buffer.getBackgroundColor(4, 0));
         assertEquals(true, buffer.isForegroundFromPalette(4, 0));
         assertEquals(false, buffer.isBackgroundFromPalette(4, 0));
+    }
+
+    @Test
+    void copySkipsCellsWithoutValidSourceLikeUpstream() {
+        TextBufferState buffer = new TextBufferState(4, 1);
+        buffer.set(0, 0, "abcd", false, 0x112233, false, 0x445566, false);
+
+        buffer.copy(-1, 0, 3, 1, 1, 0);
+
+        assertEquals('a', buffer.getCodePoint(0, 0));
+        assertEquals('a', buffer.getCodePoint(1, 0));
+        assertEquals('b', buffer.getCodePoint(2, 0));
+        assertEquals('d', buffer.getCodePoint(3, 0));
     }
 
     @Test

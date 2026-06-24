@@ -410,6 +410,30 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void videoBufferSetAndFillRespectWideCharactersLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        String wide = new String(Character.toChars(0x6c34));
+        gpu.allocateBuffer(null, new TestArguments(4, 1));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+
+        assertArrayEquals(new Object[]{true}, gpu.set(null, new TestArguments(1, 1, wide + "B")));
+        assertArrayEquals(new Object[]{true}, gpu.set(null, new TestArguments(4, 1, wide)));
+
+        assertArrayEquals(new Object[]{wide, 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(1, 1)));
+        assertArrayEquals(new Object[]{" ", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(2, 1)));
+        assertArrayEquals(new Object[]{"B", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(3, 1)));
+        assertArrayEquals(new Object[]{" ", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(4, 1)));
+
+        assertArrayEquals(new Object[]{true}, gpu.fill(null, new TestArguments(1, 1, 4, 1, wide)));
+
+        assertArrayEquals(new Object[]{wide, 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(1, 1)));
+        assertArrayEquals(new Object[]{" ", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(2, 1)));
+        assertArrayEquals(new Object[]{wide, 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(3, 1)));
+        assertArrayEquals(new Object[]{" ", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(4, 1)));
+    }
+
+    @Test
     void managesVideoBuffersWithoutBoundScreen() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);

@@ -1,5 +1,6 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.common.util.FontWidths;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
@@ -66,10 +67,12 @@ final class TextBufferState {
         final int[][] backgroundSnapshot = new int[rows][columns];
         final boolean[][] foregroundPaletteSnapshot = new boolean[rows][columns];
         final boolean[][] backgroundPaletteSnapshot = new boolean[rows][columns];
+        final boolean[][] validSnapshot = new boolean[rows][columns];
         for (int y = 0; y < textSnapshot.length; y++) {
             for (int x = 0; x < textSnapshot[y].length; x++) {
                 final int sourceColumn = column + x;
                 final int sourceRow = row + y;
+                validSnapshot[y][x] = isInside(sourceColumn, sourceRow);
                 textSnapshot[y][x] = getCodePoint(sourceColumn, sourceRow);
                 foregroundSnapshot[y][x] = getForegroundColor(sourceColumn, sourceRow);
                 backgroundSnapshot[y][x] = getBackgroundColor(sourceColumn, sourceRow);
@@ -79,6 +82,9 @@ final class TextBufferState {
         }
         for (int y = 0; y < textSnapshot.length; y++) {
             for (int x = 0; x < textSnapshot[y].length; x++) {
+                if (!validSnapshot[y][x]) {
+                    continue;
+                }
                 put(
                     column + x + horizontalTranslation,
                     row + y + verticalTranslation,
@@ -97,9 +103,15 @@ final class TextBufferState {
     }
 
     void fill(final int column, final int row, final int width, final int height, final int value, final int foregroundColor, final boolean foregroundFromPalette, final int backgroundColor, final boolean backgroundFromPalette) {
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                put(column + x, row + y, value, foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+        for (int y = Math.max(row, 0); y < Math.min(row + height, this.height); y++) {
+            int targetX = Math.max(column, 0);
+            final int steps = Math.max(0, Math.min(column + width, this.width) - targetX);
+            for (int step = 0; step < steps && targetX < this.width; step++) {
+                put(targetX, y, value, foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
+                targetX += displayWidth(value);
             }
         }
     }
@@ -113,10 +125,27 @@ final class TextBufferState {
             return;
         }
         final int[] codePoints = value.codePoints().toArray();
-        for (int index = 0; index < codePoints.length; index++) {
-            final int x = vertical ? column : column + index;
-            final int y = vertical ? row + index : row;
-            put(x, y, codePoints[index], foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
+        if (vertical) {
+            if (column < 0 || column >= width) {
+                return;
+            }
+            final int limit = Math.min(row + codePoints.length, height);
+            int index = 0;
+            for (int y = Math.max(row, 0); y < limit && index < codePoints.length; y++) {
+                put(column, y, codePoints[index], foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
+                index++;
+            }
+        } else {
+            if (row < 0 || row >= height) {
+                return;
+            }
+            int targetX = Math.max(column, 0);
+            final int steps = Math.max(0, Math.min(column + codePoints.length, width) - targetX);
+            for (int index = 0; index < steps && index < codePoints.length && targetX < width; index++) {
+                final int codePoint = codePoints[index];
+                put(targetX, row, codePoint, foregroundColor, foregroundFromPalette, backgroundColor, backgroundFromPalette);
+                targetX += displayWidth(codePoint);
+            }
         }
     }
 
@@ -218,11 +247,26 @@ final class TextBufferState {
 
     private void put(final int column, final int row, final int value, final int foregroundColor, final boolean foregroundFromPalette, final int backgroundColor, final boolean backgroundFromPalette) {
         if (isInside(column, row)) {
+            final int displayWidth = displayWidth(value);
+            if (displayWidth > 1 && column >= width - 1) {
+                return;
+            }
             text[row][column] = value;
             foreground[row][column] = foregroundColor;
             this.foregroundPalette[row][column] = foregroundFromPalette;
             background[row][column] = backgroundColor;
             this.backgroundPalette[row][column] = backgroundFromPalette;
+            for (int offset = 1; offset < displayWidth && column + offset < width; offset++) {
+                final int targetColumn = column + offset;
+                text[row][targetColumn] = ' ';
+                foreground[row][targetColumn] = foregroundColor;
+                this.foregroundPalette[row][targetColumn] = foregroundFromPalette;
+                background[row][targetColumn] = backgroundColor;
+                this.backgroundPalette[row][targetColumn] = backgroundFromPalette;
+            }
+            if (column > 0 && displayWidth(text[row][column - 1]) > 1) {
+                text[row][column - 1] = ' ';
+            }
         }
     }
 
@@ -288,6 +332,10 @@ final class TextBufferState {
 
     private boolean isInside(final int column, final int row) {
         return column >= 0 && row >= 0 && column < width && row < height;
+    }
+
+    private static int displayWidth(final int codePoint) {
+        return Math.max(1, FontWidths.wcwidth(codePoint));
     }
 
     private static boolean isLit(final int codePoint, final int foregroundColor, final int backgroundColor) {
