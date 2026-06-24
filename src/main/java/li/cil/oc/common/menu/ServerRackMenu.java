@@ -260,6 +260,7 @@ public class ServerRackMenu extends AbstractContainerMenu {
 
     static ContainerData clientData() {
         final SimpleContainerData data = new SimpleContainerData(SERVER_DATA_COUNT);
+        data.set(SERVER_IS_ITEM_INDEX, 1);
         data.set(SERVER_PRESENT_INDEX, 1);
         return data;
     }

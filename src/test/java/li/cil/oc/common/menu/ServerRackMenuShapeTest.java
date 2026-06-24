@@ -121,11 +121,11 @@ final class ServerRackMenuShapeTest {
     }
 
     @Test
-    void clientDataKeepsRackServerPresentUntilFirstSync() {
+    void clientDataDefaultsToItemModeLikeUpstreamUntilFirstSync() {
         final ContainerData data = ServerRackMenu.clientData();
 
         assertEquals(ServerRackMenu.SERVER_DATA_COUNT, data.getCount());
-        assertEquals(0, data.get(ServerRackMenu.SERVER_IS_ITEM_INDEX));
+        assertEquals(1, data.get(ServerRackMenu.SERVER_IS_ITEM_INDEX));
         assertEquals(1, data.get(ServerRackMenu.SERVER_PRESENT_INDEX));
     }
 
