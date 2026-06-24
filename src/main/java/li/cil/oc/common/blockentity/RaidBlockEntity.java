@@ -357,6 +357,9 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         if (node().network() == null) {
             Network.joinNewNetwork(node());
         }
+        if (filesystem.node() instanceof li.cil.oc.api.network.Component component) {
+            component.setVisibility(Visibility.Network);
+        }
         node().connect(filesystem.node());
     }
 
