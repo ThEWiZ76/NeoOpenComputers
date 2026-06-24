@@ -47,8 +47,8 @@ public record TerminalScreenDelta(int width, int height, Row[] rows) {
             foreground = base.foreground();
             background = base.background();
         } else {
-            foreground = new int[height][width];
-            background = new int[height][width];
+            foreground = defaultColors(DEFAULT_FOREGROUND);
+            background = defaultColors(DEFAULT_BACKGROUND);
         }
         for (final Row row : rows) {
             if (row.index() >= 0 && row.index() < height) {
@@ -129,6 +129,14 @@ public record TerminalScreenDelta(int width, int height, Row[] rows) {
         Arrays.fill(normalized, fallback);
         System.arraycopy(colors, 0, normalized, 0, Math.min(width, colors.length));
         return normalized;
+    }
+
+    private int[][] defaultColors(final int color) {
+        final int[][] colors = new int[height][width];
+        for (final int[] row : colors) {
+            Arrays.fill(row, color);
+        }
+        return colors;
     }
 
     public record Row(int index, String line, int[] foreground, int[] background) {

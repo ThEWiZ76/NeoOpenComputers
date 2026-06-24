@@ -58,6 +58,19 @@ final class TerminalScreenDeltaTest {
     }
 
     @Test
+    void appliesDefaultColorsWhenBaseSnapshotIsMissing() {
+        final TerminalScreenDelta delta = new TerminalScreenDelta(2, 1, new TerminalScreenDelta.Row[0]);
+
+        final TerminalScreenSnapshot applied = delta.applyTo(null);
+
+        assertEquals("  ", applied.line(0));
+        assertEquals(0xFFFFFF, applied.foregroundColor(0, 0));
+        assertEquals(0xFFFFFF, applied.foregroundColor(1, 0));
+        assertEquals(0x000000, applied.backgroundColor(0, 0));
+        assertEquals(0x000000, applied.backgroundColor(1, 0));
+    }
+
+    @Test
     void appliesMalformedRowsAsFixedWidthTerminalRows() {
         final TerminalScreenSnapshot previous = new TerminalScreenSnapshot(4, 1, new String[]{"base"});
         final TerminalScreenDelta delta = new TerminalScreenDelta(
