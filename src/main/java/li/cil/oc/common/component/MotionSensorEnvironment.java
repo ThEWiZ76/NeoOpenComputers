@@ -83,7 +83,7 @@ public final class MotionSensorEnvironment extends AbstractManagedEnvironment im
     public void load(final CompoundTag nbt) {
         super.load(nbt);
         if (nbt.contains(TAG_SENSITIVITY)) {
-            sensitivity = Math.max(MINIMUM_SENSITIVITY, nbt.getDouble(TAG_SENSITIVITY));
+            sensitivity = nbt.getDouble(TAG_SENSITIVITY);
         }
     }
 
