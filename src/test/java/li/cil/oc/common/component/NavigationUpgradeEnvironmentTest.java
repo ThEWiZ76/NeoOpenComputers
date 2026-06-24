@@ -24,6 +24,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NavigationUpgradeEnvironmentTest {
@@ -33,6 +35,13 @@ final class NavigationUpgradeEnvironmentTest {
         assertCallback("getFacing");
         assertCallback("getRange");
         assertCallback("findWaypoints");
+    }
+
+    @Test
+    void movementCallbacksAreSynchronizedLikeUpstream() throws NoSuchMethodException {
+        assertSynchronizedCallback("getPosition");
+        assertSynchronizedCallback("getFacing");
+        assertSynchronizedCallback("getRange");
     }
 
     @Test
@@ -72,9 +81,22 @@ final class NavigationUpgradeEnvironmentTest {
         assertEquals(0D, machineConnector.localBuffer(), 0.000_001D);
     }
 
+    @Test
+    void findWaypointsRequiresRangeLikeUpstream() {
+        OpenComputersApi.initialize();
+        NavigationUpgradeEnvironment navigation = new NavigationUpgradeEnvironment(new TestHost());
+
+        assertThrows(IndexOutOfBoundsException.class, () -> navigation.findWaypoints(null, new TestArguments()));
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = NavigationUpgradeEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static void assertSynchronizedCallback(final String methodName) throws NoSuchMethodException {
+        Method method = NavigationUpgradeEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
+        assertFalse(method.getAnnotation(Callback.class).direct());
     }
 
     private static final class RecordingContext implements Context {

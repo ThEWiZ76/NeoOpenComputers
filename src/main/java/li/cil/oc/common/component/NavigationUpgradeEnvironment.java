@@ -66,7 +66,7 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
         nbt.putInt("posZ", blockPos.getZ());
     }
 
-    @Callback(direct = true, doc = "function():number, number, number -- Returns the current absolute position.")
+    @Callback(doc = "function():number, number, number -- Returns the current absolute position.")
     public Object[] getPosition(final Context context, final Arguments args) {
         if (host == null) {
             return new Object[]{null, "no host"};
@@ -74,7 +74,7 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
         return new Object[]{host.xPosition(), host.yPosition(), host.zPosition()};
     }
 
-    @Callback(direct = true, doc = "function():number -- Returns the host facing.")
+    @Callback(doc = "function():number -- Returns the host facing.")
     public Object[] getFacing(final Context context, final Arguments args) {
         if (host instanceof Rotatable rotatable) {
             return new Object[]{rotatable.facing().get3DDataValue()};
@@ -82,14 +82,14 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
         return new Object[]{Direction.NORTH.get3DDataValue()};
     }
 
-    @Callback(direct = true, doc = "function():number -- Returns the waypoint scan range.")
+    @Callback(doc = "function():number -- Returns the waypoint scan range.")
     public Object[] getRange(final Context context, final Arguments args) {
         return new Object[]{RANGE};
     }
 
     @Callback(doc = "function([range:number]):table -- Finds nearby waypoints.")
     public Object[] findWaypoints(final Context context, final Arguments args) {
-        final double range = Math.max(0D, Math.min(args.optDouble(0, RANGE), MAX_WAYPOINT_RANGE));
+        final double range = Math.max(0D, Math.min(args.checkDouble(0), MAX_WAYPOINT_RANGE));
         if (range <= 0D) {
             return new Object[]{new Map[0]};
         }
