@@ -48,7 +48,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Communication,
         DeviceInfo.DeviceAttribute.Description, "Internet modem",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
         DeviceInfo.DeviceAttribute.Product, "SuperLink X-D4NK"
     );
 

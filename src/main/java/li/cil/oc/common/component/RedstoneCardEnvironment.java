@@ -35,7 +35,7 @@ public class RedstoneCardEnvironment extends AbstractManagedEnvironment implemen
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Communication,
             DeviceInfo.DeviceAttribute.Description, "Redstone controller",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Rs100-V",
             DeviceInfo.DeviceAttribute.Capacity, "16",
             DeviceInfo.DeviceAttribute.Width, "1"

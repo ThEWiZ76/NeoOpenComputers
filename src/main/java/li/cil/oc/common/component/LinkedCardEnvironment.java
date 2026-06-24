@@ -45,7 +45,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
             DeviceInfo.DeviceAttribute.Description, "Quantumnet controller",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "HyperLink IV: Ender Edition",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize()),
             DeviceInfo.DeviceAttribute.Width, Integer.toString(ModSettings.maxNetworkPacketParts())

@@ -68,7 +68,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Display,
             DeviceInfo.DeviceAttribute.Description, "Graphics controller",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "MPG" + ((tier + 1) * 1000) + " GTZ",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(maxWidth * maxHeight),
             DeviceInfo.DeviceAttribute.Width, Integer.toString(bits(maxDepth)),
