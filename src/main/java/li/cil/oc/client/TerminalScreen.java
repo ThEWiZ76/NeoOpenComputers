@@ -61,11 +61,14 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     @Override
     public boolean keyPressed(final int keyCode, final int scanCode, final int modifiers) {
-        if (hasControlDown() && keyCode == GLFW.GLFW_KEY_V && minecraft != null) {
-            sendClipboardInput(minecraft.keyboardHandler.getClipboard());
+        if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+        if (!shouldForwardKeyboardInput(menu.snapshot())) {
+            return false;
+        }
+        if (hasControlDown() && keyCode == GLFW.GLFW_KEY_V && minecraft != null) {
+            sendClipboardInput(minecraft.keyboardHandler.getClipboard());
             return true;
         }
         sendKeyInput(true, (char) 0, keyCode);
@@ -74,12 +77,18 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     @Override
     public boolean keyReleased(final int keyCode, final int scanCode, final int modifiers) {
+        if (!shouldForwardKeyboardInput(menu.snapshot())) {
+            return false;
+        }
         sendKeyInput(false, (char) 0, keyCode);
         return true;
     }
 
     @Override
     public boolean charTyped(final char codePoint, final int modifiers) {
+        if (!shouldForwardKeyboardInput(menu.snapshot())) {
+            return false;
+        }
         sendKeyInput(true, codePoint, 0);
         sendKeyInput(false, codePoint, 0);
         return true;
@@ -137,6 +146,14 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     static boolean acceptsInput(final TerminalScreenSnapshot snapshot) {
         return snapshot != null && snapshot.width() > 0 && snapshot.height() > 0;
+    }
+
+    static boolean shouldForwardKeyboardInput(final boolean acceptsInput, final boolean searchInputFocused) {
+        return acceptsInput && !searchInputFocused;
+    }
+
+    static boolean shouldForwardKeyboardInput(final TerminalScreenSnapshot snapshot) {
+        return shouldForwardKeyboardInput(acceptsInput(snapshot), ItemSearch.isInputFocused());
     }
 
     static int imageWidth(final TerminalScreenSnapshot snapshot) {

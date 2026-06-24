@@ -13,6 +13,7 @@ final class ItemSearchTest {
     @AfterEach
     void tearDown() {
         ItemSearch.clearStackFocusing();
+        ItemSearch.clearFocusedInput();
     }
 
     @Test
@@ -38,5 +39,27 @@ final class ItemSearchTest {
 
         assertTrue(ItemSearch.hoveredStack(null, 4, 5).isEmpty());
         assertEquals(1, calls.get());
+    }
+
+    @Test
+    void inputFocusUsesFirstFocusedProviderAndCanRemoveIt() throws Exception {
+        final AtomicInteger calls = new AtomicInteger();
+
+        final AutoCloseable registration = ItemSearch.registerFocusedInput(() -> {
+            calls.incrementAndGet();
+            return true;
+        });
+        ItemSearch.registerFocusedInput(() -> {
+            calls.incrementAndGet();
+            return false;
+        });
+
+        assertTrue(ItemSearch.isInputFocused());
+        assertEquals(1, calls.get());
+
+        registration.close();
+
+        assertTrue(!ItemSearch.isInputFocused());
+        assertEquals(2, calls.get());
     }
 }

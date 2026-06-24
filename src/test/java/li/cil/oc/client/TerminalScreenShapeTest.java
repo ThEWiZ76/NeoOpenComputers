@@ -79,6 +79,13 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenDoesNotForwardKeyboardInputWhenItemSearchInputFocused() {
+        assertEquals(true, TerminalScreen.shouldForwardKeyboardInput(true, false));
+        assertEquals(false, TerminalScreen.shouldForwardKeyboardInput(false, false));
+        assertEquals(false, TerminalScreen.shouldForwardKeyboardInput(true, true));
+    }
+
+    @Test
     void terminalScreenSizesPanelForSnapshotDimensions() {
         final TerminalScreenSnapshot missing = new TerminalScreenSnapshot(0, 0, new String[0]);
         final TerminalScreenSnapshot terminalServerDefault = new TerminalScreenSnapshot(80, 25, new String[25]);
