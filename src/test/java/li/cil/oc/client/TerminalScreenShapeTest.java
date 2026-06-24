@@ -16,6 +16,7 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -73,6 +74,19 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenTreatsColoredBackgroundAsVisibleContent() {
+        final TerminalScreenSnapshot visibleBackground = new TerminalScreenSnapshot(
+            2,
+            1,
+            new String[]{"  "},
+            new int[][]{{0xFFFFFF, 0xFFFFFF}},
+            new int[][]{{0x000000, 0x223344}});
+
+        assertEquals(true, TerminalScreen.hasVisibleText(visibleBackground));
+        assertEquals(null, TerminalScreen.statusLabel(visibleBackground));
+    }
+
+    @Test
     void terminalScreenAcceptsInputOnlyWithScreenDimensions() {
         assertEquals(false, TerminalScreen.acceptsInput(null));
         assertEquals(false, TerminalScreen.acceptsInput(new TerminalScreenSnapshot(0, 0, new String[0])));
@@ -101,6 +115,36 @@ final class TerminalScreenShapeTest {
     void terminalScreenRendersAllSnapshotRowsThatFitAdaptivePanel() {
         assertEquals(0, TerminalScreen.visibleRows(new TerminalScreenSnapshot(0, 0, new String[0])));
         assertEquals(25, TerminalScreen.visibleRows(new TerminalScreenSnapshot(80, 25, new String[25])));
+    }
+
+    @Test
+    void terminalScreenConvertsSnapshotColorsToOpaqueArgb() {
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(
+            2,
+            1,
+            new String[]{"ab"},
+            new int[][]{{0x112233, 0x445566}},
+            new int[][]{{0x010203, 0x040506}});
+
+        assertEquals(0xFF112233, TerminalScreen.textColor(snapshot, 0, 0));
+        assertEquals(0xFF040506, TerminalScreen.backgroundColor(snapshot, 1, 0));
+    }
+
+    @Test
+    void terminalScreenGroupsTextRunsByForegroundColor() {
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(
+            4,
+            1,
+            new String[]{"ABCD"},
+            new int[][]{{0x111111, 0x111111, 0x222222, 0x111111}},
+            new int[][]{{0, 0, 0, 0}});
+
+        final List<TerminalScreen.TextRun> runs = TerminalScreen.textRuns(snapshot, 0);
+
+        assertEquals(3, runs.size());
+        assertEquals(new TerminalScreen.TextRun(0, "AB", 0xFF111111), runs.get(0));
+        assertEquals(new TerminalScreen.TextRun(2, "C", 0xFF222222), runs.get(1));
+        assertEquals(new TerminalScreen.TextRun(3, "D", 0xFF111111), runs.get(2));
     }
 
     @Test

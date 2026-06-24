@@ -12,6 +12,9 @@ import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     private static final int DEFAULT_IMAGE_WIDTH = 248;
     private static final int DEFAULT_IMAGE_HEIGHT = 166;
@@ -21,7 +24,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     private static final int TEXT_TOP = 22;
     private static final int TEXT_RIGHT_MARGIN = 12;
     private static final int TEXT_BOTTOM_MARGIN = 12;
-    private static final int TEXT_COLOR = 0xFFB8F4C8;
+
+    record TextRun(int column, String text, int color) {
+    }
 
     public TerminalScreen(final TerminalMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
@@ -44,10 +49,19 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             guiGraphics.drawString(font, status, left + TEXT_LEFT, top + TEXT_TOP, 0xFF6F7F8F, false);
             return;
         }
-        for (int row = 0; row < visibleRows(menu.snapshot()); row++) {
-            final String line = snapshotLine(menu.snapshot(), row);
-            if (!line.isBlank()) {
-                guiGraphics.drawString(font, line, left + TEXT_LEFT, top + TEXT_TOP + row * LINE_HEIGHT, TEXT_COLOR, false);
+        final TerminalScreenSnapshot snapshot = menu.snapshot();
+        renderCellBackgrounds(guiGraphics, snapshot, left, top);
+        for (int row = 0; row < visibleRows(snapshot); row++) {
+            for (final TextRun run : textRuns(snapshot, row)) {
+                if (!run.text().isBlank()) {
+                    guiGraphics.drawString(
+                        font,
+                        run.text(),
+                        left + TEXT_LEFT + run.column() * CELL_WIDTH,
+                        top + TEXT_TOP + row * LINE_HEIGHT,
+                        run.color(),
+                        false);
+                }
             }
         }
     }
@@ -133,6 +147,11 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             if (!snapshotLine(snapshot, row).isBlank()) {
                 return true;
             }
+            for (int column = 0; column < snapshot.width(); column++) {
+                if ((backgroundColor(snapshot, column, row) & 0x00FFFFFF) != 0) {
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -175,6 +194,43 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             return 0;
         }
         return Math.min(snapshot.height(), Math.max(0, (imageHeight(snapshot) - TEXT_TOP - TEXT_BOTTOM_MARGIN) / LINE_HEIGHT));
+    }
+
+    static int textColor(final TerminalScreenSnapshot snapshot, final int column, final int row) {
+        return opaqueArgb(snapshot == null ? 0xFFFFFF : snapshot.foregroundColor(column, row));
+    }
+
+    static int backgroundColor(final TerminalScreenSnapshot snapshot, final int column, final int row) {
+        return opaqueArgb(snapshot == null ? 0 : snapshot.backgroundColor(column, row));
+    }
+
+    static List<TextRun> textRuns(final TerminalScreenSnapshot snapshot, final int row) {
+        if (!acceptsInput(snapshot) || row < 0 || row >= snapshot.height()) {
+            return List.of();
+        }
+        final String line = snapshotLine(snapshot, row);
+        final int width = Math.min(snapshot.width(), line.length());
+        if (width <= 0) {
+            return List.of();
+        }
+        final List<TextRun> runs = new ArrayList<>();
+        int runColumn = 0;
+        int runColor = textColor(snapshot, 0, row);
+        final StringBuilder runText = new StringBuilder();
+        for (int column = 0; column < width; column++) {
+            final int color = textColor(snapshot, column, row);
+            if (color != runColor && !runText.isEmpty()) {
+                runs.add(new TextRun(runColumn, runText.toString(), runColor));
+                runColumn = column;
+                runColor = color;
+                runText.setLength(0);
+            }
+            runText.append(line.charAt(column));
+        }
+        if (!runText.isEmpty()) {
+            runs.add(new TextRun(runColumn, runText.toString(), runColor));
+        }
+        return runs;
     }
 
     static TerminalKeyPayload keyPayload(final TerminalMenu menu, final boolean pressed, final char character, final int keyCode) {
@@ -224,6 +280,19 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         }
     }
 
+    private void renderCellBackgrounds(final GuiGraphics guiGraphics, final TerminalScreenSnapshot snapshot, final int left, final int top) {
+        for (int row = 0; row < visibleRows(snapshot); row++) {
+            final int y = top + TEXT_TOP + row * LINE_HEIGHT;
+            for (int column = 0; column < snapshot.width(); column++) {
+                final int color = backgroundColor(snapshot, column, row);
+                if ((color & 0x00FFFFFF) != 0) {
+                    final int x = left + TEXT_LEFT + column * CELL_WIDTH;
+                    guiGraphics.fill(x, y, x + CELL_WIDTH, y + LINE_HEIGHT, color);
+                }
+            }
+        }
+    }
+
     private void updateLayoutForSnapshot() {
         final int nextImageWidth = imageWidth(menu.snapshot());
         final int nextImageHeight = imageHeight(menu.snapshot());
@@ -263,5 +332,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             case GLFW.GLFW_KEY_W -> 0x11;
             default -> keyCode;
         };
+    }
+
+    private static int opaqueArgb(final int color) {
+        return 0xFF000000 | (color & 0x00FFFFFF);
     }
 }
