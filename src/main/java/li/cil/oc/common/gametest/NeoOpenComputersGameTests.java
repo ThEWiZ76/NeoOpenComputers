@@ -4022,6 +4022,27 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void rackServerExposesNetworkCardAsBusConnectableLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+        final li.cil.oc.api.internal.Server rackServer = (li.cil.oc.api.internal.Server) rack.getMountable(0);
+        final net.minecraft.world.Container serverInventory = (net.minecraft.world.Container) rackServer;
+        serverInventory.setItem(0, new ItemStack(ModItems.NETWORK_CARD.get()));
+        serverInventory.setItem(2, new ItemStack(ModItems.CPU_TIER3.get()));
+        serverInventory.setItem(5, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        serverInventory.setItem(8, bootableHardDiskStack(helper, ""));
+        serverInventory.setItem(12, luaBiosEepromStack());
+
+        rackServer.machine().onHostChanged();
+
+        helper.assertTrue(rackServer.getConnectableCount() == 1, "Rack server connectable count mismatch: " + rackServer.getConnectableCount());
+        helper.assertTrue(rackServer.getConnectableAt(0) != null, "Rack server did not expose network card connectable");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void rackServerInventoryInvalidatesWhenRackSlotIsRemoved(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

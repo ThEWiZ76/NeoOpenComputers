@@ -1,6 +1,7 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.component.RackBusConnectable;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.machine.Arguments;
@@ -23,7 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class NetworkCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public class NetworkCardEnvironment extends AbstractManagedEnvironment implements RackBusConnectable, DeviceInfo {
     protected static final String COMPONENT_NAME = "modem";
     private static final String OPEN_PORTS_TAG = "openPorts";
     private static final String WAKE_MESSAGE_TAG = "wakeMessage";
@@ -257,6 +258,11 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         if (isWakePacket(packetData)) {
             emitWakeMessage();
         }
+    }
+
+    @Override
+    public void receivePacket(final Packet packet) {
+        receivePacket(packet, 0D);
     }
 
     private void emitModemMessage(final Packet packet, final double distance, final Object[] packetData) {

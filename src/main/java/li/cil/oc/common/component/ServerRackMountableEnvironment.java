@@ -31,7 +31,9 @@ import net.minecraft.world.level.Level;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -99,6 +101,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     private final Machine machine;
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
+    private final List<RackBusConnectable> busConnectables = new ArrayList<>();
     private int pendingComponentSlot = -1;
     private boolean wasWorking;
 
@@ -176,6 +179,9 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         if (node != null && node.address() != null && pendingComponentSlot >= 0) {
             componentSlots.put(node.address(), pendingComponentSlot);
         }
+        if (node != null && node.host() instanceof RackBusConnectable connectable && !busConnectables.contains(connectable)) {
+            busConnectables.add(connectable);
+        }
         pendingComponentSlot = -1;
     }
 
@@ -183,6 +189,9 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     public void onMachineDisconnect(final Node node) {
         if (node != null && node.address() != null) {
             componentSlots.remove(node.address());
+        }
+        if (node != null && node.host() instanceof RackBusConnectable connectable) {
+            busConnectables.remove(connectable);
         }
     }
 
@@ -215,12 +224,12 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public int getConnectableCount() {
-        return 0;
+        return busConnectables.size();
     }
 
     @Override
     public RackBusConnectable getConnectableAt(final int index) {
-        return null;
+        return busConnectables.get(index);
     }
 
     @Override
@@ -511,6 +520,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     }
 
     private void notifyHardwareChanged() {
+        busConnectables.clear();
         if (machine != null) {
             machine.onHostChanged();
         }
