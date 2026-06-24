@@ -5,6 +5,7 @@ import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -37,6 +38,17 @@ public final class RackNetworking {
         }
         if (!(menu.rackInventory() instanceof RackBlockEntity rack) || payload.slot() < 0 || payload.slot() >= RackBlockEntity.CONTAINER_SIZE) {
             return false;
+        }
+        if (payload.action() == RackControlPayload.MAP) {
+            if (payload.connectableIndex() < RackControlPayload.PRIMARY_CONNECTABLE || payload.connectableIndex() > 2) {
+                return false;
+            }
+            final Direction side = sideFromOrdinal(payload.side());
+            if (payload.side() != RackControlPayload.NO_SIDE && side == null) {
+                return false;
+            }
+            rack.connect(payload.slot(), payload.connectableIndex(), side);
+            return true;
         }
         final RackMountable mountable = rack.getMountable(payload.slot());
         return mountable instanceof ServerRackMountableEnvironment server && server.controlPower(payload.action());
@@ -77,6 +89,14 @@ public final class RackNetworking {
 
     private static void handleServerRackControl(final ServerRackControlPayload payload, final IPayloadContext context) {
         applyServerRackControl(context.player().containerMenu, payload);
+    }
+
+    private static Direction sideFromOrdinal(final int ordinal) {
+        if (ordinal == RackControlPayload.NO_SIDE) {
+            return null;
+        }
+        final Direction[] sides = Direction.values();
+        return ordinal >= 0 && ordinal < sides.length ? sides[ordinal] : null;
     }
 
     private RackNetworking() {

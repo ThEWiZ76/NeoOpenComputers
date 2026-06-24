@@ -20,7 +20,7 @@ final class RackControlPayloadTest {
 
     @Test
     void roundTripsThroughStreamCodec() {
-        final RackControlPayload payload = new RackControlPayload(7, 2, RackControlPayload.TOGGLE);
+        final RackControlPayload payload = new RackControlPayload(7, 2, RackControlPayload.MAP, -1, 3);
         final RegistryFriendlyByteBuf buffer = new RegistryFriendlyByteBuf(
             Unpooled.buffer(),
             RegistryAccess.EMPTY,
@@ -31,6 +31,8 @@ final class RackControlPayloadTest {
 
         assertEquals(7, decoded.containerId());
         assertEquals(2, decoded.slot());
-        assertEquals(RackControlPayload.TOGGLE, decoded.action());
+        assertEquals(RackControlPayload.MAP, decoded.action());
+        assertEquals(-1, decoded.connectableIndex());
+        assertEquals(3, decoded.side());
     }
 }
