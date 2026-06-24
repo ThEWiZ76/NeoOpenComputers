@@ -1,7 +1,6 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Network;
-import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
@@ -22,18 +21,11 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-public class PowerDistributorBlockEntity extends BlockEntity implements Environment, SidedEnvironment, DeviceInfo {
+public class PowerDistributorBlockEntity extends BlockEntity implements Environment, SidedEnvironment {
     public static final double CONNECTOR_BUFFER_SIZE = 500D;
 
     private static final String TAG_CONNECTORS = "oc:connectors";
-    private static final Map<String, String> DEVICE_INFO = Map.of(
-        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Power,
-        DeviceInfo.DeviceAttribute.Description, "Power distributor",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "Power Distributor"
-    );
 
     private final Node[] nodes = new Node[Direction.values().length];
 
@@ -74,13 +66,6 @@ public class PowerDistributorBlockEntity extends BlockEntity implements Environm
 
     @Override
     public void onMessage(final Message message) {
-    }
-
-    @Override
-    public Map<String, String> getDeviceInfo() {
-        final Map<String, String> metadata = new java.util.HashMap<>(DEVICE_INFO);
-        metadata.put(DeviceInfo.DeviceAttribute.Capacity, Double.toString(connectorBufferSize()));
-        return metadata;
     }
 
     @Override

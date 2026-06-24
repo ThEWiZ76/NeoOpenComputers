@@ -3,7 +3,6 @@ package li.cil.oc.common.blockentity;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.FileSystem;
 import li.cil.oc.api.Network;
-import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.fs.Label;
@@ -36,21 +35,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.RaidMenu;
 
-import java.util.Map;
-
-public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo, MenuProvider, Analyzable {
+public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, MenuProvider, Analyzable {
     public static final int CONTAINER_SIZE = 3;
     public static final String DATA_TAG = "oc:raid";
 
     private static final String TAG_NODE = "node";
     private static final String TAG_FILESYSTEM = "filesystem";
     private static final String TAG_LABEL = "label";
-    private static final Map<String, String> DEVICE_INFO = Map.of(
-        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Disk,
-        DeviceInfo.DeviceAttribute.Description, "RAID",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-        DeviceInfo.DeviceAttribute.Product, "OC RAID"
-    );
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final RaidLabel label = new RaidLabel();
@@ -134,11 +125,6 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     @Override
     public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
         return filesystem == null || filesystem.node() == null ? null : new Node[]{filesystem.node()};
-    }
-
-    @Override
-    public Map<String, String> getDeviceInfo() {
-        return DEVICE_INFO;
     }
 
     @Override

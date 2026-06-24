@@ -2,6 +2,7 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import net.minecraft.world.Container;
@@ -17,7 +18,8 @@ final class RaidBlockEntityTest {
         assertTrue(ManagedEnvironment.class.isAssignableFrom(RaidBlockEntity.class));
         assertTrue(EnvironmentHost.class.isAssignableFrom(RaidBlockEntity.class));
         assertTrue(Container.class.isAssignableFrom(RaidBlockEntity.class));
-        assertTrue(DeviceInfo.class.isAssignableFrom(RaidBlockEntity.class));
+        assertTrue(Analyzable.class.isAssignableFrom(RaidBlockEntity.class));
+        assertFalse(DeviceInfo.class.isAssignableFrom(RaidBlockEntity.class));
         assertTrue(MenuProvider.class.isAssignableFrom(RaidBlockEntity.class));
     }
 
