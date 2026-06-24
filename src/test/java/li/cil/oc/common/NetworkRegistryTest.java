@@ -9,6 +9,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.FilteredEnvironment;
+import li.cil.oc.api.network.ManagedPeripheral;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
@@ -211,6 +212,21 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void componentsExposeManagedPeripheralMethodsLikeUpstream() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+        PeripheralEnvironment host = new PeripheralEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        Callback annotation = component.annotation("dynamic");
+
+        assertTrue(component.methods().contains("dynamic"));
+        assertEquals("dynamic", annotation.value());
+        assertTrue(annotation.direct());
+        assertEquals(100, annotation.limit());
+        assertArrayEquals(new Object[]{"dynamic", "payload"}, component.invoke("dynamic", null, "payload"));
+    }
+
+    @Test
     void connectorBuffersClampToLocalSize() {
         NetworkRegistry registry = new NetworkRegistry();
         Connector connector = registry.newNode(new TestEnvironment(), Visibility.Network).withConnector(10).create();
@@ -289,6 +305,21 @@ final class NetworkRegistryTest {
         @Callback("   ")
         public Object[] fallback(final Context context, final Arguments arguments) {
             return new Object[]{"fallback"};
+        }
+    }
+
+    private static final class PeripheralEnvironment extends TestEnvironment implements ManagedPeripheral {
+        @Override
+        public String[] methods() {
+            return new String[]{"dynamic"};
+        }
+
+        @Override
+        public Object[] invoke(final String method, final Context context, final Arguments args) throws Exception {
+            if (!"dynamic".equals(method)) {
+                throw new NoSuchMethodException(method);
+            }
+            return new Object[]{method, args.checkString(0)};
         }
     }
 

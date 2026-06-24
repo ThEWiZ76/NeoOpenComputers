@@ -10,6 +10,7 @@ import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.FilteredEnvironment;
+import li.cil.oc.api.network.ManagedPeripheral;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Network;
 import li.cil.oc.api.network.Node;
@@ -35,6 +36,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.item.ItemStack;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -463,7 +465,7 @@ final class NetworkRegistry implements NetworkAPI {
 
     private class ComponentNode extends BaseNode implements Component {
         private final String name;
-        private final Map<String, Method> callbacks;
+        private final Map<String, ComponentCallbackEntry> callbacks;
         private Visibility visibility;
 
         private ComponentNode(final Environment host, final Visibility reachability, final String name, final Visibility visibility) {
@@ -507,21 +509,81 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public Callback annotation(final String method) {
-            final Method callback = callbacks.get(method);
+            final ComponentCallbackEntry callback = callbacks.get(method);
             if (callback == null) {
                 throw new NoSuchElementException(method);
             }
-            return callback.getAnnotation(Callback.class);
+            return callback.annotation();
         }
 
         @Override
         public Object[] invoke(final String method, final Context context, final Object... arguments) throws Exception {
-            final Method callback = callbacks.get(method);
+            final ComponentCallbackEntry callback = callbacks.get(method);
             if (callback == null) {
                 throw new NoSuchMethodException(method);
             }
+            return callback.invoke(host(), context, new RuntimeArguments(arguments));
+        }
+
+        private Map<String, ComponentCallbackEntry> discoverCallbacks(final Environment host) {
+            final Map<String, ComponentCallbackEntry> discovered = new LinkedHashMap<>();
+            final Set<String> whitelist = host instanceof MethodWhitelist methodWhitelist && methodWhitelist.whitelistedMethods() != null
+                ? Set.copyOf(Arrays.asList(methodWhitelist.whitelistedMethods()))
+                : Set.of();
+            final FilteredEnvironment filter = host instanceof FilteredEnvironment filtered ? filtered : null;
+            if (host instanceof ManagedPeripheral peripheral) {
+                final String[] methods = peripheral.methods();
+                if (methods != null) {
+                    for (String name : methods) {
+                        if (name != null && (whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
+                            discovered.putIfAbsent(name, new ManagedPeripheralCallbackEntry(name));
+                        }
+                    }
+                }
+            }
+            Class<?> type = host.getClass();
+            while (type != null) {
+                for (Method method : type.getDeclaredMethods()) {
+                    final Callback callback = method.getAnnotation(Callback.class);
+                    if (callback != null && isValidCallbackMethod(method)) {
+                        method.setAccessible(true);
+                        final String name = callback.value().trim().isEmpty() ? method.getName() : callback.value();
+                        if ((whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
+                            discovered.putIfAbsent(name, new ReflectedComponentCallbackEntry(method));
+                        }
+                    }
+                }
+                type = type.getSuperclass();
+            }
+            return discovered;
+        }
+
+        private boolean isValidCallbackMethod(final Method method) {
+            final Class<?>[] parameterTypes = method.getParameterTypes();
+            return method.getReturnType() == Object[].class &&
+                parameterTypes.length == 2 &&
+                parameterTypes[0] == Context.class &&
+                parameterTypes[1] == li.cil.oc.api.machine.Arguments.class &&
+                Modifier.isPublic(method.getModifiers());
+        }
+    }
+
+    private interface ComponentCallbackEntry {
+        Callback annotation();
+
+        Object[] invoke(Environment host, Context context, RuntimeArguments arguments) throws Exception;
+    }
+
+    private record ReflectedComponentCallbackEntry(Method method) implements ComponentCallbackEntry {
+        @Override
+        public Callback annotation() {
+            return method.getAnnotation(Callback.class);
+        }
+
+        @Override
+        public Object[] invoke(final Environment host, final Context context, final RuntimeArguments arguments) throws Exception {
             try {
-                final Object result = callback.invoke(host(), context, new RuntimeArguments(arguments));
+                final Object result = method.invoke(host, context, arguments);
                 if (result == null) {
                     return null;
                 }
@@ -540,37 +602,52 @@ final class NetworkRegistry implements NetworkAPI {
                 throw new RuntimeException(cause);
             }
         }
+    }
 
-        private Map<String, Method> discoverCallbacks(final Environment host) {
-            final Map<String, Method> discovered = new LinkedHashMap<>();
-            final Set<String> whitelist = host instanceof MethodWhitelist methodWhitelist && methodWhitelist.whitelistedMethods() != null
-                ? Set.copyOf(Arrays.asList(methodWhitelist.whitelistedMethods()))
-                : Set.of();
-            final FilteredEnvironment filter = host instanceof FilteredEnvironment filtered ? filtered : null;
-            Class<?> type = host.getClass();
-            while (type != null) {
-                for (Method method : type.getDeclaredMethods()) {
-                    final Callback callback = method.getAnnotation(Callback.class);
-                    if (callback != null && isValidCallbackMethod(method)) {
-                        method.setAccessible(true);
-                        final String name = callback.value().trim().isEmpty() ? method.getName() : callback.value();
-                        if ((whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
-                            discovered.putIfAbsent(name, method);
-                        }
-                    }
-                }
-                type = type.getSuperclass();
-            }
-            return discovered;
+    private record ManagedPeripheralCallbackEntry(String name) implements ComponentCallbackEntry {
+        @Override
+        public Callback annotation() {
+            return new PeripheralCallbackAnnotation(name);
         }
 
-        private boolean isValidCallbackMethod(final Method method) {
-            final Class<?>[] parameterTypes = method.getParameterTypes();
-            return method.getReturnType() == Object[].class &&
-                parameterTypes.length == 2 &&
-                parameterTypes[0] == Context.class &&
-                parameterTypes[1] == li.cil.oc.api.machine.Arguments.class &&
-                Modifier.isPublic(method.getModifiers());
+        @Override
+        public Object[] invoke(final Environment host, final Context context, final RuntimeArguments arguments) throws Exception {
+            if (!(host instanceof ManagedPeripheral peripheral)) {
+                throw new NoSuchMethodException(name);
+            }
+            return peripheral.invoke(name, context, arguments);
+        }
+    }
+
+    private record PeripheralCallbackAnnotation(String value) implements Callback {
+        @Override
+        public boolean direct() {
+            return true;
+        }
+
+        @Override
+        public int limit() {
+            return 100;
+        }
+
+        @Override
+        public String doc() {
+            return "";
+        }
+
+        @Override
+        public boolean getter() {
+            return false;
+        }
+
+        @Override
+        public boolean setter() {
+            return false;
+        }
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return Callback.class;
         }
     }
 
