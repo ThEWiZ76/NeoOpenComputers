@@ -75,10 +75,10 @@ final class ServerRackScreenShapeTest {
         assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/tier0.png"), ServerRackScreen.tierIconTexture(0));
         assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/tier1.png"), ServerRackScreen.tierIconTexture(1));
         assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/tier2.png"), ServerRackScreen.tierIconTexture(2));
-        assertNull(ServerRackScreen.tierIconTexture(-1));
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/na.png"), ServerRackScreen.tierIconTexture(-1));
         assertNull(ServerRackScreen.tierIconTexture(Integer.MAX_VALUE));
 
-        for (final String icon : List.of("card", "cpu", "component_bus", "memory", "hdd", "eeprom", "tier0", "tier1", "tier2")) {
+        for (final String icon : List.of("card", "cpu", "component_bus", "memory", "hdd", "eeprom", "tier0", "tier1", "tier2", "na")) {
             assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/icons/" + icon + ".png")), icon);
         }
     }

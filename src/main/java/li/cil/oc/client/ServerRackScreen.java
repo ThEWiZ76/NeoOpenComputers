@@ -132,6 +132,9 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     }
 
     public static ResourceLocation tierIconTexture(final int tier) {
+        if (tier == -1) {
+            return iconTexture("na");
+        }
         return tier >= 0 && tier <= 2 ? iconTexture("tier" + tier) : null;
     }
 
