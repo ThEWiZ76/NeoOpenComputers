@@ -1391,47 +1391,47 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public Object optAny(final int index, final Object def) {
-            return index >= 0 && index < values.length ? values[index] : def;
+            return isDefined(index) ? values[index] : def;
         }
 
         @Override
         public boolean optBoolean(final int index, final boolean def) {
-            return index >= 0 && index < values.length ? checkBoolean(index) : def;
+            return isDefined(index) ? checkBoolean(index) : def;
         }
 
         @Override
         public int optInteger(final int index, final int def) {
-            return index >= 0 && index < values.length ? checkInteger(index) : def;
+            return isDefined(index) ? checkInteger(index) : def;
         }
 
         @Override
         public long optLong(final int index, final long def) {
-            return index >= 0 && index < values.length ? checkLong(index) : def;
+            return isDefined(index) ? checkLong(index) : def;
         }
 
         @Override
         public double optDouble(final int index, final double def) {
-            return index >= 0 && index < values.length ? checkDouble(index) : def;
+            return isDefined(index) ? checkDouble(index) : def;
         }
 
         @Override
         public String optString(final int index, final String def) {
-            return index >= 0 && index < values.length ? checkString(index) : def;
+            return isDefined(index) ? checkString(index) : def;
         }
 
         @Override
         public byte[] optByteArray(final int index, final byte[] def) {
-            return index >= 0 && index < values.length ? checkByteArray(index) : def;
+            return isDefined(index) ? checkByteArray(index) : def;
         }
 
         @Override
         public Map optTable(final int index, final Map def) {
-            return index >= 0 && index < values.length ? checkTable(index) : def;
+            return isDefined(index) ? checkTable(index) : def;
         }
 
         @Override
         public ItemStack optItemStack(final int index, final ItemStack def) {
-            return index >= 0 && index < values.length ? checkItemStack(index) : def;
+            return isDefined(index) ? checkItemStack(index) : def;
         }
 
         @Override
@@ -1524,6 +1524,10 @@ final class NetworkRegistry implements NetworkAPI {
                 return !number.isNaN();
             }
             return value instanceof Number;
+        }
+
+        private boolean isDefined(final int index) {
+            return index >= 0 && index < values.length && values[index] != null;
         }
     }
 }

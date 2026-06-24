@@ -271,6 +271,17 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void componentOptionalArgumentsTreatNullAsMissingLikeUpstream() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+        NumericArgumentsEnvironment host = new NumericArgumentsEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        Object[] result = component.invoke("optionalDefaults", null, null, null, null);
+
+        assertArrayEquals(new Object[]{"fallback", 42, "any"}, result);
+    }
+
+    @Test
     void connectorBuffersClampToLocalSize() {
         NetworkRegistry registry = new NetworkRegistry();
         Connector connector = registry.newNode(new TestEnvironment(), Visibility.Network).withConnector(10).create();
@@ -423,6 +434,15 @@ final class NetworkRegistryTest {
             return new Object[]{
                 arguments.isByteArray(0),
                 arguments.isByteArray(1)
+            };
+        }
+
+        @Callback
+        public Object[] optionalDefaults(final Context context, final Arguments arguments) {
+            return new Object[]{
+                arguments.optString(0, "fallback"),
+                arguments.optInteger(1, 42),
+                arguments.optAny(2, "any")
             };
         }
     }
