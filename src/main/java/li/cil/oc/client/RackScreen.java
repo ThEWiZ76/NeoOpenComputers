@@ -23,13 +23,8 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int MAPPING_CELL_SIZE = 3;
     private static final int MAPPING_BUS_STEP = 3;
     private static final int MAPPING_ROW_STEP = 3;
-    private static final Direction[] BUS_SIDES = new Direction[]{
-        Direction.DOWN,
-        Direction.UP,
-        Direction.SOUTH,
-        Direction.WEST,
-        Direction.EAST
-    };
+    private static final Direction DEFAULT_FRONT = Direction.NORTH;
+    private static final int BUS_SIDE_COUNT = Direction.values().length - 1;
 
     public RackScreen(final RackMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
@@ -95,7 +90,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         if (control == null || !menu.rackNodePresent(control.slot(), control.connectableIndex())) {
             return null;
         }
-        final Direction side = busSide(control.busIndex());
+        final Direction side = busSide(menu.rackFacing(), control.busIndex());
         if (side == null) {
             return null;
         }
@@ -114,7 +109,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     static MappingControl mappingControlAt(final double mouseX, final double mouseY, final int left, final int top) {
         for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
             for (int connectableIndex = 0; connectableIndex < 4; connectableIndex++) {
-                for (int busIndex = 0; busIndex < BUS_SIDES.length; busIndex++) {
+                for (int busIndex = 0; busIndex < BUS_SIDE_COUNT; busIndex++) {
                     final int x = left + FIRST_SLOT_X + slot * SLOT_SPACING + busIndex * MAPPING_BUS_STEP;
                     final int y = top + MAPPING_Y + connectableIndex * MAPPING_ROW_STEP;
                     if (mouseX >= x && mouseX < x + MAPPING_CELL_SIZE && mouseY >= y && mouseY < y + MAPPING_CELL_SIZE) {
@@ -127,12 +122,37 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     }
 
     static Direction busSide(final int busIndex) {
-        return busIndex >= 0 && busIndex < BUS_SIDES.length ? BUS_SIDES[busIndex] : null;
+        return busSide(DEFAULT_FRONT, busIndex);
+    }
+
+    static Direction busSide(final Direction front, final int busIndex) {
+        if (busIndex < 0 || busIndex >= BUS_SIDE_COUNT) {
+            return null;
+        }
+        final Direction skippedFront = front == null ? DEFAULT_FRONT : front;
+        int index = 0;
+        for (final Direction side : Direction.values()) {
+            if (side == skippedFront) {
+                continue;
+            }
+            if (index == busIndex) {
+                return side;
+            }
+            index++;
+        }
+        return null;
     }
 
     static int busIndex(final Direction side) {
-        for (int index = 0; index < BUS_SIDES.length; index++) {
-            if (BUS_SIDES[index] == side) {
+        return busIndex(DEFAULT_FRONT, side);
+    }
+
+    static int busIndex(final Direction front, final Direction side) {
+        if (side == null || side == front) {
+            return -1;
+        }
+        for (int index = 0; index < BUS_SIDE_COUNT; index++) {
+            if (busSide(front, index) == side) {
                 return index;
             }
         }
@@ -206,10 +226,11 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
                 continue;
             }
             final int selectedSide = menu.rackNodeMapping(slot, connectableIndex);
-            for (int busIndex = 0; busIndex < BUS_SIDES.length; busIndex++) {
+            for (int busIndex = 0; busIndex < BUS_SIDE_COUNT; busIndex++) {
                 final int x = left + FIRST_SLOT_X + slot * SLOT_SPACING + busIndex * MAPPING_BUS_STEP;
                 final int y = top + MAPPING_Y + connectableIndex * MAPPING_ROW_STEP;
-                final int color = selectedSide == BUS_SIDES[busIndex].ordinal() ? 0xFFA3BE8C : 0xFF6C7480;
+                final Direction side = busSide(menu.rackFacing(), busIndex);
+                final int color = side != null && selectedSide == side.ordinal() ? 0xFFA3BE8C : 0xFF6C7480;
                 guiGraphics.fill(x, y, x + MAPPING_CELL_SIZE, y + MAPPING_CELL_SIZE, color);
             }
         }

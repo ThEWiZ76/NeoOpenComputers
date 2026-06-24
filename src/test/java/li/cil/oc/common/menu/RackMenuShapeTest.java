@@ -50,7 +50,7 @@ final class RackMenuShapeTest {
         assertEquals(36, RackMenu.PLAYER_SLOT_COUNT);
         assertEquals(40, RackMenu.TOTAL_SLOT_COUNT);
         assertEquals(4, RackMenu.RACK_STATE_COUNT);
-        assertEquals(40, RackMenu.RACK_DATA_COUNT);
+        assertEquals(41, RackMenu.RACK_DATA_COUNT);
         assertEquals(4, RackMenu.RACK_MISSING_REQUIREMENTS_COUNT);
         assertEquals(16, RackMenu.RACK_NODE_MAPPING_COUNT);
         assertEquals(16, RackMenu.RACK_NODE_PRESENCE_COUNT);
@@ -79,6 +79,8 @@ final class RackMenuShapeTest {
         assertEquals(int.class, RackMenu.class.getMethod("rackNodeMappingFor", Container.class, int.class, int.class).getReturnType());
         assertEquals(boolean.class, RackMenu.class.getMethod("rackNodePresent", int.class, int.class).getReturnType());
         assertEquals(boolean.class, RackMenu.class.getMethod("rackNodePresentFor", Container.class, int.class, int.class).getReturnType());
+        assertEquals(Direction.class, RackMenu.class.getMethod("rackFacing").getReturnType());
+        assertEquals(int.class, RackMenu.class.getMethod("rackFacingFor", Container.class).getReturnType());
     }
 
     @Test
@@ -102,6 +104,18 @@ final class RackMenuShapeTest {
         assertFalse(RackMenu.rackNodePresentFor(rack, 1, 0));
     }
 
+    @Test
+    void rackMenuExposesFacingForRotatedRackBusControls() throws Exception {
+        final TestRackBlockEntity rack = allocateRack();
+        rack.facing = Direction.SOUTH;
+
+        assertEquals(Direction.SOUTH.ordinal() + 1, RackMenu.rackFacingFor(rack));
+
+        final RackMenu menu = allocateMenuWithData(rackDataWithFacing(Direction.WEST));
+
+        assertEquals(Direction.WEST, menu.rackFacing());
+    }
+
     private static TestRackBlockEntity allocateRack() throws Exception {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
@@ -114,14 +128,44 @@ final class RackMenuShapeTest {
         field.set(rack, value);
     }
 
+    private static RackMenu allocateMenuWithData(final ContainerData rackData) throws Exception {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final RackMenu menu = (RackMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(RackMenu.class);
+        final Field rackDataField = RackMenu.class.getDeclaredField("rackData");
+        rackDataField.setAccessible(true);
+        rackDataField.set(menu, rackData);
+        return menu;
+    }
+
+    private static ContainerData rackDataWithFacing(final Direction facing) {
+        return new ContainerData() {
+            @Override
+            public int get(final int index) {
+                return index == RackMenu.RACK_FACING_OFFSET ? facing.ordinal() + 1 : 0;
+            }
+
+            @Override
+            public void set(final int index, final int value) {
+            }
+
+            @Override
+            public int getCount() {
+                return RackMenu.RACK_DATA_COUNT;
+            }
+        };
+    }
+
     private static final class TestRackBlockEntity extends RackBlockEntity {
+        private Direction facing = Direction.NORTH;
+
         private TestRackBlockEntity() {
             super(null, (BlockState) null);
         }
 
         @Override
         public Direction facing() {
-            return Direction.NORTH;
+            return facing;
         }
     }
 

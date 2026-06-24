@@ -90,6 +90,21 @@ final class RackScreenShapeTest {
     }
 
     @Test
+    void rackScreenMapsBusesRelativeToRackFacingLikeUpstream() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14, rackDataWithFacingMappingAndPresence(Direction.SOUTH, 1, 2, Direction.NORTH));
+        final RackScreen.MappingControl selected = new RackScreen.MappingControl(1, 2, RackScreen.busIndex(Direction.SOUTH, Direction.NORTH));
+        final RackScreen.MappingControl remapped = new RackScreen.MappingControl(1, 2, RackScreen.busIndex(Direction.SOUTH, Direction.WEST));
+
+        final RackControlPayload cleared = RackScreen.mappingPayload(menu, selected);
+        final RackControlPayload changed = RackScreen.mappingPayload(menu, remapped);
+
+        assertEquals(Direction.NORTH, RackScreen.busSide(Direction.SOUTH, RackScreen.busIndex(Direction.SOUTH, Direction.NORTH)));
+        assertEquals(-1, RackScreen.busIndex(Direction.SOUTH, Direction.SOUTH));
+        assertEquals(RackControlPayload.NO_SIDE, cleared.side());
+        assertEquals(Direction.WEST.ordinal(), changed.side());
+    }
+
+    @Test
     void rackScreenDoesNotBuildMappingPayloadForAbsentConnectable() throws ReflectiveOperationException {
         final RackMenu menu = allocateMenu(14, rackDataWithMappingAndPresence(1, 2, Direction.UP));
 
@@ -157,11 +172,18 @@ final class RackScreenShapeTest {
     }
 
     private static ContainerData rackDataWithMappingAndPresence(final int slot, final int connectable, final Direction mappedSide) {
+        return rackDataWithFacingMappingAndPresence(Direction.NORTH, slot, connectable, mappedSide);
+    }
+
+    private static ContainerData rackDataWithFacingMappingAndPresence(final Direction facing, final int slot, final int connectable, final Direction mappedSide) {
         return new ContainerData() {
             @Override
             public int get(final int index) {
                 final int mappingIndex = RackMenu.RACK_NODE_MAPPING_OFFSET + slot * 4 + connectable;
                 final int presenceIndex = RackMenu.RACK_NODE_PRESENCE_OFFSET + slot * 4 + connectable;
+                if (index == RackMenu.RACK_FACING_OFFSET) {
+                    return facing.ordinal() + 1;
+                }
                 if (index == mappingIndex) {
                     return mappedSide.ordinal();
                 }

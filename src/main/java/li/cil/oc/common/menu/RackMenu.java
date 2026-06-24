@@ -27,7 +27,8 @@ public class RackMenu extends AbstractContainerMenu {
     public static final int RACK_MISSING_REQUIREMENTS_OFFSET = RACK_STATE_COUNT;
     public static final int RACK_NODE_MAPPING_OFFSET = RACK_MISSING_REQUIREMENTS_OFFSET + RACK_MISSING_REQUIREMENTS_COUNT;
     public static final int RACK_NODE_PRESENCE_OFFSET = RACK_NODE_MAPPING_OFFSET + RACK_NODE_MAPPING_COUNT;
-    public static final int RACK_DATA_COUNT = RACK_NODE_PRESENCE_OFFSET + RACK_NODE_PRESENCE_COUNT;
+    public static final int RACK_FACING_OFFSET = RACK_NODE_PRESENCE_OFFSET + RACK_NODE_PRESENCE_COUNT;
+    public static final int RACK_DATA_COUNT = RACK_FACING_OFFSET + 1;
     public static final int NO_SIDE = -1;
     public static final int STATE_EMPTY = 0;
     public static final int STATE_READY = 1;
@@ -127,6 +128,10 @@ public class RackMenu extends AbstractContainerMenu {
             && rackData.get(RACK_NODE_PRESENCE_OFFSET + slot * 4 + connectableIndex) != 0;
     }
 
+    public Direction rackFacing() {
+        return decodeRackFacing(rackData.get(RACK_FACING_OFFSET));
+    }
+
     public static int rackStateFor(final Container rackInventory, final int slot) {
         if (!(rackInventory instanceof RackBlockEntity rack) || slot < 0 || slot >= RACK_STATE_COUNT) {
             return STATE_EMPTY;
@@ -179,6 +184,10 @@ public class RackMenu extends AbstractContainerMenu {
             && mountable.getConnectableAt(rackConnectableIndex) != null;
     }
 
+    public static int rackFacingFor(final Container rackInventory) {
+        return rackInventory instanceof RackBlockEntity rack ? rack.facing().ordinal() + 1 : Direction.NORTH.ordinal() + 1;
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -215,9 +224,12 @@ public class RackMenu extends AbstractContainerMenu {
                     final int nodeIndex = index - RACK_NODE_MAPPING_OFFSET;
                     return rackNodeMappingFor(rack, nodeIndex / 4, nodeIndex % 4);
                 }
-                if (index < RACK_DATA_COUNT) {
+                if (index < RACK_FACING_OFFSET) {
                     final int nodeIndex = index - RACK_NODE_PRESENCE_OFFSET;
                     return rackNodePresentFor(rack, nodeIndex / 4, nodeIndex % 4) ? 1 : 0;
+                }
+                if (index == RACK_FACING_OFFSET) {
+                    return rackFacingFor(rack);
                 }
                 return 0;
             }
@@ -235,6 +247,12 @@ public class RackMenu extends AbstractContainerMenu {
 
     private static boolean isValidNodeIndex(final int slot, final int connectableIndex) {
         return slot >= 0 && slot < RACK_SLOT_COUNT && connectableIndex >= 0 && connectableIndex < 4;
+    }
+
+    private static Direction decodeRackFacing(final int encodedFacing) {
+        final Direction[] directions = Direction.values();
+        final int ordinal = encodedFacing - 1;
+        return ordinal >= 0 && ordinal < directions.length ? directions[ordinal] : Direction.NORTH;
     }
 
     private static final class RackSlot extends Slot {
