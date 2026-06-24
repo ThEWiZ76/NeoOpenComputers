@@ -1302,19 +1302,40 @@ final class NetworkRegistry implements NetworkAPI {
         @Override
         public int checkInteger(final int index) {
             final Object value = checkAny(index);
+            if (value instanceof Double number) {
+                return checkInteger(index, number);
+            }
+            if (value instanceof Float number) {
+                return checkInteger(index, number.doubleValue());
+            }
+            if (value instanceof Long number) {
+                if (number > Integer.MAX_VALUE) {
+                    return Integer.MAX_VALUE;
+                }
+                if (number < Integer.MIN_VALUE) {
+                    return Integer.MIN_VALUE;
+                }
+                return number.intValue();
+            }
             if (value instanceof Number number) {
                 return number.intValue();
             }
-            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number expected)");
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (integer expected)");
         }
 
         @Override
         public long checkLong(final int index) {
             final Object value = checkAny(index);
+            if (value instanceof Double number) {
+                return checkLong(index, number);
+            }
+            if (value instanceof Float number) {
+                return checkLong(index, number.doubleValue());
+            }
             if (value instanceof Number number) {
                 return number.longValue();
             }
-            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number expected)");
+            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (integer expected)");
         }
 
         @Override
@@ -1420,17 +1441,17 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public boolean isInteger(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof Integer;
+            return index >= 0 && index < values.length && isNonNaNNumber(values[index]);
         }
 
         @Override
         public boolean isLong(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof Long;
+            return index >= 0 && index < values.length && isNonNaNNumber(values[index]);
         }
 
         @Override
         public boolean isDouble(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof Double;
+            return index >= 0 && index < values.length && values[index] instanceof Number;
         }
 
         @Override
@@ -1440,7 +1461,7 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public boolean isByteArray(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof byte[];
+            return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]);
         }
 
         @Override
@@ -1467,6 +1488,42 @@ final class NetworkRegistry implements NetworkAPI {
         @Override
         public java.util.Iterator<Object> iterator() {
             return Arrays.asList(values).iterator();
+        }
+
+        private static int checkInteger(final int index, final double value) {
+            if (Double.isNaN(value)) {
+                throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number has no integer representation)");
+            }
+            if (value > Integer.MAX_VALUE) {
+                return Integer.MAX_VALUE;
+            }
+            if (value < Integer.MIN_VALUE) {
+                return Integer.MIN_VALUE;
+            }
+            return (int) value;
+        }
+
+        private static long checkLong(final int index, final double value) {
+            if (Double.isNaN(value)) {
+                throw new IllegalArgumentException("bad argument #" + (index + 1) + " (number has no integer representation)");
+            }
+            if (value > Long.MAX_VALUE) {
+                return Long.MAX_VALUE;
+            }
+            if (value < Long.MIN_VALUE) {
+                return Long.MIN_VALUE;
+            }
+            return (long) value;
+        }
+
+        private static boolean isNonNaNNumber(final Object value) {
+            if (value instanceof Double number) {
+                return !number.isNaN();
+            }
+            if (value instanceof Float number) {
+                return !number.isNaN();
+            }
+            return value instanceof Number;
         }
     }
 }

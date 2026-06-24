@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -227,6 +228,49 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void componentArgumentsTreatNonNaNNumbersAsIntegersLikeUpstream() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+        NumericArgumentsEnvironment host = new NumericArgumentsEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        Object[] result = component.invoke("integerFlags", null, 1.5D, Float.POSITIVE_INFINITY);
+
+        assertArrayEquals(new Object[]{true, true, true, true}, result);
+    }
+
+    @Test
+    void componentArgumentsClampLongIntegerOverflowLikeUpstream() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+        NumericArgumentsEnvironment host = new NumericArgumentsEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        Object[] result = component.invoke("clampIntegers", null, Long.MAX_VALUE, Long.MIN_VALUE);
+
+        assertArrayEquals(new Object[]{Integer.MAX_VALUE, Integer.MIN_VALUE}, result);
+    }
+
+    @Test
+    void componentArgumentsRejectNaNIntegersLikeUpstream() {
+        NetworkRegistry registry = new NetworkRegistry();
+        NumericArgumentsEnvironment host = new NumericArgumentsEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        assertThrows(IllegalArgumentException.class, () -> component.invoke("checkInteger", null, Double.NaN));
+        assertThrows(IllegalArgumentException.class, () -> component.invoke("checkLong", null, Float.NaN));
+    }
+
+    @Test
+    void componentArgumentsTreatStringsAsByteArraysLikeUpstream() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+        NumericArgumentsEnvironment host = new NumericArgumentsEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        Object[] result = component.invoke("byteArrayFlags", null, "payload", "bytes".getBytes(StandardCharsets.UTF_8));
+
+        assertArrayEquals(new Object[]{true, true}, result);
+    }
+
+    @Test
     void connectorBuffersClampToLocalSize() {
         NetworkRegistry registry = new NetworkRegistry();
         Connector connector = registry.newNode(new TestEnvironment(), Visibility.Network).withConnector(10).create();
@@ -342,6 +386,44 @@ final class NetworkRegistryTest {
         @Callback
         private Object[] privateCallback(final Context context, final Arguments arguments) {
             return new Object[]{"bad"};
+        }
+    }
+
+    private static final class NumericArgumentsEnvironment extends TestEnvironment {
+        @Callback
+        public Object[] integerFlags(final Context context, final Arguments arguments) {
+            return new Object[]{
+                arguments.isInteger(0),
+                arguments.isInteger(1),
+                arguments.isLong(0),
+                arguments.isLong(1)
+            };
+        }
+
+        @Callback
+        public Object[] clampIntegers(final Context context, final Arguments arguments) {
+            return new Object[]{
+                arguments.checkInteger(0),
+                arguments.checkInteger(1)
+            };
+        }
+
+        @Callback
+        public Object[] checkInteger(final Context context, final Arguments arguments) {
+            return new Object[]{arguments.checkInteger(0)};
+        }
+
+        @Callback
+        public Object[] checkLong(final Context context, final Arguments arguments) {
+            return new Object[]{arguments.checkLong(0)};
+        }
+
+        @Callback
+        public Object[] byteArrayFlags(final Context context, final Arguments arguments) {
+            return new Object[]{
+                arguments.isByteArray(0),
+                arguments.isByteArray(1)
+            };
         }
     }
 
