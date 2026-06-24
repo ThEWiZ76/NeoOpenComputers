@@ -831,6 +831,31 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerDisposeClearsActiveInputsLikeUpstreamReset() {
+        CountingBehavior behavior = new CountingBehavior("active");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new CountingBehaviorProvider(behavior));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag triggers = new ListTag();
+        triggers.add(triggerTag(true));
+        tag.put("triggers", triggers);
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("active", new int[]{0}, new int[0]));
+        tag.put("behaviors", behaviors);
+
+        controller.load(tag);
+        assertIterableEquals(List.of(behavior), controller.getActiveBehaviors());
+
+        controller.dispose();
+
+        assertFalse(controller.getInput(0));
+        assertIterableEquals(List.of(), controller.getActiveBehaviors());
+        assertEquals(1, behavior.disableCount);
+        assertEquals(DisableReason.Default, behavior.lastDisableReason);
+    }
+
+    @Test
     void controllerDrainsEnergyWhenReconfigured() {
         NanomachinesRegistry registry = new NanomachinesRegistry();
         registry.addProvider(new ListBehaviorProvider(List.of(new TestBehavior("active"))));
@@ -1079,6 +1104,25 @@ final class NanomachinesRegistryTest {
         @Override
         public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
             return behavior.name().equals(nbt.getString("name")) ? behavior : null;
+        }
+    }
+
+    private record CountingBehaviorProvider(CountingBehavior behavior) implements BehaviorProvider {
+        @Override
+        public Iterable<Behavior> createBehaviors(final Player player) {
+            return List.of(behavior);
+        }
+
+        @Override
+        public CompoundTag writeToNBT(final Behavior behavior) {
+            final CompoundTag tag = new CompoundTag();
+            tag.putString("name", behavior.getNameHint());
+            return tag;
+        }
+
+        @Override
+        public Behavior readFromNBT(final Player player, final CompoundTag nbt) {
+            return behavior.name.equals(nbt.getString("name")) ? behavior : null;
         }
     }
 

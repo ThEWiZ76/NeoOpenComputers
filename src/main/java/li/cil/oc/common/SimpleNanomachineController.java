@@ -247,7 +247,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     void dispose() {
-        disableActive(DisableReason.Default);
+        resetInputs(DisableReason.Default);
         if (isServerController()) {
             Network.leaveWirelessNetwork(this);
         }
@@ -938,6 +938,12 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
         activeBehaviors = List.of();
         activeBehaviorsDirty = false;
+    }
+
+    private void resetInputs(final DisableReason reason) {
+        Arrays.fill(inputs, false);
+        activeBehaviorsDirty = true;
+        cleanActiveBehaviors(reason);
     }
 
     private boolean isCreativePlayer() {
