@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NanomachinesRegistryTest {
@@ -214,6 +215,39 @@ final class NanomachinesRegistryTest {
 
         assertTrue(controller.getInput(0));
         assertIterableEquals(List.of(behavior), controller.getActiveBehaviors());
+    }
+
+    @Test
+    void controllerRejectsSavedConnectorInputOutsideTriggerListLikeUpstream() {
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        CompoundTag tag = new CompoundTag();
+        ListTag triggers = new ListTag();
+        triggers.add(triggerTag(false));
+        tag.put("triggers", triggers);
+        ListTag connectors = new ListTag();
+        CompoundTag connector = new CompoundTag();
+        connector.putIntArray("triggerInputs", new int[]{1});
+        connectors.add(connector);
+        tag.put("connectors", connectors);
+
+        assertThrows(IndexOutOfBoundsException.class, () -> controller.load(tag));
+    }
+
+    @Test
+    void controllerRejectsSavedBehaviorInputOutsideConnectorListLikeUpstream() {
+        TestBehavior behavior = new TestBehavior("linked");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(behavior));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag triggers = new ListTag();
+        triggers.add(triggerTag(false));
+        tag.put("triggers", triggers);
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("linked", new int[0], new int[]{0}));
+        tag.put("behaviors", behaviors);
+
+        assertThrows(IndexOutOfBoundsException.class, () -> controller.load(tag));
     }
 
     @Test

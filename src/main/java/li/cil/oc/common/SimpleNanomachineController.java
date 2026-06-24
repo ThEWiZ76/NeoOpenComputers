@@ -359,12 +359,15 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         final CompoundTag graphTag = tag.contains(TAG_CONFIGURATION, CompoundTag.TAG_COMPOUND)
             ? tag.getCompound(TAG_CONFIGURATION)
             : tag;
+        final int savedTriggerCount = graphTag.contains(TAG_TRIGGERS, CompoundTag.TAG_LIST)
+            ? graphTag.getList(TAG_TRIGGERS, CompoundTag.TAG_COMPOUND).size()
+            : -1;
         connectors = graphTag.contains(TAG_CONNECTORS, CompoundTag.TAG_LIST)
-            ? loadConnectorEntries(graphTag.getList(TAG_CONNECTORS, CompoundTag.TAG_COMPOUND))
+            ? loadConnectorEntries(graphTag.getList(TAG_CONNECTORS, CompoundTag.TAG_COMPOUND), savedTriggerCount)
             : List.of();
         if (graphTag.contains(TAG_BEHAVIORS, CompoundTag.TAG_LIST)) {
             disableActive(DisableReason.Default);
-            setBehaviorEntries(loadBehaviorEntries(graphTag.getList(TAG_BEHAVIORS, CompoundTag.TAG_COMPOUND)));
+            setBehaviorEntries(loadBehaviorEntries(graphTag.getList(TAG_BEHAVIORS, CompoundTag.TAG_COMPOUND), savedTriggerCount, connectors.size()));
         }
         loadTriggerStates(graphTag);
         activeBehaviorsDirty = true;
@@ -650,10 +653,12 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         return tags;
     }
 
-    private List<ConnectorEntry> loadConnectorEntries(final ListTag tags) {
+    private List<ConnectorEntry> loadConnectorEntries(final ListTag tags, final int triggerCount) {
         final List<ConnectorEntry> entries = new ArrayList<>(tags.size());
         for (int i = 0; i < tags.size(); i++) {
-            entries.add(new ConnectorEntry(tags.getCompound(i).getIntArray(TAG_TRIGGER_INPUTS)));
+            final int[] triggerInputs = tags.getCompound(i).getIntArray(TAG_TRIGGER_INPUTS);
+            validateIndices(triggerInputs, triggerCount);
+            entries.add(new ConnectorEntry(triggerInputs));
         }
         return List.copyOf(entries);
     }
@@ -673,7 +678,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         return tags;
     }
 
-    private List<BehaviorEntry> loadBehaviorEntries(final ListTag tags) {
+    private List<BehaviorEntry> loadBehaviorEntries(final ListTag tags, final int triggerCount, final int connectorCount) {
         final List<BehaviorEntry> entries = new ArrayList<>();
         final int fallbackInputCount = Math.max(1, (int) Math.ceil(tags.size() * ModSettings.nanomachineTriggerQuota()));
         for (int i = 0; i < tags.size(); i++) {
@@ -685,6 +690,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             final int[] connectorInputs = tag.contains(TAG_CONNECTOR_INPUTS, CompoundTag.TAG_INT_ARRAY)
                 ? tag.getIntArray(TAG_CONNECTOR_INPUTS)
                 : new int[0];
+            validateIndices(triggerInputs, triggerCount);
+            validateIndices(connectorInputs, connectorCount);
             for (final BehaviorProvider provider : registry.getProviders()) {
                 final Behavior behavior = provider.readFromNBT(player, data);
                 if (behavior != null) {
@@ -694,6 +701,17 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             }
         }
         return entries;
+    }
+
+    private static void validateIndices(final int[] indices, final int size) {
+        if (size < 0) {
+            return;
+        }
+        for (final int index : indices) {
+            if (index < 0 || index >= size) {
+                throw new IndexOutOfBoundsException("Saved nanomachine graph index " + index + " outside 0.." + (size - 1));
+            }
+        }
     }
 
     private void respond(final WirelessEndpoint endpoint, final Object... data) {
