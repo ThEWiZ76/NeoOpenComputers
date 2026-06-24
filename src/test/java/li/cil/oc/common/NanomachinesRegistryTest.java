@@ -234,6 +234,19 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerRejectsSavedConnectorInputWhenTriggerListMissingLikeUpstream() {
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        CompoundTag tag = new CompoundTag();
+        ListTag connectors = new ListTag();
+        CompoundTag connector = new CompoundTag();
+        connector.putIntArray("triggerInputs", new int[]{0});
+        connectors.add(connector);
+        tag.put("connectors", connectors);
+
+        assertThrows(IndexOutOfBoundsException.class, () -> controller.load(tag));
+    }
+
+    @Test
     void controllerRejectsSavedBehaviorInputOutsideConnectorListLikeUpstream() {
         TestBehavior behavior = new TestBehavior("linked");
         NanomachinesRegistry registry = new NanomachinesRegistry();

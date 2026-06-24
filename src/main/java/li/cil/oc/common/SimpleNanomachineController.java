@@ -363,7 +363,11 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             ? graphTag.getList(TAG_TRIGGERS, CompoundTag.TAG_COMPOUND).size()
             : -1;
         connectors = graphTag.contains(TAG_CONNECTORS, CompoundTag.TAG_LIST)
-            ? loadConnectorEntries(graphTag.getList(TAG_CONNECTORS, CompoundTag.TAG_COMPOUND), savedTriggerCount)
+            ? loadConnectorEntries(
+                graphTag.getList(TAG_CONNECTORS, CompoundTag.TAG_COMPOUND),
+                savedTriggerCount >= 0 || !graphTag.contains(TAG_ACTIVE_INPUTS, CompoundTag.TAG_INT_ARRAY)
+                    ? Math.max(0, savedTriggerCount)
+                    : savedTriggerCount)
             : List.of();
         if (graphTag.contains(TAG_BEHAVIORS, CompoundTag.TAG_LIST)) {
             disableActive(DisableReason.Default);
