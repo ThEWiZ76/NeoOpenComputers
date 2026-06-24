@@ -13,7 +13,7 @@ public final class KeyboardEnvironment {
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Input,
         DeviceInfo.DeviceAttribute.Description, "Keyboard",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
         DeviceInfo.DeviceAttribute.Product, "Fancytyper MX-Stone"
     );
 

@@ -37,6 +37,7 @@ final class KeyboardEnvironmentTest {
 
         assertEquals(DeviceInfo.DeviceClass.Input, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Keyboard", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("Fancytyper MX-Stone", metadata.get(DeviceInfo.DeviceAttribute.Product));
     }
 
