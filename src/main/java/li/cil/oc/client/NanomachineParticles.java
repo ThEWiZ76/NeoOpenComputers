@@ -9,7 +9,10 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 final class NanomachineParticles {
     private NanomachineParticles() {
@@ -38,6 +41,18 @@ final class NanomachineParticles {
             return "portal";
         }
         return effects.get(Math.floorMod(index, effects.size()));
+    }
+
+    static Map<String, Double> activeEffectSpawnChances() {
+        final Map<String, Integer> counts = new LinkedHashMap<>();
+        for (final String effect : ambientParticleEffects()) {
+            counts.merge(effect, 1, Integer::sum);
+        }
+        final Map<String, Double> chances = new LinkedHashMap<>();
+        for (final Map.Entry<String, Integer> entry : counts.entrySet()) {
+            chances.put(entry.getKey(), entry.getValue() * 0.25D);
+        }
+        return Collections.unmodifiableMap(chances);
     }
 
     static ParticleOptions particleType(final String effectName) {
@@ -83,12 +98,17 @@ final class NanomachineParticles {
             return;
         }
         final double chance = ambientChance(ModSettings.enableNanomachinePfx());
-        if (!shouldSpawn(chance, minecraft.level.random.nextDouble())) {
+        if (shouldSpawn(chance, minecraft.level.random.nextDouble())) {
+            spawnParticleAround(minecraft.player, ParticleTypes.PORTAL);
+        }
+        if (!ModSettings.enableNanomachinePfx() || !NanomachineClientState.installed() || NanomachineClientState.buffer() <= 0D) {
             return;
         }
-        final List<String> effects = ambientParticleEffects();
-        final ParticleOptions particle = particleType(ambientParticleEffect(effects.isEmpty() ? 0 : minecraft.level.random.nextInt(effects.size())));
-        spawnParticleAround(minecraft.player, particle);
+        for (final Map.Entry<String, Double> entry : activeEffectSpawnChances().entrySet()) {
+            if (shouldSpawn(entry.getValue(), minecraft.level.random.nextDouble())) {
+                spawnParticleAround(minecraft.player, particleType(entry.getKey()));
+            }
+        }
     }
 
     private static void spawnParticleAround(final Player player, final ParticleOptions particle) {

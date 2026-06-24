@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -55,6 +56,15 @@ final class NanomachineParticlesTest {
         NanomachineClientState.clear();
 
         assertEquals("portal", NanomachineParticles.ambientParticleEffect(0));
+    }
+
+    @Test
+    void activeParticleEffectsUseUpstreamPerInputChance() {
+        NanomachineClientState.apply(new NanomachinePowerPayload(true, 50D, 100D, 3, 4, List.of("flame", "flame", "heart")));
+
+        assertEquals(Map.of(
+            "flame", 0.5D,
+            "heart", 0.25D), NanomachineParticles.activeEffectSpawnChances());
     }
 
     @Test
