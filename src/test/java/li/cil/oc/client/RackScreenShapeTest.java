@@ -152,6 +152,28 @@ final class RackScreenShapeTest {
         assertTranslationKey("gui.neoopencomputers.rack.missing.eeprom", missingTooltip.get(4));
     }
 
+    @Test
+    void rackScreenExposesMappingTooltipKeys() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14, rackDataWithFacingMappingAndPresence(Direction.SOUTH, 1, 2, Direction.NORTH));
+        final RackScreen.MappingControl selected = new RackScreen.MappingControl(1, 2, RackScreen.busIndex(Direction.SOUTH, Direction.NORTH));
+        final RackScreen.MappingControl unselected = new RackScreen.MappingControl(1, 2, RackScreen.busIndex(Direction.SOUTH, Direction.WEST));
+
+        final List<Component> selectedTooltip = RackScreen.mappingTooltip(menu, selected);
+        final List<Component> unselectedTooltip = RackScreen.mappingTooltip(menu, unselected);
+
+        assertEquals(3, selectedTooltip.size());
+        assertTranslationKey("gui.neoopencomputers.rack.bus", selectedTooltip.get(0));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.north", selectedTooltip.get(1));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.clear", selectedTooltip.get(2));
+
+        assertEquals(3, unselectedTooltip.size());
+        assertTranslationKey("gui.neoopencomputers.rack.bus", unselectedTooltip.get(0));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.west", unselectedTooltip.get(1));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.map", unselectedTooltip.get(2));
+
+        assertTrue(RackScreen.mappingTooltip(menu, new RackScreen.MappingControl(1, 3, RackScreen.busIndex(Direction.SOUTH, Direction.WEST))).isEmpty());
+    }
+
     private static RackMenu allocateMenu(final int containerId) throws ReflectiveOperationException {
         return allocateMenu(containerId, null);
     }

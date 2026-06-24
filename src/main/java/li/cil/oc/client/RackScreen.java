@@ -50,6 +50,10 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
+        final List<Component> mappingTooltip = mappingTooltip(menu, mappingControlAt(mouseX, mouseY, leftPos, topPos));
+        if (!mappingTooltip.isEmpty()) {
+            guiGraphics.renderComponentTooltip(font, mappingTooltip, mouseX, mouseY);
+        }
         final int slot = controlSlotAt(mouseX, mouseY, leftPos, topPos);
         if (slot >= 0) {
             guiGraphics.renderComponentTooltip(font, controlTooltip(menu.rackState(slot), menu.rackMissingRequirements(slot)), mouseX, mouseY);
@@ -206,6 +210,27 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.eeprom"));
         }
         return tooltip;
+    }
+
+    static List<Component> mappingTooltip(final RackMenu menu, final MappingControl control) {
+        final List<Component> tooltip = new ArrayList<>();
+        if (control == null || !menu.rackNodePresent(control.slot(), control.connectableIndex())) {
+            return tooltip;
+        }
+        final Direction side = busSide(menu.rackFacing(), control.busIndex());
+        if (side == null) {
+            return tooltip;
+        }
+        tooltip.add(Component.translatable("gui.neoopencomputers.rack.bus"));
+        tooltip.add(sideLabel(side));
+        tooltip.add(Component.translatable(menu.rackNodeMapping(control.slot(), control.connectableIndex()) == side.ordinal()
+            ? "gui.neoopencomputers.rack.bus.clear"
+            : "gui.neoopencomputers.rack.bus.map"));
+        return tooltip;
+    }
+
+    static Component sideLabel(final Direction side) {
+        return Component.translatable("gui.neoopencomputers.rack.bus.side." + side.getSerializedName());
     }
 
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
