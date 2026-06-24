@@ -18,7 +18,7 @@ final class DatabaseEnvironmentTest {
 
         assertEquals(DeviceInfo.DeviceClass.Generic, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Object catalogue", metadata.get(DeviceInfo.DeviceAttribute.Description));
-        assertEquals("MightyPirates", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("iCatalogue (patent pending)", metadata.get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("3", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
     }

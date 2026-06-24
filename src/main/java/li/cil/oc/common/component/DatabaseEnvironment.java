@@ -49,7 +49,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
             DeviceInfo.DeviceAttribute.Description, "Object catalogue",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "iCatalogue (patent pending)",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(size())
         );
