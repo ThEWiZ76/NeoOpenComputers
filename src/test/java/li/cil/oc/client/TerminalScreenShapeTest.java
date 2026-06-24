@@ -148,6 +148,21 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenTextRunsPreserveSupplementaryCodePoints() {
+        final String supplementary = new String(Character.toChars(0x10400));
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(
+            1,
+            1,
+            new String[]{supplementary},
+            new int[][]{{0x334455}},
+            new int[][]{{0}});
+
+        final List<TerminalScreen.TextRun> runs = TerminalScreen.textRuns(snapshot, 0);
+
+        assertEquals(List.of(new TerminalScreen.TextRun(0, supplementary, 0xFF334455)), runs);
+    }
+
+    @Test
     void terminalScreenBuildsKeyPayloadForMenu() throws ReflectiveOperationException {
         final TerminalMenu menu = allocateMenu(12);
 

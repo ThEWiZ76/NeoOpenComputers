@@ -209,7 +209,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             return List.of();
         }
         final String line = snapshotLine(snapshot, row);
-        final int width = Math.min(snapshot.width(), line.length());
+        final int width = Math.min(snapshot.width(), line.codePointCount(0, line.length()));
         if (width <= 0) {
             return List.of();
         }
@@ -217,7 +217,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         int runColumn = 0;
         int runColor = textColor(snapshot, 0, row);
         final StringBuilder runText = new StringBuilder();
-        for (int column = 0; column < width; column++) {
+        int offset = 0;
+        for (int column = 0; column < width && offset < line.length(); column++) {
+            final int codePoint = line.codePointAt(offset);
             final int color = textColor(snapshot, column, row);
             if (color != runColor && !runText.isEmpty()) {
                 runs.add(new TextRun(runColumn, runText.toString(), runColor));
@@ -225,7 +227,8 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
                 runColor = color;
                 runText.setLength(0);
             }
-            runText.append(line.charAt(column));
+            runText.appendCodePoint(codePoint);
+            offset += Character.charCount(codePoint);
         }
         if (!runText.isEmpty()) {
             runs.add(new TextRun(runColumn, runText.toString(), runColor));
