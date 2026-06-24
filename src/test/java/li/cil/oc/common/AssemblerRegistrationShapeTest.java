@@ -1,9 +1,15 @@
 package li.cil.oc.common;
 
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import org.junit.jupiter.api.Test;
+import sun.misc.Unsafe;
+
+import java.lang.reflect.Field;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class AssemblerRegistrationShapeTest {
     @Test
@@ -16,5 +22,24 @@ final class AssemblerRegistrationShapeTest {
         assertEquals(13, AssemblerBlockEntity.SLOT_COMPONENT_START);
         assertEquals(9, AssemblerBlockEntity.COMPONENT_SLOT_COUNT);
         assertEquals(22, AssemblerBlockEntity.CONTAINER_SIZE);
+    }
+
+    @Test
+    void assemblerExposesUpstreamDeviceInfoMetadata() throws Exception {
+        assertTrue(DeviceInfo.class.isAssignableFrom(AssemblerBlockEntity.class));
+
+        final AssemblerBlockEntity assembler = allocateAssembler();
+        final Map<String, String> metadata = ((DeviceInfo) assembler).getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Generic, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Assembler", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("Factorizer R1D1", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    private static AssemblerBlockEntity allocateAssembler() throws Exception {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        return (AssemblerBlockEntity) ((Unsafe) unsafeField.get(null)).allocateInstance(AssemblerBlockEntity.class);
     }
 }
