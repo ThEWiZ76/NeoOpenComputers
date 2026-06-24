@@ -16,9 +16,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.Test;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,8 +55,28 @@ final class RedstoneIoRegistrationShapeTest {
         assertCallback("getComparatorInput");
     }
 
+    @Test
+    void redstoneIoBlockEntityExposesUpstreamDeviceInfoMetadata() throws Exception {
+        final RedstoneIoBlockEntity redstone = allocateRedstoneIo();
+
+        Map<String, String> metadata = redstone.getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Communication, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Redstone controller", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("Rs100-V", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("16", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("1", metadata.get(DeviceInfo.DeviceAttribute.Width));
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = RedstoneIoBlockEntity.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static RedstoneIoBlockEntity allocateRedstoneIo() throws Exception {
+        Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        return (RedstoneIoBlockEntity) ((Unsafe) unsafeField.get(null)).allocateInstance(RedstoneIoBlockEntity.class);
     }
 }
