@@ -82,6 +82,9 @@ public final class RackNetworking {
         if (!(containerMenu instanceof ServerRackMenu menu) || menu.containerId != payload.containerId()) {
             return false;
         }
+        if (!menu.isItem() && !menu.serverPresent()) {
+            return false;
+        }
         return menu.serverInventory() instanceof ServerRackMountableEnvironment server && server.controlPower(payload.action());
     }
 
