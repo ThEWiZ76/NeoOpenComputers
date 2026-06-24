@@ -215,6 +215,25 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerResponsesConsumeWirelessEnergyLikeUpstream() {
+        API.network = new NetworkRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        SimpleNanomachineController baseline = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+        final double range = ModSettings.nanomachinesCommandRange();
+        final double expectedCost = ModSettings.wirelessCostPerRange(1) * range * range;
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 124}), sender);
+        runNanomachineCommandDelay(controller);
+        runNanomachineCommandDelay(baseline);
+
+        assertTrue(sender.lastPacket != null);
+        assertEquals(baseline.getLocalBuffer() - expectedCost, controller.getLocalBuffer(), 0.000_001D);
+    }
+
+    @Test
     void controllerDelaysWirelessCommandResponsesAndIgnoresCommandsWhileWaiting() {
         API.network = new NetworkRegistry();
         SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());

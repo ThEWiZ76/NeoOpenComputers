@@ -544,6 +544,10 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         if (responsePort <= 0) {
             return;
         }
+        final double cost = ModSettings.wirelessCostPerRange(1) * ModSettings.nanomachinesCommandRange() * ModSettings.nanomachinesCommandRange();
+        if (changeBuffer(-cost) <= -0.1D) {
+            return;
+        }
         final Object[] response = new Object[data.length + 1];
         response[0] = "nanomachines";
         System.arraycopy(data, 0, response, 1, data.length);
