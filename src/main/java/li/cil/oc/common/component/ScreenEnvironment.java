@@ -24,7 +24,7 @@ public final class ScreenEnvironment {
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Display,
             DeviceInfo.DeviceAttribute.Description, "Text buffer",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Text Screen V0",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(Math.max(0, maxWidth) * Math.max(0, maxHeight)),
             DeviceInfo.DeviceAttribute.Width, Integer.toString(bits(maxDepth))

@@ -38,6 +38,7 @@ final class ScreenEnvironmentTest {
 
         assertEquals(DeviceInfo.DeviceClass.Display, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Text buffer", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("Text Screen V0", metadata.get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("640", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
         assertEquals("1", metadata.get(DeviceInfo.DeviceAttribute.Width));
