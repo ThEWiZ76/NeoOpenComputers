@@ -488,6 +488,24 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void bitbltClipsSourceAndDestinationLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        gpu.allocateBuffer(null, new TestArguments(3, 1));
+        gpu.allocateBuffer(null, new TestArguments(3, 1));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+        gpu.set(null, new TestArguments(1, 1, "ABC"));
+        gpu.setActiveBuffer(null, new TestArguments(2));
+        gpu.set(null, new TestArguments(1, 1, "xyz"));
+
+        assertArrayEquals(new Object[]{true}, gpu.bitblt(null, new TestArguments(2, 1, 1, 3, 1, 1, 0, 1)));
+
+        assertArrayEquals(new Object[]{"x", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(1, 1)));
+        assertArrayEquals(new Object[]{"A", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(2, 1)));
+        assertArrayEquals(new Object[]{"B", 0xFFFFFF, 0x000000, null, null}, gpu.get(null, new TestArguments(3, 1)));
+    }
+
+    @Test
     void persistsVideoBuffersAndActiveIndex() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);

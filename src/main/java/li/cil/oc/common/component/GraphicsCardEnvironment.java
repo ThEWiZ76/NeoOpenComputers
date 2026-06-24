@@ -401,9 +401,13 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         if (!consumeScreenEnergy(dstIndex, width * height, ModSettings.gpuCopyCost() / 15D)) {
             return notEnoughEnergy();
         }
-        dst.rawSetText(x, y, textSnapshot(src, fromX, fromY, width, height));
-        dst.rawSetForeground(x, y, foregroundSnapshot(src, fromX, fromY, width, height));
-        dst.rawSetBackground(x, y, backgroundSnapshot(src, fromX, fromY, width, height));
+        final BitBltRegion region = clipBitBltRegion(dst, src, x, y, width, height, fromX, fromY);
+        if (region.width() <= 0 || region.height() <= 0) {
+            return new Object[]{true};
+        }
+        dst.rawSetText(region.dstX(), region.dstY(), textSnapshot(src, region.srcX(), region.srcY(), region.width(), region.height()));
+        dst.rawSetForeground(region.dstX(), region.dstY(), foregroundSnapshot(src, region.srcX(), region.srcY(), region.width(), region.height()));
+        dst.rawSetBackground(region.dstX(), region.dstY(), backgroundSnapshot(src, region.srcX(), region.srcY(), region.width(), region.height()));
         return new Object[]{true};
     }
 
@@ -565,6 +569,43 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             : new Object[]{previous, null};
     }
 
+    private static BitBltRegion clipBitBltRegion(final TextBuffer dst, final TextBuffer src, final int dstX, final int dstY, final int width, final int height, final int srcX, final int srcY) {
+        int adjustedDstX = dstX;
+        int adjustedDstY = dstY;
+        int adjustedWidth = width;
+        int adjustedHeight = height;
+        int adjustedSrcX = srcX;
+        int adjustedSrcY = srcY;
+
+        if (adjustedDstX < 0) {
+            adjustedWidth += adjustedDstX;
+            adjustedSrcX -= adjustedDstX;
+            adjustedDstX = 0;
+        }
+        if (adjustedDstY < 0) {
+            adjustedHeight += adjustedDstY;
+            adjustedSrcY -= adjustedDstY;
+            adjustedDstY = 0;
+        }
+        if (adjustedSrcX < 0) {
+            adjustedWidth += adjustedSrcX;
+            adjustedDstX -= adjustedSrcX;
+            adjustedSrcX = 0;
+        }
+        if (adjustedSrcY < 0) {
+            adjustedHeight += adjustedSrcY;
+            adjustedDstY -= adjustedSrcY;
+            adjustedSrcY = 0;
+        }
+
+        adjustedWidth -= Math.max(0, adjustedDstX + adjustedWidth - dst.getWidth());
+        adjustedWidth -= Math.max(0, adjustedSrcX + adjustedWidth - src.getWidth());
+        adjustedHeight -= Math.max(0, adjustedDstY + adjustedHeight - dst.getHeight());
+        adjustedHeight -= Math.max(0, adjustedSrcY + adjustedHeight - src.getHeight());
+
+        return new BitBltRegion(adjustedDstX, adjustedDstY, adjustedWidth, adjustedHeight, adjustedSrcX, adjustedSrcY);
+    }
+
     private static int[][] textSnapshot(final TextBuffer source, final int column, final int row, final int width, final int height) {
         final int[][] snapshot = new int[Math.max(0, height)][Math.max(0, width)];
         for (int y = 0; y < snapshot.length; y++) {
@@ -655,6 +696,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     @FunctionalInterface
     private interface ScreenOperation {
         Object[] apply(TextBuffer buffer);
+    }
+
+    private record BitBltRegion(int dstX, int dstY, int width, int height, int srcX, int srcY) {
     }
 
     private static final class VideoBuffer extends AbstractManagedEnvironment implements TextBuffer {
