@@ -2231,6 +2231,26 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void userdataDisposeSuppressesThrowablesLikeUpstream() {
+        TestValue value = new ThrowingDisposeValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            valid = pcall(function()
+              count = select('#', userdata.dispose(value))
+            end)
+            continued = true
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+
+        assertTrue(architecture.globalBoolean("valid"));
+        assertTrue(architecture.globalBoolean("continued"));
+        assertEquals(0, architecture.globalInteger("count"));
+    }
+
+    @Test
     void reusesUserdataProxyForSameValueHandle() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""
@@ -5023,6 +5043,13 @@ final class LuaArchitectureTest {
         @Override
         public void unapply(final Context context, final Arguments arguments) {
             throw failure;
+        }
+    }
+
+    private static final class ThrowingDisposeValue extends TestValue {
+        @Override
+        public void dispose(final Context context) {
+            throw new AssertionError("broken dispose");
         }
     }
 

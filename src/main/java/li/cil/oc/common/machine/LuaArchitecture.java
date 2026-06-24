@@ -1343,7 +1343,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 final Value value = checkValue(args, 1);
                 try {
                     value.dispose(machine);
-                } catch (Exception ignored) {
+                } catch (Throwable ignored) {
                     // Upstream logs and suppresses userdata dispose failures.
                 }
                 return LuaValue.NONE;
