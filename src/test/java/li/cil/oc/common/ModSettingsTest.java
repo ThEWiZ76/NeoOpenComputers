@@ -63,6 +63,7 @@ final class ModSettingsTest {
         assertEquals(TextBuffer.ColorDepth.EightBit, ModSettings.screenDepthByTier(2));
         assertEquals(TextBuffer.ColorDepth.OneBit, ModSettings.screenDepthByTier(-1));
         assertEquals(TextBuffer.ColorDepth.EightBit, ModSettings.screenDepthByTier(99));
+        assertEquals(0.05D, ModSettings.screenCost());
         assertEquals(true, ModSettings.inputUsername());
         assertEquals(25D, ModSettings.disassemblerTickAmount());
         assertEquals(2000D, ModSettings.disassemblerItemCost());
@@ -249,6 +250,7 @@ final class ModSettingsTest {
         assertEquals(List.of("filesystem", "floppySize"), ModSettings.FLOPPY_SIZE.getPath());
         assertEquals(List.of("filesystem", "hddRead"), ModSettings.HDD_READ.getPath());
         assertEquals(List.of("filesystem", "hddWrite"), ModSettings.HDD_WRITE.getPath());
+        assertEquals(List.of("power", "cost", "screen"), ModSettings.SCREEN_COST.getPath());
         assertEquals(List.of("power", "cost", "gpuSet"), ModSettings.GPU_SET_COST.getPath());
         assertEquals(List.of("power", "cost", "gpuFill"), ModSettings.GPU_FILL_COST.getPath());
         assertEquals(List.of("power", "cost", "gpuClear"), ModSettings.GPU_CLEAR_COST.getPath());

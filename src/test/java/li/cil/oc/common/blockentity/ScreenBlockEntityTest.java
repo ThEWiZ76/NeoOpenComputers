@@ -151,6 +151,23 @@ final class ScreenBlockEntityTest {
         });
     }
 
+    @Test
+    void usesConfiguredScreenEnergyCostLikeUpstream() throws Exception {
+        withCachedConfig(ModSettings.SCREEN_COST, 0.2D, () ->
+            withCachedConfig(ModSettings.SCREEN_WIDTHS_BY_TIER, List.of(50, 80, 160), () ->
+            withCachedConfig(ModSettings.SCREEN_HEIGHTS_BY_TIER, List.of(16, 25, 50), () -> {
+                ScreenBlockEntity screen = allocateScreen();
+                initializeBuffer(screen);
+                Method configureTier = ScreenBlockEntity.class.getDeclaredMethod("configureTier", int.class);
+                configureTier.setAccessible(true);
+
+                configureTier.invoke(screen, 2);
+
+                assertEquals(0.2D, screen.getEnergyCostPerTick(), 0.000_001D);
+                assertEquals(2D, screen.fullyLitEnergyCostPerTick(), 0.000_001D);
+            })));
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = ScreenBlockEntity.class.getMethod(methodName, Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));

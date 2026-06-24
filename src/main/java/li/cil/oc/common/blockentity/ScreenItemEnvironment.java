@@ -53,6 +53,7 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
         maximumWidth = ModSettings.screenWidthByTier(this.tier);
         maximumHeight = ModSettings.screenHeightByTier(this.tier);
         maximumColorDepth = ModSettings.screenDepthByTier(this.tier);
+        energyCostPerTick = ModSettings.screenCost();
         colorDepth = maximumColorDepth;
         width = maximumWidth;
         height = maximumHeight;
@@ -80,6 +81,12 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
     @Override
     public double getEnergyCostPerTick() {
         return energyCostPerTick;
+    }
+
+    public double fullyLitEnergyCostPerTick() {
+        final double basicPixels = (double) ModSettings.screenWidthByTier(0) * (double) ModSettings.screenHeightByTier(0);
+        final double maximumPixels = (double) maximumWidth * (double) maximumHeight;
+        return energyCostPerTick * maximumPixels / Math.max(1D, basicPixels);
     }
 
     @Override

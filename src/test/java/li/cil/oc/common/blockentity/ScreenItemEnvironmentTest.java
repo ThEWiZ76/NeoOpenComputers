@@ -45,6 +45,20 @@ final class ScreenItemEnvironmentTest {
         });
     }
 
+    @Test
+    void usesConfiguredScreenEnergyCostLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.SCREEN_COST, 0.2D, () ->
+            withCachedConfig(ModSettings.SCREEN_WIDTHS_BY_TIER, List.of(50, 80, 160), () ->
+            withCachedConfig(ModSettings.SCREEN_HEIGHTS_BY_TIER, List.of(16, 25, 50), () -> {
+                final ScreenItemEnvironment tierThree = new ScreenItemEnvironment(null, 2);
+
+                assertEquals(0.2D, tierThree.getEnergyCostPerTick(), 0.000_001D);
+                assertEquals(2D, tierThree.fullyLitEnergyCostPerTick(), 0.000_001D);
+            })));
+    }
+
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
         final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
         cachedValue.setAccessible(true);

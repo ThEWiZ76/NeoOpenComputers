@@ -17,7 +17,7 @@ public final class ScreenEnvironment {
         if (builder == null) {
             return null;
         }
-        return builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create();
+        return builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create();
     }
 
     public static Map<String, String> deviceInfo(final int maxWidth, final int maxHeight, final TextBuffer.ColorDepth maxDepth) {

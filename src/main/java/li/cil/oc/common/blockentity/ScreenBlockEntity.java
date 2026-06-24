@@ -87,6 +87,12 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         return energyCostPerTick;
     }
 
+    public double fullyLitEnergyCostPerTick() {
+        final double basicPixels = (double) ModSettings.screenWidthByTier(0) * (double) ModSettings.screenHeightByTier(0);
+        final double maximumPixels = (double) maximumWidth * (double) maximumHeight;
+        return energyCostPerTick * maximumPixels / Math.max(1D, basicPixels);
+    }
+
     @Override
     public void setPowerState(final boolean value) {
         powered = value;
@@ -598,6 +604,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         maximumWidth = ModSettings.screenWidthByTier(this.tier);
         maximumHeight = ModSettings.screenHeightByTier(this.tier);
         maximumColorDepth = ModSettings.screenDepthByTier(this.tier);
+        energyCostPerTick = ModSettings.screenCost();
         colorDepth = maximumColorDepth;
         width = maximumWidth;
         height = maximumHeight;
