@@ -3221,6 +3221,22 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void leashUpgradeRejectsInvalidSideLikeUpstream(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.LEASH_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for leash upgrade");
+
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final AgentTestHost host = new AgentTestHost(helper, player);
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.LEASH_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Leash upgrade did not create environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Leash node is not a component");
+
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        assertComponentFailureMessage(helper, component, "leash", "invalid side", 6);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tractorBeamUpgradeRejectsNonRobotAgentHost(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for tractor beam upgrade");

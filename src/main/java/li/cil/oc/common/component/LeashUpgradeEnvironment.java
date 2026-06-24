@@ -61,13 +61,13 @@ public final class LeashUpgradeEnvironment extends AbstractManagedEnvironment im
         if (leashedEntities.size() >= MAX_LEASHED_ENTITIES) {
             return new Object[]{null, "too many leashed entities"};
         }
+        final Direction direction = checkSide(arguments, 0);
         final Entity holder = leashHolder();
         final Level level = host == null ? null : host.world();
         if (holder == null || level == null) {
             return new Object[]{null, "no unleashed entity"};
         }
 
-        final Direction direction = Direction.from3DDataValue(arguments.checkInteger(0));
         final AABB bounds = leashBounds(direction);
         for (final Entity entity : level.getEntitiesOfClass(Entity.class, bounds)) {
             if (entity instanceof Leashable leashable && leashable.canHaveALeashAttachedToIt()) {
@@ -146,6 +146,14 @@ public final class LeashUpgradeEnvironment extends AbstractManagedEnvironment im
             return tablet.player();
         }
         return host instanceof Entity entity ? entity : null;
+    }
+
+    private static Direction checkSide(final Arguments arguments, final int index) {
+        final int side = arguments.checkInteger(index);
+        if (side < 0 || side > 5) {
+            throw new IllegalArgumentException("invalid side");
+        }
+        return Direction.from3DDataValue(side);
     }
 
     private AABB leashBounds(final Direction direction) {
