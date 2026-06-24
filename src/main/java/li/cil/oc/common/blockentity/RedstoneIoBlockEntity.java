@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.RedstoneControllerHost;
 import net.minecraft.core.BlockPos;
@@ -160,18 +161,26 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
 
     @Callback(doc = "function([side:number, ]value:number or table):number or table -- Set redstone output and return previous value.")
     public Object[] setOutput(final Context context, final Arguments args) {
+        final Object result;
+        final boolean changed;
         if (args.count() == 1 && args.isTable(0)) {
-            final Map<Integer, Integer> oldValues = valuesToMap(outputs);
-            setOutputs(args.checkTable(0));
-            return new Object[]{oldValues};
-        }
-        if (args.count() != 2) {
+            result = valuesToMap(outputs);
+            changed = setOutputs(args.checkTable(0));
+        } else if (args.count() == 2) {
+            final Direction direction = side(args.checkInteger(0));
+            final int oldValue = redstoneOutput(direction);
+            final int newValue = Math.clamp(args.checkInteger(1), 0, 15);
+            result = oldValue;
+            changed = oldValue != newValue;
+            setRedstoneOutput(direction, newValue);
+        } else {
             throw new IllegalArgumentException("invalid number of arguments, expected 1 or 2");
         }
-        final Direction direction = side(args.checkInteger(0));
-        final int oldValue = redstoneOutput(direction);
-        setRedstoneOutput(direction, args.checkInteger(1));
-        return new Object[]{oldValue};
+        final double redstoneDelay = ModSettings.redstoneDelay();
+        if (changed && context != null && redstoneDelay > 0D) {
+            context.pause(redstoneDelay);
+        }
+        return new Object[]{result};
     }
 
     @Callback(direct = true, doc = "function(side:number):number -- Get the comparator input on the specified side.")
@@ -256,12 +265,18 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         }
     }
 
-    private void setOutputs(final Map<?, ?> values) {
+    private boolean setOutputs(final Map<?, ?> values) {
+        boolean changed = false;
         for (Map.Entry<?, ?> entry : values.entrySet()) {
             if (entry.getKey() instanceof Number side && entry.getValue() instanceof Number value) {
-                setRedstoneOutput(side(side.intValue()), value.intValue());
+                final Direction direction = side(side.intValue());
+                final int oldValue = redstoneOutput(direction);
+                final int newValue = Math.clamp(value.intValue(), 0, 15);
+                changed |= oldValue != newValue;
+                setRedstoneOutput(direction, newValue);
             }
         }
+        return changed;
     }
 
     private void saveNode(final CompoundTag tag) {
