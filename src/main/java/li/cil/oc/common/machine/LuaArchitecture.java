@@ -1346,7 +1346,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
                 } catch (Throwable ignored) {
                     // Upstream logs and suppresses userdata dispose failures.
                 }
-                return LuaValue.NONE;
+                return LuaValue.NIL;
             }
         });
         userdata.set("methods", new VarArgFunction() {
