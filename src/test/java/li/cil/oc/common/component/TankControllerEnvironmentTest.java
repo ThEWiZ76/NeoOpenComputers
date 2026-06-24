@@ -35,6 +35,7 @@ final class TankControllerEnvironmentTest {
 
         assertEquals(DeviceInfo.DeviceClass.Generic, info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Tank controller", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("FlowCheckDX", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
     }
 
