@@ -211,6 +211,22 @@ final class DataCardEnvironmentTest {
     }
 
     @Test
+    void secondaryCryptoArgumentsIgnoreDataHardLimitLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        withCachedConfig(ModSettings.DATA_CARD_HARD_LIMIT, 1, () -> {
+            DataCardEnvironment card = new DataCardEnvironment(1);
+            charge(card, 1000D);
+            byte[] data = bytes("x");
+            byte[] key = bytes("0123456789abcdef");
+            byte[] iv = bytes("abcdef0123456789");
+
+            assertArrayEquals(hmac("HmacMD5", key, data), (byte[]) card.md5(null, new TestArguments(data, key))[0]);
+            assertArrayEquals(hmac("HmacSHA256", key, data), (byte[]) card.sha256(null, new TestArguments(data, key))[0]);
+            assertArrayEquals(aes(Cipher.ENCRYPT_MODE, data, key, iv), (byte[]) card.encrypt(null, new TestArguments(data, key, iv))[0]);
+        });
+    }
+
+    @Test
     void tierTwoRejectsInvalidAesKeyAndIvLengths() {
         OpenComputersApi.initialize();
         DataCardEnvironment card = new DataCardEnvironment(1);

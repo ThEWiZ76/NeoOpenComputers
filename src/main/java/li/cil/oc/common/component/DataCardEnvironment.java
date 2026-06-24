@@ -238,7 +238,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         try {
             if (tier >= 1 && args.count() > 1) {
                 final Mac mac = Mac.getInstance(hmacAlgorithm);
-                mac.init(new SecretKeySpec(checkData(args, 1), hmacAlgorithm));
+                mac.init(new SecretKeySpec(args.checkByteArray(1), hmacAlgorithm));
                 return mac.doFinal(data);
             }
             return MessageDigest.getInstance(digestAlgorithm).digest(data);
@@ -252,11 +252,11 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     private byte[] aes(final int mode, final Context context, final Arguments args) throws Exception {
         try {
             final byte[] data = costedData(context, args, ModSettings.dataCardSimpleCost(), ModSettings.dataCardSimpleByteCost());
-            final byte[] key = checkData(args, 1);
+            final byte[] key = args.checkByteArray(1);
             if (key.length != 16) {
                 throw new IllegalArgumentException("expected a 128-bit AES key");
             }
-            final byte[] iv = checkData(args, 2);
+            final byte[] iv = args.checkByteArray(2);
             if (iv.length != 16) {
                 throw new IllegalArgumentException("expected a 128-bit AES IV");
             }
