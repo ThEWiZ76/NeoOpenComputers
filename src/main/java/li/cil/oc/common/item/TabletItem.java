@@ -1,5 +1,6 @@
 package li.cil.oc.common.item;
 
+import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Chargeable;
 import li.cil.oc.api.driver.item.Slot;
@@ -35,6 +36,9 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
     public static final double DEFAULT_MAX_CHARGE = 10000D;
 
     private static final String DATA_TAG = "oc:tablet";
+    private static final String DRIVER_DATA_TAG = "oc:data";
+    private static final String STACK_COMPONENTS_TAG = "components";
+    private static final String STACK_CUSTOM_DATA_TAG = "minecraft:custom_data";
     private static final String ENERGY_TAG = "energy";
     private static final String MAX_ENERGY_TAG = "maxEnergy";
     private static final String TIER_TAG = "tier";
@@ -168,7 +172,24 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return readData(stack);
+        if (stack == null) {
+            return new CompoundTag();
+        }
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return new CompoundTag();
+        }
+        final CompoundTag data = customData.getUnsafe().getCompound(DATA_TAG);
+        final ListTag components = data.getList(COMPONENTS_TAG, Tag.TAG_COMPOUND);
+        for (int index = 0; index < components.size(); index++) {
+            final CompoundTag entry = components.getCompound(index);
+            final CompoundTag stackData = entry.getCompound(STACK_TAG);
+            final ItemStack component = decodeStack(stackData);
+            if (isFilesystemComponent(component)) {
+                return stackDriverDataTag(stackData);
+            }
+        }
+        return new CompoundTag();
     }
 
     public CompoundTag analyzeBlock(
@@ -327,6 +348,33 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
             return ItemStack.EMPTY;
         }
         return ItemStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, tag).result().orElse(ItemStack.EMPTY);
+    }
+
+    private static boolean isFilesystemComponent(final ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        final DriverItem driver = Driver.driverFor(stack);
+        if (driver == null) {
+            return false;
+        }
+        final String slot = driver.slot(stack);
+        return Slot.HDD.equals(slot) || Slot.Floppy.equals(slot);
+    }
+
+    private static CompoundTag stackDriverDataTag(final CompoundTag stackData) {
+        if (!stackData.contains(STACK_COMPONENTS_TAG, Tag.TAG_COMPOUND)) {
+            stackData.put(STACK_COMPONENTS_TAG, new CompoundTag());
+        }
+        final CompoundTag components = stackData.getCompound(STACK_COMPONENTS_TAG);
+        if (!components.contains(STACK_CUSTOM_DATA_TAG, Tag.TAG_COMPOUND)) {
+            components.put(STACK_CUSTOM_DATA_TAG, new CompoundTag());
+        }
+        final CompoundTag customData = components.getCompound(STACK_CUSTOM_DATA_TAG);
+        if (!customData.contains(DRIVER_DATA_TAG, Tag.TAG_COMPOUND)) {
+            customData.put(DRIVER_DATA_TAG, new CompoundTag());
+        }
+        return customData.getCompound(DRIVER_DATA_TAG);
     }
 
     private static int caseTier(final ItemStack caseStack) {

@@ -2123,7 +2123,26 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(driver != null, "No driver registered for tablet item");
         helper.assertTrue(Slot.Tablet.equals(driver.slot(stack)), "Tablet driver slot mismatch");
         helper.assertTrue(driver.tier(stack) == 1, "Tablet driver tier mismatch");
-        helper.assertTrue(driver.dataTag(stack).getBoolean("running"), "Tablet driver data tag did not expose stored data");
+        helper.assertTrue(driver.dataTag(stack).isEmpty(), "Tablet driver data tag without filesystem should be empty");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tabletDriverDataTagTargetsInstalledFilesystem(final GameTestHelper helper) {
+        final TabletItem tablet = ModItems.TABLET.get();
+        final ItemStack stack = tablet.assembleFromCase(
+            new ItemStack(ModItems.TABLET_CASE_TIER1.get()),
+            ItemStack.EMPTY,
+            new ItemStack(ModItems.HDD_TIER1.get()));
+        final DriverItem tabletDriver = Driver.driverFor(stack);
+        helper.assertTrue(tabletDriver != null, "No driver registered for tablet item");
+
+        tabletDriver.dataTag(stack).putString("marker", "tablet-fs");
+
+        final ItemStack filesystem = tablet.getComponent(stack, 1);
+        final DriverItem filesystemDriver = Driver.driverFor(filesystem);
+        helper.assertTrue(filesystemDriver != null, "No driver registered for tablet filesystem item");
+        helper.assertTrue("tablet-fs".equals(filesystemDriver.dataTag(filesystem).getString("marker")), "Tablet driver data tag did not persist to installed filesystem");
         helper.succeed();
     }
 
