@@ -1589,6 +1589,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesWirelessCommandsIgnoreDeadPlayersLikeUpstream(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+        final li.cil.oc.api.network.WirelessEndpoint endpoint = (li.cil.oc.api.network.WirelessEndpoint) controller;
+        final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
+        Network.joinWirelessNetwork(sender);
+
+        player.setHealth(0F);
+        helper.assertFalse(player.isAlive(), "Nanomachines dead-player test player is still alive");
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 564}), sender);
+
+        player.setHealth(1F);
+        helper.assertTrue(player.isAlive(), "Nanomachines dead-player test player did not revive");
+        runNanomachinesCommandDelay(player);
+
+        helper.assertTrue(sender.lastPacket == null, "Nanomachines command responded after being received while player was dead");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesOverloadDamagesPlayersAboveSafeInputCount(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 4));

@@ -180,7 +180,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     @Override
     public void receivePacket(final Packet packet, final WirelessEndpoint sender) {
-        if (packet == null || sender == null || getLocalBuffer() <= 0D || commandDelay > 0 || !isSenderInCommandRange(sender)) {
+        if (packet == null || sender == null || isDeadPlayer() || getLocalBuffer() <= 0D || commandDelay > 0 || !isSenderInCommandRange(sender)) {
             return;
         }
         final Object[] data = packet.data();
@@ -772,6 +772,10 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     private boolean isCreativePlayer() {
         return player != null && (player.isCreative() || player.getAbilities().instabuild);
+    }
+
+    private boolean isDeadPlayer() {
+        return player != null && !player.isAlive();
     }
 
     private void applyReconfigureEffects() {
