@@ -8,6 +8,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
@@ -27,11 +28,13 @@ final class ServerRackMenuShapeTest {
     void serverRackMenuHasClientAndServerConstructors() throws NoSuchMethodException {
         final Constructor<ServerRackMenu> clientConstructor = ServerRackMenu.class.getConstructor(int.class, Inventory.class);
         final Constructor<ServerRackMenu> serverConstructor = ServerRackMenu.class.getConstructor(int.class, Inventory.class, Container.class);
+        final Constructor<ServerRackMenu> lockedServerConstructor = ServerRackMenu.class.getConstructor(int.class, Inventory.class, Container.class, ItemStack.class);
         final Constructor<ServerRackMenu> dataConstructor = ServerRackMenu.class.getConstructor(int.class, Inventory.class, Container.class, ContainerData.class);
 
         assertTrue(AbstractContainerMenu.class.isAssignableFrom(ServerRackMenu.class));
         assertArrayEquals(new Class<?>[]{int.class, Inventory.class}, clientConstructor.getParameterTypes());
         assertArrayEquals(new Class<?>[]{int.class, Inventory.class, Container.class}, serverConstructor.getParameterTypes());
+        assertArrayEquals(new Class<?>[]{int.class, Inventory.class, Container.class, ItemStack.class}, lockedServerConstructor.getParameterTypes());
         assertArrayEquals(new Class<?>[]{int.class, Inventory.class, Container.class, ContainerData.class}, dataConstructor.getParameterTypes());
     }
 
@@ -54,6 +57,13 @@ final class ServerRackMenuShapeTest {
     @Test
     void serverRackMenuExposesServerInventoryTarget() throws NoSuchMethodException {
         assertEquals(Container.class, ServerRackMenu.class.getMethod("serverInventory").getReturnType());
+    }
+
+    @Test
+    void serverRackMenuExposesLockedStackGuardLikeUpstream() throws NoSuchMethodException {
+        assertEquals(ItemStack.class, ServerRackMenu.class.getMethod("lockedStack").getReturnType());
+        assertEquals(boolean.class, ServerRackMenu.class.getMethod("isLockedStack", ItemStack.class).getReturnType());
+        assertEquals(boolean.class, ServerRackMenu.class.getMethod("isLockedSlot", int.class).getReturnType());
     }
 
     @Test

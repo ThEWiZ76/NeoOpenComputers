@@ -48,7 +48,7 @@ public class ServerItem extends Item implements DriverItem, Tiered {
                 final CompoundTag data = dataTag(stack);
                 final ServerRackMountableEnvironment server = new ServerRackMountableEnvironment(player, tier, data);
                 player.openMenu(new SimpleMenuProvider(
-                    (containerId, playerInventory, menuPlayer) -> new ServerRackMenu(containerId, playerInventory, server),
+                    (containerId, playerInventory, menuPlayer) -> new ServerRackMenu(containerId, playerInventory, server, stack),
                     Component.translatable("gui.neoopencomputers.server_rack")));
             }
             player.swing(usedHand);

@@ -448,6 +448,24 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void serverItemMenuLocksHeldStackLikeUpstream(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.SERVER_TIER2.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.getInventory().setItem(0, stack);
+
+        final ServerRackMountableEnvironment server = new ServerRackMountableEnvironment(player, 1, driver.dataTag(stack));
+        final ServerRackMenu menu = new ServerRackMenu(1, player.getInventory(), server, stack);
+        final int hotbarSlotZeroMenuIndex = ServerRackMenu.SERVER_SLOT_COUNT + 27;
+
+        helper.assertTrue(menu.isLockedStack(stack), "Server item menu did not recognize held server stack as locked");
+        helper.assertTrue(menu.isLockedSlot(hotbarSlotZeroMenuIndex), "Server item menu did not lock held hotbar stack");
+        helper.assertTrue(menu.quickMoveStack(player, hotbarSlotZeroMenuIndex).isEmpty(), "Server item menu allowed moving held server stack");
+        helper.assertTrue(player.getInventory().getItem(0) == stack, "Locked server stack moved out of player inventory");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardDriverDataTagCarriesAccessContext(final GameTestHelper helper) throws Exception {
         final ItemStack stack = new ItemStack(ModItems.DEBUG_CARD.get());
         final DriverItem driver = Driver.driverFor(stack);

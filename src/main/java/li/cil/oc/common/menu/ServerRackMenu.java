@@ -53,6 +53,7 @@ public class ServerRackMenu extends AbstractContainerMenu {
 
     private final Container serverInventory;
     private final ContainerData serverData;
+    private final ItemStack lockedStack;
 
     public ServerRackMenu(final int containerId, final Inventory playerInventory) {
         this(containerId, playerInventory, new SimpleContainer(SERVER_SLOT_COUNT), new SimpleContainerData(SERVER_DATA_COUNT));
@@ -62,10 +63,19 @@ public class ServerRackMenu extends AbstractContainerMenu {
         this(containerId, playerInventory, serverInventory, serverData(serverInventory));
     }
 
+    public ServerRackMenu(final int containerId, final Inventory playerInventory, final Container serverInventory, final ItemStack lockedStack) {
+        this(containerId, playerInventory, serverInventory, serverData(serverInventory), lockedStack);
+    }
+
     public ServerRackMenu(final int containerId, final Inventory playerInventory, final Container serverInventory, final ContainerData serverData) {
+        this(containerId, playerInventory, serverInventory, serverData, ItemStack.EMPTY);
+    }
+
+    public ServerRackMenu(final int containerId, final Inventory playerInventory, final Container serverInventory, final ContainerData serverData, final ItemStack lockedStack) {
         super(ModMenus.SERVER_RACK.get(), containerId);
         this.serverInventory = serverInventory;
         this.serverData = serverData;
+        this.lockedStack = lockedStack == null ? ItemStack.EMPTY : lockedStack;
         serverInventory.startOpen(playerInventory.player);
         addDataSlots(serverData);
 
@@ -86,6 +96,9 @@ public class ServerRackMenu extends AbstractContainerMenu {
         ItemStack moved = ItemStack.EMPTY;
         final Slot slot = slots.get(index);
         if (slot != null && slot.hasItem()) {
+            if (isLockedSlot(index)) {
+                return ItemStack.EMPTY;
+            }
             final ItemStack stack = slot.getItem();
             moved = stack.copy();
             if (index < SERVER_SLOT_COUNT) {
@@ -112,6 +125,21 @@ public class ServerRackMenu extends AbstractContainerMenu {
 
     public Container serverInventory() {
         return serverInventory;
+    }
+
+    public ItemStack lockedStack() {
+        return lockedStack;
+    }
+
+    public boolean isLockedStack(final ItemStack stack) {
+        return !lockedStack.isEmpty()
+            && stack != null
+            && !stack.isEmpty()
+            && (stack == lockedStack || ItemStack.matches(stack, lockedStack));
+    }
+
+    public boolean isLockedSlot(final int index) {
+        return index >= SERVER_SLOT_COUNT && index >= 0 && index < slots.size() && isLockedStack(slots.get(index).getItem());
     }
 
     public int slotKind(final int slot) {
