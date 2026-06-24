@@ -81,7 +81,7 @@ public final class NanomachineMagnetProvider extends AbstractProvider {
                     return true;
                 }
                 if (inventoryStack.getCount() < inventoryStack.getMaxStackSize()
-                    && ItemStack.isSameItemSameComponents(inventoryStack, pulledStack)) {
+                    && ItemStack.isSameItem(inventoryStack, pulledStack)) {
                     return true;
                 }
             }

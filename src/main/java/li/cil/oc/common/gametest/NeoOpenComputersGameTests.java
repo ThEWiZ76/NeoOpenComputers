@@ -70,6 +70,7 @@ import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.nanomachines.provider.NanomachineDisintegrationProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
+import li.cil.oc.common.nanomachines.provider.NanomachineMagnetProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachinePotionProvider;
 import li.cil.oc.common.template.AssemblerTemplate;
 import li.cil.oc.common.template.AssemblerTemplateImc;
@@ -1910,6 +1911,41 @@ public final class NeoOpenComputersGameTests {
         speed.onDisable(li.cil.oc.api.nanomachines.DisableReason.InputChanged);
 
         helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SPEED), "Nanomachines potion behavior did not remove speed");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void nanomachinesMagnetMatchesInventoryItemsIgnoringComponentsLikeUpstream(final GameTestHelper helper) {
+        final BlockPos playerPos = new BlockPos(1, 1, 1);
+        final BlockPos itemPos = playerPos.relative(Direction.NORTH, 2);
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(playerPos)));
+        for (int slot = 0; slot < player.getInventory().items.size(); slot++) {
+            final ItemStack namedDiamonds = new ItemStack(Items.DIAMOND, 63);
+            namedDiamonds.set(DataComponents.CUSTOM_NAME, Component.literal("named " + slot));
+            player.getInventory().setItem(slot, namedDiamonds);
+        }
+        final ItemEntity item = new ItemEntity(
+            helper.getLevel(),
+            helper.absolutePos(itemPos).getX() + 0.5D,
+            helper.absolutePos(itemPos).getY(),
+            helper.absolutePos(itemPos).getZ() + 0.5D,
+            new ItemStack(Items.DIAMOND));
+        item.setNoPickUpDelay();
+        item.setDeltaMovement(Vec3.ZERO);
+        helper.getLevel().addFreshEntity(item);
+        final li.cil.oc.api.nanomachines.Behavior behavior = new NanomachineMagnetProvider().createBehaviors(player).iterator().next();
+        final li.cil.oc.api.nanomachines.Controller controller = fixedInputController(behavior, 1);
+        final li.cil.oc.api.detail.NanomachinesAPI nanomachines = singleControllerNanomachinesApi(player, controller);
+        final li.cil.oc.api.detail.NanomachinesAPI previous = API.nanomachines;
+        try {
+            API.nanomachines = nanomachines;
+            behavior.update();
+            helper.assertTrue(item.getDeltaMovement().lengthSqr() > 0D, "Magnet did not pull same item with different components");
+        } finally {
+            API.nanomachines = previous;
+            item.discard();
+        }
         helper.succeed();
     }
 
