@@ -17,6 +17,11 @@ public final class TerminalNetworking {
                 TerminalScreenSnapshotPayload.STREAM_CODEC,
                 TerminalNetworking::handleScreenSnapshot);
         event.registrar(NETWORK_VERSION)
+            .playToClient(
+                TerminalScreenDeltaPayload.TYPE,
+                TerminalScreenDeltaPayload.STREAM_CODEC,
+                TerminalNetworking::handleScreenDelta);
+        event.registrar(NETWORK_VERSION)
             .playToServer(
                 TerminalKeyPayload.TYPE,
                 TerminalKeyPayload.STREAM_CODEC,
@@ -36,6 +41,12 @@ public final class TerminalNetworking {
     static void applyScreenSnapshot(final AbstractContainerMenu containerMenu, final TerminalScreenSnapshotPayload payload) {
         if (containerMenu instanceof TerminalMenu menu && menu.containerId == payload.containerId()) {
             menu.updateSnapshot(payload.snapshot());
+        }
+    }
+
+    static void applyScreenDelta(final AbstractContainerMenu containerMenu, final TerminalScreenDeltaPayload payload) {
+        if (containerMenu instanceof TerminalMenu menu && menu.containerId == payload.containerId()) {
+            menu.updateSnapshot(payload.delta().applyTo(menu.snapshot()));
         }
     }
 
@@ -119,6 +130,10 @@ public final class TerminalNetworking {
 
     private static void handleScreenSnapshot(final TerminalScreenSnapshotPayload payload, final IPayloadContext context) {
         applyScreenSnapshot(context.player().containerMenu, payload);
+    }
+
+    private static void handleScreenDelta(final TerminalScreenDeltaPayload payload, final IPayloadContext context) {
+        applyScreenDelta(context.player().containerMenu, payload);
     }
 
     private static void handleTerminalKey(final TerminalKeyPayload payload, final IPayloadContext context) {

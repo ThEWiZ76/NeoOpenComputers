@@ -1,5 +1,6 @@
 package li.cil.oc.common.network;
 
+import li.cil.oc.common.component.TerminalScreenDelta;
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.menu.TerminalMenu;
@@ -24,6 +25,20 @@ final class TerminalNetworkingTest {
 
         assertEquals(4, menu.snapshot().width());
         assertEquals("new", menu.snapshot().line(0));
+    }
+
+    @Test
+    void appliesDeltaPayloadToMatchingTerminalMenu() throws ReflectiveOperationException {
+        final TerminalScreenSnapshot previous = new TerminalScreenSnapshot(4, 2, new String[]{"old ", "same"});
+        final TerminalScreenSnapshot current = new TerminalScreenSnapshot(4, 2, new String[]{"new ", "same"});
+        final TerminalMenu menu = allocateMenu(3, previous);
+        final TerminalScreenDeltaPayload payload = new TerminalScreenDeltaPayload(3, TerminalScreenDelta.between(previous, current));
+
+        TerminalNetworking.applyScreenDelta(menu, payload);
+
+        assertEquals(4, menu.snapshot().width());
+        assertEquals("new ", menu.snapshot().line(0));
+        assertEquals("same", menu.snapshot().line(1));
     }
 
     @Test

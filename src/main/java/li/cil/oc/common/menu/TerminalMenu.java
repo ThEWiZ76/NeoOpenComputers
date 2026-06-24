@@ -1,10 +1,13 @@
 package li.cil.oc.common.menu;
 
 import li.cil.oc.common.ModMenus;
+import li.cil.oc.common.component.TerminalScreenDelta;
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
+import li.cil.oc.common.network.TerminalScreenDeltaPayload;
 import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -50,7 +53,7 @@ public class TerminalMenu extends AbstractContainerMenu {
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
-        final TerminalScreenSnapshotPayload payload = changedSnapshotPayload();
+        final CustomPacketPayload payload = changedScreenPayload();
         if (payload != null && player instanceof ServerPlayer serverPlayer) {
             PacketDistributor.sendToPlayer(serverPlayer, payload);
         }
@@ -63,6 +66,23 @@ public class TerminalMenu extends AbstractContainerMenu {
         final TerminalScreenSnapshot currentSnapshot = terminalServer.screenSnapshot();
         if (snapshot.contentEquals(currentSnapshot)) {
             return null;
+        }
+        updateSnapshot(currentSnapshot);
+        return new TerminalScreenSnapshotPayload(containerId, currentSnapshot);
+    }
+
+    CustomPacketPayload changedScreenPayload() {
+        if (terminalServer == null) {
+            return null;
+        }
+        final TerminalScreenSnapshot currentSnapshot = terminalServer.screenSnapshot();
+        if (snapshot.contentEquals(currentSnapshot)) {
+            return null;
+        }
+        if (snapshot.width() == currentSnapshot.width() && snapshot.height() == currentSnapshot.height()) {
+            final TerminalScreenDelta delta = TerminalScreenDelta.between(snapshot, currentSnapshot);
+            updateSnapshot(currentSnapshot);
+            return new TerminalScreenDeltaPayload(containerId, delta);
         }
         updateSnapshot(currentSnapshot);
         return new TerminalScreenSnapshotPayload(containerId, currentSnapshot);
