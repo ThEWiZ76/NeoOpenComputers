@@ -2084,6 +2084,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void transposerReportsInvalidTankIndexLikeUpstream(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final int side = Direction.WEST.get3DDataValue();
+        helper.setBlock(pos, ModBlocks.TRANSPOSER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+        final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) transposer.node();
+
+        assertComponentFailureMessage(helper, component, "getTankLevel", "invalid tank index", side, 2);
+        assertComponentFailureMessage(helper, component, "getTankCapacity", "invalid tank index", side, 2);
+        assertComponentFailureMessage(helper, component, "getFluidInTank", "invalid tank index", side, 2);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void transposerTransfersFluidBetweenAdjacentTanks(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.TRANSPOSER.get());
@@ -2405,6 +2420,23 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Integer.valueOf(1000).equals(fluid[1]), "Tank controller did not report fluid amount");
         helper.assertTrue(Integer.valueOf(1000).equals(fluid[2]), "Tank controller did not report fluid capacity");
         assertSingleWaterTankDescription(helper, allFluids, "Tank controller");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void tankControllerReportsInvalidTankIndexLikeUpstream(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final int side = Direction.WEST.get3DDataValue();
+        helper.setBlock(pos, ModBlocks.ADAPTER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), AdapterBlockEntity.class);
+        final AdapterBlockEntity adapter = helper.getBlockEntity(pos);
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), adapter);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        assertComponentFailureMessage(helper, component, "getTankLevel", "invalid tank index", side, 2);
+        assertComponentFailureMessage(helper, component, "getTankCapacity", "invalid tank index", side, 2);
+        assertComponentFailureMessage(helper, component, "getFluidInTank", "invalid tank index", side, 2);
         helper.succeed();
     }
 
@@ -6172,6 +6204,15 @@ public final class NeoOpenComputersGameTests {
         } catch (Exception e) {
             helper.fail("Component invocation failed: " + method + " " + e.getMessage());
             return new Object[0];
+        }
+    }
+
+    private static void assertComponentFailureMessage(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method, final String message, final Object... args) {
+        try {
+            component.invoke(method, null, args);
+            helper.fail("Component invocation unexpectedly passed: " + method);
+        } catch (Exception e) {
+            helper.assertTrue(message.equals(e.getMessage()), "Expected " + method + " to fail with '" + message + "' but got '" + e.getMessage() + "'");
         }
     }
 

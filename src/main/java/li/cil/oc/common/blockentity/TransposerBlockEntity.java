@@ -475,7 +475,7 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
     private static int checkTank(final IFluidHandler handler, final int tank) {
         final int index = tank - 1;
         if (index < 0 || index >= handler.getTanks()) {
-            throw new IllegalArgumentException("tank index out of bounds");
+            throw new IllegalArgumentException("invalid tank index");
         }
         return index;
     }
