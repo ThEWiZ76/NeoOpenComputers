@@ -2,8 +2,11 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Slot;
+import net.minecraft.core.NonNullList;
 import org.junit.jupiter.api.Test;
+import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 
@@ -42,5 +45,35 @@ final class ServerRackMountableEnvironmentShapeTest {
         assertEquals("Terminal server", metadata.get(DeviceInfo.DeviceAttribute.Description));
         assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("RemoteViewing EX", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
+    void serverExposesUpstreamDeviceInfoMetadata() throws Exception {
+        ServerRackMountableEnvironment server = allocateServer(1);
+
+        Map<String, String> metadata = server.getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.System, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Server", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("Blader", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("13", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static ServerRackMountableEnvironment allocateServer(final int tier) throws Exception {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final Unsafe unsafe = (Unsafe) unsafeField.get(null);
+        final ServerRackMountableEnvironment server = (ServerRackMountableEnvironment) unsafe.allocateInstance(ServerRackMountableEnvironment.class);
+        final NonNullList items = NonNullList.create();
+        for (int index = 0; index < ServerRackMountableEnvironment.slotCountForTier(tier); index++) {
+            items.add(new Object());
+        }
+        final Field tierField = ServerRackMountableEnvironment.class.getDeclaredField("tier");
+        final Field itemsField = ServerRackMountableEnvironment.class.getDeclaredField("items");
+        unsafe.putInt(server, unsafe.objectFieldOffset(tierField), tier);
+        unsafe.putObject(server, unsafe.objectFieldOffset(itemsField), items);
+        return server;
     }
 }

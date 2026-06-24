@@ -309,8 +309,8 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.System,
             DeviceInfo.DeviceAttribute.Description, "Server",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-            DeviceInfo.DeviceAttribute.Product, "Server Tier " + (tier + 1),
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
+            DeviceInfo.DeviceAttribute.Product, "Blader",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(getContainerSize())
         );
     }
