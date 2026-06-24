@@ -197,6 +197,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         }
         final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, left, top);
         if (payload.x() < 0 || payload.y() < 0 || payload.x() >= snapshot.width() || payload.y() >= snapshot.height()) {
+            if (kind == TerminalMousePayload.MOUSE_UP) {
+                return new TerminalMousePayload(menu.containerId, kind, -1.0D, -1.0D, buttonOrDelta);
+            }
             return null;
         }
         return payload;

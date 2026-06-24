@@ -60,6 +60,15 @@ final class TerminalNetworkingTest {
     }
 
     @Test
+    void acceptsOutsideMouseUpForReleaseParity() {
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
+
+        assertEquals(true, TerminalNetworking.acceptsTerminalMouse(snapshot, new TerminalMousePayload(1, TerminalMousePayload.MOUSE_UP, -1, -1, 0)));
+        assertEquals(false, TerminalNetworking.acceptsTerminalMouse(snapshot, new TerminalMousePayload(1, TerminalMousePayload.MOUSE_DOWN, -1, -1, 0)));
+        assertEquals(false, TerminalNetworking.acceptsTerminalMouse(new TerminalScreenSnapshot(0, 0, new String[0]), new TerminalMousePayload(1, TerminalMousePayload.MOUSE_UP, -1, -1, 0)));
+    }
+
+    @Test
     void checksTerminalInputReadinessFromSnapshotBounds() {
         assertEquals(false, TerminalNetworking.acceptsTerminalInput(null));
         assertEquals(false, TerminalNetworking.acceptsTerminalInput(new TerminalScreenSnapshot(0, 0, new String[0])));

@@ -76,7 +76,7 @@ public final class TerminalNetworking {
         if (!acceptsTerminalMenu(menu, player)) {
             return;
         }
-        if (!mouseInside(menu.terminalServer().screenSnapshot(), payload)) {
+        if (!acceptsTerminalMouse(menu.terminalServer().screenSnapshot(), payload)) {
             return;
         }
         switch (payload.kind()) {
@@ -97,6 +97,14 @@ public final class TerminalNetworking {
             && payload.y() >= 0
             && payload.x() < snapshot.width()
             && payload.y() < snapshot.height();
+    }
+
+    static boolean acceptsTerminalMouse(final TerminalScreenSnapshot snapshot, final TerminalMousePayload payload) {
+        return acceptsTerminalInput(snapshot)
+            && (mouseInside(snapshot, payload)
+            || payload.kind() == TerminalMousePayload.MOUSE_UP
+            && payload.x() == -1.0D
+            && payload.y() == -1.0D);
     }
 
     static boolean acceptsTerminalInput(final TerminalScreenSnapshot snapshot) {

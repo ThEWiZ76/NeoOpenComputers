@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class TerminalScreenShapeTest {
@@ -166,6 +167,21 @@ final class TerminalScreenShapeTest {
         assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 9, 30, 0, 10, 20, snapshot));
         assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 47, 30, 0, 10, 20, snapshot));
         assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 20, 40, 0, 10, 20, new TerminalScreenSnapshot(0, 0, new String[0])));
+    }
+
+    @Test
+    void terminalScreenSendsOutsideMouseUpLikeUpstream() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
+
+        final TerminalMousePayload payload = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_UP, 9, 30, 0, 10, 20, snapshot);
+
+        assertNotNull(payload);
+        assertEquals(12, payload.containerId());
+        assertEquals(TerminalMousePayload.MOUSE_UP, payload.kind());
+        assertEquals(-1.0D, payload.x());
+        assertEquals(-1.0D, payload.y());
+        assertEquals(0, payload.buttonOrDelta());
     }
 
     private static TerminalMenu allocateMenu(final int containerId) throws ReflectiveOperationException {
