@@ -6,7 +6,6 @@ import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -75,7 +74,7 @@ public final class RackNetworking {
 
         player.openMenu(new SimpleMenuProvider(
             (containerId, playerInventory, menuPlayer) -> new ServerRackMenu(containerId, playerInventory, server),
-            Component.translatable("gui.neoopencomputers.server_rack")));
+            ServerRackMenu.serverTitle()));
         return true;
     }
 

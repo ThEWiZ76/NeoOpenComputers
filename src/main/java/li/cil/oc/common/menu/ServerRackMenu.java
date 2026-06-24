@@ -3,6 +3,7 @@ package li.cil.oc.common.menu;
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.api.util.StateAware;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -125,6 +126,10 @@ public class ServerRackMenu extends AbstractContainerMenu {
 
     public Container serverInventory() {
         return serverInventory;
+    }
+
+    public static Component serverTitle() {
+        return Component.translatable("oc:container.server");
     }
 
     public ItemStack lockedStack() {

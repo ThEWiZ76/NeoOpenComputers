@@ -269,7 +269,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         if (!player.isShiftKeyDown()) {
             player.openMenu(new SimpleMenuProvider(
                 (containerId, playerInventory, menuPlayer) -> new ServerRackMenu(containerId, playerInventory, this),
-                net.minecraft.network.chat.Component.translatable("gui.neoopencomputers.server_rack")));
+                ServerRackMenu.serverTitle()));
             return true;
         }
         if (!machine.isRunning() && !machine.isPaused() && stillValid(player) && canStartMachine()) {

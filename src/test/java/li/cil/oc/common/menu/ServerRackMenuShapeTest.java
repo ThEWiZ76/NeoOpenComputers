@@ -9,6 +9,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
@@ -57,6 +59,14 @@ final class ServerRackMenuShapeTest {
     @Test
     void serverRackMenuExposesServerInventoryTarget() throws NoSuchMethodException {
         assertEquals(Container.class, ServerRackMenu.class.getMethod("serverInventory").getReturnType());
+    }
+
+    @Test
+    void serverRackMenuTitleUsesUpstreamServerInventoryName() {
+        final Component title = ServerRackMenu.serverTitle();
+
+        assertTrue(title.getContents() instanceof TranslatableContents);
+        assertEquals("oc:container.server", ((TranslatableContents) title.getContents()).getKey());
     }
 
     @Test

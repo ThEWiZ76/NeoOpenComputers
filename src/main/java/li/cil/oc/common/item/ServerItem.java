@@ -10,7 +10,6 @@ import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.menu.ServerRackMenu;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
@@ -49,7 +48,7 @@ public class ServerItem extends Item implements DriverItem, Tiered {
                 final ServerRackMountableEnvironment server = new ServerRackMountableEnvironment(player, tier, data);
                 player.openMenu(new SimpleMenuProvider(
                     (containerId, playerInventory, menuPlayer) -> new ServerRackMenu(containerId, playerInventory, server, stack),
-                    Component.translatable("gui.neoopencomputers.server_rack")));
+                    ServerRackMenu.serverTitle()));
             }
             player.swing(usedHand);
         }

@@ -125,6 +125,7 @@
   "item.neoopencomputers.wrench": "Wrench",
   "itemGroup.neoopencomputers": "NeoOpenComputers",
   "mod.neoopencomputers": "NeoOpenComputers",
+  "oc:container.server": "Server",
   "gui.neoopencomputers.assembler.progress": "Progress %s%%",
   "gui.neoopencomputers.assembler.status": "Assembler status",
   "gui.neoopencomputers.assembler.state.busy": "Assembling (%s%%)",
