@@ -67,7 +67,7 @@ public class MemoryItem extends Item implements Memory {
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Memory,
             DeviceInfo.DeviceAttribute.Description, "Memory bank",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Multipurpose RAM Type",
             DeviceInfo.DeviceAttribute.Clock, clock(clampedTier)
         );

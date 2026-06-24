@@ -76,7 +76,7 @@ public class CpuItem extends Item implements Processor, CallBudget {
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Processor,
             DeviceInfo.DeviceAttribute.Description, "CPU",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "FlexiArch " + (clampedTier + 1) + " Processor",
             DeviceInfo.DeviceAttribute.Clock, clock(clampedTier)
         );

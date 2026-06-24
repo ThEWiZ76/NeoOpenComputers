@@ -93,6 +93,7 @@ final class ComponentItemShapeTest {
         Map<String, String> metadata = info.getDeviceInfo();
         assertEquals(DeviceInfo.DeviceClass.Processor, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("CPU", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("FlexiArch 1 Processor", metadata.get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("500", metadata.get(DeviceInfo.DeviceAttribute.Clock));
     }
@@ -118,6 +119,7 @@ final class ComponentItemShapeTest {
         Map<String, String> metadata = info.getDeviceInfo();
         assertEquals(DeviceInfo.DeviceClass.Memory, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Memory bank", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("Multipurpose RAM Type", metadata.get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("500", metadata.get(DeviceInfo.DeviceAttribute.Clock));
     }
