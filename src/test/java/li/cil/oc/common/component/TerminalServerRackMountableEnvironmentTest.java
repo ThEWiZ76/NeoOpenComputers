@@ -2,10 +2,12 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.internal.TextBuffer;
+import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModSettings;
 import org.junit.jupiter.api.Test;
+import net.minecraft.world.level.Level;
 
 import java.lang.reflect.Field;
 
@@ -33,6 +35,15 @@ final class TerminalServerRackMountableEnvironmentTest {
         Network.joinNewNetwork(terminal.node());
 
         assertSame(terminal, TerminalServerRegistry.find(terminal.node().address()));
+    }
+
+    @Test
+    void terminalServerRejectsPlayersOutsideUpstreamWirelessRange() {
+        final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment(new TestHost(10.5D, 64.5D, -2.5D), 1);
+        final double range = ModSettings.maxWirelessRange(1);
+
+        assertTrue(terminal.isUsableFrom(null, 10.5D + range - 1D, 64.5D, -2.5D));
+        assertEquals(false, terminal.isUsableFrom(null, 10.5D + range, 64.5D, -2.5D));
     }
 
     @Test
@@ -104,5 +115,16 @@ final class TerminalServerRackMountableEnvironmentTest {
             }
         }
         throw new NoSuchFieldException(name);
+    }
+
+    private record TestHost(double xPosition, double yPosition, double zPosition) implements EnvironmentHost {
+        @Override
+        public Level world() {
+            return null;
+        }
+
+        @Override
+        public void markChanged() {
+        }
     }
 }

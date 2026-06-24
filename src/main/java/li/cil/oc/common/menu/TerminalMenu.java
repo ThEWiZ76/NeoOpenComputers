@@ -99,6 +99,7 @@ public class TerminalMenu extends AbstractContainerMenu {
             return true;
         }
         return terminalServer.node() != null
-            && TerminalServerRegistry.find(terminalServer.node().address()) == terminalServer;
+            && TerminalServerRegistry.find(terminalServer.node().address()) == terminalServer
+            && terminalServer.isUsableBy(player);
     }
 }

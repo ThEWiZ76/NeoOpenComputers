@@ -4,8 +4,10 @@ import li.cil.oc.api.Network;
 import li.cil.oc.api.component.RackBusConnectable;
 import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.Analyzable;
+import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
@@ -23,6 +25,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -37,12 +40,20 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     private static final String TAG_KEYS = "oc:keys";
     private static final int MAX_TERMINALS = 4;
 
+    private final EnvironmentHost host;
+    private final int slot;
     private final ScreenItemEnvironment screen;
     private final KeyboardItemEnvironment keyboard;
     private final List<String> keys = new ArrayList<>();
 
     public TerminalServerRackMountableEnvironment() {
+        this(null, -1);
+    }
+
+    public TerminalServerRackMountableEnvironment(final EnvironmentHost host, final int slot) {
         OpenComputersApi.initialize();
+        this.host = host;
+        this.slot = slot;
         screen = new ScreenItemEnvironment(null, 1);
         screen.setMaximumResolution(ModSettings.screenWidthByTier(2), ModSettings.screenHeightByTier(2));
         screen.setMaximumColorDepth(ModSettings.screenDepthByTier(2));
@@ -124,6 +135,28 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     public boolean allowsTerminal(final ItemStack terminal) {
         final String key = terminalKey(terminal);
         return key != null && keys.contains(key);
+    }
+
+    public boolean isUsableBy(final Player player) {
+        return player == null || player.isAlive() && isUsableFrom(player.level(), player.getX(), player.getY(), player.getZ());
+    }
+
+    boolean isUsableFrom(final Level level, final double x, final double y, final double z) {
+        if (host == null) {
+            return true;
+        }
+        if (host instanceof Rack rack && slot >= 0 && rack.getMountable(slot) != this) {
+            return false;
+        }
+        final Level hostLevel = host.world();
+        if (level != null && hostLevel != null && level != hostLevel) {
+            return false;
+        }
+        final double dx = host.xPosition() - x;
+        final double dy = host.yPosition() - y;
+        final double dz = host.zPosition() - z;
+        final double range = ModSettings.maxWirelessRange(1);
+        return dx * dx + dy * dy + dz * dz < range * range;
     }
 
     public TextBuffer screen() {

@@ -2,6 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
@@ -21,6 +22,9 @@ public class TerminalServerItem extends Item implements DriverItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (host instanceof Rack rack) {
+            return new TerminalServerRackMountableEnvironment(host, findSlot(rack, stack));
+        }
         return new TerminalServerRackMountableEnvironment();
     }
 
@@ -37,5 +41,15 @@ public class TerminalServerItem extends Item implements DriverItem {
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
         return ItemDriverData.dataTag(stack);
+    }
+
+    private static int findSlot(final Rack rack, final ItemStack stack) {
+        for (int slot = 0; slot < rack.getContainerSize(); slot++) {
+            final ItemStack candidate = rack.getItem(slot);
+            if (candidate == stack || ItemStack.matches(candidate, stack)) {
+                return slot;
+            }
+        }
+        return -1;
     }
 }

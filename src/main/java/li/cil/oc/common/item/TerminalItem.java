@@ -56,7 +56,7 @@ public class TerminalItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(final Level level, final Player player, final InteractionHand hand) {
         final ItemStack terminal = player.getItemInHand(hand);
-        if (findBoundTerminalServer(terminal) == null) {
+        if (findBoundTerminalServer(terminal, player) == null) {
             return InteractionResultHolder.pass(terminal);
         }
         if (!level.isClientSide) {
@@ -64,7 +64,7 @@ public class TerminalItem extends Item {
                 (containerId, playerInventory, menuPlayer) -> createMenuForBoundTerminal(containerId, playerInventory, terminal),
                 net.minecraft.network.chat.Component.translatable("item.neoopencomputers.terminal")));
             if (openedContainerId.isPresent() && player instanceof ServerPlayer serverPlayer) {
-                final TerminalScreenSnapshotPayload payload = createScreenSnapshotPayloadForBoundTerminal(openedContainerId.getAsInt(), terminal);
+                final TerminalScreenSnapshotPayload payload = createScreenSnapshotPayloadForBoundTerminal(openedContainerId.getAsInt(), terminal, player);
                 if (payload != null) {
                     PacketDistributor.sendToPlayer(serverPlayer, payload);
                 }
@@ -125,8 +125,13 @@ public class TerminalItem extends Item {
         return terminalServer != null && terminalServer.allowsTerminal(terminal) ? terminalServer : null;
     }
 
-    public static TerminalMenu createMenuForBoundTerminal(final int containerId, final net.minecraft.world.entity.player.Inventory playerInventory, final ItemStack terminal) {
+    public static TerminalServerRackMountableEnvironment findBoundTerminalServer(final ItemStack terminal, final Player player) {
         final TerminalServerRackMountableEnvironment terminalServer = findBoundTerminalServer(terminal);
+        return terminalServer != null && terminalServer.isUsableBy(player) ? terminalServer : null;
+    }
+
+    public static TerminalMenu createMenuForBoundTerminal(final int containerId, final net.minecraft.world.entity.player.Inventory playerInventory, final ItemStack terminal) {
+        final TerminalServerRackMountableEnvironment terminalServer = findBoundTerminalServer(terminal, playerInventory == null ? null : playerInventory.player);
         if (terminalServer == null) {
             return null;
         }
@@ -135,8 +140,12 @@ public class TerminalItem extends Item {
     }
 
     public static TerminalScreenSnapshotPayload createScreenSnapshotPayloadForBoundTerminal(final int containerId, final ItemStack terminal) {
+        return createScreenSnapshotPayloadForBoundTerminal(containerId, terminal, null);
+    }
+
+    public static TerminalScreenSnapshotPayload createScreenSnapshotPayloadForBoundTerminal(final int containerId, final ItemStack terminal, final Player player) {
         final TerminalServerRackMountableEnvironment terminalServer = findBoundTerminalServer(terminal);
-        if (terminalServer == null) {
+        if (terminalServer == null || !terminalServer.isUsableBy(player)) {
             return null;
         }
         return new TerminalScreenSnapshotPayload(containerId, terminalServer.screenSnapshot());
