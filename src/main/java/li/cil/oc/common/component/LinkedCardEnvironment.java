@@ -150,21 +150,35 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
 
     @Override
     public void receiveLinkedPacket(final Packet packet) {
-        if (!(host instanceof MachineHost machineHost) || machineHost.machine() == null || node() == null) {
+        if (node() == null) {
             return;
         }
         if (node().address() != null && node().address().equals(packet.source())) {
             return;
         }
         final Object[] data = packet.data();
-        final Object[] signalArgs = new Object[3 + data.length];
-        signalArgs[0] = packet.source();
-        signalArgs[1] = packet.port();
-        signalArgs[2] = 0D;
-        System.arraycopy(data, 0, signalArgs, 3, data.length);
-        machineHost.machine().signal(MODEM_MESSAGE_SIGNAL, signalArgs);
+        if (host instanceof MachineHost machineHost && machineHost.machine() != null) {
+            final Object[] signalArgs = new Object[3 + data.length];
+            signalArgs[0] = packet.source();
+            signalArgs[1] = packet.port();
+            signalArgs[2] = 0D;
+            System.arraycopy(data, 0, signalArgs, 3, data.length);
+            machineHost.machine().signal(MODEM_MESSAGE_SIGNAL, signalArgs);
+        } else {
+            final Object[] signalArgs = new Object[4 + data.length];
+            signalArgs[0] = MODEM_MESSAGE_SIGNAL;
+            signalArgs[1] = packet.source();
+            signalArgs[2] = packet.port();
+            signalArgs[3] = 0D;
+            System.arraycopy(data, 0, signalArgs, 4, data.length);
+            node().sendToReachable("computer.signal", signalArgs);
+        }
         if (isWakePacket(data)) {
-            machineHost.machine().start();
+            if (host instanceof MachineHost machineHost && machineHost.machine() != null) {
+                machineHost.machine().start();
+            } else {
+                node().sendToNeighbors("computer.start");
+            }
         }
     }
 

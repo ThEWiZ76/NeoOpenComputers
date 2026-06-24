@@ -109,6 +109,25 @@ final class LinkedCardEnvironmentTest {
     }
 
     @Test
+    void receivePacketSignalsReachableNodeWhenHostIsNotMachineHostLikeUpstream() {
+        OpenComputersApi.initialize();
+        LinkedCardEnvironment sender = new LinkedCardEnvironment(new TestMachineHost(), "pair");
+        LinkedCardEnvironment receiver = new LinkedCardEnvironment(new TestHost(), "pair");
+        RecordingEnvironment computer = new RecordingEnvironment();
+        Network.joinNewNetwork(sender.node());
+        Network.joinNewNetwork(receiver.node());
+        receiver.node().connect(computer.node());
+        charge(sender, 101D);
+
+        assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments("payload")));
+
+        assertEquals(1, computer.messages.size());
+        Message message = computer.messages.get(0);
+        assertEquals("computer.signal", message.name());
+        assertArrayEquals(new Object[]{"modem_message", sender.node().address(), 0, 0D, "payload"}, message.data());
+    }
+
+    @Test
     void sendRequiresEnergyAndConsumesBuffer() {
         OpenComputersApi.initialize();
         TestMachineHost rightHost = new TestMachineHost();
@@ -294,6 +313,16 @@ final class LinkedCardEnvironmentTest {
         @Override public void onMessage(final Message message) {}
         @Override public void load(final CompoundTag nbt) {}
         @Override public void save(final CompoundTag nbt) {}
+    }
+
+    private static final class RecordingEnvironment implements li.cil.oc.api.network.Environment {
+        private final List<Message> messages = new ArrayList<>();
+        private final Node node = Network.newNode(this, Visibility.Network).create();
+
+        @Override public Node node() { return node; }
+        @Override public void onConnect(final Node node) {}
+        @Override public void onDisconnect(final Node node) {}
+        @Override public void onMessage(final Message message) { messages.add(message); }
     }
 
     private record TestArguments(Object... values) implements Arguments {
