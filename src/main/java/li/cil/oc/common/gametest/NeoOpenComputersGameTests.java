@@ -401,6 +401,20 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void serverItemDriverDataTagPersistsRackMountableData(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.SERVER_TIER2.get());
+        final DriverItem driver = Driver.driverFor(stack);
+
+        helper.assertTrue(driver != null, "No driver for server item");
+        driver.dataTag(stack).putString("marker", "server-data");
+
+        helper.assertTrue("server-data".equals(driver.dataTag(stack).getString("marker")), "Server item driver data tag did not persist marker");
+        final CompoundTag root = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+        helper.assertTrue("server-data".equals(root.getCompound("oc:rackMountable").getString("marker")), "Server item did not store data in rack mountable tag");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardDriverDataTagCarriesAccessContext(final GameTestHelper helper) throws Exception {
         final ItemStack stack = new ItemStack(ModItems.DEBUG_CARD.get());
         final DriverItem driver = Driver.driverFor(stack);

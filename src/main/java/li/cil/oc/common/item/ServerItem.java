@@ -7,11 +7,15 @@ import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 public class ServerItem extends Item implements DriverItem, Tiered {
+    private static final String RACK_MOUNTABLE_DATA_TAG = "oc:rackMountable";
+
     private final int tier;
 
     public ServerItem(final Properties properties, final int tier) {
@@ -49,7 +53,19 @@ public class ServerItem extends Item implements DriverItem, Tiered {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        if (stack == null || stack.isEmpty()) {
+            return new CompoundTag();
+        }
+        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(new CompoundTag()));
+            customData = stack.get(DataComponents.CUSTOM_DATA);
+        }
+        final CompoundTag root = customData.getUnsafe();
+        if (!root.contains(RACK_MOUNTABLE_DATA_TAG, CompoundTag.TAG_COMPOUND)) {
+            root.put(RACK_MOUNTABLE_DATA_TAG, new CompoundTag());
+        }
+        return root.getCompound(RACK_MOUNTABLE_DATA_TAG);
     }
 
     private static int findSlot(final Rack rack, final ItemStack stack) {
