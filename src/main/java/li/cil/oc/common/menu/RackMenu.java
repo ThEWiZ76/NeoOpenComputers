@@ -39,9 +39,13 @@ public class RackMenu extends AbstractContainerMenu {
     public static final int MISSING_MEMORY = ServerRackMountableEnvironment.MISSING_MEMORY;
     public static final int MISSING_EEPROM = ServerRackMountableEnvironment.MISSING_EEPROM;
 
+    private static final int RACK_SLOT_X = 20;
+    private static final int RACK_SLOT_Y = 23;
+    private static final int RACK_SLOT_STEP = 20;
     private static final int PLAYER_INVENTORY_X = 8;
-    private static final int PLAYER_INVENTORY_Y = 84;
-    private static final int PLAYER_HOTBAR_Y = 142;
+    private static final int PLAYER_INVENTORY_Y = 128;
+    private static final int SLOT_STEP = 18;
+    private static final int PLAYER_HOTBAR_Y = 186;
 
     private final Container rackInventory;
     private final ContainerData rackData;
@@ -62,10 +66,9 @@ public class RackMenu extends AbstractContainerMenu {
         this.rackData = rackData;
         rackInventory.startOpen(playerInventory.player);
 
-        addSlot(new RackSlot(rackInventory, 0, 53, 26));
-        addSlot(new RackSlot(rackInventory, 1, 71, 26));
-        addSlot(new RackSlot(rackInventory, 2, 89, 26));
-        addSlot(new RackSlot(rackInventory, 3, 107, 26));
+        for (int slot = 0; slot < RACK_SLOT_COUNT; slot++) {
+            addSlot(new RackSlot(rackInventory, slot, rackSlotX(slot), rackSlotY(slot)));
+        }
         addPlayerInventory(playerInventory);
         addDataSlots(rackData);
     }
@@ -197,6 +200,30 @@ public class RackMenu extends AbstractContainerMenu {
         return rackInventory instanceof RackBlockEntity rack && rack.isRelayEnabled();
     }
 
+    public static int rackSlotX(final int slot) {
+        return RACK_SLOT_X;
+    }
+
+    public static int rackSlotY(final int slot) {
+        return RACK_SLOT_Y + slot * RACK_SLOT_STEP;
+    }
+
+    public static int playerInventoryX(final int column) {
+        return PLAYER_INVENTORY_X + column * SLOT_STEP;
+    }
+
+    public static int playerInventoryY(final int row) {
+        return PLAYER_INVENTORY_Y + row * SLOT_STEP;
+    }
+
+    public static int playerHotbarX(final int column) {
+        return playerInventoryX(column);
+    }
+
+    public static int playerHotbarY() {
+        return PLAYER_HOTBAR_Y;
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -206,12 +233,12 @@ public class RackMenu extends AbstractContainerMenu {
     private void addPlayerInventory(final Inventory playerInventory) {
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
-                addSlot(new Slot(playerInventory, column + row * 9 + 9, PLAYER_INVENTORY_X + column * 18, PLAYER_INVENTORY_Y + row * 18));
+                addSlot(new Slot(playerInventory, column + row * 9 + 9, playerInventoryX(column), playerInventoryY(row)));
             }
         }
 
         for (int column = 0; column < 9; column++) {
-            addSlot(new Slot(playerInventory, column, PLAYER_INVENTORY_X + column * 18, PLAYER_HOTBAR_Y));
+            addSlot(new Slot(playerInventory, column, playerHotbarX(column), playerHotbarY()));
         }
     }
 

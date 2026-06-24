@@ -131,8 +131,18 @@ final class RackScreenShapeTest {
         assertEquals(1, enablePayload.side());
         assertEquals(RackControlPayload.RELAY, disablePayload.action());
         assertEquals(0, disablePayload.side());
-        assertTrue(RackScreen.relayControlAt(151, 50, 0, 0));
-        assertTrue(!RackScreen.relayControlAt(150, 50, 0, 0));
+        assertTrue(RackScreen.relayControlAt(101, 96, 0, 0));
+        assertTrue(!RackScreen.relayControlAt(100, 96, 0, 0));
+    }
+
+    @Test
+    void rackScreenUsesUpstreamTallLayoutAndRelayControl() throws ReflectiveOperationException {
+        assertEquals(210, invokeInt("rackImageHeight"));
+        assertEquals(116, invokeInt("rackInventoryLabelY"));
+        assertTrue(RackScreen.relayControlAt(101, 96, 0, 0));
+        assertTrue(RackScreen.relayControlAt(165, 113, 0, 0));
+        assertTrue(!RackScreen.relayControlAt(166, 96, 0, 0));
+        assertTrue(!RackScreen.relayControlAt(151, 50, 0, 0));
     }
 
     @Test
@@ -340,5 +350,11 @@ final class RackScreenShapeTest {
     private static void assertTranslationKey(final String expected, final Component component) {
         assertTrue(component.getContents() instanceof TranslatableContents);
         assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());
+    }
+
+    private static int invokeInt(final String method) throws ReflectiveOperationException {
+        final var declaredMethod = RackScreen.class.getDeclaredMethod(method);
+        declaredMethod.setAccessible(true);
+        return (int) declaredMethod.invoke(null);
     }
 }

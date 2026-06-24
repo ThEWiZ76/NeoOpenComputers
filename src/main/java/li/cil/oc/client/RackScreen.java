@@ -14,14 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RackScreen extends AbstractContainerScreen<RackMenu> {
-    private static final int FIRST_SLOT_X = 53;
-    private static final int SLOT_Y = 26;
-    private static final int SLOT_SPACING = 18;
-    private static final int CONTROL_Y = 50;
+    private static final int CONTROL_X = 101;
+    private static final int CONTROL_Y = 23;
+    private static final int CONTROL_SLOT_STEP = 20;
     private static final int CONTROL_SIZE = 10;
-    private static final int RELAY_X = 151;
-    private static final int RELAY_Y = 50;
-    private static final int RELAY_SIZE = 10;
+    private static final int RELAY_X = 101;
+    private static final int RELAY_Y = 96;
+    private static final int RELAY_WIDTH = 65;
+    private static final int RELAY_HEIGHT = 18;
     private static final int BUS_LABEL_X = 122;
     private static final int BUS_LABEL_Y = 20;
     private static final int BUS_LABEL_WIDTH = 36;
@@ -59,8 +59,8 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
 
     public RackScreen(final RackMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
-        imageHeight = 166;
-        inventoryLabelY = imageHeight - 94;
+        imageHeight = rackImageHeight();
+        inventoryLabelY = rackInventoryLabelY();
     }
 
     @Override
@@ -68,11 +68,11 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         final int left = leftPos;
         final int top = topPos;
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
-        guiGraphics.fill(left + 7, top + 16, left + 169, top + 76, 0xFF3B4252);
+        guiGraphics.fill(left + 7, top + 16, left + 169, top + 118, 0xFF3B4252);
         drawRelayControl(guiGraphics, left + RELAY_X, top + RELAY_Y, menu.rackRelayEnabled());
         for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
-            drawSlot(guiGraphics, left + FIRST_SLOT_X - 1 + slot * SLOT_SPACING, top + SLOT_Y - 1);
-            drawControl(guiGraphics, left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING, top + CONTROL_Y, controlColor(menu.rackState(slot)));
+            drawSlot(guiGraphics, left + RackMenu.rackSlotX(slot) - 1, top + RackMenu.rackSlotY(slot) - 1);
+            drawControl(guiGraphics, left + CONTROL_X, top + controlY(slot), controlColor(menu.rackState(slot)));
             drawWireIndicators(guiGraphics, menu, left, top, slot);
             drawBusPointIndicators(guiGraphics, menu, left, top, slot);
             drawMappingControls(guiGraphics, menu, left, top, slot);
@@ -175,7 +175,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     static boolean relayControlAt(final double mouseX, final double mouseY, final int left, final int top) {
         final int x = left + RELAY_X;
         final int y = top + RELAY_Y;
-        return mouseX >= x && mouseX < x + RELAY_SIZE && mouseY >= y && mouseY < y + RELAY_SIZE;
+        return mouseX >= x && mouseX < x + RELAY_WIDTH && mouseY >= y && mouseY < y + RELAY_HEIGHT;
     }
 
     static MappingControl mappingControlAt(final double mouseX, final double mouseY, final int left, final int top) {
@@ -335,8 +335,8 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
 
     static int controlSlotAt(final double mouseX, final double mouseY, final int left, final int top) {
         for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
-            final int x = left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING;
-            final int y = top + CONTROL_Y;
+            final int x = left + CONTROL_X;
+            final int y = top + controlY(slot);
             if (mouseX >= x && mouseX < x + CONTROL_SIZE && mouseY >= y && mouseY < y + CONTROL_SIZE) {
                 return slot;
             }
@@ -380,6 +380,14 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.eeprom"));
         }
         return tooltip;
+    }
+
+    static int rackImageHeight() {
+        return 210;
+    }
+
+    static int rackInventoryLabelY() {
+        return rackImageHeight() - 94;
     }
 
     static List<Component> mappingTooltip(final RackMenu menu, final MappingControl control) {
@@ -467,9 +475,14 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
 
     private static void drawRelayControl(final GuiGraphics guiGraphics, final int left, final int top, final boolean enabled) {
         final int color = enabled ? 0xFFA3BE8C : 0xFF6C7480;
-        guiGraphics.fill(left, top, left + RELAY_SIZE, top + RELAY_SIZE, 0xFF1F232B);
-        guiGraphics.fill(left + 2, top + 4, left + 8, top + 6, color);
-        guiGraphics.fill(left + 4, top + 2, left + 6, top + 8, color);
+        guiGraphics.fill(left, top, left + RELAY_WIDTH, top + RELAY_HEIGHT, 0xFF1F232B);
+        guiGraphics.fill(left + 1, top + 1, left + RELAY_WIDTH - 1, top + RELAY_HEIGHT - 1, 0xFF3B4252);
+        guiGraphics.fill(left + 7, top + 8, left + 13, top + 10, color);
+        guiGraphics.fill(left + 9, top + 6, left + 11, top + 12, color);
+    }
+
+    private static int controlY(final int slot) {
+        return CONTROL_Y + slot * CONTROL_SLOT_STEP;
     }
 
     private static void drawMappingControls(final GuiGraphics guiGraphics, final RackMenu menu, final int left, final int top, final int slot) {

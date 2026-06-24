@@ -65,6 +65,21 @@ final class RackMenuShapeTest {
     }
 
     @Test
+    void rackMenuUsesUpstreamVerticalSlotLayout() throws Exception {
+        assertEquals(20, invokeInt("rackSlotX", 0));
+        assertEquals(23, invokeInt("rackSlotY", 0));
+        assertEquals(20, invokeInt("rackSlotX", 3));
+        assertEquals(83, invokeInt("rackSlotY", 3));
+        assertEquals(8, invokeInt("playerInventoryX", 0));
+        assertEquals(128, invokeInt("playerInventoryY", 0));
+        assertEquals(152, invokeInt("playerInventoryX", 8));
+        assertEquals(164, invokeInt("playerInventoryY", 2));
+        assertEquals(8, invokeInt("playerHotbarX", 0));
+        assertEquals(152, invokeInt("playerHotbarX", 8));
+        assertEquals(186, invokeInt("playerHotbarY"));
+    }
+
+    @Test
     void rackMenuExposesServerRackInventoryTarget() throws NoSuchMethodException {
         assertEquals(Container.class, RackMenu.class.getMethod("rackInventory").getReturnType());
     }
@@ -150,6 +165,18 @@ final class RackMenuShapeTest {
         rackDataField.setAccessible(true);
         rackDataField.set(menu, rackData);
         return menu;
+    }
+
+    private static int invokeInt(final String method, final int argument) throws ReflectiveOperationException {
+        final var declaredMethod = RackMenu.class.getDeclaredMethod(method, int.class);
+        declaredMethod.setAccessible(true);
+        return (int) declaredMethod.invoke(null, argument);
+    }
+
+    private static int invokeInt(final String method) throws ReflectiveOperationException {
+        final var declaredMethod = RackMenu.class.getDeclaredMethod(method);
+        declaredMethod.setAccessible(true);
+        return (int) declaredMethod.invoke(null);
     }
 
     private static ContainerData rackDataWithFacing(final Direction facing) {
