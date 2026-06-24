@@ -70,6 +70,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue DATA_CARD_TIMEOUT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_BREAK_CHANCE;
     public static final ModConfigSpec.DoubleValue REDSTONE_DELAY;
+    public static final ModConfigSpec.IntValue DISK_ACTIVITY_SOUND_DELAY;
     public static final ModConfigSpec.IntValue GEOLYZER_RANGE;
     public static final ModConfigSpec.IntValue TRANSPOSER_FLUID_TRANSFER_RATE;
     public static final ModConfigSpec.IntValue DEFAULT_RELAY_DELAY;
@@ -191,6 +192,9 @@ public final class ModSettings {
         REDSTONE_DELAY = builder
             .comment("Seconds redstone output changes pause the calling context. OpenComputers upstream default is 0.1.")
             .defineInRange("redstoneDelay", 0.1D, 0D, Double.MAX_VALUE);
+        DISK_ACTIVITY_SOUND_DELAY = builder
+            .comment("Minimum milliseconds between filesystem access sound/activity packets per filesystem sound. Negative disables activity packets. OpenComputers upstream default is 500.")
+            .defineInRange("diskActivitySoundDelay", 500, -1, Integer.MAX_VALUE);
         GEOLYZER_RANGE = builder
             .comment("Maximum absolute Geolyzer scan offset. OpenComputers upstream default is 32.")
             .defineInRange("geolyzerRange", 32, 0, Integer.MAX_VALUE);
@@ -959,6 +963,10 @@ public final class ModSettings {
 
     public static double hddWriteCost() {
         return doubleValue(HDD_WRITE) / 1024.0D;
+    }
+
+    public static int diskActivitySoundDelay() {
+        return Math.max(-1, intValue(DISK_ACTIVITY_SOUND_DELAY));
     }
 
     public static double gpuSetCost() {

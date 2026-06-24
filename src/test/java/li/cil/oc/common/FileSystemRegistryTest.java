@@ -5,6 +5,8 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.event.FileSystemAccessEvent;
+import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -18,6 +20,8 @@ import li.cil.oc.api.machine.TestNodes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +33,8 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -291,6 +297,36 @@ final class FileSystemRegistryTest {
         assertArrayEquals(new Object[]{true}, component.invoke("rename", null, "tmp/nested", "tmp/renamed"));
         assertArrayEquals(new Object[]{true}, component.invoke("remove", null, "tmp/renamed"));
         assertArrayEquals(new Object[]{false}, component.invoke("exists", null, "tmp/renamed"));
+    }
+
+    @Test
+    void managedFileSystemEnvironmentPostsThrottledAccessEventsLikeUpstream() throws Exception {
+        withCachedConfig(ModSettings.DISK_ACTIVITY_SOUND_DELAY, 500, () -> {
+            OpenComputersApi.initialize();
+            FileSystem fileSystem = API.fileSystem.fromMemory(4096);
+            fileSystem.makeDirectory("tmp");
+            String sound = "neoopencomputers:test/fs-access-" + System.nanoTime();
+            ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", new RecordingHost(), sound, 1);
+            Component component = (Component) environment.node();
+            List<FileSystemAccessEvent.Server> events = new ArrayList<>();
+            NeoForge.EVENT_BUS.start();
+            NeoForge.EVENT_BUS.addListener(FileSystemAccessEvent.Server.class, event -> {
+                if (sound.equals(event.getSound())) {
+                    events.add(event);
+                }
+            });
+
+            component.invoke("exists", null, "tmp");
+            component.invoke("size", null, "tmp");
+
+            assertEquals(1, events.size());
+            FileSystemAccessEvent.Server event = events.getFirst();
+            assertEquals(environment.node(), event.getNode());
+            assertEquals(1.5D, event.getX());
+            assertEquals(2.5D, event.getY());
+            assertEquals(3.5D, event.getZ());
+            return null;
+        });
     }
 
     @Test
@@ -714,6 +750,32 @@ final class FileSystemRegistryTest {
 
         @Override
         public void onMessage(final Message message) {
+        }
+    }
+
+    private static final class RecordingHost implements EnvironmentHost {
+        @Override
+        public Level world() {
+            return null;
+        }
+
+        @Override
+        public double xPosition() {
+            return 1.5D;
+        }
+
+        @Override
+        public double yPosition() {
+            return 2.5D;
+        }
+
+        @Override
+        public double zPosition() {
+            return 3.5D;
+        }
+
+        @Override
+        public void markChanged() {
         }
     }
 }

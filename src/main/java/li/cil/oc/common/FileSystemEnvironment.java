@@ -6,6 +6,7 @@ import li.cil.oc.api.fs.Handle;
 import li.cil.oc.api.fs.Label;
 import li.cil.oc.api.fs.Mode;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.event.FileSystemAccessEvent;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -21,6 +22,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -46,6 +48,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     private final int speed;
     private final int costIndex;
     private final Map<String, Set<Integer>> owners = new LinkedHashMap<>();
+    private final Map<String, Long> activityTimeouts = new LinkedHashMap<>();
     private boolean saving;
 
     FileSystemEnvironment(final FileSystem fileSystem, final Label label, final EnvironmentHost host, final String accessSound, final int speed) {
@@ -131,43 +134,61 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
 
     @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether an object exists at the specified absolute path.")
     public Object[] exists(final Context context, final Arguments arguments) throws FileNotFoundException {
-        return new Object[]{fileSystem.exists(clean(arguments.checkString(0)))};
+        final boolean exists = fileSystem.exists(clean(arguments.checkString(0)));
+        diskActivity();
+        return new Object[]{exists};
     }
 
     @Callback(direct = true, doc = "function(path:string):number -- Returns the size of the object at the specified path.")
     public Object[] size(final Context context, final Arguments arguments) throws FileNotFoundException {
-        return new Object[]{fileSystem.size(clean(arguments.checkString(0)))};
+        final long size = fileSystem.size(clean(arguments.checkString(0)));
+        diskActivity();
+        return new Object[]{size};
     }
 
     @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether the object at the specified path is a directory.")
     public Object[] isDirectory(final Context context, final Arguments arguments) throws FileNotFoundException {
-        return new Object[]{fileSystem.isDirectory(clean(arguments.checkString(0)))};
+        final boolean directory = fileSystem.isDirectory(clean(arguments.checkString(0)));
+        diskActivity();
+        return new Object[]{directory};
     }
 
     @Callback(direct = true, doc = "function(path:string):number -- Returns the timestamp of when the object at the path was modified.")
     public Object[] lastModified(final Context context, final Arguments arguments) throws FileNotFoundException {
-        return new Object[]{fileSystem.lastModified(clean(arguments.checkString(0)))};
+        final long lastModified = fileSystem.lastModified(clean(arguments.checkString(0)));
+        diskActivity();
+        return new Object[]{lastModified};
     }
 
     @Callback(doc = "function(path:string):table -- Returns names of objects in the directory at the specified path.")
     public Object[] list(final Context context, final Arguments arguments) throws FileNotFoundException {
         final String[] contents = fileSystem.list(clean(arguments.checkString(0)));
-        return contents == null ? null : new Object[]{contents};
+        if (contents == null) {
+            return null;
+        }
+        diskActivity();
+        return new Object[]{contents};
     }
 
     @Callback(doc = "function(path:string):boolean -- Creates a directory at the specified path, including parent directories.")
     public Object[] makeDirectory(final Context context, final Arguments arguments) throws FileNotFoundException {
-        return new Object[]{makeDirectory(clean(arguments.checkString(0)))};
+        final boolean success = makeDirectory(clean(arguments.checkString(0)));
+        diskActivity();
+        return new Object[]{success};
     }
 
     @Callback(doc = "function(path:string):boolean -- Removes the object at the specified path.")
     public Object[] remove(final Context context, final Arguments arguments) throws FileNotFoundException {
-        return new Object[]{remove(clean(arguments.checkString(0)))};
+        final boolean success = remove(clean(arguments.checkString(0)));
+        diskActivity();
+        return new Object[]{success};
     }
 
     @Callback(doc = "function(from:string,to:string):boolean -- Renames or moves an object.")
     public Object[] rename(final Context context, final Arguments arguments) throws FileNotFoundException {
-        return new Object[]{fileSystem.rename(clean(arguments.checkString(0)), clean(arguments.checkString(1)))};
+        final boolean success = fileSystem.rename(clean(arguments.checkString(0)), clean(arguments.checkString(1)));
+        diskActivity();
+        return new Object[]{success};
     }
 
     @Callback(direct = true, limit = 4, doc = "function(path:string[,mode:string='r']):userdata -- Opens a file handle.")
@@ -175,6 +196,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         checkHandleLimit(context);
         final int handle = fileSystem.open(clean(arguments.checkString(0)), parseMode(arguments.optString(1, "r")));
         rememberOwner(context, handle);
+        diskActivity();
         return new Object[]{new FileHandleValue(this, handle)};
     }
 
@@ -196,6 +218,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
             return new Object[]{null};
         }
         consumeEnergy(ModSettings.hddReadCost() * read);
+        diskActivity();
         if (read == buffer.length) {
             return new Object[]{buffer};
         }
@@ -229,6 +252,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         final byte[] value = arguments.checkByteArray(1);
         consumeEnergy(ModSettings.hddWriteCost() * value.length);
         getHandle(handleId).write(value);
+        diskActivity();
         return new Object[]{true};
     }
 
@@ -481,6 +505,34 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     private void consumeEnergy(final double cost) throws IOException {
         if (node() instanceof Connector connector && !connector.tryChangeBuffer(-cost)) {
             throw new IOException("not enough energy");
+        }
+    }
+
+    private void diskActivity() {
+        if (accessSound.isEmpty() || host.isEmpty() || node() == null) {
+            return;
+        }
+        final int delay = ModSettings.diskActivitySoundDelay();
+        if (delay < 0) {
+            return;
+        }
+        final String sound = accessSound.get();
+        final long now = System.currentTimeMillis();
+        final Long blockedUntil = activityTimeouts.get(sound);
+        if (blockedUntil != null && blockedUntil > now) {
+            return;
+        }
+        final EnvironmentHost environmentHost = host.get();
+        final FileSystemAccessEvent.Server event = new FileSystemAccessEvent.Server(
+            sound,
+            environmentHost.world(),
+            environmentHost.xPosition(),
+            environmentHost.yPosition(),
+            environmentHost.zPosition(),
+            node());
+        NeoForge.EVENT_BUS.post(event);
+        if (!event.isCanceled()) {
+            activityTimeouts.put(sound, now + delay);
         }
     }
 
