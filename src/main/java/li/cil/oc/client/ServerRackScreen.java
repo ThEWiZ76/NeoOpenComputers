@@ -53,6 +53,8 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         final int slot = serverSlotAt(mouseX, mouseY, leftPos, topPos);
         if (slot >= 0) {
             guiGraphics.renderComponentTooltip(font, slotTooltip(menu.slotKind(slot), menu.slotTierLimit(slot), menu.getSlot(slot).hasItem()), mouseX, mouseY);
+        } else if (statusControlAt(mouseX, mouseY, leftPos, topPos)) {
+            guiGraphics.renderComponentTooltip(font, statusControlTooltip(menu.serverState()), mouseX, mouseY);
         } else if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
             guiGraphics.renderComponentTooltip(font, statusTooltip(menu.serverState(), menu.missingRequirements(), menu.componentCount(), menu.maxComponents()), mouseX, mouseY);
         }
@@ -130,6 +132,12 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.eeprom"));
         }
         return tooltip;
+    }
+
+    public static List<Component> statusControlTooltip(final int state) {
+        return List.of(Component.translatable(state == ServerRackMenu.STATE_RUNNING
+            ? "gui.neoopencomputers.server_rack.power.turn_off"
+            : "gui.neoopencomputers.server_rack.power.turn_on"));
     }
 
     static ServerRackControlPayload controlPayload(final ServerRackMenu menu, final int action) {

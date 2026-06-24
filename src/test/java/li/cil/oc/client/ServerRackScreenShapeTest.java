@@ -125,6 +125,17 @@ final class ServerRackScreenShapeTest {
     }
 
     @Test
+    void serverRackPowerControlTooltipMatchesUpstreamTurnAction() {
+        final List<Component> readyTooltip = ServerRackScreen.statusControlTooltip(ServerRackMenu.STATE_READY);
+        final List<Component> runningTooltip = ServerRackScreen.statusControlTooltip(ServerRackMenu.STATE_RUNNING);
+
+        assertEquals(1, readyTooltip.size());
+        assertEquals(1, runningTooltip.size());
+        assertTranslationKey("gui.neoopencomputers.server_rack.power.turn_on", readyTooltip.getFirst());
+        assertTranslationKey("gui.neoopencomputers.server_rack.power.turn_off", runningTooltip.getFirst());
+    }
+
+    @Test
     void serverRackScreenBuildsControlPayloadForMenu() throws ReflectiveOperationException {
         final ServerRackMenu menu = allocateMenu(11);
 
