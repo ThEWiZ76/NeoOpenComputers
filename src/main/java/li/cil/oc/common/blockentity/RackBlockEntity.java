@@ -206,6 +206,13 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         }
     }
 
+    public Direction mappedSide(final int slot, final int connectableIndex) {
+        if (!isValidSlot(slot) || connectableIndex < -1 || connectableIndex > 2 || nodeMapping == null) {
+            return null;
+        }
+        return nodeMapping[slot][connectableIndex + 1];
+    }
+
     @Override
     public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
         final Integer slot = slotAt(side, hitX, hitY, hitZ);

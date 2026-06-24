@@ -3,6 +3,7 @@ package li.cil.oc.client;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.network.RackControlPayload;
 import li.cil.oc.common.network.RackOpenServerPayload;
+import net.minecraft.core.Direction;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -64,6 +65,10 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
 
     static RackControlPayload controlPayload(final RackMenu menu, final int slot, final int action) {
         return new RackControlPayload(menu.containerId, slot, action);
+    }
+
+    static RackControlPayload mappingPayload(final RackMenu menu, final int slot, final int connectableIndex, final Direction side) {
+        return RackControlPayload.map(menu.containerId, slot, connectableIndex, side);
     }
 
     static RackOpenServerPayload openServerPayload(final RackMenu menu, final int slot) {

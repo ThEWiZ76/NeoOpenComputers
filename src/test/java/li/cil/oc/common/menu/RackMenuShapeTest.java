@@ -1,15 +1,34 @@
 package li.cil.oc.common.menu;
 
+import li.cil.oc.api.Network;
+import li.cil.oc.api.component.RackBusConnectable;
+import li.cil.oc.api.component.RackMountable;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.util.StateAware;
+import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.blockentity.RackBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.Test;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.EnumSet;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class RackMenuShapeTest {
@@ -31,7 +50,11 @@ final class RackMenuShapeTest {
         assertEquals(36, RackMenu.PLAYER_SLOT_COUNT);
         assertEquals(40, RackMenu.TOTAL_SLOT_COUNT);
         assertEquals(4, RackMenu.RACK_STATE_COUNT);
-        assertEquals(8, RackMenu.RACK_DATA_COUNT);
+        assertEquals(40, RackMenu.RACK_DATA_COUNT);
+        assertEquals(4, RackMenu.RACK_MISSING_REQUIREMENTS_COUNT);
+        assertEquals(16, RackMenu.RACK_NODE_MAPPING_COUNT);
+        assertEquals(16, RackMenu.RACK_NODE_PRESENCE_COUNT);
+        assertEquals(-1, RackMenu.NO_SIDE);
         assertEquals(0, RackMenu.STATE_EMPTY);
         assertEquals(1, RackMenu.STATE_READY);
         assertEquals(2, RackMenu.STATE_RUNNING);
@@ -52,5 +75,86 @@ final class RackMenuShapeTest {
         assertEquals(int.class, RackMenu.class.getMethod("rackStateFor", Container.class, int.class).getReturnType());
         assertEquals(int.class, RackMenu.class.getMethod("rackMissingRequirements", int.class).getReturnType());
         assertEquals(int.class, RackMenu.class.getMethod("rackMissingRequirementsFor", Container.class, int.class).getReturnType());
+        assertEquals(int.class, RackMenu.class.getMethod("rackNodeMapping", int.class, int.class).getReturnType());
+        assertEquals(int.class, RackMenu.class.getMethod("rackNodeMappingFor", Container.class, int.class, int.class).getReturnType());
+        assertEquals(boolean.class, RackMenu.class.getMethod("rackNodePresent", int.class, int.class).getReturnType());
+        assertEquals(boolean.class, RackMenu.class.getMethod("rackNodePresentFor", Container.class, int.class, int.class).getReturnType());
+    }
+
+    @Test
+    void rackMenuExposesNodeMappingAndPresenceLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final TestRackBlockEntity rack = allocateRack();
+        final TestRackBusConnectable connectable = new TestRackBusConnectable();
+        final RackMountable[] mountables = new RackMountable[RackBlockEntity.CONTAINER_SIZE];
+        mountables[0] = new TestRackMountable(connectable);
+        setField(rack, "mountables", mountables);
+
+        rack.connect(0, -1, Direction.SOUTH);
+        rack.connect(0, 0, Direction.UP);
+
+        assertEquals(Direction.SOUTH.ordinal(), RackMenu.rackNodeMappingFor(rack, 0, 0));
+        assertEquals(Direction.UP.ordinal(), RackMenu.rackNodeMappingFor(rack, 0, 1));
+        assertEquals(RackMenu.NO_SIDE, RackMenu.rackNodeMappingFor(rack, 0, 2));
+        assertTrue(RackMenu.rackNodePresentFor(rack, 0, 0));
+        assertTrue(RackMenu.rackNodePresentFor(rack, 0, 1));
+        assertFalse(RackMenu.rackNodePresentFor(rack, 0, 2));
+        assertFalse(RackMenu.rackNodePresentFor(rack, 1, 0));
+    }
+
+    private static TestRackBlockEntity allocateRack() throws Exception {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        return (TestRackBlockEntity) ((Unsafe) unsafeField.get(null)).allocateInstance(TestRackBlockEntity.class);
+    }
+
+    private static void setField(final RackBlockEntity rack, final String name, final Object value) throws Exception {
+        final Field field = RackBlockEntity.class.getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(rack, value);
+    }
+
+    private static final class TestRackBlockEntity extends RackBlockEntity {
+        private TestRackBlockEntity() {
+            super(null, (BlockState) null);
+        }
+
+        @Override
+        public Direction facing() {
+            return Direction.NORTH;
+        }
+    }
+
+    private static final class TestRackMountable implements RackMountable {
+        private final Node node = Network.newNode(this, Visibility.Network).create();
+        private final RackBusConnectable[] connectables;
+
+        private TestRackMountable(final RackBusConnectable... connectables) {
+            this.connectables = connectables;
+        }
+
+        @Override public CompoundTag getData() { return new CompoundTag(); }
+        @Override public int getConnectableCount() { return connectables.length; }
+        @Override public RackBusConnectable getConnectableAt(final int index) { return index >= 0 && index < connectables.length ? connectables[index] : null; }
+        @Override public boolean onActivate(final Player player, final InteractionHand hand, final ItemStack heldItem, final float hitX, final float hitY) { return false; }
+        @Override public EnumSet<StateAware.State> getCurrentState() { return EnumSet.noneOf(StateAware.State.class); }
+        @Override public boolean canUpdate() { return false; }
+        @Override public void update() {}
+        @Override public Node node() { return node; }
+        @Override public void onConnect(final Node node) {}
+        @Override public void onDisconnect(final Node node) {}
+        @Override public void onMessage(final Message message) {}
+        @Override public void load(final CompoundTag nbt) {}
+        @Override public void save(final CompoundTag nbt) {}
+    }
+
+    private static final class TestRackBusConnectable implements RackBusConnectable {
+        private final Node node = Network.newNode(this, Visibility.Network).create();
+
+        @Override public void receivePacket(final li.cil.oc.api.network.Packet packet) {}
+        @Override public Node node() { return node; }
+        @Override public void onConnect(final Node node) {}
+        @Override public void onDisconnect(final Node node) {}
+        @Override public void onMessage(final Message message) {}
     }
 }
