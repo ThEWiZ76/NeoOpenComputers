@@ -273,6 +273,7 @@ final class FileSystemRegistryTest {
         Map<String, String> metadata = info.getDeviceInfo();
         assertEquals(DeviceInfo.DeviceClass.Volume, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Filesystem", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("MPFS.21.6", metadata.get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("262", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
         assertEquals("256", metadata.get(DeviceInfo.DeviceAttribute.Size));

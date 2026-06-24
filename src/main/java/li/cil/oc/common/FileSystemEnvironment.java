@@ -90,7 +90,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Volume,
             DeviceInfo.DeviceAttribute.Description, "Filesystem",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "MPFS.21.6",
             DeviceInfo.DeviceAttribute.Capacity, Long.toString((long) (spaceTotal * 1.024D)),
             DeviceInfo.DeviceAttribute.Size, Long.toString(spaceTotal),
