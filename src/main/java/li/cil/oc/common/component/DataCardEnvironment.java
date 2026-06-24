@@ -70,8 +70,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Processor,
             DeviceInfo.DeviceAttribute.Description, "Data processor card",
             DeviceInfo.DeviceAttribute.Vendor, "S.C. Ltd.",
-            DeviceInfo.DeviceAttribute.Product, productName(),
-            DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.dataCardHardLimit())
+            DeviceInfo.DeviceAttribute.Product, productName()
         );
     }
 

@@ -62,7 +62,15 @@ final class DataCardEnvironmentTest {
     void reportsTieredDeviceInfo() {
         OpenComputersApi.initialize();
 
-        assertEquals("SC01D H45h3r", assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(0)).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
+        Map<String, String> tierOneInfo = assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(0)).getDeviceInfo();
+        assertEquals(DeviceInfo.DeviceClass.Processor, tierOneInfo.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Data processor card", tierOneInfo.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("S.C. Ltd.", tierOneInfo.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("SC01D H45h3r", tierOneInfo.get(DeviceInfo.DeviceAttribute.Product));
+        assertFalse(tierOneInfo.containsKey(DeviceInfo.DeviceAttribute.Capacity));
+        assertFalse(tierOneInfo.containsKey(DeviceInfo.DeviceAttribute.Size));
+        assertEquals(4, tierOneInfo.size());
+
         assertEquals("SC02D Cryptic", assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(1)).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("SC03D Signer", assertInstanceOf(DeviceInfo.class, new DataCardEnvironment(2)).getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
     }
