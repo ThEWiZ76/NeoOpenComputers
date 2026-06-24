@@ -22,6 +22,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.FilteredEnvironment;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.ManagedPeripheral;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
@@ -35,6 +36,7 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -453,8 +455,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     public Map<String, Callback> methods(final Object value) {
         if (value instanceof Value) {
             final Map<String, Callback> methods = new LinkedHashMap<>();
-            for (Map.Entry<String, Method> entry : discoverCallbacks(value).entrySet()) {
-                methods.put(entry.getKey(), entry.getValue().getAnnotation(Callback.class));
+            for (Map.Entry<String, ValueCallbackEntry> entry : discoverCallbacks(value).entrySet()) {
+                methods.put(entry.getKey(), entry.getValue().annotation());
             }
             return methods;
         }
@@ -506,33 +508,66 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public Object[] invoke(final Value value, final String method, final Object[] args) throws Exception {
-        final Method callback = discoverCallbacks(value).get(method);
+        final ValueCallbackEntry callback = discoverCallbacks(value).get(method);
         if (callback == null) {
             throw new NoSuchMethodException(method);
         }
-        final Callback annotation = callback.getAnnotation(Callback.class);
+        final Callback annotation = callback.annotation();
         if (annotation.direct()) {
             consumeCallBudget(1D / annotation.limit());
         }
-        try {
-            final Object result = callback.invoke(value, this, new MachineArguments(args == null ? new Object[0] : args));
-            if (result == null) {
-                return null;
-            }
-            if (result instanceof Object[] values) {
-                return values;
-            }
-            return new Object[]{result};
-        } catch (InvocationTargetException e) {
-            final Throwable cause = e.getCause();
-            if (cause instanceof Exception exception) {
-                throw exception;
-            }
-            if (cause instanceof Error error) {
-                throw error;
-            }
-            throw new RuntimeException(cause);
+        return callback.invoke(value, this, new MachineArguments(args == null ? new Object[0] : args));
+    }
+
+    private record ReflectedValueCallbackEntry(Method method) implements ValueCallbackEntry {
+        @Override
+        public Callback annotation() {
+            return method.getAnnotation(Callback.class);
         }
+
+        @Override
+        public Object[] invoke(final Value value, final Context context, final Arguments args) throws Exception {
+            try {
+                final Object result = method.invoke(value, context, args);
+                if (result == null) {
+                    return null;
+                }
+                if (result instanceof Object[] values) {
+                    return values;
+                }
+                return new Object[]{result};
+            } catch (InvocationTargetException e) {
+                final Throwable cause = e.getCause();
+                if (cause instanceof Exception exception) {
+                    throw exception;
+                }
+                if (cause instanceof Error error) {
+                    throw error;
+                }
+                throw new RuntimeException(cause);
+            }
+        }
+    }
+
+    private record ManagedPeripheralValueCallbackEntry(String name) implements ValueCallbackEntry {
+        @Override
+        public Callback annotation() {
+            return new PeripheralCallbackAnnotation(name);
+        }
+
+        @Override
+        public Object[] invoke(final Value value, final Context context, final Arguments args) throws Exception {
+            if (!(value instanceof ManagedPeripheral peripheral)) {
+                throw new NoSuchMethodException(name);
+            }
+            return peripheral.invoke(name, context, args);
+        }
+    }
+
+    private interface ValueCallbackEntry {
+        Callback annotation();
+
+        Object[] invoke(Value value, Context context, Arguments args) throws Exception;
     }
 
     @Override
@@ -1082,12 +1117,19 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         return name == null ? null : name.value();
     }
 
-    private static Map<String, Method> discoverCallbacks(final Object value) {
-        final Map<String, Method> discovered = new LinkedHashMap<>();
+    private static Map<String, ValueCallbackEntry> discoverCallbacks(final Object value) {
+        final Map<String, ValueCallbackEntry> discovered = new LinkedHashMap<>();
         final Set<String> whitelist = value instanceof MethodWhitelist methodWhitelist && methodWhitelist.whitelistedMethods() != null
             ? Set.copyOf(Arrays.asList(methodWhitelist.whitelistedMethods()))
             : Set.of();
         final FilteredEnvironment filter = value instanceof FilteredEnvironment filtered ? filtered : null;
+        if (value instanceof ManagedPeripheral peripheral) {
+            for (String name : peripheral.methods()) {
+                if ((whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
+                    discovered.putIfAbsent(name, new ManagedPeripheralValueCallbackEntry(name));
+                }
+            }
+        }
         Class<?> type = value.getClass();
         while (type != null) {
             for (Method method : type.getDeclaredMethods()) {
@@ -1096,7 +1138,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
                     method.setAccessible(true);
                     final String name = callback.value().trim().isEmpty() ? method.getName() : callback.value();
                     if ((whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
-                        discovered.putIfAbsent(name, method);
+                        discovered.putIfAbsent(name, new ReflectedValueCallbackEntry(method));
                     }
                 }
             }
@@ -1112,6 +1154,38 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             parameterTypes[0] == Context.class &&
             parameterTypes[1] == Arguments.class &&
             Modifier.isPublic(method.getModifiers());
+    }
+
+    private record PeripheralCallbackAnnotation(String value) implements Callback {
+        @Override
+        public boolean direct() {
+            return true;
+        }
+
+        @Override
+        public int limit() {
+            return 100;
+        }
+
+        @Override
+        public String doc() {
+            return "";
+        }
+
+        @Override
+        public boolean getter() {
+            return false;
+        }
+
+        @Override
+        public boolean setter() {
+            return false;
+        }
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return Callback.class;
+        }
     }
 
     private record MachineArguments(Object[] values) implements Arguments {

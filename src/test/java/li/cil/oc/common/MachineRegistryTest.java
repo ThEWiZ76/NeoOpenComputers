@@ -17,6 +17,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.FilteredEnvironment;
+import li.cil.oc.api.network.ManagedPeripheral;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -243,6 +244,20 @@ final class MachineRegistryTest {
         assertTrue(methods.containsKey("fallback"));
         assertFalse(methods.containsKey("   "));
         assertArrayEquals(new Object[]{"fallback"}, machine.invoke(value, "fallback", new Object[0]));
+    }
+
+    @Test
+    void valueCallbacksExposeManagedPeripheralMethodsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        PeripheralValue value = new PeripheralValue();
+
+        Map<String, Callback> methods = machine.methods(value);
+
+        assertTrue(methods.containsKey("dynamic"));
+        assertTrue(methods.get("dynamic").direct());
+        assertEquals(100, methods.get("dynamic").limit());
+        assertArrayEquals(new Object[]{"dynamic", "payload"}, machine.invoke(value, "dynamic", new Object[]{"payload"}));
     }
 
     @Test
@@ -1737,6 +1752,21 @@ final class MachineRegistryTest {
         @Callback
         private Object[] privateCallback(final Context context, final Arguments arguments) {
             return new Object[]{"bad"};
+        }
+    }
+
+    private static final class PeripheralValue extends AbstractValue implements ManagedPeripheral {
+        @Override
+        public String[] methods() {
+            return new String[]{"dynamic"};
+        }
+
+        @Override
+        public Object[] invoke(final String method, final Context context, final Arguments args) throws Exception {
+            if (!"dynamic".equals(method)) {
+                throw new NoSuchMethodException(method);
+            }
+            return new Object[]{"dynamic", args.checkString(0)};
         }
     }
 
