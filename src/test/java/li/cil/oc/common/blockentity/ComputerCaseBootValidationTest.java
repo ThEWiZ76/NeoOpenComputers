@@ -109,6 +109,7 @@ final class ComputerCaseBootValidationTest {
 
         assertEquals(DeviceInfo.DeviceClass.System, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Computer", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("Blocker", metadata.get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("7", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
     }

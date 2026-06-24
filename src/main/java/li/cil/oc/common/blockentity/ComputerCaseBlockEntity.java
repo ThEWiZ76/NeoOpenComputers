@@ -386,7 +386,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.System,
             DeviceInfo.DeviceAttribute.Description, "Computer",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Blocker",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(Math.max(0, capacity))
         );
