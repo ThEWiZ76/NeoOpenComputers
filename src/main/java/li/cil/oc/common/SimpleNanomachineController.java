@@ -968,9 +968,6 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
 
         private boolean isActive(final boolean[] inputs, final List<ConnectorEntry> connectors) {
-            if (triggerInputs.length == 0 && connectorInputs.length == 0) {
-                return false;
-            }
             for (final int input : triggerInputs) {
                 if (input < 0 || input >= inputs.length || !inputs[input]) {
                     return false;
