@@ -43,6 +43,6 @@ public class GraphicsCardItem extends Item implements DriverItem {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        return ItemDriverData.dataTag(stack);
     }
 }

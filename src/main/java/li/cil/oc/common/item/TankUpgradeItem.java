@@ -41,6 +41,6 @@ public class TankUpgradeItem extends Item implements HostAware {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        return ItemDriverData.dataTag(stack);
     }
 }

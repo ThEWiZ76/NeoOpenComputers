@@ -46,7 +46,7 @@ public class MemoryItem extends Item implements Memory {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        return ItemDriverData.dataTag(stack);
     }
 
     @Override

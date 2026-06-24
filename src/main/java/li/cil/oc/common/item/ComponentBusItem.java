@@ -40,7 +40,7 @@ public class ComponentBusItem extends Item implements Processor {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        return ItemDriverData.dataTag(stack);
     }
 
     @Override

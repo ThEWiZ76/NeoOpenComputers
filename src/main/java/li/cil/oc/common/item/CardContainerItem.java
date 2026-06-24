@@ -38,7 +38,7 @@ public class CardContainerItem extends Item implements Container {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        return ItemDriverData.dataTag(stack);
     }
 
     @Override

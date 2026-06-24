@@ -43,7 +43,7 @@ public class InventoryUpgradeItem extends Item implements HostAware, Inventory {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        return ItemDriverData.dataTag(stack);
     }
 
     @Override

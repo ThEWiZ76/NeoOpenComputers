@@ -49,7 +49,7 @@ public class CpuItem extends Item implements Processor, CallBudget {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        return ItemDriverData.dataTag(stack);
     }
 
     @Override

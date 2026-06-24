@@ -417,6 +417,36 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void commonItemDriversPersistUpstreamDataTag(final GameTestHelper helper) {
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.CPU_TIER1.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.COMPONENT_BUS_TIER1.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.INTERNET_CARD.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.DATA_CARD_TIER1.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.REDSTONE_CARD.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.NETWORK_CARD.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER1.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER2.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.UPGRADE_CONTAINER_TIER3.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.HOVER_UPGRADE_TIER1.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.CRAFTING_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.EXPERIENCE_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.INVENTORY_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.NAVIGATION_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.PISTON_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.SIGN_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.SOLAR_GENERATOR_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TANK_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TRADING_UPGRADE.get()));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void serverItemRightClickOpensUsableItemMenuLikeUpstream(final GameTestHelper helper) {
         final ItemStack stack = new ItemStack(ModItems.SERVER_TIER2.get());
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
@@ -6328,6 +6358,17 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(li.cil.oc.api.driver.item.Slot.Container.equals(container.slot(stack)), "Expected container slot for " + stack);
         helper.assertTrue(providedSlot.equals(container.providedSlot(stack)), "Expected " + stack + " to provide " + providedSlot);
         helper.assertTrue(container.providedTier(stack) == tier, "Expected " + stack + " to provide tier " + tier + " but got " + container.providedTier(stack));
+    }
+
+    private static void assertCommonDriverDataTagPersists(final GameTestHelper helper, final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for " + stack);
+        driver.dataTag(stack).putString("marker", "upstream");
+
+        helper.assertTrue("upstream".equals(driver.dataTag(stack).getString("marker")), "Driver data tag did not persist for " + stack);
+        helper.assertTrue("upstream".equals(stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag()
+            .getCompound("oc:data")
+            .getString("marker")), "Driver data tag not stored under oc:data for " + stack);
     }
 
     private static void assertDatabaseCapacity(final GameTestHelper helper, final ItemStack stack, final int capacity) {
