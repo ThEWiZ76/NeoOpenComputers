@@ -124,6 +124,37 @@ final class RackBlockEntityTest {
     }
 
     @Test
+    void rackRelayModeFansSideBusPacketsToOtherSideBusesLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final RackBlockEntity rack = allocateRack();
+        setField(rack, "mountables", new RackMountable[RackBlockEntity.CONTAINER_SIZE]);
+        rack.setRelayEnabled(true);
+
+        final Node southBus = rack.sidedNode(Direction.SOUTH);
+        final Node eastBus = rack.sidedNode(Direction.EAST);
+        final Node westBus = rack.sidedNode(Direction.WEST);
+
+        final TestEnvironment south = new TestEnvironment();
+        final TestEnvironment east = new TestEnvironment();
+        final TestEnvironment west = new TestEnvironment();
+        final Node southNode = Network.newNode(south, Visibility.Network).create();
+        final Node eastNode = Network.newNode(east, Visibility.Network).create();
+        final Node westNode = Network.newNode(west, Visibility.Network).create();
+        Network.joinNewNetwork(southBus);
+        Network.joinNewNetwork(eastBus);
+        Network.joinNewNetwork(westBus);
+        southNode.connect(southBus);
+        eastNode.connect(eastBus);
+        westNode.connect(westBus);
+
+        final TestPacket packet = new TestPacket("south", null, 123, new Object[]{"relay"});
+        southNode.sendToReachable("network.message", packet);
+
+        assertSame(packet, east.packet);
+        assertSame(packet, west.packet);
+    }
+
+    @Test
     void removingRackMountableClearsBusMappingsLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         final RackBlockEntity rack = allocateRack();

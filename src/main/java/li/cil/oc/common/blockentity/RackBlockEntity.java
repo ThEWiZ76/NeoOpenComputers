@@ -61,6 +61,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     private SidePlug[] sidePlugs;
     private SecondaryPlug[][] secondaryPlugs;
     private boolean relayEnabled;
+    private boolean relayingSidePacket;
 
     public RackBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.RACK.get(), pos, blockState);
@@ -744,6 +745,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         public void onMessage(final Message message) {
             if (NETWORK_MESSAGE.equals(message.name()) && message.data().length == 1 && message.data()[0] instanceof Packet packet) {
                 sendPacketToSecondaryConnectables(side, packet);
+                relayPacketToSideBuses(side, packet);
             }
         }
     }
@@ -791,6 +793,26 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
                     }
                 }
             }
+        }
+    }
+
+    private void relayPacketToSideBuses(final Direction sourceSide, final Packet packet) {
+        if (!relayEnabled || relayingSidePacket || sidePlugs == null) {
+            return;
+        }
+        relayingSidePacket = true;
+        try {
+            for (final Direction targetSide : Direction.values()) {
+                if (targetSide == sourceSide || !canConnect(targetSide)) {
+                    continue;
+                }
+                final SidePlug targetPlug = sidePlugs[targetSide.ordinal()];
+                if (targetPlug != null) {
+                    targetPlug.node().sendToReachable(NETWORK_MESSAGE, packet);
+                }
+            }
+        } finally {
+            relayingSidePacket = false;
         }
     }
 
