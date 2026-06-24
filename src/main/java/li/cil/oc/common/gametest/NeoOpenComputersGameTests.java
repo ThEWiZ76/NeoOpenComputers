@@ -454,6 +454,7 @@ public final class NeoOpenComputersGameTests {
         assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TRANSPOSER.get()));
         assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.LINKED_CARD.get()));
         assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.DEBUG_CARD.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
         helper.succeed();
     }
 

@@ -69,11 +69,14 @@ public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.Dr
         if (stack == null) {
             return new CompoundTag();
         }
-        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) {
-            return new CompoundTag();
+        final CompoundTag data = ItemDriverData.dataTag(stack);
+        if (data.isEmpty()) {
+            final CompoundTag legacyData = legacyDataTag(stack);
+            if (!legacyData.isEmpty()) {
+                data.merge(legacyData);
+            }
         }
-        return customData.copyTag().getCompound(DATABASE_DATA_TAG);
+        return data;
     }
 
     private static void writeDataTag(final ItemStack stack, final CompoundTag data) {
@@ -82,8 +85,16 @@ public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.Dr
         }
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
-        root.put(DATABASE_DATA_TAG, data.copy());
+        root.put("oc:data", data.copy());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    private static CompoundTag legacyDataTag(final ItemStack stack) {
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return new CompoundTag();
+        }
+        return customData.copyTag().getCompound(DATABASE_DATA_TAG);
     }
 
     private static int slotsForTier(final int tier) {
