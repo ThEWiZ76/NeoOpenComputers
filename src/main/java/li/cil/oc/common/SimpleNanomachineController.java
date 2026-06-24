@@ -773,11 +773,9 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
 
         final List<Behavior> newBehaviors = new ArrayList<>();
-        if (inputs.length > 0 && activeInputCount() > 0) {
-            for (final BehaviorEntry entry : behaviorEntries) {
-                if (entry.isActive(inputs, connectors)) {
-                    newBehaviors.add(entry.behavior());
-                }
+        for (final BehaviorEntry entry : behaviorEntries) {
+            if (entry.isActive(inputs, connectors)) {
+                newBehaviors.add(entry.behavior());
             }
         }
         final List<Behavior> addedBehaviors = new ArrayList<>();
@@ -834,9 +832,6 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
 
         private boolean isActive(final boolean[] inputs) {
-            if (triggerInputs.length == 0) {
-                return false;
-            }
             for (final int input : triggerInputs) {
                 if (input < 0 || input >= inputs.length || !inputs[input]) {
                     return false;

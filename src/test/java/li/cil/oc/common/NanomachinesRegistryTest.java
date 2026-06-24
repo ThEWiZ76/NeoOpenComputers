@@ -210,6 +210,26 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerLoadsEmptyConnectorsAsActiveLikeUpstream() {
+        TestBehavior linked = new TestBehavior("linked");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(linked));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag connectors = new ListTag();
+        connectors.add(new CompoundTag());
+        tag.put("connectors", connectors);
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("linked", new int[0], new int[]{0}));
+        tag.put("behaviors", behaviors);
+
+        controller.load(tag);
+
+        assertIterableEquals(List.of(linked), controller.getActiveBehaviors());
+        assertEquals(1, controller.getInputCount(linked));
+    }
+
+    @Test
     void controllerGeneratesConnectorGraphFromBehaviorCount() {
         NanomachinesRegistry registry = new NanomachinesRegistry();
         registry.addProvider(new ListBehaviorProvider(java.util.stream.IntStream.range(0, 10)
