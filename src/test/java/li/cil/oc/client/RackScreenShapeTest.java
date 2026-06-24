@@ -163,15 +163,29 @@ final class RackScreenShapeTest {
 
         assertEquals(3, selectedTooltip.size());
         assertTranslationKey("gui.neoopencomputers.rack.bus", selectedTooltip.get(0));
-        assertTranslationKey("gui.neoopencomputers.rack.bus.side.north", selectedTooltip.get(1));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.back", selectedTooltip.get(1));
         assertTranslationKey("gui.neoopencomputers.rack.bus.clear", selectedTooltip.get(2));
 
         assertEquals(3, unselectedTooltip.size());
         assertTranslationKey("gui.neoopencomputers.rack.bus", unselectedTooltip.get(0));
-        assertTranslationKey("gui.neoopencomputers.rack.bus.side.west", unselectedTooltip.get(1));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.left", unselectedTooltip.get(1));
         assertTranslationKey("gui.neoopencomputers.rack.bus.map", unselectedTooltip.get(2));
 
         assertTrue(RackScreen.mappingTooltip(menu, new RackScreen.MappingControl(1, 3, RackScreen.busIndex(Direction.SOUTH, Direction.WEST))).isEmpty());
+    }
+
+    @Test
+    void rackScreenLabelsBusSidesRelativeToRackFacing() {
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.top", RackScreen.sideLabel(Direction.NORTH, Direction.UP));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.bottom", RackScreen.sideLabel(Direction.NORTH, Direction.DOWN));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.back", RackScreen.sideLabel(Direction.NORTH, Direction.SOUTH));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.left", RackScreen.sideLabel(Direction.NORTH, Direction.EAST));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.right", RackScreen.sideLabel(Direction.NORTH, Direction.WEST));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.front", RackScreen.sideLabel(Direction.NORTH, Direction.NORTH));
+
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.back", RackScreen.sideLabel(Direction.SOUTH, Direction.NORTH));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.left", RackScreen.sideLabel(Direction.SOUTH, Direction.WEST));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.side.right", RackScreen.sideLabel(Direction.SOUTH, Direction.EAST));
     }
 
     private static RackMenu allocateMenu(final int containerId) throws ReflectiveOperationException {

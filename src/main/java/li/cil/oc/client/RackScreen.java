@@ -222,7 +222,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             return tooltip;
         }
         tooltip.add(Component.translatable("gui.neoopencomputers.rack.bus"));
-        tooltip.add(sideLabel(side));
+        tooltip.add(sideLabel(menu.rackFacing(), side));
         tooltip.add(Component.translatable(menu.rackNodeMapping(control.slot(), control.connectableIndex()) == side.ordinal()
             ? "gui.neoopencomputers.rack.bus.clear"
             : "gui.neoopencomputers.rack.bus.map"));
@@ -230,7 +230,35 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     }
 
     static Component sideLabel(final Direction side) {
-        return Component.translatable("gui.neoopencomputers.rack.bus.side." + side.getSerializedName());
+        return sideLabel(DEFAULT_FRONT, side);
+    }
+
+    static Component sideLabel(final Direction front, final Direction side) {
+        return Component.translatable("gui.neoopencomputers.rack.bus.side." + localSideKey(front, side));
+    }
+
+    private static String localSideKey(final Direction front, final Direction side) {
+        if (side == Direction.UP) {
+            return "top";
+        }
+        if (side == Direction.DOWN) {
+            return "bottom";
+        }
+
+        final Direction horizontalFront = front == null || front.getAxis().isVertical() ? DEFAULT_FRONT : front;
+        if (side == horizontalFront) {
+            return "front";
+        }
+        if (side == horizontalFront.getOpposite()) {
+            return "back";
+        }
+        if (side == horizontalFront.getClockWise()) {
+            return "left";
+        }
+        if (side == horizontalFront.getCounterClockWise()) {
+            return "right";
+        }
+        return side == null ? "unknown" : side.getSerializedName();
     }
 
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
