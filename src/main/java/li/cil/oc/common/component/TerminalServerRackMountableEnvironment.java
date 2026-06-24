@@ -191,7 +191,7 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         for (int column = 0; column < screen.renderWidth(); column++) {
             builder.appendCodePoint(screen.getCodePoint(column, row));
         }
-        return builder.toString().stripTrailing();
+        return builder.toString();
     }
 
     private static String terminalKey(final ItemStack terminal) {

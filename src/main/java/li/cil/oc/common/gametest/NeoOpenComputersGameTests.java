@@ -5040,7 +5040,8 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(snapshot.width() == terminalServer.screen().renderWidth(), "Terminal snapshot width mismatch");
         helper.assertTrue(snapshot.height() == terminalServer.screen().renderHeight(), "Terminal snapshot height mismatch");
-        helper.assertTrue("neo".equals(snapshot.line(0)), "Terminal snapshot missed virtual screen text");
+        helper.assertTrue(snapshot.line(0).startsWith("neo"), "Terminal snapshot missed virtual screen text");
+        helper.assertTrue(snapshot.line(0).length() == snapshot.width(), "Terminal snapshot did not preserve full line width");
         helper.succeed();
     }
 
@@ -5058,7 +5059,7 @@ public final class NeoOpenComputersGameTests {
         final li.cil.oc.common.menu.TerminalMenu menu = TerminalItem.createMenuForBoundTerminal(1, null, terminal);
 
         helper.assertTrue(menu != null, "Terminal item did not create menu for bound terminal");
-        helper.assertTrue("menu".equals(menu.snapshot().line(0)), "Terminal menu did not include screen snapshot");
+        helper.assertTrue(menu.snapshot().line(0).startsWith("menu"), "Terminal menu did not include screen snapshot");
         helper.succeed();
     }
 
@@ -5096,7 +5097,7 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(payload != null, "Terminal item did not create screen snapshot payload");
         helper.assertTrue(payload.containerId() == 9, "Terminal snapshot payload used wrong container id");
-        helper.assertTrue("packet".equals(payload.snapshot().line(0)), "Terminal snapshot payload missed screen text");
+        helper.assertTrue(payload.snapshot().line(0).startsWith("packet"), "Terminal snapshot payload missed screen text");
         helper.succeed();
     }
 
