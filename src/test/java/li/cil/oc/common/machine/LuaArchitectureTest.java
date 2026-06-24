@@ -1726,20 +1726,36 @@ final class LuaArchitectureTest {
     }
 
     @Test
-    void exposesComponentMethodsToLua() {
+    void exposesComponentMethodMetadataToLuaLikeUpstream() {
         Map<String, Callback> methods = new LinkedHashMap<>();
         methods.put("label", callback("labelCallback"));
         methods.put("direct", callback("directCallback"));
         methods.put("accessor", callback("accessorCallback"));
-        LuaArchitecture architecture = new LuaArchitecture("methods = component.methods('fs-address'); labelDirect = methods.label; direct = methods.direct; accessor = methods.accessor; missing, missingMessage = component.methods('missing')");
+        LuaArchitecture architecture = new LuaArchitecture("""
+            methods = component.methods('fs-address')
+            labelType = type(methods.label)
+            labelDirect = methods.label.direct
+            labelGetter = methods.label.getter
+            labelSetter = methods.label.setter
+            directDirect = methods.direct.direct
+            accessorType = type(methods.accessor)
+            accessorGetter = methods.accessor.getter
+            accessorSetter = methods.accessor.setter
+            missing, missingMessage = component.methods('missing')
+            """);
         architecture.bind(machineWithComponentsAndMethods(Map.of("fs-address", "filesystem"), methods));
 
         assertTrue(architecture.initialize());
         assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
 
+        assertEquals("table", architecture.globalString("labelType"));
         assertEquals(false, architecture.globalBoolean("labelDirect"));
-        assertEquals(true, architecture.globalBoolean("direct"));
-        assertEquals("nil", architecture.globalString("accessor"));
+        assertEquals(false, architecture.globalBoolean("labelGetter"));
+        assertEquals(false, architecture.globalBoolean("labelSetter"));
+        assertEquals(true, architecture.globalBoolean("directDirect"));
+        assertEquals("table", architecture.globalString("accessorType"));
+        assertEquals(true, architecture.globalBoolean("accessorGetter"));
+        assertEquals(true, architecture.globalBoolean("accessorSetter"));
         assertEquals("nil", architecture.globalString("missing"));
         assertEquals("no such component", architecture.globalString("missingMessage"));
     }
