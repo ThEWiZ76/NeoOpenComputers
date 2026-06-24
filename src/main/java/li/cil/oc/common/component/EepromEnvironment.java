@@ -42,7 +42,7 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Memory,
             DeviceInfo.DeviceAttribute.Description, "EEPROM",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "FlashStick2k",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.eepromSize()),
             DeviceInfo.DeviceAttribute.Size, Integer.toString(ModSettings.eepromSize())

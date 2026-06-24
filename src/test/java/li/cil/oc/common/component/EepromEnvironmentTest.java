@@ -155,6 +155,7 @@ final class EepromEnvironmentTest {
 
         assertEquals(DeviceInfo.DeviceClass.Memory, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("EEPROM", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("FlashStick2k", metadata.get(DeviceInfo.DeviceAttribute.Product));
         assertEquals("4096", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
         assertEquals("4096", metadata.get(DeviceInfo.DeviceAttribute.Size));
