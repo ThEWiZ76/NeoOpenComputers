@@ -236,8 +236,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
     private byte[] hash(final String digestAlgorithm, final String hmacAlgorithm, final Context context, final Arguments args, final double baseCost, final double byteCost) throws Exception {
         final byte[] data = costedData(context, args, baseCost, byteCost);
         try {
-            if (args.count() > 1) {
-                requireTier(1);
+            if (tier >= 1 && args.count() > 1) {
                 final Mac mac = Mac.getInstance(hmacAlgorithm);
                 mac.init(new SecretKeySpec(checkData(args, 1), hmacAlgorithm));
                 return mac.doFinal(data);

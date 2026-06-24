@@ -125,6 +125,18 @@ final class DataCardEnvironmentTest {
     }
 
     @Test
+    void tierOneIgnoresExtraHashKeyLikeUpstreamSubclass() throws Exception {
+        OpenComputersApi.initialize();
+        DataCardEnvironment card = new DataCardEnvironment(0);
+        charge(card, 1000D);
+        byte[] data = bytes("hello world");
+        byte[] key = bytes("ignored key");
+
+        assertArrayEquals(MessageDigest.getInstance("MD5").digest(data), (byte[]) card.md5(null, new TestArguments(data, key))[0]);
+        assertArrayEquals(MessageDigest.getInstance("SHA-256").digest(data), (byte[]) card.sha256(null, new TestArguments(data, key))[0]);
+    }
+
+    @Test
     void decode64IgnoresWhitespaceLikeUpstreamApacheCodec() throws Exception {
         OpenComputersApi.initialize();
         DataCardEnvironment card = new DataCardEnvironment(0);
