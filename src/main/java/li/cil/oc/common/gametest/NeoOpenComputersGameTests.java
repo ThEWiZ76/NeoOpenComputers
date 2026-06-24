@@ -4137,6 +4137,29 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void removingRackServerCpuWithoutUpdateStopsMachineLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        helper.assertTrue(mountable instanceof li.cil.oc.api.internal.Server, "Rack did not create server mountable");
+        final li.cil.oc.api.internal.Server rackServer = (li.cil.oc.api.internal.Server) mountable;
+        final net.minecraft.world.Container serverInventory = (net.minecraft.world.Container) rackServer;
+        serverInventory.setItem(2, new ItemStack(ModItems.CPU_TIER3.get()));
+        serverInventory.setItem(5, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        serverInventory.setItem(8, bootableHardDiskStack(helper, ""));
+        serverInventory.setItem(12, luaBiosEepromStack());
+
+        helper.assertTrue(rackServer.machine().start(), "Rack server machine did not start before CPU removal");
+        serverInventory.removeItemNoUpdate(2);
+
+        helper.assertFalse(rackServer.machine().isRunning(), "Rack server kept running after CPU removal");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void shiftClickRackServerSlotStartsPowerLikeUpstream(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

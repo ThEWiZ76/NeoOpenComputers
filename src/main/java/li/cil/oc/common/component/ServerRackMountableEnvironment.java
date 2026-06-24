@@ -443,7 +443,14 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public ItemStack removeItemNoUpdate(final int slot) {
-        return isValidSlot(slot) ? ContainerHelper.takeItem(items, slot) : ItemStack.EMPTY;
+        if (!isValidSlot(slot)) {
+            return ItemStack.EMPTY;
+        }
+        final ItemStack removed = ContainerHelper.takeItem(items, slot);
+        if (!removed.isEmpty()) {
+            notifyHardwareChanged();
+        }
+        return removed;
     }
 
     @Override
