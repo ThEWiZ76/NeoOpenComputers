@@ -136,7 +136,10 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     }
 
     public boolean allowsTerminal(final ItemStack terminal) {
-        final String key = terminalKey(terminal);
+        return allowsTerminalKey(terminalKey(terminal));
+    }
+
+    public boolean allowsTerminalKey(final String key) {
         return key != null && keys.contains(key);
     }
 

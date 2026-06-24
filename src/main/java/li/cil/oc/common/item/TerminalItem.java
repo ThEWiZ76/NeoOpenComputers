@@ -146,7 +146,7 @@ public class TerminalItem extends Item {
             return null;
         }
         final TerminalScreenSnapshot snapshot = terminalServer.screenSnapshot();
-        return new TerminalMenu(containerId, playerInventory, snapshot, terminalServer);
+        return new TerminalMenu(containerId, playerInventory, snapshot, terminalServer, terminalKey(terminal));
     }
 
     public static TerminalScreenSnapshotPayload createScreenSnapshotPayloadForBoundTerminal(final int containerId, final ItemStack terminal) {
@@ -170,5 +170,14 @@ public class TerminalItem extends Item {
             return null;
         }
         return customData.copyTag().getCompound(DATA_TAG);
+    }
+
+    private static String terminalKey(final ItemStack terminal) {
+        final CompoundTag data = terminalData(terminal);
+        if (data == null) {
+            return null;
+        }
+        final String key = data.getString(KEY_TAG);
+        return key.isBlank() ? null : key;
     }
 }

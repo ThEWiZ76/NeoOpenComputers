@@ -26,6 +26,12 @@ final class TerminalMenuShapeTest {
             Inventory.class,
             TerminalScreenSnapshot.class,
             TerminalServerRackMountableEnvironment.class);
+        final Constructor<TerminalMenu> keyedTerminalServerConstructor = TerminalMenu.class.getConstructor(
+            int.class,
+            Inventory.class,
+            TerminalScreenSnapshot.class,
+            TerminalServerRackMountableEnvironment.class,
+            String.class);
 
         assertTrue(AbstractContainerMenu.class.isAssignableFrom(TerminalMenu.class));
         assertArrayEquals(new Class<?>[]{int.class, Inventory.class}, clientConstructor.getParameterTypes());
@@ -33,6 +39,9 @@ final class TerminalMenuShapeTest {
         assertArrayEquals(
             new Class<?>[]{int.class, Inventory.class, TerminalScreenSnapshot.class, TerminalServerRackMountableEnvironment.class},
             terminalServerConstructor.getParameterTypes());
+        assertArrayEquals(
+            new Class<?>[]{int.class, Inventory.class, TerminalScreenSnapshot.class, TerminalServerRackMountableEnvironment.class, String.class},
+            keyedTerminalServerConstructor.getParameterTypes());
     }
 
     @Test

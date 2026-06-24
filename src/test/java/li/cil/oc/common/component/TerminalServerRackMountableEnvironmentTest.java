@@ -6,12 +6,16 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.menu.TerminalMenu;
 import org.junit.jupiter.api.Test;
 import net.minecraft.world.level.Level;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -97,6 +101,39 @@ final class TerminalServerRackMountableEnvironmentTest {
         assertTrue(virtualNodes[0].isNeighborOf(terminal.node()));
         assertTrue(virtualNodes[1].isNeighborOf(terminal.node()));
         assertTrue(virtualNodes[0].isNeighborOf(virtualNodes[1]));
+    }
+
+    @Test
+    void terminalMenuInvalidatesWhenTerminalKeyChangesLikeUpstream() throws ReflectiveOperationException {
+        TerminalServerRegistry.clear();
+        final TerminalServerRackMountableEnvironment terminalServer = new TerminalServerRackMountableEnvironment();
+        terminalKeys(terminalServer).add("old");
+        final TerminalMenu menu = allocateTerminalMenu(terminalServer, "old");
+        assertTrue(menu.stillValid(null));
+
+        terminalKeys(terminalServer).clear();
+
+        assertFalse(menu.stillValid(null));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> terminalKeys(final TerminalServerRackMountableEnvironment terminalServer) throws ReflectiveOperationException {
+        final Field keys = TerminalServerRackMountableEnvironment.class.getDeclaredField("keys");
+        keys.setAccessible(true);
+        return (List<String>) keys.get(terminalServer);
+    }
+
+    private static TerminalMenu allocateTerminalMenu(final TerminalServerRackMountableEnvironment terminalServer, final String terminalKey) throws ReflectiveOperationException {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final TerminalMenu menu = (TerminalMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(TerminalMenu.class);
+        final Field terminalServerField = field(TerminalMenu.class, "terminalServer");
+        terminalServerField.setAccessible(true);
+        terminalServerField.set(menu, terminalServer);
+        final Field terminalKeyField = field(TerminalMenu.class, "terminalKey");
+        terminalKeyField.setAccessible(true);
+        terminalKeyField.set(menu, terminalKey);
+        return menu;
     }
 
     private static void clearNodeAddress(final Node node) throws ReflectiveOperationException {

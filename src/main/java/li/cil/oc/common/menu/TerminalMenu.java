@@ -21,6 +21,7 @@ public class TerminalMenu extends AbstractContainerMenu {
 
     private TerminalScreenSnapshot snapshot;
     private final TerminalServerRackMountableEnvironment terminalServer;
+    private final String terminalKey;
     private final Player player;
 
     public TerminalMenu(final int containerId, final Inventory playerInventory) {
@@ -32,9 +33,14 @@ public class TerminalMenu extends AbstractContainerMenu {
     }
 
     public TerminalMenu(final int containerId, final Inventory playerInventory, final TerminalScreenSnapshot snapshot, final TerminalServerRackMountableEnvironment terminalServer) {
+        this(containerId, playerInventory, snapshot, terminalServer, null);
+    }
+
+    public TerminalMenu(final int containerId, final Inventory playerInventory, final TerminalScreenSnapshot snapshot, final TerminalServerRackMountableEnvironment terminalServer, final String terminalKey) {
         super(ModMenus.TERMINAL.get(), containerId);
         this.snapshot = snapshot == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : snapshot;
         this.terminalServer = terminalServer;
+        this.terminalKey = terminalKey == null || terminalKey.isBlank() ? null : terminalKey;
         this.player = playerInventory == null ? null : playerInventory.player;
     }
 
@@ -100,6 +106,7 @@ public class TerminalMenu extends AbstractContainerMenu {
         }
         return terminalServer.node() != null
             && TerminalServerRegistry.find(terminalServer.node().address()) == terminalServer
+            && (terminalKey == null || terminalServer.allowsTerminalKey(terminalKey))
             && terminalServer.isUsableBy(player);
     }
 }
