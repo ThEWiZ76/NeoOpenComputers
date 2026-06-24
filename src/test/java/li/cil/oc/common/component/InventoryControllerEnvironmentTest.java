@@ -23,7 +23,7 @@ final class InventoryControllerEnvironmentTest {
 
         assertEquals(DeviceInfo.DeviceClass.Generic, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Inventory controller", metadata.get(DeviceInfo.DeviceAttribute.Description));
-        assertEquals("MightyPirates", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("Item Cataloguer R1", metadata.get(DeviceInfo.DeviceAttribute.Product));
     }
 

@@ -41,7 +41,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
             DeviceInfo.DeviceAttribute.Description, "Inventory controller",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Item Cataloguer R1"
         );
     }
