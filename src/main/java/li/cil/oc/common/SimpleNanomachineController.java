@@ -71,7 +71,11 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     public Controller reconfigure() {
         final List<BehaviorEntry> created = new ArrayList<>();
         for (final var provider : registry.getProviders()) {
-            for (final Behavior behavior : provider.createBehaviors(player)) {
+            final Iterable<Behavior> providerBehaviors = provider.createBehaviors(player);
+            if (providerBehaviors == null) {
+                continue;
+            }
+            for (final Behavior behavior : providerBehaviors) {
                 if (behavior != null) {
                     created.add(new BehaviorEntry(provider, behavior, new int[0], new int[0]));
                 }

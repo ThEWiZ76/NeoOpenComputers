@@ -174,6 +174,20 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerIgnoresProvidersReturningNullBehaviorLists() {
+        TestBehavior valid = new TestBehavior("valid");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(null));
+        registry.addProvider(new ListBehaviorProvider(List.of(valid)));
+
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        controller.save(tag);
+
+        assertEquals(1, tag.getList("behaviors", CompoundTag.TAG_COMPOUND).size());
+    }
+
+    @Test
     void controllerRandomizesGeneratedGraphOnReconfigure() {
         NanomachinesRegistry registry = new NanomachinesRegistry();
         registry.addProvider(new ListBehaviorProvider(java.util.stream.IntStream.range(0, 20)
