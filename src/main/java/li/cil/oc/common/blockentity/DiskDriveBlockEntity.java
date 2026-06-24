@@ -47,7 +47,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Disk,
         DeviceInfo.DeviceAttribute.Description, "Floppy disk drive",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
         DeviceInfo.DeviceAttribute.Product, "Spinner 520p1"
     );
 
