@@ -3380,6 +3380,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void pistonUpgradeRejectsInvalidSideLikeUpstream(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.PISTON_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for piston upgrade");
+
+        final ManagedEnvironment environment = driver.createEnvironment(
+            new ItemStack(ModItems.PISTON_UPGRADE.get()),
+            new StaticRotatablePositionEnvironmentHost(helper, new BlockPos(2, 1, 2), Direction.EAST)
+        );
+        helper.assertTrue(environment != null, "Piston upgrade did not create piston environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Piston node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        assertComponentFailureMessage(helper, component, "push", "invalid side", 6);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void pistonUpgradePushesBlockChain(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.PISTON_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for piston upgrade");

@@ -98,7 +98,11 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
         if (arguments.count() <= 0) {
             return rotatable.facing();
         }
-        return rotatable.toGlobal(Direction.from3DDataValue(arguments.checkInteger(0)));
+        final int side = arguments.checkInteger(0);
+        if (side < 0 || side > 5) {
+            throw new IllegalArgumentException("invalid side");
+        }
+        return rotatable.toGlobal(Direction.from3DDataValue(side));
     }
 
     private BlockPos hostPosition() {
