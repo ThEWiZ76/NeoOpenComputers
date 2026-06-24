@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -77,6 +78,16 @@ final class DiskDriveBlockEntityTest {
 
         final var component = assertInstanceOf(li.cil.oc.api.network.Component.class, filesystem.node());
         assertEquals(Visibility.Network, component.visibility());
+    }
+
+    @Test
+    void mediaReturnsNullAddressWithoutEmptyDriveErrorLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final DiskDriveBlockEntity diskDrive = allocateDiskDrive();
+        final TestManagedEnvironment filesystem = new TestManagedEnvironment();
+        setField(diskDrive, "diskEnvironment", filesystem);
+
+        assertArrayEquals(new Object[]{null}, diskDrive.media(null, null));
     }
 
     private static DiskDriveBlockEntity allocateDiskDrive() throws Exception {

@@ -138,8 +138,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         if (diskEnvironment == null || diskEnvironment.node() == null) {
             return new Object[]{null, "drive is empty"};
         }
-        final String address = diskEnvironment.node().address();
-        return address == null || address.isEmpty() ? new Object[]{null, "drive is empty"} : new Object[]{address};
+        return new Object[]{diskEnvironment.node().address()};
     }
 
     @Override
