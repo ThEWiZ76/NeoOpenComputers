@@ -76,6 +76,17 @@ final class RackNetworkingTest {
     }
 
     @Test
+    void applyRackControlRejectsStaleRackMenuLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final TestRackBlockEntity rack = allocateRack();
+        rack.valid = false;
+        final RackMenu menu = allocateMenu(17, rack);
+
+        assertFalse(RackNetworking.applyRackControl(null, menu, RackControlPayload.relay(17, true)));
+        assertFalse(rack.isRelayEnabled());
+    }
+
+    @Test
     void applyServerRackControlRejectsStaleRackServerLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         final AtomicInteger stopCount = new AtomicInteger();
@@ -222,6 +233,8 @@ final class RackNetworkingTest {
     }
 
     private static final class TestRackBlockEntity extends RackBlockEntity {
+        private boolean valid = true;
+
         private TestRackBlockEntity() {
             super(null, (BlockState) null);
         }
@@ -229,6 +242,11 @@ final class RackNetworkingTest {
         @Override
         public Direction facing() {
             return Direction.NORTH;
+        }
+
+        @Override
+        public boolean stillValid(final Player player) {
+            return valid;
         }
     }
 
