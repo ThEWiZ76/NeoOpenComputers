@@ -4,8 +4,10 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import li.cil.oc.api.API;
 import li.cil.oc.common.DebugCardWhitelist;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.NanomachinesRegistry;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -17,12 +19,16 @@ import java.util.Set;
 public final class ModCommands {
     private static final SimpleCommandExceptionType WHITELIST_DISABLED =
         new SimpleCommandExceptionType(Component.literal("§cDebug card whitelisting is not enabled."));
+    private static final SimpleCommandExceptionType NANOMACHINES_UNAVAILABLE =
+        new SimpleCommandExceptionType(Component.literal("§cNanomachines are not available."));
 
     private ModCommands() {
     }
 
     public static void register(final RegisterCommandsEvent event) {
         event.getDispatcher().register(debugWhitelistCommand());
+        event.getDispatcher().register(debugNanomachinesCommand("oc_debugNanomachines"));
+        event.getDispatcher().register(debugNanomachinesCommand("oc_dn"));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> debugWhitelistCommand() {
@@ -43,6 +49,21 @@ public final class ModCommands {
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.argument("player", StringArgumentType.word())
                     .executes(context -> remove(context.getSource(), StringArgumentType.getString(context, "player")))));
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> debugNanomachinesCommand(final String name) {
+        return Commands.literal(name)
+            .requires(source -> source.hasPermission(2))
+            .executes(context -> debugNanomachines(context.getSource()));
+    }
+
+    private static int debugNanomachines(final CommandSourceStack source) throws CommandSyntaxException {
+        if (API.nanomachines instanceof NanomachinesRegistry registry) {
+            registry.debugController(source.getPlayerOrException());
+            source.sendSuccess(() -> Component.literal("Debug configuration created, see log for mappings."), false);
+            return 1;
+        }
+        throw NANOMACHINES_UNAVAILABLE.create();
     }
 
     private static int revoke(final CommandSourceStack source, final String player) throws CommandSyntaxException {

@@ -71,18 +71,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     @Override
     public Controller reconfigure() {
-        final List<BehaviorEntry> created = new ArrayList<>();
-        for (final var provider : registry.getProviders()) {
-            final Iterable<Behavior> providerBehaviors = provider.createBehaviors(player);
-            if (providerBehaviors == null) {
-                continue;
-            }
-            for (final Behavior behavior : providerBehaviors) {
-                if (behavior != null) {
-                    created.add(new BehaviorEntry(provider, behavior, new int[0], new int[0]));
-                }
-            }
-        }
+        final List<BehaviorEntry> created = createBehaviorEntries();
         disableActive(DisableReason.Default);
         configureGeneratedGraph(created);
         if (configured) {
@@ -92,6 +81,19 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             configured = true;
         }
         return this;
+    }
+
+    void debugConfiguration() {
+        final List<BehaviorEntry> created = createBehaviorEntries();
+        final List<BehaviorEntry> debugEntries = new ArrayList<>(created.size());
+        for (int i = 0; i < created.size(); i++) {
+            final BehaviorEntry entry = created.get(i);
+            debugEntries.add(new BehaviorEntry(entry.provider(), entry.behavior(), new int[]{i}, new int[0]));
+        }
+        disableActive(DisableReason.Default);
+        connectors = List.of();
+        setBehaviorEntries(debugEntries);
+        saveState();
     }
 
     @Override
@@ -341,6 +343,22 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         activeBehaviors = List.of();
         inputs = new boolean[computeInputCount(connectors, behaviorEntries)];
         activeBehaviorsDirty = true;
+    }
+
+    private List<BehaviorEntry> createBehaviorEntries() {
+        final List<BehaviorEntry> created = new ArrayList<>();
+        for (final var provider : registry.getProviders()) {
+            final Iterable<Behavior> providerBehaviors = provider.createBehaviors(player);
+            if (providerBehaviors == null) {
+                continue;
+            }
+            for (final Behavior behavior : providerBehaviors) {
+                if (behavior != null) {
+                    created.add(new BehaviorEntry(provider, behavior, new int[0], new int[0]));
+                }
+            }
+        }
+        return created;
     }
 
     private void configureGeneratedGraph(final List<BehaviorEntry> entries) {

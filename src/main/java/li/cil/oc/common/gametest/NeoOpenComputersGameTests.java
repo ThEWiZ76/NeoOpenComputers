@@ -1488,6 +1488,37 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesDebugCommandCreatesOneInputPerBehavior(final GameTestHelper helper) {
+        final Player player = helper.makeMockServerPlayerInLevel();
+        final li.cil.oc.api.detail.NanomachinesAPI previous = API.nanomachines;
+        final li.cil.oc.common.NanomachinesRegistry registry = new li.cil.oc.common.NanomachinesRegistry();
+        final RecordingNanomachineBehavior first = new RecordingNanomachineBehavior();
+        final RecordingNanomachineBehavior second = new RecordingNanomachineBehavior();
+        registry.addProvider(new RecordingNanomachineProvider(java.util.List.of(first, second)));
+        API.nanomachines = registry;
+
+        try {
+            helper.getLevel().getServer().getCommands().performPrefixedCommand(
+                player.createCommandSourceStack().withPermission(4).withSuppressedOutput(),
+                "oc_debugNanomachines");
+
+            final li.cil.oc.api.nanomachines.Controller controller = registry.getController(player);
+            helper.assertTrue(controller != null, "Nanomachines debug command did not install controller");
+            helper.assertTrue(controller.getTotalInputCount() == 2, "Nanomachines debug command did not create one input per behavior");
+            helper.assertTrue(controller.setInput(0, true), "Nanomachines debug command first input rejected");
+            helper.assertTrue(containsBehavior(controller.getActiveBehaviors(), first), "Nanomachines debug command did not map first input to first behavior");
+            helper.assertFalse(containsBehavior(controller.getActiveBehaviors(), second), "Nanomachines debug command activated second behavior from first input");
+            helper.assertTrue(controller.setInput(0, false), "Nanomachines debug command first input reset rejected");
+            helper.assertTrue(controller.setInput(1, true), "Nanomachines debug command second input rejected");
+            helper.assertTrue(containsBehavior(controller.getActiveBehaviors(), second), "Nanomachines debug command did not map second input to second behavior");
+        } finally {
+            API.nanomachines = previous;
+        }
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesControllerStatePersistsAcrossRegistryReload(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         final li.cil.oc.common.NanomachinesRegistry firstRegistry = new li.cil.oc.common.NanomachinesRegistry();

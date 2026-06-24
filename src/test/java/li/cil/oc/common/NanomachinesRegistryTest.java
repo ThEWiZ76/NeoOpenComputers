@@ -266,6 +266,29 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void debugConfigurationMapsOneTriggerToEachBehaviorLikeUpstream() {
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(
+            new TestBehavior("first"),
+            new TestBehavior("second"),
+            new TestBehavior("third"))));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+
+        controller.debugConfiguration();
+        controller.save(tag);
+
+        assertEquals(3, tag.getList("triggers", CompoundTag.TAG_COMPOUND).size());
+        assertEquals(0, tag.getList("connectors", CompoundTag.TAG_COMPOUND).size());
+        ListTag behaviors = tag.getList("behaviors", CompoundTag.TAG_COMPOUND);
+        assertEquals(3, behaviors.size());
+        for (int i = 0; i < behaviors.size(); i++) {
+            assertArrayEquals(new int[]{i}, behaviors.getCompound(i).getIntArray("triggerInputs"));
+            assertEquals(0, behaviors.getCompound(i).getIntArray("connectorInputs").length);
+        }
+    }
+
+    @Test
     void controllerIgnoresProvidersReturningNullBehaviorLists() {
         TestBehavior valid = new TestBehavior("valid");
         NanomachinesRegistry registry = new NanomachinesRegistry();
