@@ -1395,6 +1395,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesReconfigureAppliesUpstreamSideEffects(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+
+        helper.assertFalse(player.hasEffect(MobEffects.BLINDNESS), "Nanomachines initial install applied blindness");
+        helper.assertFalse(player.hasEffect(MobEffects.POISON), "Nanomachines initial install applied poison");
+        helper.assertFalse(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Nanomachines initial install applied slowness");
+
+        controller.reconfigure();
+
+        helper.assertTrue(player.hasEffect(MobEffects.BLINDNESS), "Nanomachines reconfigure did not apply blindness");
+        helper.assertTrue(player.hasEffect(MobEffects.POISON), "Nanomachines reconfigure did not apply poison");
+        helper.assertTrue(player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN), "Nanomachines reconfigure did not apply slowness");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesConfiguredItemRestoresSavedConfiguration(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         final li.cil.oc.common.NanomachinesRegistry previous = API.nanomachines instanceof li.cil.oc.common.NanomachinesRegistry registry ? registry : null;

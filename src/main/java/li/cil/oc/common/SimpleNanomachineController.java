@@ -13,6 +13,8 @@ import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -78,6 +80,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         disableActive(DisableReason.Default);
         configureGeneratedGraph(created);
         if (configured) {
+            applyReconfigureEffects();
             changeBuffer(-ModSettings.nanomachinesReconfigureCost());
         } else {
             configured = true;
@@ -769,6 +772,15 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     private boolean isCreativePlayer() {
         return player != null && (player.isCreative() || player.getAbilities().instabuild);
+    }
+
+    private void applyReconfigureEffects() {
+        if (player == null) {
+            return;
+        }
+        player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100));
+        player.addEffect(new MobEffectInstance(MobEffects.POISON, 150));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200));
     }
 
     private record ConnectorEntry(int[] triggerInputs) {
