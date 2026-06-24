@@ -115,13 +115,14 @@ public record TerminalScreenDelta(int width, int height, Row[] rows) {
     }
 
     private static String normalizeLine(final String line, final int width) {
-        if (line.length() == width) {
+        final int codePointCount = line.codePointCount(0, line.length());
+        if (codePointCount == width) {
             return line;
         }
-        if (line.length() > width) {
-            return line.substring(0, width);
+        if (codePointCount > width) {
+            return line.substring(0, line.offsetByCodePoints(0, width));
         }
-        return line + " ".repeat(width - line.length());
+        return line + " ".repeat(width - codePointCount);
     }
 
     private static int[] normalizeColors(final int[] colors, final int width, final int fallback) {

@@ -90,4 +90,19 @@ final class TerminalScreenDeltaTest {
         assertEquals(0x000000, applied.backgroundColor(1, 0));
         assertEquals(0x000000, applied.backgroundColor(3, 0));
     }
+
+    @Test
+    void appliesRowsWithoutSplittingSupplementaryCodePoints() {
+        final String glyph = new String(Character.toChars(0x10400));
+        final TerminalScreenDelta delta = new TerminalScreenDelta(
+            1,
+            1,
+            new TerminalScreenDelta.Row[]{
+                new TerminalScreenDelta.Row(0, glyph, new int[]{0x112233}, new int[]{0x445566})
+            });
+
+        final TerminalScreenSnapshot applied = delta.applyTo(null);
+
+        assertEquals(glyph, applied.line(0));
+    }
 }
