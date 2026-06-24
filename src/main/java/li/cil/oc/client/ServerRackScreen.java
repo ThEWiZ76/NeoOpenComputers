@@ -43,7 +43,15 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             if (position == null) {
                 continue;
             }
-            drawSlot(guiGraphics, left + position.x() - 1, top + position.y() - 1);
+            drawSlot(
+                guiGraphics,
+                left + position.x() - 1,
+                top + position.y() - 1,
+                left + position.x(),
+                top + position.y(),
+                menu.slotKind(slot),
+                menu.slotTierLimit(slot),
+                menu.getSlot(slot).hasItem());
         }
         guiGraphics.drawString(font, statusLabel(menu.serverState()), left + 8, top + 62, 0xFFD8DEE9, false);
         if (statusControlVisible(menu)) {
@@ -108,6 +116,23 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             return Component.translatable("gui.neoopencomputers.server_rack.slot.unavailable");
         }
         return Component.translatable("gui.neoopencomputers.server_rack.slot.max_tier", tier);
+    }
+
+    public static ResourceLocation slotIconTexture(final int kind) {
+        final String name = switch (kind) {
+            case ServerRackMenu.SLOT_KIND_CARD -> "card";
+            case ServerRackMenu.SLOT_KIND_CPU -> "cpu";
+            case ServerRackMenu.SLOT_KIND_COMPONENT_BUS -> "component_bus";
+            case ServerRackMenu.SLOT_KIND_MEMORY -> "memory";
+            case ServerRackMenu.SLOT_KIND_HDD -> "hdd";
+            case ServerRackMenu.SLOT_KIND_EEPROM -> "eeprom";
+            default -> null;
+        };
+        return name == null ? null : iconTexture(name);
+    }
+
+    public static ResourceLocation tierIconTexture(final int tier) {
+        return tier >= 0 && tier <= 2 ? iconTexture("tier" + tier) : null;
     }
 
     public static List<Component> slotTooltip(final int kind, final int tier) {
@@ -214,8 +239,27 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         return 0;
     }
 
-    private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
+    private static void drawSlot(
+        final GuiGraphics guiGraphics,
+        final int left,
+        final int top,
+        final int iconLeft,
+        final int iconTop,
+        final int kind,
+        final int tier,
+        final boolean occupied) {
         guiGraphics.blit(SLOT_TEXTURE, left, top, 0, 0, STATUS_CONTROL_SIZE, STATUS_CONTROL_SIZE);
+        if (occupied) {
+            return;
+        }
+        final ResourceLocation tierTexture = tierIconTexture(tier);
+        if (tierTexture != null) {
+            guiGraphics.blit(tierTexture, iconLeft, iconTop, 0, 0, SERVER_SLOT_SIZE, SERVER_SLOT_SIZE, SERVER_SLOT_SIZE, SERVER_SLOT_SIZE);
+        }
+        final ResourceLocation slotTexture = slotIconTexture(kind);
+        if (slotTexture != null) {
+            guiGraphics.blit(slotTexture, iconLeft, iconTop, 0, 0, SERVER_SLOT_SIZE, SERVER_SLOT_SIZE, SERVER_SLOT_SIZE, SERVER_SLOT_SIZE);
+        }
     }
 
     private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state, final boolean hovered) {
@@ -227,6 +271,10 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             powerButtonTextureY(hovered),
             STATUS_CONTROL_SIZE,
             STATUS_CONTROL_SIZE);
+    }
+
+    private static ResourceLocation iconTexture(final String name) {
+        return ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/icons/" + name + ".png");
     }
 
 }

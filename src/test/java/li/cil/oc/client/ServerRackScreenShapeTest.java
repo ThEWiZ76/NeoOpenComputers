@@ -63,6 +63,27 @@ final class ServerRackScreenShapeTest {
     }
 
     @Test
+    void serverRackSlotsUseUpstreamSlotAndTierIcons() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/card.png"), ServerRackScreen.slotIconTexture(ServerRackMenu.SLOT_KIND_CARD));
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/cpu.png"), ServerRackScreen.slotIconTexture(ServerRackMenu.SLOT_KIND_CPU));
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/component_bus.png"), ServerRackScreen.slotIconTexture(ServerRackMenu.SLOT_KIND_COMPONENT_BUS));
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/memory.png"), ServerRackScreen.slotIconTexture(ServerRackMenu.SLOT_KIND_MEMORY));
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/hdd.png"), ServerRackScreen.slotIconTexture(ServerRackMenu.SLOT_KIND_HDD));
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/eeprom.png"), ServerRackScreen.slotIconTexture(ServerRackMenu.SLOT_KIND_EEPROM));
+        assertNull(ServerRackScreen.slotIconTexture(ServerRackMenu.SLOT_KIND_NONE));
+
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/tier0.png"), ServerRackScreen.tierIconTexture(0));
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/tier1.png"), ServerRackScreen.tierIconTexture(1));
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/tier2.png"), ServerRackScreen.tierIconTexture(2));
+        assertNull(ServerRackScreen.tierIconTexture(-1));
+        assertNull(ServerRackScreen.tierIconTexture(Integer.MAX_VALUE));
+
+        for (final String icon : List.of("card", "cpu", "component_bus", "memory", "hdd", "eeprom", "tier0", "tier1", "tier2")) {
+            assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/icons/" + icon + ".png")), icon);
+        }
+    }
+
+    @Test
     void serverRackScreenExposesSlotLabels() throws NoSuchMethodException {
         final Method label = ServerRackScreen.class.getMethod("slotLabel", int.class);
         final Method tierLabel = ServerRackScreen.class.getMethod("slotTierLabel", int.class);
