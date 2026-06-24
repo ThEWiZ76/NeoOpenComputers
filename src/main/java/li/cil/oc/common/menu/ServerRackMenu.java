@@ -141,7 +141,7 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return !lockedStack.isEmpty()
             && stack != null
             && !stack.isEmpty()
-            && (stack == lockedStack || ItemStack.matches(stack, lockedStack));
+            && (stack == lockedStack || ItemStack.isSameItem(stack, lockedStack));
     }
 
     public boolean isLockedSlot(final int index) {

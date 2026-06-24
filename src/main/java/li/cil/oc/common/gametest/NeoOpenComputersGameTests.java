@@ -532,6 +532,20 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void serverItemMenuLocksSameItemStacksLikeUpstream(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.SERVER_TIER2.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+
+        final ServerRackMountableEnvironment server = new ServerRackMountableEnvironment(player, 1, driver.dataTag(stack));
+        final ServerRackMenu menu = new ServerRackMenu(1, player.getInventory(), server, stack);
+
+        helper.assertTrue(menu.isLockedStack(new ItemStack(ModItems.SERVER_TIER2.get(), 2)), "Server item menu did not lock same item stack with different count");
+        helper.assertTrue(!menu.isLockedStack(new ItemStack(ModItems.SERVER_TIER1.get())), "Server item menu locked a different server item");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardDriverDataTagCarriesAccessContext(final GameTestHelper helper) throws Exception {
         final ItemStack stack = new ItemStack(ModItems.DEBUG_CARD.get());
         final DriverItem driver = Driver.driverFor(stack);
