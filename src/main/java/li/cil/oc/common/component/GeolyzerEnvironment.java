@@ -47,7 +47,7 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
             DeviceInfo.DeviceAttribute.Description, "Geolyzer",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Terrain Analyzer MkII",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.geolyzerRange())
         );
