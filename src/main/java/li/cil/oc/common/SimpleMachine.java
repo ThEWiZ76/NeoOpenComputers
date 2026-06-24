@@ -1088,7 +1088,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
                 final Callback callback = method.getAnnotation(Callback.class);
                 if (callback != null && isValidCallbackMethod(method)) {
                     method.setAccessible(true);
-                    final String name = callback.value().isEmpty() ? method.getName() : callback.value();
+                    final String name = callback.value().trim().isEmpty() ? method.getName() : callback.value();
                     if ((whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
                         discovered.putIfAbsent(name, method);
                     }

@@ -233,6 +233,19 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void valueCallbacksUseMethodNameForBlankCallbackNamesLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        BlankCallbackNameValue value = new BlankCallbackNameValue();
+
+        Map<String, Callback> methods = machine.methods(value);
+
+        assertTrue(methods.containsKey("fallback"));
+        assertFalse(methods.containsKey("   "));
+        assertArrayEquals(new Object[]{"fallback"}, machine.invoke(value, "fallback", new Object[0]));
+    }
+
+    @Test
     void machineInvokeRejectsMissingComponentsLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1679,6 +1692,13 @@ final class MachineRegistryTest {
         @Callback
         public Object[] extra(final Context context, final Arguments arguments) {
             return new Object[]{"extra"};
+        }
+    }
+
+    private static final class BlankCallbackNameValue extends AbstractValue {
+        @Callback("   ")
+        public Object[] fallback(final Context context, final Arguments arguments) {
+            return new Object[]{"fallback"};
         }
     }
 

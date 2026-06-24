@@ -200,6 +200,17 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void componentsUseMethodNameForBlankCallbackNamesLikeUpstream() throws Exception {
+        NetworkRegistry registry = new NetworkRegistry();
+        BlankCallbackNameEnvironment host = new BlankCallbackNameEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        assertTrue(component.methods().contains("fallback"));
+        assertFalse(component.methods().contains("   "));
+        assertArrayEquals(new Object[]{"fallback"}, component.invoke("fallback", null));
+    }
+
+    @Test
     void connectorBuffersClampToLocalSize() {
         NetworkRegistry registry = new NetworkRegistry();
         Connector connector = registry.newNode(new TestEnvironment(), Visibility.Network).withConnector(10).create();
@@ -271,6 +282,13 @@ final class NetworkRegistryTest {
         @Callback(doc = "function():string -- Test callback.")
         public Object[] ping(final Context context, final Arguments arguments) {
             return new Object[]{"pong", arguments.checkString(0)};
+        }
+    }
+
+    private static final class BlankCallbackNameEnvironment extends TestEnvironment {
+        @Callback("   ")
+        public Object[] fallback(final Context context, final Arguments arguments) {
+            return new Object[]{"fallback"};
         }
     }
 
