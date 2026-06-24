@@ -23,6 +23,8 @@ import java.util.Random;
 import java.util.UUID;
 
 final class SimpleNanomachineController implements Controller, WirelessEndpoint {
+    private static final String TAG_UUID = "uuid";
+    private static final String TAG_PORT = "port";
     private static final String TAG_ENERGY = "energy";
     private static final String TAG_ACTIVE_INPUTS = "activeInputs";
     private static final String TAG_CONNECTORS = "connectors";
@@ -259,6 +261,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     void save(final CompoundTag tag) {
+        tag.putString(TAG_UUID, uuid);
+        tag.putInt(TAG_PORT, responsePort);
         tag.putDouble(TAG_ENERGY, buffer);
         tag.putIntArray(TAG_ACTIVE_INPUTS, activeInputs());
         tag.put(TAG_CONNECTORS, saveConnectorEntries());
@@ -266,6 +270,12 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     void load(final CompoundTag tag) {
+        if (tag.contains(TAG_UUID)) {
+            uuid = tag.getString(TAG_UUID);
+        }
+        if (tag.contains(TAG_PORT)) {
+            responsePort = clampPort(tag.getInt(TAG_PORT));
+        }
         if (tag.contains(TAG_ENERGY)) {
             buffer = Math.clamp(tag.getDouble(TAG_ENERGY), 0D, getLocalBufferSize());
         }

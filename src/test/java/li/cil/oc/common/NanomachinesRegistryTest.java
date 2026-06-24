@@ -234,6 +234,30 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerRuntimeSaveRestoresUuidAndResponsePortLikeUpstream() {
+        API.network = new NetworkRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 777}), sender);
+        runNanomachineCommandDelay(controller);
+        CompoundTag tag = new CompoundTag();
+
+        controller.save(tag);
+
+        SimpleNanomachineController loaded = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        loaded.load(tag);
+        sender.lastPacket = null;
+        ((WirelessEndpoint) (Object) loaded).receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getPowerState"}), sender);
+        runNanomachineCommandDelay(loaded);
+
+        assertEquals(controller.uuid(), loaded.uuid());
+        assertTrue(sender.lastPacket != null);
+        assertEquals(777, sender.lastPacket.port());
+    }
+
+    @Test
     void controllerDelaysWirelessCommandResponsesAndIgnoresCommandsWhileWaiting() {
         API.network = new NetworkRegistry();
         SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
