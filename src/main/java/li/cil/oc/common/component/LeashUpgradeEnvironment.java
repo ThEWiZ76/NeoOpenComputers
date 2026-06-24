@@ -109,6 +109,7 @@ public final class LeashUpgradeEnvironment extends AbstractManagedEnvironment im
                 // Ignore malformed legacy data instead of failing environment load.
             }
         }
+        reacquireLeashedEntities();
     }
 
     @Override
@@ -136,6 +137,21 @@ public final class LeashUpgradeEnvironment extends AbstractManagedEnvironment im
         }
         leashedEntities.clear();
         host.markChanged();
+    }
+
+    private void reacquireLeashedEntities() {
+        final Entity holder = leashHolder();
+        final Level level = host == null ? null : host.world();
+        if (holder == null || level == null || leashedEntities.isEmpty()) {
+            return;
+        }
+
+        final AABB bounds = new AABB(hostPosition()).inflate(5D);
+        for (final Entity entity : level.getEntitiesOfClass(Entity.class, bounds)) {
+            if (leashedEntities.contains(entity.getUUID()) && entity instanceof Leashable leashable) {
+                leashable.setLeashedTo(holder, true);
+            }
+        }
     }
 
     private Entity leashHolder() {

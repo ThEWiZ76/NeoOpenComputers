@@ -86,6 +86,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -97,6 +98,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.npc.Villager;
@@ -3233,6 +3235,34 @@ public final class NeoOpenComputersGameTests {
 
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         assertComponentFailureMessage(helper, component, "leash", "invalid side", 6);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void leashUpgradeReacquiresSavedEntitiesLikeUpstream(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.LEASH_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for leash upgrade");
+
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final AgentTestHost host = new AgentTestHost(helper, player);
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.LEASH_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Leash upgrade did not create environment");
+
+        final LivingEntity sheep = EntityType.SHEEP.create(helper.getLevel());
+        helper.assertTrue(sheep != null, "Failed to create sheep");
+        sheep.moveTo(host.xPosition() + 0.5D, host.yPosition(), host.zPosition() + 0.5D);
+        helper.getLevel().addFreshEntity(sheep);
+        helper.assertTrue(sheep instanceof Leashable, "Sheep is not leashable");
+        final Leashable leashable = (Leashable) sheep;
+        helper.assertTrue(leashable.getLeashHolder() == null, "Sheep started leashed");
+
+        final CompoundTag tag = new CompoundTag();
+        final ListTag list = new ListTag();
+        list.add(StringTag.valueOf(sheep.getUUID().toString()));
+        tag.put("leashedEntities", list);
+        environment.load(tag);
+
+        helper.assertTrue(leashable.getLeashHolder() == player, "Leash upgrade did not re-acquire saved entity");
         helper.succeed();
     }
 
