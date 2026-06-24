@@ -33,7 +33,7 @@ public class SolarGeneratorUpgradeEnvironment extends AbstractManagedEnvironment
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Power,
             DeviceInfo.DeviceAttribute.Description, "Solar panel",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Enligh10"
         );
     }

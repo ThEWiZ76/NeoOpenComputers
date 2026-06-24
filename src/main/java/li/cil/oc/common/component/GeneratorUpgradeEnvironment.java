@@ -42,7 +42,7 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Power,
             DeviceInfo.DeviceAttribute.Description, "Generator",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Portagen 2.0 (Rev. 3)",
             DeviceInfo.DeviceAttribute.Capacity, "1"
         );

@@ -27,7 +27,7 @@ public class BatteryUpgradeEnvironment extends AbstractManagedEnvironment implem
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Power,
             DeviceInfo.DeviceAttribute.Description, "Battery",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "Unlimited Power (Almost Ed.)",
             DeviceInfo.DeviceAttribute.Capacity, Double.toString(capacity)
         );
