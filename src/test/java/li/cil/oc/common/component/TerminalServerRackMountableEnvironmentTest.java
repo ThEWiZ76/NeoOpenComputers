@@ -1,10 +1,12 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.internal.TextBuffer;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModSettings;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class TerminalServerRackMountableEnvironmentTest {
     @Test
@@ -46,5 +48,17 @@ final class TerminalServerRackMountableEnvironmentTest {
         assertEquals(0x112233, snapshot.foregroundColor(1, 0));
         assertEquals(0x445566, snapshot.backgroundColor(0, 0));
         assertEquals(0x445566, snapshot.backgroundColor(1, 0));
+    }
+
+    @Test
+    void virtualScreenAndKeyboardAreDirectlyConnectedLikeUpstream() {
+        final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment();
+
+        final Node[] virtualNodes = terminal.onAnalyze(null, null, 0, 0, 0);
+
+        assertEquals(2, virtualNodes.length);
+        assertTrue(virtualNodes[0].isNeighborOf(terminal.node()));
+        assertTrue(virtualNodes[1].isNeighborOf(terminal.node()));
+        assertTrue(virtualNodes[0].isNeighborOf(virtualNodes[1]));
     }
 }

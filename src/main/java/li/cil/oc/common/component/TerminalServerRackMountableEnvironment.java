@@ -192,6 +192,9 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         if (keyboard.node() != null && !keyboard.node().isNeighborOf(node())) {
             node().connect(keyboard.node());
         }
+        if (screen.node() != null && keyboard.node() != null && !screen.node().isNeighborOf(keyboard.node())) {
+            screen.node().connect(keyboard.node());
+        }
         TerminalServerRegistry.add(this);
     }
 
