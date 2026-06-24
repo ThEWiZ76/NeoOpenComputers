@@ -1,13 +1,17 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Driver;
+import li.cil.oc.api.Network;
 import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.network.Analyzable;
+import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
@@ -40,11 +44,13 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     public static final String DATA_TAG = "oc:rack";
 
     private static final String TAG_MOUNTABLE_DATA = "oc:mountableData";
+    private static final String TAG_SIDE_NODES = "oc:sideNodes";
     private static final String STACK_MOUNTABLE_DATA_TAG = "oc:rackMountable";
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final CompoundTag[] mountableData = new CompoundTag[CONTAINER_SIZE];
     private final RackMountable[] mountables = new RackMountable[CONTAINER_SIZE];
+    private SidePlug[] sidePlugs;
 
     public RackBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.RACK.get(), pos, blockState);
@@ -136,12 +142,15 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
     @Override
     public Node sidedNode(final Direction side) {
-        return null;
+        if (!canConnect(side)) {
+            return null;
+        }
+        return sidePlug(side).node();
     }
 
     @Override
     public boolean canConnect(final Direction side) {
-        return false;
+        return side != null && side != facing();
     }
 
     @Override
@@ -301,12 +310,14 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
+        removeSideNodes();
         removeMountables();
     }
 
     @Override
     public void setRemoved() {
         super.setRemoved();
+        removeSideNodes();
         removeMountables();
     }
 
@@ -357,6 +368,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     private void loadRackData(final CompoundTag tag, final HolderLookup.Provider registries) {
+        loadSideNodes(tag);
         removeMountables();
         for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
             items.set(slot, ItemStack.EMPTY);
@@ -373,6 +385,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     private void saveRackData(final CompoundTag tag, final HolderLookup.Provider registries) {
+        saveSideNodes(tag);
         saveMountableData();
         ContainerHelper.saveAllItems(tag, items, registries);
         final ListTag data = new ListTag();
@@ -380,6 +393,57 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             data.add(mountableData[slot] == null ? new CompoundTag() : mountableData[slot].copy());
         }
         tag.put(TAG_MOUNTABLE_DATA, data);
+    }
+
+    private void loadSideNodes(final CompoundTag tag) {
+        if (!tag.contains(TAG_SIDE_NODES)) {
+            return;
+        }
+        final ListTag sideNodes = tag.getList(TAG_SIDE_NODES, CompoundTag.TAG_COMPOUND);
+        for (int index = 0; index < Math.min(sideNodes.size(), Direction.values().length); index++) {
+            final Direction side = Direction.values()[index];
+            if (canConnect(side)) {
+                sidePlug(side).node().load(sideNodes.getCompound(index));
+            }
+        }
+    }
+
+    private void saveSideNodes(final CompoundTag tag) {
+        final ListTag sideNodes = new ListTag();
+        for (final Direction side : Direction.values()) {
+            final CompoundTag sideNode = new CompoundTag();
+            if (canConnect(side)) {
+                final Node node = sidePlug(side).node();
+                if (node.address() == null) {
+                    Network.joinNewNetwork(node);
+                }
+                node.save(sideNode);
+            }
+            sideNodes.add(sideNode);
+        }
+        tag.put(TAG_SIDE_NODES, sideNodes);
+    }
+
+    private SidePlug sidePlug(final Direction side) {
+        if (sidePlugs == null) {
+            sidePlugs = new SidePlug[Direction.values().length];
+        }
+        final int index = side.ordinal();
+        if (sidePlugs[index] == null) {
+            sidePlugs[index] = new SidePlug();
+        }
+        return sidePlugs[index];
+    }
+
+    private void removeSideNodes() {
+        if (sidePlugs == null) {
+            return;
+        }
+        for (final SidePlug plug : sidePlugs) {
+            if (plug != null) {
+                plug.node().remove();
+            }
+        }
     }
 
     private void tickServer() {
@@ -444,5 +508,32 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         final CompoundTag data = mountables[slot].getData();
         mountables[slot].save(data);
         mountableData[slot] = data;
+    }
+
+    private final class SidePlug implements Environment {
+        private final Node node;
+
+        private SidePlug() {
+            node = Network.newNode(this, Visibility.Network)
+                .withConnector(PowerDistributorBlockEntity.connectorBufferSize())
+                .create();
+        }
+
+        @Override
+        public Node node() {
+            return node;
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
+        }
     }
 }

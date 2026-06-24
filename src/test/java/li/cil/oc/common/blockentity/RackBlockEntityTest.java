@@ -6,6 +6,7 @@ import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.network.Analyzable;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
@@ -28,6 +29,9 @@ import java.util.EnumSet;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class RackBlockEntityTest {
@@ -44,6 +48,24 @@ final class RackBlockEntityTest {
         assertTrue(Container.class.isAssignableFrom(RackBlockEntity.class));
         assertTrue(Rack.class.isAssignableFrom(RackBlockEntity.class));
         assertTrue(MenuProvider.class.isAssignableFrom(RackBlockEntity.class));
+    }
+
+    @Test
+    void rackExposesSidedBusNodesExceptFrontLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final RackBlockEntity rack = allocateRack();
+
+        assertFalse(rack.canConnect(Direction.NORTH));
+        assertTrue(rack.canConnect(Direction.SOUTH));
+        assertTrue(rack.canConnect(Direction.UP));
+        assertNull(rack.sidedNode(Direction.NORTH));
+
+        final Node southBus = rack.sidedNode(Direction.SOUTH);
+        assertNotNull(southBus);
+        assertSame(southBus, rack.sidedNode(Direction.SOUTH));
+        assertTrue(southBus instanceof Connector);
+        assertEquals(Visibility.Network, southBus.reachability());
+        assertArrayEquals(new Node[]{southBus}, rack.onAnalyze(null, Direction.SOUTH, 0.5F, 0.5F, 0.5F));
     }
 
     @Test
