@@ -82,9 +82,7 @@ public final class MotionSensorEnvironment extends AbstractManagedEnvironment im
     @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
-        if (nbt.contains(TAG_SENSITIVITY)) {
-            sensitivity = nbt.getDouble(TAG_SENSITIVITY);
-        }
+        sensitivity = nbt.getDouble(TAG_SENSITIVITY);
     }
 
     @Override

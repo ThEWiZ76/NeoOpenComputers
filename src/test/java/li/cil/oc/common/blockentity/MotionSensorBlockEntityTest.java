@@ -20,9 +20,25 @@ final class MotionSensorBlockEntityTest {
         assertArrayEquals(new Object[]{0.1D}, sensor.getSensitivity(null, null));
     }
 
+    @Test
+    void missingSavedSensitivityLoadsZeroLikeUpstream() throws Exception {
+        MotionSensorBlockEntity sensor = allocateSensor();
+        setSensitivity(sensor, 0.4D);
+
+        sensor.loadAdditional(new CompoundTag(), null);
+
+        assertArrayEquals(new Object[]{0.0D}, sensor.getSensitivity(null, null));
+    }
+
     private static MotionSensorBlockEntity allocateSensor() throws Exception {
         Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
         return (MotionSensorBlockEntity) ((Unsafe) unsafeField.get(null)).allocateInstance(MotionSensorBlockEntity.class);
+    }
+
+    private static void setSensitivity(final MotionSensorBlockEntity sensor, final double value) throws Exception {
+        Field sensitivity = MotionSensorBlockEntity.class.getDeclaredField("sensitivity");
+        sensitivity.setAccessible(true);
+        sensitivity.setDouble(sensor, value);
     }
 }

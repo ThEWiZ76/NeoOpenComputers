@@ -18,4 +18,14 @@ final class MotionSensorEnvironmentTest {
 
         assertArrayEquals(new Object[]{0.1D}, sensor.getSensitivity(null, null));
     }
+
+    @Test
+    void missingSavedSensitivityLoadsZeroLikeUpstream() {
+        OpenComputersApi.initialize();
+        MotionSensorEnvironment sensor = new MotionSensorEnvironment(null);
+
+        sensor.load(new CompoundTag());
+
+        assertArrayEquals(new Object[]{0.0D}, sensor.getSensitivity(null, null));
+    }
 }
