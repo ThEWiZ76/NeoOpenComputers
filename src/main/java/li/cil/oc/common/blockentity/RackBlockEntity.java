@@ -422,6 +422,10 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     private static CompoundTag readMountableData(final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack);
+        if (driver != null && acceptsDriverSlot(driver.slot(stack))) {
+            return driver.dataTag(stack).copy();
+        }
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData == null) {
             return new CompoundTag();
@@ -433,10 +437,22 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         if (stack.isEmpty() || data == null || data.isEmpty()) {
             return;
         }
+        final DriverItem driver = Driver.driverFor(stack);
+        if (driver != null && acceptsDriverSlot(driver.slot(stack))) {
+            replaceContents(driver.dataTag(stack), data);
+            return;
+        }
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
         root.put(STACK_MOUNTABLE_DATA_TAG, data.copy());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    private static void replaceContents(final CompoundTag target, final CompoundTag source) {
+        for (final String key : List.copyOf(target.getAllKeys())) {
+            target.remove(key);
+        }
+        target.merge(source.copy());
     }
 
     private void loadRackData(final CompoundTag tag, final HolderLookup.Provider registries) {

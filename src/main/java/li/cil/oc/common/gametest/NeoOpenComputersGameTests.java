@@ -81,6 +81,7 @@ import net.neoforged.fml.InterModComms;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
@@ -93,6 +94,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -406,7 +408,7 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void serverItemDriverDataTagPersistsRackMountableData(final GameTestHelper helper) {
+    public static void serverItemDriverDataTagPersistsRootDataLikeUpstream(final GameTestHelper helper) {
         final ItemStack stack = new ItemStack(ModItems.SERVER_TIER2.get());
         final DriverItem driver = Driver.driverFor(stack);
 
@@ -415,7 +417,8 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue("server-data".equals(driver.dataTag(stack).getString("marker")), "Server item driver data tag did not persist marker");
         final CompoundTag root = stack.get(DataComponents.CUSTOM_DATA).copyTag();
-        helper.assertTrue("server-data".equals(root.getCompound("oc:rackMountable").getString("marker")), "Server item did not store data in rack mountable tag");
+        helper.assertTrue("server-data".equals(root.getString("marker")), "Server item did not store driver data in root tag");
+        helper.assertTrue(!root.contains("oc:rackMountable"), "Server item still created nested rack mountable tag for driver data");
         helper.succeed();
     }
 
@@ -488,6 +491,25 @@ public final class NeoOpenComputersGameTests {
 
         final ServerRackMountableEnvironment reopened = new ServerRackMountableEnvironment(player, 1, driver.dataTag(stack));
         helper.assertTrue(reopened.getItem(2).is(ModItems.CPU_TIER2.get()), "Server item menu did not persist component stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void serverItemMenuMigratesLegacyRackMountableData(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.SERVER_TIER2.get());
+        final CompoundTag root = new CompoundTag();
+        final CompoundTag legacyData = new CompoundTag();
+        final NonNullList<ItemStack> legacyItems = NonNullList.withSize(ServerRackMountableEnvironment.slotCountForTier(1), ItemStack.EMPTY);
+        legacyItems.set(2, new ItemStack(ModItems.CPU_TIER2.get()));
+        ContainerHelper.saveAllItems(legacyData, legacyItems, helper.getLevel().registryAccess());
+        root.put("oc:rackMountable", legacyData);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final DriverItem driver = Driver.driverFor(stack);
+        final ServerRackMountableEnvironment server = new ServerRackMountableEnvironment(player, 1, driver.dataTag(stack));
+
+        helper.assertTrue(server.getItem(2).is(ModItems.CPU_TIER2.get()), "Server item menu did not migrate legacy rack mountable data");
         helper.succeed();
     }
 

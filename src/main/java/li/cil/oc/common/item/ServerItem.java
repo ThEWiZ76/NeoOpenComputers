@@ -84,10 +84,12 @@ public class ServerItem extends Item implements DriverItem, Tiered {
             customData = stack.get(DataComponents.CUSTOM_DATA);
         }
         final CompoundTag root = customData.getUnsafe();
-        if (!root.contains(RACK_MOUNTABLE_DATA_TAG, CompoundTag.TAG_COMPOUND)) {
-            root.put(RACK_MOUNTABLE_DATA_TAG, new CompoundTag());
+        if (root.contains(RACK_MOUNTABLE_DATA_TAG, CompoundTag.TAG_COMPOUND)) {
+            final CompoundTag legacyData = root.getCompound(RACK_MOUNTABLE_DATA_TAG).copy();
+            root.remove(RACK_MOUNTABLE_DATA_TAG);
+            root.merge(legacyData);
         }
-        return root.getCompound(RACK_MOUNTABLE_DATA_TAG);
+        return root;
     }
 
     private static int findSlot(final Rack rack, final ItemStack stack) {
