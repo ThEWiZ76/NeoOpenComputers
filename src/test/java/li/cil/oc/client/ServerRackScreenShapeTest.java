@@ -46,6 +46,16 @@ final class ServerRackScreenShapeTest {
     }
 
     @Test
+    void serverRackPowerControlUsesUpstreamTextureAtlas() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/button_power.png"), ServerRackScreen.POWER_BUTTON_TEXTURE);
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/gui/button_power.png")));
+        assertEquals(0, ServerRackScreen.powerButtonTextureX(ServerRackMenu.STATE_READY));
+        assertEquals(18, ServerRackScreen.powerButtonTextureX(ServerRackMenu.STATE_RUNNING));
+        assertEquals(0, ServerRackScreen.powerButtonTextureY(false));
+        assertEquals(18, ServerRackScreen.powerButtonTextureY(true));
+    }
+
+    @Test
     void serverRackScreenExposesSlotLabels() throws NoSuchMethodException {
         final Method label = ServerRackScreen.class.getMethod("slotLabel", int.class);
         final Method tierLabel = ServerRackScreen.class.getMethod("slotTierLabel", int.class);

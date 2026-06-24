@@ -18,6 +18,7 @@ import java.util.List;
 
 public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     public static final ResourceLocation SERVER_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/server.png");
+    public static final ResourceLocation POWER_BUTTON_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/button_power.png");
 
     private static final int SERVER_SLOT_SIZE = 16;
     private static final int STATUS_CONTROL_X = 48;
@@ -49,7 +50,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         }
         guiGraphics.drawString(font, statusLabel(menu.serverState()), left + 8, top + 62, 0xFFD8DEE9, false);
         if (statusControlVisible(menu)) {
-            drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, top + STATUS_CONTROL_Y, menu.serverState());
+            drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, top + STATUS_CONTROL_Y, menu.serverState(), statusControlAt(mouseX, mouseY, left, top));
         }
     }
 
@@ -175,6 +176,14 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         return !menu.isItem();
     }
 
+    public static int powerButtonTextureX(final int state) {
+        return state == ServerRackMenu.STATE_RUNNING ? STATUS_CONTROL_SIZE : 0;
+    }
+
+    public static int powerButtonTextureY(final boolean hovered) {
+        return hovered ? STATUS_CONTROL_SIZE : 0;
+    }
+
     public static int serverSlotAt(final int mouseX, final int mouseY, final int left, final int top) {
         return serverSlotAt(mouseX, mouseY, left, top, 2);
     }
@@ -213,12 +222,15 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         guiGraphics.fill(left, top, left + 16, top + 16, kind == ServerRackMenu.SLOT_KIND_NONE ? 0xFF2E3440 : 0xFF4C566A);
     }
 
-    private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state) {
-        final int color = state == ServerRackMenu.STATE_RUNNING ? 0xFF88C0D0 : state == ServerRackMenu.STATE_READY ? 0xFFA3BE8C : 0xFFD08770;
-        guiGraphics.fill(left, top, left + STATUS_CONTROL_SIZE, top + STATUS_CONTROL_SIZE, 0xFF1F232B);
-        guiGraphics.fill(left + 6, top + 4, left + 9, top + 14, color);
-        guiGraphics.fill(left + 9, top + 5, left + 12, top + 13, color);
-        guiGraphics.fill(left + 12, top + 7, left + 14, top + 11, color);
+    private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state, final boolean hovered) {
+        guiGraphics.blit(
+            POWER_BUTTON_TEXTURE,
+            left,
+            top,
+            powerButtonTextureX(state),
+            powerButtonTextureY(hovered),
+            STATUS_CONTROL_SIZE,
+            STATUS_CONTROL_SIZE);
     }
 
     private static String slotAbbreviation(final int kind) {
