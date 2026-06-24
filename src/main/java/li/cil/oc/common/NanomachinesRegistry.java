@@ -94,6 +94,14 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
         return controller;
     }
 
+    public List<String> controllerConfigurationLines(final Player player) {
+        final Controller controller = installController(player);
+        if (controller instanceof SimpleNanomachineController simpleController) {
+            return simpleController.configurationLines();
+        }
+        return List.of();
+    }
+
     @Override
     public void uninstallController(final Player player) {
         if (player == null) {

@@ -1519,6 +1519,29 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesLogCommandInstallsAndPrintsPlayerConfiguration(final GameTestHelper helper) {
+        final Player player = helper.makeMockServerPlayerInLevel();
+        final li.cil.oc.api.detail.NanomachinesAPI previous = API.nanomachines;
+        final li.cil.oc.common.NanomachinesRegistry registry = new li.cil.oc.common.NanomachinesRegistry();
+        registry.addProvider(new RecordingNanomachineProvider(new RecordingNanomachineBehavior()));
+        API.nanomachines = registry;
+
+        try {
+            helper.getLevel().getServer().getCommands().performPrefixedCommand(
+                player.createCommandSourceStack().withPermission(4).withSuppressedOutput(),
+                "oc_nm");
+
+            final li.cil.oc.api.nanomachines.Controller controller = registry.getController(player);
+            helper.assertTrue(controller != null, "Nanomachines log command did not install controller");
+            helper.assertTrue(controller.getTotalInputCount() > 0, "Nanomachines log command did not create configuration");
+        } finally {
+            API.nanomachines = previous;
+        }
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesControllerStatePersistsAcrossRegistryReload(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         final li.cil.oc.common.NanomachinesRegistry firstRegistry = new li.cil.oc.common.NanomachinesRegistry();

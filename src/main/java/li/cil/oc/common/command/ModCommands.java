@@ -10,10 +10,13 @@ import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.NanomachinesRegistry;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 public final class ModCommands {
@@ -29,6 +32,8 @@ public final class ModCommands {
         event.getDispatcher().register(debugWhitelistCommand());
         event.getDispatcher().register(debugNanomachinesCommand("oc_debugNanomachines"));
         event.getDispatcher().register(debugNanomachinesCommand("oc_dn"));
+        event.getDispatcher().register(logNanomachinesCommand("oc_nanomachines"));
+        event.getDispatcher().register(logNanomachinesCommand("oc_nm"));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> debugWhitelistCommand() {
@@ -57,11 +62,34 @@ public final class ModCommands {
             .executes(context -> debugNanomachines(context.getSource()));
     }
 
+    private static LiteralArgumentBuilder<CommandSourceStack> logNanomachinesCommand(final String name) {
+        return Commands.literal(name)
+            .requires(source -> source.hasPermission(2))
+            .executes(context -> logNanomachines(context.getSource(), context.getSource().getPlayerOrException()))
+            .then(Commands.argument("player", EntityArgument.player())
+                .executes(context -> logNanomachines(context.getSource(), EntityArgument.getPlayer(context, "player"))));
+    }
+
     private static int debugNanomachines(final CommandSourceStack source) throws CommandSyntaxException {
         if (API.nanomachines instanceof NanomachinesRegistry registry) {
             registry.debugController(source.getPlayerOrException());
             source.sendSuccess(() -> Component.literal("Debug configuration created, see log for mappings."), false);
             return 1;
+        }
+        throw NANOMACHINES_UNAVAILABLE.create();
+    }
+
+    private static int logNanomachines(final CommandSourceStack source, final ServerPlayer player) throws CommandSyntaxException {
+        if (API.nanomachines instanceof NanomachinesRegistry registry) {
+            final List<String> lines = registry.controllerConfigurationLines(player);
+            if (lines.isEmpty()) {
+                player.sendSystemMessage(Component.literal("<empty>"));
+            } else {
+                for (final String line : lines) {
+                    player.sendSystemMessage(Component.literal(line));
+                }
+            }
+            return Math.max(1, lines.size());
         }
         throw NANOMACHINES_UNAVAILABLE.create();
     }

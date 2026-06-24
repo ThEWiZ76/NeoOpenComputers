@@ -289,6 +289,21 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void configurationLinesShowBehaviorInputMappingLikeUpstreamPrint() {
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(
+            new TestBehavior("first"),
+            new TestBehavior("second"))));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+
+        controller.debugConfiguration();
+
+        assertIterableEquals(List.of(
+            "first <- (1)",
+            "second <- (2)"), controller.configurationLines());
+    }
+
+    @Test
     void controllerIgnoresProvidersReturningNullBehaviorLists() {
         TestBehavior valid = new TestBehavior("valid");
         NanomachinesRegistry registry = new NanomachinesRegistry();

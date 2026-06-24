@@ -281,6 +281,48 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         return List.copyOf(effects);
     }
 
+    List<String> configurationLines() {
+        final List<String> lines = new ArrayList<>(behaviorEntries.size());
+        for (final BehaviorEntry entry : behaviorEntries) {
+            final StringBuilder line = new StringBuilder(behaviorName(entry.behavior())).append(" <- (");
+            boolean first = true;
+            for (final int input : entry.triggerInputs()) {
+                if (first) {
+                    first = false;
+                } else {
+                    line.append(", ");
+                }
+                line.append(input + 1);
+            }
+            for (final int connector : entry.connectorInputs()) {
+                if (connector < 0 || connector >= connectors.size()) {
+                    continue;
+                }
+                if (first) {
+                    first = false;
+                } else {
+                    line.append(", ");
+                }
+                line.append('(');
+                final int[] triggerInputs = connectors.get(connector).triggerInputs();
+                for (int i = 0; i < triggerInputs.length; i++) {
+                    if (i > 0) {
+                        line.append(", ");
+                    }
+                    line.append(triggerInputs[i] + 1);
+                }
+                line.append(')');
+            }
+            lines.add(line.append(')').toString());
+        }
+        return List.copyOf(lines);
+    }
+
+    private static String behaviorName(final Behavior behavior) {
+        final String name = behavior.getNameHint();
+        return name == null ? behavior.getClass().getSimpleName() : name;
+    }
+
     void save(final CompoundTag tag) {
         tag.putString(TAG_UUID, uuid);
         tag.putInt(TAG_PORT, responsePort);
