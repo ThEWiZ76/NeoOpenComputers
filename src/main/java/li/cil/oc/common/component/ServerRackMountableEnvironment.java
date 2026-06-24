@@ -226,7 +226,14 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         if (player == null || !player.isShiftKeyDown()) {
             return false;
         }
-        return controlPower(li.cil.oc.common.network.RackControlPayload.TOGGLE);
+        if (!machine.isRunning() && !machine.isPaused() && stillValid(player) && canStartMachine()) {
+            final boolean changed = machine.start();
+            if (changed) {
+                updateWorkingState();
+                markChanged();
+            }
+        }
+        return true;
     }
 
     public boolean controlPower(final int action) {
