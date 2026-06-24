@@ -35,15 +35,19 @@ public record TerminalScreenDelta(int width, int height, Row[] rows) {
     }
 
     public TerminalScreenSnapshot applyTo(final TerminalScreenSnapshot base) {
-        if (base == null || base.width() != width || base.height() != height) {
-            return base;
-        }
         final String[] lines = new String[height];
+        final int[][] foreground;
+        final int[][] background;
         for (int row = 0; row < height; row++) {
-            lines[row] = base.line(row);
+            lines[row] = base != null && base.width() == width && base.height() == height ? base.line(row) : " ".repeat(width);
         }
-        final int[][] foreground = base.foreground();
-        final int[][] background = base.background();
+        if (base != null && base.width() == width && base.height() == height) {
+            foreground = base.foreground();
+            background = base.background();
+        } else {
+            foreground = new int[height][width];
+            background = new int[height][width];
+        }
         for (final Row row : rows) {
             if (row.index() >= 0 && row.index() < height) {
                 lines[row.index()] = row.line();

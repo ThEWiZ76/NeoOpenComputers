@@ -42,4 +42,18 @@ final class TerminalScreenDeltaTest {
         assertEquals(1, loaded.rowCount());
         assertEquals(true, current.contentEquals(loaded.applyTo(previous)));
     }
+
+    @Test
+    void appliesFullSnapshotWhenTerminalDimensionsChange() {
+        final TerminalScreenSnapshot previous = new TerminalScreenSnapshot(2, 1, new String[]{"oc"});
+        final TerminalScreenSnapshot current = new TerminalScreenSnapshot(3, 2, new String[]{"neo", "oc "});
+
+        final TerminalScreenDelta delta = TerminalScreenDelta.between(previous, current);
+        final TerminalScreenSnapshot applied = delta.applyTo(previous);
+
+        assertEquals(2, delta.rowCount());
+        assertEquals(3, applied.width());
+        assertEquals(2, applied.height());
+        assertEquals(true, current.contentEquals(applied));
+    }
 }
