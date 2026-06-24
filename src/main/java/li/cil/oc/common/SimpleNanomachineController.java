@@ -616,7 +616,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         System.arraycopy(data, 0, response, 1, data.length);
         final Packet packet = Network.newPacket(uuid, null, responsePort, response);
         if (packet != null) {
-            Network.sendWirelessPacket(this, ModSettings.nanomachinesCommandRange(), packet);
+            final double range = ModSettings.nanomachinesCommandRange();
+            Network.sendWirelessPacket(this, range * range, packet);
         }
     }
 

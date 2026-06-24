@@ -289,6 +289,24 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerResponsesUseUpstreamSquaredCommandRangeStrength() {
+        API.network = new NetworkRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        final double range = ModSettings.nanomachinesCommandRange();
+        final int distancePastPlainRange = (int) Math.floor(range) + 1;
+        assertTrue(range * range >= distancePastPlainRange);
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(distancePastPlainRange, 0, 0);
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 125}), sender);
+        runNanomachineCommandDelay(controller);
+
+        assertTrue(sender.lastPacket != null);
+        assertEquals(125, sender.lastPacket.port());
+    }
+
+    @Test
     void controllerRuntimeSaveRestoresUuidAndResponsePortLikeUpstream() {
         API.network = new NetworkRegistry();
         SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
@@ -684,20 +702,33 @@ final class NanomachinesRegistryTest {
     private static final class RecordingWirelessEndpoint implements WirelessEndpoint {
         private Packet lastPacket;
         private WirelessEndpoint lastSender;
+        private final int x;
+        private final int y;
+        private final int z;
+
+        private RecordingWirelessEndpoint() {
+            this(0, 0, 0);
+        }
+
+        private RecordingWirelessEndpoint(final int x, final int y, final int z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
 
         @Override
         public int x() {
-            return 0;
+            return x;
         }
 
         @Override
         public int y() {
-            return 0;
+            return y;
         }
 
         @Override
         public int z() {
-            return 0;
+            return z;
         }
 
         @Override
