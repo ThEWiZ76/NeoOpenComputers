@@ -227,6 +227,21 @@ final class RackScreenShapeTest {
     }
 
     @Test
+    void rackScreenBuildsConnectorWireIndicatorsLikeUpstream() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14, rackDataWithFacingMappingAndPresence(Direction.NORTH, 1, 2, Direction.WEST));
+
+        final List<RackScreen.WireIndicator> indicators = RackScreen.wireIndicators(menu, 1);
+
+        assertEquals(5, indicators.size());
+        assertEquals(new RackScreen.WireIndicator(37, 52, 1, 2, RackScreen.WireKind.CONNECTOR), indicators.get(0));
+        assertEquals(new RackScreen.WireIndicator(38, 52, 6, 2, RackScreen.WireKind.WIRE), indicators.get(1));
+        assertEquals(new RackScreen.WireIndicator(49, 52, 6, 2, RackScreen.WireKind.WIRE), indicators.get(2));
+        assertEquals(new RackScreen.WireIndicator(60, 52, 6, 2, RackScreen.WireKind.WIRE), indicators.get(3));
+        assertEquals(new RackScreen.WireIndicator(71, 52, 6, 2, RackScreen.WireKind.WIRE), indicators.get(4));
+        assertTrue(RackScreen.wireIndicators(menu, 0).isEmpty());
+    }
+
+    @Test
     void rackScreenLabelsBusSidesRelativeToRackFacing() {
         assertTranslationKey("gui.neoopencomputers.rack.bus.side.top", RackScreen.sideLabel(Direction.NORTH, Direction.UP));
         assertTranslationKey("gui.neoopencomputers.rack.bus.side.bottom", RackScreen.sideLabel(Direction.NORTH, Direction.DOWN));

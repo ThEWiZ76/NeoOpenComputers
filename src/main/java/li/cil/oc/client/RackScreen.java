@@ -30,6 +30,18 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int BUS_LABEL_Y = 20;
     private static final int BUS_LABEL_WIDTH = 36;
     private static final int BUS_LABEL_STEP = 11;
+    private static final int CONNECTOR_X = 37;
+    private static final int CONNECTOR_Y = 23;
+    private static final int CONNECTOR_SLOT_STEP = 20;
+    private static final int MASTER_CONNECTOR_WIDTH = 1;
+    private static final int MASTER_CONNECTOR_HEIGHT = 3;
+    private static final int SLAVE_CONNECTOR_WIDTH = 1;
+    private static final int SLAVE_CONNECTOR_HEIGHT = 2;
+    private static final int CONNECTOR_GAP = 2;
+    private static final int WIRE_WIDTH = 6;
+    private static final int MASTER_WIRE_HEIGHT = 3;
+    private static final int SLAVE_WIRE_HEIGHT = 2;
+    private static final int BUS_PRESENT_WIDTH = 5;
     private static final Direction DEFAULT_FRONT = Direction.NORTH;
     private static final int BUS_SIDE_COUNT = Direction.values().length - 1;
 
@@ -49,6 +61,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
             drawSlot(guiGraphics, left + FIRST_SLOT_X - 1 + slot * SLOT_SPACING, top + SLOT_Y - 1);
             drawControl(guiGraphics, left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING, top + CONTROL_Y, controlColor(menu.rackState(slot)));
+            drawWireIndicators(guiGraphics, menu, left, top, slot);
             drawMappingControls(guiGraphics, menu, left, top, slot);
         }
     }
@@ -174,6 +187,50 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             return -1;
         }
         return (int) ((mouseY - y) / BUS_LABEL_STEP);
+    }
+
+    static List<WireIndicator> wireIndicators(final RackMenu menu, final int slot) {
+        final List<WireIndicator> indicators = new ArrayList<>();
+        for (int connectableIndex = 0; connectableIndex < 4; connectableIndex++) {
+            if (!menu.rackNodePresent(slot, connectableIndex)) {
+                continue;
+            }
+            final boolean master = connectableIndex == 0;
+            final int connectorWidth = master ? MASTER_CONNECTOR_WIDTH : SLAVE_CONNECTOR_WIDTH;
+            final int connectorHeight = master ? MASTER_CONNECTOR_HEIGHT : SLAVE_CONNECTOR_HEIGHT;
+            final int wireHeight = master ? MASTER_WIRE_HEIGHT : SLAVE_WIRE_HEIGHT;
+            final int x = CONNECTOR_X;
+            final int y = connectorY(slot, connectableIndex);
+            indicators.add(new WireIndicator(x, y, connectorWidth, connectorHeight, WireKind.CONNECTOR));
+
+            final Direction mappedSide = directionFromOrdinal(menu.rackNodeMapping(slot, connectableIndex));
+            final int busIndex = busIndex(menu.rackFacing(), mappedSide);
+            if (busIndex < 0) {
+                continue;
+            }
+            for (int segment = 0; segment <= busIndex; segment++) {
+                indicators.add(new WireIndicator(
+                    x + connectorWidth + segment * (BUS_PRESENT_WIDTH + WIRE_WIDTH),
+                    y,
+                    WIRE_WIDTH,
+                    wireHeight,
+                    WireKind.WIRE));
+            }
+        }
+        return indicators;
+    }
+
+    private static int connectorY(final int slot, final int connectableIndex) {
+        final int baseY = CONNECTOR_Y + slot * CONNECTOR_SLOT_STEP;
+        if (connectableIndex == 0) {
+            return baseY;
+        }
+        return baseY + MASTER_CONNECTOR_HEIGHT + CONNECTOR_GAP + (SLAVE_CONNECTOR_HEIGHT + CONNECTOR_GAP) * (connectableIndex - 1);
+    }
+
+    private static Direction directionFromOrdinal(final int ordinal) {
+        final Direction[] values = Direction.values();
+        return ordinal >= 0 && ordinal < values.length ? values[ordinal] : null;
     }
 
     static Direction busSide(final int busIndex) {
@@ -367,6 +424,26 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
                 guiGraphics.fill(x, y, x + MAPPING_CELL_SIZE, y + MAPPING_CELL_SIZE, color);
             }
         }
+    }
+
+    private static void drawWireIndicators(final GuiGraphics guiGraphics, final RackMenu menu, final int left, final int top, final int slot) {
+        for (final WireIndicator indicator : wireIndicators(menu, slot)) {
+            final int color = indicator.kind() == WireKind.CONNECTOR ? 0xFF88C0D0 : 0xFFA3BE8C;
+            guiGraphics.fill(
+                left + indicator.x(),
+                top + indicator.y(),
+                left + indicator.x() + indicator.width(),
+                top + indicator.y() + indicator.height(),
+                color);
+        }
+    }
+
+    enum WireKind {
+        CONNECTOR,
+        WIRE
+    }
+
+    record WireIndicator(int x, int y, int width, int height, WireKind kind) {
     }
 
     record MappingControl(int slot, int connectableIndex, int busIndex) {
