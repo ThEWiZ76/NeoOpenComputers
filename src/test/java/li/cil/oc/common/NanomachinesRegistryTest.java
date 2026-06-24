@@ -117,6 +117,47 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerLoadsUpstreamTriggerListStates() {
+        TestBehavior behavior = new TestBehavior("triggered");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(behavior));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag triggers = new ListTag();
+        triggers.add(triggerTag(true));
+        tag.put("triggers", triggers);
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("triggered", new int[]{0}, new int[0]));
+        tag.put("behaviors", behaviors);
+
+        controller.load(tag);
+
+        assertTrue(controller.getInput(0));
+        assertIterableEquals(List.of(behavior), controller.getActiveBehaviors());
+    }
+
+    @Test
+    void controllerSavesUpstreamTriggerListStates() {
+        TestBehavior behavior = new TestBehavior("triggered");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(behavior));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("triggered", new int[]{0}, new int[0]));
+        tag.put("behaviors", behaviors);
+        tag.putIntArray("activeInputs", new int[]{0});
+        controller.load(tag);
+
+        CompoundTag saved = new CompoundTag();
+        controller.save(saved);
+
+        ListTag triggers = saved.getList("triggers", CompoundTag.TAG_COMPOUND);
+        assertEquals(1, triggers.size());
+        assertTrue(triggers.getCompound(0).getBoolean("isActive"));
+    }
+
+    @Test
     void controllerActivatesConnectorBackedBehaviorsFromSavedConfiguration() {
         TestBehavior linked = new TestBehavior("linked");
         NanomachinesRegistry registry = new NanomachinesRegistry();
@@ -582,6 +623,12 @@ final class NanomachinesRegistryTest {
         behavior.putIntArray("triggerInputs", triggerInputs);
         behavior.putIntArray("connectorInputs", connectorInputs);
         return behavior;
+    }
+
+    private static CompoundTag triggerTag(final boolean isActive) {
+        final CompoundTag trigger = new CompoundTag();
+        trigger.putBoolean("isActive", isActive);
+        return trigger;
     }
 
     private static int maxTriggerFanOut(final ListTag connectors, final ListTag behaviors) {

@@ -30,6 +30,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private static final String TAG_UUID = "uuid";
     private static final String TAG_PORT = "port";
     private static final String TAG_ENERGY = "energy";
+    private static final String TAG_TRIGGERS = "triggers";
+    private static final String TAG_IS_ACTIVE = "isActive";
     private static final String TAG_ACTIVE_INPUTS = "activeInputs";
     private static final String TAG_CONNECTORS = "connectors";
     private static final String TAG_BEHAVIORS = "behaviors";
@@ -281,9 +283,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         tag.putString(TAG_UUID, uuid);
         tag.putInt(TAG_PORT, responsePort);
         tag.putDouble(TAG_ENERGY, buffer);
+        saveGraph(tag, false);
         tag.putIntArray(TAG_ACTIVE_INPUTS, activeInputs());
-        tag.put(TAG_CONNECTORS, saveConnectorEntries());
-        tag.put(TAG_BEHAVIORS, saveBehaviorEntries());
     }
 
     void load(final CompoundTag tag) {
@@ -303,15 +304,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             disableActive(DisableReason.Default);
             setBehaviorEntries(loadBehaviorEntries(tag.getList(TAG_BEHAVIORS, CompoundTag.TAG_COMPOUND)));
         }
-        final int[] activeInputs = tag.getIntArray(TAG_ACTIVE_INPUTS);
-        for (int i = 0; i < inputs.length; i++) {
-            inputs[i] = false;
-        }
-        for (final int activeInput : activeInputs) {
-            if (activeInput >= 0 && activeInput < inputs.length) {
-                inputs[activeInput] = true;
-            }
-        }
+        loadTriggerStates(tag);
         activeBehaviorsDirty = true;
     }
 
@@ -321,8 +314,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     void saveItemConfiguration(final CompoundTag itemData) {
         final CompoundTag configuration = new CompoundTag();
-        configuration.put(TAG_CONNECTORS, saveConnectorEntries());
-        configuration.put(TAG_BEHAVIORS, saveBehaviorEntries());
+        saveGraph(configuration, true);
         NanomachineItemData.save(itemData, uuid, configuration);
     }
 
@@ -493,6 +485,50 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             }
         }
         return inputCount;
+    }
+
+    private void saveGraph(final CompoundTag tag, final boolean forItem) {
+        tag.put(TAG_TRIGGERS, saveTriggerEntries(forItem));
+        tag.put(TAG_CONNECTORS, saveConnectorEntries());
+        tag.put(TAG_BEHAVIORS, saveBehaviorEntries());
+    }
+
+    private ListTag saveTriggerEntries(final boolean forItem) {
+        final ListTag tags = new ListTag();
+        for (final boolean input : inputs) {
+            final CompoundTag tag = new CompoundTag();
+            tag.putBoolean(TAG_IS_ACTIVE, input && !forItem);
+            tags.add(tag);
+        }
+        return tags;
+    }
+
+    private void loadTriggerStates(final CompoundTag tag) {
+        if (tag.contains(TAG_TRIGGERS, CompoundTag.TAG_LIST)) {
+            final ListTag triggers = tag.getList(TAG_TRIGGERS, CompoundTag.TAG_COMPOUND);
+            ensureInputCount(triggers.size());
+            for (int i = 0; i < inputs.length; i++) {
+                inputs[i] = i < triggers.size() && triggers.getCompound(i).getBoolean(TAG_IS_ACTIVE);
+            }
+            return;
+        }
+
+        for (int i = 0; i < inputs.length; i++) {
+            inputs[i] = false;
+        }
+        for (final int activeInput : tag.getIntArray(TAG_ACTIVE_INPUTS)) {
+            if (activeInput >= 0 && activeInput < inputs.length) {
+                inputs[activeInput] = true;
+            }
+        }
+    }
+
+    private void ensureInputCount(final int inputCount) {
+        if (inputCount > inputs.length) {
+            final boolean[] extendedInputs = new boolean[inputCount];
+            System.arraycopy(inputs, 0, extendedInputs, 0, inputs.length);
+            inputs = extendedInputs;
+        }
     }
 
     private ListTag saveConnectorEntries() {
