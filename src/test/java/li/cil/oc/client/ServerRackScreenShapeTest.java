@@ -274,6 +274,16 @@ final class ServerRackScreenShapeTest {
         assertFalse(ServerRackScreen.shouldHighlightTransferTarget(true, false, false, false, true, true, true, false, false));
     }
 
+    @Test
+    void serverRackScreenHighlightsItemSearchTargetsLikeUpstream() {
+        assertTrue(ServerRackScreen.shouldHighlightSearchTarget(true, false, true, true));
+
+        assertFalse(ServerRackScreen.shouldHighlightSearchTarget(false, false, true, true));
+        assertFalse(ServerRackScreen.shouldHighlightSearchTarget(true, true, true, true));
+        assertFalse(ServerRackScreen.shouldHighlightSearchTarget(true, false, false, true));
+        assertFalse(ServerRackScreen.shouldHighlightSearchTarget(true, false, true, false));
+    }
+
     private static void assertTranslationKey(final String expected, final Component component) {
         assertTrue(component.getContents() instanceof TranslatableContents);
         assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());

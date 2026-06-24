@@ -11,10 +11,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     public static final ResourceLocation SERVER_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/server.png");
@@ -68,7 +70,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         }
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        renderTransferHighlights(guiGraphics);
+        renderTransferHighlights(guiGraphics, mouseX, mouseY);
         renderTooltip(guiGraphics, mouseX, mouseY);
         final int slot = serverSlotAt(mouseX, mouseY, leftPos, topPos, serverTier(menu));
         if (slot >= 0) {
@@ -211,6 +213,14 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             : hoveredPlayerInventory && hoveredHasStack && currentSelective && currentAcceptsHovered;
     }
 
+    public static boolean shouldHighlightSearchTarget(
+        final boolean carriedEmpty,
+        final boolean currentPlayerInventory,
+        final boolean currentSelective,
+        final boolean currentAcceptsSearch) {
+        return carriedEmpty && !currentPlayerInventory && currentSelective && currentAcceptsSearch;
+    }
+
     static ServerRackControlPayload controlPayload(final ServerRackMenu menu, final int action) {
         return new ServerRackControlPayload(menu.containerId, action);
     }
@@ -304,16 +314,20 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         }
     }
 
-    private void renderTransferHighlights(final GuiGraphics guiGraphics) {
-        if (!menu.getCarried().isEmpty() || hoveredSlot == null) {
+    private void renderTransferHighlights(final GuiGraphics guiGraphics, final int mouseX, final int mouseY) {
+        if (!menu.getCarried().isEmpty()) {
             return;
         }
-        final int hoveredIndex = menu.slots.indexOf(hoveredSlot);
-        if (hoveredIndex < 0) {
+        final Optional<ItemStack> searchStack = hoveredSlot == null ? ItemSearch.hoveredStack(this, mouseX, mouseY) : Optional.empty();
+        if (hoveredSlot == null && searchStack.isEmpty()) {
             return;
         }
-        final boolean hoveredPlayerInventory = isPlayerInventorySlot(hoveredIndex);
-        final boolean hoveredSelective = isSelectiveSlot(menu, hoveredIndex);
+        final int hoveredIndex = hoveredSlot == null ? -1 : menu.slots.indexOf(hoveredSlot);
+        if (hoveredSlot != null && hoveredIndex < 0) {
+            return;
+        }
+        final boolean hoveredPlayerInventory = hoveredSlot != null && isPlayerInventorySlot(hoveredIndex);
+        final boolean hoveredSelective = hoveredSlot != null && isSelectiveSlot(menu, hoveredIndex);
         for (int slotIndex = 0; slotIndex < menu.slots.size(); slotIndex++) {
             final Slot slot = menu.slots.get(slotIndex);
             if (slot == hoveredSlot) {
@@ -321,7 +335,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             }
             final boolean currentPlayerInventory = isPlayerInventorySlot(slotIndex);
             final boolean currentSelective = isSelectiveSlot(menu, slotIndex);
-            if (shouldHighlightTransferTarget(
+            final boolean highlight = hoveredSlot != null ? shouldHighlightTransferTarget(
                 true,
                 currentPlayerInventory,
                 slot.hasItem(),
@@ -330,7 +344,9 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
                 hoveredPlayerInventory,
                 hoveredSlot.hasItem(),
                 hoveredSelective,
-                isSelectiveSlot(menu, hoveredIndex) && slot.hasItem() && hoveredSlot.mayPlace(slot.getItem()))) {
+                isSelectiveSlot(menu, hoveredIndex) && slot.hasItem() && hoveredSlot.mayPlace(slot.getItem()))
+                : shouldHighlightSearchTarget(true, currentPlayerInventory, currentSelective, slot.mayPlace(searchStack.orElseThrow()));
+            if (highlight) {
                 guiGraphics.fill(
                     leftPos + slot.x,
                     topPos + slot.y,
