@@ -1243,7 +1243,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         @Override public boolean isLong(final int index) { return index >= 0 && index < values.length && isNonNaNNumber(values[index]); }
         @Override public boolean isDouble(final int index) { return index >= 0 && index < values.length && values[index] instanceof Number; }
         @Override public boolean isString(final int index) { return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]); }
-        @Override public boolean isByteArray(final int index) { return index >= 0 && index < values.length && values[index] instanceof byte[]; }
+        @Override public boolean isByteArray(final int index) { return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]); }
         @Override public boolean isTable(final int index) { return index >= 0 && index < values.length && values[index] instanceof Map; }
         @Override public boolean isItemStack(final int index) { return index >= 0 && index < values.length && values[index] instanceof ItemStack; }
         @Override public Object[] toArray() {

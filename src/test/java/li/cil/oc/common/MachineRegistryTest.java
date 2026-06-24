@@ -293,6 +293,17 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void valueCallbackArgumentsTreatStringsAsByteArraysLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        NumericArgumentsValue value = new NumericArgumentsValue();
+
+        Object[] result = machine.invoke(value, "byteArrayFlags", new Object[]{"payload", "bytes".getBytes(StandardCharsets.UTF_8)});
+
+        assertArrayEquals(new Object[]{true, true}, result);
+    }
+
+    @Test
     void machineInvokeRejectsMissingComponentsLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1829,6 +1840,14 @@ final class MachineRegistryTest {
         @Callback
         public Object[] checkLong(final Context context, final Arguments arguments) {
             return new Object[]{arguments.checkLong(0)};
+        }
+
+        @Callback
+        public Object[] byteArrayFlags(final Context context, final Arguments arguments) {
+            return new Object[]{
+                arguments.isByteArray(0),
+                arguments.isByteArray(1)
+            };
         }
     }
 
