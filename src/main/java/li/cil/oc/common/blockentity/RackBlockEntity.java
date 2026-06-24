@@ -51,6 +51,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     private static final String TAG_MOUNTABLE_DATA = "oc:mountableData";
     private static final String TAG_SIDE_NODES = "oc:sideNodes";
     private static final String TAG_NODE_MAPPING = "oc:nodeMapping";
+    private static final String TAG_RELAY_ENABLED = "oc:isRelayEnabled";
     private static final String STACK_MOUNTABLE_DATA_TAG = "oc:rackMountable";
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
@@ -59,6 +60,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     private Direction[][] nodeMapping;
     private SidePlug[] sidePlugs;
     private SecondaryPlug[][] secondaryPlugs;
+    private boolean relayEnabled;
 
     public RackBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.RACK.get(), pos, blockState);
@@ -211,6 +213,15 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             return null;
         }
         return nodeMapping[slot][connectableIndex + 1];
+    }
+
+    public boolean isRelayEnabled() {
+        return relayEnabled;
+    }
+
+    public void setRelayEnabled(final boolean enabled) {
+        relayEnabled = enabled;
+        setChanged();
     }
 
     @Override
@@ -430,6 +441,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     private void loadRackData(final CompoundTag tag, final HolderLookup.Provider registries) {
         loadSideNodes(tag);
         loadNodeMappings(tag);
+        loadRelayState(tag);
         removeMountables();
         for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
             items.set(slot, ItemStack.EMPTY);
@@ -448,6 +460,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     private void saveRackData(final CompoundTag tag, final HolderLookup.Provider registries) {
         saveSideNodes(tag);
         saveNodeMappings(tag);
+        saveRelayState(tag);
         saveMountableData();
         ContainerHelper.saveAllItems(tag, items, registries);
         final ListTag data = new ListTag();
@@ -520,6 +533,14 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             nodeMappings.add(new IntArrayTag(sideOrdinals));
         }
         tag.put(TAG_NODE_MAPPING, nodeMappings);
+    }
+
+    private void loadRelayState(final CompoundTag tag) {
+        relayEnabled = tag.getBoolean(TAG_RELAY_ENABLED);
+    }
+
+    private void saveRelayState(final CompoundTag tag) {
+        tag.putBoolean(TAG_RELAY_ENABLED, relayEnabled);
     }
 
     private SidePlug sidePlug(final Direction side) {

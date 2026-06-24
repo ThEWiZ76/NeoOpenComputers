@@ -55,6 +55,18 @@ final class RackNetworkingTest {
         assertFalse(RackNetworking.applyRackControl(menu, payload));
     }
 
+    @Test
+    void applyRackControlTogglesRackRelayStateLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final TestRackBlockEntity rack = allocateRack();
+        final RackMenu menu = allocateMenu(17, rack);
+
+        assertTrue(RackNetworking.applyRackControl(menu, RackControlPayload.relay(17, true)));
+        assertTrue(rack.isRelayEnabled());
+        assertTrue(RackNetworking.applyRackControl(menu, RackControlPayload.relay(17, false)));
+        assertFalse(rack.isRelayEnabled());
+    }
+
     private static TestRackBlockEntity allocateRack() throws Exception {
         return (TestRackBlockEntity) unsafe().allocateInstance(TestRackBlockEntity.class);
     }

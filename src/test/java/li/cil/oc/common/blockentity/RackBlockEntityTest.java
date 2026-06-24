@@ -184,6 +184,21 @@ final class RackBlockEntityTest {
     }
 
     @Test
+    void rackPersistsRelayStateLikeUpstream() throws Exception {
+        final RackBlockEntity rack = allocateRack();
+
+        rack.setRelayEnabled(true);
+
+        final CompoundTag tag = new CompoundTag();
+        invokeRelayStateMethod(rack, "saveRelayState", tag);
+
+        final RackBlockEntity loaded = allocateRack();
+        invokeRelayStateMethod(loaded, "loadRelayState", tag);
+
+        assertTrue(loaded.isRelayEnabled());
+    }
+
+    @Test
     void rackReconnectsLoadedBusMappingsWhenSideBusIsCreatedLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         final RackBlockEntity saved = allocateRack();
@@ -251,6 +266,12 @@ final class RackBlockEntityTest {
     }
 
     private static void invokeNodeMappingMethod(final RackBlockEntity rack, final String name, final CompoundTag tag) throws Exception {
+        final Method method = RackBlockEntity.class.getDeclaredMethod(name, CompoundTag.class);
+        method.setAccessible(true);
+        method.invoke(rack, tag);
+    }
+
+    private static void invokeRelayStateMethod(final RackBlockEntity rack, final String name, final CompoundTag tag) throws Exception {
         final Method method = RackBlockEntity.class.getDeclaredMethod(name, CompoundTag.class);
         method.setAccessible(true);
         method.invoke(rack, tag);

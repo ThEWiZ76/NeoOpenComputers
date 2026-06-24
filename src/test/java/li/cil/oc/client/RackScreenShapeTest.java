@@ -122,6 +122,22 @@ final class RackScreenShapeTest {
     }
 
     @Test
+    void rackScreenBuildsRelayPayloadAndMapsRelayControl() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14, rackDataWithRelayState(false));
+        final RackMenu enabledMenu = allocateMenu(14, rackDataWithRelayState(true));
+
+        final RackControlPayload enablePayload = RackScreen.relayPayload(menu);
+        final RackControlPayload disablePayload = RackScreen.relayPayload(enabledMenu);
+
+        assertEquals(RackControlPayload.RELAY, enablePayload.action());
+        assertEquals(1, enablePayload.side());
+        assertEquals(RackControlPayload.RELAY, disablePayload.action());
+        assertEquals(0, disablePayload.side());
+        assertTrue(RackScreen.relayControlAt(151, 50, 0, 0));
+        assertTrue(!RackScreen.relayControlAt(150, 50, 0, 0));
+    }
+
+    @Test
     void rackScreenUsesRackStateForControlColor() {
         assertEquals(0xFF4C566A, RackScreen.controlColor(RackMenu.STATE_EMPTY));
         assertEquals(0xFFA3BE8C, RackScreen.controlColor(RackMenu.STATE_READY));
@@ -172,6 +188,22 @@ final class RackScreenShapeTest {
         assertTranslationKey("gui.neoopencomputers.rack.bus.map", unselectedTooltip.get(2));
 
         assertTrue(RackScreen.mappingTooltip(menu, new RackScreen.MappingControl(1, 3, RackScreen.busIndex(Direction.SOUTH, Direction.WEST))).isEmpty());
+    }
+
+    @Test
+    void rackScreenExposesRelayTooltipKeys() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14, rackDataWithRelayState(false));
+        final RackMenu enabledMenu = allocateMenu(14, rackDataWithRelayState(true));
+
+        final List<Component> disabledTooltip = RackScreen.relayTooltip(menu);
+        final List<Component> enabledTooltip = RackScreen.relayTooltip(enabledMenu);
+
+        assertEquals(2, disabledTooltip.size());
+        assertTranslationKey("gui.neoopencomputers.rack.relay", disabledTooltip.get(0));
+        assertTranslationKey("gui.neoopencomputers.rack.relay.disabled", disabledTooltip.get(1));
+        assertEquals(2, enabledTooltip.size());
+        assertTranslationKey("gui.neoopencomputers.rack.relay", enabledTooltip.get(0));
+        assertTranslationKey("gui.neoopencomputers.rack.relay.enabled", enabledTooltip.get(1));
     }
 
     @Test
@@ -227,6 +259,24 @@ final class RackScreenShapeTest {
                     return 1;
                 }
                 return 0;
+            }
+
+            @Override
+            public void set(final int index, final int value) {
+            }
+
+            @Override
+            public int getCount() {
+                return RackMenu.RACK_DATA_COUNT;
+            }
+        };
+    }
+
+    private static ContainerData rackDataWithRelayState(final boolean enabled) {
+        return new ContainerData() {
+            @Override
+            public int get(final int index) {
+                return index == RackMenu.RACK_RELAY_OFFSET && enabled ? 1 : 0;
             }
 
             @Override

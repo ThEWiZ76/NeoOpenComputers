@@ -19,6 +19,9 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int SLOT_SPACING = 18;
     private static final int CONTROL_Y = 50;
     private static final int CONTROL_SIZE = 10;
+    private static final int RELAY_X = 151;
+    private static final int RELAY_Y = 50;
+    private static final int RELAY_SIZE = 10;
     private static final int MAPPING_Y = 64;
     private static final int MAPPING_CELL_SIZE = 3;
     private static final int MAPPING_BUS_STEP = 3;
@@ -38,6 +41,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         final int top = topPos;
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
         guiGraphics.fill(left + 7, top + 16, left + 169, top + 76, 0xFF3B4252);
+        drawRelayControl(guiGraphics, left + RELAY_X, top + RELAY_Y, menu.rackRelayEnabled());
         for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
             drawSlot(guiGraphics, left + FIRST_SLOT_X - 1 + slot * SLOT_SPACING, top + SLOT_Y - 1);
             drawControl(guiGraphics, left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING, top + CONTROL_Y, controlColor(menu.rackState(slot)));
@@ -54,6 +58,9 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         if (!mappingTooltip.isEmpty()) {
             guiGraphics.renderComponentTooltip(font, mappingTooltip, mouseX, mouseY);
         }
+        if (relayControlAt(mouseX, mouseY, leftPos, topPos)) {
+            guiGraphics.renderComponentTooltip(font, relayTooltip(menu), mouseX, mouseY);
+        }
         final int slot = controlSlotAt(mouseX, mouseY, leftPos, topPos);
         if (slot >= 0) {
             guiGraphics.renderComponentTooltip(font, controlTooltip(menu.rackState(slot), menu.rackMissingRequirements(slot)), mouseX, mouseY);
@@ -63,6 +70,10 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     @Override
     public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
         if (button == 0) {
+            if (relayControlAt(mouseX, mouseY, leftPos, topPos)) {
+                PacketDistributor.sendToServer(relayPayload(menu));
+                return true;
+            }
             final MappingControl mappingControl = mappingControlAt(mouseX, mouseY, leftPos, topPos);
             final RackControlPayload payload = mappingPayload(menu, mappingControl);
             if (payload != null) {
@@ -108,6 +119,16 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
 
     static RackOpenServerPayload openServerPayload(final RackMenu menu, final int slot) {
         return new RackOpenServerPayload(menu.containerId, slot);
+    }
+
+    static RackControlPayload relayPayload(final RackMenu menu) {
+        return RackControlPayload.relay(menu.containerId, !menu.rackRelayEnabled());
+    }
+
+    static boolean relayControlAt(final double mouseX, final double mouseY, final int left, final int top) {
+        final int x = left + RELAY_X;
+        final int y = top + RELAY_Y;
+        return mouseX >= x && mouseX < x + RELAY_SIZE && mouseY >= y && mouseY < y + RELAY_SIZE;
     }
 
     static MappingControl mappingControlAt(final double mouseX, final double mouseY, final int left, final int top) {
@@ -229,6 +250,15 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         return tooltip;
     }
 
+    static List<Component> relayTooltip(final RackMenu menu) {
+        final List<Component> tooltip = new ArrayList<>();
+        tooltip.add(Component.translatable("gui.neoopencomputers.rack.relay"));
+        tooltip.add(Component.translatable(menu.rackRelayEnabled()
+            ? "gui.neoopencomputers.rack.relay.enabled"
+            : "gui.neoopencomputers.rack.relay.disabled"));
+        return tooltip;
+    }
+
     static Component sideLabel(final Direction side) {
         return sideLabel(DEFAULT_FRONT, side);
     }
@@ -271,6 +301,13 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         guiGraphics.fill(left + 3, top + 2, left + 5, top + 8, color);
         guiGraphics.fill(left + 5, top + 3, left + 7, top + 7, color);
         guiGraphics.fill(left + 7, top + 4, left + 8, top + 6, color);
+    }
+
+    private static void drawRelayControl(final GuiGraphics guiGraphics, final int left, final int top, final boolean enabled) {
+        final int color = enabled ? 0xFFA3BE8C : 0xFF6C7480;
+        guiGraphics.fill(left, top, left + RELAY_SIZE, top + RELAY_SIZE, 0xFF1F232B);
+        guiGraphics.fill(left + 2, top + 4, left + 8, top + 6, color);
+        guiGraphics.fill(left + 4, top + 2, left + 6, top + 8, color);
     }
 
     private static void drawMappingControls(final GuiGraphics guiGraphics, final RackMenu menu, final int left, final int top, final int slot) {

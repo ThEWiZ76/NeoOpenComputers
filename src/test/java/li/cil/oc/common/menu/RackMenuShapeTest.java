@@ -50,7 +50,7 @@ final class RackMenuShapeTest {
         assertEquals(36, RackMenu.PLAYER_SLOT_COUNT);
         assertEquals(40, RackMenu.TOTAL_SLOT_COUNT);
         assertEquals(4, RackMenu.RACK_STATE_COUNT);
-        assertEquals(41, RackMenu.RACK_DATA_COUNT);
+        assertEquals(42, RackMenu.RACK_DATA_COUNT);
         assertEquals(4, RackMenu.RACK_MISSING_REQUIREMENTS_COUNT);
         assertEquals(16, RackMenu.RACK_NODE_MAPPING_COUNT);
         assertEquals(16, RackMenu.RACK_NODE_PRESENCE_COUNT);
@@ -81,6 +81,8 @@ final class RackMenuShapeTest {
         assertEquals(boolean.class, RackMenu.class.getMethod("rackNodePresentFor", Container.class, int.class, int.class).getReturnType());
         assertEquals(Direction.class, RackMenu.class.getMethod("rackFacing").getReturnType());
         assertEquals(int.class, RackMenu.class.getMethod("rackFacingFor", Container.class).getReturnType());
+        assertEquals(boolean.class, RackMenu.class.getMethod("rackRelayEnabled").getReturnType());
+        assertEquals(boolean.class, RackMenu.class.getMethod("rackRelayEnabledFor", Container.class).getReturnType());
     }
 
     @Test
@@ -116,6 +118,18 @@ final class RackMenuShapeTest {
         assertEquals(Direction.WEST, menu.rackFacing());
     }
 
+    @Test
+    void rackMenuExposesRelayStateLikeUpstream() throws Exception {
+        final TestRackBlockEntity rack = allocateRack();
+        rack.setRelayEnabled(true);
+
+        assertTrue(RackMenu.rackRelayEnabledFor(rack));
+
+        final RackMenu menu = allocateMenuWithData(rackDataWithRelayState(true));
+
+        assertTrue(menu.rackRelayEnabled());
+    }
+
     private static TestRackBlockEntity allocateRack() throws Exception {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
@@ -143,6 +157,24 @@ final class RackMenuShapeTest {
             @Override
             public int get(final int index) {
                 return index == RackMenu.RACK_FACING_OFFSET ? facing.ordinal() + 1 : 0;
+            }
+
+            @Override
+            public void set(final int index, final int value) {
+            }
+
+            @Override
+            public int getCount() {
+                return RackMenu.RACK_DATA_COUNT;
+            }
+        };
+    }
+
+    private static ContainerData rackDataWithRelayState(final boolean enabled) {
+        return new ContainerData() {
+            @Override
+            public int get(final int index) {
+                return index == RackMenu.RACK_RELAY_OFFSET && enabled ? 1 : 0;
             }
 
             @Override

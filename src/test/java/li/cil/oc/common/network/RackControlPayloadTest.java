@@ -35,4 +35,14 @@ final class RackControlPayloadTest {
         assertEquals(-1, decoded.connectableIndex());
         assertEquals(3, decoded.side());
     }
+
+    @Test
+    void buildsRelayPayloadLikeUpstreamGuiToggle() {
+        final RackControlPayload payload = RackControlPayload.relay(7, true);
+
+        assertEquals(7, payload.containerId());
+        assertEquals(RackControlPayload.RELAY, payload.action());
+        assertEquals(1, payload.side());
+        assertEquals(RackControlPayload.PRIMARY_CONNECTABLE, payload.connectableIndex());
+    }
 }

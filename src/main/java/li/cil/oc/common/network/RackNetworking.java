@@ -36,7 +36,14 @@ public final class RackNetworking {
         if (!(containerMenu instanceof RackMenu menu) || menu.containerId != payload.containerId()) {
             return false;
         }
-        if (!(menu.rackInventory() instanceof RackBlockEntity rack) || payload.slot() < 0 || payload.slot() >= RackBlockEntity.CONTAINER_SIZE) {
+        if (!(menu.rackInventory() instanceof RackBlockEntity rack)) {
+            return false;
+        }
+        if (payload.action() == RackControlPayload.RELAY) {
+            rack.setRelayEnabled(payload.side() != 0);
+            return true;
+        }
+        if (payload.slot() < 0 || payload.slot() >= RackBlockEntity.CONTAINER_SIZE) {
             return false;
         }
         if (payload.action() == RackControlPayload.MAP) {

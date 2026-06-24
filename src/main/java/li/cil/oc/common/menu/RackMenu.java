@@ -28,7 +28,8 @@ public class RackMenu extends AbstractContainerMenu {
     public static final int RACK_NODE_MAPPING_OFFSET = RACK_MISSING_REQUIREMENTS_OFFSET + RACK_MISSING_REQUIREMENTS_COUNT;
     public static final int RACK_NODE_PRESENCE_OFFSET = RACK_NODE_MAPPING_OFFSET + RACK_NODE_MAPPING_COUNT;
     public static final int RACK_FACING_OFFSET = RACK_NODE_PRESENCE_OFFSET + RACK_NODE_PRESENCE_COUNT;
-    public static final int RACK_DATA_COUNT = RACK_FACING_OFFSET + 1;
+    public static final int RACK_RELAY_OFFSET = RACK_FACING_OFFSET + 1;
+    public static final int RACK_DATA_COUNT = RACK_RELAY_OFFSET + 1;
     public static final int NO_SIDE = -1;
     public static final int STATE_EMPTY = 0;
     public static final int STATE_READY = 1;
@@ -132,6 +133,10 @@ public class RackMenu extends AbstractContainerMenu {
         return decodeRackFacing(rackData.get(RACK_FACING_OFFSET));
     }
 
+    public boolean rackRelayEnabled() {
+        return rackData.get(RACK_RELAY_OFFSET) != 0;
+    }
+
     public static int rackStateFor(final Container rackInventory, final int slot) {
         if (!(rackInventory instanceof RackBlockEntity rack) || slot < 0 || slot >= RACK_STATE_COUNT) {
             return STATE_EMPTY;
@@ -188,6 +193,10 @@ public class RackMenu extends AbstractContainerMenu {
         return rackInventory instanceof RackBlockEntity rack ? rack.facing().ordinal() + 1 : Direction.NORTH.ordinal() + 1;
     }
 
+    public static boolean rackRelayEnabledFor(final Container rackInventory) {
+        return rackInventory instanceof RackBlockEntity rack && rack.isRelayEnabled();
+    }
+
     @Override
     public void removed(final Player player) {
         super.removed(player);
@@ -230,6 +239,9 @@ public class RackMenu extends AbstractContainerMenu {
                 }
                 if (index == RACK_FACING_OFFSET) {
                     return rackFacingFor(rack);
+                }
+                if (index == RACK_RELAY_OFFSET) {
+                    return rackRelayEnabledFor(rack) ? 1 : 0;
                 }
                 return 0;
             }

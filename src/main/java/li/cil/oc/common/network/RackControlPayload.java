@@ -13,6 +13,7 @@ public record RackControlPayload(int containerId, int slot, int action, int conn
     public static final int STOP = 1;
     public static final int TOGGLE = 2;
     public static final int MAP = 3;
+    public static final int RELAY = 4;
     public static final int PRIMARY_CONNECTABLE = -1;
     public static final int NO_SIDE = -1;
 
@@ -37,6 +38,10 @@ public record RackControlPayload(int containerId, int slot, int action, int conn
 
     public static RackControlPayload map(final int containerId, final int slot, final int connectableIndex, final Direction side) {
         return new RackControlPayload(containerId, slot, MAP, connectableIndex, side == null ? NO_SIDE : side.ordinal());
+    }
+
+    public static RackControlPayload relay(final int containerId, final boolean enabled) {
+        return new RackControlPayload(containerId, 0, RELAY, PRIMARY_CONNECTABLE, enabled ? 1 : 0);
     }
 
     @Override
