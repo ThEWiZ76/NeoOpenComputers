@@ -39,6 +39,20 @@ final class TerminalScreenSnapshotTest {
     }
 
     @Test
+    void loadsMissingSavedRowsAsBlankRows() {
+        final CompoundTag tag = new CompoundTag();
+        tag.putInt("width", 3);
+        tag.putInt("height", 2);
+
+        final TerminalScreenSnapshot loaded = TerminalScreenSnapshot.load(tag);
+        final TerminalScreenSnapshot blank = new TerminalScreenSnapshot(3, 2, new String[]{"", ""});
+
+        assertEquals("", loaded.line(0));
+        assertEquals("", loaded.line(1));
+        assertEquals(true, blank.contentEquals(loaded));
+    }
+
+    @Test
     void comparesSnapshotContents() {
         final TerminalScreenSnapshot first = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
         final TerminalScreenSnapshot same = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});

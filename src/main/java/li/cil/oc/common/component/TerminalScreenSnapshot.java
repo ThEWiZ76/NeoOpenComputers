@@ -85,9 +85,9 @@ public record TerminalScreenSnapshot(int width, int height, String[] lines, int[
         final int width = Math.max(0, tag.getInt(TAG_WIDTH));
         final int height = Math.max(0, tag.getInt(TAG_HEIGHT));
         final ListTag lineTags = tag.getList(TAG_LINES, StringTag.TAG_STRING);
-        final String[] lines = new String[Math.min(height, lineTags.size())];
+        final String[] lines = new String[height];
         for (int index = 0; index < lines.length; index++) {
-            lines[index] = lineTags.getString(index);
+            lines[index] = index < lineTags.size() ? lineTags.getString(index) : "";
         }
         return new TerminalScreenSnapshot(
             width,
