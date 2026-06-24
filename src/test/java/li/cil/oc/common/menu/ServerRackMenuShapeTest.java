@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ServerRackMenuShapeTest {
@@ -55,6 +56,15 @@ final class ServerRackMenuShapeTest {
         assertEquals(ServerRackMountableEnvironment.MISSING_CPU, ServerRackMenu.MISSING_CPU);
         assertEquals(ServerRackMountableEnvironment.MISSING_MEMORY, ServerRackMenu.MISSING_MEMORY);
         assertEquals(ServerRackMountableEnvironment.MISSING_EEPROM, ServerRackMenu.MISSING_EEPROM);
+    }
+
+    @Test
+    void serverRackMenuRejectsWrongContainerDataSizeLikeOtherMenus() {
+        final ContainerData shortData = containerData(ServerRackMenu.SERVER_DATA_COUNT - 1);
+
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ServerRackMenu.checkServerDataCount(shortData));
     }
 
     @Test
@@ -261,6 +271,24 @@ final class ServerRackMenuShapeTest {
                 }
                 return null;
             });
+    }
+
+    private static ContainerData containerData(final int size) {
+        return new ContainerData() {
+            @Override
+            public int get(final int index) {
+                return 0;
+            }
+
+            @Override
+            public void set(final int index, final int value) {
+            }
+
+            @Override
+            public int getCount() {
+                return size;
+            }
+        };
     }
 
     private static Unsafe unsafe() throws ReflectiveOperationException {

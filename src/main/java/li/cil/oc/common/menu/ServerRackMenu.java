@@ -79,6 +79,7 @@ public class ServerRackMenu extends AbstractContainerMenu {
         this.serverData = serverData;
         this.lockedStack = lockedStack == null ? ItemStack.EMPTY : lockedStack;
         serverInventory.startOpen(playerInventory.player);
+        checkServerDataCount(serverData);
         addDataSlots(serverData);
 
         final int tier = serverTierFor(serverInventory);
@@ -178,6 +179,10 @@ public class ServerRackMenu extends AbstractContainerMenu {
 
     public boolean serverPresent() {
         return serverData.get(SERVER_PRESENT_INDEX) != 0;
+    }
+
+    static void checkServerDataCount(final ContainerData serverData) {
+        checkContainerDataCount(serverData, SERVER_DATA_COUNT);
     }
 
     @Override
