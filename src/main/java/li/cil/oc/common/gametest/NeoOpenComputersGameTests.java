@@ -61,9 +61,11 @@ import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
+import li.cil.oc.common.menu.ServerRackMenu;
 import li.cil.oc.common.component.LinkedCardEnvironment;
 import li.cil.oc.common.component.DebugCardEnvironment;
 import li.cil.oc.common.component.MfuEnvironment;
+import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.nanomachines.provider.NanomachineDisintegrationProvider;
@@ -411,6 +413,37 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("server-data".equals(driver.dataTag(stack).getString("marker")), "Server item driver data tag did not persist marker");
         final CompoundTag root = stack.get(DataComponents.CUSTOM_DATA).copyTag();
         helper.assertTrue("server-data".equals(root.getCompound("oc:rackMountable").getString("marker")), "Server item did not store data in rack mountable tag");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void serverItemRightClickOpensUsableItemMenuLikeUpstream(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.SERVER_TIER2.get());
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+        player.setShiftKeyDown(false);
+
+        final var result = stack.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+
+        helper.assertTrue(result.getResult().consumesAction(), "Server item right-click did not consume action");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void serverItemMenuUsesHeldStackDataLikeUpstream(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.SERVER_TIER2.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final CompoundTag data = driver.dataTag(stack);
+        final ServerRackMountableEnvironment server = new ServerRackMountableEnvironment(player, 1, data);
+        final ServerRackMenu menu = new ServerRackMenu(1, player.getInventory(), server);
+
+        helper.assertTrue(menu.isItem(), "Server item menu did not sync item mode");
+        helper.assertTrue(menu.stillValid(player), "Server item menu was not usable by opening player");
+        server.setItem(2, new ItemStack(ModItems.CPU_TIER2.get()));
+
+        final ServerRackMountableEnvironment reopened = new ServerRackMountableEnvironment(player, 1, driver.dataTag(stack));
+        helper.assertTrue(reopened.getItem(2).is(ModItems.CPU_TIER2.get()), "Server item menu did not persist component stack");
         helper.succeed();
     }
 

@@ -98,6 +98,8 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     private final Rack rack;
     private final int slot;
     private final int tier;
+    private final Player itemOwner;
+    private final CompoundTag itemData;
     private final Machine machine;
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
@@ -106,16 +108,29 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     private boolean wasWorking;
 
     public ServerRackMountableEnvironment(final Rack rack, final int slot, final int tier) {
+        this(rack, slot, tier, null, null);
+    }
+
+    public ServerRackMountableEnvironment(final Player itemOwner, final int tier, final CompoundTag itemData) {
+        this(null, -1, tier, itemOwner, itemData);
+    }
+
+    private ServerRackMountableEnvironment(final Rack rack, final int slot, final int tier, final Player itemOwner, final CompoundTag itemData) {
         OpenComputersApi.initialize();
         this.rack = rack;
         this.slot = slot;
         this.tier = Math.max(0, Math.min(2, tier));
+        this.itemOwner = itemOwner;
+        this.itemData = itemData;
         this.items = NonNullList.withSize(slotCount(this.tier), ItemStack.EMPTY);
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.create());
         }
         machine = li.cil.oc.api.Machine.create(this);
+        if (itemData != null) {
+            load(itemData);
+        }
     }
 
     @Override
@@ -197,28 +212,42 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public Level world() {
-        return rack == null ? null : rack.world();
+        if (rack != null) {
+            return rack.world();
+        }
+        return itemOwner == null ? null : itemOwner.level();
     }
 
     @Override
     public double xPosition() {
-        return rack == null ? 0D : rack.xPosition();
+        if (rack != null) {
+            return rack.xPosition();
+        }
+        return itemOwner == null ? 0D : itemOwner.getX();
     }
 
     @Override
     public double yPosition() {
-        return rack == null ? 0D : rack.yPosition();
+        if (rack != null) {
+            return rack.yPosition();
+        }
+        return itemOwner == null ? 0D : itemOwner.getY();
     }
 
     @Override
     public double zPosition() {
-        return rack == null ? 0D : rack.zPosition();
+        if (rack != null) {
+            return rack.zPosition();
+        }
+        return itemOwner == null ? 0D : itemOwner.getZ();
     }
 
     @Override
     public void markChanged() {
         if (rack != null && slot >= 0) {
             rack.markChanged(slot);
+        } else if (itemData != null) {
+            save(itemData);
         }
     }
 
@@ -447,7 +476,10 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public boolean stillValid(final Player player) {
-        return rack instanceof Container container && container.stillValid(player) && rack.getMountable(slot) == this;
+        if (rack instanceof Container container) {
+            return container.stillValid(player) && rack.getMountable(slot) == this;
+        }
+        return itemOwner != null && player == itemOwner;
     }
 
     @Override

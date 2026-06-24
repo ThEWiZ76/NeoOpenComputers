@@ -7,11 +7,18 @@ import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
+import li.cil.oc.common.menu.ServerRackMenu;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
 
 public class ServerItem extends Item implements DriverItem, Tiered {
     private static final String RACK_MOUNTABLE_DATA_TAG = "oc:rackMountable";
@@ -31,6 +38,22 @@ public class ServerItem extends Item implements DriverItem, Tiered {
     @Override
     public boolean worksWith(final ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() == this;
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(final Level level, final Player player, final InteractionHand usedHand) {
+        final ItemStack stack = player.getItemInHand(usedHand);
+        if (!player.isShiftKeyDown()) {
+            if (!level.isClientSide) {
+                final CompoundTag data = dataTag(stack);
+                final ServerRackMountableEnvironment server = new ServerRackMountableEnvironment(player, tier, data);
+                player.openMenu(new SimpleMenuProvider(
+                    (containerId, playerInventory, menuPlayer) -> new ServerRackMenu(containerId, playerInventory, server),
+                    Component.translatable("gui.neoopencomputers.server_rack")));
+            }
+            player.swing(usedHand);
+        }
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 
     @Override
