@@ -2,8 +2,12 @@ package li.cil.oc.common;
 
 import li.cil.oc.api.API;
 import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.MethodWhitelist;
 import li.cil.oc.api.fs.FileSystem;
 import li.cil.oc.api.machine.Architecture;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.machine.Machine;
@@ -12,6 +16,7 @@ import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.FilteredEnvironment;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -22,6 +27,7 @@ import li.cil.oc.api.driver.item.CallBudget;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.api.prefab.AbstractValue;
 import li.cil.oc.common.machine.ProgramLocations;
 import li.cil.oc.common.machine.MachineBoundArchitecture;
 import li.cil.oc.common.machine.SynchronizedCallAware;
@@ -191,6 +197,22 @@ final class MachineRegistryTest {
             new Object[]{"payload".getBytes(StandardCharsets.UTF_8)});
 
         assertArrayEquals(new Object[]{"payload"}, result);
+    }
+
+    @Test
+    void valueCallbacksHonorFiltersLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        FilteredValue value = new FilteredValue();
+
+        Map<String, Callback> methods = machine.methods(value);
+
+        assertTrue(methods.containsKey("echo"));
+        assertFalse(methods.containsKey("hidden"));
+        assertFalse(methods.containsKey("extra"));
+        assertArrayEquals(new Object[]{"ok"}, machine.invoke(value, "echo", new Object[0]));
+        assertThrows(NoSuchMethodException.class, () -> machine.invoke(value, "hidden", new Object[0]));
+        assertThrows(NoSuchMethodException.class, () -> machine.invoke(value, "extra", new Object[0]));
     }
 
     @Test
@@ -1613,6 +1635,33 @@ final class MachineRegistryTest {
         @li.cil.oc.api.machine.Callback
         public Object[] snapshotFirst(final li.cil.oc.api.machine.Context context, final li.cil.oc.api.machine.Arguments arguments) {
             return new Object[]{arguments.toArray()[0]};
+        }
+    }
+
+    private static final class FilteredValue extends AbstractValue implements FilteredEnvironment, MethodWhitelist {
+        @Override
+        public boolean isCallbackEnabled(final String name) {
+            return !"hidden".equals(name);
+        }
+
+        @Override
+        public String[] whitelistedMethods() {
+            return new String[]{"echo", "hidden"};
+        }
+
+        @Callback
+        public Object[] echo(final Context context, final Arguments arguments) {
+            return new Object[]{"ok"};
+        }
+
+        @Callback
+        public Object[] hidden(final Context context, final Arguments arguments) {
+            return new Object[]{"hidden"};
+        }
+
+        @Callback
+        public Object[] extra(final Context context, final Arguments arguments) {
+            return new Object[]{"extra"};
         }
     }
 

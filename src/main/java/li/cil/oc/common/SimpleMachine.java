@@ -5,6 +5,7 @@ import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.MethodWhitelist;
 import li.cil.oc.api.driver.item.CallBudget;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Architecture;
@@ -19,6 +20,7 @@ import li.cil.oc.api.machine.Signal;
 import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.FilteredEnvironment;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -1075,6 +1077,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     private static Map<String, Method> discoverCallbacks(final Object value) {
         final Map<String, Method> discovered = new LinkedHashMap<>();
+        final Set<String> whitelist = value instanceof MethodWhitelist methodWhitelist && methodWhitelist.whitelistedMethods() != null
+            ? Set.copyOf(Arrays.asList(methodWhitelist.whitelistedMethods()))
+            : Set.of();
+        final FilteredEnvironment filter = value instanceof FilteredEnvironment filtered ? filtered : null;
         Class<?> type = value.getClass();
         while (type != null) {
             for (Method method : type.getDeclaredMethods()) {
@@ -1082,7 +1088,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
                 if (callback != null) {
                     method.setAccessible(true);
                     final String name = callback.value().isEmpty() ? method.getName() : callback.value();
-                    discovered.putIfAbsent(name, method);
+                    if ((whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
+                        discovered.putIfAbsent(name, method);
+                    }
                 }
             }
             type = type.getSuperclass();
