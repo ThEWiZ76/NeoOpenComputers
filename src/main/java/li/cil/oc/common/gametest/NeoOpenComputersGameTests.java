@@ -3917,6 +3917,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void shiftClickRackServerSlotTogglesPowerLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+        final li.cil.oc.api.internal.Server rackServer = (li.cil.oc.api.internal.Server) rack.getMountable(0);
+        final net.minecraft.world.Container serverInventory = (net.minecraft.world.Container) rackServer;
+        serverInventory.setItem(2, new ItemStack(ModItems.CPU_TIER3.get()));
+        serverInventory.setItem(5, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        serverInventory.setItem(8, bootableHardDiskStack(helper, ""));
+        serverInventory.setItem(12, luaBiosEepromStack());
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setShiftKeyDown(true);
+        final BlockPos absoluteRackPos = helper.absolutePos(rackPos);
+        final BlockHitResult hit = new BlockHitResult(
+            new Vec3(absoluteRackPos.getX() + 0.5D, absoluteRackPos.getY() + 0.875D, absoluteRackPos.getZ()),
+            Direction.NORTH,
+            absoluteRackPos,
+            false);
+
+        final InteractionResult result = invokeUseWithoutItem(helper.getBlockState(rackPos), helper, rackPos, player, hit);
+
+        helper.assertTrue(result.consumesAction(), "Rack server shift-click did not consume activation");
+        helper.assertTrue(rackServer.machine().isRunning(), "Rack server shift-click did not start the machine");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void rackMenuDistinguishesEmptyAndIncompleteServerStates(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
@@ -6842,6 +6870,10 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static InteractionResult invokeUseWithoutItem(final BlockState state, final GameTestHelper helper, final BlockPos pos, final BlockHitResult hit) {
+        return invokeUseWithoutItem(state, helper, pos, null, hit);
+    }
+
+    private static InteractionResult invokeUseWithoutItem(final BlockState state, final GameTestHelper helper, final BlockPos pos, final Player player, final BlockHitResult hit) {
         try {
             final Method useWithoutItem = state.getBlock().getClass().getDeclaredMethod(
                 "useWithoutItem",
@@ -6851,7 +6883,7 @@ public final class NeoOpenComputersGameTests {
                 net.minecraft.world.entity.player.Player.class,
                 BlockHitResult.class);
             useWithoutItem.setAccessible(true);
-            return (InteractionResult) useWithoutItem.invoke(state.getBlock(), state, helper.getLevel(), helper.absolutePos(pos), null, hit);
+            return (InteractionResult) useWithoutItem.invoke(state.getBlock(), state, helper.getLevel(), helper.absolutePos(pos), player, hit);
         } catch (ReflectiveOperationException e) {
             throw new AssertionError("Could not invoke screen useWithoutItem", e);
         }

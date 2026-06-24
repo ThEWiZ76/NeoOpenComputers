@@ -1,10 +1,13 @@
 package li.cil.oc.common.block;
 
 import com.mojang.serialization.MapCodec;
+import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -24,6 +27,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 
 @SuppressWarnings("deprecation")
 public class RackBlock extends HorizontalDirectionalBlock implements EntityBlock {
@@ -93,10 +97,37 @@ public class RackBlock extends HorizontalDirectionalBlock implements EntityBlock
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockEntity(pos) instanceof RackBlockEntity rack) {
+            final Vec3 clickLocation = hitResult.getLocation();
+            final float hitX = (float) (clickLocation.x - pos.getX());
+            final float hitY = (float) (clickLocation.y - pos.getY());
+            final float hitZ = (float) (clickLocation.z - pos.getZ());
+            final Integer slot = rack.slotAt(hitResult.getDirection(), hitX, hitY, hitZ);
+            if (slot != null) {
+                final RackMountable mountable = rack.getMountable(slot);
+                if (mountable != null && mountable.onActivate(
+                    player,
+                    InteractionHand.MAIN_HAND,
+                    player.getMainHandItem(),
+                    localMountableX(hitResult.getDirection(), hitX),
+                    localMountableY(hitY, slot))) {
+                    return InteractionResult.CONSUME;
+                }
+            }
             player.openMenu(rack);
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
+    }
+
+    private static float localMountableX(final Direction side, final float hitX) {
+        final int globalX = (int) (hitX * 16.05F);
+        final int localX = (side.getAxis() != Axis.Z ? 15 - globalX : globalX) - 1;
+        return localX / 14F;
+    }
+
+    private static float localMountableY(final float hitY, final int slot) {
+        final int globalY = (int) (hitY * 16.05F);
+        return ((15 - globalY) - 2 - 3 * slot) / 3F;
     }
 
     @Override
