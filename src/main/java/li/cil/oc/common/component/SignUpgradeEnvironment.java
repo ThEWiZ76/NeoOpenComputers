@@ -82,7 +82,7 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
 
     @Callback(doc = "function([side:number]):string -- Get sign text. Adapter hosts require a side; rotatable hosts use the front side.")
     public Object[] getValue(final Context context, final Arguments arguments) {
-        final SignBlockEntity sign = adapterMode ? findSign(Direction.from3DDataValue(arguments.checkInteger(0))) : findSign();
+        final SignBlockEntity sign = adapterMode ? findSign(checkSide(arguments, 0)) : findSign();
         if (sign == null) {
             return new Object[]{null, "no sign"};
         }
@@ -91,7 +91,7 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
 
     @Callback(doc = "function([side:number,] value:string):string -- Set sign text. Adapter hosts require a side; rotatable hosts use the front side.")
     public Object[] setValue(final Context context, final Arguments arguments) {
-        final SignBlockEntity sign = adapterMode ? findSign(Direction.from3DDataValue(arguments.checkInteger(0))) : findSign();
+        final SignBlockEntity sign = adapterMode ? findSign(checkSide(arguments, 0)) : findSign();
         if (sign == null) {
             return new Object[]{null, "no sign"};
         }
@@ -145,6 +145,14 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
 
     private BlockPos hostPosition() {
         return BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition());
+    }
+
+    private static Direction checkSide(final Arguments arguments, final int index) {
+        final int side = arguments.checkInteger(index);
+        if (side < 0 || side > 5) {
+            throw new IllegalArgumentException("invalid side");
+        }
+        return Direction.from3DDataValue(side);
     }
 
     private static String text(final SignBlockEntity sign) {

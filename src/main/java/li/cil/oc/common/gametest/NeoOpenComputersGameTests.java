@@ -4886,6 +4886,8 @@ public final class NeoOpenComputersGameTests {
                 final int east = Direction.EAST.get3DDataValue();
                 assertInvokeResult(helper, computer, address, "setValue", new Object[]{east, "adapter\nsign"}, "adapter\nsign\n\n");
                 assertInvokeResult(helper, computer, address, "getValue", new Object[]{east}, "adapter\nsign\n\n");
+                assertMachineFailureMessage(helper, computer, address, "getValue", "invalid side", new Object[]{6});
+                assertMachineFailureMessage(helper, computer, address, "setValue", "invalid side", new Object[]{6, "invalid"});
             } catch (Exception e) {
                 helper.fail("Sign upgrade invocation failed: " + e.getMessage());
             }
