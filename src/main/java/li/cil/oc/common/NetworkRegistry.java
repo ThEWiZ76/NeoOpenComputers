@@ -37,6 +37,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -550,7 +551,7 @@ final class NetworkRegistry implements NetworkAPI {
             while (type != null) {
                 for (Method method : type.getDeclaredMethods()) {
                     final Callback callback = method.getAnnotation(Callback.class);
-                    if (callback != null) {
+                    if (callback != null && isValidCallbackMethod(method)) {
                         method.setAccessible(true);
                         final String name = callback.value().isEmpty() ? method.getName() : callback.value();
                         if ((whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
@@ -561,6 +562,15 @@ final class NetworkRegistry implements NetworkAPI {
                 type = type.getSuperclass();
             }
             return discovered;
+        }
+
+        private boolean isValidCallbackMethod(final Method method) {
+            final Class<?>[] parameterTypes = method.getParameterTypes();
+            return method.getReturnType() == Object[].class &&
+                parameterTypes.length == 2 &&
+                parameterTypes[0] == Context.class &&
+                parameterTypes[1] == li.cil.oc.api.machine.Arguments.class &&
+                Modifier.isPublic(method.getModifiers());
         }
     }
 

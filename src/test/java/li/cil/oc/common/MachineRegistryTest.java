@@ -216,6 +216,23 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void valueCallbacksIgnoreInvalidCallbackShapesLikeUpstream() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        InvalidCallbackValue value = new InvalidCallbackValue();
+
+        Map<String, Callback> methods = machine.methods(value);
+
+        assertTrue(methods.containsKey("valid"));
+        assertFalse(methods.containsKey("badReturn"));
+        assertFalse(methods.containsKey("badArgs"));
+        assertFalse(methods.containsKey("privateCallback"));
+        assertThrows(NoSuchMethodException.class, () -> machine.invoke(value, "badReturn", new Object[0]));
+        assertThrows(NoSuchMethodException.class, () -> machine.invoke(value, "badArgs", new Object[0]));
+        assertThrows(NoSuchMethodException.class, () -> machine.invoke(value, "privateCallback", new Object[0]));
+    }
+
+    @Test
     void machineInvokeRejectsMissingComponentsLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1662,6 +1679,28 @@ final class MachineRegistryTest {
         @Callback
         public Object[] extra(final Context context, final Arguments arguments) {
             return new Object[]{"extra"};
+        }
+    }
+
+    private static final class InvalidCallbackValue extends AbstractValue {
+        @Callback
+        public Object[] valid(final Context context, final Arguments arguments) {
+            return new Object[]{"valid"};
+        }
+
+        @Callback
+        public String badReturn(final Context context, final Arguments arguments) {
+            return "bad";
+        }
+
+        @Callback
+        public Object[] badArgs() {
+            return new Object[]{"bad"};
+        }
+
+        @Callback
+        private Object[] privateCallback(final Context context, final Arguments arguments) {
+            return new Object[]{"bad"};
         }
     }
 

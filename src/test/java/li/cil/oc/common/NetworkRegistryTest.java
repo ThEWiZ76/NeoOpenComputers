@@ -185,6 +185,21 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void componentsIgnoreInvalidCallbackShapesLikeUpstream() {
+        NetworkRegistry registry = new NetworkRegistry();
+        InvalidCallbackEnvironment host = new InvalidCallbackEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        assertTrue(component.methods().contains("valid"));
+        assertFalse(component.methods().contains("badReturn"));
+        assertFalse(component.methods().contains("badArgs"));
+        assertFalse(component.methods().contains("privateCallback"));
+        assertThrows(NoSuchMethodException.class, () -> component.invoke("badReturn", null));
+        assertThrows(NoSuchMethodException.class, () -> component.invoke("badArgs", null));
+        assertThrows(NoSuchMethodException.class, () -> component.invoke("privateCallback", null));
+    }
+
+    @Test
     void connectorBuffersClampToLocalSize() {
         NetworkRegistry registry = new NetworkRegistry();
         Connector connector = registry.newNode(new TestEnvironment(), Visibility.Network).withConnector(10).create();
@@ -256,6 +271,28 @@ final class NetworkRegistryTest {
         @Callback(doc = "function():string -- Test callback.")
         public Object[] ping(final Context context, final Arguments arguments) {
             return new Object[]{"pong", arguments.checkString(0)};
+        }
+    }
+
+    private static final class InvalidCallbackEnvironment extends TestEnvironment {
+        @Callback
+        public Object[] valid(final Context context, final Arguments arguments) {
+            return new Object[]{"valid"};
+        }
+
+        @Callback
+        public String badReturn(final Context context, final Arguments arguments) {
+            return "bad";
+        }
+
+        @Callback
+        public Object[] badArgs() {
+            return new Object[]{"bad"};
+        }
+
+        @Callback
+        private Object[] privateCallback(final Context context, final Arguments arguments) {
+            return new Object[]{"bad"};
         }
     }
 
