@@ -22,6 +22,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 public class FloppyItem extends Item implements DriverItem {
+    private static final String DRIVER_DATA_TAG = "oc:data";
     private static final String FLOPPY_DATA_TAG = "oc:floppy";
 
     public FloppyItem(final Properties properties) {
@@ -30,9 +31,13 @@ public class FloppyItem extends Item implements DriverItem {
 
     @Override
     public Component getName(final ItemStack stack) {
-        final CompoundTag data = dataTag(stack);
-        if (data.contains(ItemRegistry.FLOPPY_LABEL_TAG)) {
-            return Component.literal(data.getString(ItemRegistry.FLOPPY_LABEL_TAG));
+        final CompoundTag rootData = rootData(stack);
+        if (rootData.contains(ItemRegistry.FLOPPY_LABEL_TAG)) {
+            return Component.literal(rootData.getString(ItemRegistry.FLOPPY_LABEL_TAG));
+        }
+        final CompoundTag driverData = dataTag(stack);
+        if (driverData.contains(ItemRegistry.FLOPPY_LABEL_TAG)) {
+            return Component.literal(driverData.getString(ItemRegistry.FLOPPY_LABEL_TAG));
         }
         return super.getName(stack);
     }
@@ -44,8 +49,8 @@ public class FloppyItem extends Item implements DriverItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        final CompoundTag data = dataTag(stack);
-        if (data.contains(ItemRegistry.FLOPPY_FACTORY_ID_TAG)) {
+        final CompoundTag rootData = rootData(stack);
+        if (rootData.contains(ItemRegistry.FLOPPY_FACTORY_ID_TAG)) {
             if (!(API.items instanceof ItemRegistry registry)) {
                 return null;
             }
@@ -58,7 +63,7 @@ public class FloppyItem extends Item implements DriverItem {
                 if (fileSystem == null) {
                     return null;
                 }
-                final String label = data.getString(ItemRegistry.FLOPPY_LABEL_TAG);
+                final String label = rootData.getString(ItemRegistry.FLOPPY_LABEL_TAG);
                 final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
                 if (environment != null && environment.node() instanceof li.cil.oc.api.network.Component component) {
                     component.setVisibility(Visibility.Network);
@@ -69,7 +74,7 @@ public class FloppyItem extends Item implements DriverItem {
             }
         }
 
-        return createWritableEnvironment(data.getCompound(FLOPPY_DATA_TAG), saved -> writeDataTag(stack, saved), data, host);
+        return createWritableEnvironment(dataTag(stack), saved -> writeDataTag(stack, saved), rootData, host);
     }
 
     static ManagedEnvironment createWritableEnvironment(final CompoundTag fileSystemData, final Consumer<CompoundTag> saveData, final CompoundTag itemData, final EnvironmentHost host) {
@@ -106,6 +111,20 @@ public class FloppyItem extends Item implements DriverItem {
         if (stack == null) {
             return new CompoundTag();
         }
+        final CompoundTag data = ItemDriverData.dataTag(stack);
+        if (data.isEmpty()) {
+            final CompoundTag legacyData = legacyDataTag(stack);
+            if (!legacyData.isEmpty()) {
+                data.merge(legacyData);
+            }
+        }
+        return data;
+    }
+
+    private static CompoundTag rootData(final ItemStack stack) {
+        if (stack == null) {
+            return new CompoundTag();
+        }
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         return customData == null ? new CompoundTag() : customData.copyTag();
     }
@@ -116,8 +135,16 @@ public class FloppyItem extends Item implements DriverItem {
         }
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
-        root.put(FLOPPY_DATA_TAG, data.copy());
+        root.put(DRIVER_DATA_TAG, data.copy());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    private static CompoundTag legacyDataTag(final ItemStack stack) {
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return new CompoundTag();
+        }
+        return customData.copyTag().getCompound(FLOPPY_DATA_TAG);
     }
 
     private record StackBackedEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData) implements ManagedEnvironment {

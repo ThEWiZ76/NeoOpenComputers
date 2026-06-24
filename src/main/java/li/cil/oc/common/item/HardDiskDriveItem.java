@@ -17,6 +17,7 @@ import net.minecraft.world.item.component.CustomData;
 import java.util.function.Consumer;
 
 public class HardDiskDriveItem extends Item implements DriverItem {
+    private static final String DRIVER_DATA_TAG = "oc:data";
     private static final String HDD_DATA_TAG = "oc:hdd";
     private final int tier;
 
@@ -74,11 +75,14 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         if (stack == null) {
             return new CompoundTag();
         }
-        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) {
-            return new CompoundTag();
+        final CompoundTag data = ItemDriverData.dataTag(stack);
+        if (data.isEmpty()) {
+            final CompoundTag legacyData = legacyDataTag(stack);
+            if (!legacyData.isEmpty()) {
+                data.merge(legacyData);
+            }
         }
-        return customData.copyTag().getCompound(HDD_DATA_TAG);
+        return data;
     }
 
     private static void writeDataTag(final ItemStack stack, final CompoundTag data) {
@@ -87,8 +91,16 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         }
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
-        root.put(HDD_DATA_TAG, data.copy());
+        root.put(DRIVER_DATA_TAG, data.copy());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    private static CompoundTag legacyDataTag(final ItemStack stack) {
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return new CompoundTag();
+        }
+        return customData.copyTag().getCompound(HDD_DATA_TAG);
     }
 
     private record StackBackedEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData) implements ManagedEnvironment {
