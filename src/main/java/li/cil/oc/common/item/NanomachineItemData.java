@@ -30,6 +30,10 @@ public final class NanomachineItemData {
         return root != null && root.contains(CONFIGURATION_TAG, CompoundTag.TAG_COMPOUND);
     }
 
+    public static boolean hasConfiguration(final ItemStack stack) {
+        return stack != null && !stack.isEmpty() && hasConfiguration(stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag());
+    }
+
     public static CompoundTag configuration(final CompoundTag root) {
         return hasConfiguration(root) ? root.getCompound(CONFIGURATION_TAG).copy() : new CompoundTag();
     }

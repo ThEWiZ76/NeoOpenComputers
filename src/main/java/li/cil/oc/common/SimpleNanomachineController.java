@@ -764,8 +764,12 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
         try {
             for (final ItemStack stack : player.getInventory().items) {
-                if (stack.is(ModItems.NANOMACHINES.get()) && !NanomachineItemData.hasConfiguration(NanomachineItemData.dataTag(stack))) {
-                    saveItemConfiguration(NanomachineItemData.dataTag(stack));
+                if (stack.is(ModItems.NANOMACHINES.get()) && !NanomachineItemData.hasConfiguration(stack)) {
+                    final ItemStack configured = stack.split(1);
+                    saveItemConfiguration(NanomachineItemData.dataTag(configured));
+                    if (!player.getInventory().add(configured)) {
+                        player.drop(configured, false);
+                    }
                     return new Object[]{"saved", true};
                 }
             }

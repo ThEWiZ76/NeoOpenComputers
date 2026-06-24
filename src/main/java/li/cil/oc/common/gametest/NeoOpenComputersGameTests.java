@@ -1638,7 +1638,7 @@ public final class NeoOpenComputersGameTests {
     @GameTest(template = "empty")
     public static void nanomachinesWirelessSaveConfigurationWritesBlankItem(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
-        final ItemStack blank = new ItemStack(ModItems.NANOMACHINES.get());
+        final ItemStack blank = new ItemStack(ModItems.NANOMACHINES.get(), 2);
         player.getInventory().add(blank);
         final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
         final li.cil.oc.api.network.WirelessEndpoint endpoint = (li.cil.oc.api.network.WirelessEndpoint) controller;
@@ -1660,6 +1660,14 @@ public final class NeoOpenComputersGameTests {
             .findFirst()
             .orElse(ItemStack.EMPTY);
         helper.assertFalse(saved.isEmpty(), "Nanomachines saveConfiguration did not write configuration to a blank item");
+        helper.assertTrue(saved.getCount() == 1, "Nanomachines saveConfiguration wrote configuration to more than one stacked item");
+        final ItemStack remainingBlank = player.getInventory().items.stream()
+            .filter(stack -> stack.is(ModItems.NANOMACHINES.get()))
+            .filter(stack -> !stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().contains("oc:configuration", CompoundTag.TAG_COMPOUND))
+            .findFirst()
+            .orElse(ItemStack.EMPTY);
+        helper.assertFalse(remainingBlank.isEmpty(), "Nanomachines saveConfiguration did not leave the rest of the blank stack untouched");
+        helper.assertTrue(remainingBlank.getCount() == 1, "Nanomachines saveConfiguration left wrong blank stack size");
         helper.succeed();
     }
 
