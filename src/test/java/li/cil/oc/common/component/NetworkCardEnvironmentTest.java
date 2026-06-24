@@ -337,10 +337,38 @@ final class NetworkCardEnvironmentTest {
 
         assertEquals(DeviceInfo.DeviceClass.Network, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Ethernet controller", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("42i520 (MPN-01)", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("1.0", metadata.get(DeviceInfo.DeviceAttribute.Version));
         assertEquals("8192", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
         assertEquals("16", metadata.get(DeviceInfo.DeviceAttribute.Size));
         assertEquals("8", metadata.get(DeviceInfo.DeviceAttribute.Width));
+    }
+
+    @Test
+    void wirelessDeviceInfoExposesUpstreamMetadata() {
+        OpenComputersApi.initialize();
+
+        Map<String, String> tierOne = new WirelessNetworkCardEnvironment(new TestHost(), 0).getDeviceInfo();
+        Map<String, String> tierTwo = new WirelessNetworkCardEnvironment(new TestHost(), 1).getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Network, tierOne.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Wireless ethernet controller", tierOne.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", tierOne.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("39i110 (LPPW-01)", tierOne.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("1.0", tierOne.get(DeviceInfo.DeviceAttribute.Version));
+        assertEquals("8192", tierOne.get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("1", tierOne.get(DeviceInfo.DeviceAttribute.Size));
+        assertEquals("16.0", tierOne.get(DeviceInfo.DeviceAttribute.Width));
+
+        assertEquals(DeviceInfo.DeviceClass.Network, tierTwo.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Wireless ethernet controller", tierTwo.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", tierTwo.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("62i230 (MPW-01)", tierTwo.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("2.0", tierTwo.get(DeviceInfo.DeviceAttribute.Version));
+        assertEquals("8192", tierTwo.get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("16", tierTwo.get(DeviceInfo.DeviceAttribute.Size));
+        assertEquals("400.0", tierTwo.get(DeviceInfo.DeviceAttribute.Width));
     }
 
     @Test

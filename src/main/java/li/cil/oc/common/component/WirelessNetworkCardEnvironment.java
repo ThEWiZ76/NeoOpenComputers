@@ -40,7 +40,7 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
             DeviceInfo.DeviceAttribute.Description, "Wireless ethernet controller",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, tier == 0 ? "39i110 (LPPW-01)" : "62i230 (MPW-01)",
             DeviceInfo.DeviceAttribute.Version, tier == 0 ? "1.0" : "2.0",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize()),

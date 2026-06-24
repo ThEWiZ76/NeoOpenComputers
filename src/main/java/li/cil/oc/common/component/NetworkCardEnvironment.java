@@ -50,7 +50,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Network,
             DeviceInfo.DeviceAttribute.Description, "Ethernet controller",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "42i520 (MPN-01)",
             DeviceInfo.DeviceAttribute.Version, "1.0",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.maxNetworkPacketSize()),
