@@ -5,12 +5,15 @@ import li.cil.oc.api.component.RackBusConnectable;
 import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.TextBuffer;
+import li.cil.oc.api.network.Analyzable;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.blockentity.ScreenItemEnvironment;
 import li.cil.oc.common.item.TerminalItem;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -26,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public final class TerminalServerRackMountableEnvironment extends AbstractManagedEnvironment implements RackMountable, DeviceInfo {
+public final class TerminalServerRackMountableEnvironment extends AbstractManagedEnvironment implements RackMountable, DeviceInfo, Analyzable {
     private static final String TAG_KIND = "kind";
     private static final String TAG_SCREEN = "screen";
     private static final String TAG_KEYBOARD = "keyboard";
@@ -160,6 +163,11 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
             DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "RemoteViewing EX"
         );
+    }
+
+    @Override
+    public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
+        return new Node[]{screen.node(), keyboard.node()};
     }
 
     private void connectVirtualTerminal() {

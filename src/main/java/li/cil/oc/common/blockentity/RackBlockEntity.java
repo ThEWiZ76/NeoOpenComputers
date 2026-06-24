@@ -33,7 +33,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.RackMenu;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, Analyzable {
@@ -147,28 +146,12 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
     @Override
     public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
-        final LinkedHashSet<Node> nodes = new LinkedHashSet<>();
-        for (final RackMountable mountable : mountables) {
-            if (mountable instanceof Analyzable analyzable) {
-                final Node[] analyzedNodes = analyzable.onAnalyze(player, side, hitX, hitY, hitZ);
-                if (analyzedNodes != null) {
-                    for (final Node node : analyzedNodes) {
-                        if (node != null) {
-                            nodes.add(node);
-                        }
-                    }
-                }
-                continue;
-            }
-            if (mountable == null || mountable.node() == null) {
-                continue;
-            }
-            nodes.add(mountable.node());
-            for (final Node neighbor : mountable.node().neighbors()) {
-                nodes.add(neighbor);
-            }
+        final Integer slot = slotAt(side, hitY);
+        if (slot != null) {
+            final RackMountable mountable = getMountable(slot);
+            return mountable instanceof Analyzable analyzable ? analyzable.onAnalyze(player, side, hitX, hitY, hitZ) : null;
         }
-        return nodes.toArray(Node[]::new);
+        return new Node[]{sidedNode(side)};
     }
 
     @Override
@@ -329,6 +312,15 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
     private static boolean isValidSlot(final int slot) {
         return slot >= 0 && slot < CONTAINER_SIZE;
+    }
+
+    private Integer slotAt(final Direction side, final float hitY) {
+        if (side != facing()) {
+            return null;
+        }
+        final int globalY = (int) (hitY * 16);
+        final int slot = ((15 - globalY) - 2) * CONTAINER_SIZE / (14 - 2);
+        return Math.max(0, Math.min(CONTAINER_SIZE - 1, slot));
     }
 
     private static boolean isRackMountableStack(final ItemStack stack) {

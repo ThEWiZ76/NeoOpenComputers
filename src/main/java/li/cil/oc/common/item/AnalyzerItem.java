@@ -16,6 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +33,12 @@ public class AnalyzerItem extends Item {
     }
 
     public static List<net.minecraft.network.chat.Component> describe(final Object target, final Direction side) {
+        return describe(target, side, 0.5F, 0.875F, 0.5F);
+    }
+
+    public static List<net.minecraft.network.chat.Component> describe(final Object target, final Direction side, final float hitX, final float hitY, final float hitZ) {
         final ArrayList<net.minecraft.network.chat.Component> lines = new ArrayList<>();
-        for (Node node : nodes(target, side)) {
+        for (Node node : nodes(target, side, hitX, hitY, hitZ)) {
             if (node != null) {
                 describeNode(node, lines);
             }
@@ -49,7 +54,11 @@ public class AnalyzerItem extends Item {
             return InteractionResult.PASS;
         }
         final BlockEntity blockEntity = level.getBlockEntity(context.getClickedPos());
-        final List<net.minecraft.network.chat.Component> lines = describe(blockEntity, context.getClickedFace());
+        final Vec3 clickLocation = context.getClickLocation();
+        final float hitX = (float) (clickLocation.x - context.getClickedPos().getX());
+        final float hitY = (float) (clickLocation.y - context.getClickedPos().getY());
+        final float hitZ = (float) (clickLocation.z - context.getClickedPos().getZ());
+        final List<net.minecraft.network.chat.Component> lines = describe(blockEntity, context.getClickedFace(), hitX, hitY, hitZ);
         if (lines.isEmpty()) {
             return InteractionResult.PASS;
         }
@@ -61,9 +70,9 @@ public class AnalyzerItem extends Item {
         return InteractionResult.CONSUME;
     }
 
-    private static Iterable<Node> nodes(final Object target, final Direction side) {
+    private static Iterable<Node> nodes(final Object target, final Direction side, final float hitX, final float hitY, final float hitZ) {
         if (target instanceof Analyzable analyzable) {
-            final Node[] nodes = analyzable.onAnalyze(null, side, 0, 0, 0);
+            final Node[] nodes = analyzable.onAnalyze(null, side, hitX, hitY, hitZ);
             if (nodes == null) {
                 return List.of();
             }

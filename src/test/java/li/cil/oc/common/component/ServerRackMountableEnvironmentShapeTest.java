@@ -1,16 +1,22 @@
 package li.cil.oc.common.component;
 
+import li.cil.oc.api.network.Analyzable;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Slot;
+import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 final class ServerRackMountableEnvironmentShapeTest {
     @Test
@@ -45,6 +51,19 @@ final class ServerRackMountableEnvironmentShapeTest {
         assertEquals("Terminal server", metadata.get(DeviceInfo.DeviceAttribute.Description));
         assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("RemoteViewing EX", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
+    void terminalServerAnalyzeReturnsVirtualScreenAndKeyboardNodesLikeUpstream() {
+        final TerminalServerRackMountableEnvironment terminalServer = new TerminalServerRackMountableEnvironment();
+        final Analyzable analyzable = assertInstanceOf(Analyzable.class, terminalServer);
+
+        final String[] componentNames = Arrays.stream(analyzable.onAnalyze(null, Direction.NORTH, 0.5F, 0.875F, 0.5F))
+            .map(Component.class::cast)
+            .map(Component::name)
+            .toArray(String[]::new);
+
+        assertArrayEquals(new String[]{"screen", "keyboard"}, componentNames);
     }
 
     @Test
