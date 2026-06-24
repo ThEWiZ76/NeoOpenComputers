@@ -124,7 +124,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
 
     @Override
     public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
-        return filesystem == null || filesystem.node() == null ? null : new Node[]{filesystem.node()};
+        return new Node[]{filesystem == null ? null : filesystem.node()};
     }
 
     @Override

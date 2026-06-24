@@ -18,6 +18,7 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -54,6 +55,13 @@ final class RaidBlockEntityTest {
 
         final var component = assertInstanceOf(li.cil.oc.api.network.Component.class, filesystem.node());
         assertEquals(Visibility.Network, component.visibility());
+    }
+
+    @Test
+    void onAnalyzeReturnsNullNodeArrayWhenRaidFilesystemMissingLikeUpstream() throws Exception {
+        final RaidBlockEntity raid = allocateRaid();
+
+        assertArrayEquals(new Node[]{null}, raid.onAnalyze(null, null, 0F, 0F, 0F));
     }
 
     private static RaidBlockEntity allocateRaid() throws Exception {

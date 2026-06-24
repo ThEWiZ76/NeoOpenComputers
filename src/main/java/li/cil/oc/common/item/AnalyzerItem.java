@@ -34,7 +34,9 @@ public class AnalyzerItem extends Item {
     public static List<net.minecraft.network.chat.Component> describe(final Object target, final Direction side) {
         final ArrayList<net.minecraft.network.chat.Component> lines = new ArrayList<>();
         for (Node node : nodes(target, side)) {
-            describeNode(node, lines);
+            if (node != null) {
+                describeNode(node, lines);
+            }
         }
         return lines;
     }
@@ -62,7 +64,16 @@ public class AnalyzerItem extends Item {
     private static Iterable<Node> nodes(final Object target, final Direction side) {
         if (target instanceof Analyzable analyzable) {
             final Node[] nodes = analyzable.onAnalyze(null, side, 0, 0, 0);
-            return nodes == null ? List.of() : List.of(nodes);
+            if (nodes == null) {
+                return List.of();
+            }
+            final ArrayList<Node> nonNullNodes = new ArrayList<>(nodes.length);
+            for (final Node node : nodes) {
+                if (node != null) {
+                    nonNullNodes.add(node);
+                }
+            }
+            return nonNullNodes;
         }
         if (target instanceof SidedEnvironment sidedEnvironment) {
             final Node node = sidedEnvironment.sidedNode(side);

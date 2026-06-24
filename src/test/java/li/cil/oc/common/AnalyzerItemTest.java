@@ -1,13 +1,16 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.item.AnalyzerItem;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -54,6 +57,13 @@ final class AnalyzerItemTest {
         assertTrue(contains(lines, "Product: Terrain Analyzer MkII"));
     }
 
+    @Test
+    void ignoresNullAnalyzableNodesLikeUpstream() {
+        List<Component> lines = AnalyzerItem.describe(new NullNodeAnalyzable());
+
+        assertTrue(lines.isEmpty());
+    }
+
     private static boolean contains(final List<Component> lines, final String expected) {
         return lines.stream().anyMatch(line -> line.getString().equals(expected));
     }
@@ -87,6 +97,13 @@ final class AnalyzerItemTest {
                 DeviceAttribute.Description, "Geolyzer",
                 DeviceAttribute.Vendor, "MightyPirates",
                 DeviceAttribute.Product, "Terrain Analyzer MkII");
+        }
+    }
+
+    private static final class NullNodeAnalyzable implements Analyzable {
+        @Override
+        public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
+            return new Node[]{null};
         }
     }
 }
