@@ -117,6 +117,15 @@ final class DataCardEnvironmentTest {
     }
 
     @Test
+    void decode64IgnoresWhitespaceLikeUpstreamApacheCodec() throws Exception {
+        OpenComputersApi.initialize();
+        DataCardEnvironment card = new DataCardEnvironment(0);
+        charge(card, 100D);
+
+        assertArrayEquals(bytes("hello"), (byte[]) card.decode64(null, new TestArguments(bytes("aGVs bG8=")))[0]);
+    }
+
+    @Test
     void operationsConsumeEnergyAndPauseAboveSoftLimit() throws Exception {
         OpenComputersApi.initialize();
         DataCardEnvironment card = new DataCardEnvironment(0);

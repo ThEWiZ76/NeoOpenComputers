@@ -96,7 +96,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
 
     @Callback(direct = true, limit = 32, doc = "function(data:string):string -- Decodes base64 bytes.")
     public Object[] decode64(final Context context, final Arguments args) throws Exception {
-        return new Object[]{Base64.getDecoder().decode(costedData(context, args, ModSettings.dataCardTrivialCost(), ModSettings.dataCardTrivialByteCost()))};
+        return new Object[]{Base64.getMimeDecoder().decode(costedData(context, args, ModSettings.dataCardTrivialCost(), ModSettings.dataCardTrivialByteCost()))};
     }
 
     @Callback(direct = true, limit = 4, doc = "function(data:string):string -- Compresses bytes using zlib deflate.")
