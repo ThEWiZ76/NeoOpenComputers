@@ -129,10 +129,10 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
         crc.update(costedData(context, args, ModSettings.dataCardTrivialCost(), ModSettings.dataCardTrivialByteCost()));
         final long value = crc.getValue();
         return new Object[]{new byte[]{
-            (byte) ((value >>> 24) & 0xFF),
-            (byte) ((value >>> 16) & 0xFF),
+            (byte) (value & 0xFF),
             (byte) ((value >>> 8) & 0xFF),
-            (byte) (value & 0xFF)
+            (byte) ((value >>> 16) & 0xFF),
+            (byte) ((value >>> 24) & 0xFF)
         }};
     }
 
