@@ -362,6 +362,25 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void generatedGraphCapsConnectorFanOutLikeUpstream() throws Exception {
+        withCachedConfig(ModSettings.NANOMACHINES_TRIGGER_QUOTA, 0.25D, () ->
+            withCachedConfig(ModSettings.NANOMACHINES_CONNECTOR_QUOTA, 0.2D, () ->
+                withCachedConfig(ModSettings.NANOMACHINE_MAX_INPUTS, 1, () ->
+                    withCachedConfig(ModSettings.NANOMACHINE_MAX_OUTPUTS, 2, () -> {
+                        NanomachinesRegistry registry = new NanomachinesRegistry();
+                        registry.addProvider(new ListBehaviorProvider(java.util.stream.IntStream.range(0, 20)
+                            .mapToObj(index -> (Behavior) new TestBehavior("behavior" + index))
+                            .toList()));
+                        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry, new Random(1L));
+                        CompoundTag tag = new CompoundTag();
+
+                        controller.save(tag);
+
+                        assertTrue(maxConnectorFanOut(tag.getList("behaviors", CompoundTag.TAG_COMPOUND)) <= ModSettings.nanomachineMaxOutputs());
+                    }))));
+    }
+
+    @Test
     void controllerRespondsToSetResponsePortWirelessCommand() {
         API.network = new NetworkRegistry();
         NanomachinesRegistry registry = new NanomachinesRegistry();
@@ -773,6 +792,20 @@ final class NanomachinesRegistryTest {
         for (int i = 0; i < behaviors.size(); i++) {
             for (final int input : behaviors.getCompound(i).getIntArray("triggerInputs")) {
                 counts[input]++;
+            }
+        }
+        int max = 0;
+        for (final int count : counts) {
+            max = Math.max(max, count);
+        }
+        return max;
+    }
+
+    private static int maxConnectorFanOut(final ListTag behaviors) {
+        final int[] counts = new int[16];
+        for (int i = 0; i < behaviors.size(); i++) {
+            for (final int connector : behaviors.getCompound(i).getIntArray("connectorInputs")) {
+                counts[connector]++;
             }
         }
         int max = 0;
