@@ -141,8 +141,8 @@ final class TerminalScreenShapeTest {
 
         assertEquals(12, payload.containerId());
         assertEquals(TerminalMousePayload.MOUSE_DOWN, payload.kind());
-        assertEquals(3.0D, payload.x());
-        assertEquals(3.0D, payload.y());
+        assertEquals(2.0D, payload.x());
+        assertEquals(2.0D, payload.y());
         assertEquals(0, payload.buttonOrDelta());
     }
 
@@ -154,8 +154,8 @@ final class TerminalScreenShapeTest {
         final TerminalMousePayload payload = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 45, 47, 0, 10, 20, snapshot);
 
         assertEquals(12, payload.containerId());
-        assertEquals(4.0D, payload.x());
-        assertEquals(1.0D, payload.y());
+        assertEquals(3.0D, payload.x());
+        assertEquals(0.0D, payload.y());
     }
 
     @Test

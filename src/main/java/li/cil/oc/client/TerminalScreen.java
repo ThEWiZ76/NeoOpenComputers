@@ -186,8 +186,8 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static TerminalMousePayload mousePayload(final TerminalMenu menu, final int kind, final double mouseX, final double mouseY, final int buttonOrDelta, final int left, final int top) {
-        final double column = 1 + Math.floor((mouseX - left - TEXT_LEFT) / CELL_WIDTH);
-        final double row = 1 + Math.floor((mouseY - top - TEXT_TOP) / LINE_HEIGHT);
+        final double column = Math.floor((mouseX - left - TEXT_LEFT) / CELL_WIDTH);
+        final double row = Math.floor((mouseY - top - TEXT_TOP) / LINE_HEIGHT);
         return new TerminalMousePayload(menu.containerId, kind, column, row, buttonOrDelta);
     }
 
@@ -196,7 +196,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             return null;
         }
         final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, left, top);
-        if (payload.x() < 1 || payload.y() < 1 || payload.x() > snapshot.width() || payload.y() > snapshot.height()) {
+        if (payload.x() < 0 || payload.y() < 0 || payload.x() >= snapshot.width() || payload.y() >= snapshot.height()) {
             return null;
         }
         return payload;

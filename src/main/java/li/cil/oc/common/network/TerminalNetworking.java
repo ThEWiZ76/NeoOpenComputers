@@ -93,10 +93,10 @@ public final class TerminalNetworking {
         return snapshot != null
             && snapshot.width() > 0
             && snapshot.height() > 0
-            && payload.x() >= 1
-            && payload.y() >= 1
-            && payload.x() <= snapshot.width()
-            && payload.y() <= snapshot.height();
+            && payload.x() >= 0
+            && payload.y() >= 0
+            && payload.x() < snapshot.width()
+            && payload.y() < snapshot.height();
     }
 
     static boolean acceptsTerminalInput(final TerminalScreenSnapshot snapshot) {
