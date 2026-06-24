@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ServerRackScreenShapeTest {
@@ -58,11 +59,33 @@ final class ServerRackScreenShapeTest {
 
     @Test
     void serverRackScreenMapsMouseToServerSlots() {
-        assertEquals(0, ServerRackScreen.serverSlotAt(8, 18, 0, 0));
-        assertEquals(8, ServerRackScreen.serverSlotAt(152, 18, 0, 0));
-        assertEquals(9, ServerRackScreen.serverSlotAt(8, 36, 0, 0));
+        assertEquals(0, ServerRackScreen.serverSlotAt(76, 7, 0, 0));
+        assertEquals(13, ServerRackScreen.serverSlotAt(148, 61, 0, 0));
+        assertEquals(16, ServerRackScreen.serverSlotAt(26, 34, 0, 0));
+        assertEquals(-1, ServerRackScreen.serverSlotAt(8, 18, 0, 0));
         assertEquals(-1, ServerRackScreen.serverSlotAt(170, 18, 0, 0));
-        assertEquals(-1, ServerRackScreen.serverSlotAt(8, 58, 0, 0));
+    }
+
+    @Test
+    void serverRackScreenUsesUpstreamTieredSlotLayout() {
+        assertEquals(new ServerRackMenu.ServerSlotPosition(76, 7), ServerRackScreen.slotPositionForTier(1, 0));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(100, 43), ServerRackScreen.slotPositionForTier(1, 4));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(76, 43), ServerRackScreen.slotPositionForTier(1, 11));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(26, 34), ServerRackScreen.slotPositionForTier(1, 12));
+        assertNull(ServerRackScreen.slotPositionForTier(1, 13));
+
+        assertEquals(new ServerRackMenu.ServerSlotPosition(148, 61), ServerRackScreen.slotPositionForTier(2, 13));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(76, 61), ServerRackScreen.slotPositionForTier(2, 15));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(26, 34), ServerRackScreen.slotPositionForTier(2, 16));
+    }
+
+    @Test
+    void serverRackScreenMapsMouseToTieredServerSlotsLikeUpstream() {
+        assertEquals(0, ServerRackScreen.serverSlotAt(76, 7, 0, 0, 1));
+        assertEquals(12, ServerRackScreen.serverSlotAt(26, 34, 0, 0, 1));
+        assertEquals(16, ServerRackScreen.serverSlotAt(26, 34, 0, 0, 2));
+        assertEquals(-1, ServerRackScreen.serverSlotAt(8, 18, 0, 0, 1));
+        assertEquals(-1, ServerRackScreen.serverSlotAt(148, 61, 0, 0, 1));
     }
 
     @Test

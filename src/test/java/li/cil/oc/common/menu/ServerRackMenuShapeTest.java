@@ -17,6 +17,7 @@ import java.lang.reflect.Proxy;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ServerRackMenuShapeTest {
@@ -109,6 +110,19 @@ final class ServerRackMenuShapeTest {
         assertEquals(ServerRackMenu.SLOT_KIND_CPU, ServerRackMenu.slotKindForTier(1, 2));
         assertEquals(ServerRackMenu.SLOT_KIND_EEPROM, ServerRackMenu.slotKindForTier(1, 12));
         assertEquals(ServerRackMenu.SLOT_KIND_NONE, ServerRackMenu.slotKindForTier(1, 13));
+    }
+
+    @Test
+    void slotPositionForTierUsesUpstreamServerLayout() {
+        assertEquals(new ServerRackMenu.ServerSlotPosition(76, 7), ServerRackMenu.slotPositionForTier(1, 0));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(100, 43), ServerRackMenu.slotPositionForTier(1, 4));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(76, 43), ServerRackMenu.slotPositionForTier(1, 11));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(26, 34), ServerRackMenu.slotPositionForTier(1, 12));
+        assertNull(ServerRackMenu.slotPositionForTier(1, 13));
+
+        assertEquals(new ServerRackMenu.ServerSlotPosition(148, 61), ServerRackMenu.slotPositionForTier(2, 13));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(76, 61), ServerRackMenu.slotPositionForTier(2, 15));
+        assertEquals(new ServerRackMenu.ServerSlotPosition(26, 34), ServerRackMenu.slotPositionForTier(2, 16));
     }
 
     @Test

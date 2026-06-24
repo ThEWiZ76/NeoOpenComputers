@@ -42,8 +42,13 @@ public class ServerRackMenu extends AbstractContainerMenu {
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 84;
     private static final int PLAYER_HOTBAR_Y = 142;
-    private static final int FIRST_SERVER_SLOT_X = 8;
-    private static final int FIRST_SERVER_SLOT_Y = 18;
+    private static final int FIRST_COLUMN_X = 76;
+    private static final int FIRST_SLOT_Y = 7;
+    private static final int LAST_SLOT_X = 26;
+    private static final int LAST_SLOT_Y = 34;
+    private static final int SLOT_STRIDE = 18;
+    private static final int HIDDEN_SLOT_X = -1000;
+    private static final int HIDDEN_SLOT_Y = -1000;
 
     private final Container serverInventory;
     private final ContainerData serverData;
@@ -63,8 +68,14 @@ public class ServerRackMenu extends AbstractContainerMenu {
         serverInventory.startOpen(playerInventory.player);
         addDataSlots(serverData);
 
+        final int tier = serverTierFor(serverInventory);
         for (int slot = 0; slot < SERVER_SLOT_COUNT; slot++) {
-            addSlot(new ServerRackSlot(serverInventory, slot, FIRST_SERVER_SLOT_X + (slot % 9) * 18, FIRST_SERVER_SLOT_Y + (slot / 9) * 18));
+            final ServerSlotPosition position = slotPositionForTier(tier, slot);
+            addSlot(new ServerRackSlot(
+                serverInventory,
+                slot,
+                position == null ? HIDDEN_SLOT_X : position.x(),
+                position == null ? HIDDEN_SLOT_Y : position.y()));
         }
         addPlayerInventory(playerInventory);
     }
@@ -148,6 +159,32 @@ public class ServerRackMenu extends AbstractContainerMenu {
         return ServerRackMountableEnvironment.slotTierLimit(tier, slot);
     }
 
+    public static ServerSlotPosition slotPositionForTier(final int tier, final int slot) {
+        final int verticalSlots = Math.min(3, 1 + Math.clamp(tier, 0, 2));
+        int index = 0;
+        for (int row = 0; row <= 1; row++) {
+            if (slot == index++) {
+                return new ServerSlotPosition(FIRST_COLUMN_X, FIRST_SLOT_Y + row * SLOT_STRIDE);
+            }
+        }
+        for (final int columnX : new int[]{100, 124, 148}) {
+            for (int row = 0; row <= verticalSlots; row++) {
+                if (slot == index++) {
+                    return new ServerSlotPosition(columnX, FIRST_SLOT_Y + row * SLOT_STRIDE);
+                }
+            }
+        }
+        for (int row = 2; row <= verticalSlots; row++) {
+            if (slot == index++) {
+                return new ServerSlotPosition(FIRST_COLUMN_X, FIRST_SLOT_Y + row * SLOT_STRIDE);
+            }
+        }
+        if (slot == index) {
+            return new ServerSlotPosition(LAST_SLOT_X, LAST_SLOT_Y);
+        }
+        return null;
+    }
+
     public static int serverStateFor(final Container serverInventory) {
         if (!(serverInventory instanceof ServerRackMountableEnvironment server)) {
             return STATE_EMPTY;
@@ -222,6 +259,20 @@ public class ServerRackMenu extends AbstractContainerMenu {
         };
     }
 
+    private static int serverTierFor(final Container serverInventory) {
+        if (serverInventory instanceof ServerRackMountableEnvironment server) {
+            return server.tier();
+        }
+        final int size = serverInventory.getContainerSize();
+        if (size >= ServerRackMountableEnvironment.slotCountForTier(2)) {
+            return 2;
+        }
+        if (size >= ServerRackMountableEnvironment.slotCountForTier(1)) {
+            return 1;
+        }
+        return 0;
+    }
+
     private void addPlayerInventory(final Inventory playerInventory) {
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
@@ -243,5 +294,8 @@ public class ServerRackMenu extends AbstractContainerMenu {
         public boolean mayPlace(final ItemStack stack) {
             return container.canPlaceItem(getSlotIndex(), stack);
         }
+    }
+
+    public record ServerSlotPosition(int x, int y) {
     }
 }

@@ -13,11 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
-    private static final int SERVER_SLOT_LEFT = 8;
-    private static final int SERVER_SLOT_TOP = 18;
     private static final int SERVER_SLOT_SIZE = 16;
-    private static final int SERVER_SLOT_STRIDE = 18;
-    private static final int SERVER_SLOT_COLUMNS = 9;
     private static final int STATUS_CONTROL_X = 152;
     private static final int STATUS_CONTROL_Y = 62;
     private static final int STATUS_CONTROL_SIZE = 10;
@@ -34,11 +30,16 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         final int top = topPos;
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
         guiGraphics.fill(left + 7, top + 16, left + 169, top + 58, 0xFF3B4252);
+        final int tier = serverTier(menu);
         for (int slot = 0; slot < ServerRackMenu.SERVER_SLOT_COUNT; slot++) {
-            drawSlot(guiGraphics, left + 7 + (slot % SERVER_SLOT_COLUMNS) * SERVER_SLOT_STRIDE, top + 17 + (slot / SERVER_SLOT_COLUMNS) * SERVER_SLOT_STRIDE, menu.slotKind(slot));
+            final ServerRackMenu.ServerSlotPosition position = slotPositionForTier(tier, slot);
+            if (position == null) {
+                continue;
+            }
+            drawSlot(guiGraphics, left + position.x() - 1, top + position.y() - 1, menu.slotKind(slot));
             final String label = slotAbbreviation(menu.slotKind(slot));
             if (!label.isEmpty()) {
-                guiGraphics.drawString(font, label, left + SERVER_SLOT_LEFT + (slot % SERVER_SLOT_COLUMNS) * SERVER_SLOT_STRIDE + 2, top + SERVER_SLOT_TOP + (slot / SERVER_SLOT_COLUMNS) * SERVER_SLOT_STRIDE + 4, 0xFFD8DEE9, false);
+                guiGraphics.drawString(font, label, left + position.x() + 2, top + position.y() + 4, 0xFFD8DEE9, false);
             }
         }
         guiGraphics.drawString(font, statusLabel(menu.serverState()), left + 8, top + 62, 0xFFD8DEE9, false);
@@ -50,7 +51,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
-        final int slot = serverSlotAt(mouseX, mouseY, leftPos, topPos);
+        final int slot = serverSlotAt(mouseX, mouseY, leftPos, topPos, serverTier(menu));
         if (slot >= 0) {
             guiGraphics.renderComponentTooltip(font, slotTooltip(menu.slotKind(slot), menu.slotTierLimit(slot), menu.getSlot(slot).hasItem()), mouseX, mouseY);
         } else if (statusControlAt(mouseX, mouseY, leftPos, topPos)) {
@@ -151,18 +152,36 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     }
 
     public static int serverSlotAt(final int mouseX, final int mouseY, final int left, final int top) {
-        final int x = mouseX - left - SERVER_SLOT_LEFT;
-        final int y = mouseY - top - SERVER_SLOT_TOP;
-        if (x < 0 || y < 0 || x % SERVER_SLOT_STRIDE >= SERVER_SLOT_SIZE || y % SERVER_SLOT_STRIDE >= SERVER_SLOT_SIZE) {
-            return -1;
+        return serverSlotAt(mouseX, mouseY, left, top, 2);
+    }
+
+    public static int serverSlotAt(final int mouseX, final int mouseY, final int left, final int top, final int tier) {
+        for (int slot = 0; slot < ServerRackMenu.SERVER_SLOT_COUNT; slot++) {
+            final ServerRackMenu.ServerSlotPosition position = slotPositionForTier(tier, slot);
+            if (position == null) {
+                continue;
+            }
+            final int x = left + position.x();
+            final int y = top + position.y();
+            if (mouseX >= x && mouseX < x + SERVER_SLOT_SIZE && mouseY >= y && mouseY < y + SERVER_SLOT_SIZE) {
+                return slot;
+            }
         }
-        final int column = x / SERVER_SLOT_STRIDE;
-        final int row = y / SERVER_SLOT_STRIDE;
-        if (column >= SERVER_SLOT_COLUMNS) {
-            return -1;
+        return -1;
+    }
+
+    public static ServerRackMenu.ServerSlotPosition slotPositionForTier(final int tier, final int slot) {
+        return ServerRackMenu.slotPositionForTier(tier, slot);
+    }
+
+    static int serverTier(final ServerRackMenu menu) {
+        if (menu.slotTierLimit(16) >= 0 || menu.slotKind(16) != ServerRackMenu.SLOT_KIND_NONE) {
+            return 2;
         }
-        final int slot = row * SERVER_SLOT_COLUMNS + column;
-        return slot < ServerRackMenu.SERVER_SLOT_COUNT ? slot : -1;
+        if (menu.slotTierLimit(12) >= 0 || menu.slotKind(12) != ServerRackMenu.SLOT_KIND_NONE) {
+            return 1;
+        }
+        return 0;
     }
 
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top, final int kind) {
@@ -189,4 +208,5 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             default -> "";
         };
     }
+
 }
