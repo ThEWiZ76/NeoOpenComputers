@@ -207,6 +207,26 @@ final class RackScreenShapeTest {
     }
 
     @Test
+    void rackScreenExposesOrientationTooltipLikeUpstream() {
+        final List<Component> tooltip = RackScreen.orientationTooltip();
+
+        assertEquals(4, tooltip.size());
+        assertTranslationKey("gui.neoopencomputers.rack.orientation.line1", tooltip.get(0));
+        assertTranslationKey("gui.neoopencomputers.rack.orientation.line2", tooltip.get(1));
+        assertTranslationKey("gui.neoopencomputers.rack.orientation.line3", tooltip.get(2));
+        assertTranslationKey("gui.neoopencomputers.rack.orientation.line4", tooltip.get(3));
+
+        assertEquals(0, RackScreen.busLabelAt(122, 20, 0, 0));
+        assertEquals(4, RackScreen.busLabelAt(157, 20 + 4 * 11 + 10, 0, 0));
+        assertEquals(-1, RackScreen.busLabelAt(121, 20, 0, 0));
+        assertEquals(-1, RackScreen.busLabelAt(158, 20, 0, 0));
+        assertEquals(-1, RackScreen.busLabelAt(122, 20 + 5 * 11, 0, 0));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.label.bottom", RackScreen.busLabel(Direction.NORTH, 0));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.label.top", RackScreen.busLabel(Direction.NORTH, 1));
+        assertTranslationKey("gui.neoopencomputers.rack.bus.label.back", RackScreen.busLabel(Direction.NORTH, 2));
+    }
+
+    @Test
     void rackScreenLabelsBusSidesRelativeToRackFacing() {
         assertTranslationKey("gui.neoopencomputers.rack.bus.side.top", RackScreen.sideLabel(Direction.NORTH, Direction.UP));
         assertTranslationKey("gui.neoopencomputers.rack.bus.side.bottom", RackScreen.sideLabel(Direction.NORTH, Direction.DOWN));

@@ -26,6 +26,10 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int MAPPING_CELL_SIZE = 3;
     private static final int MAPPING_BUS_STEP = 3;
     private static final int MAPPING_ROW_STEP = 3;
+    private static final int BUS_LABEL_X = 122;
+    private static final int BUS_LABEL_Y = 20;
+    private static final int BUS_LABEL_WIDTH = 36;
+    private static final int BUS_LABEL_STEP = 11;
     private static final Direction DEFAULT_FRONT = Direction.NORTH;
     private static final int BUS_SIDE_COUNT = Direction.values().length - 1;
 
@@ -61,9 +65,26 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         if (relayControlAt(mouseX, mouseY, leftPos, topPos)) {
             guiGraphics.renderComponentTooltip(font, relayTooltip(menu), mouseX, mouseY);
         }
+        if (busLabelAt(mouseX, mouseY, leftPos, topPos) >= 0) {
+            guiGraphics.renderComponentTooltip(font, orientationTooltip(), mouseX, mouseY);
+        }
         final int slot = controlSlotAt(mouseX, mouseY, leftPos, topPos);
         if (slot >= 0) {
             guiGraphics.renderComponentTooltip(font, controlTooltip(menu.rackState(slot), menu.rackMissingRequirements(slot)), mouseX, mouseY);
+        }
+    }
+
+    @Override
+    protected void renderLabels(final GuiGraphics guiGraphics, final int mouseX, final int mouseY) {
+        super.renderLabels(guiGraphics, mouseX, mouseY);
+        for (int busIndex = 0; busIndex < BUS_SIDE_COUNT; busIndex++) {
+            guiGraphics.drawString(
+                font,
+                busLabel(menu.rackFacing(), busIndex),
+                BUS_LABEL_X,
+                BUS_LABEL_Y + busIndex * BUS_LABEL_STEP,
+                0x404040,
+                false);
         }
     }
 
@@ -144,6 +165,15 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             }
         }
         return null;
+    }
+
+    static int busLabelAt(final double mouseX, final double mouseY, final int left, final int top) {
+        final int x = left + BUS_LABEL_X;
+        final int y = top + BUS_LABEL_Y;
+        if (mouseX < x || mouseX >= x + BUS_LABEL_WIDTH || mouseY < y || mouseY >= y + BUS_SIDE_COUNT * BUS_LABEL_STEP) {
+            return -1;
+        }
+        return (int) ((mouseY - y) / BUS_LABEL_STEP);
     }
 
     static Direction busSide(final int busIndex) {
@@ -259,12 +289,25 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         return tooltip;
     }
 
+    static List<Component> orientationTooltip() {
+        final List<Component> tooltip = new ArrayList<>();
+        tooltip.add(Component.translatable("gui.neoopencomputers.rack.orientation.line1"));
+        tooltip.add(Component.translatable("gui.neoopencomputers.rack.orientation.line2"));
+        tooltip.add(Component.translatable("gui.neoopencomputers.rack.orientation.line3"));
+        tooltip.add(Component.translatable("gui.neoopencomputers.rack.orientation.line4"));
+        return tooltip;
+    }
+
     static Component sideLabel(final Direction side) {
         return sideLabel(DEFAULT_FRONT, side);
     }
 
     static Component sideLabel(final Direction front, final Direction side) {
         return Component.translatable("gui.neoopencomputers.rack.bus.side." + localSideKey(front, side));
+    }
+
+    static Component busLabel(final Direction front, final int busIndex) {
+        return Component.translatable("gui.neoopencomputers.rack.bus.label." + localSideKey(front, busSide(front, busIndex)));
     }
 
     private static String localSideKey(final Direction front, final Direction side) {
