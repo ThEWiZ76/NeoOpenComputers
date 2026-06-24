@@ -16,9 +16,9 @@ import java.util.List;
 
 public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     private static final int SERVER_SLOT_SIZE = 16;
-    private static final int STATUS_CONTROL_X = 152;
-    private static final int STATUS_CONTROL_Y = 62;
-    private static final int STATUS_CONTROL_SIZE = 10;
+    private static final int STATUS_CONTROL_X = 48;
+    private static final int STATUS_CONTROL_Y = 33;
+    private static final int STATUS_CONTROL_SIZE = 18;
 
     public ServerRackScreen(final ServerRackMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
@@ -213,9 +213,9 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state) {
         final int color = state == ServerRackMenu.STATE_RUNNING ? 0xFF88C0D0 : state == ServerRackMenu.STATE_READY ? 0xFFA3BE8C : 0xFFD08770;
         guiGraphics.fill(left, top, left + STATUS_CONTROL_SIZE, top + STATUS_CONTROL_SIZE, 0xFF1F232B);
-        guiGraphics.fill(left + 3, top + 2, left + 5, top + 8, color);
-        guiGraphics.fill(left + 5, top + 3, left + 7, top + 7, color);
-        guiGraphics.fill(left + 7, top + 4, left + 8, top + 6, color);
+        guiGraphics.fill(left + 6, top + 4, left + 9, top + 14, color);
+        guiGraphics.fill(left + 9, top + 5, left + 12, top + 13, color);
+        guiGraphics.fill(left + 12, top + 7, left + 14, top + 11, color);
     }
 
     private static String slotAbbreviation(final int kind) {

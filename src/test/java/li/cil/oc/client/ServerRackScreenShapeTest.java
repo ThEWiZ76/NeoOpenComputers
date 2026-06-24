@@ -176,10 +176,11 @@ final class ServerRackScreenShapeTest {
 
     @Test
     void serverRackScreenMapsMouseToStatusControl() {
-        assertEquals(true, ServerRackScreen.statusControlAt(152, 62, 0, 0));
-        assertEquals(false, ServerRackScreen.statusControlAt(151, 62, 0, 0));
-        assertEquals(false, ServerRackScreen.statusControlAt(164, 62, 0, 0));
-        assertEquals(false, ServerRackScreen.statusControlAt(152, 74, 0, 0));
+        assertEquals(true, ServerRackScreen.statusControlAt(48, 33, 0, 0));
+        assertEquals(true, ServerRackScreen.statusControlAt(65, 50, 0, 0));
+        assertEquals(false, ServerRackScreen.statusControlAt(47, 33, 0, 0));
+        assertEquals(false, ServerRackScreen.statusControlAt(66, 33, 0, 0));
+        assertEquals(false, ServerRackScreen.statusControlAt(48, 51, 0, 0));
     }
 
     @Test
