@@ -1,5 +1,6 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Node;
@@ -19,6 +20,20 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class HologramBlockEntityTest {
+    @Test
+    void exposesUpstreamDeviceInfoMetadata() throws Exception {
+        HologramBlockEntity hologram = allocateHologram(1);
+
+        Map<String, String> metadata = hologram.getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Display, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Holographic projector", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("VirtualViewer H1-2", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals(Integer.toString(HologramBlockEntity.WIDTH * HologramBlockEntity.WIDTH * HologramBlockEntity.HEIGHT), metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("3", metadata.get(DeviceInfo.DeviceAttribute.Width));
+    }
+
     @Test
     void storesVoxelValues() throws Exception {
         HologramBlockEntity hologram = allocateHologram(1);

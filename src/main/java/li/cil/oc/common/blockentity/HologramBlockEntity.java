@@ -124,7 +124,7 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
         return Map.of(
             DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Display,
             DeviceInfo.DeviceAttribute.Description, "Holographic projector",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
             DeviceInfo.DeviceAttribute.Product, "VirtualViewer H1-" + (tier + 1),
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(WIDTH * WIDTH * HEIGHT),
             DeviceInfo.DeviceAttribute.Width, Integer.toString(colors.length)
