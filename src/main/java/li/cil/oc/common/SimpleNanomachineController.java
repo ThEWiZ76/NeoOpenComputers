@@ -116,7 +116,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     @Override
     public boolean setInput(final int index, final boolean value) {
-        if (value && !inputs[index] && activeInputCount() >= getMaxActiveInputs()) {
+        if (value && activeInputCount() >= getMaxActiveInputs()) {
             return false;
         }
         if (inputs[index] != value) {

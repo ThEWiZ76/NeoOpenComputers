@@ -158,6 +158,23 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerSetInputTrueFailsWhenAlreadyAtMaxActiveLikeUpstream() {
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        CompoundTag tag = new CompoundTag();
+        ListTag triggers = new ListTag();
+        final int maxActive = ModSettings.nanomachinesMaxInputsActive();
+        assertTrue(maxActive > 0);
+        for (int i = 0; i < maxActive; i++) {
+            triggers.add(triggerTag(true));
+        }
+        tag.put("triggers", triggers);
+        controller.load(tag);
+
+        assertFalse(controller.setInput(0, true));
+        assertTrue(controller.getInput(0));
+    }
+
+    @Test
     void controllerActivatesConnectorBackedBehaviorsFromSavedConfiguration() {
         TestBehavior linked = new TestBehavior("linked");
         NanomachinesRegistry registry = new NanomachinesRegistry();
