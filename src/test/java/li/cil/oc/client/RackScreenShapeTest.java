@@ -242,6 +242,20 @@ final class RackScreenShapeTest {
     }
 
     @Test
+    void rackScreenBuildsBusPointIndicatorsLikeUpstream() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14, rackDataWithFacingMappingAndPresence(Direction.NORTH, 1, 2, Direction.WEST));
+
+        final List<RackScreen.BusPointIndicator> indicators = RackScreen.busPointIndicators(menu, 1);
+
+        assertEquals(20, indicators.size());
+        assertEquals(new RackScreen.BusPointIndicator(45, 42, 3, 5, false), indicators.get(0));
+        assertEquals(new RackScreen.BusPointIndicator(45, 47, 3, 4, false), indicators.get(1));
+        assertEquals(new RackScreen.BusPointIndicator(44, 51, 5, 4, true), indicators.get(2));
+        assertEquals(new RackScreen.BusPointIndicator(45, 55, 3, 4, false), indicators.get(3));
+        assertEquals(new RackScreen.BusPointIndicator(88, 51, 5, 4, true), indicators.get(18));
+    }
+
+    @Test
     void rackScreenLabelsBusSidesRelativeToRackFacing() {
         assertTranslationKey("gui.neoopencomputers.rack.bus.side.top", RackScreen.sideLabel(Direction.NORTH, Direction.UP));
         assertTranslationKey("gui.neoopencomputers.rack.bus.side.bottom", RackScreen.sideLabel(Direction.NORTH, Direction.DOWN));

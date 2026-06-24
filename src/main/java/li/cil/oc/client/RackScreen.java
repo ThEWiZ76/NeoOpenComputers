@@ -42,6 +42,18 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int MASTER_WIRE_HEIGHT = 3;
     private static final int SLAVE_WIRE_HEIGHT = 2;
     private static final int BUS_PRESENT_WIDTH = 5;
+    private static final int BUS_START_X = 45;
+    private static final int BUS_START_Y = 22;
+    private static final int BUS_STEP = 11;
+    private static final int BUS_SLOT_STEP = 20;
+    private static final int MASTER_BUS_BLANK_WIDTH = 3;
+    private static final int MASTER_BUS_BLANK_HEIGHT = 5;
+    private static final int MASTER_BUS_PRESENT_WIDTH = 5;
+    private static final int MASTER_BUS_PRESENT_HEIGHT = 5;
+    private static final int SLAVE_BUS_BLANK_WIDTH = 3;
+    private static final int SLAVE_BUS_BLANK_HEIGHT = 4;
+    private static final int SLAVE_BUS_PRESENT_WIDTH = 5;
+    private static final int SLAVE_BUS_PRESENT_HEIGHT = 4;
     private static final Direction DEFAULT_FRONT = Direction.NORTH;
     private static final int BUS_SIDE_COUNT = Direction.values().length - 1;
 
@@ -62,6 +74,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             drawSlot(guiGraphics, left + FIRST_SLOT_X - 1 + slot * SLOT_SPACING, top + SLOT_Y - 1);
             drawControl(guiGraphics, left + FIRST_SLOT_X + 3 + slot * SLOT_SPACING, top + CONTROL_Y, controlColor(menu.rackState(slot)));
             drawWireIndicators(guiGraphics, menu, left, top, slot);
+            drawBusPointIndicators(guiGraphics, menu, left, top, slot);
             drawMappingControls(guiGraphics, menu, left, top, slot);
         }
     }
@@ -215,6 +228,34 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
                     WIRE_WIDTH,
                     wireHeight,
                     WireKind.WIRE));
+            }
+        }
+        return indicators;
+    }
+
+    static List<BusPointIndicator> busPointIndicators(final RackMenu menu, final int slot) {
+        final List<BusPointIndicator> indicators = new ArrayList<>();
+        for (int busIndex = 0; busIndex < BUS_SIDE_COUNT; busIndex++) {
+            final int busX = BUS_START_X + busIndex * BUS_STEP;
+            final int busY = BUS_START_Y + slot * BUS_SLOT_STEP;
+            for (int connectableIndex = 0; connectableIndex < 4; connectableIndex++) {
+                final boolean present = menu.rackNodePresent(slot, connectableIndex);
+                if (connectableIndex == 0) {
+                    indicators.add(new BusPointIndicator(
+                        present ? busX - 1 : busX,
+                        busY,
+                        present ? MASTER_BUS_PRESENT_WIDTH : MASTER_BUS_BLANK_WIDTH,
+                        present ? MASTER_BUS_PRESENT_HEIGHT : MASTER_BUS_BLANK_HEIGHT,
+                        present));
+                } else {
+                    final int row = connectableIndex - 1;
+                    indicators.add(new BusPointIndicator(
+                        present ? busX - 1 : busX,
+                        busY + MASTER_BUS_BLANK_HEIGHT + SLAVE_BUS_BLANK_HEIGHT * row,
+                        present ? SLAVE_BUS_PRESENT_WIDTH : SLAVE_BUS_BLANK_WIDTH,
+                        present ? SLAVE_BUS_PRESENT_HEIGHT : SLAVE_BUS_BLANK_HEIGHT,
+                        present));
+                }
             }
         }
         return indicators;
@@ -438,12 +479,27 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         }
     }
 
+    private static void drawBusPointIndicators(final GuiGraphics guiGraphics, final RackMenu menu, final int left, final int top, final int slot) {
+        for (final BusPointIndicator indicator : busPointIndicators(menu, slot)) {
+            final int color = indicator.present() ? 0xFFA3BE8C : 0xFF6C7480;
+            guiGraphics.fill(
+                left + indicator.x(),
+                top + indicator.y(),
+                left + indicator.x() + indicator.width(),
+                top + indicator.y() + indicator.height(),
+                color);
+        }
+    }
+
     enum WireKind {
         CONNECTOR,
         WIRE
     }
 
     record WireIndicator(int x, int y, int width, int height, WireKind kind) {
+    }
+
+    record BusPointIndicator(int x, int y, int width, int height, boolean present) {
     }
 
     record MappingControl(int slot, int connectableIndex, int busIndex) {
