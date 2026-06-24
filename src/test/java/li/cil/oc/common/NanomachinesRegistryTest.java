@@ -500,6 +500,23 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerIgnoresWirelessCommandsWithExtraArgumentsLikeUpstream() {
+        API.network = new NetworkRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 126}), sender);
+        runNanomachineCommandDelay(controller);
+        sender.lastPacket = null;
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "getPowerState", "extra"}), sender);
+        runNanomachineCommandDelay(controller);
+
+        assertNull(sender.lastPacket);
+    }
+
+    @Test
     void controllerRuntimeSaveRestoresUuidAndResponsePortLikeUpstream() {
         API.network = new NetworkRegistry();
         SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());

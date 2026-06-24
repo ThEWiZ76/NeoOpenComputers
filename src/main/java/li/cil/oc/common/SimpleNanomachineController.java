@@ -202,26 +202,26 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             return;
         }
         final Object command = commandValue(data[1]);
-        if ("setResponsePort".equals(command) && data.length >= 3 && commandValue(data[2]) instanceof Number port) {
+        if ("setResponsePort".equals(command) && data.length == 3 && commandValue(data[2]) instanceof Number port) {
             responsePort = clampPort(port.intValue());
             respond(sender, "port", responsePort);
-        } else if ("getPowerState".equals(command)) {
+        } else if ("getPowerState".equals(command) && data.length == 2) {
             respond(sender, "power", getLocalBuffer(), getLocalBufferSize());
-        } else if ("saveConfiguration".equals(command)) {
+        } else if ("saveConfiguration".equals(command) && data.length == 2) {
             respond(sender, saveConfigurationResponse());
-        } else if ("getTotalInputCount".equals(command)) {
+        } else if ("getTotalInputCount".equals(command) && data.length == 2) {
             respond(sender, "totalInputCount", getTotalInputCount());
-        } else if ("getSafeActiveInputs".equals(command)) {
+        } else if ("getSafeActiveInputs".equals(command) && data.length == 2) {
             respond(sender, "safeActiveInputs", getSafeActiveInputs());
-        } else if ("getMaxActiveInputs".equals(command)) {
+        } else if ("getMaxActiveInputs".equals(command) && data.length == 2) {
             respond(sender, "maxActiveInputs", getMaxActiveInputs());
-        } else if ("getInput".equals(command) && data.length >= 3 && commandValue(data[2]) instanceof Number index) {
+        } else if ("getInput".equals(command) && data.length == 3 && commandValue(data[2]) instanceof Number index) {
             try {
                 respond(sender, "input", index.intValue(), getInput(index.intValue() - 1));
             } catch (final RuntimeException e) {
                 respond(sender, "input", "error");
             }
-        } else if ("setInput".equals(command) && data.length >= 4 && commandValue(data[2]) instanceof Number index && commandValue(data[3]) instanceof Boolean value) {
+        } else if ("setInput".equals(command) && data.length == 4 && commandValue(data[2]) instanceof Number index && commandValue(data[3]) instanceof Boolean value) {
             try {
                 if (setInput(index.intValue() - 1, value)) {
                     respond(sender, "input", index.intValue(), getInput(index.intValue() - 1));
@@ -231,17 +231,17 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             } catch (final RuntimeException e) {
                 respond(sender, "input", "error");
             }
-        } else if ("getActiveEffects".equals(command)) {
+        } else if ("getActiveEffects".equals(command) && data.length == 2) {
             respond(sender, "effects", activeEffects());
-        } else if ("getHealth".equals(command) && player != null) {
+        } else if ("getHealth".equals(command) && data.length == 2 && player != null) {
             respond(sender, "health", player.getHealth(), player.getMaxHealth());
-        } else if ("getHunger".equals(command) && player != null) {
+        } else if ("getHunger".equals(command) && data.length == 2 && player != null) {
             respond(sender, "hunger", player.getFoodData().getFoodLevel(), player.getFoodData().getSaturationLevel());
-        } else if ("getAge".equals(command) && player != null) {
+        } else if ("getAge".equals(command) && data.length == 2 && player != null) {
             respond(sender, "age", idleSeconds());
-        } else if ("getName".equals(command) && player != null) {
+        } else if ("getName".equals(command) && data.length == 2 && player != null) {
             respond(sender, "name", player.getDisplayName().getString());
-        } else if ("getExperience".equals(command) && player != null) {
+        } else if ("getExperience".equals(command) && data.length == 2 && player != null) {
             respond(sender, "experience", player.experienceLevel);
         }
     }

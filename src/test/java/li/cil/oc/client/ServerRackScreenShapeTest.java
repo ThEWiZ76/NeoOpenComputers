@@ -214,13 +214,16 @@ final class ServerRackScreenShapeTest {
     }
 
     @Test
-    void serverRackScreenBuildsControlPayloadForMenu() throws ReflectiveOperationException {
+    void serverRackPowerControlPayloadUsesDesiredStateLikeUpstream() throws ReflectiveOperationException {
         final ServerRackMenu menu = allocateMenu(11);
 
-        final ServerRackControlPayload payload = ServerRackScreen.controlPayload(menu, RackControlPayload.TOGGLE);
+        final ServerRackControlPayload startPayload = ServerRackScreen.controlPayload(menu, ServerRackScreen.statusControlAction(ServerRackMenu.STATE_READY));
+        final ServerRackControlPayload stopPayload = ServerRackScreen.controlPayload(menu, ServerRackScreen.statusControlAction(ServerRackMenu.STATE_RUNNING));
 
-        assertEquals(11, payload.containerId());
-        assertEquals(RackControlPayload.TOGGLE, payload.action());
+        assertEquals(11, startPayload.containerId());
+        assertEquals(RackControlPayload.START, startPayload.action());
+        assertEquals(11, stopPayload.containerId());
+        assertEquals(RackControlPayload.STOP, stopPayload.action());
     }
 
     @Test

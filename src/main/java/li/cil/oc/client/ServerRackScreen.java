@@ -85,7 +85,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     @Override
     public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
         if (button == 0 && statusControlVisible(menu) && statusControlAt((int) mouseX, (int) mouseY, leftPos, topPos)) {
-            PacketDistributor.sendToServer(controlPayload(menu, RackControlPayload.TOGGLE));
+            PacketDistributor.sendToServer(controlPayload(menu, statusControlAction(menu.serverState())));
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -223,6 +223,10 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
 
     static ServerRackControlPayload controlPayload(final ServerRackMenu menu, final int action) {
         return new ServerRackControlPayload(menu.containerId, action);
+    }
+
+    static int statusControlAction(final int state) {
+        return state == ServerRackMenu.STATE_RUNNING ? RackControlPayload.STOP : RackControlPayload.START;
     }
 
     static boolean statusControlAt(final int mouseX, final int mouseY, final int left, final int top) {
