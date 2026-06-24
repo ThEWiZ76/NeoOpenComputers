@@ -155,10 +155,10 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     @Override
     public Map<String, String> getDeviceInfo() {
         return Map.of(
-            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.System,
+            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
             DeviceInfo.DeviceAttribute.Description, "Terminal server",
-            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
-            DeviceInfo.DeviceAttribute.Product, "Terminal Server"
+            DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
+            DeviceInfo.DeviceAttribute.Product, "RemoteViewing EX"
         );
     }
 
