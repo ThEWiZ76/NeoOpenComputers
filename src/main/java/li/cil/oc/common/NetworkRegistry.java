@@ -2,12 +2,14 @@ package li.cil.oc.common;
 
 import li.cil.oc.api.detail.Builder;
 import li.cil.oc.api.detail.NetworkAPI;
+import li.cil.oc.api.driver.MethodWhitelist;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.FilteredEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Network;
 import li.cil.oc.api.network.Node;
@@ -540,6 +542,10 @@ final class NetworkRegistry implements NetworkAPI {
 
         private Map<String, Method> discoverCallbacks(final Environment host) {
             final Map<String, Method> discovered = new LinkedHashMap<>();
+            final Set<String> whitelist = host instanceof MethodWhitelist methodWhitelist && methodWhitelist.whitelistedMethods() != null
+                ? Set.copyOf(Arrays.asList(methodWhitelist.whitelistedMethods()))
+                : Set.of();
+            final FilteredEnvironment filter = host instanceof FilteredEnvironment filtered ? filtered : null;
             Class<?> type = host.getClass();
             while (type != null) {
                 for (Method method : type.getDeclaredMethods()) {
@@ -547,7 +553,9 @@ final class NetworkRegistry implements NetworkAPI {
                     if (callback != null) {
                         method.setAccessible(true);
                         final String name = callback.value().isEmpty() ? method.getName() : callback.value();
-                        discovered.putIfAbsent(name, method);
+                        if ((whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
+                            discovered.putIfAbsent(name, method);
+                        }
                     }
                 }
                 type = type.getSuperclass();

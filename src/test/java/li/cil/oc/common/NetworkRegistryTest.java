@@ -4,9 +4,11 @@ import li.cil.oc.api.API;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.driver.MethodWhitelist;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.FilteredEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
@@ -170,6 +172,19 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void componentsHonorCallbackFiltersLikeUpstream() {
+        NetworkRegistry registry = new NetworkRegistry();
+        FilteredTestEnvironment host = new FilteredTestEnvironment();
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        assertTrue(component.methods().contains("ping"));
+        assertFalse(component.methods().contains("hidden"));
+        assertFalse(component.methods().contains("extra"));
+        assertThrows(NoSuchMethodException.class, () -> component.invoke("hidden", null));
+        assertThrows(NoSuchMethodException.class, () -> component.invoke("extra", null));
+    }
+
+    @Test
     void connectorBuffersClampToLocalSize() {
         NetworkRegistry registry = new NetworkRegistry();
         Connector connector = registry.newNode(new TestEnvironment(), Visibility.Network).withConnector(10).create();
@@ -212,7 +227,7 @@ final class NetworkRegistryTest {
         });
     }
 
-    private static final class TestEnvironment implements Environment {
+    private static class TestEnvironment implements Environment {
         private final List<Message> messages = new ArrayList<>();
         private Node node;
 
@@ -241,6 +256,28 @@ final class NetworkRegistryTest {
         @Callback(doc = "function():string -- Test callback.")
         public Object[] ping(final Context context, final Arguments arguments) {
             return new Object[]{"pong", arguments.checkString(0)};
+        }
+    }
+
+    private static final class FilteredTestEnvironment extends TestEnvironment implements FilteredEnvironment, MethodWhitelist {
+        @Override
+        public boolean isCallbackEnabled(final String name) {
+            return !"hidden".equals(name);
+        }
+
+        @Override
+        public String[] whitelistedMethods() {
+            return new String[]{"ping", "hidden"};
+        }
+
+        @Callback
+        public Object[] hidden(final Context context, final Arguments arguments) {
+            return new Object[]{"hidden"};
+        }
+
+        @Callback
+        public Object[] extra(final Context context, final Arguments arguments) {
+            return new Object[]{"extra"};
         }
     }
 

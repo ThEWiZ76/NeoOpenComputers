@@ -33,6 +33,7 @@ import java.util.zip.CRC32;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -74,6 +75,29 @@ final class DataCardEnvironmentTest {
 
         assertEquals(Visibility.Neighbors, card.node().reachability());
         assertEquals(Visibility.Neighbors, assertInstanceOf(li.cil.oc.api.network.Component.class, card.node()).visibility());
+    }
+
+    @Test
+    void exposesOnlyCallbacksAvailableForTierLikeUpstreamSubclasses() {
+        OpenComputersApi.initialize();
+
+        li.cil.oc.api.network.Component tierOne = assertInstanceOf(li.cil.oc.api.network.Component.class, new DataCardEnvironment(0).node());
+        li.cil.oc.api.network.Component tierTwo = assertInstanceOf(li.cil.oc.api.network.Component.class, new DataCardEnvironment(1).node());
+        li.cil.oc.api.network.Component tierThree = assertInstanceOf(li.cil.oc.api.network.Component.class, new DataCardEnvironment(2).node());
+
+        assertTrue(tierOne.methods().contains("encode64"));
+        assertTrue(tierOne.methods().contains("sha256"));
+        assertFalse(tierOne.methods().contains("encrypt"));
+        assertFalse(tierOne.methods().contains("random"));
+        assertFalse(tierOne.methods().contains("generateKeyPair"));
+
+        assertTrue(tierTwo.methods().contains("encrypt"));
+        assertTrue(tierTwo.methods().contains("random"));
+        assertFalse(tierTwo.methods().contains("generateKeyPair"));
+
+        assertTrue(tierThree.methods().contains("encrypt"));
+        assertTrue(tierThree.methods().contains("random"));
+        assertTrue(tierThree.methods().contains("generateKeyPair"));
     }
 
     @Test

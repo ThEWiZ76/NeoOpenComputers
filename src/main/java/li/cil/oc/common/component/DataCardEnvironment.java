@@ -7,6 +7,7 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.FilteredEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ModSettings;
@@ -35,14 +36,23 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.CRC32;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-public class DataCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public class DataCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo, FilteredEnvironment {
     private static final String COMPONENT_NAME = "data";
     private static final int MAX_RANDOM_SIZE = 1024;
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final Set<String> TIER_ONE_CALLBACKS = Set.of(
+        "getLimit", "encode64", "decode64", "deflate", "inflate", "crc32", "md5", "sha256");
+    private static final Set<String> TIER_TWO_CALLBACKS = Set.of(
+        "getLimit", "encode64", "decode64", "deflate", "inflate", "crc32", "md5", "sha256",
+        "encrypt", "decrypt", "random");
+    private static final Set<String> TIER_THREE_CALLBACKS = Set.of(
+        "getLimit", "encode64", "decode64", "deflate", "inflate", "crc32", "md5", "sha256",
+        "encrypt", "decrypt", "random", "generateKeyPair", "deserializeKey", "ecdh", "ecdsa");
 
     private final int tier;
 
@@ -63,6 +73,15 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
             DeviceInfo.DeviceAttribute.Product, productName(),
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(ModSettings.dataCardHardLimit())
         );
+    }
+
+    @Override
+    public boolean isCallbackEnabled(final String name) {
+        return switch (tier) {
+            case 0 -> TIER_ONE_CALLBACKS.contains(name);
+            case 1 -> TIER_TWO_CALLBACKS.contains(name);
+            default -> TIER_THREE_CALLBACKS.contains(name);
+        };
     }
 
     @Callback(direct = true, doc = "function():number -- Gets the maximum input size in bytes.")
