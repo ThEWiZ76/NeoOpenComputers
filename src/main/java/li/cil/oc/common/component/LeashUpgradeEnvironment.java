@@ -129,10 +129,13 @@ public final class LeashUpgradeEnvironment extends AbstractManagedEnvironment im
             return;
         }
 
+        final Entity holder = leashHolder();
         final AABB bounds = new AABB(hostPosition()).inflate(5D);
         for (final Entity entity : level.getEntitiesOfClass(Entity.class, bounds)) {
             if (leashedEntities.contains(entity.getUUID()) && entity instanceof Leashable leashable) {
-                leashable.dropLeash(true, false);
+                if (leashable.getLeashHolder() == holder) {
+                    leashable.dropLeash(true, false);
+                }
             }
         }
         leashedEntities.clear();
