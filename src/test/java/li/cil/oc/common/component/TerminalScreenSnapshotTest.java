@@ -39,6 +39,19 @@ final class TerminalScreenSnapshotTest {
     }
 
     @Test
+    void roundTripsSparseRowsAsBlankRows() {
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(3, 2, new String[]{"neo"});
+        final CompoundTag tag = new CompoundTag();
+
+        snapshot.save(tag);
+        final TerminalScreenSnapshot loaded = TerminalScreenSnapshot.load(tag);
+
+        assertEquals("neo", loaded.line(0));
+        assertEquals("", loaded.line(1));
+        assertEquals(true, snapshot.contentEquals(loaded));
+    }
+
+    @Test
     void loadsMissingSavedRowsAsBlankRows() {
         final CompoundTag tag = new CompoundTag();
         tag.putInt("width", 3);

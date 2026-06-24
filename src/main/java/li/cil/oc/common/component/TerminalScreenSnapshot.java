@@ -23,11 +23,11 @@ public record TerminalScreenSnapshot(int width, int height, String[] lines, int[
     public TerminalScreenSnapshot {
         width = Math.max(0, width);
         height = Math.max(0, height);
-        lines = lines == null ? new String[0] : Arrays.copyOf(lines, lines.length);
+        final String[] sourceLines = lines == null ? new String[0] : lines;
+        lines = new String[height];
         for (int index = 0; index < lines.length; index++) {
-            if (lines[index] == null) {
-                lines[index] = "";
-            }
+            final String line = index < sourceLines.length ? sourceLines[index] : "";
+            lines[index] = line == null ? "" : line;
         }
         foreground = normalizeColors(foreground, width, height, DEFAULT_FOREGROUND);
         background = normalizeColors(background, width, height, DEFAULT_BACKGROUND);
