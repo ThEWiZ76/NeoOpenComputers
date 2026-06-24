@@ -60,13 +60,11 @@ final class RackScreenShapeTest {
     }
 
     @Test
-    void rackScreenMapsBusGridCoordinatesLikeUpstreamButtons() {
-        final RackScreen.MappingControl first = RackScreen.mappingControlAt(53, 64, 0, 0);
-        final RackScreen.MappingControl last = RackScreen.mappingControlAt(53 + 3 * 18 + 4 * 3 + 2, 64 + 3 * 3 + 2, 0, 0);
-
-        assertEquals(new RackScreen.MappingControl(0, 0, 0), first);
-        assertEquals(new RackScreen.MappingControl(3, 3, 4), last);
-        assertNull(RackScreen.mappingControlAt(52, 64, 0, 0));
+    void rackScreenMapsBusHitboxesAtUpstreamBusPoints() {
+        assertEquals(new RackScreen.MappingControl(0, 0, 0), RackScreen.mappingControlAt(45, 23, 0, 0));
+        assertEquals(new RackScreen.MappingControl(0, 1, 0), RackScreen.mappingControlAt(45, 28, 0, 0));
+        assertEquals(new RackScreen.MappingControl(3, 3, 4), RackScreen.mappingControlAt(89 + 2, 83 + 5 + 4 * 2 + 1, 0, 0));
+        assertNull(RackScreen.mappingControlAt(53, 64, 0, 0));
     }
 
     @Test

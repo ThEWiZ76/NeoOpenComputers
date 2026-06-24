@@ -22,10 +22,6 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int RELAY_X = 151;
     private static final int RELAY_Y = 50;
     private static final int RELAY_SIZE = 10;
-    private static final int MAPPING_Y = 64;
-    private static final int MAPPING_CELL_SIZE = 3;
-    private static final int MAPPING_BUS_STEP = 3;
-    private static final int MAPPING_ROW_STEP = 3;
     private static final int BUS_LABEL_X = 122;
     private static final int BUS_LABEL_Y = 20;
     private static final int BUS_LABEL_WIDTH = 36;
@@ -50,10 +46,14 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int MASTER_BUS_BLANK_HEIGHT = 5;
     private static final int MASTER_BUS_PRESENT_WIDTH = 5;
     private static final int MASTER_BUS_PRESENT_HEIGHT = 5;
+    private static final int MASTER_BUS_HOVER_WIDTH = 3;
+    private static final int MASTER_BUS_HOVER_HEIGHT = 3;
     private static final int SLAVE_BUS_BLANK_WIDTH = 3;
     private static final int SLAVE_BUS_BLANK_HEIGHT = 4;
     private static final int SLAVE_BUS_PRESENT_WIDTH = 5;
     private static final int SLAVE_BUS_PRESENT_HEIGHT = 4;
+    private static final int SLAVE_BUS_HOVER_WIDTH = 3;
+    private static final int SLAVE_BUS_HOVER_HEIGHT = 2;
     private static final Direction DEFAULT_FRONT = Direction.NORTH;
     private static final int BUS_SIDE_COUNT = Direction.values().length - 1;
 
@@ -182,9 +182,10 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
             for (int connectableIndex = 0; connectableIndex < 4; connectableIndex++) {
                 for (int busIndex = 0; busIndex < BUS_SIDE_COUNT; busIndex++) {
-                    final int x = left + FIRST_SLOT_X + slot * SLOT_SPACING + busIndex * MAPPING_BUS_STEP;
-                    final int y = top + MAPPING_Y + connectableIndex * MAPPING_ROW_STEP;
-                    if (mouseX >= x && mouseX < x + MAPPING_CELL_SIZE && mouseY >= y && mouseY < y + MAPPING_CELL_SIZE) {
+                    final int x = left + busControlX(busIndex);
+                    final int y = top + busControlY(slot, connectableIndex);
+                    if (mouseX >= x && mouseX < x + busControlWidth(connectableIndex)
+                        && mouseY >= y && mouseY < y + busControlHeight(connectableIndex)) {
                         return new MappingControl(slot, connectableIndex, busIndex);
                     }
                 }
@@ -267,6 +268,26 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             return baseY;
         }
         return baseY + MASTER_CONNECTOR_HEIGHT + CONNECTOR_GAP + (SLAVE_CONNECTOR_HEIGHT + CONNECTOR_GAP) * (connectableIndex - 1);
+    }
+
+    private static int busControlX(final int busIndex) {
+        return BUS_START_X + busIndex * BUS_STEP;
+    }
+
+    private static int busControlY(final int slot, final int connectableIndex) {
+        final int busY = BUS_START_Y + slot * BUS_SLOT_STEP;
+        if (connectableIndex == 0) {
+            return busY + 1;
+        }
+        return busY + 1 + MASTER_BUS_BLANK_HEIGHT + SLAVE_BUS_BLANK_HEIGHT * (connectableIndex - 1);
+    }
+
+    private static int busControlWidth(final int connectableIndex) {
+        return connectableIndex == 0 ? MASTER_BUS_HOVER_WIDTH : SLAVE_BUS_HOVER_WIDTH;
+    }
+
+    private static int busControlHeight(final int connectableIndex) {
+        return connectableIndex == 0 ? MASTER_BUS_HOVER_HEIGHT : SLAVE_BUS_HOVER_HEIGHT;
     }
 
     private static Direction directionFromOrdinal(final int ordinal) {
@@ -458,11 +479,11 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
             }
             final int selectedSide = menu.rackNodeMapping(slot, connectableIndex);
             for (int busIndex = 0; busIndex < BUS_SIDE_COUNT; busIndex++) {
-                final int x = left + FIRST_SLOT_X + slot * SLOT_SPACING + busIndex * MAPPING_BUS_STEP;
-                final int y = top + MAPPING_Y + connectableIndex * MAPPING_ROW_STEP;
+                final int x = left + busControlX(busIndex);
+                final int y = top + busControlY(slot, connectableIndex);
                 final Direction side = busSide(menu.rackFacing(), busIndex);
                 final int color = side != null && selectedSide == side.ordinal() ? 0xFFA3BE8C : 0xFF6C7480;
-                guiGraphics.fill(x, y, x + MAPPING_CELL_SIZE, y + MAPPING_CELL_SIZE, color);
+                guiGraphics.fill(x, y, x + busControlWidth(connectableIndex), y + busControlHeight(connectableIndex), color);
             }
         }
     }
