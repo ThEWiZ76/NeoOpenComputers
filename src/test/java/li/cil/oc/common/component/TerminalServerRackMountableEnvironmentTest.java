@@ -117,7 +117,33 @@ final class TerminalServerRackMountableEnvironmentTest {
         throw new NoSuchFieldException(name);
     }
 
-    private record TestHost(double xPosition, double yPosition, double zPosition) implements EnvironmentHost {
+    private static final class TestHost implements EnvironmentHost {
+        private final double xPosition;
+        private final double yPosition;
+        private final double zPosition;
+        private int changed;
+
+        private TestHost(final double xPosition, final double yPosition, final double zPosition) {
+            this.xPosition = xPosition;
+            this.yPosition = yPosition;
+            this.zPosition = zPosition;
+        }
+
+        @Override
+        public double xPosition() {
+            return xPosition;
+        }
+
+        @Override
+        public double yPosition() {
+            return yPosition;
+        }
+
+        @Override
+        public double zPosition() {
+            return zPosition;
+        }
+
         @Override
         public Level world() {
             return null;
@@ -125,6 +151,7 @@ final class TerminalServerRackMountableEnvironmentTest {
 
         @Override
         public void markChanged() {
+            changed++;
         }
     }
 }

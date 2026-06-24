@@ -81,22 +81,23 @@ public class TerminalItem extends Item {
         if (mountable == null || mountable.node() == null) {
             return false;
         }
-        String screenAddress = null;
-        String keyboardAddress = null;
-        for (final Node node : mountable.node().neighbors()) {
-            if (node instanceof Component component && "screen".equals(component.name())) {
-                screenAddress = node.address();
-            } else if (node instanceof Component component && "keyboard".equals(component.name())) {
-                keyboardAddress = node.address();
-            }
+        if (!(mountable instanceof TerminalServerRackMountableEnvironment terminalServer)) {
+            return false;
         }
-        final String terminalServerAddress = mountable.node().address();
+        return bindToTerminalServer(terminal, terminalServer);
+    }
+
+    public static boolean bindToTerminalServer(final ItemStack terminal, final TerminalServerRackMountableEnvironment terminalServer) {
+        if (terminal == null || terminal.isEmpty() || terminalServer == null || terminalServer.node() == null) {
+            return false;
+        }
+        final String terminalServerAddress = terminalServer.node().address();
+        final String screenAddress = componentAddress(terminalServer.node(), "screen");
+        final String keyboardAddress = componentAddress(terminalServer.node(), "keyboard");
         if (terminalServerAddress == null || screenAddress == null || keyboardAddress == null) {
             return false;
         }
-        final String key = mountable instanceof TerminalServerRackMountableEnvironment terminalServer
-            ? terminalServer.bindTerminal(terminal)
-            : null;
+        final String key = terminalServer.bindTerminal(terminal);
         if (key == null || key.isBlank()) {
             return false;
         }
@@ -110,6 +111,15 @@ public class TerminalItem extends Item {
         root.put(DATA_TAG, data);
         terminal.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
         return true;
+    }
+
+    private static String componentAddress(final Node root, final String componentName) {
+        for (final Node node : root.neighbors()) {
+            if (node instanceof Component component && componentName.equals(component.name())) {
+                return node.address();
+            }
+        }
+        return null;
     }
 
     public static TerminalServerRackMountableEnvironment findBoundTerminalServer(final ItemStack terminal) {

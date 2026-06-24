@@ -129,6 +129,9 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         }
         final String key = UUID.randomUUID().toString();
         keys.add(key);
+        if (host != null) {
+            host.markChanged();
+        }
         return key;
     }
 
@@ -189,7 +192,16 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
 
     @Override
     public boolean onActivate(final Player player, final InteractionHand hand, final ItemStack heldItem, final float hitX, final float hitY) {
-        return false;
+        if (heldItem == null || !(heldItem.getItem() instanceof TerminalItem)) {
+            return false;
+        }
+        if (!TerminalItem.bindToTerminalServer(heldItem, this)) {
+            return false;
+        }
+        if (player != null) {
+            player.getInventory().setChanged();
+        }
+        return true;
     }
 
     @Override

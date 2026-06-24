@@ -4926,6 +4926,22 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalServerOnActivateBindsTerminalItemLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+
+        helper.assertTrue(terminalServer.onActivate(null, InteractionHand.MAIN_HAND, terminal, 0.5F, 0.5F),
+            "Terminal server mount activation did not bind terminal item");
+        helper.assertTrue(TerminalItem.findBoundTerminalServer(terminal) == terminalServer,
+            "Terminal bound through mount activation did not resolve terminal server");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void terminalItemBindsClickedRackSlotLikeUpstream(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
