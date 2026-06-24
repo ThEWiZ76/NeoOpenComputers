@@ -1194,7 +1194,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             if (index < 0 || index >= values.length) throw new IllegalArgumentException("missing argument #" + (index + 1));
             return values[index];
         }
-        @Override public boolean checkBoolean(final int index) { return (Boolean) checkAny(index); }
+        @Override public boolean checkBoolean(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Boolean bool) return bool;
+            throw typeError(index, "boolean");
+        }
         @Override public int checkInteger(final int index) {
             final Object value = checkAny(index);
             if (value instanceof Double number) return checkInteger(index, number);
@@ -1214,7 +1218,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             if (value instanceof Number number) return number.longValue();
             throw new IllegalArgumentException("bad argument #" + (index + 1) + " (integer expected)");
         }
-        @Override public double checkDouble(final int index) { return ((Number) checkAny(index)).doubleValue(); }
+        @Override public double checkDouble(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Number number) return number.doubleValue();
+            throw typeError(index, "number");
+        }
         @Override public String checkString(final int index) {
             final Object value = checkAny(index);
             if (value instanceof String string) return string;
@@ -1227,8 +1235,16 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             if (value instanceof String string) return string.getBytes(StandardCharsets.UTF_8);
             throw new IllegalArgumentException("bad argument #" + (index + 1) + " (byte array expected)");
         }
-        @Override public Map checkTable(final int index) { return (Map) checkAny(index); }
-        @Override public ItemStack checkItemStack(final int index) { return (ItemStack) checkAny(index); }
+        @Override public Map checkTable(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof Map table) return table;
+            throw typeError(index, "table");
+        }
+        @Override public ItemStack checkItemStack(final int index) {
+            final Object value = checkAny(index);
+            if (value instanceof ItemStack stack) return stack;
+            throw typeError(index, "item stack");
+        }
         @Override public Object optAny(final int index, final Object def) { return index >= 0 && index < values.length ? values[index] : def; }
         @Override public boolean optBoolean(final int index, final boolean def) { return index >= 0 && index < values.length ? checkBoolean(index) : def; }
         @Override public int optInteger(final int index, final int def) { return index >= 0 && index < values.length ? checkInteger(index) : def; }
@@ -1279,6 +1295,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             if (value instanceof Double number) return !number.isNaN();
             if (value instanceof Float number) return !number.isNaN();
             return value instanceof Number;
+        }
+
+        private static IllegalArgumentException typeError(final int index, final String expected) {
+            return new IllegalArgumentException("bad argument #" + (index + 1) + " (" + expected + " expected)");
         }
     }
 }

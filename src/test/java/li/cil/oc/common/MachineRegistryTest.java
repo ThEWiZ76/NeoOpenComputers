@@ -304,6 +304,18 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void valueCallbackArgumentsRejectBadTypesWithIllegalArgumentExceptionLikeUpstream() {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        NumericArgumentsValue value = new NumericArgumentsValue();
+
+        assertThrows(IllegalArgumentException.class, () -> machine.invoke(value, "checkBoolean", new Object[]{"bad"}));
+        assertThrows(IllegalArgumentException.class, () -> machine.invoke(value, "checkDouble", new Object[]{"bad"}));
+        assertThrows(IllegalArgumentException.class, () -> machine.invoke(value, "checkTable", new Object[]{"bad"}));
+        assertThrows(IllegalArgumentException.class, () -> machine.invoke(value, "checkItemStack", new Object[]{"bad"}));
+    }
+
+    @Test
     void machineInvokeRejectsMissingComponentsLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1848,6 +1860,26 @@ final class MachineRegistryTest {
                 arguments.isByteArray(0),
                 arguments.isByteArray(1)
             };
+        }
+
+        @Callback
+        public Object[] checkBoolean(final Context context, final Arguments arguments) {
+            return new Object[]{arguments.checkBoolean(0)};
+        }
+
+        @Callback
+        public Object[] checkDouble(final Context context, final Arguments arguments) {
+            return new Object[]{arguments.checkDouble(0)};
+        }
+
+        @Callback
+        public Object[] checkTable(final Context context, final Arguments arguments) {
+            return new Object[]{arguments.checkTable(0)};
+        }
+
+        @Callback
+        public Object[] checkItemStack(final Context context, final Arguments arguments) {
+            return new Object[]{arguments.checkItemStack(0)};
         }
     }
 
