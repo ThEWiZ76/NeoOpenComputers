@@ -31,7 +31,7 @@ public final class MotionSensorEnvironment extends AbstractManagedEnvironment im
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Motion sensor",
-        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates",
+        DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
         DeviceInfo.DeviceAttribute.Product, "Blinker M1K0",
         DeviceInfo.DeviceAttribute.Capacity, Integer.toString(RADIUS)
     );
