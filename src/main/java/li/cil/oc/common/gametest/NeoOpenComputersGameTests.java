@@ -1483,9 +1483,9 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void nanomachinesWirelessAgeCommandReportsPlayerAgeSeconds(final GameTestHelper helper) {
+    public static void nanomachinesWirelessAgeCommandReportsIdleSecondsLikeUpstream(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
-        player.tickCount = 85;
+        player.tickCount = 200;
         final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
         final li.cil.oc.api.network.WirelessEndpoint endpoint = (li.cil.oc.api.network.WirelessEndpoint) controller;
         final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
@@ -1499,7 +1499,7 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(sender.lastPacket != null, "Nanomachines age command did not respond");
         helper.assertTrue(sender.lastPacket.port() == 560, "Nanomachines age command used wrong response port");
-        helper.assertTrue(java.util.Arrays.equals(new Object[]{"nanomachines", "age", 4}, sender.lastPacket.data()), "Nanomachines age command returned wrong payload");
+        helper.assertTrue(java.util.Arrays.equals(new Object[]{"nanomachines", "age", 0}, sender.lastPacket.data()), "Nanomachines age command returned wrong payload");
         helper.succeed();
     }
 

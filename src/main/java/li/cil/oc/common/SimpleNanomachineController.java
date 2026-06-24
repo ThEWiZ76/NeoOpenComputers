@@ -9,8 +9,10 @@ import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.WirelessEndpoint;
 import li.cil.oc.common.damage.ModDamageSources;
 import li.cil.oc.common.item.NanomachineItemData;
+import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -215,7 +217,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         } else if ("getHunger".equals(command) && player != null) {
             respond(sender, "hunger", player.getFoodData().getFoodLevel(), player.getFoodData().getSaturationLevel());
         } else if ("getAge".equals(command) && player != null) {
-            respond(sender, "age", Math.max(0, player.tickCount / 20));
+            respond(sender, "age", idleSeconds());
         } else if ("getName".equals(command) && player != null) {
             respond(sender, "name", player.getDisplayName().getString());
         } else if ("getExperience".equals(command) && player != null) {
@@ -595,6 +597,14 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         final double range = ModSettings.nanomachinesCommandRange();
         final double effectiveRange = range * range;
         return Math.sqrt(dx * dx + dy * dy + dz * dz) <= effectiveRange;
+    }
+
+    private int idleSeconds() {
+        if (player instanceof ServerPlayer serverPlayer) {
+            final long seconds = Math.max(0L, (Util.getMillis() - serverPlayer.getLastActionTime()) / 1000L);
+            return (int) Math.min(Integer.MAX_VALUE, seconds);
+        }
+        return 0;
     }
 
     private String activeEffects() {
