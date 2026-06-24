@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.util.StateAware;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.blockentity.ScreenItemEnvironment;
 import li.cil.oc.common.item.TerminalItem;
@@ -43,6 +44,8 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     public TerminalServerRackMountableEnvironment() {
         OpenComputersApi.initialize();
         screen = new ScreenItemEnvironment(null, 1);
+        screen.setMaximumResolution(ModSettings.screenWidthByTier(2), ModSettings.screenHeightByTier(2));
+        screen.setMaximumColorDepth(ModSettings.screenDepthByTier(2));
         keyboard = new KeyboardItemEnvironment();
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {

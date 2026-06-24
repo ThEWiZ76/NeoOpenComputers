@@ -1,10 +1,22 @@
 package li.cil.oc.common.component;
 
+import li.cil.oc.api.internal.TextBuffer;
+import li.cil.oc.common.ModSettings;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class TerminalServerRackMountableEnvironmentTest {
+    @Test
+    void terminalServerVirtualScreenUsesTierThreeCapacityLikeUpstream() {
+        final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment();
+        final TextBuffer screen = terminal.screen();
+
+        assertEquals(ModSettings.screenWidthByTier(2), screen.getMaximumWidth());
+        assertEquals(ModSettings.screenHeightByTier(2), screen.getMaximumHeight());
+        assertEquals(ModSettings.screenDepthByTier(2), screen.getMaximumColorDepth());
+    }
+
     @Test
     void screenSnapshotPreservesTrailingSpacesLikeTextBuffer() {
         final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment();
