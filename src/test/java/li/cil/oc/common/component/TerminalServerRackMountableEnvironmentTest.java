@@ -1,12 +1,16 @@
 package li.cil.oc.common.component;
 
+import li.cil.oc.api.Network;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModSettings;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class TerminalServerRackMountableEnvironmentTest {
@@ -15,6 +19,20 @@ final class TerminalServerRackMountableEnvironmentTest {
         final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment();
 
         assertEquals(Visibility.None, terminal.node().reachability());
+    }
+
+    @Test
+    void registryPromotesAddresslessTerminalServersLikeUpstreamCache() throws Exception {
+        TerminalServerRegistry.clear();
+        final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment();
+        terminal.removeVirtualNodes();
+        terminal.node().remove();
+        clearNodeAddress(terminal.node());
+
+        TerminalServerRegistry.add(terminal);
+        Network.joinNewNetwork(terminal.node());
+
+        assertSame(terminal, TerminalServerRegistry.find(terminal.node().address()));
     }
 
     @Test
@@ -68,5 +86,23 @@ final class TerminalServerRackMountableEnvironmentTest {
         assertTrue(virtualNodes[0].isNeighborOf(terminal.node()));
         assertTrue(virtualNodes[1].isNeighborOf(terminal.node()));
         assertTrue(virtualNodes[0].isNeighborOf(virtualNodes[1]));
+    }
+
+    private static void clearNodeAddress(final Node node) throws ReflectiveOperationException {
+        final Field address = field(node.getClass(), "address");
+        address.setAccessible(true);
+        address.set(node, null);
+    }
+
+    private static Field field(final Class<?> type, final String name) throws NoSuchFieldException {
+        Class<?> current = type;
+        while (current != null) {
+            try {
+                return current.getDeclaredField(name);
+            } catch (final NoSuchFieldException ignored) {
+                current = current.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException(name);
     }
 }
