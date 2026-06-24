@@ -506,9 +506,9 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private void loadTriggerStates(final CompoundTag tag) {
         if (tag.contains(TAG_TRIGGERS, CompoundTag.TAG_LIST)) {
             final ListTag triggers = tag.getList(TAG_TRIGGERS, CompoundTag.TAG_COMPOUND);
-            ensureInputCount(triggers.size());
+            inputs = new boolean[triggers.size()];
             for (int i = 0; i < inputs.length; i++) {
-                inputs[i] = i < triggers.size() && triggers.getCompound(i).getBoolean(TAG_IS_ACTIVE);
+                inputs[i] = triggers.getCompound(i).getBoolean(TAG_IS_ACTIVE);
             }
             return;
         }
@@ -520,14 +520,6 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             if (activeInput >= 0 && activeInput < inputs.length) {
                 inputs[activeInput] = true;
             }
-        }
-    }
-
-    private void ensureInputCount(final int inputCount) {
-        if (inputCount > inputs.length) {
-            final boolean[] extendedInputs = new boolean[inputCount];
-            System.arraycopy(inputs, 0, extendedInputs, 0, inputs.length);
-            inputs = extendedInputs;
         }
     }
 

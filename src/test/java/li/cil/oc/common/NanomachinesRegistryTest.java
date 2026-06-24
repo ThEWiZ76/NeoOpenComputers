@@ -216,6 +216,7 @@ final class NanomachinesRegistryTest {
         registry.addProvider(new NamedBehaviorProvider(linked));
         SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
         CompoundTag tag = new CompoundTag();
+        tag.put("triggers", new ListTag());
         ListTag connectors = new ListTag();
         connectors.add(new CompoundTag());
         tag.put("connectors", connectors);
@@ -225,6 +226,7 @@ final class NanomachinesRegistryTest {
 
         controller.load(tag);
 
+        assertEquals(0, controller.getTotalInputCount());
         assertIterableEquals(List.of(linked), controller.getActiveBehaviors());
         assertEquals(1, controller.getInputCount(linked));
     }
