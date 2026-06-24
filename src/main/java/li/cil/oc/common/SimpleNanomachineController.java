@@ -344,11 +344,15 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     private void configureGeneratedGraph(final List<BehaviorEntry> entries) {
-        final int inputCount = Math.max(1, (int) Math.ceil(entries.size() * ModSettings.nanomachineTriggerQuota()));
+        final int inputCount = generatedTriggerCount(entries.size());
         final int connectorCount = (int) Math.ceil(entries.size() * ModSettings.nanomachineConnectorQuota());
         final List<Integer> triggerSourcePool = triggerSourcePool(inputCount);
         connectors = createConnectorEntries(triggerSourcePool, connectorCount);
         setBehaviorEntries(assignGeneratedInputs(entries, triggerSourcePool, connectors.size()));
+    }
+
+    private int generatedTriggerCount(final int behaviorCount) {
+        return Math.max(0, (int) Math.ceil(behaviorCount * ModSettings.nanomachineTriggerQuota()));
     }
 
     private List<Integer> triggerSourcePool(final int inputCount) {
@@ -473,7 +477,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     private int computeInputCount(final List<ConnectorEntry> connectors, final List<BehaviorEntry> entries) {
-        int inputCount = Math.max(1, (int) Math.ceil(entries.size() * ModSettings.nanomachineTriggerQuota()));
+        int inputCount = generatedTriggerCount(entries.size());
         for (final ConnectorEntry connector : connectors) {
             for (final int input : connector.triggerInputs()) {
                 inputCount = Math.max(inputCount, input + 1);

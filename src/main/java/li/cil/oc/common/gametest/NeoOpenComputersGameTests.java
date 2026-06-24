@@ -1491,11 +1491,13 @@ public final class NeoOpenComputersGameTests {
     public static void nanomachinesControllerStatePersistsAcrossRegistryReload(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         final li.cil.oc.common.NanomachinesRegistry firstRegistry = new li.cil.oc.common.NanomachinesRegistry();
+        firstRegistry.addProvider(new RecordingNanomachineProvider(new RecordingNanomachineBehavior()));
         final li.cil.oc.api.nanomachines.Controller firstController = firstRegistry.installController(player);
         firstController.setInput(0, true);
         firstController.changeBuffer(-1234D);
 
         final li.cil.oc.common.NanomachinesRegistry reloadedRegistry = new li.cil.oc.common.NanomachinesRegistry();
+        reloadedRegistry.addProvider(new RecordingNanomachineProvider(new RecordingNanomachineBehavior()));
         final li.cil.oc.api.nanomachines.Controller reloadedController = reloadedRegistry.getController(player);
 
         helper.assertTrue(reloadedController != null, "Nanomachines controller did not reload");

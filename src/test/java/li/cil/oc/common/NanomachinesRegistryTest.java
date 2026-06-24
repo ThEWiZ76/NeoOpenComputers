@@ -75,6 +75,18 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void emptyNanomachineGraphHasNoTriggerInputsLikeUpstream() {
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+
+        controller.save(tag);
+
+        assertEquals(0, controller.getTotalInputCount());
+        assertEquals(0, tag.getList("triggers", CompoundTag.TAG_COMPOUND).size());
+    }
+
+    @Test
     void controllerPersistsBehaviorConfigurationThroughProviders() {
         NanomachinesRegistry registry = new NanomachinesRegistry();
         TrackingBehaviorProvider provider = new TrackingBehaviorProvider();
@@ -444,7 +456,9 @@ final class NanomachinesRegistryTest {
     @Test
     void controllerRespondsToGetAndSetInputWirelessCommands() {
         API.network = new NetworkRegistry();
-        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new ListBehaviorProvider(List.of(new TestBehavior("input"))));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
         RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
         Network.joinWirelessNetwork(sender);
         WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
