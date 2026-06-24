@@ -27,7 +27,7 @@ final class DisassemblerBlockEntityTest {
 
         assertEquals(DeviceInfo.DeviceClass.Generic, metadata.get(DeviceInfo.DeviceAttribute.Class));
         assertEquals("Disassembler", metadata.get(DeviceInfo.DeviceAttribute.Description));
-        assertEquals("MightyPirates", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("Break.3R-100", metadata.get(DeviceInfo.DeviceAttribute.Product));
     }
 
