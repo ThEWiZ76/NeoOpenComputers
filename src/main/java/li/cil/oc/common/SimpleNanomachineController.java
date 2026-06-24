@@ -68,6 +68,9 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         this.graphRandom = graphRandom == null ? new Random(0L) : graphRandom;
         buffer = ModSettings.nanomachinesBuffer() * 0.25D;
         reconfigure();
+        if (isServerController()) {
+            Network.joinWirelessNetwork(this);
+        }
     }
 
     @Override
@@ -243,11 +246,17 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     void dispose() {
         disableActive(DisableReason.Default);
+        if (isServerController()) {
+            Network.leaveWirelessNetwork(this);
+        }
     }
 
     void update() {
         if (player != null && !player.isAlive()) {
             return;
+        }
+        if (isServerController()) {
+            Network.updateWirelessNetwork(this);
         }
         updateTicks++;
         if (commandDelay > 0) {
@@ -902,6 +911,10 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     private boolean isDeadPlayer() {
         return player != null && !player.isAlive();
+    }
+
+    private boolean isServerController() {
+        return player != null && !player.level().isClientSide();
     }
 
     private void applyReconfigureEffects() {

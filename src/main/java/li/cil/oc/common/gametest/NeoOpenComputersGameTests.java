@@ -1686,6 +1686,30 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesControllerJoinsWirelessNetworkLikeUpstream(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        li.cil.oc.api.Nanomachines.installController(player);
+        final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
+        Network.joinWirelessNetwork(sender);
+        try {
+            final double range = ModSettings.nanomachinesCommandRange();
+            Network.sendWirelessPacket(
+                sender,
+                range * range,
+                Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 558}));
+            runNanomachinesCommandDelay(player);
+
+            helper.assertTrue(sender.lastPacket != null, "Network-delivered nanomachines command did not reach installed controller");
+            helper.assertTrue(sender.lastPacket.port() == 558, "Network-delivered nanomachines response used wrong port");
+            helper.assertTrue(java.util.Arrays.equals(new Object[]{"nanomachines", "port", 558}, sender.lastPacket.data()), "Network-delivered nanomachines command returned wrong payload");
+        } finally {
+            Network.leaveWirelessNetwork(sender);
+            li.cil.oc.api.Nanomachines.uninstallController(player);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesWirelessHealthCommandReportsPlayerHealth(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setHealth(7.5F);
