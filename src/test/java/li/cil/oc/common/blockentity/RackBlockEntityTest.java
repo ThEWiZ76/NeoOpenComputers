@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.EnumSet;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -66,6 +67,27 @@ final class RackBlockEntityTest {
         assertTrue(southBus instanceof Connector);
         assertEquals(Visibility.Network, southBus.reachability());
         assertArrayEquals(new Node[]{southBus}, rack.onAnalyze(null, Direction.SOUTH, 0.5F, 0.5F, 0.5F));
+    }
+
+    @Test
+    void rackConnectsPrimaryMountableNodeToSideBusLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final RackBlockEntity rack = allocateRack();
+        final TestRackMountable mountable = new TestRackMountable("server");
+        final RackMountable[] mountables = new RackMountable[RackBlockEntity.CONTAINER_SIZE];
+        mountables[0] = mountable;
+        setField(rack, "mountables", mountables);
+
+        final Method connect = RackBlockEntity.class.getMethod("connect", int.class, int.class, Direction.class);
+        connect.invoke(rack, 0, -1, Direction.SOUTH);
+
+        final Node bus = rack.sidedNode(Direction.SOUTH);
+        assertTrue(mountable.node().isNeighborOf(bus));
+        assertSame(bus.network(), mountable.node().network());
+
+        connect.invoke(rack, 0, -1, null);
+
+        assertFalse(mountable.node().isNeighborOf(bus));
     }
 
     @Test

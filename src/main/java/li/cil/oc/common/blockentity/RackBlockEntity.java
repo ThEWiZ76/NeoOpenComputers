@@ -50,6 +50,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final CompoundTag[] mountableData = new CompoundTag[CONTAINER_SIZE];
     private final RackMountable[] mountables = new RackMountable[CONTAINER_SIZE];
+    private Direction[][] nodeMapping;
     private SidePlug[] sidePlugs;
 
     public RackBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -151,6 +152,36 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     @Override
     public boolean canConnect(final Direction side) {
         return side != null && side != facing();
+    }
+
+    public void connect(final int slot, final int connectableIndex, final Direction side) {
+        if (!isValidSlot(slot) || connectableIndex != -1) {
+            return;
+        }
+
+        final Direction newSide = canConnect(side) ? side : null;
+        final Direction oldSide = nodeMapping()[slot][0];
+        if (oldSide == newSide) {
+            return;
+        }
+
+        final RackMountable mountable = getMountable(slot);
+        if (mountable != null && oldSide != null && mountable.node() != null) {
+            final Node plug = sidedNode(oldSide);
+            if (plug != null) {
+                mountable.node().disconnect(plug);
+            }
+        }
+
+        nodeMapping()[slot][0] = newSide;
+
+        if (mountable != null && newSide != null && mountable.node() != null) {
+            final Node plug = sidedNode(newSide);
+            if (plug != null) {
+                Network.joinNewNetwork(plug);
+                mountable.node().connect(plug);
+            }
+        }
     }
 
     @Override
@@ -433,6 +464,13 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             sidePlugs[index] = new SidePlug();
         }
         return sidePlugs[index];
+    }
+
+    private Direction[][] nodeMapping() {
+        if (nodeMapping == null) {
+            nodeMapping = new Direction[CONTAINER_SIZE][4];
+        }
+        return nodeMapping;
     }
 
     private void removeSideNodes() {
