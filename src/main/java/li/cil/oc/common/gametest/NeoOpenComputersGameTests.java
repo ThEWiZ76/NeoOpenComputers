@@ -443,6 +443,12 @@ public final class NeoOpenComputersGameTests {
         assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()));
         assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TERMINAL_SERVER.get()));
         assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TRADING_UPGRADE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.DISK_DRIVE.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.SCREEN_TIER1.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.KEYBOARD.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.MOTION_SENSOR.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.GEOLYZER.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TRANSPOSER.get()));
         helper.succeed();
     }
 

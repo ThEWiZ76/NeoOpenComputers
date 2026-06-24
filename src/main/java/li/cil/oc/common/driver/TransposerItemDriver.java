@@ -6,6 +6,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.component.TransposerEnvironment;
+import li.cil.oc.common.item.ItemDriverData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
@@ -40,6 +41,6 @@ public final class TransposerItemDriver implements HostAware {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
-        return new CompoundTag();
+        return ItemDriverData.dataTag(stack);
     }
 }
