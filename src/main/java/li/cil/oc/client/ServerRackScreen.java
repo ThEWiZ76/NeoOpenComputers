@@ -7,6 +7,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
@@ -70,6 +72,19 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    protected void slotClicked(final Slot slot, final int slotId, final int mouseButton, final ClickType clickType) {
+        if (menu.isLockedSlot(slotId)) {
+            return;
+        }
+        super.slotClicked(slot, slotId, mouseButton, clickType);
+    }
+
+    @Override
+    protected boolean checkHotbarKeyPressed(final int keyCode, final int scanCode) {
+        return false;
     }
 
     public static Component slotLabel(final int kind) {

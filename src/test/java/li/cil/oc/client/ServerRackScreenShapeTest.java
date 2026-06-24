@@ -7,7 +7,9 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.Slot;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
@@ -18,6 +20,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -185,9 +188,32 @@ final class ServerRackScreenShapeTest {
         assertEquals(true, ServerRackScreen.statusControlVisible(allocateMenu(1, false)));
     }
 
+    @Test
+    void serverRackScreenLocksHotbarKeysLikeUpstream() throws ReflectiveOperationException {
+        final Method hotbarGuard = ServerRackScreen.class.getDeclaredMethod("checkHotbarKeyPressed", int.class, int.class);
+        final ServerRackScreen screen = allocateScreen();
+
+        hotbarGuard.setAccessible(true);
+
+        assertFalse((boolean) hotbarGuard.invoke(screen, 2, 0));
+    }
+
+    @Test
+    void serverRackScreenOverridesSlotClickForLockedStackGuard() throws NoSuchMethodException {
+        final Method slotClicked = ServerRackScreen.class.getDeclaredMethod("slotClicked", Slot.class, int.class, int.class, ClickType.class);
+
+        assertEquals(void.class, slotClicked.getReturnType());
+    }
+
     private static void assertTranslationKey(final String expected, final Component component) {
         assertTrue(component.getContents() instanceof TranslatableContents);
         assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());
+    }
+
+    private static ServerRackScreen allocateScreen() throws ReflectiveOperationException {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        return (ServerRackScreen) ((Unsafe) unsafeField.get(null)).allocateInstance(ServerRackScreen.class);
     }
 
     private static ServerRackMenu allocateMenu(final int containerId) throws ReflectiveOperationException {
