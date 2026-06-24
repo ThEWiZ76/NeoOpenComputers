@@ -11,6 +11,7 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -95,9 +96,39 @@ final class TerminalMenuShapeTest {
         assertEquals(null, menu.changedSnapshotPayload());
     }
 
+    @Test
+    void terminalMenuDoesNotStreamScreenChangesAfterTerminalKeyInvalidates() throws ReflectiveOperationException {
+        final TerminalServerRackMountableEnvironment terminalServer = new TerminalServerRackMountableEnvironment();
+        terminalKeys(terminalServer).add("old");
+        terminalServer.screen().setResolution(2, 1);
+        terminalServer.screen().setViewport(2, 1);
+        terminalServer.screen().set(0, 0, "AB", false);
+        final TerminalMenu menu = allocateMenu();
+        setField(menu, "snapshot", new TerminalScreenSnapshot(2, 1, new String[]{"CD"}));
+        setField(menu, "terminalServer", terminalServer);
+        setField(menu, "terminalKey", "old");
+
+        terminalKeys(terminalServer).clear();
+
+        assertEquals(null, menu.changedScreenPayload());
+    }
+
     private static TerminalMenu allocateMenu() throws ReflectiveOperationException {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
         return (TerminalMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(TerminalMenu.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> terminalKeys(final TerminalServerRackMountableEnvironment terminalServer) throws ReflectiveOperationException {
+        final Field keys = TerminalServerRackMountableEnvironment.class.getDeclaredField("keys");
+        keys.setAccessible(true);
+        return (List<String>) keys.get(terminalServer);
+    }
+
+    private static void setField(final Object instance, final String name, final Object value) throws ReflectiveOperationException {
+        final Field field = TerminalMenu.class.getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(instance, value);
     }
 }

@@ -66,7 +66,7 @@ public class TerminalMenu extends AbstractContainerMenu {
     }
 
     TerminalScreenSnapshotPayload changedSnapshotPayload() {
-        if (terminalServer == null) {
+        if (terminalServer == null || !stillValid(player)) {
             return null;
         }
         final TerminalScreenSnapshot currentSnapshot = terminalServer.screenSnapshot();
@@ -78,7 +78,7 @@ public class TerminalMenu extends AbstractContainerMenu {
     }
 
     CustomPacketPayload changedScreenPayload() {
-        if (terminalServer == null) {
+        if (terminalServer == null || !stillValid(player)) {
             return null;
         }
         final TerminalScreenSnapshot currentSnapshot = terminalServer.screenSnapshot();
