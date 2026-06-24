@@ -2,6 +2,7 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
+import li.cil.oc.api.component.RackBusConnectable;
 import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
@@ -11,6 +12,7 @@ import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
@@ -42,6 +44,7 @@ import java.util.List;
 public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, Analyzable {
     public static final int CONTAINER_SIZE = 4;
     public static final String DATA_TAG = "oc:rack";
+    private static final String NETWORK_MESSAGE = "network.message";
 
     private static final String TAG_MOUNTABLE_DATA = "oc:mountableData";
     private static final String TAG_SIDE_NODES = "oc:sideNodes";
@@ -52,6 +55,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     private final RackMountable[] mountables = new RackMountable[CONTAINER_SIZE];
     private Direction[][] nodeMapping;
     private SidePlug[] sidePlugs;
+    private SecondaryPlug[][] secondaryPlugs;
 
     public RackBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.RACK.get(), pos, blockState);
@@ -155,31 +159,46 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     public void connect(final int slot, final int connectableIndex, final Direction side) {
-        if (!isValidSlot(slot) || connectableIndex != -1) {
+        if (!isValidSlot(slot) || connectableIndex < -1 || connectableIndex > 2) {
             return;
         }
 
         final Direction newSide = canConnect(side) ? side : null;
-        final Direction oldSide = nodeMapping()[slot][0];
+        final int mappingIndex = connectableIndex + 1;
+        final Direction oldSide = nodeMapping()[slot][mappingIndex];
         if (oldSide == newSide) {
             return;
         }
 
         final RackMountable mountable = getMountable(slot);
         if (mountable != null && oldSide != null && mountable.node() != null) {
-            final Node plug = sidedNode(oldSide);
-            if (plug != null) {
-                mountable.node().disconnect(plug);
+            if (connectableIndex == -1) {
+                final Node plug = sidedNode(oldSide);
+                if (plug != null) {
+                    mountable.node().disconnect(plug);
+                }
+            } else {
+                removeSecondaryPlug(slot, connectableIndex);
             }
         }
 
-        nodeMapping()[slot][0] = newSide;
+        nodeMapping()[slot][mappingIndex] = newSide;
 
-        if (mountable != null && newSide != null && mountable.node() != null) {
+        if (mountable == null || newSide == null) {
+            return;
+        }
+
+        if (connectableIndex == -1 && mountable.node() != null) {
             final Node plug = sidedNode(newSide);
             if (plug != null) {
                 Network.joinNewNetwork(plug);
                 mountable.node().connect(plug);
+            }
+        } else if (connectableIndex >= 0 && connectableIndex < mountable.getConnectableCount()) {
+            final RackBusConnectable connectable = mountable.getConnectableAt(connectableIndex);
+            if (connectable != null && connectable.node() != null) {
+                Network.joinNewNetwork(connectable.node());
+                connectable.node().connect(secondaryPlug(slot, connectableIndex).node());
             }
         }
     }
@@ -461,7 +480,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         }
         final int index = side.ordinal();
         if (sidePlugs[index] == null) {
-            sidePlugs[index] = new SidePlug();
+            sidePlugs[index] = new SidePlug(side);
         }
         return sidePlugs[index];
     }
@@ -482,6 +501,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
                 plug.node().remove();
             }
         }
+        removeSecondaryPlugs();
     }
 
     private void tickServer() {
@@ -549,9 +569,11 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     private final class SidePlug implements Environment {
+        private final Direction side;
         private final Node node;
 
-        private SidePlug() {
+        private SidePlug(final Direction side) {
+            this.side = side;
             node = Network.newNode(this, Visibility.Network)
                 .withConnector(PowerDistributorBlockEntity.connectorBufferSize())
                 .create();
@@ -572,6 +594,115 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
         @Override
         public void onMessage(final Message message) {
+            if (NETWORK_MESSAGE.equals(message.name()) && message.data().length == 1 && message.data()[0] instanceof Packet packet) {
+                sendPacketToSecondaryConnectables(side, packet);
+            }
+        }
+    }
+
+    private SecondaryPlug secondaryPlug(final int slot, final int connectableIndex) {
+        if (secondaryPlugs == null) {
+            secondaryPlugs = new SecondaryPlug[CONTAINER_SIZE][3];
+        }
+        if (secondaryPlugs[slot][connectableIndex] == null) {
+            secondaryPlugs[slot][connectableIndex] = new SecondaryPlug(slot, connectableIndex);
+        }
+        return secondaryPlugs[slot][connectableIndex];
+    }
+
+    private void removeSecondaryPlug(final int slot, final int connectableIndex) {
+        if (secondaryPlugs == null || secondaryPlugs[slot][connectableIndex] == null) {
+            return;
+        }
+        secondaryPlugs[slot][connectableIndex].node().remove();
+        secondaryPlugs[slot][connectableIndex] = null;
+    }
+
+    private void removeSecondaryPlugs() {
+        if (secondaryPlugs == null) {
+            return;
+        }
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            for (int connectableIndex = 0; connectableIndex < 3; connectableIndex++) {
+                removeSecondaryPlug(slot, connectableIndex);
+            }
+        }
+    }
+
+    private void sendPacketToSecondaryConnectables(final Direction sourceSide, final Packet packet) {
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            final RackMountable mountable = getMountable(slot);
+            if (mountable == null) {
+                continue;
+            }
+            for (int connectableIndex = 0; connectableIndex < 3; connectableIndex++) {
+                if (nodeMapping()[slot][connectableIndex + 1] == sourceSide && connectableIndex < mountable.getConnectableCount()) {
+                    final RackBusConnectable connectable = mountable.getConnectableAt(connectableIndex);
+                    if (connectable != null) {
+                        connectable.receivePacket(packet);
+                    }
+                }
+            }
+        }
+    }
+
+    private void relayPacketFromSecondaryConnectable(final int sourceSlot, final int sourceConnectableIndex, final Packet packet, final Node sourceNode) {
+        final Direction side = nodeMapping()[sourceSlot][sourceConnectableIndex + 1];
+        if (side == null) {
+            return;
+        }
+        final Node bus = sidedNode(side);
+        if (bus != null) {
+            bus.sendToReachable(NETWORK_MESSAGE, packet);
+        }
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            final RackMountable mountable = getMountable(slot);
+            if (mountable == null) {
+                continue;
+            }
+            for (int connectableIndex = 0; connectableIndex < 3; connectableIndex++) {
+                if (slot == sourceSlot && connectableIndex == sourceConnectableIndex) {
+                    continue;
+                }
+                if (nodeMapping()[slot][connectableIndex + 1] == side && connectableIndex < mountable.getConnectableCount()) {
+                    final RackBusConnectable connectable = mountable.getConnectableAt(connectableIndex);
+                    if (connectable != null && connectable.node() != sourceNode) {
+                        connectable.receivePacket(packet);
+                    }
+                }
+            }
+        }
+    }
+
+    private final class SecondaryPlug implements Environment {
+        private final int slot;
+        private final int connectableIndex;
+        private final Node node;
+
+        private SecondaryPlug(final int slot, final int connectableIndex) {
+            this.slot = slot;
+            this.connectableIndex = connectableIndex;
+            node = Network.newNode(this, Visibility.Neighbors).create();
+        }
+
+        @Override
+        public Node node() {
+            return node;
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
+            if (NETWORK_MESSAGE.equals(message.name()) && message.data().length == 1 && message.data()[0] instanceof Packet packet) {
+                relayPacketFromSecondaryConnectable(slot, connectableIndex, packet, message.source());
+            }
         }
     }
 }
