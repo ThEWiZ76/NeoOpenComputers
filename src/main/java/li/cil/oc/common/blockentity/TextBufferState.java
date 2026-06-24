@@ -173,6 +173,23 @@ final class TextBufferState {
         return isInside(column, row) && backgroundPalette[row][column];
     }
 
+    double litRatio(final int viewportWidth, final int viewportHeight) {
+        final int columns = Math.min(Math.max(1, viewportWidth), width);
+        final int rows = Math.min(Math.max(1, viewportHeight), height);
+        int lit = 0;
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < columns; x++) {
+                final int codePoint = text[y][x];
+                final int foregroundColor = foreground[y][x];
+                final int backgroundColor = background[y][x];
+                if (isLit(codePoint, foregroundColor, backgroundColor)) {
+                    lit++;
+                }
+            }
+        }
+        return lit / (double) (columns * rows);
+    }
+
     void load(final CompoundTag tag) {
         final int loadedWidth = Math.max(1, tag.getInt(TAG_WIDTH));
         final int loadedHeight = Math.max(1, tag.getInt(TAG_HEIGHT));
@@ -271,5 +288,15 @@ final class TextBufferState {
 
     private boolean isInside(final int column, final int row) {
         return column >= 0 && row >= 0 && column < width && row < height;
+    }
+
+    private static boolean isLit(final int codePoint, final int foregroundColor, final int backgroundColor) {
+        if (codePoint == ' ') {
+            return backgroundColor != 0;
+        }
+        if (codePoint == 0x2588) {
+            return foregroundColor != 0;
+        }
+        return foregroundColor != 0 || backgroundColor != 0;
     }
 }

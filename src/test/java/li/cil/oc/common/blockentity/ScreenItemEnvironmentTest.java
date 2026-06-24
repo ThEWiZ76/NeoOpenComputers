@@ -3,6 +3,7 @@ package li.cil.oc.common.blockentity;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.api.internal.TextBuffer;
+import li.cil.oc.api.network.Connector;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
@@ -57,6 +58,25 @@ final class ScreenItemEnvironmentTest {
                 assertEquals(0.2D, tierThree.getEnergyCostPerTick(), 0.000_001D);
                 assertEquals(2D, tierThree.fullyLitEnergyCostPerTick(), 0.000_001D);
             })));
+    }
+
+    @Test
+    void litScreenConsumesConfiguredPowerOnUpdateLikeUpstream() {
+        OpenComputersApi.initialize();
+        ScreenItemEnvironment screen = new ScreenItemEnvironment(null, 0);
+        screen.setEnergyCostPerTick(1D);
+        screen.setResolution(1, 1);
+        screen.set(0, 0, "X", false);
+        Connector connector = (Connector) screen.node();
+        connector.setLocalBufferSize(20D);
+        connector.changeBuffer(20D);
+
+        assertEquals(true, screen.canUpdate());
+        for (int tick = 0; tick < ModSettings.mfuTickFrequency(); tick++) {
+            screen.update();
+        }
+
+        assertEquals(10D, connector.localBuffer(), 0.000_001D);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

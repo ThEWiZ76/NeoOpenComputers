@@ -4,6 +4,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.internal.TextBuffer;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModSettings;
@@ -166,6 +167,31 @@ final class ScreenBlockEntityTest {
                 assertEquals(0.2D, screen.getEnergyCostPerTick(), 0.000_001D);
                 assertEquals(2D, screen.fullyLitEnergyCostPerTick(), 0.000_001D);
             })));
+    }
+
+    @Test
+    void litScreenConsumesConfiguredPowerOnUpdateLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        ScreenBlockEntity screen = allocateScreen();
+        initializeBuffer(screen);
+        Method configureTier = ScreenBlockEntity.class.getDeclaredMethod("configureTier", int.class);
+        configureTier.setAccessible(true);
+        configureTier.invoke(screen, 0);
+        screen.setPowerState(true);
+        screen.setEnergyCostPerTick(1D);
+        screen.setResolution(1, 1);
+        screen.setForegroundColor(0xFFFFFF);
+        screen.set(0, 0, "X", false);
+        Connector connector = (Connector) screen.node();
+        connector.setLocalBufferSize(20D);
+        connector.changeBuffer(20D);
+
+        assertEquals(true, screen.canUpdate());
+        for (int tick = 0; tick < ModSettings.mfuTickFrequency(); tick++) {
+            screen.update();
+        }
+
+        assertEquals(10D, connector.localBuffer(), 0.000_001D);
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {

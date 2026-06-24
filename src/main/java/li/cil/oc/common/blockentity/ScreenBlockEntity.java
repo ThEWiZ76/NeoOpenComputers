@@ -10,6 +10,7 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.block.ScreenBlock;
@@ -39,6 +40,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private double energyCostPerTick;
     private int tier;
     private boolean powered = true;
+    private boolean hasPower = true;
+    private int updateTicks;
     private int maximumWidth = DEFAULT_WIDTH;
     private int maximumHeight = DEFAULT_HEIGHT;
     private double aspectWidth = 1.0D;
@@ -408,7 +411,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Override
     public boolean renderText() {
-        return renderingEnabled;
+        return renderingEnabled && powered && hasPower;
     }
 
     @Override
@@ -493,11 +496,25 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Override
     public boolean canUpdate() {
-        return false;
+        return true;
     }
 
     @Override
     public void update() {
+        if (!powered) {
+            return;
+        }
+        updateTicks++;
+        final int tickFrequency = Math.max(1, ModSettings.mfuTickFrequency());
+        if (updateTicks % tickFrequency != 0) {
+            return;
+        }
+        final double cost = fullyLitEnergyCostPerTick() * buffer.litRatio(viewportWidth, viewportHeight) * tickFrequency;
+        final boolean newHasPower = cost <= 0D || node() instanceof Connector connector && connector.tryChangeBuffer(-cost);
+        if (hasPower != newHasPower) {
+            hasPower = newHasPower;
+            markChanged();
+        }
     }
 
     @Override
@@ -506,7 +523,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (nbt.contains(TAG_NODE) && node() != null) {
             node().load(nbt.getCompound(TAG_NODE));
         }
-        powered = nbt.getBoolean("powered");
+        powered = !nbt.contains("powered") || nbt.getBoolean("powered");
+        hasPower = !nbt.contains("hasPower") || nbt.getBoolean("hasPower");
         width = Math.clamp(nbt.getInt("width"), 1, maximumWidth);
         height = Math.clamp(nbt.getInt("height"), 1, maximumHeight);
         viewportWidth = Math.clamp(nbt.getInt("viewportWidth"), 1, width);
@@ -533,6 +551,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         ensureTierConfigured();
         saveNode(nbt);
         nbt.putBoolean("powered", powered);
+        nbt.putBoolean("hasPower", hasPower);
         nbt.putInt("width", width);
         nbt.putInt("height", height);
         nbt.putInt("viewportWidth", viewportWidth);
