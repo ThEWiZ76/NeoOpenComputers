@@ -19,6 +19,7 @@ import java.util.List;
 public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     public static final ResourceLocation SERVER_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/server.png");
     public static final ResourceLocation POWER_BUTTON_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/button_power.png");
+    public static final ResourceLocation SLOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/slot.png");
 
     private static final int SERVER_SLOT_SIZE = 16;
     private static final int STATUS_CONTROL_X = 48;
@@ -42,11 +43,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             if (position == null) {
                 continue;
             }
-            drawSlot(guiGraphics, left + position.x() - 1, top + position.y() - 1, menu.slotKind(slot));
-            final String label = slotAbbreviation(menu.slotKind(slot));
-            if (!label.isEmpty()) {
-                guiGraphics.drawString(font, label, left + position.x() + 2, top + position.y() + 4, 0xFFD8DEE9, false);
-            }
+            drawSlot(guiGraphics, left + position.x() - 1, top + position.y() - 1);
         }
         guiGraphics.drawString(font, statusLabel(menu.serverState()), left + 8, top + 62, 0xFFD8DEE9, false);
         if (statusControlVisible(menu)) {
@@ -217,9 +214,8 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         return 0;
     }
 
-    private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top, final int kind) {
-        guiGraphics.fill(left - 1, top - 1, left + 17, top + 17, 0xFF1F232B);
-        guiGraphics.fill(left, top, left + 16, top + 16, kind == ServerRackMenu.SLOT_KIND_NONE ? 0xFF2E3440 : 0xFF4C566A);
+    private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
+        guiGraphics.blit(SLOT_TEXTURE, left, top, 0, 0, STATUS_CONTROL_SIZE, STATUS_CONTROL_SIZE);
     }
 
     private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state, final boolean hovered) {
@@ -231,18 +227,6 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             powerButtonTextureY(hovered),
             STATUS_CONTROL_SIZE,
             STATUS_CONTROL_SIZE);
-    }
-
-    private static String slotAbbreviation(final int kind) {
-        return switch (kind) {
-            case ServerRackMenu.SLOT_KIND_CARD -> "C";
-            case ServerRackMenu.SLOT_KIND_CPU -> "CPU";
-            case ServerRackMenu.SLOT_KIND_COMPONENT_BUS -> "B";
-            case ServerRackMenu.SLOT_KIND_MEMORY -> "M";
-            case ServerRackMenu.SLOT_KIND_HDD -> "D";
-            case ServerRackMenu.SLOT_KIND_EEPROM -> "E";
-            default -> "";
-        };
     }
 
 }

@@ -56,6 +56,13 @@ final class ServerRackScreenShapeTest {
     }
 
     @Test
+    void serverRackSlotsUseUpstreamSlotTextureWithoutTemporaryAbbreviations() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/slot.png"), ServerRackScreen.SLOT_TEXTURE);
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/gui/slot.png")));
+        assertFalse(hasDeclaredMethod("slotAbbreviation", int.class));
+    }
+
+    @Test
     void serverRackScreenExposesSlotLabels() throws NoSuchMethodException {
         final Method label = ServerRackScreen.class.getMethod("slotLabel", int.class);
         final Method tierLabel = ServerRackScreen.class.getMethod("slotTierLabel", int.class);
@@ -265,5 +272,14 @@ final class ServerRackScreenShapeTest {
             }
         });
         return menu;
+    }
+
+    private static boolean hasDeclaredMethod(final String name, final Class<?>... parameterTypes) {
+        try {
+            ServerRackScreen.class.getDeclaredMethod(name, parameterTypes);
+            return true;
+        } catch (final NoSuchMethodException ignored) {
+            return false;
+        }
     }
 }
