@@ -23,6 +23,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.OptionalInt;
@@ -44,7 +45,12 @@ public class TerminalItem extends Item {
         if (!(blockEntity instanceof RackBlockEntity rack)) {
             return InteractionResult.PASS;
         }
-        return bindToFirstTerminalServer(context.getItemInHand(), rack) ? InteractionResult.CONSUME : InteractionResult.PASS;
+        final Vec3 clickLocation = context.getClickLocation();
+        final float hitX = (float) (clickLocation.x - context.getClickedPos().getX());
+        final float hitY = (float) (clickLocation.y - context.getClickedPos().getY());
+        final float hitZ = (float) (clickLocation.z - context.getClickedPos().getZ());
+        final Integer slot = rack.slotAt(context.getClickedFace(), hitX, hitY, hitZ);
+        return slot != null && bindToTerminalServer(context.getItemInHand(), rack, slot) ? InteractionResult.CONSUME : InteractionResult.PASS;
     }
 
     @Override
@@ -134,15 +140,6 @@ public class TerminalItem extends Item {
             return null;
         }
         return new TerminalScreenSnapshotPayload(containerId, terminalServer.screenSnapshot());
-    }
-
-    private static boolean bindToFirstTerminalServer(final ItemStack terminal, final RackBlockEntity rack) {
-        for (int slot = 0; slot < rack.getContainerSize(); slot++) {
-            if (bindToTerminalServer(terminal, rack, slot)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static CompoundTag terminalData(final ItemStack terminal) {

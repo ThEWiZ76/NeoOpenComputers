@@ -146,7 +146,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
 
     @Override
     public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
-        final Integer slot = slotAt(side, hitY);
+        final Integer slot = slotAt(side, hitX, hitY, hitZ);
         if (slot != null) {
             final RackMountable mountable = getMountable(slot);
             return mountable instanceof Analyzable analyzable ? analyzable.onAnalyze(player, side, hitX, hitY, hitZ) : null;
@@ -314,7 +314,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         return slot >= 0 && slot < CONTAINER_SIZE;
     }
 
-    private Integer slotAt(final Direction side, final float hitY) {
+    public Integer slotAt(final Direction side, final float hitX, final float hitY, final float hitZ) {
         if (side != facing()) {
             return null;
         }

@@ -4460,6 +4460,32 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalItemBindsClickedRackSlotLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        rack.setItem(3, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, terminal);
+        final BlockPos absoluteRackPos = helper.absolutePos(rackPos);
+        final BlockHitResult hit = new BlockHitResult(
+            new Vec3(absoluteRackPos.getX() + 0.5D, absoluteRackPos.getY() + 0.1D, absoluteRackPos.getZ()),
+            Direction.NORTH,
+            absoluteRackPos,
+            false);
+
+        final InteractionResult result = terminal.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+        final CompoundTag data = terminal.get(DataComponents.CUSTOM_DATA).copyTag().getCompound(TerminalItem.DATA_TAG);
+
+        helper.assertTrue(result.consumesAction(), "Terminal click did not bind to rack");
+        helper.assertTrue(data.getString(TerminalItem.TERMINAL_SERVER_TAG).equals(rack.getMountable(3).node().address()),
+            "Terminal click did not bind to clicked rack slot");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void terminalServerRegistryTracksLiveMountables(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
