@@ -6,14 +6,12 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.DebugCardEnvironment;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 
 public class DebugCardItem extends Item implements DriverItem {
@@ -72,16 +70,7 @@ public class DebugCardItem extends Item implements DriverItem {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public CompoundTag dataTag(final ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return new CompoundTag();
-        }
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) {
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(new CompoundTag()));
-            customData = stack.get(DataComponents.CUSTOM_DATA);
-        }
-        return customData.getUnsafe();
+        return ItemDriverData.dataTag(stack);
     }
 }

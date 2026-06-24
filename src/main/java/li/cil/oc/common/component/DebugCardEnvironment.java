@@ -360,10 +360,20 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     }
 
     public static AccessContext loadAccess(final CompoundTag root) {
-        if (root == null || !root.contains(DATA_TAG)) {
+        if (root == null) {
             return null;
         }
-        final CompoundTag data = root.getCompound(DATA_TAG);
+        final AccessContext direct = loadAccessData(root);
+        if (direct != null) {
+            return direct;
+        }
+        if (!root.contains(DATA_TAG, Tag.TAG_COMPOUND)) {
+            return null;
+        }
+        return loadAccessData(root.getCompound(DATA_TAG));
+    }
+
+    private static AccessContext loadAccessData(final CompoundTag data) {
         if (!data.contains(PLAYER_TAG)) {
             return null;
         }
@@ -374,14 +384,12 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         if (root == null) {
             return;
         }
-        final CompoundTag data = root.contains(DATA_TAG) ? root.getCompound(DATA_TAG) : new CompoundTag();
-        data.remove(PLAYER_TAG);
-        data.remove(ACCESS_NONCE_TAG);
+        root.remove(PLAYER_TAG);
+        root.remove(ACCESS_NONCE_TAG);
         if (access != null) {
-            data.putString(PLAYER_TAG, access.player());
-            data.putString(ACCESS_NONCE_TAG, access.nonce());
+            root.putString(PLAYER_TAG, access.player());
+            root.putString(ACCESS_NONCE_TAG, access.nonce());
         }
-        root.put(DATA_TAG, data);
     }
 
     private void checkAccess() throws Exception {

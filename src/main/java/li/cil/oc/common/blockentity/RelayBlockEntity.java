@@ -62,6 +62,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private static final String TAG_STRENGTH = "oc:strength";
     private static final String TAG_REPEATER = "oc:isRepeater";
     private static final String TAG_RELAY_COOLDOWN = "oc:relayCooldown";
+    private static final String TAG_DRIVER_DATA = "oc:data";
     private static final String TAG_SIDE = "side";
     private static final String TAG_PACKET = "packet";
     private static final int MAX_TIER = 2;
@@ -562,7 +563,8 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
 
     private static String linkedChannel(final ItemStack stack) {
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        final CompoundTag tag = customData == null ? new CompoundTag() : customData.copyTag();
+        final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
+        final CompoundTag tag = root.getCompound(TAG_DRIVER_DATA);
         return LinkedNetwork.normalizeChannel(tag.getString(LinkedCardItem.TUNNEL_TAG));
     }
 

@@ -395,6 +395,9 @@ public final class NeoOpenComputersGameTests {
         driver.dataTag(stack).putString(LinkedCardItem.TUNNEL_TAG, "pair");
 
         helper.assertTrue("pair".equals(driver.dataTag(stack).getString(LinkedCardItem.TUNNEL_TAG)), "Linked card driver data tag did not persist tunnel");
+        helper.assertTrue("pair".equals(stack.get(DataComponents.CUSTOM_DATA).copyTag()
+            .getCompound("oc:data")
+            .getString(LinkedCardItem.TUNNEL_TAG)), "Linked card driver data tag not stored under oc:data");
         final ManagedEnvironment environment = driver.createEnvironment(stack, null);
         helper.assertTrue(environment instanceof LinkedCardEnvironment, "Linked card did not create linked environment");
         final LinkedCardEnvironment linked = (LinkedCardEnvironment) environment;
@@ -449,6 +452,8 @@ public final class NeoOpenComputersGameTests {
         assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.MOTION_SENSOR.get()));
         assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.GEOLYZER.get()));
         assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.TRANSPOSER.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.LINKED_CARD.get()));
+        assertCommonDriverDataTagPersists(helper, new ItemStack(ModItems.DEBUG_CARD.get()));
         helper.succeed();
     }
 
@@ -508,6 +513,9 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(driver != null, "No driver for debug card");
         DebugCardEnvironment.saveAccess(driver.dataTag(stack), new DebugCardEnvironment.AccessContext("Alice", "nonce-1"));
+        helper.assertTrue("Alice".equals(stack.get(DataComponents.CUSTOM_DATA).copyTag()
+            .getCompound("oc:data")
+            .getString("oc:player")), "Debug card access context not stored under oc:data");
 
         withCachedConfig(ModSettings.DEBUG_CARD_ACCESS, "whitelist", () ->
             withCachedConfig(ModSettings.DEBUG_CARD_WHITELIST, List.of("alice nonce-1"), () -> {
@@ -537,6 +545,9 @@ public final class NeoOpenComputersGameTests {
                 helper.assertTrue(access != null, "Debug card shift-use did not bind access context");
                 helper.assertTrue(playerName.equals(access.player()), "Debug card bound wrong player");
                 helper.assertTrue("nonce-1".equals(access.nonce()), "Debug card bound wrong nonce");
+                helper.assertTrue(playerName.equals(first.get(DataComponents.CUSTOM_DATA).copyTag()
+                    .getCompound("oc:data")
+                    .getString("oc:player")), "Debug card shift-use did not store access under oc:data");
 
                 final ItemStack second = first.use(helper.getLevel(), player, InteractionHand.MAIN_HAND).getObject();
                 helper.assertTrue(DebugCardEnvironment.loadAccess(driver.dataTag(second)) == null, "Debug card second shift-use did not unbind access context");
@@ -4334,8 +4345,13 @@ public final class NeoOpenComputersGameTests {
         Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(secondRelayPos));
         final RelayBlockEntity firstRelay = helper.getBlockEntity(firstRelayPos);
         final RelayBlockEntity secondRelay = helper.getBlockEntity(secondRelayPos);
-        firstRelay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.LINKED_CARD.get()));
-        secondRelay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.LINKED_CARD.get()));
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.LINKED_CARD.get()));
+        final ItemStack firstCard = new ItemStack(ModItems.LINKED_CARD.get());
+        final ItemStack secondCard = new ItemStack(ModItems.LINKED_CARD.get());
+        driver.dataTag(firstCard).putString(LinkedCardItem.TUNNEL_TAG, "relay-channel");
+        driver.dataTag(secondCard).putString(LinkedCardItem.TUNNEL_TAG, "relay-channel");
+        firstRelay.setItem(RelayBlockEntity.CARD_SLOT, firstCard);
+        secondRelay.setItem(RelayBlockEntity.CARD_SLOT, secondCard);
 
         final RecordingNetworkEnvironment source = new RecordingNetworkEnvironment();
         final RecordingNetworkEnvironment receiver = new RecordingNetworkEnvironment();

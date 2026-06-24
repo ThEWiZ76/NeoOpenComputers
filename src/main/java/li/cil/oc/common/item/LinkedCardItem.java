@@ -5,11 +5,9 @@ import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.LinkedCardEnvironment;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 
 public class LinkedCardItem extends Item implements HostAware {
     public static final String TUNNEL_TAG = "oc:tunnel";
@@ -44,16 +42,7 @@ public class LinkedCardItem extends Item implements HostAware {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public CompoundTag dataTag(final ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return new CompoundTag();
-        }
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) {
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(new CompoundTag()));
-            customData = stack.get(DataComponents.CUSTOM_DATA);
-        }
-        return customData.getUnsafe();
+        return ItemDriverData.dataTag(stack);
     }
 }
