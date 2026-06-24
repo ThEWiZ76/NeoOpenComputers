@@ -25,6 +25,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     private static final int STATUS_CONTROL_X = 48;
     private static final int STATUS_CONTROL_Y = 33;
     private static final int STATUS_CONTROL_SIZE = 18;
+    private static final int TRANSFER_HIGHLIGHT_COLOR = 0x80FFFFFF;
 
     public ServerRackScreen(final ServerRackMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
@@ -63,6 +64,7 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
     public void render(final GuiGraphics guiGraphics, final int mouseX, final int mouseY, final float partialTick) {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+        renderTransferHighlights(guiGraphics);
         renderTooltip(guiGraphics, mouseX, mouseY);
         final int slot = serverSlotAt(mouseX, mouseY, leftPos, topPos, serverTier(menu));
         if (slot >= 0) {
@@ -187,6 +189,24 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
             : "gui.neoopencomputers.server_rack.power.turn_on"));
     }
 
+    public static boolean shouldHighlightTransferTarget(
+        final boolean carriedEmpty,
+        final boolean currentPlayerInventory,
+        final boolean currentHasStack,
+        final boolean currentSelective,
+        final boolean currentAcceptsHovered,
+        final boolean hoveredPlayerInventory,
+        final boolean hoveredHasStack,
+        final boolean hoveredSelective,
+        final boolean hoveredAcceptsCurrent) {
+        if (!carriedEmpty || currentPlayerInventory == hoveredPlayerInventory) {
+            return false;
+        }
+        return currentPlayerInventory
+            ? currentHasStack && hoveredSelective && hoveredAcceptsCurrent
+            : hoveredPlayerInventory && hoveredHasStack && currentSelective && currentAcceptsHovered;
+    }
+
     static ServerRackControlPayload controlPayload(final ServerRackMenu menu, final int action) {
         return new ServerRackControlPayload(menu.containerId, action);
     }
@@ -199,6 +219,17 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
 
     static boolean statusControlVisible(final ServerRackMenu menu) {
         return !menu.isItem();
+    }
+
+    static boolean isPlayerInventorySlot(final int slotIndex) {
+        return slotIndex >= ServerRackMenu.SERVER_SLOT_COUNT;
+    }
+
+    static boolean isSelectiveSlot(final ServerRackMenu menu, final int slotIndex) {
+        return slotIndex >= 0
+            && slotIndex < ServerRackMenu.SERVER_SLOT_COUNT
+            && menu.slotKind(slotIndex) != ServerRackMenu.SLOT_KIND_NONE
+            && menu.slotTierLimit(slotIndex) >= 0;
     }
 
     public static int powerButtonTextureX(final int state) {
@@ -262,6 +293,43 @@ public class ServerRackScreen extends AbstractContainerScreen<ServerRackMenu> {
         final ResourceLocation slotTexture = slotIconTexture(kind);
         if (slotTexture != null) {
             guiGraphics.blit(slotTexture, iconLeft, iconTop, 0, 0, SERVER_SLOT_SIZE, SERVER_SLOT_SIZE, SERVER_SLOT_SIZE, SERVER_SLOT_SIZE);
+        }
+    }
+
+    private void renderTransferHighlights(final GuiGraphics guiGraphics) {
+        if (!menu.getCarried().isEmpty() || hoveredSlot == null) {
+            return;
+        }
+        final int hoveredIndex = menu.slots.indexOf(hoveredSlot);
+        if (hoveredIndex < 0) {
+            return;
+        }
+        final boolean hoveredPlayerInventory = isPlayerInventorySlot(hoveredIndex);
+        final boolean hoveredSelective = isSelectiveSlot(menu, hoveredIndex);
+        for (int slotIndex = 0; slotIndex < menu.slots.size(); slotIndex++) {
+            final Slot slot = menu.slots.get(slotIndex);
+            if (slot == hoveredSlot) {
+                continue;
+            }
+            final boolean currentPlayerInventory = isPlayerInventorySlot(slotIndex);
+            final boolean currentSelective = isSelectiveSlot(menu, slotIndex);
+            if (shouldHighlightTransferTarget(
+                true,
+                currentPlayerInventory,
+                slot.hasItem(),
+                currentSelective,
+                hoveredSlot.hasItem() && slot.mayPlace(hoveredSlot.getItem()),
+                hoveredPlayerInventory,
+                hoveredSlot.hasItem(),
+                hoveredSelective,
+                isSelectiveSlot(menu, hoveredIndex) && slot.hasItem() && hoveredSlot.mayPlace(slot.getItem()))) {
+                guiGraphics.fill(
+                    leftPos + slot.x,
+                    topPos + slot.y,
+                    leftPos + slot.x + SERVER_SLOT_SIZE,
+                    topPos + slot.y + SERVER_SLOT_SIZE,
+                    TRANSFER_HIGHLIGHT_COLOR);
+            }
         }
     }
 

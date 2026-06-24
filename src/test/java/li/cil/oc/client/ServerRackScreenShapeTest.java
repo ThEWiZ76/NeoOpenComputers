@@ -253,6 +253,18 @@ final class ServerRackScreenShapeTest {
         assertEquals(void.class, slotClicked.getReturnType());
     }
 
+    @Test
+    void serverRackScreenHighlightsValidCrossInventoryTargetsLikeUpstream() {
+        assertTrue(ServerRackScreen.shouldHighlightTransferTarget(true, true, true, false, false, false, false, true, true));
+        assertTrue(ServerRackScreen.shouldHighlightTransferTarget(true, false, false, true, true, true, true, false, false));
+
+        assertFalse(ServerRackScreen.shouldHighlightTransferTarget(false, true, true, false, false, false, false, true, true));
+        assertFalse(ServerRackScreen.shouldHighlightTransferTarget(true, true, true, false, false, true, false, true, true));
+        assertFalse(ServerRackScreen.shouldHighlightTransferTarget(true, true, true, false, false, false, false, false, true));
+        assertFalse(ServerRackScreen.shouldHighlightTransferTarget(true, true, false, false, false, false, false, true, true));
+        assertFalse(ServerRackScreen.shouldHighlightTransferTarget(true, false, false, false, true, true, true, false, false));
+    }
+
     private static void assertTranslationKey(final String expected, final Component component) {
         assertTrue(component.getContents() instanceof TranslatableContents);
         assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());
