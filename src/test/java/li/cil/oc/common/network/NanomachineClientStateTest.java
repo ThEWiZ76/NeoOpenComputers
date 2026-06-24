@@ -42,4 +42,17 @@ final class NanomachineClientStateTest {
         assertEquals(List.of(), NanomachineClientState.activeParticleEffects());
         assertEquals(0D, NanomachineClientState.fill());
     }
+
+    @Test
+    void invalidPowerPayloadValuesClampToEmptyState() {
+        NanomachineClientState.apply(new NanomachinePowerPayload(true, Double.NaN, Double.NaN, -3, -1, null));
+
+        assertTrue(NanomachineClientState.installed());
+        assertEquals(0D, NanomachineClientState.buffer());
+        assertEquals(0D, NanomachineClientState.maxBuffer());
+        assertEquals(0, NanomachineClientState.activeInputs());
+        assertEquals(0, NanomachineClientState.totalInputs());
+        assertEquals(List.of(), NanomachineClientState.activeParticleEffects());
+        assertEquals(0D, NanomachineClientState.fill());
+    }
 }

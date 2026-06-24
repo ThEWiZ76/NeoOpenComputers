@@ -19,8 +19,8 @@ public final class NanomachineClientState {
             return;
         }
         installed = true;
-        buffer = Math.max(0D, payload.buffer());
-        maxBuffer = Math.max(0D, payload.maxBuffer());
+        buffer = nonNegativeFinite(payload.buffer());
+        maxBuffer = nonNegativeFinite(payload.maxBuffer());
         if (maxBuffer > 0D) {
             buffer = Math.min(buffer, maxBuffer);
         }
@@ -64,5 +64,9 @@ public final class NanomachineClientState {
 
     public static double fill() {
         return installed && maxBuffer > 0D ? Math.clamp(buffer / maxBuffer, 0D, 1D) : 0D;
+    }
+
+    private static double nonNegativeFinite(final double value) {
+        return Double.isFinite(value) ? Math.max(0D, value) : 0D;
     }
 }
