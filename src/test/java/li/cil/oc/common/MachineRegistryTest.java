@@ -316,6 +316,17 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void valueCallbackOptionalArgumentsTreatNullAsMissingLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        Machine machine = API.machine.create(null);
+        NumericArgumentsValue value = new NumericArgumentsValue();
+
+        Object[] result = machine.invoke(value, "optionalDefaults", new Object[]{null, null, null});
+
+        assertArrayEquals(new Object[]{"fallback", 42, "any"}, result);
+    }
+
+    @Test
     void machineInvokeRejectsMissingComponentsLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1880,6 +1891,15 @@ final class MachineRegistryTest {
         @Callback
         public Object[] checkItemStack(final Context context, final Arguments arguments) {
             return new Object[]{arguments.checkItemStack(0)};
+        }
+
+        @Callback
+        public Object[] optionalDefaults(final Context context, final Arguments arguments) {
+            return new Object[]{
+                arguments.optString(0, "fallback"),
+                arguments.optInteger(1, 42),
+                arguments.optAny(2, "any")
+            };
         }
     }
 

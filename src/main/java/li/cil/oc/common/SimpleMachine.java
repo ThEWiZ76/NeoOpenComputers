@@ -1245,15 +1245,15 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             if (value instanceof ItemStack stack) return stack;
             throw typeError(index, "item stack");
         }
-        @Override public Object optAny(final int index, final Object def) { return index >= 0 && index < values.length ? values[index] : def; }
-        @Override public boolean optBoolean(final int index, final boolean def) { return index >= 0 && index < values.length ? checkBoolean(index) : def; }
-        @Override public int optInteger(final int index, final int def) { return index >= 0 && index < values.length ? checkInteger(index) : def; }
-        @Override public long optLong(final int index, final long def) { return index >= 0 && index < values.length ? checkLong(index) : def; }
-        @Override public double optDouble(final int index, final double def) { return index >= 0 && index < values.length ? checkDouble(index) : def; }
-        @Override public String optString(final int index, final String def) { return index >= 0 && index < values.length ? checkString(index) : def; }
-        @Override public byte[] optByteArray(final int index, final byte[] def) { return index >= 0 && index < values.length ? checkByteArray(index) : def; }
-        @Override public Map optTable(final int index, final Map def) { return index >= 0 && index < values.length ? checkTable(index) : def; }
-        @Override public ItemStack optItemStack(final int index, final ItemStack def) { return index >= 0 && index < values.length ? checkItemStack(index) : def; }
+        @Override public Object optAny(final int index, final Object def) { return isDefined(index) ? values[index] : def; }
+        @Override public boolean optBoolean(final int index, final boolean def) { return isDefined(index) ? checkBoolean(index) : def; }
+        @Override public int optInteger(final int index, final int def) { return isDefined(index) ? checkInteger(index) : def; }
+        @Override public long optLong(final int index, final long def) { return isDefined(index) ? checkLong(index) : def; }
+        @Override public double optDouble(final int index, final double def) { return isDefined(index) ? checkDouble(index) : def; }
+        @Override public String optString(final int index, final String def) { return isDefined(index) ? checkString(index) : def; }
+        @Override public byte[] optByteArray(final int index, final byte[] def) { return isDefined(index) ? checkByteArray(index) : def; }
+        @Override public Map optTable(final int index, final Map def) { return isDefined(index) ? checkTable(index) : def; }
+        @Override public ItemStack optItemStack(final int index, final ItemStack def) { return isDefined(index) ? checkItemStack(index) : def; }
         @Override public boolean isBoolean(final int index) { return index >= 0 && index < values.length && values[index] instanceof Boolean; }
         @Override public boolean isInteger(final int index) { return index >= 0 && index < values.length && isNonNaNNumber(values[index]); }
         @Override public boolean isLong(final int index) { return index >= 0 && index < values.length && isNonNaNNumber(values[index]); }
@@ -1295,6 +1295,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             if (value instanceof Double number) return !number.isNaN();
             if (value instanceof Float number) return !number.isNaN();
             return value instanceof Number;
+        }
+
+        private boolean isDefined(final int index) {
+            return index >= 0 && index < values.length && values[index] != null;
         }
 
         private static IllegalArgumentException typeError(final int index, final String expected) {
