@@ -151,7 +151,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
     private static int checkSlot(final Container container, final int slot) {
         final int index = slot - 1;
         if (index < 0 || index >= container.getContainerSize()) {
-            throw new IllegalArgumentException("slot index out of bounds");
+            throw new IllegalArgumentException("invalid slot");
         }
         return index;
     }
@@ -159,7 +159,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
     private static int checkSlot(final Database database, final int slot) {
         final int index = slot - 1;
         if (index < 0 || index >= database.size()) {
-            throw new IllegalArgumentException("slot index out of bounds");
+            throw new IllegalArgumentException("invalid slot");
         }
         return index;
     }

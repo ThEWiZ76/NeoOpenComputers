@@ -367,7 +367,7 @@ public final class TransposerEnvironment extends AbstractManagedEnvironment impl
     private static int checkSlot(final Container container, final int slot) {
         final int index = slot - 1;
         if (index < 0 || index >= container.getContainerSize()) {
-            throw new IllegalArgumentException("slot index out of bounds");
+            throw new IllegalArgumentException("invalid slot");
         }
         return index;
     }
@@ -375,7 +375,7 @@ public final class TransposerEnvironment extends AbstractManagedEnvironment impl
     private static int checkSlot(final Database database, final int slot) {
         final int index = slot - 1;
         if (index < 0 || index >= database.size()) {
-            throw new IllegalArgumentException("slot index out of bounds");
+            throw new IllegalArgumentException("invalid slot");
         }
         return index;
     }

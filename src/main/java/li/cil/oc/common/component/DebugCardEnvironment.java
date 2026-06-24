@@ -1215,7 +1215,7 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         private static int checkSlot(final int slots, final int slot) {
             final int index = slot - 1;
             if (index < 0 || index >= slots) {
-                throw new IllegalArgumentException("slot index out of bounds");
+                throw new IllegalArgumentException("invalid slot");
             }
             return index;
         }

@@ -188,7 +188,7 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
         final Database database = database(args.checkString(1));
         final int slot = args.checkInteger(2) - 1;
         if (slot < 0 || slot >= database.size()) {
-            throw new IllegalArgumentException("slot index out of bounds");
+            throw new IllegalArgumentException("invalid slot");
         }
         final boolean overwritten = !database.getStackInSlot(slot).isEmpty();
         database.setStackInSlot(slot, stack);

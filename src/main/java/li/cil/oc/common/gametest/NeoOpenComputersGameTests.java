@@ -2084,6 +2084,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void transposerReportsInvalidSlotLikeUpstream(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final int side = Direction.WEST.get3DDataValue();
+        helper.setBlock(pos, ModBlocks.TRANSPOSER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.CHEST);
+        final TransposerBlockEntity transposer = helper.getBlockEntity(pos);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) transposer.node();
+
+        assertComponentFailureMessage(helper, component, "getSlotStackSize", "invalid slot", side, 28);
+        assertComponentFailureMessage(helper, component, "getSlotMaxStackSize", "invalid slot", side, 28);
+        assertComponentFailureMessage(helper, component, "compareStacks", "invalid slot", side, 1, 28);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void transposerReportsInvalidTankIndexLikeUpstream(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(1, 1, 1);
         final int side = Direction.WEST.get3DDataValue();
@@ -4798,6 +4813,9 @@ public final class NeoOpenComputersGameTests {
                 final Object firstStack = stackMap.get(1);
                 final Object secondStack = stackMap.get(2);
                 helper.assertTrue(firstStack instanceof ItemStack first && first.getCount() == 4 && secondStack instanceof ItemStack second && second.getCount() == 1, "Inventory controller all-stack value mismatch");
+                assertMachineFailureMessage(helper, computer, address, "getSlotStackSize", "invalid slot", new Object[]{east, 28});
+                assertMachineFailureMessage(helper, computer, address, "getSlotMaxStackSize", "invalid slot", new Object[]{east, 28});
+                assertMachineFailureMessage(helper, computer, address, "compareStacks", "invalid slot", new Object[]{east, 1, 28});
             } catch (Exception e) {
                 helper.fail("Inventory controller invocation failed: " + e.getMessage());
             }
@@ -6211,6 +6229,15 @@ public final class NeoOpenComputersGameTests {
         try {
             component.invoke(method, null, args);
             helper.fail("Component invocation unexpectedly passed: " + method);
+        } catch (Exception e) {
+            helper.assertTrue(message.equals(e.getMessage()), "Expected " + method + " to fail with '" + message + "' but got '" + e.getMessage() + "'");
+        }
+    }
+
+    private static void assertMachineFailureMessage(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final String address, final String method, final String message, final Object[] args) {
+        try {
+            computer.machine().invoke(address, method, args);
+            helper.fail("Machine invocation unexpectedly passed: " + method);
         } catch (Exception e) {
             helper.assertTrue(message.equals(e.getMessage()), "Expected " + method + " to fail with '" + message + "' but got '" + e.getMessage() + "'");
         }

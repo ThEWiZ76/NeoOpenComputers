@@ -177,7 +177,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
     private int checkSlot(final Arguments arguments, final int index, final int size) {
         final int slot = arguments.checkInteger(index) - 1;
         if (slot < 0 || slot >= size) {
-            throw new IllegalArgumentException("slot index out of bounds");
+            throw new IllegalArgumentException("invalid slot");
         }
         return slot;
     }
