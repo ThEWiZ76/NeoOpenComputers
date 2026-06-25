@@ -5384,6 +5384,31 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void rackPowersMountedServerFromSideBusLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.SERVER_RACK_RATE, 50D, () -> {
+            final BlockPos rackPos = new BlockPos(1, 1, 1);
+            helper.setBlock(rackPos, ModBlocks.RACK.get());
+            final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+
+            rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+            final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+            helper.assertTrue(mountable instanceof li.cil.oc.api.internal.Server, "Rack did not create server mountable");
+            final li.cil.oc.api.internal.Server rackServer = (li.cil.oc.api.internal.Server) mountable;
+            final Connector serverConnector = (Connector) rackServer.machine().node();
+            serverConnector.changeBuffer(-serverConnector.localBuffer());
+
+            final Connector sideConnector = (Connector) rack.sidedNode(Direction.SOUTH);
+            sideConnector.changeBuffer(50D);
+
+            RackBlockEntity.serverTick(helper.getLevel(), rackPos, helper.getBlockState(rackPos), rack);
+
+            helper.assertTrue(Double.compare(50D, serverConnector.localBuffer()) == 0, "Rack did not move side-bus energy into mounted server connector");
+            helper.assertTrue(Double.compare(0D, sideConnector.localBuffer()) == 0, "Rack did not consume side-bus energy while powering server");
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void removingRackServerCpuWithoutUpdateStopsMachineLikeUpstream(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

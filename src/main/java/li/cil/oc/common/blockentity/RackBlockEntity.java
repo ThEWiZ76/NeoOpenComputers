@@ -7,7 +7,9 @@ import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Rack;
+import li.cil.oc.api.internal.Server;
 import li.cil.oc.api.network.Analyzable;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -15,6 +17,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import net.minecraft.core.BlockPos;
@@ -592,11 +595,55 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     private void tickServer() {
+        distributePowerToMountables();
         for (final RackMountable mountable : mountables) {
             if (mountable != null && mountable.canUpdate()) {
                 mountable.update();
             }
         }
+    }
+
+    private void distributePowerToMountables() {
+        if (sidePlugs == null) {
+            return;
+        }
+        for (final RackMountable mountable : mountables) {
+            final Connector destination = powerConnector(mountable);
+            if (destination == null) {
+                continue;
+            }
+            double remaining = ModSettings.serverRackRate();
+            for (final SidePlug sidePlug : sidePlugs) {
+                if (remaining <= 0D) {
+                    break;
+                }
+                if (sidePlug == null || !(sidePlug.node() instanceof Connector source)) {
+                    continue;
+                }
+                final double received = remaining + source.changeBuffer(-remaining);
+                if (received <= 0D) {
+                    continue;
+                }
+                final double rejected = destination.changeBuffer(received);
+                if (rejected > 0D) {
+                    source.changeBuffer(rejected);
+                }
+                remaining -= received - rejected;
+            }
+        }
+    }
+
+    private static Connector powerConnector(final RackMountable mountable) {
+        if (mountable == null) {
+            return null;
+        }
+        if (mountable.node() instanceof Connector connector) {
+            return connector;
+        }
+        if (mountable instanceof Server server && server.machine() != null && server.machine().node() instanceof Connector connector) {
+            return connector;
+        }
+        return null;
     }
 
     private void refreshMountables() {
