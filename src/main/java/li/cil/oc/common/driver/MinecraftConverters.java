@@ -12,14 +12,18 @@ import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.neoforge.fluids.FluidStack;
 
+import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public final class MinecraftConverters {
     public static final Converter ITEM_STACK = (value, output) -> {
@@ -73,6 +77,36 @@ public final class MinecraftConverters {
             }
         }
     };
+
+    public static final Converter LEVEL = (value, output) -> {
+        if (value instanceof Level level) {
+            output.put("id", levelId(level));
+            output.put("name", level.dimension().location().toString());
+        }
+    };
+
+    private static String levelId(final Level level) {
+        final long seed = level instanceof ServerLevel serverLevel ? serverLevel.getSeed() : 0L;
+        final int dimension = legacyDimensionId(level);
+        final byte[] bytes = ByteBuffer.allocate(Long.BYTES + Integer.BYTES)
+            .putLong(seed)
+            .putInt(dimension)
+            .array();
+        return UUID.nameUUIDFromBytes(bytes).toString();
+    }
+
+    private static int legacyDimensionId(final Level level) {
+        if (Level.OVERWORLD.equals(level.dimension())) {
+            return 0;
+        }
+        if (Level.NETHER.equals(level.dimension())) {
+            return -1;
+        }
+        if (Level.END.equals(level.dimension())) {
+            return 1;
+        }
+        return level.dimension().location().hashCode();
+    }
 
     private static Object convertTag(final Tag tag) {
         if (tag instanceof NumericTag numericTag) {

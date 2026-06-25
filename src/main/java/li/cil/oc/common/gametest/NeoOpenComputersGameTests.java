@@ -903,6 +903,22 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void driverRegistryConvertsLevelsLikeUpstream(final GameTestHelper helper) throws Exception {
+        helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+        final DriverRegistry registry = (DriverRegistry) API.driver;
+        final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+        convert.setAccessible(true);
+
+        final Object[] result = (Object[]) convert.invoke(registry, (Object) new Object[]{helper.getLevel()});
+
+        helper.assertTrue(result.length == 1 && result[0] instanceof Map<?, ?>, "Level did not convert to a map");
+        final Map<?, ?> map = (Map<?, ?>) result[0];
+        helper.assertTrue(map.get("id") instanceof String id && !id.isBlank(), "Level converter did not report id");
+        helper.assertTrue(helper.getLevel().dimension().location().toString().equals(map.get("name")), "Level converter did not report dimension name");
+        helper.succeed();
+    }
+
     @SuppressWarnings("removal")
     @GameTest(template = "empty")
     public static void debugCardPlayerValueUpdatesOnlinePlayerState(final GameTestHelper helper) {
