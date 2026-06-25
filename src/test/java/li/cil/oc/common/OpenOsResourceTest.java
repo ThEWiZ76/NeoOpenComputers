@@ -9,10 +9,15 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -21,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class OpenOsResourceTest {
     private static final Path OPENOS_RECIPE = Path.of("src/main/resources/data/neoopencomputers/recipe/openos_floppy.json");
     private static final Path OPPM_RECIPE = Path.of("src/main/resources/data/neoopencomputers/recipe/oppm_floppy.json");
+    private static final Path OPENOS_ROOT = Path.of("src/main/resources/assets/neoopencomputers/loot/openos");
 
     @Test
     void bundledOpenOsFilesystemContainsBootFiles() throws IOException {
@@ -38,6 +44,24 @@ final class OpenOsResourceTest {
 
         String init = new String(buffer, 0, read, StandardCharsets.UTF_8);
         assertTrue(init.contains("computer.getBootAddress()"));
+    }
+
+    @Test
+    void bundledOpenOsKeepsUpstreamBootCriticalSnapshot() throws IOException, NoSuchAlgorithmException {
+        assertEquals(179, Files.walk(OPENOS_ROOT).filter(Files::isRegularFile).count());
+
+        Map<String, String> bootCriticalHashes = new LinkedHashMap<>();
+        bootCriticalHashes.put("init.lua", "46a1347ae0ad82b803787027b8a7aa447f961dd73afb22390c550084c676f159");
+        bootCriticalHashes.put("lib/core/boot.lua", "a8babcd38222480a9a7af48cda246c6d3bf5a75e31704ef39df7f8627c55ebd0");
+        bootCriticalHashes.put("lib/core/full_shell.lua", "50e7d3c7c0a0e7c862429309c81f5f9d0686a450eb92e17ae7ed0af7e1d4cc71");
+        bootCriticalHashes.put("bin/sh.lua", "f5a03e7a5f0d6e6c0ce1a0f74eb4429bfca9f4d875b72f8cd9cbb99c7556b848");
+        bootCriticalHashes.put("bin/lua.lua", "548801e583814c499666b31ce54df778d0430efd1793affd1be889c00d5cfb15");
+        bootCriticalHashes.put("bin/edit.lua", "1df3511dbe5efaa9fd132cebfd54536c90d815cc3ab65ef18a6c52418e6493bc");
+        bootCriticalHashes.put("lib/filesystem.lua", "9b7d4cea39b852691a75391c5f5fc025e69bdfed0616cd7bb7eb8b5137c14b71");
+
+        for (Map.Entry<String, String> entry : bootCriticalHashes.entrySet()) {
+            assertEquals(entry.getValue(), sha256(OPENOS_ROOT.resolve(entry.getKey())), entry.getKey());
+        }
     }
 
     @Test
@@ -115,5 +139,9 @@ final class OpenOsResourceTest {
 
     private static String ingredientItem(final JsonArray ingredients, final int index) {
         return ingredients.get(index).getAsJsonObject().get("item").getAsString();
+    }
+
+    private static String sha256(final Path path) throws IOException, NoSuchAlgorithmException {
+        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)));
     }
 }
