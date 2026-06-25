@@ -59,6 +59,17 @@ final class AbstractManagedEnvironmentTest {
     }
 
     @Test
+    void loadDelegatesEmptyNodeStateWhenNodeTagIsMissing() {
+        TestManagedEnvironment environment = new TestManagedEnvironment();
+        TestNode node = new TestNode("address");
+        environment.installNode(node);
+
+        environment.load(new CompoundTag());
+
+        assertTrue(node.loaded);
+    }
+
+    @Test
     void saveWritesNodeStateWhenNodeAlreadyHasAddress() {
         TestManagedEnvironment environment = new TestManagedEnvironment();
         TestNode node = new TestNode("address");
