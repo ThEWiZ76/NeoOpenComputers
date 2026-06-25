@@ -2071,6 +2071,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chargeableItemsExposeNeoForgeEnergyCapabilityLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
+            final ItemStack stack = new ItemStack(ModItems.BATTERY_UPGRADE_TIER1.get());
+            final double capacity = ModSettings.batteryUpgradeBuffer(0);
+            final IEnergyStorage storage = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+
+            helper.assertTrue(storage != null, "Battery upgrade did not expose NeoForge Energy item capability");
+            helper.assertTrue(storage.canReceive(), "Battery upgrade energy capability could not receive");
+            helper.assertTrue(!storage.canExtract(), "Battery upgrade energy capability unexpectedly allowed extraction");
+            helper.assertTrue(storage.getMaxEnergyStored() == ModSettings.toForgeEnergy(capacity), "Battery upgrade energy capability reported wrong capacity");
+            helper.assertTrue(storage.receiveEnergy(ModSettings.toForgeEnergy(capacity * 0.75D), true) == ModSettings.toForgeEnergy(capacity * 0.75D), "Battery upgrade simulated receive did not report accepted energy");
+            helper.assertTrue(storage.getEnergyStored() == 0, "Battery upgrade simulated receive changed stored energy");
+            helper.assertTrue(storage.receiveEnergy(ModSettings.toForgeEnergy(capacity * 0.75D), false) == ModSettings.toForgeEnergy(capacity * 0.75D), "Battery upgrade did not receive NeoForge Energy");
+            helper.assertTrue(storage.getEnergyStored() == ModSettings.toForgeEnergy(capacity * 0.75D), "Battery upgrade did not persist received NeoForge Energy");
+            helper.assertTrue(storage.receiveEnergy(ModSettings.toForgeEnergy(capacity), false) == ModSettings.toForgeEnergy(capacity * 0.25D), "Battery upgrade did not cap received NeoForge Energy at capacity");
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void itemChargeImcRegistersProviderLikeUpstream(final GameTestHelper helper) {
         final ItemStack target = new ItemStack(Items.NETHER_STAR);
         helper.assertTrue(!ItemCharges.canCharge(target), "Baseline stack was chargeable before IMC registration");

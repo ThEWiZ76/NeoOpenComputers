@@ -13,6 +13,13 @@ public final class ModCapabilities {
     }
 
     public static void register(final RegisterCapabilitiesEvent event) {
+        event.registerItem(
+            Capabilities.EnergyStorage.ITEM,
+            ChargeableItemEnergyStorage::create,
+            ModItems.BATTERY_UPGRADE_TIER1.get(),
+            ModItems.BATTERY_UPGRADE_TIER2.get(),
+            ModItems.BATTERY_UPGRADE_TIER3.get(),
+            ModItems.TABLET.get());
         event.registerBlockEntity(
             Capabilities.EnergyStorage.BLOCK,
             ModBlockEntities.POWER_CONVERTER.get(),
