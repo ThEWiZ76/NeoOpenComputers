@@ -7,6 +7,9 @@ import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.api.driver.InventoryProvider;
+import li.cil.oc.api.driver.item.UpgradeRenderer;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.manual.ImageRenderer;
@@ -14,6 +17,7 @@ import li.cil.oc.api.fs.Label;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.Visibility;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,6 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -38,6 +43,45 @@ final class DetailApiContractsTest {
     @Test
     void apiConfigKeepsUpstreamTypesafeConfigType() throws NoSuchFieldException {
         assertEquals(Config.class, API.class.getField("config").getType());
+    }
+
+    @Test
+    void callbackAnnotationKeepsUpstreamDefaults() throws NoSuchMethodException {
+        assertEquals("", Callback.class.getMethod("value").getDefaultValue());
+        assertEquals(false, Callback.class.getMethod("direct").getDefaultValue());
+        assertEquals(Integer.MAX_VALUE, Callback.class.getMethod("limit").getDefaultValue());
+        assertEquals("", Callback.class.getMethod("doc").getDefaultValue());
+        assertEquals(false, Callback.class.getMethod("getter").getDefaultValue());
+        assertEquals(false, Callback.class.getMethod("setter").getDefaultValue());
+    }
+
+    @Test
+    void networkVisibilityKeepsUpstreamOrder() {
+        assertEquals(List.of(Visibility.None, Visibility.Neighbors, Visibility.Network), List.of(Visibility.values()));
+    }
+
+    @Test
+    void executionResultKeepsUpstreamPublicPayloadFields() throws ReflectiveOperationException {
+        ExecutionResult.Sleep sleep = new ExecutionResult.Sleep(7);
+        ExecutionResult.Shutdown shutdown = new ExecutionResult.Shutdown(true);
+        ExecutionResult.Error error = new ExecutionResult.Error("failure");
+
+        assertEquals(7, ExecutionResult.Sleep.class.getField("ticks").getInt(sleep));
+        assertEquals(true, ExecutionResult.Shutdown.class.getField("reboot").getBoolean(shutdown));
+        assertEquals("failure", ExecutionResult.Error.class.getField("message").get(error));
+    }
+
+    @Test
+    void upgradeRendererMountPointNamesKeepUpstreamValues() {
+        assertEquals("none", UpgradeRenderer.MountPointName.None);
+        assertEquals("any", UpgradeRenderer.MountPointName.Any);
+        assertEquals("top_left", UpgradeRenderer.MountPointName.TopLeft);
+        assertEquals("top_right", UpgradeRenderer.MountPointName.TopRight);
+        assertEquals("top_back", UpgradeRenderer.MountPointName.TopBack);
+        assertEquals("bottom_left", UpgradeRenderer.MountPointName.BottomLeft);
+        assertEquals("bottom_right", UpgradeRenderer.MountPointName.BottomRight);
+        assertEquals("bottom_back", UpgradeRenderer.MountPointName.BottomBack);
+        assertEquals("bottom_front", UpgradeRenderer.MountPointName.BottomFront);
     }
 
     @Test
