@@ -89,6 +89,8 @@
   "item.neoopencomputers.network_card": "Network Card",
   "item.neoopencomputers.num_pad": "Num Pad",
   "item.neoopencomputers.piston_upgrade": "Piston Upgrade",
+  "block.neoopencomputers.power_converter": "Power Converter",
+  "item.neoopencomputers.power_converter": "Power Converter",
   "block.neoopencomputers.power_distributor": "Power Distributor",
   "item.neoopencomputers.power_distributor": "Power Distributor",
   "block.neoopencomputers.rack": "Server Rack",

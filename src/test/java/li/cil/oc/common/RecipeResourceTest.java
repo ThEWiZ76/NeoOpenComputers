@@ -39,6 +39,7 @@ final class RecipeResourceTest {
             ModContentIds.CONTROL_UNIT,
             ModContentIds.DISK_PLATTER,
             ModContentIds.INTERWEB,
+            ModContentIds.POWER_CONVERTER,
             ModContentIds.POWER_DISTRIBUTOR,
             ModContentIds.RACK,
             ModContentIds.RAID,
@@ -273,7 +274,16 @@ final class RecipeResourceTest {
     @Test
     void networkInfrastructureRecipesUseUpstreamMaterials() throws IOException {
         JsonObject powerDistributor = readJson(RECIPE_ROOT.resolve(ModContentIds.POWER_DISTRIBUTOR + ".json"));
+        JsonObject powerConverter = readJson(RECIPE_ROOT.resolve(ModContentIds.POWER_CONVERTER + ".json"));
         JsonObject relay = readJson(RECIPE_ROOT.resolve(ModContentIds.RELAY + ".json"));
+
+        assertPattern(powerConverter, "IGI", "CMC", "IRI");
+        JsonObject converterKeys = powerConverter.getAsJsonObject("key");
+        assertTag(converterKeys, "I", "c:ingots/iron");
+        assertTag(converterKeys, "G", "c:ingots/gold");
+        assertItem(converterKeys, "C", "neoopencomputers:" + ModContentIds.CABLE);
+        assertItem(converterKeys, "M", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(converterKeys, "R", "minecraft:redstone");
 
         assertPattern(powerDistributor, "IGI", "CMC", "IBI");
         JsonObject distributorKeys = powerDistributor.getAsJsonObject("key");

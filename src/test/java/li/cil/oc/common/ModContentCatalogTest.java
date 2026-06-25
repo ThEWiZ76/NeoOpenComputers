@@ -121,6 +121,8 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.MOTION_SENSOR));
         assertNotNull(registry.get(ModContentIds.POWER_DISTRIBUTOR));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR));
+        assertNotNull(registry.get(ModContentIds.POWER_CONVERTER));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_POWER_CONVERTER));
         assertNotNull(registry.get(ModContentIds.RACK));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_RACK));
         assertNotNull(registry.get(ModContentIds.RAID));
@@ -293,6 +295,8 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.MOTION_SENSOR, registry.get(ModContentIds.MOTION_SENSOR).name());
         assertEquals(ModContentIds.POWER_DISTRIBUTOR, registry.get(ModContentIds.POWER_DISTRIBUTOR).name());
         assertEquals(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR, registry.get(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR).name());
+        assertEquals(ModContentIds.POWER_CONVERTER, registry.get(ModContentIds.POWER_CONVERTER).name());
+        assertEquals(ModContentCatalog.COMPAT_POWER_CONVERTER, registry.get(ModContentCatalog.COMPAT_POWER_CONVERTER).name());
         assertEquals(ModContentIds.RACK, registry.get(ModContentIds.RACK).name());
         assertEquals(ModContentCatalog.COMPAT_RACK, registry.get(ModContentCatalog.COMPAT_RACK).name());
         assertEquals(ModContentIds.RAID, registry.get(ModContentIds.RAID).name());

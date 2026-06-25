@@ -38,6 +38,7 @@ final class ModSettingsTest {
         assertEquals(12, ModSettings.deviceComplexityByTier(-1));
         assertEquals(9001, ModSettings.deviceComplexityByTier(99));
         assertEquals(500D, ModSettings.powerDistributorBuffer());
+        assertEquals(500D, ModSettings.powerConverterRate());
         assertEquals(10000D, ModSettings.tabletBuffer());
         assertEquals(20000D, ModSettings.tabletAssemblyBaseCost());
         assertEquals(5000D, ModSettings.tabletAssemblyComplexityCost());
@@ -207,6 +208,7 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
         assertEquals(List.of("power", "generatorEfficiency"), ModSettings.GENERATOR_EFFICIENCY.getPath());
+        assertEquals(List.of("power", "rate", "powerConverter"), ModSettings.POWER_CONVERTER_RATE.getPath());
         assertEquals(List.of("power", "buffer", "batteryUpgrades"), ModSettings.BATTERY_UPGRADE_BUFFERS.getPath());
         assertEquals(List.of("power", "buffer", "distributor"), ModSettings.POWER_DISTRIBUTOR_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "tablet"), ModSettings.TABLET_BUFFER.getPath());

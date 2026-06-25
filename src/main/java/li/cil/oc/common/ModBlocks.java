@@ -11,6 +11,7 @@ import li.cil.oc.common.block.GeolyzerBlock;
 import li.cil.oc.common.block.HologramBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
+import li.cil.oc.common.block.PowerConverterBlock;
 import li.cil.oc.common.block.PowerDistributorBlock;
 import li.cil.oc.common.block.PrintBlock;
 import li.cil.oc.common.block.PrinterBlock;
@@ -98,6 +99,10 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> POWER_DISTRIBUTOR = BLOCKS.register(
         ModContentIds.POWER_DISTRIBUTOR,
         () -> new PowerDistributorBlock(networkInfrastructureProperties()));
+
+    public static final DeferredBlock<Block> POWER_CONVERTER = BLOCKS.register(
+        ModContentIds.POWER_CONVERTER,
+        () -> new PowerConverterBlock(networkInfrastructureProperties()));
 
     public static final DeferredBlock<Block> PRINT = BLOCKS.register(
         ModContentIds.PRINT,

@@ -11,6 +11,7 @@ import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
+import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
 import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
 import li.cil.oc.common.blockentity.PrintBlockEntity;
 import li.cil.oc.common.blockentity.PrinterBlockEntity;
@@ -101,6 +102,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.POWER_DISTRIBUTOR_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(PowerDistributorBlockEntity::new, ModBlocks.POWER_DISTRIBUTOR.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PowerConverterBlockEntity>> POWER_CONVERTER =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.POWER_CONVERTER_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(PowerConverterBlockEntity::new, ModBlocks.POWER_CONVERTER.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PrintBlockEntity>> PRINT =
         BLOCK_ENTITY_TYPES.register(

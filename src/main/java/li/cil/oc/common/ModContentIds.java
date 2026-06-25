@@ -102,6 +102,8 @@ public final class ModContentIds {
     public static final String NETWORK_CARD = "network_card";
     public static final String NUM_PAD = "num_pad";
     public static final String PISTON_UPGRADE = "piston_upgrade";
+    public static final String POWER_CONVERTER = "power_converter";
+    public static final String POWER_CONVERTER_BLOCK_ENTITY = "power_converter";
     public static final String POWER_DISTRIBUTOR = "power_distributor";
     public static final String POWER_DISTRIBUTOR_BLOCK_ENTITY = "power_distributor";
     public static final String PRINT = "print";

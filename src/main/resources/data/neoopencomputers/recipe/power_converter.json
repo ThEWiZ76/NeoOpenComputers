@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IGI",
+    "CMC",
+    "IRI"
+  ],
+  "key": {
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "C": {
+      "item": "neoopencomputers:cable"
+    },
+    "M": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:power_converter"
+  }
+}

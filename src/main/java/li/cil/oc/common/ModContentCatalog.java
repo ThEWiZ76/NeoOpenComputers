@@ -64,6 +64,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_NAVIGATION_UPGRADE = "navigationUpgrade";
     public static final String COMPAT_NETWORK_CARD = "lancard";
     public static final String COMPAT_PISTON_UPGRADE = "pistonUpgrade";
+    public static final String COMPAT_POWER_CONVERTER = "powerConverter";
     public static final String COMPAT_POWER_DISTRIBUTOR = "powerDistributor";
     public static final String COMPAT_RACK = "rack";
     public static final String COMPAT_RAID = "raid";
@@ -145,6 +146,8 @@ public final class ModContentCatalog {
                 ModItems.MOTION_SENSOR.get(),
                 ModBlocks.POWER_DISTRIBUTOR.get(),
                 ModItems.POWER_DISTRIBUTOR.get(),
+                ModBlocks.POWER_CONVERTER.get(),
+                ModItems.POWER_CONVERTER.get(),
                 ModBlocks.RACK.get(),
                 ModItems.RACK.get(),
                 ModBlocks.RAID.get(),
@@ -371,6 +374,8 @@ public final class ModContentCatalog {
         final Item motionSensorItem,
         final Block powerDistributor,
         final Item powerDistributorItem,
+        final Block powerConverter,
+        final Item powerConverterItem,
         final Block rack,
         final Item rackItem,
         final Block raid,
@@ -504,6 +509,8 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.MOTION_SENSOR, motionSensor, motionSensorItem);
         registry.register(ModContentIds.POWER_DISTRIBUTOR, powerDistributor, powerDistributorItem);
         registry.register(COMPAT_POWER_DISTRIBUTOR, powerDistributor, powerDistributorItem);
+        registry.register(ModContentIds.POWER_CONVERTER, powerConverter, powerConverterItem);
+        registry.register(COMPAT_POWER_CONVERTER, powerConverter, powerConverterItem);
         registry.register(ModContentIds.RACK, rack, rackItem);
         registry.register(COMPAT_RACK, rack, rackItem);
         registry.register(ModContentIds.RAID, raid, raidItem);

@@ -154,6 +154,10 @@ public final class ModItems {
         ModContentIds.POWER_DISTRIBUTOR,
         ModBlocks.POWER_DISTRIBUTOR);
 
+    public static final DeferredItem<BlockItem> POWER_CONVERTER = ITEMS.registerSimpleBlockItem(
+        ModContentIds.POWER_CONVERTER,
+        ModBlocks.POWER_CONVERTER);
+
     public static final DeferredItem<PrintItem> PRINT = ITEMS.register(
         ModContentIds.PRINT,
         () -> new PrintItem(ModBlocks.PRINT.get(), new Item.Properties()));

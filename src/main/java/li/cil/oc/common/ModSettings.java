@@ -131,6 +131,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
+    public static final ModConfigSpec.DoubleValue POWER_CONVERTER_RATE;
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue PRINTER_TICK_AMOUNT;
@@ -407,6 +408,11 @@ public final class ModSettings {
         SOLAR_GENERATOR_EFFICIENCY = builder
             .comment("Energy produced per tick by solar generator upgrades. OpenComputers upstream default is 0.2.")
             .defineInRange("solarGeneratorEfficiency", 0.2D, 0D, Double.MAX_VALUE);
+        builder.push("rate");
+        POWER_CONVERTER_RATE = builder
+            .comment("Energy throughput per tick exposed by power converters. OpenComputers upstream default is 500.")
+            .defineInRange("powerConverter", 500D, 0D, Double.MAX_VALUE);
+        builder.pop();
         ASSEMBLER_TICK_AMOUNT = builder
             .comment("Energy the assembler can apply per tick. OpenComputers upstream default is 50.")
             .defineInRange("assemblerTickAmount", 50D, 1D, Double.MAX_VALUE);
@@ -669,6 +675,10 @@ public final class ModSettings {
 
     public static double converterBuffer() {
         return Math.max(0D, doubleValue(CONVERTER_BUFFER));
+    }
+
+    public static double powerConverterRate() {
+        return Math.max(0D, doubleValue(POWER_CONVERTER_RATE));
     }
 
     public static double computerBuffer() {

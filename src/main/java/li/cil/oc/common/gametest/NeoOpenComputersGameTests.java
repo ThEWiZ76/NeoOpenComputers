@@ -53,6 +53,7 @@ import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
+import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
@@ -231,6 +232,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.KEYBOARD.get();
         ModBlocks.MOTION_SENSOR.get();
         ModBlocks.POWER_DISTRIBUTOR.get();
+        ModBlocks.POWER_CONVERTER.get();
         ModBlocks.PRINT.get();
         ModBlocks.PRINTER.get();
         ModBlocks.RACK.get();
@@ -276,6 +278,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.ARROW_KEYS.get();
         ModItems.NUM_PAD.get();
         ModItems.POWER_DISTRIBUTOR.get();
+        ModItems.POWER_CONVERTER.get();
         ModItems.PRINT.get();
         ModItems.PRINTER.get();
         ModItems.RACK.get();
@@ -5637,6 +5640,35 @@ public final class NeoOpenComputersGameTests {
         final double expected = PowerDistributorBlockEntity.connectorBufferSize() / Direction.values().length;
         assertClose(helper, east.localBuffer(), expected, "Power distributor east buffer");
         assertClose(helper, west.localBuffer(), expected, "Power distributor west buffer");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void powerConverterExposesUpstreamHiddenConnectorAndDeviceInfo(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 123D, () -> {
+            withCachedConfig(ModSettings.POWER_CONVERTER_RATE, 456D, () -> {
+                final BlockPos converterPos = new BlockPos(1, 1, 1);
+                helper.setBlock(converterPos, ModBlocks.POWER_CONVERTER.get());
+                Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(converterPos));
+                final PowerConverterBlockEntity converter = helper.getBlockEntity(converterPos);
+
+                helper.assertTrue(converter.node() instanceof Connector, "Power converter node is not a connector");
+                final Connector connector = (Connector) converter.node();
+                helper.assertTrue(Double.compare(123D, connector.localBufferSize()) == 0, "Power converter connector capacity mismatch");
+                helper.assertTrue(converter.sidedNode(Direction.NORTH) == converter.node(), "Power converter north side did not expose its connector");
+                helper.assertTrue(converter.sidedNode(Direction.SOUTH) == converter.node(), "Power converter south side did not expose its connector");
+                helper.assertTrue(converter.sidedNode(null) == null, "Power converter exposed a null-side connector");
+                helper.assertTrue(converter.canConnect(Direction.UP), "Power converter rejected side connection");
+                helper.assertTrue(!converter.canConnect(null), "Power converter accepted null-side connection");
+
+                final Map<String, String> info = converter.getDeviceInfo();
+                helper.assertTrue(DeviceInfo.DeviceClass.Power.equals(info.get(DeviceInfo.DeviceAttribute.Class)), "Power converter device class mismatch");
+                helper.assertTrue("Power converter".equals(info.get(DeviceInfo.DeviceAttribute.Description)), "Power converter description mismatch");
+                helper.assertTrue("MightyPirates GmbH & Co. KG".equals(info.get(DeviceInfo.DeviceAttribute.Vendor)), "Power converter vendor mismatch");
+                helper.assertTrue("Transgizer-PX5".equals(info.get(DeviceInfo.DeviceAttribute.Product)), "Power converter product mismatch");
+                helper.assertTrue("456.0".equals(info.get(DeviceInfo.DeviceAttribute.Capacity)), "Power converter capacity mismatch");
+            });
+        });
         helper.succeed();
     }
 
