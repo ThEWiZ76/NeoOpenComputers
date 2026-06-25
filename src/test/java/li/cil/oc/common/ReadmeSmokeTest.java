@@ -24,6 +24,7 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains(".\\scripts\\run-first-smoke-client.ps1"), "README must document interactive first-smoke launcher");
         assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
+        assertTrue(readme.contains("screenshots"), "README must tell testers screenshots are bundled");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
     }
 
@@ -52,6 +53,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("Tester Checklist"), "Collector must write tester checklist");
         assertTrue(scriptText.contains("Compress-Archive"), "Collector must package a zip by default");
         assertTrue(scriptText.contains("Missing texture"), "Collector must scan missing texture failures");
+        assertTrue(scriptText.contains("screenshots"), "Collector must copy recent Minecraft screenshots");
+        assertTrue(scriptText.contains("Select-Object -First 20"), "Collector must bound copied screenshots");
     }
 
     @Test

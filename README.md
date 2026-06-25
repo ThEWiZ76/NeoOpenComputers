@@ -105,7 +105,7 @@ To package first-smoke evidence after testing:
 .\scripts\collect-first-smoke-report.ps1
 ```
 
-This writes a timestamped report under `build\first-smoke-reports`, copies available client and bounded-smoke logs, scans for hard failure patterns, and creates a zipped evidence bundle by default.
+This writes a timestamped report under `build\first-smoke-reports`, copies available client and bounded-smoke logs, copies up to 20 recent Minecraft screenshots, scans for hard failure patterns, and creates a zipped evidence bundle by default.
 
 ## Run Development Server
 

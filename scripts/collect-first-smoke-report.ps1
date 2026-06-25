@@ -19,6 +19,7 @@ if ([string]::IsNullOrWhiteSpace($OutputDir)) {
 
 $reportDir = Join-Path $OutputDir "first-smoke-$Timestamp"
 $logsDir = Join-Path $reportDir 'logs'
+$screenshotsDir = Join-Path $reportDir 'screenshots'
 New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
 
 function Copy-IfPresent {
@@ -50,6 +51,7 @@ $clientRunDir = Join-Path $repoRoot 'run\client'
 $clientLatestLog = Join-Path $clientRunDir 'logs\latest.log'
 $clientDebugLog = Join-Path $clientRunDir 'logs\debug.log'
 $clientCrashDir = Join-Path $clientRunDir 'crash-reports'
+$clientScreenshotsDir = Join-Path $clientRunDir 'screenshots'
 $smokeDir = Join-Path $repoRoot 'build\client-smoke'
 $smokeStdout = Join-Path $smokeDir 'runClient.out.log'
 $smokeStderr = Join-Path $smokeDir 'runClient.err.log'
@@ -64,6 +66,19 @@ $copied = @($copied | Where-Object { $null -ne $_ })
 if (Test-Path -LiteralPath $clientCrashDir) {
     $crashDestination = Join-Path $logsDir 'crash-reports'
     Copy-Item -LiteralPath $clientCrashDir -Destination $crashDestination -Recurse -Force
+}
+
+$copiedScreenshots = @()
+if (Test-Path -LiteralPath $clientScreenshotsDir) {
+    $screenshotFiles = @(Get-ChildItem -LiteralPath $clientScreenshotsDir -File -Filter '*.png' | Sort-Object LastWriteTime -Descending | Select-Object -First 20)
+    if ($screenshotFiles.Count -gt 0) {
+        New-Item -ItemType Directory -Force -Path $screenshotsDir | Out-Null
+        foreach ($screenshot in $screenshotFiles) {
+            $destination = Join-Path $screenshotsDir $screenshot.Name
+            Copy-Item -LiteralPath $screenshot.FullName -Destination $destination -Force
+            $copiedScreenshots += $destination
+        }
+    }
 }
 
 $combinedLog = (Read-TextIfPresent $clientLatestLog) + "`n" +
@@ -86,6 +101,7 @@ $matches = @($failurePatterns | Where-Object { $combinedLog.Contains($_) })
 $status = if ($matches.Count -eq 0) { 'No hard failure patterns found in copied logs.' } else { "Hard failure patterns found: $($matches -join ', ')" }
 $reportPath = Join-Path $reportDir 'summary.md'
 $relativeLogs = if ($copied.Count -eq 0) { '- No standard logs were found.' } else { ($copied | ForEach-Object { "- logs/$([System.IO.Path]::GetFileName($_))" }) -join "`n" }
+$relativeScreenshots = if ($copiedScreenshots.Count -eq 0) { '- No screenshots were found.' } else { ($copiedScreenshots | ForEach-Object { "- screenshots/$([System.IO.Path]::GetFileName($_))" }) -join "`n" }
 
 @"
 # NeoOpenComputers First Smoke Report
@@ -100,6 +116,10 @@ $status
 
 $relativeLogs
 
+## Copied Screenshots
+
+$relativeScreenshots
+
 ## Tester Checklist
 
 - [ ] Client opens local world with NeoOpenComputers installed.
@@ -110,6 +130,7 @@ $relativeLogs
 - [ ] Disk-drive floppy data survives save/reload.
 - [ ] Redstone, modem, storage, inventory, tank, and transposer each get one basic smoke pass.
 - [ ] Printer creates a print item and placed print renders configured shape data.
+- [ ] Screenshots exist for visual print, screen, GUI, or texture issues.
 - [ ] Placed print rotation, drops, hit boxes, tooltip/name, light/opacity, and redstone/button activation look sane.
 - [ ] No crash, missing texture, untranslated key, client/server error, or unexpected visual behavior remains unexplained.
 
