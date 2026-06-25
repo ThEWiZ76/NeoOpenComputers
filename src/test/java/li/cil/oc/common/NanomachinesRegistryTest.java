@@ -346,6 +346,28 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerLoadsBehaviorWithoutInputTagsAsInputlessLikeUpstream() {
+        TestBehavior behavior = new TestBehavior("legacy-inputless");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new NamedBehaviorProvider(behavior));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag behaviors = new ListTag();
+        CompoundTag behaviorTag = new CompoundTag();
+        CompoundTag behaviorData = new CompoundTag();
+        behaviorData.putString("name", "legacy-inputless");
+        behaviorTag.put("behavior", behaviorData);
+        behaviors.add(behaviorTag);
+        tag.put("behaviors", behaviors);
+
+        controller.load(tag);
+
+        assertEquals(0, controller.getTotalInputCount());
+        assertIterableEquals(List.of(behavior), controller.getActiveBehaviors());
+        assertEquals(0, controller.getInputCount(behavior));
+    }
+
+    @Test
     void controllerLoadsEmptyConnectorsAsActiveLikeUpstream() {
         TestBehavior linked = new TestBehavior("linked");
         NanomachinesRegistry registry = new NanomachinesRegistry();

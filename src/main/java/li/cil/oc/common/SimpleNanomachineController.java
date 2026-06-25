@@ -98,7 +98,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
         disableActive(DisableReason.Default);
         connectors = List.of();
-        setBehaviorEntries(debugEntries);
+        setBehaviorEntries(debugEntries, debugEntries.size());
         saveState();
     }
 
@@ -371,7 +371,9 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             : List.of();
         if (graphTag.contains(TAG_BEHAVIORS, CompoundTag.TAG_LIST)) {
             disableActive(DisableReason.Default);
-            setBehaviorEntries(loadBehaviorEntries(graphTag.getList(TAG_BEHAVIORS, CompoundTag.TAG_COMPOUND), savedTriggerCount, connectors.size()));
+            setBehaviorEntries(
+                loadBehaviorEntries(graphTag.getList(TAG_BEHAVIORS, CompoundTag.TAG_COMPOUND), savedTriggerCount, connectors.size()),
+                Math.max(0, savedTriggerCount));
         }
         loadTriggerStates(graphTag);
         activeBehaviorsDirty = true;
@@ -401,6 +403,10 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     }
 
     private void setBehaviorEntries(final List<BehaviorEntry> entries) {
+        setBehaviorEntries(entries, generatedTriggerCount(entries.size()));
+    }
+
+    private void setBehaviorEntries(final List<BehaviorEntry> entries, final int minimumInputCount) {
         behaviorEntries = List.copyOf(entries);
         final List<Behavior> created = new ArrayList<>(behaviorEntries.size());
         for (final BehaviorEntry entry : behaviorEntries) {
@@ -408,7 +414,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
         behaviors = List.copyOf(created);
         activeBehaviors = List.of();
-        inputs = new boolean[computeInputCount(connectors, behaviorEntries)];
+        inputs = new boolean[computeInputCount(connectors, behaviorEntries, minimumInputCount)];
         activeBehaviorsDirty = true;
     }
 
@@ -433,7 +439,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         final int connectorCount = (int) Math.ceil(entries.size() * ModSettings.nanomachineConnectorQuota());
         final List<Integer> triggerSourcePool = triggerSourcePool(inputCount);
         connectors = createConnectorEntries(triggerSourcePool, connectorCount);
-        setBehaviorEntries(cleanGeneratedGraph(assignGeneratedInputs(entries, triggerSourcePool, connectors.size())));
+        setBehaviorEntries(cleanGeneratedGraph(assignGeneratedInputs(entries, triggerSourcePool, connectors.size())), inputCount);
     }
 
     private int generatedTriggerCount(final int behaviorCount) {
@@ -587,8 +593,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         return -1;
     }
 
-    private int computeInputCount(final List<ConnectorEntry> connectors, final List<BehaviorEntry> entries) {
-        int inputCount = generatedTriggerCount(entries.size());
+    private int computeInputCount(final List<ConnectorEntry> connectors, final List<BehaviorEntry> entries, final int minimumInputCount) {
+        int inputCount = Math.max(0, minimumInputCount);
         for (final ConnectorEntry connector : connectors) {
             for (final int input : connector.triggerInputs()) {
                 inputCount = Math.max(inputCount, input + 1);
@@ -684,13 +690,12 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
 
     private List<BehaviorEntry> loadBehaviorEntries(final ListTag tags, final int triggerCount, final int connectorCount) {
         final List<BehaviorEntry> entries = new ArrayList<>();
-        final int fallbackInputCount = Math.max(1, (int) Math.ceil(tags.size() * ModSettings.nanomachineTriggerQuota()));
         for (int i = 0; i < tags.size(); i++) {
             final CompoundTag tag = tags.getCompound(i);
             final CompoundTag data = tag.getCompound(TAG_BEHAVIOR);
             final int[] triggerInputs = tag.contains(TAG_TRIGGER_INPUTS, CompoundTag.TAG_INT_ARRAY)
                 ? tag.getIntArray(TAG_TRIGGER_INPUTS)
-                : new int[]{i % fallbackInputCount};
+                : new int[0];
             final int[] connectorInputs = tag.contains(TAG_CONNECTOR_INPUTS, CompoundTag.TAG_INT_ARRAY)
                 ? tag.getIntArray(TAG_CONNECTOR_INPUTS)
                 : new int[0];
