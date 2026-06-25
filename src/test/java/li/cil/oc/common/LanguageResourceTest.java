@@ -57,6 +57,70 @@ final class LanguageResourceTest {
         }
     }
 
+    @Test
+    void rackAndServerGuiTranslationsExistForFirstSmokeTesting() throws IOException {
+        JsonObject translations = readJson(EN_US);
+        List<String> keys = List.of(
+            "oc:container.server",
+            "gui.neoopencomputers.server_rack",
+            "gui.neoopencomputers.server_rack.slot.card",
+            "gui.neoopencomputers.server_rack.slot.component_bus",
+            "gui.neoopencomputers.server_rack.slot.cpu",
+            "gui.neoopencomputers.server_rack.slot.eeprom",
+            "gui.neoopencomputers.server_rack.slot.empty",
+            "gui.neoopencomputers.server_rack.slot.empty_state",
+            "gui.neoopencomputers.server_rack.slot.hdd",
+            "gui.neoopencomputers.server_rack.slot.installed",
+            "gui.neoopencomputers.server_rack.slot.any_tier",
+            "gui.neoopencomputers.server_rack.slot.max_tier",
+            "gui.neoopencomputers.server_rack.slot.memory",
+            "gui.neoopencomputers.server_rack.slot.unavailable",
+            "gui.neoopencomputers.server_rack.components",
+            "gui.neoopencomputers.server_rack.power.turn_off",
+            "gui.neoopencomputers.server_rack.power.turn_on",
+            "gui.neoopencomputers.server_rack.status",
+            "gui.neoopencomputers.server_rack.state.empty",
+            "gui.neoopencomputers.server_rack.state.incomplete",
+            "gui.neoopencomputers.server_rack.state.ready",
+            "gui.neoopencomputers.server_rack.state.running",
+            "gui.neoopencomputers.rack.bus",
+            "gui.neoopencomputers.rack.bus.clear",
+            "gui.neoopencomputers.rack.bus.map",
+            "gui.neoopencomputers.rack.bus.label.back",
+            "gui.neoopencomputers.rack.bus.label.bottom",
+            "gui.neoopencomputers.rack.bus.label.front",
+            "gui.neoopencomputers.rack.bus.label.left",
+            "gui.neoopencomputers.rack.bus.label.right",
+            "gui.neoopencomputers.rack.bus.label.top",
+            "gui.neoopencomputers.rack.bus.label.unknown",
+            "gui.neoopencomputers.rack.bus.side.back",
+            "gui.neoopencomputers.rack.bus.side.bottom",
+            "gui.neoopencomputers.rack.bus.side.front",
+            "gui.neoopencomputers.rack.bus.side.left",
+            "gui.neoopencomputers.rack.bus.side.right",
+            "gui.neoopencomputers.rack.bus.side.top",
+            "gui.neoopencomputers.rack.bus.side.unknown",
+            "gui.neoopencomputers.rack.control",
+            "gui.neoopencomputers.rack.missing.cpu",
+            "gui.neoopencomputers.rack.missing.eeprom",
+            "gui.neoopencomputers.rack.missing.memory",
+            "gui.neoopencomputers.rack.orientation.line1",
+            "gui.neoopencomputers.rack.orientation.line2",
+            "gui.neoopencomputers.rack.orientation.line3",
+            "gui.neoopencomputers.rack.orientation.line4",
+            "gui.neoopencomputers.rack.relay",
+            "gui.neoopencomputers.rack.relay.disabled",
+            "gui.neoopencomputers.rack.relay.enabled",
+            "gui.neoopencomputers.rack.state.empty",
+            "gui.neoopencomputers.rack.state.incomplete",
+            "gui.neoopencomputers.rack.state.ready",
+            "gui.neoopencomputers.rack.state.running");
+
+        for (String key : keys) {
+            assertTrue(translations.has(key), "Missing rack/server GUI translation key " + key);
+        }
+    }
+
     private static JsonObject readJson(final Path path) throws IOException {
         try (Reader reader = Files.newBufferedReader(path)) {
             return JsonParser.parseReader(reader).getAsJsonObject();

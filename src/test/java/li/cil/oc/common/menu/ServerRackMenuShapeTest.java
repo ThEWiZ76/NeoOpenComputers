@@ -210,6 +210,16 @@ final class ServerRackMenuShapeTest {
     }
 
     @Test
+    void plainServerInventorySizeInfersVisibleLayoutTier() throws ReflectiveOperationException {
+        final Method serverTierFor = ServerRackMenu.class.getDeclaredMethod("serverTierFor", Container.class);
+        serverTierFor.setAccessible(true);
+
+        assertEquals(0, serverTierFor.invoke(null, plainContainer(ServerRackMountableEnvironment.slotCountForTier(0))));
+        assertEquals(1, serverTierFor.invoke(null, plainContainer(ServerRackMountableEnvironment.slotCountForTier(1))));
+        assertEquals(2, serverTierFor.invoke(null, plainContainer(ServerRackMountableEnvironment.slotCountForTier(2))));
+    }
+
+    @Test
     void slotTierLimitForTierUsesServerTierLayout() {
         assertEquals(2, ServerRackMenu.slotTierLimitForTier(1, 2));
         assertEquals(Integer.MAX_VALUE, ServerRackMenu.slotTierLimitForTier(1, 12));
@@ -299,6 +309,52 @@ final class ServerRackMenuShapeTest {
             @Override
             public int getCount() {
                 return size;
+            }
+        };
+    }
+
+    private static Container plainContainer(final int size) {
+        return new Container() {
+            @Override
+            public int getContainerSize() {
+                return size;
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return true;
+            }
+
+            @Override
+            public ItemStack getItem(final int slot) {
+                return null;
+            }
+
+            @Override
+            public ItemStack removeItem(final int slot, final int amount) {
+                return null;
+            }
+
+            @Override
+            public ItemStack removeItemNoUpdate(final int slot) {
+                return null;
+            }
+
+            @Override
+            public void setItem(final int slot, final ItemStack stack) {
+            }
+
+            @Override
+            public void setChanged() {
+            }
+
+            @Override
+            public boolean stillValid(final net.minecraft.world.entity.player.Player player) {
+                return true;
+            }
+
+            @Override
+            public void clearContent() {
             }
         };
     }
