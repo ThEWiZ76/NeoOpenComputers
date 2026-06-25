@@ -207,6 +207,24 @@ publishing {
         register('mavenJava', MavenPublication) {
             from components.java
             artifact tasks.named('apiJar')
+
+            pom {
+                name = mod_name
+                description = 'Java-first NeoForge port of OpenComputers for Minecraft 1.21.1.'
+                url = 'https://github.com/ThEWiZ76/NeoOpenComputers'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/license/mit'
+                        distribution = 'repo'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/ThEWiZ76/NeoOpenComputers.git'
+                    developerConnection = 'scm:git:https://github.com/ThEWiZ76/NeoOpenComputers.git'
+                    url = 'https://github.com/ThEWiZ76/NeoOpenComputers'
+                }
+            }
         }
     }
     repositories {
