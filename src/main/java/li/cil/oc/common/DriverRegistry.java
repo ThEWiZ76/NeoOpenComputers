@@ -67,16 +67,23 @@ public final class DriverRegistry implements DriverAPI {
 
     @Override
     public DriverItem driverFor(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
+        final List<DriverItem> hostAwareMatches = new ArrayList<>();
         for (final DriverItem driver : itemDrivers) {
-            if (driver instanceof final HostAware hostAware) {
-                if (hostAware.worksWith(stack, host)) {
-                    return driver;
+            if (driver instanceof HostAware) {
+                if (driver.worksWith(stack)) {
+                    hostAwareMatches.add(driver);
                 }
-            } else if (driver.worksWith(stack)) {
-                return driver;
             }
         }
-        return null;
+        if (!hostAwareMatches.isEmpty()) {
+            for (final DriverItem driver : hostAwareMatches) {
+                if (((HostAware) driver).worksWith(stack, host)) {
+                    return driver;
+                }
+            }
+            return null;
+        }
+        return driverFor(stack);
     }
 
     @Override

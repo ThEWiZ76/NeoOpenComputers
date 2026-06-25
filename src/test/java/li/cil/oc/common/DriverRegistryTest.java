@@ -65,6 +65,18 @@ final class DriverRegistryTest {
     }
 
     @Test
+    void hostAwareStackMatchPreventsGenericFallbackForWrongHostLikeUpstream() {
+        DriverRegistry registry = new DriverRegistry();
+        TestHostAwareDriver hostAware = new TestHostAwareDriver();
+        TestDriverItem generic = new TestDriverItem(true);
+        registry.add(hostAware);
+        registry.add(generic);
+
+        assertNull(registry.driverFor(null, EnvironmentHost.class));
+        assertSame(hostAware, registry.driverFor(null, TestHost.class));
+    }
+
+    @Test
     void environmentProvidersReturnAllMatches() {
         DriverRegistry registry = new DriverRegistry();
         EnvironmentProvider first = stack -> String.class;
