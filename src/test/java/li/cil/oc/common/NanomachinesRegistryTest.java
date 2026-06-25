@@ -55,6 +55,19 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void bootstrapRegistersDefaultNanomachineProvidersInUpstreamOrder() {
+        OpenComputersApi.initialize();
+
+        assertIterableEquals(List.of(
+            NanomachineDisintegrationProvider.class,
+            NanomachineHungryProvider.class,
+            NanomachineParticleProvider.class,
+            NanomachinePotionProvider.class,
+            NanomachineMagnetProvider.class
+        ), providerTypes((NanomachinesRegistry) API.nanomachines));
+    }
+
+    @Test
     void registersProvidersInOrder() {
         NanomachinesRegistry registry = new NanomachinesRegistry();
         BehaviorProvider first = new TestBehaviorProvider();
@@ -1002,6 +1015,14 @@ final class NanomachinesRegistryTest {
             }
         }
         return false;
+    }
+
+    private static List<Class<?>> providerTypes(final NanomachinesRegistry registry) {
+        final java.util.ArrayList<Class<?>> types = new java.util.ArrayList<>();
+        for (final BehaviorProvider provider : registry.getProviders()) {
+            types.add(provider.getClass());
+        }
+        return types;
     }
 
     private static <T> void withCachedConfig(

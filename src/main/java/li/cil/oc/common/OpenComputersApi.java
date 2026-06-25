@@ -25,11 +25,11 @@ public final class OpenComputersApi {
         }
         if (API.nanomachines == null) {
             final NanomachinesRegistry registry = new NanomachinesRegistry();
+            registry.addProvider(new NanomachineDisintegrationProvider());
+            registry.addProvider(new NanomachineHungryProvider());
             registry.addProvider(new NanomachineParticleProvider());
             registry.addProvider(new NanomachinePotionProvider());
-            registry.addProvider(new NanomachineHungryProvider());
             registry.addProvider(new NanomachineMagnetProvider());
-            registry.addProvider(new NanomachineDisintegrationProvider());
             API.nanomachines = registry;
         }
         if (API.fileSystem == null) {
