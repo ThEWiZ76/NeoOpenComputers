@@ -62,6 +62,14 @@ $mcpSmokeTools = Join-Path $mcpSmokeDir 'tools-list.json'
 $mcpSmokePing = Join-Path $mcpSmokeDir 'ping.json'
 $mcpSmokeInitialize = Join-Path $mcpSmokeDir 'initialize.json'
 $mcpSmokeExtraMods = Join-Path $mcpSmokeDir 'extra-mods.txt'
+$mcpWorldSmokeDir = Join-Path $repoRoot 'build\mcp-world-smoke'
+$mcpWorldSmokeStdout = Join-Path $mcpWorldSmokeDir 'runClient.out.log'
+$mcpWorldSmokeStderr = Join-Path $mcpWorldSmokeDir 'runClient.err.log'
+$mcpWorldSmokePlayerInfo = Join-Path $mcpWorldSmokeDir 'player-info.json'
+$mcpWorldSmokeBlocks = Join-Path $mcpWorldSmokeDir 'blocks.json'
+$mcpWorldSmokeCommand = Join-Path $mcpWorldSmokeDir 'command.json'
+$mcpWorldSmokeTools = Join-Path $mcpWorldSmokeDir 'tools-list.json'
+$mcpWorldSmokeExtraMods = Join-Path $mcpWorldSmokeDir 'extra-mods.txt'
 $sessionDir = Join-Path (Join-Path $repoRoot 'build\first-smoke-sessions') "session-$Timestamp"
 $sessionStdout = Join-Path $sessionDir 'runClient.out.log'
 $sessionStderr = Join-Path $sessionDir 'runClient.err.log'
@@ -78,6 +86,13 @@ $copied += Copy-IfPresent $mcpSmokeTools 'mcp-smoke-tools-list.json'
 $copied += Copy-IfPresent $mcpSmokePing 'mcp-smoke-ping.json'
 $copied += Copy-IfPresent $mcpSmokeInitialize 'mcp-smoke-initialize.json'
 $copied += Copy-IfPresent $mcpSmokeExtraMods 'mcp-smoke-extra-mods.txt'
+$copied += Copy-IfPresent $mcpWorldSmokeStdout 'mcp-world-stdout.log'
+$copied += Copy-IfPresent $mcpWorldSmokeStderr 'mcp-world-stderr.log'
+$copied += Copy-IfPresent $mcpWorldSmokePlayerInfo 'mcp-world-player-info.json'
+$copied += Copy-IfPresent $mcpWorldSmokeBlocks 'mcp-world-blocks.json'
+$copied += Copy-IfPresent $mcpWorldSmokeCommand 'mcp-world-command.json'
+$copied += Copy-IfPresent $mcpWorldSmokeTools 'mcp-world-tools-list.json'
+$copied += Copy-IfPresent $mcpWorldSmokeExtraMods 'mcp-world-extra-mods.txt'
 $copied += Copy-IfPresent $sessionStdout 'interactive-client-stdout.log'
 $copied += Copy-IfPresent $sessionStderr 'interactive-client-stderr.log'
 $copied += Copy-IfPresent $sessionExtraMods 'interactive-extra-mods.txt'
@@ -108,6 +123,11 @@ $combinedLog = (Read-TextIfPresent $clientLatestLog) + "`n" +
     (Read-TextIfPresent $mcpSmokeStdout) + "`n" +
     (Read-TextIfPresent $mcpSmokeStderr) + "`n" +
     (Read-TextIfPresent $mcpSmokeTools) + "`n" +
+    (Read-TextIfPresent $mcpWorldSmokeStdout) + "`n" +
+    (Read-TextIfPresent $mcpWorldSmokeStderr) + "`n" +
+    (Read-TextIfPresent $mcpWorldSmokePlayerInfo) + "`n" +
+    (Read-TextIfPresent $mcpWorldSmokeBlocks) + "`n" +
+    (Read-TextIfPresent $mcpWorldSmokeCommand) + "`n" +
     (Read-TextIfPresent $sessionStdout) + "`n" +
     (Read-TextIfPresent $sessionStderr) + "`n" +
     (Read-TextIfPresent $sessionExtraMods)
@@ -149,6 +169,7 @@ $relativeScreenshots
 ## Tester Checklist
 
 - [ ] Client opens local world with NeoOpenComputers installed.
+- [ ] Bounded MCP world smoke enters a local save and writes mcp-world-player-info.json, mcp-world-blocks.json, and mcp-world-command.json.
 - [ ] Computer case, screen, keyboard, disk drive, modem, redstone card, printer, and print block place without crash.
 - [ ] OpenOS or Lua prompt boots on a placed computer.
 - [ ] Filesystem, EEPROM, floppy, and disk-drive actions work once.

@@ -110,6 +110,12 @@ For a bounded MCP helper startup smoke, run:
 
     .\scripts\run-mcp-client-smoke.ps1
 
+For a bounded MCP in-world smoke, create a local singleplayer save at run\client\saves\NeoOCSmoke, then run:
+
+    .\scripts\run-mcp-world-smoke.ps1
+
+This launches with --quickPlaySingleplayer NeoOCSmoke and writes player-info, block-scan, and command evidence under build\mcp-world-smoke.
+
 ## Checksums
 
 See SHA256SUMS.txt.

@@ -31,6 +31,8 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("build\\first-smoke-sessions"), "README must document interactive session logs");
         assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
         assertTrue(readme.contains(".\\scripts\\run-mcp-client-smoke.ps1"), "README must document bounded MCP client smoke script");
+        assertTrue(readme.contains(".\\scripts\\run-mcp-world-smoke.ps1"), "README must document bounded MCP world smoke script");
+        assertTrue(readme.contains("--quickPlaySingleplayer"), "README must document quick-play world entry for MCP world smoke");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
         assertTrue(readme.contains("screenshots"), "README must tell testers screenshots are bundled");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
@@ -53,6 +55,20 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("execute_commands"), "MCP smoke must verify command tool");
         assertTrue(scriptText.contains("get_player_info"), "MCP smoke must verify player info tool");
         assertTrue(scriptText.contains("mcp-client-smoke"), "MCP smoke must write bounded evidence logs");
+    }
+
+    @Test
+    void boundedMcpWorldSmokeScriptExists() throws IOException {
+        final Path script = Path.of("scripts/run-mcp-world-smoke.ps1");
+        assertTrue(Files.exists(script), "Missing bounded MCP world smoke script");
+
+        final String scriptText = Files.readString(script);
+        assertTrue(scriptText.contains("WorldName"), "World smoke must take an explicit world name");
+        assertTrue(scriptText.contains("--quickPlaySingleplayer"), "World smoke must use Minecraft quick-play singleplayer entry");
+        assertTrue(scriptText.contains("get_player_info"), "World smoke must prove the client reached a real world");
+        assertTrue(scriptText.contains("get_blocks_in_area"), "World smoke must prove world block scanning works");
+        assertTrue(scriptText.contains("execute_commands"), "World smoke must include a command transport proof");
+        assertTrue(scriptText.contains("mcp-world-smoke"), "World smoke must write bounded evidence logs");
     }
 
     @Test
@@ -115,6 +131,9 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("interactive-extra-mods.txt"), "Collector must copy interactive helper mod manifest");
         assertTrue(scriptText.contains("mcp-smoke-tools-list.json"), "Collector must copy bounded MCP smoke tools");
         assertTrue(scriptText.contains("mcp-smoke-extra-mods.txt"), "Collector must copy bounded MCP helper mod manifest");
+        assertTrue(scriptText.contains("mcp-world-player-info.json"), "Collector must copy bounded MCP world player info");
+        assertTrue(scriptText.contains("mcp-world-blocks.json"), "Collector must copy bounded MCP world block scan");
+        assertTrue(scriptText.contains("mcp-world-command.json"), "Collector must copy bounded MCP world command proof");
         assertTrue(scriptText.contains("screenshots"), "Collector must copy recent Minecraft screenshots");
         assertTrue(scriptText.contains("Select-Object -First 20"), "Collector must bound copied screenshots");
         assertTrue(scriptText.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),

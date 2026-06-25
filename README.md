@@ -106,6 +106,14 @@ For a bounded MCP helper smoke that starts the client, verifies `http://localhos
 .\scripts\run-mcp-client-smoke.ps1
 ```
 
+For a bounded MCP world smoke, first create a local singleplayer test world whose save folder is `run\client\saves\NeoOCSmoke`, then run:
+
+```powershell
+.\scripts\run-mcp-world-smoke.ps1
+```
+
+This starts the client with the MCP helper mod and `--quickPlaySingleplayer NeoOCSmoke`, waits until `get_player_info` proves the client has entered the world, then captures `get_player_info`, `get_blocks_in_area`, and `execute_commands` evidence under `build\mcp-world-smoke`.
+
 4. In a local test world, check these flows:
 
 - Computer case, screen, and keyboard place without crashing.
