@@ -152,6 +152,7 @@ import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -1470,6 +1471,33 @@ public final class NeoOpenComputersGameTests {
     public static void printDataMaterialValueAcceptsChameliumLikeUpstream(final GameTestHelper helper) {
         helper.assertTrue(PrintData.materialValue(new ItemStack(ModItems.CHAMELIUM.get())) == PrintData.UPSTREAM_MATERIAL_VALUE, "Chamelium should provide one upstream print material unit");
         helper.assertTrue(PrintData.materialValue(new ItemStack(Items.DIAMOND)) == 0, "Unrelated stack should not provide print material");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printDataPersistsThroughItemStackCustomDataLikeUpstream(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.CHAMELIUM.get());
+        final CompoundTag root = new CompoundTag();
+        root.putString("unrelated", "kept");
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+
+        final PrintData saved = new PrintData();
+        saved.setLabel("model");
+        saved.setTooltip("tooltip");
+        saved.setLightLevel(20);
+        saved.setRedstoneLevel(7);
+        saved.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 0.25D, 0.25D, 0.25D), "minecraft:block/stone", 0x112233));
+        saved.save(stack);
+
+        final CompoundTag persisted = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+        helper.assertTrue("kept".equals(persisted.getString("unrelated")), "PrintData save did not preserve unrelated stack data");
+        final PrintData loaded = new PrintData(stack);
+
+        helper.assertTrue("model".equals(loaded.label()), "PrintData label did not round-trip through ItemStack data");
+        helper.assertTrue("tooltip".equals(loaded.tooltip()), "PrintData tooltip did not round-trip through ItemStack data");
+        helper.assertTrue(loaded.lightLevel() == 15, "PrintData light level did not clamp/load through ItemStack data");
+        helper.assertTrue(loaded.redstoneLevel() == 7, "PrintData redstone level did not round-trip through ItemStack data");
+        helper.assertTrue(loaded.stateOff().size() == 1, "PrintData stateOff shape did not round-trip through ItemStack data");
         helper.succeed();
     }
 

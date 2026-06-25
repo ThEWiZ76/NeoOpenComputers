@@ -81,6 +81,15 @@ final class PrintDataTest {
         assertEquals(0, printData.getMethod("materialValue", ItemStack.class).invoke(null, new Object[]{null}));
     }
 
+    @Test
+    void itemStackBridgeMatchesUpstreamItemDataApi() throws Exception {
+        Class<?> printData = Class.forName("li.cil.oc.common.item.data.PrintData");
+
+        printData.getConstructor(ItemStack.class);
+        printData.getMethod("load", ItemStack.class);
+        printData.getMethod("save", ItemStack.class);
+    }
+
     public static int inkValue(final ItemStack stack) {
         return stack == null ? 12345 : 0;
     }

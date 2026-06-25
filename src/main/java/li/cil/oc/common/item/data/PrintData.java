@@ -2,10 +2,12 @@ package li.cil.oc.common.item.data;
 
 import li.cil.oc.common.InkProviders;
 import li.cil.oc.common.ModItems;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.phys.AABB;
 
 import java.lang.reflect.Method;
@@ -50,6 +52,13 @@ public final class PrintData {
     private boolean noclipOn;
     private boolean opacityDirty = true;
     private float opacity;
+
+    public PrintData() {
+    }
+
+    public PrintData(final ItemStack stack) {
+        load(stack);
+    }
 
     public String label() {
         return label;
@@ -201,6 +210,16 @@ public final class PrintData {
         opacityDirty = true;
     }
 
+    public void load(final ItemStack stack) {
+        if (stack == null) {
+            return;
+        }
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData != null) {
+            load(customData.copyTag());
+        }
+    }
+
     public void save(final CompoundTag tag) {
         if (label != null) {
             tag.putString("label", label);
@@ -217,6 +236,16 @@ public final class PrintData {
         tag.putByte("lightLevel", (byte) lightLevel);
         tag.putBoolean("noclipOff", noclipOff);
         tag.putBoolean("noclipOn", noclipOn);
+    }
+
+    public void save(final ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        final CompoundTag tag = customData == null ? new CompoundTag() : customData.copyTag();
+        save(tag);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
     public static float computeApproximateOpacity(final Iterable<Shape> shapes) {
