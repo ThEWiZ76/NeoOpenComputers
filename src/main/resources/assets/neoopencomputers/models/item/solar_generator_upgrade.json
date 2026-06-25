@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:item/daylight_detector"
+    "layer0": "neoopencomputers:item/solar_generator_upgrade"
   }
 }

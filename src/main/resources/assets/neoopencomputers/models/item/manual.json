@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "neoopencomputers:item/upgrade_container_tier3"
+    "layer0": "neoopencomputers:item/manual"
   }
 }
