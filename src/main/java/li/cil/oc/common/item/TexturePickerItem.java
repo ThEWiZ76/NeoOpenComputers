@@ -9,7 +9,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class TexturePickerItem extends Item {
@@ -39,6 +38,6 @@ public class TexturePickerItem extends Item {
             return "";
         }
         final ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
-        return id == BuiltInRegistries.BLOCK.getKey(Blocks.AIR) ? "" : id.toString();
+        return ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "block/" + id.getPath()).toString();
     }
 }

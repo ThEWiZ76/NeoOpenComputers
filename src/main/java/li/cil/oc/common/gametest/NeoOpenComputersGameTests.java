@@ -402,7 +402,7 @@ public final class NeoOpenComputersGameTests {
         final BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, Blocks.STONE.defaultBlockState());
 
-        helper.assertTrue("minecraft:stone".equals(TexturePickerItem.describeBlockTexture(helper.getLevel(), helper.absolutePos(pos))), "Texture Picker did not describe target block");
+        helper.assertTrue("minecraft:block/stone".equals(TexturePickerItem.describeBlockTexture(helper.getLevel(), helper.absolutePos(pos))), "Texture Picker did not describe target block");
         helper.succeed();
     }
 
