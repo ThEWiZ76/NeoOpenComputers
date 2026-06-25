@@ -123,6 +123,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.level.ChunkPos;
@@ -1576,6 +1577,30 @@ public final class NeoOpenComputersGameTests {
         final ItemStack clone = print.createItemStack();
         helper.assertTrue(clone.is(ModItems.PRINT.get()), "Print block entity did not recreate print stack");
         helper.assertTrue("placed-print".equals(new PrintData(clone).label()), "Print block entity recreated stack without data");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printBlockActivatesWithHeldItemLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/stone", null));
+        data.addStateOn(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 0.5D, 1D), "minecraft:block/redstone_block", null));
+
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final BlockState state = ModBlocks.PRINT.get().defaultBlockState();
+        helper.setBlock(pos, state);
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.loadFromStack(data.createItemStack());
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final ItemStack held = new ItemStack(Items.STICK);
+        player.setItemInHand(InteractionHand.MAIN_HAND, held);
+        final BlockPos absolutePos = helper.absolutePos(pos);
+        final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absolutePos), Direction.UP, absolutePos, false);
+
+        final ItemInteractionResult result = helper.getBlockState(pos).useItemOn(held, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit);
+
+        helper.assertTrue(result.consumesAction(), "Held-item print activation did not consume interaction");
+        helper.assertTrue(print.isActiveState(), "Held-item print activation did not toggle print state");
         helper.succeed();
     }
 

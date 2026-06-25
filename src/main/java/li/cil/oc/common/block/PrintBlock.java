@@ -7,6 +7,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -127,16 +129,32 @@ public class PrintBlock extends HorizontalDirectionalBlock implements EntityBloc
         final BlockPos pos,
         final Player player,
         final BlockHitResult hitResult) {
+        return activatePrint(level, pos) ? InteractionResult.sidedSuccess(level.isClientSide) : InteractionResult.PASS;
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(
+        final ItemStack stack,
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final InteractionHand hand,
+        final BlockHitResult hitResult) {
+        return activatePrint(level, pos) ? ItemInteractionResult.sidedSuccess(level.isClientSide) : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+
+    private boolean activatePrint(final Level level, final BlockPos pos) {
         if (level.isClientSide) {
-            return InteractionResult.SUCCESS;
+            return true;
         }
         if (level.getBlockEntity(pos) instanceof PrintBlockEntity print && print.activate()) {
             if (print.data().isButtonMode()) {
                 level.scheduleTick(pos, this, BUTTON_TICKS);
             }
-            return InteractionResult.CONSUME;
+            return true;
         }
-        return InteractionResult.PASS;
+        return false;
     }
 
     @Override
