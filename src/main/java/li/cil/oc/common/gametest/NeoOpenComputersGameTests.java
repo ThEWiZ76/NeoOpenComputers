@@ -3641,6 +3641,7 @@ public final class NeoOpenComputersGameTests {
         assertEnvironmentProvider(helper, new ItemStack(ModItems.REDSTONE_CARD.get()), li.cil.oc.common.component.RedstoneCardEnvironment.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.NAVIGATION_UPGRADE.get()), li.cil.oc.common.component.NavigationUpgradeEnvironment.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.ANGEL_UPGRADE.get()), li.cil.oc.common.component.AngelUpgradeEnvironment.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.LEASH_UPGRADE.get()), li.cil.oc.common.component.LeashUpgradeEnvironment.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.MOTION_SENSOR.get()), li.cil.oc.common.component.MotionSensorEnvironment.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.TRANSPOSER.get()), li.cil.oc.common.component.TransposerEnvironment.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.SCREEN_TIER2.get()), li.cil.oc.common.blockentity.ScreenItemEnvironment.class);

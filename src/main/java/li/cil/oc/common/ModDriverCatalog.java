@@ -26,6 +26,7 @@ import li.cil.oc.common.component.GraphicsCardEnvironment;
 import li.cil.oc.common.component.InternetCardEnvironment;
 import li.cil.oc.common.component.InventoryControllerEnvironment;
 import li.cil.oc.common.component.KeyboardItemEnvironment;
+import li.cil.oc.common.component.LeashUpgradeEnvironment;
 import li.cil.oc.common.component.LinkedCardEnvironment;
 import li.cil.oc.common.component.MfuEnvironment;
 import li.cil.oc.common.component.MotionSensorEnvironment;
@@ -147,6 +148,7 @@ public final class ModDriverCatalog {
                 providerFor(ModItems.SIGN_UPGRADE.get(), SignUpgradeEnvironment.class),
                 providerFor(ModItems.TRADING_UPGRADE.get(), TradingUpgradeEnvironment.class),
                 providerFor(ModItems.TRACTOR_BEAM_UPGRADE.get(), TractorBeamUpgradeEnvironment.class),
+                providerFor(ModItems.LEASH_UPGRADE.get(), LeashUpgradeEnvironment.class),
                 providerFor(ModItems.ANGEL_UPGRADE.get(), AngelUpgradeEnvironment.class),
                 providerFor(ModItems.CHUNKLOADER_UPGRADE.get(), ChunkloaderUpgradeEnvironment.class),
                 providerFor(ModItems.MFU.get(), MfuEnvironment.class),
