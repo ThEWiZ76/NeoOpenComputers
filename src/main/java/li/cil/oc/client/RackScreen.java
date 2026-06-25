@@ -22,6 +22,10 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     private static final int RELAY_Y = 96;
     private static final int RELAY_WIDTH = 65;
     private static final int RELAY_HEIGHT = 18;
+    private static final int[] RELAY_WIRE_XS = {50, 61, 72, 83};
+    private static final int RELAY_WIRE_Y = 104;
+    private static final int RELAY_WIRE_WIDTH = 4;
+    private static final int RELAY_WIRE_HEIGHT = 2;
     private static final int BUS_LABEL_X = 122;
     private static final int BUS_LABEL_Y = 20;
     private static final int BUS_LABEL_WIDTH = 36;
@@ -70,6 +74,7 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
         guiGraphics.fill(left + 7, top + 16, left + 169, top + 118, 0xFF3B4252);
         drawRelayControl(guiGraphics, left + RELAY_X, top + RELAY_Y, menu.rackRelayEnabled());
+        drawRelayWireIndicators(guiGraphics, menu, left, top);
         for (int slot = 0; slot < RackMenu.RACK_SLOT_COUNT; slot++) {
             drawSlot(guiGraphics, left + RackMenu.rackSlotX(slot) - 1, top + RackMenu.rackSlotY(slot) - 1);
             drawControl(guiGraphics, left + CONTROL_X, top + controlY(slot), controlColor(menu.rackState(slot)));
@@ -258,6 +263,17 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
                         present));
                 }
             }
+        }
+        return indicators;
+    }
+
+    static List<RelayWireIndicator> relayWireIndicators(final RackMenu menu) {
+        final List<RelayWireIndicator> indicators = new ArrayList<>();
+        if (!menu.rackRelayEnabled()) {
+            return indicators;
+        }
+        for (final int x : RELAY_WIRE_XS) {
+            indicators.add(new RelayWireIndicator(x, RELAY_WIRE_Y, RELAY_WIRE_WIDTH, RELAY_WIRE_HEIGHT));
         }
         return indicators;
     }
@@ -481,6 +497,17 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
         guiGraphics.fill(left + 9, top + 6, left + 11, top + 12, color);
     }
 
+    private static void drawRelayWireIndicators(final GuiGraphics guiGraphics, final RackMenu menu, final int left, final int top) {
+        for (final RelayWireIndicator indicator : relayWireIndicators(menu)) {
+            guiGraphics.fill(
+                left + indicator.x(),
+                top + indicator.y(),
+                left + indicator.x() + indicator.width(),
+                top + indicator.y() + indicator.height(),
+                0xFFA3BE8C);
+        }
+    }
+
     private static int controlY(final int slot) {
         return CONTROL_Y + slot * CONTROL_SLOT_STEP;
     }
@@ -534,6 +561,9 @@ public class RackScreen extends AbstractContainerScreen<RackMenu> {
     }
 
     record BusPointIndicator(int x, int y, int width, int height, boolean present) {
+    }
+
+    record RelayWireIndicator(int x, int y, int width, int height) {
     }
 
     record MappingControl(int slot, int connectableIndex, int busIndex) {

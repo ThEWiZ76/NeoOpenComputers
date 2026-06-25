@@ -215,6 +215,22 @@ final class RackScreenShapeTest {
     }
 
     @Test
+    void rackScreenBuildsRelayWireIndicatorsOnlyWhenRelayEnabledLikeUpstream() throws ReflectiveOperationException {
+        final RackMenu menu = allocateMenu(14, rackDataWithRelayState(false));
+        final RackMenu enabledMenu = allocateMenu(14, rackDataWithRelayState(true));
+
+        assertTrue(RackScreen.relayWireIndicators(menu).isEmpty());
+
+        final List<RackScreen.RelayWireIndicator> indicators = RackScreen.relayWireIndicators(enabledMenu);
+
+        assertEquals(4, indicators.size());
+        assertEquals(new RackScreen.RelayWireIndicator(50, 104, 4, 2), indicators.get(0));
+        assertEquals(new RackScreen.RelayWireIndicator(61, 104, 4, 2), indicators.get(1));
+        assertEquals(new RackScreen.RelayWireIndicator(72, 104, 4, 2), indicators.get(2));
+        assertEquals(new RackScreen.RelayWireIndicator(83, 104, 4, 2), indicators.get(3));
+    }
+
+    @Test
     void rackScreenExposesOrientationTooltipLikeUpstream() {
         final List<Component> tooltip = RackScreen.orientationTooltip();
 
