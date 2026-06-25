@@ -1,6 +1,7 @@
 package li.cil.oc.common.item.data;
 
 import li.cil.oc.common.InkProviders;
+import li.cil.oc.common.ModItems;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -265,6 +266,13 @@ public final class PrintData {
 
     public static int inkValue(final ItemStack stack) {
         return InkProviders.inkValue(stack);
+    }
+
+    public static int materialValue(final ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 0;
+        }
+        return stack.is(ModItems.CHAMELIUM.get()) ? UPSTREAM_MATERIAL_VALUE : 0;
     }
 
     public static Shape nbtToShape(final CompoundTag tag) {

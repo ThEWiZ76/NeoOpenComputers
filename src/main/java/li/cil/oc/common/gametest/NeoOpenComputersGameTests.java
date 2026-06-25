@@ -72,6 +72,7 @@ import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
+import li.cil.oc.common.item.data.PrintData;
 import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
@@ -1462,6 +1463,13 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(InkProviders.inkValue(target) == 3333, "IMC ink provider did not supply ink value");
         helper.assertTrue(InkProviders.inkValue(new ItemStack(Items.EMERALD)) == 0, "IMC ink provider accepted unrelated stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printDataMaterialValueAcceptsChameliumLikeUpstream(final GameTestHelper helper) {
+        helper.assertTrue(PrintData.materialValue(new ItemStack(ModItems.CHAMELIUM.get())) == PrintData.UPSTREAM_MATERIAL_VALUE, "Chamelium should provide one upstream print material unit");
+        helper.assertTrue(PrintData.materialValue(new ItemStack(Items.DIAMOND)) == 0, "Unrelated stack should not provide print material");
         helper.succeed();
     }
 
