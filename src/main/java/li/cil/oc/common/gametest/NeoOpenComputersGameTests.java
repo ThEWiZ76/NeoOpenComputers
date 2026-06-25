@@ -165,6 +165,7 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.CommandBlockEntity;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
@@ -6624,6 +6625,70 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterHidesCommandBlockDriverByDefaultLikeUpstream(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_COMMAND_BLOCK_DRIVER, false);
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.COMMAND_BLOCK);
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(adapter.node().network() == computer.node().network(), "Adapter is not on the computer network");
+            helper.assertTrue(componentAddress(computer, "command_block") == null, "Disabled command block driver should not expose a component: " + computer.machine().components());
+            try {
+                restoreCachedConfig(ModSettings.ENABLE_COMMAND_BLOCK_DRIVER, previous);
+            } catch (Exception e) {
+                helper.fail("Failed to restore command block config: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 120)
+    public static void adapterExposesCommandBlockDriverWhenEnabledLikeUpstream(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_COMMAND_BLOCK_DRIVER, true);
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.COMMAND_BLOCK);
+        final CommandBlockEntity commandBlock = helper.getBlockEntity(targetPos);
+        commandBlock.getCommandBlock().setCommand("say neoopencomputers");
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(adapter.node().network() == computer.node().network(), "Adapter is not on the computer network");
+            final String address = componentAddress(computer, "command_block");
+            helper.assertTrue(address != null, "Adapter did not expose enabled command block component: " + computer.machine().components());
+            try {
+                assertInvokeResult(helper, computer, address, "getCommand", new Object[0], "say neoopencomputers");
+                assertInvokeResult(helper, computer, address, "setCommand", new Object[]{"Searge"}, true);
+                assertInvokeResult(helper, computer, address, "getCommand", new Object[0], "Searge");
+                final Object[] execute = computer.machine().invoke(address, "executeCommand", new Object[0]);
+                if (helper.getLevel().getServer().isCommandBlockEnabled()) {
+                    helper.assertTrue(execute.length == 2 && Integer.valueOf(1).equals(execute[0]) && "#itzlipofutzli".equals(execute[1]),
+                        "Command block execute did not return success count and output");
+                } else {
+                    helper.assertTrue(execute.length == 2 && execute[0] == null && "command blocks are disabled".equals(execute[1]),
+                        "Disabled command blocks did not return upstream disabled error");
+                }
+                restoreCachedConfig(ModSettings.ENABLE_COMMAND_BLOCK_DRIVER, previous);
+            } catch (Exception e) {
+                helper.fail("Command block component invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
     public static void adapterInventoryControllerUpgradeReadsChest(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
@@ -8271,15 +8336,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Object previous = setCachedConfig(value, override);
+        try {
+            action.run();
+        } finally {
+            restoreCachedConfig(value, previous);
+        }
+    }
+
+    private static <T> Object setCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override) throws Exception {
         final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
         cachedValue.setAccessible(true);
         final Object previous = cachedValue.get(value);
         cachedValue.set(value, override);
-        try {
-            action.run();
-        } finally {
-            cachedValue.set(value, previous);
-        }
+        return previous;
+    }
+
+    private static <T> void restoreCachedConfig(final ModConfigSpec.ConfigValue<T> value, final Object previous) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        cachedValue.set(value, previous);
     }
 
     private static void assertSingleResult(final GameTestHelper helper, final Object[] result, final Object expected, final String name) {

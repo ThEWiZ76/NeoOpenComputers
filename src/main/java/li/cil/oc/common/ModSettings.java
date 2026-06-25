@@ -94,6 +94,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP;
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP_HEADERS;
     public static final ModConfigSpec.BooleanValue ENABLE_TCP;
+    public static final ModConfigSpec.BooleanValue ENABLE_COMMAND_BLOCK_DRIVER;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> FILTERING_RULES;
     public static final ModConfigSpec.IntValue REQUEST_TIMEOUT;
     public static final ModConfigSpec.IntValue INTERNET_THREADS;
@@ -358,6 +359,14 @@ public final class ModSettings {
         HTTP_USER_AGENT = builder
             .comment("HTTP User-Agent for internet-card requests. $version is replaced with the mod version.")
             .define("httpUserAgent", "opencomputers/$version");
+        builder.pop();
+
+        builder.push("integration");
+        builder.push("vanilla");
+        ENABLE_COMMAND_BLOCK_DRIVER = builder
+            .comment("Enable the vanilla command block driver. This lets computers set and execute commands via adjacent command blocks. OpenComputers upstream default is false.")
+            .define("enableCommandBlockDriver", false);
+        builder.pop();
         builder.pop();
 
         builder.push("hologram");
@@ -1078,6 +1087,10 @@ public final class ModSettings {
 
     public static boolean enableTcp() {
         return booleanValue(ENABLE_TCP);
+    }
+
+    public static boolean enableCommandBlockDriver() {
+        return booleanValue(ENABLE_COMMAND_BLOCK_DRIVER);
     }
 
     public static List<String> internetFilteringRules() {
