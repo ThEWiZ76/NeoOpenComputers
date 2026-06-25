@@ -2435,6 +2435,27 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesWirelessSaveConfigurationReportsMissingBlankItem(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+        final li.cil.oc.api.network.WirelessEndpoint endpoint = (li.cil.oc.api.network.WirelessEndpoint) controller;
+        final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
+        Network.joinWirelessNetwork(sender);
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setResponsePort", 566}), sender);
+        runNanomachinesCommandDelay(player);
+        sender.lastPacket = null;
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "saveConfiguration"}), sender);
+        runNanomachinesCommandDelay(player);
+
+        helper.assertTrue(sender.lastPacket != null, "Nanomachines saveConfiguration missing-item path did not respond");
+        helper.assertTrue(sender.lastPacket.port() == 566, "Nanomachines saveConfiguration missing-item path used wrong response port");
+        helper.assertTrue(java.util.Arrays.equals(new Object[]{"nanomachines", "saved", false, "no nanomachines"}, sender.lastPacket.data()),
+            "Nanomachines saveConfiguration missing-item path returned wrong payload");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesControllerJoinsWirelessNetworkLikeUpstream(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         li.cil.oc.api.Nanomachines.installController(player);
