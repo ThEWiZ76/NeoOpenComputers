@@ -8,6 +8,7 @@ import li.cil.oc.api.driver.InventoryProvider;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.manual.ImageRenderer;
+import li.cil.oc.api.fs.Label;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.api.network.EnvironmentHost;
@@ -93,6 +94,15 @@ final class DetailApiContractsTest {
     }
 
     @Test
+    void fileSystemApiKeepsDeprecatedManagedEnvironmentConvenienceOverloads() throws NoSuchMethodException {
+        assertDeprecatedManagedEnvironmentOverload(Label.class, EnvironmentHost.class, String.class);
+        assertDeprecatedManagedEnvironmentOverload(String.class, EnvironmentHost.class, String.class);
+        assertDeprecatedManagedEnvironmentOverload(Label.class);
+        assertDeprecatedManagedEnvironmentOverload(String.class);
+        assertDeprecatedManagedEnvironmentOverload();
+    }
+
+    @Test
     void driverApiCanBeImplementedByRegistries() {
         TestDriverAPI api = new TestDriverAPI();
         DriverBlock block = new TestDriverBlock();
@@ -175,6 +185,17 @@ final class DetailApiContractsTest {
         public Collection<DriverItem> itemDrivers() {
             return Set.of(item);
         }
+    }
+
+    private static void assertDeprecatedManagedEnvironmentOverload(final Class<?>... tailParameters) throws NoSuchMethodException {
+        final Class<?>[] parameters = new Class<?>[tailParameters.length + 1];
+        parameters[0] = li.cil.oc.api.fs.FileSystem.class;
+        System.arraycopy(tailParameters, 0, parameters, 1, tailParameters.length);
+
+        final Method method = FileSystemAPI.class.getMethod("asManagedEnvironment", parameters);
+
+        assertEquals(ManagedEnvironment.class, method.getReturnType());
+        assertSame(Deprecated.class, method.getAnnotation(Deprecated.class).annotationType());
     }
 
     private static final class TestDriverBlock implements DriverBlock {

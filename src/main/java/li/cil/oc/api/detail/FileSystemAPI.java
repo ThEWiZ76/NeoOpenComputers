@@ -16,4 +16,44 @@ public interface FileSystemAPI {
     ManagedEnvironment asManagedEnvironment(li.cil.oc.api.fs.FileSystem fileSystem, Label label, EnvironmentHost host, String accessSound, int speed);
 
     ManagedEnvironment asManagedEnvironment(li.cil.oc.api.fs.FileSystem fileSystem, String label, EnvironmentHost host, String accessSound, int speed);
+
+    /**
+     * @deprecated Use {@link li.cil.oc.api.FileSystem} convenience overloads instead.
+     */
+    @Deprecated
+    default ManagedEnvironment asManagedEnvironment(final li.cil.oc.api.fs.FileSystem fileSystem, final Label label, final EnvironmentHost host, final String accessSound) {
+        return asManagedEnvironment(fileSystem, label, host, accessSound, 1);
+    }
+
+    /**
+     * @deprecated Use {@link li.cil.oc.api.FileSystem} convenience overloads instead.
+     */
+    @Deprecated
+    default ManagedEnvironment asManagedEnvironment(final li.cil.oc.api.fs.FileSystem fileSystem, final String label, final EnvironmentHost host, final String accessSound) {
+        return asManagedEnvironment(fileSystem, label, host, accessSound, 1);
+    }
+
+    /**
+     * @deprecated Use {@link li.cil.oc.api.FileSystem} convenience overloads instead.
+     */
+    @Deprecated
+    default ManagedEnvironment asManagedEnvironment(final li.cil.oc.api.fs.FileSystem fileSystem, final Label label) {
+        return asManagedEnvironment(fileSystem, label, null, null, 1);
+    }
+
+    /**
+     * @deprecated Use {@link li.cil.oc.api.FileSystem} convenience overloads instead.
+     */
+    @Deprecated
+    default ManagedEnvironment asManagedEnvironment(final li.cil.oc.api.fs.FileSystem fileSystem, final String label) {
+        return asManagedEnvironment(fileSystem, label, null, null, 1);
+    }
+
+    /**
+     * @deprecated Use {@link li.cil.oc.api.FileSystem} convenience overloads instead.
+     */
+    @Deprecated
+    default ManagedEnvironment asManagedEnvironment(final li.cil.oc.api.fs.FileSystem fileSystem) {
+        return asManagedEnvironment(fileSystem, (Label) null, null, null, 1);
+    }
 }
