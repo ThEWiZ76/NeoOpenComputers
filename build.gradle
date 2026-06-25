@@ -205,10 +205,12 @@ tasks.withType(Test).configureEach {
     dependsOn tasks.named('jar')
     dependsOn tasks.named('jarJar')
     dependsOn tasks.named('javadocJar')
+    dependsOn tasks.named('generatePomFileForMavenJavaPublication')
     systemProperty 'neoopencomputers.apiJar', tasks.named('apiJar').flatMap { it.archiveFile }.get().asFile.absolutePath
     systemProperty 'neoopencomputers.modJar', tasks.named('jar').flatMap { it.archiveFile }.get().asFile.absolutePath
     systemProperty 'neoopencomputers.allJar', tasks.named('jarJar').flatMap { it.archiveFile }.get().asFile.absolutePath
     systemProperty 'neoopencomputers.javadocJar', tasks.named('javadocJar').flatMap { it.archiveFile }.get().asFile.absolutePath
+    systemProperty 'neoopencomputers.mavenPom', layout.buildDirectory.file('publications/mavenJava/pom-default.xml').get().asFile.absolutePath
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -262,7 +264,7 @@ publishing {
     }
     repositories {
         maven {
-            url "file://${project.projectDir}/repo"
+            url = uri(layout.buildDirectory.dir('repo'))
         }
     }
 }

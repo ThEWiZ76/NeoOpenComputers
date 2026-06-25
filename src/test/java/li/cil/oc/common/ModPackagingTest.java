@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -79,6 +80,35 @@ final class ModPackagingTest {
         }
     }
 
+    @Test
+    void generatedMavenPomContainsCommunityMetadata() throws Exception {
+        final Path pom = Path.of(System.getProperty("neoopencomputers.mavenPom"));
+        assertTrue(Files.isRegularFile(pom), "Generated Maven POM is missing");
+
+        final var factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        final var document = factory.newDocumentBuilder().parse(pom.toFile());
+
+        assertTrue("li.cil.oc".equals(textOf(document, "groupId")), "POM must use stable public groupId");
+        assertTrue("neoopencomputers".equals(textOf(document, "artifactId")), "POM must publish NeoOpenComputers artifactId");
+        assertTrue("0.1.0".equals(textOf(document, "version")), "POM must publish current mod version");
+        assertTrue("NeoOpenComputers".equals(textOf(document, "name")), "POM must publish mod name");
+        assertTrue(textOf(document, "description").contains("Java-first NeoForge port"), "POM must describe the port");
+        assertTrue(textOf(document, "url").contains("ThEWiZ76/NeoOpenComputers"), "POM must point at community repository");
+        assertTrue(textOf(document, "license").contains("MIT License"), "POM must publish MIT license metadata");
+        assertTrue(textOf(document, "connection").contains("ThEWiZ76/NeoOpenComputers.git"), "POM must publish SCM metadata");
+    }
+
+    @Test
+    void localMavenRepositoryUsesPortableGradleUri() throws IOException {
+        final String build = Files.readString(BUILD_GRADLE);
+
+        assertTrue(build.contains("url = uri(layout.buildDirectory.dir('repo'))"),
+            "Local Maven repository must use a portable Gradle URI");
+        assertTrue(!build.contains("file://${project.projectDir}/repo"),
+            "Local Maven repository must not use a Windows-hostile file URI string");
+    }
+
     private static void assertContains(final ZipFile jar, final String entryName) {
         assertTrue(jar.getEntry(entryName) != null, () -> "Missing packaged entry " + entryName);
     }
@@ -95,5 +125,11 @@ final class ModPackagingTest {
             }
         }
         return false;
+    }
+
+    private static String textOf(final org.w3c.dom.Document document, final String tagName) {
+        final var nodes = document.getElementsByTagName(tagName);
+        assertTrue(nodes.getLength() > 0, () -> "Missing POM element " + tagName);
+        return nodes.item(0).getTextContent().trim();
     }
 }
