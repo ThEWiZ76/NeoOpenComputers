@@ -66,6 +66,7 @@ import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.blockentity.WaypointBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
+import li.cil.oc.common.block.PrintBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.NanomachineItemData;
@@ -1551,6 +1552,22 @@ public final class NeoOpenComputersGameTests {
         final ItemStack clone = print.createItemStack();
         helper.assertTrue(clone.is(ModItems.PRINT.get()), "Print block entity did not recreate print stack");
         helper.assertTrue("placed-print".equals(new PrintData(clone).label()), "Print block entity recreated stack without data");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printBlockRotatesShapeTowardFacingLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 0.25D, 1D, 1D), "minecraft:block/stone", null));
+
+        final BlockPos pos = BlockPos.ZERO;
+        helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState().setValue(PrintBlock.FACING, Direction.EAST));
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.loadFromStack(data.createItemStack());
+
+        final AABB bounds = helper.getBlockState(pos).getShape(helper.getLevel(), helper.absolutePos(pos)).bounds();
+        helper.assertTrue(bounds.minX == 0D && bounds.maxX == 1D, "East-facing print did not rotate shape across X axis");
+        helper.assertTrue(bounds.minZ >= 0.75D && bounds.maxZ == 1D, "East-facing print did not rotate shape to south edge like upstream");
         helper.succeed();
     }
 

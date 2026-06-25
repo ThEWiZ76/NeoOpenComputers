@@ -1,6 +1,7 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.block.PrintBlock;
 import li.cil.oc.common.item.data.PrintData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -74,14 +75,17 @@ public class PrintBlockEntity extends BlockEntity {
     }
 
     public AABB bounds() {
+        updateBounds();
         return activeState ? boundsOn : boundsOff;
     }
 
     public VoxelShape shape() {
+        updateBounds();
         return activeState ? shapeOn : shapeOff;
     }
 
     public VoxelShape collisionShape() {
+        updateBounds();
         if (activeState ? data.isNoclipOn() : data.isNoclipOff()) {
             return Shapes.empty();
         }
@@ -91,7 +95,7 @@ public class PrintBlockEntity extends BlockEntity {
     public boolean isSideSolid(final Direction side) {
         final Iterable<PrintData.Shape> shapes = activeState ? data.stateOn() : data.stateOff();
         for (PrintData.Shape shape : shapes) {
-            final AABB bounds = shape.bounds();
+            final AABB bounds = rotateTowardsFacing(shape.bounds());
             final boolean fullX = bounds.minX == 0D && bounds.maxX == 1D;
             final boolean fullY = bounds.minY == 0D && bounds.maxY == 1D;
             final boolean fullZ = bounds.minZ == 0D && bounds.maxZ == 1D;
@@ -141,26 +145,41 @@ public class PrintBlockEntity extends BlockEntity {
     }
 
     private void updateBounds() {
-        boundsOff = unionBounds(data.stateOff());
-        boundsOn = unionBounds(data.stateOn());
+        boundsOff = unionRotatedBounds(data.stateOff());
+        boundsOn = unionRotatedBounds(data.stateOn());
         shapeOff = buildShape(data.stateOff());
         shapeOn = buildShape(data.stateOn());
     }
 
-    private static AABB unionBounds(final Iterable<PrintData.Shape> shapes) {
+    private AABB unionRotatedBounds(final Iterable<PrintData.Shape> shapes) {
         AABB result = null;
         for (PrintData.Shape shape : shapes) {
-            result = result == null ? shape.bounds() : result.minmax(shape.bounds());
+            final AABB rotated = rotateTowardsFacing(shape.bounds());
+            result = result == null ? rotated : result.minmax(rotated);
         }
         return result == null || volume(result) == 0D ? UNIT_BOUNDS : result;
     }
 
-    private static VoxelShape buildShape(final Iterable<PrintData.Shape> shapes) {
+    private VoxelShape buildShape(final Iterable<PrintData.Shape> shapes) {
         VoxelShape result = Shapes.empty();
         for (PrintData.Shape shape : shapes) {
-            result = Shapes.or(result, Shapes.create(shape.bounds()));
+            result = Shapes.or(result, Shapes.create(rotateTowardsFacing(shape.bounds())));
         }
         return result.isEmpty() ? Shapes.block() : result;
+    }
+
+    private AABB rotateTowardsFacing(final AABB bounds) {
+        return switch (facing()) {
+            case EAST -> new AABB(bounds.minZ, bounds.minY, 1D - bounds.maxX, bounds.maxZ, bounds.maxY, 1D - bounds.minX);
+            case NORTH -> new AABB(1D - bounds.maxX, bounds.minY, 1D - bounds.maxZ, 1D - bounds.minX, bounds.maxY, 1D - bounds.minZ);
+            case WEST -> new AABB(1D - bounds.maxZ, bounds.minY, bounds.minX, 1D - bounds.minZ, bounds.maxY, bounds.maxX);
+            default -> bounds;
+        };
+    }
+
+    private Direction facing() {
+        final BlockState state = getBlockState();
+        return state.hasProperty(PrintBlock.FACING) ? state.getValue(PrintBlock.FACING) : Direction.SOUTH;
     }
 
     private static double volume(final AABB bounds) {
