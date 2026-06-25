@@ -1701,6 +1701,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void printBlockUsesConfiguredOpacityWhenEnabledLikeUpstream(final GameTestHelper helper) throws Exception {
+        final PrintData data = new PrintData();
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/stone", null));
+
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState());
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.loadFromStack(data.createItemStack());
+
+        withCachedConfig(ModSettings.PRINTS_HAVE_OPACITY, true, () -> {
+            final int lightBlock = helper.getBlockState(pos).getLightBlock(helper.getLevel(), helper.absolutePos(pos));
+            helper.assertTrue(lightBlock == 4, "Print block did not use upstream opacity-derived light blocking");
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void mfuDriverIsAdapterOnly(final GameTestHelper helper) {
         final ItemStack stack = new ItemStack(ModItems.MFU.get());
 

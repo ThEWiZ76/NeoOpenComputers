@@ -223,6 +223,7 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_LIGHT_GRAY)
             .strength(1.0F, 3.0F)
+            .dynamicShape()
             .noOcclusion();
     }
 

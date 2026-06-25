@@ -136,6 +136,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue TABLET_ASSEMBLY_BASE_COST;
     public static final ModConfigSpec.DoubleValue TABLET_ASSEMBLY_COMPLEXITY_COST;
     public static final ModConfigSpec.DoubleValue PRINT_COST;
+    public static final ModConfigSpec.BooleanValue PRINTS_HAVE_OPACITY;
     public static final ModConfigSpec.DoubleValue CONVERTER_BUFFER;
     public static final ModConfigSpec.DoubleValue COMPUTER_BUFFER;
     public static final ModConfigSpec.DoubleValue ACCESS_POINT_BUFFER;
@@ -480,6 +481,9 @@ public final class ModSettings {
         PRINT_COST = builder
             .comment("Energy consumed for a single 3D print. OpenComputers upstream default is 100.")
             .defineInRange("printerModel", 100D, 0D, Double.MAX_VALUE);
+        PRINTS_HAVE_OPACITY = builder
+            .comment("Make prints cast shadows based on estimated model opacity. OpenComputers upstream default is false.")
+            .define("printsHaveOpacity", false);
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
@@ -603,6 +607,10 @@ public final class ModSettings {
 
     public static double printCost() {
         return Math.max(0D, doubleValue(PRINT_COST));
+    }
+
+    public static boolean printsHaveOpacity() {
+        return booleanValue(PRINTS_HAVE_OPACITY);
     }
 
     public static List<Double> batteryUpgradeBuffers() {

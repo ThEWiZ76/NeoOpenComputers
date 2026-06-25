@@ -1,6 +1,7 @@
 package li.cil.oc.common.block;
 
 import com.mojang.serialization.MapCodec;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.blockentity.PrintBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -109,6 +110,14 @@ public class PrintBlock extends HorizontalDirectionalBlock implements EntityBloc
             return print.lightLevel();
         }
         return super.getLightEmission(state, level, pos);
+    }
+
+    @Override
+    protected int getLightBlock(final BlockState state, final BlockGetter level, final BlockPos pos) {
+        if (ModSettings.printsHaveOpacity() && level.getBlockEntity(pos) instanceof PrintBlockEntity print) {
+            return (int) (print.data().opacity() * 4F);
+        }
+        return super.getLightBlock(state, level, pos);
     }
 
     @Override
