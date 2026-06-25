@@ -84,6 +84,8 @@ For an interactive smoke session that automatically packages logs after the clie
 .\scripts\run-first-smoke-client.ps1
 ```
 
+This stores Gradle client stdout/stderr under `build\first-smoke-sessions` and includes those logs in the first-smoke report bundle.
+
 For a bounded launch/log smoke that stops after resource reload and texture atlas creation:
 
 ```powershell

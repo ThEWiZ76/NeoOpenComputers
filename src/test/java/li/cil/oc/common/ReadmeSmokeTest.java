@@ -23,6 +23,7 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains(".\\scripts\\package-first-smoke-kit.ps1"), "README must document first-smoke kit packaging");
         assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include current disk-drive persistence smoke item");
         assertTrue(readme.contains(".\\scripts\\run-first-smoke-client.ps1"), "README must document interactive first-smoke launcher");
+        assertTrue(readme.contains("build\\first-smoke-sessions"), "README must document interactive session logs");
         assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
         assertTrue(readme.contains("screenshots"), "README must tell testers screenshots are bundled");
@@ -54,6 +55,9 @@ final class ReadmeSmokeTest {
 
         final String scriptText = Files.readString(script);
         assertTrue(scriptText.contains("runClient"), "Launcher must start development client");
+        assertTrue(scriptText.contains("first-smoke-sessions"), "Launcher must write interactive session logs");
+        assertTrue(scriptText.contains("RedirectStandardOutput"), "Launcher must capture stdout");
+        assertTrue(scriptText.contains("RedirectStandardError"), "Launcher must capture stderr");
         assertTrue(scriptText.contains("collect-first-smoke-report.ps1"), "Launcher must collect evidence after client exit");
         assertTrue(scriptText.contains("DryRun"), "Launcher must have a dry-run path for verification");
     }
@@ -67,6 +71,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("Tester Checklist"), "Collector must write tester checklist");
         assertTrue(scriptText.contains("Compress-Archive"), "Collector must package a zip by default");
         assertTrue(scriptText.contains("Missing texture"), "Collector must scan missing texture failures");
+        assertTrue(scriptText.contains("interactive-client-stdout.log"), "Collector must copy interactive stdout");
+        assertTrue(scriptText.contains("interactive-client-stderr.log"), "Collector must copy interactive stderr");
         assertTrue(scriptText.contains("screenshots"), "Collector must copy recent Minecraft screenshots");
         assertTrue(scriptText.contains("Select-Object -First 20"), "Collector must bound copied screenshots");
     }

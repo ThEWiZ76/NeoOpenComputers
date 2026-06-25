@@ -55,12 +55,17 @@ $clientScreenshotsDir = Join-Path $clientRunDir 'screenshots'
 $smokeDir = Join-Path $repoRoot 'build\client-smoke'
 $smokeStdout = Join-Path $smokeDir 'runClient.out.log'
 $smokeStderr = Join-Path $smokeDir 'runClient.err.log'
+$sessionDir = Join-Path (Join-Path $repoRoot 'build\first-smoke-sessions') "session-$Timestamp"
+$sessionStdout = Join-Path $sessionDir 'runClient.out.log'
+$sessionStderr = Join-Path $sessionDir 'runClient.err.log'
 
 $copied = @()
 $copied += Copy-IfPresent $clientLatestLog 'client-latest.log'
 $copied += Copy-IfPresent $clientDebugLog 'client-debug.log'
 $copied += Copy-IfPresent $smokeStdout 'bounded-smoke-stdout.log'
 $copied += Copy-IfPresent $smokeStderr 'bounded-smoke-stderr.log'
+$copied += Copy-IfPresent $sessionStdout 'interactive-client-stdout.log'
+$copied += Copy-IfPresent $sessionStderr 'interactive-client-stderr.log'
 $copied = @($copied | Where-Object { $null -ne $_ })
 
 if (Test-Path -LiteralPath $clientCrashDir) {
@@ -84,7 +89,9 @@ if (Test-Path -LiteralPath $clientScreenshotsDir) {
 $combinedLog = (Read-TextIfPresent $clientLatestLog) + "`n" +
     (Read-TextIfPresent $clientDebugLog) + "`n" +
     (Read-TextIfPresent $smokeStdout) + "`n" +
-    (Read-TextIfPresent $smokeStderr)
+    (Read-TextIfPresent $smokeStderr) + "`n" +
+    (Read-TextIfPresent $sessionStdout) + "`n" +
+    (Read-TextIfPresent $sessionStderr)
 
 $failurePatterns = @(
     '/ERROR]',
