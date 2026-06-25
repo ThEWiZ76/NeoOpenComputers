@@ -2,7 +2,6 @@ package li.cil.oc.common.network;
 
 import li.cil.oc.NeoOpenComputers;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -15,21 +14,29 @@ public record TerminalMousePayload(int containerId, int kind, double x, double y
 
     public static final Type<TerminalMousePayload> TYPE = new Type<>(
         ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "terminal_mouse"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, TerminalMousePayload> STREAM_CODEC = StreamCodec.composite(
-        ByteBufCodecs.VAR_INT,
-        TerminalMousePayload::containerId,
-        ByteBufCodecs.VAR_INT,
-        TerminalMousePayload::kind,
-        ByteBufCodecs.DOUBLE,
-        TerminalMousePayload::x,
-        ByteBufCodecs.DOUBLE,
-        TerminalMousePayload::y,
-        ByteBufCodecs.VAR_INT,
-        TerminalMousePayload::buttonOrDelta,
-        TerminalMousePayload::new);
+    public static final StreamCodec<RegistryFriendlyByteBuf, TerminalMousePayload> STREAM_CODEC = StreamCodec.of(
+        TerminalMousePayload::encode,
+        TerminalMousePayload::decode);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
+    }
+
+    private static void encode(final RegistryFriendlyByteBuf buffer, final TerminalMousePayload payload) {
+        buffer.writeVarInt(payload.containerId());
+        buffer.writeVarInt(payload.kind());
+        buffer.writeFloat((float) payload.x());
+        buffer.writeFloat((float) payload.y());
+        buffer.writeVarInt(payload.buttonOrDelta());
+    }
+
+    private static TerminalMousePayload decode(final RegistryFriendlyByteBuf buffer) {
+        return new TerminalMousePayload(
+            buffer.readVarInt(),
+            buffer.readVarInt(),
+            buffer.readFloat(),
+            buffer.readFloat(),
+            buffer.readVarInt());
     }
 }

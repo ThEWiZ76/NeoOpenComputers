@@ -40,4 +40,26 @@ final class TerminalMousePayloadTest {
         assertEquals(8.0D, decoded.y());
         assertEquals(-1, decoded.buttonOrDelta());
     }
+
+    @Test
+    void streamCodecQuantizesCoordinatesToUpstreamFloatPrecision() {
+        final double x = 1.0D / 3.0D;
+        final double y = 2.0D / 3.0D;
+        final TerminalMousePayload payload = new TerminalMousePayload(
+            4,
+            TerminalMousePayload.MOUSE_DOWN,
+            x,
+            y,
+            1);
+        final RegistryFriendlyByteBuf buffer = new RegistryFriendlyByteBuf(
+            Unpooled.buffer(),
+            RegistryAccess.EMPTY,
+            ConnectionType.NEOFORGE);
+
+        TerminalMousePayload.STREAM_CODEC.encode(buffer, payload);
+        final TerminalMousePayload decoded = TerminalMousePayload.STREAM_CODEC.decode(buffer);
+
+        assertEquals((double) (float) x, decoded.x());
+        assertEquals((double) (float) y, decoded.y());
+    }
 }
