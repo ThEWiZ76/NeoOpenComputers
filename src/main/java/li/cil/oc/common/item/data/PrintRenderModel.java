@@ -31,9 +31,8 @@ public final class PrintRenderModel {
         final Iterable<PrintData.Shape> shapes = activePreview && data.hasActiveState() ? data.stateOn() : data.stateOff();
         final List<RenderShape> result = new ArrayList<>();
         for (PrintData.Shape shape : shapes) {
-            if (shape.texture() != null && !shape.texture().isBlank()) {
-                result.add(new RenderShape(shape.bounds(), normalizeTexture(shape.texture()), tint(shape)));
-            }
+            final String texture = shape.texture() == null || shape.texture().isBlank() ? FALLBACK_TEXTURE : normalizeTexture(shape.texture());
+            result.add(new RenderShape(shape.bounds(), texture, tint(shape)));
         }
         if (result.isEmpty()) {
             result.add(new RenderShape(UNIT_BOUNDS, FALLBACK_TEXTURE, FALLBACK_TINT));

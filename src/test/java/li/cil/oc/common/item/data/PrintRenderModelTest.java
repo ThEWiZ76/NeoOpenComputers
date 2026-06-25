@@ -36,6 +36,18 @@ final class PrintRenderModelTest {
     }
 
     @Test
+    void itemShapesKeepTexturelessConfiguredGeometryLikeUpstream() {
+        final PrintData data = new PrintData();
+        final AABB configuredBounds = new AABB(0D, 0D, 0D, 0.25D, 0.5D, 0.75D);
+        data.addStateOff(new PrintData.Shape(configuredBounds, "", null));
+
+        final List<PrintRenderModel.RenderShape> shapes = PrintRenderModel.itemShapes(data, false);
+
+        assertEquals(1, shapes.size());
+        assertEquals(configuredBounds, shapes.getFirst().bounds());
+    }
+
+    @Test
     void textureNamesAcceptLegacyBlocksPaths() {
         final PrintData data = new PrintData();
         data.addStateOff(new PrintData.Shape(PrintRenderModel.UNIT_BOUNDS, "minecraft:blocks/stone", null));
