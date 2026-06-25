@@ -1,7 +1,10 @@
 package li.cil.oc.common;
 
+import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
+import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
+import li.cil.oc.common.blockentity.RelayBlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
@@ -18,5 +21,17 @@ public final class ModCapabilities {
             Capabilities.EnergyStorage.BLOCK,
             ModBlockEntities.COMPUTER_CASE.get(),
             ComputerCaseBlockEntity::energyStorage);
+        event.registerBlockEntity(
+            Capabilities.EnergyStorage.BLOCK,
+            ModBlockEntities.ASSEMBLER.get(),
+            AssemblerBlockEntity::energyStorage);
+        event.registerBlockEntity(
+            Capabilities.EnergyStorage.BLOCK,
+            ModBlockEntities.DISASSEMBLER.get(),
+            DisassemblerBlockEntity::energyStorage);
+        event.registerBlockEntity(
+            Capabilities.EnergyStorage.BLOCK,
+            ModBlockEntities.RELAY.get(),
+            RelayBlockEntity::energyStorage);
     }
 }

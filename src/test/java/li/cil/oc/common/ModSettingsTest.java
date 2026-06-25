@@ -43,6 +43,10 @@ final class ModSettingsTest {
         assertEquals(20D, ModSettings.caseRate(2));
         assertEquals(5D, ModSettings.caseRate(-1));
         assertEquals(20D, ModSettings.caseRate(99));
+        assertEquals(10D, ModSettings.accessPointRate());
+        assertEquals(100D, ModSettings.assemblerRate());
+        assertEquals(50D, ModSettings.disassemblerRate());
+        assertEquals(50D, ModSettings.serverRackRate());
         assertEquals(500D, ModSettings.powerDistributorBuffer());
         assertEquals(500D, ModSettings.powerConverterRate());
         assertEquals(0.1D, ModSettings.forgeEnergyRatio(), 0.000_001D);
@@ -217,8 +221,12 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
         assertEquals(List.of("power", "generatorEfficiency"), ModSettings.GENERATOR_EFFICIENCY.getPath());
+        assertEquals(List.of("power", "rate", "accessPoint"), ModSettings.ACCESS_POINT_RATE.getPath());
+        assertEquals(List.of("power", "rate", "assembler"), ModSettings.ASSEMBLER_RATE.getPath());
         assertEquals(List.of("power", "rate", "case"), ModSettings.CASE_RATES.getPath());
+        assertEquals(List.of("power", "rate", "disassembler"), ModSettings.DISASSEMBLER_RATE.getPath());
         assertEquals(List.of("power", "rate", "powerConverter"), ModSettings.POWER_CONVERTER_RATE.getPath());
+        assertEquals(List.of("power", "rate", "serverRack"), ModSettings.SERVER_RACK_RATE.getPath());
         assertEquals(List.of("power", "value", "ForgeEnergy"), ModSettings.POWER_VALUE_FORGE_ENERGY.getPath());
         assertEquals(List.of("power", "buffer", "batteryUpgrades"), ModSettings.BATTERY_UPGRADE_BUFFERS.getPath());
         assertEquals(List.of("power", "buffer", "distributor"), ModSettings.POWER_DISTRIBUTOR_BUFFER.getPath());

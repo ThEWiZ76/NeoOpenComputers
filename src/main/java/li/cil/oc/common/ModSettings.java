@@ -132,8 +132,12 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
+    public static final ModConfigSpec.DoubleValue ACCESS_POINT_RATE;
+    public static final ModConfigSpec.DoubleValue ASSEMBLER_RATE;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> CASE_RATES;
+    public static final ModConfigSpec.DoubleValue DISASSEMBLER_RATE;
     public static final ModConfigSpec.DoubleValue POWER_CONVERTER_RATE;
+    public static final ModConfigSpec.DoubleValue SERVER_RACK_RATE;
     public static final ModConfigSpec.DoubleValue POWER_VALUE_FORGE_ENERGY;
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
@@ -412,12 +416,24 @@ public final class ModSettings {
             .comment("Energy produced per tick by solar generator upgrades. OpenComputers upstream default is 0.2.")
             .defineInRange("solarGeneratorEfficiency", 0.2D, 0D, Double.MAX_VALUE);
         builder.push("rate");
+        ACCESS_POINT_RATE = builder
+            .comment("Energy throughput per tick accepted by access point style blocks such as relays. OpenComputers upstream default is 10.")
+            .defineInRange("accessPoint", 10D, 0D, Double.MAX_VALUE);
+        ASSEMBLER_RATE = builder
+            .comment("Energy throughput per tick accepted by assemblers from external power. OpenComputers upstream default is 100.")
+            .defineInRange("assembler", 100D, 0D, Double.MAX_VALUE);
         CASE_RATES = builder
             .comment("Energy throughput per tick accepted by computer case tiers one, two, and three. OpenComputers upstream default is [5, 10, 20].")
             .defineList("case", DEFAULT_CASE_RATES, value -> value instanceof Double && (Double) value >= 0D);
+        DISASSEMBLER_RATE = builder
+            .comment("Energy throughput per tick accepted by disassemblers from external power. OpenComputers upstream default is 50.")
+            .defineInRange("disassembler", 50D, 0D, Double.MAX_VALUE);
         POWER_CONVERTER_RATE = builder
             .comment("Energy throughput per tick exposed by power converters. OpenComputers upstream default is 500.")
             .defineInRange("powerConverter", 500D, 0D, Double.MAX_VALUE);
+        SERVER_RACK_RATE = builder
+            .comment("Energy throughput per tick accepted by server racks from external power. OpenComputers upstream default is 50.")
+            .defineInRange("serverRack", 50D, 0D, Double.MAX_VALUE);
         builder.pop();
         builder.push("value");
         POWER_VALUE_FORGE_ENERGY = builder
@@ -690,6 +706,22 @@ public final class ModSettings {
 
     public static double powerConverterRate() {
         return Math.max(0D, doubleValue(POWER_CONVERTER_RATE));
+    }
+
+    public static double accessPointRate() {
+        return Math.max(0D, doubleValue(ACCESS_POINT_RATE));
+    }
+
+    public static double assemblerRate() {
+        return Math.max(0D, doubleValue(ASSEMBLER_RATE));
+    }
+
+    public static double disassemblerRate() {
+        return Math.max(0D, doubleValue(DISASSEMBLER_RATE));
+    }
+
+    public static double serverRackRate() {
+        return Math.max(0D, doubleValue(SERVER_RACK_RATE));
     }
 
     public static List<Double> caseRates() {

@@ -5755,6 +5755,76 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void poweredMachineBlocksAcceptForgeEnergyCapabilityLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
+            withCachedConfig(ModSettings.ACCESS_POINT_BUFFER, 60D, () ->
+                withCachedConfig(ModSettings.ASSEMBLER_RATE, 100D, () ->
+                    withCachedConfig(ModSettings.DISASSEMBLER_RATE, 50D, () ->
+                        withCachedConfig(ModSettings.ACCESS_POINT_RATE, 10D, () ->
+                            withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
+                                final BlockPos assemblerPos = new BlockPos(1, 1, 1);
+                                helper.setBlock(assemblerPos, ModBlocks.ASSEMBLER.get());
+                                Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(assemblerPos));
+                                final AssemblerBlockEntity assembler = helper.getBlockEntity(assemblerPos);
+                                final Connector assemblerConnector = (Connector) assembler.node();
+                                final IEnergyStorage assemblerStorage = helper.getLevel().getCapability(
+                                    Capabilities.EnergyStorage.BLOCK,
+                                    helper.absolutePos(assemblerPos),
+                                    helper.getBlockState(assemblerPos),
+                                    assembler,
+                                    Direction.NORTH);
+                                final IEnergyStorage assemblerTopStorage = helper.getLevel().getCapability(
+                                    Capabilities.EnergyStorage.BLOCK,
+                                    helper.absolutePos(assemblerPos),
+                                    helper.getBlockState(assemblerPos),
+                                    assembler,
+                                    Direction.UP);
+                                helper.assertTrue(assemblerStorage != null, "Assembler did not expose Forge Energy capability");
+                                helper.assertTrue(assemblerTopStorage == null, "Assembler exposed Forge Energy capability on blocked top side");
+                                helper.assertTrue(assemblerStorage.receiveEnergy(1500, false) == 1000, "Assembler receive did not cap by assembler rate");
+                                helper.assertTrue(Double.compare(100D, assemblerConnector.localBuffer()) == 0, "Assembler did not fill OC buffer from Forge Energy");
+
+                                final BlockPos disassemblerPos = new BlockPos(3, 1, 1);
+                                helper.setBlock(disassemblerPos, ModBlocks.DISASSEMBLER.get());
+                                Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(disassemblerPos));
+                                final DisassemblerBlockEntity disassembler = helper.getBlockEntity(disassemblerPos);
+                                final Connector disassemblerConnector = (Connector) disassembler.node();
+                                final IEnergyStorage disassemblerStorage = helper.getLevel().getCapability(
+                                    Capabilities.EnergyStorage.BLOCK,
+                                    helper.absolutePos(disassemblerPos),
+                                    helper.getBlockState(disassemblerPos),
+                                    disassembler,
+                                    Direction.NORTH);
+                                helper.assertTrue(disassemblerStorage != null, "Disassembler did not expose Forge Energy capability");
+                                helper.assertTrue(disassemblerStorage.receiveEnergy(1500, false) == 500, "Disassembler receive did not cap by disassembler rate");
+                                helper.assertTrue(Double.compare(50D, disassemblerConnector.localBuffer()) == 0, "Disassembler did not fill OC buffer from Forge Energy");
+
+                                final BlockPos relayPos = new BlockPos(5, 1, 1);
+                                helper.setBlock(relayPos, ModBlocks.RELAY.get());
+                                Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(relayPos));
+                                final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
+                                final Connector relayConnector = (Connector) relay.sidedNode(Direction.NORTH);
+                                final IEnergyStorage relayStorage = helper.getLevel().getCapability(
+                                    Capabilities.EnergyStorage.BLOCK,
+                                    helper.absolutePos(relayPos),
+                                    helper.getBlockState(relayPos),
+                                    relay,
+                                    Direction.NORTH);
+                                final IEnergyStorage relayNullStorage = helper.getLevel().getCapability(
+                                    Capabilities.EnergyStorage.BLOCK,
+                                    helper.absolutePos(relayPos),
+                                    helper.getBlockState(relayPos),
+                                    relay,
+                                    (Direction) null);
+                                helper.assertTrue(relayStorage != null, "Relay did not expose sided Forge Energy capability");
+                                helper.assertTrue(relayNullStorage == null, "Relay exposed null-side Forge Energy capability");
+                                helper.assertTrue(relayStorage.receiveEnergy(700, false) == 100, "Relay receive did not cap by access point rate");
+                                helper.assertTrue(Double.compare(10D, relayConnector.localBuffer()) == 0, "Relay side plug did not fill OC buffer from Forge Energy");
+                            }))))));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void relayForwardsPacketsBetweenSideNetworks(final GameTestHelper helper) {
         final BlockPos relayPos = new BlockPos(1, 1, 1);
         helper.setBlock(relayPos, ModBlocks.RELAY.get());

@@ -16,6 +16,7 @@ import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.WirelessEndpoint;
+import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModSettings;
@@ -42,6 +43,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -68,6 +70,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private static final int MAX_TIER = 2;
 
     private final Plug[] plugs = new Plug[Direction.values().length];
+    private final IEnergyStorage[] energyStorages = new IEnergyStorage[Direction.values().length];
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final Queue<QueuedPacket> queue = new ArrayDeque<>();
     private int maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
@@ -87,6 +90,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         OpenComputersApi.initialize();
         for (final Direction direction : Direction.values()) {
             plugs[direction.ordinal()] = new Plug(direction);
+            energyStorages[direction.ordinal()] = new ForgeEnergyStorageView(() -> plugConnector(direction), RelayBlockEntity::energyThroughput);
         }
         updateLimits();
     }
@@ -113,6 +117,10 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     @Override
     public boolean canConnect(final Direction side) {
         return side != null;
+    }
+
+    public IEnergyStorage energyStorage(final Direction side) {
+        return side == null ? null : energyStorages[side.ordinal()];
     }
 
     @Override
@@ -465,6 +473,14 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
 
     public static double connectorBufferSize() {
         return ModSettings.accessPointBuffer();
+    }
+
+    public static double energyThroughput() {
+        return ModSettings.accessPointRate();
+    }
+
+    private Connector plugConnector(final Direction side) {
+        return plugs[side.ordinal()].node() instanceof Connector connector ? connector : null;
     }
 
     private void updateLimits() {

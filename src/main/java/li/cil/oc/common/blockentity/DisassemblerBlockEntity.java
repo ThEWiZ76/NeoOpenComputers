@@ -2,11 +2,13 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
@@ -32,6 +34,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 
 import java.util.ArrayDeque;
 import java.util.Map;
@@ -53,6 +56,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final ArrayDeque<ItemStack> queuedOutputs = new ArrayDeque<>();
+    private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, DisassemblerBlockEntity::energyThroughput);
     private Node node;
     private double disassemblyBuffer;
 
@@ -125,6 +129,10 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     @Override
     public Node sidedNode(final Direction side) {
         return canConnect(side) ? node() : null;
+    }
+
+    public IEnergyStorage energyStorage(final Direction side) {
+        return canConnect(side) ? energyStorage : null;
     }
 
     @Override
@@ -235,6 +243,10 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     public static double connectorBufferSize() {
         return ModSettings.converterBuffer();
+    }
+
+    public static double energyThroughput() {
+        return ModSettings.disassemblerRate();
     }
 
     @Override
@@ -445,6 +457,10 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     private static boolean isValidSlot(final int slot) {
         return slot >= 0 && slot < CONTAINER_SIZE;
+    }
+
+    private Connector connectorNode() {
+        return node() instanceof Connector connector ? connector : null;
     }
 
     private static Node createNode(final Environment host) {

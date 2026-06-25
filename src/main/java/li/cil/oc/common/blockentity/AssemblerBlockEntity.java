@@ -5,6 +5,7 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -12,6 +13,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.menu.AssemblerMenu;
@@ -35,6 +37,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 
 import java.util.Map;
 
@@ -61,6 +64,7 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     );
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
+    private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, AssemblerBlockEntity::energyThroughput);
     private Node node;
     private ItemStack pendingOutput = ItemStack.EMPTY;
     private double totalRequiredEnergy;
@@ -89,6 +93,10 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
 
     public static double connectorBufferSize() {
         return ModSettings.converterBuffer();
+    }
+
+    public static double energyThroughput() {
+        return ModSettings.assemblerRate();
     }
 
     public boolean start(final boolean finishImmediately) {
@@ -154,6 +162,10 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     @Override
     public Node sidedNode(final Direction side) {
         return canConnect(side) ? node() : null;
+    }
+
+    public IEnergyStorage energyStorage(final Direction side) {
+        return canConnect(side) ? energyStorage : null;
     }
 
     @Override
@@ -384,6 +396,10 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
 
     private static boolean isValidSlot(final int slot) {
         return slot >= 0 && slot < CONTAINER_SIZE;
+    }
+
+    private Connector connectorNode() {
+        return node() instanceof Connector connector ? connector : null;
     }
 
     private static Node createNode(final ManagedEnvironment host) {
