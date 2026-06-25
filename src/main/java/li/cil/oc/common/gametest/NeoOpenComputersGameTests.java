@@ -195,7 +195,9 @@ import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.io.ByteArrayInputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -1163,7 +1165,12 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(result.length == 1 && result[0] instanceof Map<?, ?>, "Level did not convert to a map");
         final Map<?, ?> map = (Map<?, ?>) result[0];
-        helper.assertTrue(map.get("id") instanceof String id && !id.isBlank(), "Level converter did not report id");
+        final byte[] upstreamDigest = MessageDigest.getInstance("MD5").digest(ByteBuffer.allocate(Long.BYTES + Integer.BYTES)
+            .putLong(helper.getLevel().getSeed())
+            .putInt(0)
+            .array());
+        final String expectedId = UUID.nameUUIDFromBytes(upstreamDigest).toString();
+        helper.assertTrue(expectedId.equals(map.get("id")), "Level converter did not report upstream provider id");
         helper.assertTrue(helper.getLevel().dimension().location().toString().equals(map.get("name")), "Level converter did not report dimension name");
         helper.succeed();
     }

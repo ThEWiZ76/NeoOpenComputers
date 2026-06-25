@@ -40,6 +40,8 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -161,7 +163,7 @@ public final class MinecraftConverters {
             .putLong(seed)
             .putInt(dimension)
             .array();
-        return UUID.nameUUIDFromBytes(bytes).toString();
+        return UUID.nameUUIDFromBytes(md5(bytes)).toString();
     }
 
     private static int legacyDimensionId(final Level level) {
@@ -281,6 +283,14 @@ public final class MinecraftConverters {
             return values;
         }
         return null;
+    }
+
+    private static byte[] md5(final byte[] bytes) {
+        try {
+            return MessageDigest.getInstance("MD5").digest(bytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("MD5 digest is unavailable.", e);
+        }
     }
 
     private static byte[] saveTag(final CompoundTag tag) {
