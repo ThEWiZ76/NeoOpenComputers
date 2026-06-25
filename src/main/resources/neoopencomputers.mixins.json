@@ -4,6 +4,7 @@
   "package": "li.cil.oc.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AbstractFurnaceBlockEntityAccessor",
     "BeaconBlockEntityAccessor",
     "BeaconBlockEntityMixin",
     "BrewingStandBlockEntityAccessor"

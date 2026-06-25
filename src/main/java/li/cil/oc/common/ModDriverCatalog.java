@@ -50,6 +50,7 @@ import li.cil.oc.common.driver.ComparatorBlockDriver;
 import li.cil.oc.common.driver.DatabaseInventoryProvider;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
 import li.cil.oc.common.driver.DiskDriveContainerDriver;
+import li.cil.oc.common.driver.FurnaceBlockDriver;
 import li.cil.oc.common.driver.GeolyzerItemDriver;
 import li.cil.oc.common.driver.InventoryBlockDriver;
 import li.cil.oc.common.driver.KeyboardItemDriver;
@@ -68,7 +69,7 @@ import java.util.function.Supplier;
 public final class ModDriverCatalog {
     public static void registerDefaults() {
         if (API.driver instanceof DriverRegistry registry) {
-            registerBlocks(registry, new BeaconBlockDriver(), new BrewingStandBlockDriver(), new ComputerCaseBlockDriver(), new ComparatorBlockDriver(), new DiskDriveBlockDriver(), new InventoryBlockDriver(), new NoteBlockDriver(), new ScreenBlockDriver());
+            registerBlocks(registry, new BeaconBlockDriver(), new BrewingStandBlockDriver(), new ComputerCaseBlockDriver(), new ComparatorBlockDriver(), new DiskDriveBlockDriver(), new FurnaceBlockDriver(), new InventoryBlockDriver(), new NoteBlockDriver(), new ScreenBlockDriver());
             registry.add(MinecraftConverters.ITEM_STACK);
             registry.add(MinecraftConverters.LINKED_CARD);
             registry.add(MinecraftConverters.NANOMACHINES);
