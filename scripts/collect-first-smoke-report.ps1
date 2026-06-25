@@ -152,7 +152,7 @@ if (-not $NoZip) {
     if (Test-Path -LiteralPath $zipPath) {
         Remove-Item -LiteralPath $zipPath -Force
     }
-    Compress-Archive -LiteralPath (Join-Path $reportDir '*') -DestinationPath $zipPath -Force
+    Compress-Archive -Path (Join-Path $reportDir '*') -DestinationPath $zipPath -Force
     Write-Host "First smoke report: $zipPath"
 } else {
     Write-Host "First smoke report: $reportDir"

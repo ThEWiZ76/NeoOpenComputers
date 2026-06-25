@@ -74,7 +74,9 @@ final class ReadmeSmokeTest {
 
         final String scriptText = Files.readString(script);
         assertTrue(scriptText.contains("Tester Checklist"), "Collector must write tester checklist");
-        assertTrue(scriptText.contains("Compress-Archive"), "Collector must package a zip by default");
+        assertTrue(scriptText.contains("Compress-Archive -Path"), "Collector zip must expand wildcard contents");
+        assertTrue(!scriptText.contains("Compress-Archive -LiteralPath (Join-Path $reportDir '*')"),
+            "LiteralPath does not expand the report wildcard when zipping");
         assertTrue(scriptText.contains("Missing texture"), "Collector must scan missing texture failures");
         assertTrue(scriptText.contains("interactive-client-stdout.log"), "Collector must copy interactive stdout");
         assertTrue(scriptText.contains("interactive-client-stderr.log"), "Collector must copy interactive stderr");
