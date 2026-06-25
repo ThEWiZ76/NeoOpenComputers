@@ -150,6 +150,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.crafting.CraftingInput;
@@ -1039,6 +1040,37 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue("visible".equals(decoded.getString("probe")), "Compressed item stack custom data did not round-trip");
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "empty")
+    public static void driverRegistryConvertsItemStackVanillaDetailsLikeUpstream(final GameTestHelper helper) throws Exception {
+        helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+        final DriverRegistry registry = (DriverRegistry) API.driver;
+        final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+        convert.setAccessible(true);
+
+        final ItemStack stack = new ItemStack(Items.DIAMOND_SWORD);
+        final CompoundTag tag = new CompoundTag();
+        tag.putInt("advDmg", 7);
+        tag.putInt("Energy", 42);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        stack.set(DataComponents.LORE, new ItemLore(List.of(Component.literal("first line"), Component.literal("second line"))));
+        stack.enchant(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.SHARPNESS), 3);
+
+        final Object[] result = (Object[]) convert.invoke(registry, (Object) new Object[]{stack});
+
+        helper.assertTrue(result.length == 1 && result[0] instanceof Map<?, ?>, "Item stack did not convert to a map");
+        final Map<?, ?> map = (Map<?, ?>) result[0];
+        helper.assertTrue("first line\nsecond line".equals(map.get("lore")), "Item stack converter did not join lore lines");
+        helper.assertTrue(Integer.valueOf(7).equals(map.get("customDamage")), "Item stack converter did not expose advDmg as customDamage");
+        helper.assertTrue(Integer.valueOf(42).equals(map.get("Energy")), "Item stack converter did not expose Energy");
+        helper.assertTrue(map.get("enchantments") instanceof Object[] enchantments && enchantments.length == 1 && enchantments[0] instanceof Map<?, ?>,
+            "Item stack converter did not expose enchantments");
+        final Map<?, ?> enchantment = (Map<?, ?>) ((Object[]) map.get("enchantments"))[0];
+        helper.assertTrue("minecraft:sharpness".equals(enchantment.get("name")), "Item stack converter did not expose enchantment id");
+        helper.assertTrue(enchantment.get("label") instanceof String label && !label.isBlank(), "Item stack converter did not expose enchantment label");
+        helper.assertTrue(enchantment.get("level") instanceof Number level && level.intValue() == 3, "Item stack converter did not expose enchantment level");
+        helper.succeed();
     }
 
     @GameTest(template = "empty")

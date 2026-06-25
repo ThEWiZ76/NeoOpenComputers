@@ -6,6 +6,7 @@ import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.LinkedNetwork;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.NanomachineItemData;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.ByteArrayTag;
@@ -17,9 +18,14 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,6 +43,7 @@ import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public final class MinecraftConverters {
     private static final String ITEM_DRIVER_DATA_TAG = "oc:data";
@@ -51,9 +58,9 @@ public final class MinecraftConverters {
             output.put("hasTag", stack.has(DataComponents.CUSTOM_DATA));
             output.put("name", id == null ? "minecraft:air" : id.toString());
             output.put("label", stack.getHoverName().getString());
-            if (ModSettings.allowItemStackNbtTags() && stack.has(DataComponents.CUSTOM_DATA)) {
-                output.put("tag", saveTag(stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag()));
-            }
+            convertItemStackCustomData(stack, output);
+            convertItemStackLore(stack, output);
+            convertItemStackEnchantments(stack, output);
         }
     };
 
@@ -185,6 +192,51 @@ public final class MinecraftConverters {
         final Map<Object, Object> output = new LinkedHashMap<>();
         output.put("capacity", handler.getTankCapacity(tank));
         convertFluidStack(handler.getFluidInTank(tank), output);
+        return output;
+    }
+
+    private static void convertItemStackCustomData(final ItemStack stack, final Map<Object, Object> output) {
+        if (!stack.has(DataComponents.CUSTOM_DATA)) {
+            return;
+        }
+        final CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        if (tag.contains("advDmg", Tag.TAG_INT)) {
+            output.put("customDamage", tag.getInt("advDmg"));
+        }
+        if (tag.contains("Energy", Tag.TAG_INT)) {
+            output.put("Energy", tag.getInt("Energy"));
+        }
+        if (ModSettings.allowItemStackNbtTags()) {
+            output.put("tag", saveTag(tag));
+        }
+    }
+
+    private static void convertItemStackLore(final ItemStack stack, final Map<Object, Object> output) {
+        final ItemLore lore = stack.get(DataComponents.LORE);
+        if (lore != null && !lore.lines().isEmpty()) {
+            output.put("lore", lore.lines().stream()
+                .map(Component::getString)
+                .collect(Collectors.joining("\n")));
+        }
+    }
+
+    private static void convertItemStackEnchantments(final ItemStack stack, final Map<Object, Object> output) {
+        final ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(stack);
+        if (enchantments.isEmpty()) {
+            return;
+        }
+        output.put("enchantments", enchantments.entrySet().stream()
+            .map(entry -> enchantmentMap(entry.getKey(), entry.getIntValue()))
+            .toArray());
+    }
+
+    private static Map<String, Object> enchantmentMap(final Holder<Enchantment> enchantment, final int level) {
+        final Map<String, Object> output = new LinkedHashMap<>();
+        output.put("name", enchantment.unwrapKey()
+            .map(key -> key.location().toString())
+            .orElse(enchantment.value().toString()));
+        output.put("label", Enchantment.getFullname(enchantment, level).getString());
+        output.put("level", level);
         return output;
     }
 
