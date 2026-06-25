@@ -3,6 +3,14 @@ package li.cil.oc.common.driver;
 import li.cil.oc.api.driver.Converter;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.ByteArrayTag;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.NumericTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -46,6 +54,45 @@ public final class MinecraftConverters {
             }
         }
     };
+
+    public static final Converter NBT = (value, output) -> {
+        if (value instanceof CompoundTag tag) {
+            output.put("oc:flatten", convertTag(tag));
+        }
+    };
+
+    private static Object convertTag(final Tag tag) {
+        if (tag instanceof NumericTag numericTag) {
+            return numericTag.getAsNumber();
+        }
+        if (tag instanceof StringTag stringTag) {
+            return stringTag.getAsString();
+        }
+        if (tag instanceof ByteArrayTag byteArrayTag) {
+            return byteArrayTag.getAsByteArray();
+        }
+        if (tag instanceof IntArrayTag intArrayTag) {
+            return intArrayTag.getAsIntArray();
+        }
+        if (tag instanceof LongArrayTag longArrayTag) {
+            return longArrayTag.getAsLongArray();
+        }
+        if (tag instanceof ListTag listTag) {
+            Object[] values = new Object[listTag.size()];
+            for (int index = 0; index < listTag.size(); index++) {
+                values[index] = convertTag(listTag.get(index));
+            }
+            return values;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            Map<String, Object> values = new LinkedHashMap<>();
+            for (String key : compoundTag.getAllKeys()) {
+                values.put(key, convertTag(compoundTag.get(key)));
+            }
+            return values;
+        }
+        return null;
+    }
 
     private static <T extends Comparable<T>> String propertyName(final Property<T> property, final Comparable<?> value) {
         return property.getName(valueClassCast(value));

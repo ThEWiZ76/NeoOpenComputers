@@ -57,6 +57,7 @@ public final class ModDriverCatalog {
             registry.add(MinecraftConverters.ITEM_STACK);
             registry.add(MinecraftConverters.BLOCK);
             registry.add(MinecraftConverters.BLOCK_STATE);
+            registry.add(MinecraftConverters.NBT);
             register(
                 registry,
                 ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(), ModItems.APU_TIER1.get(), ModItems.APU_TIER2.get(),

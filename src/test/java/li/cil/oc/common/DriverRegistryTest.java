@@ -17,9 +17,13 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.driver.MinecraftConverters;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -181,6 +185,49 @@ final class DriverRegistryTest {
         DriverRegistry registry = new DriverRegistry();
 
         assertArrayEquals(new Object[]{"converted-value:plain"}, registry.convert(new Object[]{new TestConvertedValue("plain")}));
+    }
+
+    @Test
+    void minecraftNbtConverterFlattensCompoundTagsLikeUpstream() {
+        DriverRegistry registry = new DriverRegistry();
+        registry.add(MinecraftConverters.NBT);
+        CompoundTag root = new CompoundTag();
+        root.putByte("byte", (byte) 3);
+        root.putShort("short", (short) 4);
+        root.putInt("int", 5);
+        root.putLong("long", 6L);
+        root.putFloat("float", 7.5F);
+        root.putDouble("double", 8.5D);
+        root.putString("string", "hello");
+        root.putByteArray("bytes", new byte[]{1, 2});
+        root.putIntArray("ints", new int[]{3, 4});
+        root.putLongArray("longs", new long[]{5L, 6L});
+
+        ListTag list = new ListTag();
+        list.add(StringTag.valueOf("first"));
+        list.add(StringTag.valueOf("second"));
+        root.put("list", list);
+
+        CompoundTag nested = new CompoundTag();
+        nested.put("value", IntTag.valueOf(9));
+        root.put("nested", nested);
+
+        Object[] converted = registry.convert(new Object[]{root});
+
+        Map<?, ?> map = assertInstanceOf(Map.class, converted[0]);
+        assertEquals((byte) 3, map.get("byte"));
+        assertEquals((short) 4, map.get("short"));
+        assertEquals(5, map.get("int"));
+        assertEquals(6L, map.get("long"));
+        assertEquals(7.5F, map.get("float"));
+        assertEquals(8.5D, map.get("double"));
+        assertEquals("hello", map.get("string"));
+        assertArrayEquals(new byte[]{1, 2}, (byte[]) map.get("bytes"));
+        assertArrayEquals(new int[]{3, 4}, (int[]) map.get("ints"));
+        assertArrayEquals(new long[]{5L, 6L}, (long[]) map.get("longs"));
+        assertArrayEquals(new Object[]{"first", "second"}, (Object[]) map.get("list"));
+        Map<?, ?> nestedMap = assertInstanceOf(Map.class, map.get("nested"));
+        assertEquals(9, nestedMap.get("value"));
     }
 
     @Test
