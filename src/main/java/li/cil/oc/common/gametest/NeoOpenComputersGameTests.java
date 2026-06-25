@@ -5763,6 +5763,39 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void energyStorageBlockDriverExposesEnergyDeviceLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
+            withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
+                final BlockPos converterPos = new BlockPos(1, 1, 1);
+                helper.setBlock(converterPos, ModBlocks.POWER_CONVERTER.get());
+                Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(converterPos));
+                final PowerConverterBlockEntity converter = helper.getBlockEntity(converterPos);
+                final IEnergyStorage storage = helper.getLevel().getCapability(
+                    Capabilities.EnergyStorage.BLOCK,
+                    helper.absolutePos(converterPos),
+                    helper.getBlockState(converterPos),
+                    converter,
+                    Direction.NORTH);
+                helper.assertTrue(storage != null, "Power converter did not expose baseline NeoForge Energy storage");
+                storage.receiveEnergy(500, false);
+
+                final li.cil.oc.api.driver.DriverBlock driver = Driver.driverFor(helper.getLevel(), helper.absolutePos(converterPos), Direction.NORTH);
+                helper.assertTrue(driver != null, "No energy storage block driver matched NeoForge Energy storage");
+                final ManagedEnvironment environment = driver.createEnvironment(helper.getLevel(), helper.absolutePos(converterPos), Direction.NORTH);
+                helper.assertTrue(environment != null, "Energy storage block driver did not create an environment");
+                helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Energy storage block driver did not expose a component");
+
+                final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+                helper.assertTrue("energy_device".equals(component.name()), "Energy storage component name mismatch");
+                helper.assertTrue(component.invoke("getEnergyStored", null)[0].equals(500), "Energy storage component reported wrong stored energy");
+                helper.assertTrue(component.invoke("getMaxEnergyStored", null)[0].equals(1000), "Energy storage component reported wrong max energy");
+                helper.assertTrue(component.invoke("canReceive", null)[0].equals(true), "Energy storage component reported wrong receive state");
+                helper.assertTrue(component.invoke("canExtract", null)[0].equals(false), "Energy storage component reported wrong extract state");
+            }));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void computerCaseAcceptsForgeEnergyCapabilityLikeUpstream(final GameTestHelper helper) throws Exception {
         withCachedConfig(ModSettings.COMPUTER_BUFFER, 100D, () ->
             withCachedConfig(ModSettings.CASE_RATES, List.of(5D, 10D, 20D), () ->
