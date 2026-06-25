@@ -45,6 +45,17 @@ tasks.named('jar', Jar).configure {
     }
 }
 
+tasks.register('apiJar', Jar) {
+    archiveClassifier = 'api'
+    from sourceSets.main.allSource
+    from sourceSets.main.output
+    include 'li/cil/oc/api/**'
+}
+
+tasks.named('assemble').configure {
+    dependsOn tasks.named('apiJar')
+}
+
 // Mojang ships Java 21 to end users in 1.21.1, so mods should target Java 21.
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
@@ -195,6 +206,7 @@ publishing {
     publications {
         register('mavenJava', MavenPublication) {
             from components.java
+            artifact tasks.named('apiJar')
         }
     }
     repositories {
