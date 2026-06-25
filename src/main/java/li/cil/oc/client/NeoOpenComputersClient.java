@@ -4,8 +4,10 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.API;
 import li.cil.oc.common.ManualRegistry;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.network.DebugClipboardState;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
@@ -16,6 +18,8 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -55,6 +59,22 @@ public final class NeoOpenComputersClient {
     @SubscribeEvent
     static void registerGuiLayers(final RegisterGuiLayersEvent event) {
         event.registerAbove(VanillaGuiLayers.PLAYER_HEALTH, NANOMACHINE_HUD, (graphics, deltaTracker) -> NanomachineHud.render(graphics, Minecraft.getInstance()));
+    }
+
+    @SubscribeEvent
+    static void registerClientExtensions(final RegisterClientExtensionsEvent event) {
+        event.registerItem(new IClientItemExtensions() {
+            private BlockEntityWithoutLevelRenderer renderer;
+
+            @Override
+            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                if (renderer == null) {
+                    final Minecraft minecraft = Minecraft.getInstance();
+                    renderer = new PrintItemRenderer(minecraft.getBlockEntityRenderDispatcher(), minecraft.getEntityModels());
+                }
+                return renderer;
+            }
+        }, ModItems.PRINT.get());
     }
 
     static void onClientTick(final ClientTickEvent.Post event) {
