@@ -52,8 +52,21 @@ tasks.register('apiJar', Jar) {
     include 'li/cil/oc/api/**'
 }
 
+tasks.named('javadoc', Javadoc).configure {
+    include 'li/cil/oc/api/**'
+    options.addBooleanOption('Xdoclint:none', true)
+    options.quiet()
+}
+
+tasks.register('javadocJar', Jar) {
+    archiveClassifier = 'javadoc'
+    dependsOn tasks.named('javadoc')
+    from tasks.named('javadoc')
+}
+
 tasks.named('assemble').configure {
     dependsOn tasks.named('apiJar')
+    dependsOn tasks.named('javadocJar')
 }
 
 // Mojang ships Java 21 to end users in 1.21.1, so mods should target Java 21.
@@ -207,6 +220,7 @@ publishing {
         register('mavenJava', MavenPublication) {
             from components.java
             artifact tasks.named('apiJar')
+            artifact tasks.named('javadocJar')
 
             pom {
                 name = mod_name
