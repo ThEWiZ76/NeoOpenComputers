@@ -121,6 +121,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
@@ -188,6 +190,7 @@ import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -991,6 +994,51 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Integer.valueOf(1000).equals(fluid.get("amount")), "Fluid container item did not report fluid amount");
         helper.assertTrue("minecraft:water".equals(fluid.get("name")), "Fluid container item did not report fluid id");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void driverRegistryHidesItemStackNbtTagsByDefaultLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.ALLOW_ITEM_STACK_NBT_TAGS, false, () -> {
+            helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+            final DriverRegistry registry = (DriverRegistry) API.driver;
+            final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+            convert.setAccessible(true);
+            final ItemStack stack = new ItemStack(Items.DIAMOND);
+            final CompoundTag tag = new CompoundTag();
+            tag.putString("probe", "hidden");
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+
+            final Object[] result = (Object[]) convert.invoke(registry, (Object) new Object[]{stack});
+
+            helper.assertTrue(result.length == 1 && result[0] instanceof Map<?, ?>, "Item stack did not convert to a map");
+            final Map<?, ?> map = (Map<?, ?>) result[0];
+            helper.assertTrue(Boolean.TRUE.equals(map.get("hasTag")), "Item stack converter did not report custom data");
+            helper.assertFalse(map.containsKey("tag"), "Default item stack converter leaked compressed custom data");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty")
+    public static void driverRegistryExposesCompressedItemStackNbtTagsWhenEnabledLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.ALLOW_ITEM_STACK_NBT_TAGS, true, () -> {
+            helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+            final DriverRegistry registry = (DriverRegistry) API.driver;
+            final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+            convert.setAccessible(true);
+            final ItemStack stack = new ItemStack(Items.DIAMOND);
+            final CompoundTag tag = new CompoundTag();
+            tag.putString("probe", "visible");
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+
+            final Object[] result = (Object[]) convert.invoke(registry, (Object) new Object[]{stack});
+
+            helper.assertTrue(result.length == 1 && result[0] instanceof Map<?, ?>, "Item stack did not convert to a map");
+            final Map<?, ?> map = (Map<?, ?>) result[0];
+            helper.assertTrue(map.get("tag") instanceof byte[] bytes && bytes.length > 0, "Enabled item stack converter did not expose compressed custom data");
+            final CompoundTag decoded = NbtIo.readCompressed(new ByteArrayInputStream((byte[]) map.get("tag")), NbtAccounter.unlimitedHeap());
+            helper.assertTrue("visible".equals(decoded.getString("probe")), "Compressed item stack custom data did not round-trip");
+            helper.succeed();
+        });
     }
 
     @GameTest(template = "empty")

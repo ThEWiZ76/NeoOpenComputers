@@ -97,6 +97,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ENABLE_INVENTORY_DRIVER;
     public static final ModConfigSpec.BooleanValue ENABLE_COMMAND_BLOCK_DRIVER;
     public static final ModConfigSpec.BooleanValue ENABLE_TANK_DRIVER;
+    public static final ModConfigSpec.BooleanValue ALLOW_ITEM_STACK_NBT_TAGS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> FILTERING_RULES;
     public static final ModConfigSpec.IntValue REQUEST_TIMEOUT;
     public static final ModConfigSpec.IntValue INTERNET_THREADS;
@@ -374,6 +375,9 @@ public final class ModSettings {
         ENABLE_TANK_DRIVER = builder
             .comment("Enable the vanilla tank/fluid handler drivers. This lets computers inspect adjacent fluid handlers such as cauldrons. OpenComputers upstream default is false.")
             .define("enableTankDriver", false);
+        ALLOW_ITEM_STACK_NBT_TAGS = builder
+            .comment("Allow the item stack converter to expose compressed custom data tags. This can leak implementation-private mod data. OpenComputers upstream default is false.")
+            .define("allowItemStackNBTTags", false);
         builder.pop();
         builder.pop();
 
@@ -1107,6 +1111,10 @@ public final class ModSettings {
 
     public static boolean enableTankDriver() {
         return booleanValue(ENABLE_TANK_DRIVER);
+    }
+
+    public static boolean allowItemStackNbtTags() {
+        return booleanValue(ALLOW_ITEM_STACK_NBT_TAGS);
     }
 
     public static List<String> internetFilteringRules() {

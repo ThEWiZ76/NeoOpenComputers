@@ -2,6 +2,7 @@ package li.cil.oc.common.driver;
 
 import li.cil.oc.api.driver.Converter;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.LinkedNetwork;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.NanomachineItemData;
@@ -12,6 +13,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
@@ -29,6 +31,8 @@ import net.neoforged.neoforge.fluids.IFluidTank;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -47,6 +51,9 @@ public final class MinecraftConverters {
             output.put("hasTag", stack.has(DataComponents.CUSTOM_DATA));
             output.put("name", id == null ? "minecraft:air" : id.toString());
             output.put("label", stack.getHoverName().getString());
+            if (ModSettings.allowItemStackNbtTags() && stack.has(DataComponents.CUSTOM_DATA)) {
+                output.put("tag", saveTag(stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag()));
+            }
         }
     };
 
@@ -212,6 +219,16 @@ public final class MinecraftConverters {
             return values;
         }
         return null;
+    }
+
+    private static byte[] saveTag(final CompoundTag tag) {
+        try {
+            final ByteArrayOutputStream output = new ByteArrayOutputStream();
+            NbtIo.writeCompressed(tag, output);
+            return output.toByteArray();
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to compress item stack custom data.", e);
+        }
     }
 
     private static <T extends Comparable<T>> String propertyName(final Property<T> property, final Comparable<?> value) {
