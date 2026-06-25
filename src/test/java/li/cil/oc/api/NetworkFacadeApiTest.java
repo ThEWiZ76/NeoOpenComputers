@@ -43,16 +43,19 @@ final class NetworkFacadeApiTest {
         Method blockEntityJoin = NetworkAPI.class.getMethod("joinOrCreateNetwork", BlockEntity.class);
         Method blockGetterJoin = NetworkAPI.class.getMethod("joinOrCreateNetwork", BlockGetter.class, BlockPos.class);
         Method leaveDimension = NetworkAPI.class.getMethod("leaveWirelessNetwork", WirelessEndpoint.class, ResourceKey.class);
+        Method leaveLegacyDimension = NetworkAPI.class.getMethod("leaveWirelessNetwork", WirelessEndpoint.class, int.class);
         Method loadPacket = NetworkAPI.class.getMethod("newPacket", CompoundTag.class);
 
         assertArrayEquals(new Class<?>[]{BlockEntity.class}, blockEntityJoin.getParameterTypes());
         assertArrayEquals(new Class<?>[]{BlockGetter.class, BlockPos.class}, blockGetterJoin.getParameterTypes());
         assertArrayEquals(new Class<?>[]{WirelessEndpoint.class, ResourceKey.class}, leaveDimension.getParameterTypes());
+        assertArrayEquals(new Class<?>[]{WirelessEndpoint.class, int.class}, leaveLegacyDimension.getParameterTypes());
+        assertSame(Deprecated.class, leaveLegacyDimension.getAnnotation(Deprecated.class).annotationType());
         assertEquals(Packet.class, loadPacket.getReturnType());
     }
 
     @Test
-    void networkFacadeDelegatesToNetworkApi() {
+    void networkFacadeDelegatesToNetworkApi() throws ReflectiveOperationException {
         TestNetworkAPI api = new TestNetworkAPI();
         API.network = api;
         Node node = new TestNode();
@@ -66,6 +69,7 @@ final class NetworkFacadeApiTest {
         Network.updateWirelessNetwork(endpoint);
         Network.leaveWirelessNetwork(endpoint);
         Network.leaveWirelessNetwork(endpoint, Level.OVERWORLD);
+        invokeLegacyLeave(endpoint, 0);
         Network.sendWirelessPacket(endpoint, 2.5, packet);
 
         assertTrue(api.blockEntityJoined);
@@ -83,6 +87,22 @@ final class NetworkFacadeApiTest {
         assertEquals("source", api.source);
         assertEquals("destination", api.destination);
         assertEquals(10, api.port);
+    }
+
+    @Test
+    void networkFacadeMapsLegacyDimensionIdsToModernKeys() throws ReflectiveOperationException {
+        TestNetworkAPI api = new TestNetworkAPI();
+        API.network = api;
+        WirelessEndpoint endpoint = new TestWirelessEndpoint();
+
+        invokeLegacyLeave(endpoint, -1);
+        assertEquals(Level.NETHER, api.dimension);
+
+        invokeLegacyLeave(endpoint, 0);
+        assertEquals(Level.OVERWORLD, api.dimension);
+
+        invokeLegacyLeave(endpoint, 1);
+        assertEquals(Level.END, api.dimension);
     }
 
     @Test
@@ -186,6 +206,10 @@ final class NetworkFacadeApiTest {
             packet = new TestPacket();
             return packet;
         }
+    }
+
+    private static void invokeLegacyLeave(final WirelessEndpoint endpoint, final int dimension) throws ReflectiveOperationException {
+        Network.class.getMethod("leaveWirelessNetwork", WirelessEndpoint.class, int.class).invoke(null, endpoint, dimension);
     }
 
     private static final class TestNodeBuilder implements Builder.NodeBuilder {

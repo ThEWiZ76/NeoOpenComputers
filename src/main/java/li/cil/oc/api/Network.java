@@ -56,6 +56,16 @@ public final class Network {
         }
     }
 
+    /**
+     * @deprecated Minecraft 1.21 uses dimension keys; legacy ids only map vanilla dimensions.
+     */
+    @Deprecated
+    public static void leaveWirelessNetwork(final WirelessEndpoint endpoint, final int dimension) {
+        if (API.network != null) {
+            API.network.leaveWirelessNetwork(endpoint, dimension);
+        }
+    }
+
     public static void sendWirelessPacket(final WirelessEndpoint source, final double strength, final Packet packet) {
         if (API.network != null) {
             API.network.sendWirelessPacket(source, strength, packet);
