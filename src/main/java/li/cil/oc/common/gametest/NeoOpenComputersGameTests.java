@@ -84,6 +84,9 @@ import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
 import li.cil.oc.common.network.RackNetworking;
 import li.cil.oc.common.network.RackOpenServerPayload;
+import li.cil.oc.common.network.TerminalClipboardPayload;
+import li.cil.oc.common.network.TerminalKeyPayload;
+import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.recipe.LootDiskCyclingRecipe;
 import li.cil.oc.common.component.LinkedCardEnvironment;
 import li.cil.oc.common.component.DebugCardEnvironment;
@@ -6070,6 +6073,39 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void terminalItemNetworkInputReachesComputerLikeFirstSmoke(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        final BlockPos computerPos = new BlockPos(2, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+
+        helper.assertTrue(TerminalItem.bindToTerminalServer(terminal, rack, 0), "Terminal did not bind to terminal server");
+        terminalServer.node().connect(computer.node());
+        startSignalComputer(helper, computer);
+        final li.cil.oc.common.menu.TerminalMenu menu = TerminalItem.createMenuForBoundTerminal(7, null, terminal);
+        helper.assertTrue(menu != null, "Terminal item did not create menu for bound terminal");
+        helper.assertTrue(menu.stillValid(null), "Bound terminal menu was not valid");
+
+        invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, true, 'b', 0x30), null);
+        invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, false, 'b', 0x30), null);
+        invokeTerminalClipboard(menu, new TerminalClipboardPayload(menu.containerId, "alpha\nbeta"), null);
+
+        helper.runAtTickTime(5, () -> {
+            final String keyboardAddress = terminalVirtualKeyboardAddress(helper, terminalServer);
+            assertNextSignal(helper, computer, "key_down", keyboardAddress, (int) 'b', 0x30);
+            assertNextSignal(helper, computer, "key_up", keyboardAddress, (int) 'b', 0x30);
+            assertNextSignal(helper, computer, "clipboard", keyboardAddress, "alpha\n");
+            assertNextSignal(helper, computer, "clipboard", keyboardAddress, "beta");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty")
     public static void analyzerReportsRackTerminalServerVirtualNodes(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
@@ -8679,6 +8715,44 @@ public final class NeoOpenComputersGameTests {
         } catch (ReflectiveOperationException e) {
             throw new AssertionError("Could not invoke rack open-server packet handler", e);
         }
+    }
+
+    private static void invokeTerminalKey(final li.cil.oc.common.menu.TerminalMenu menu, final TerminalKeyPayload payload, final Player player) {
+        try {
+            final Method applyTerminalKey = TerminalNetworking.class.getDeclaredMethod(
+                "applyTerminalKey",
+                net.minecraft.world.inventory.AbstractContainerMenu.class,
+                TerminalKeyPayload.class,
+                Player.class);
+            applyTerminalKey.setAccessible(true);
+            applyTerminalKey.invoke(null, menu, payload, player);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Could not invoke terminal key packet handler", e);
+        }
+    }
+
+    private static void invokeTerminalClipboard(final li.cil.oc.common.menu.TerminalMenu menu, final TerminalClipboardPayload payload, final Player player) {
+        try {
+            final Method applyTerminalClipboard = TerminalNetworking.class.getDeclaredMethod(
+                "applyTerminalClipboard",
+                net.minecraft.world.inventory.AbstractContainerMenu.class,
+                TerminalClipboardPayload.class,
+                Player.class);
+            applyTerminalClipboard.setAccessible(true);
+            applyTerminalClipboard.invoke(null, menu, payload, player);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Could not invoke terminal clipboard packet handler", e);
+        }
+    }
+
+    private static String terminalVirtualKeyboardAddress(final GameTestHelper helper, final TerminalServerRackMountableEnvironment terminalServer) {
+        for (final Node node : terminalServer.onAnalyze(null, Direction.NORTH, 0, 0, 0)) {
+            if (node instanceof li.cil.oc.api.network.Component component && "keyboard".equals(component.name())) {
+                return node.address();
+            }
+        }
+        helper.fail("Terminal server did not expose virtual keyboard node");
+        return "";
     }
 
     private static void sendMotionSignalNow(final MotionSensorBlockEntity sensor, final BlockPos pos, final LivingEntity entity) {
