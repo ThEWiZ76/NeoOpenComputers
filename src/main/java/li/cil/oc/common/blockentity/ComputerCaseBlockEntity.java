@@ -510,10 +510,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         tag.putInt(TAG_COLOR, color);
         tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_REDSTONE_OUTPUTS, redstoneOutputs);
-        ContainerHelper.saveAllItems(tag, items, registries);
         final CompoundTag machineTag = new CompoundTag();
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
+        ContainerHelper.saveAllItems(tag, items, registries);
     }
 
     private void tickServer() {

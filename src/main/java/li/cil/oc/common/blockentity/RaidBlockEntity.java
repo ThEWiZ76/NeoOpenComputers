@@ -70,8 +70,8 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
 
     public void saveToStack(final ItemStack stack, final HolderLookup.Provider registries) {
         final CompoundTag data = new CompoundTag();
-        ContainerHelper.saveAllItems(data, items, registries);
         save(data);
+        ContainerHelper.saveAllItems(data, items, registries);
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
         root.put(DATA_TAG, data);
@@ -306,8 +306,8 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     @Override
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        ContainerHelper.saveAllItems(tag, items, registries);
         save(tag);
+        ContainerHelper.saveAllItems(tag, items, registries);
     }
 
     @Override

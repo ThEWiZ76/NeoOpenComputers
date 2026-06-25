@@ -281,8 +281,8 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     @Override
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        ContainerHelper.saveAllItems(tag, items, registries);
         save(tag);
+        ContainerHelper.saveAllItems(tag, items, registries);
     }
 
     @Override

@@ -7359,6 +7359,37 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void computerCaseStorageStateSurvivesNbtReloadForFirstSmoke(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+        final BlockPos loadedComputerPos = new BlockPos(3, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootableHardDiskStack(helper, "computer.pushSignal('booted')"));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        final String filesystemAddress = componentAddress(computer, "filesystem");
+        helper.assertTrue(filesystemAddress != null, "Computer has no filesystem component before reload: " + computer.machine().components());
+        writeFile(helper, computer, filesystemAddress, "reload.txt", "persisted");
+
+        final CompoundTag saved = computer.saveWithFullMetadata(helper.getLevel().registryAccess());
+
+        helper.setBlock(loadedComputerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        final ComputerCaseBlockEntity loaded = helper.getBlockEntity(loadedComputerPos);
+        loaded.loadWithComponents(saved, helper.getLevel().registryAccess());
+
+        helper.assertTrue(loaded.getItem(ComputerCaseBlockEntity.SLOT_CPU).is(ModItems.CPU_TIER1.get()), "Reloaded computer lost CPU");
+        helper.assertTrue(loaded.getItem(ComputerCaseBlockEntity.SLOT_MEMORY_0).is(ModItems.MEMORY_TIER1.get()), "Reloaded computer lost memory");
+        helper.assertTrue(loaded.getItem(ComputerCaseBlockEntity.SLOT_EEPROM).is(ModItems.EEPROM.get()), "Reloaded computer lost EEPROM");
+        helper.assertTrue(componentAddress(loaded, "filesystem") != null, "Reloaded computer has no filesystem component: " + loaded.machine().components());
+        assertHardDiskContainsFile(helper, loaded.getItem(ComputerCaseBlockEntity.SLOT_HDD), "reload.txt");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void screenKeyboardSignalsReachComputer(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
