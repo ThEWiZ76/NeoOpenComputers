@@ -165,11 +165,13 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.item.JukeboxSong;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -6582,6 +6584,41 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "getSpawningMobName", new Object[0], "minecraft:zombie");
             } catch (Exception e) {
                 helper.fail("Mob spawner component invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterExposesJukeboxBlockDriverLikeUpstream(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.JUKEBOX);
+        final JukeboxBlockEntity jukebox = helper.getBlockEntity(targetPos);
+        final ItemStack record = new ItemStack(Items.MUSIC_DISC_13);
+        jukebox.setTheItem(record);
+        final String expectedRecord = JukeboxSong.fromStack(helper.getLevel().registryAccess(), record)
+            .orElseThrow(() -> new IllegalStateException("Test record has no jukebox song"))
+            .value()
+            .description()
+            .getString();
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final String address = componentAddress(computer, "jukebox");
+            helper.assertTrue(address != null, "Adapter did not expose jukebox component: " + computer.machine().components());
+            try {
+                assertInvokeResult(helper, computer, address, "getRecord", new Object[0], expectedRecord);
+                assertInvokeResult(helper, computer, address, "play", new Object[0], true);
+                helper.assertTrue(jukebox.getSongPlayer().isPlaying(), "Jukebox play callback did not start song");
+                final Object[] stop = computer.machine().invoke(address, "stop", new Object[0]);
+                helper.assertTrue(stop == null || stop.length == 0, "Expected stop to return no values");
+                helper.assertFalse(jukebox.getSongPlayer().isPlaying(), "Jukebox stop callback did not stop song");
+            } catch (Exception e) {
+                helper.fail("Jukebox component invocation failed: " + e.getMessage());
             }
         });
     }
