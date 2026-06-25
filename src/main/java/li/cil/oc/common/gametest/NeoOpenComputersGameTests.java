@@ -27,9 +27,12 @@ import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
 import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.HostBlacklistImc;
+import li.cil.oc.common.InkProviderImc;
+import li.cil.oc.common.InkProviders;
 import li.cil.oc.common.ItemChargeImc;
 import li.cil.oc.common.ItemCharges;
 import li.cil.oc.common.ItemRegistry;
+import li.cil.oc.common.ModInkProviders;
 import li.cil.oc.common.ModItemCharges;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
@@ -1430,6 +1433,35 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(filled.getDefaultMaxStackSize() == 1, "Ink cartridge should not stack");
         helper.assertTrue(filled.hasCraftingRemainingItem(), "Ink cartridge should have a crafting remainder");
         helper.assertTrue(filled.getCraftingRemainingItem() == ModItems.INK_CARTRIDGE_EMPTY.get(), "Ink cartridge remainder should be empty cartridge");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void defaultInkProvidersMirrorOpenComputersValues(final GameTestHelper helper) {
+        ModInkProviders.registerDefaults();
+
+        helper.assertTrue(InkProviders.inkValue(new ItemStack(ModItems.INK_CARTRIDGE.get())) == 50000, "Default ink provider did not accept ink cartridge");
+        helper.assertTrue(InkProviders.inkValue(new ItemStack(Items.CYAN_DYE)) == 5000, "Default ink provider did not accept dyes at upstream ratio");
+        helper.assertTrue(InkProviders.inkValue(new ItemStack(ModItems.INK_CARTRIDGE_EMPTY.get())) == 0, "Default ink provider accepted empty cartridge");
+        helper.assertTrue(InkProviders.inkValue(new ItemStack(Items.DIAMOND)) == 0, "Default ink provider accepted unrelated stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void inkProviderImcRegistersProviderLikeUpstream(final GameTestHelper helper) {
+        final ItemStack target = new ItemStack(Items.ECHO_SHARD);
+        helper.assertTrue(InkProviders.inkValue(target) == 0, "Baseline stack had ink value before IMC registration");
+        final InterModComms.IMCMessage message = new InterModComms.IMCMessage(
+            "addon",
+            NeoOpenComputers.MODID,
+            li.cil.oc.api.IMC.REGISTER_INK_PROVIDER,
+            () -> NeoOpenComputersGameTests.class.getName() + ".inkValueForEchoShard"
+        );
+
+        InkProviderImc.process(Stream.of(message));
+
+        helper.assertTrue(InkProviders.inkValue(target) == 3333, "IMC ink provider did not supply ink value");
+        helper.assertTrue(InkProviders.inkValue(new ItemStack(Items.EMERALD)) == 0, "IMC ink provider accepted unrelated stack");
         helper.succeed();
     }
 
@@ -7925,6 +7957,10 @@ public final class NeoOpenComputersGameTests {
 
     public static boolean isEchoShardWrench(final ItemStack stack) {
         return stack.is(Items.ECHO_SHARD);
+    }
+
+    public static int inkValueForEchoShard(final ItemStack stack) {
+        return stack.is(Items.ECHO_SHARD) ? 3333 : 0;
     }
 
     private static ItemStack lootDisk(final String label, final DyeColor color, final String factoryId) {
