@@ -40,6 +40,7 @@ import li.cil.oc.common.component.WirelessNetworkCardEnvironment;
 import li.cil.oc.common.driver.BlockItemEnvironmentProvider;
 import li.cil.oc.common.driver.ComputerCaseBlockDriver;
 import li.cil.oc.common.driver.ComparatorBlockDriver;
+import li.cil.oc.common.driver.DatabaseInventoryProvider;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
 import li.cil.oc.common.driver.DiskDriveContainerDriver;
 import li.cil.oc.common.driver.GeolyzerItemDriver;
@@ -49,6 +50,7 @@ import li.cil.oc.common.driver.MinecraftConverters;
 import li.cil.oc.common.driver.MotionSensorItemDriver;
 import li.cil.oc.common.driver.ScreenBlockDriver;
 import li.cil.oc.common.driver.ScreenItemDriver;
+import li.cil.oc.common.driver.ServerInventoryProvider;
 import li.cil.oc.common.driver.TransposerItemDriver;
 import net.minecraft.world.item.ItemStack;
 
@@ -142,6 +144,8 @@ public final class ModDriverCatalog {
                 providerFor(new MotionSensorItemDriver(), MotionSensorEnvironment.class),
                 providerFor(new TransposerItemDriver(), TransposerEnvironment.class),
                 new BlockItemEnvironmentProvider());
+            registry.add(new DatabaseInventoryProvider());
+            registry.add(new ServerInventoryProvider());
         }
     }
 

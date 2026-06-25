@@ -53,6 +53,7 @@ import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.LinkedCardItem;
+import li.cil.oc.common.item.ServerItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
 import li.cil.oc.common.item.TexturePickerItem;
@@ -2777,6 +2778,42 @@ public final class NeoOpenComputersGameTests {
         assertEnvironmentProvider(helper, new ItemStack(ModItems.RELAY.get()), RelayBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.REDSTONE_IO.get()), RedstoneIoBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.WAYPOINT.get()), WaypointBlockEntity.class);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void databaseUpgradeProvidesItemInventoryLikeUpstream(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get());
+        final net.neoforged.neoforge.items.IItemHandler handler = Driver.itemHandlerFor(stack, null);
+
+        helper.assertTrue(handler != null, "Database upgrade did not provide an item inventory");
+        helper.assertTrue(handler.getSlots() == 9, "Tier 1 database inventory had wrong slot count");
+        final ItemStack remainder = handler.insertItem(0, new ItemStack(Items.DIAMOND, 3), false);
+        helper.assertTrue(remainder.isEmpty(), "Database inventory rejected inserted stack");
+
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No database driver after inventory insert");
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment instanceof li.cil.oc.api.internal.Database, "Database inventory did not persist through stack data");
+        final ItemStack stored = ((li.cil.oc.api.internal.Database) environment).getStackInSlot(0);
+        helper.assertTrue(stored.is(Items.DIAMOND) && stored.getCount() == 3, "Database inventory did not persist inserted stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void serverProvidesItemInventoryLikeUpstream(final GameTestHelper helper) {
+        final Player player = helper.makeMockServerPlayerInLevel();
+        final ItemStack stack = new ItemStack(ModItems.SERVER_TIER1.get());
+        final net.neoforged.neoforge.items.IItemHandler handler = Driver.itemHandlerFor(stack, player);
+
+        helper.assertTrue(handler != null, "Server did not provide an item inventory");
+        helper.assertTrue(handler.getSlots() == ServerRackMountableEnvironment.slotCountForTier(0), "Tier 1 server inventory had wrong slot count");
+        final ItemStack remainder = handler.insertItem(2, new ItemStack(ModItems.CPU_TIER1.get()), false);
+        helper.assertTrue(remainder.isEmpty(), "Server inventory rejected CPU in CPU slot");
+
+        final ServerRackMountableEnvironment server = new ServerRackMountableEnvironment(player, 0, ((ServerItem) stack.getItem()).dataTag(stack));
+        final ItemStack stored = server.getItem(2);
+        helper.assertTrue(stored.is(ModItems.CPU_TIER1.get()), "Server inventory did not persist inserted CPU");
         helper.succeed();
     }
 
