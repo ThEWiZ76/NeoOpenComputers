@@ -44,6 +44,12 @@ Reason: it is the newest useful maintained OpenComputers line. The branch still 
 
 The built mod jar is written to `build/libs`.
 
+To package a local first-smoke tester bundle with install jar, API jar, Javadoc jar, checksums, and instructions:
+
+```powershell
+.\scripts\package-first-smoke-kit.ps1
+```
+
 ## Run Development Client
 
 ```powershell
