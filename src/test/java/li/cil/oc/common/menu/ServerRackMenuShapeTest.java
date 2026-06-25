@@ -140,6 +140,18 @@ final class ServerRackMenuShapeTest {
     }
 
     @Test
+    void clientDataDefaultsToTierOneServerLayoutUntilFirstSync() {
+        final ContainerData data = ServerRackMenu.clientData();
+
+        assertEquals(ServerRackMenu.SLOT_KIND_CPU, data.get(2));
+        assertEquals(ServerRackMenu.SLOT_KIND_EEPROM, data.get(8));
+        assertEquals(ServerRackMenu.SLOT_KIND_NONE, data.get(9));
+        assertEquals(1, data.get(ServerRackMenu.SERVER_SLOT_COUNT + 2));
+        assertEquals(Integer.MAX_VALUE, data.get(ServerRackMenu.SERVER_SLOT_COUNT + 8));
+        assertEquals(-1, data.get(ServerRackMenu.SERVER_SLOT_COUNT + 9));
+    }
+
+    @Test
     void serverInventoryReportsMachineComponentCapacity() throws ReflectiveOperationException {
         final Container server = fakeServerWithMachineCapacity(5, 12);
 

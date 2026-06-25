@@ -265,6 +265,10 @@ public class ServerRackMenu extends AbstractContainerMenu {
 
     static ContainerData clientData() {
         final SimpleContainerData data = new SimpleContainerData(SERVER_DATA_COUNT);
+        for (int slot = 0; slot < SERVER_SLOT_COUNT; slot++) {
+            data.set(slot, slotKindForTier(0, slot));
+            data.set(SERVER_SLOT_COUNT + slot, slotTierLimitForTier(0, slot));
+        }
         data.set(SERVER_IS_ITEM_INDEX, 1);
         data.set(SERVER_PRESENT_INDEX, 1);
         return data;
