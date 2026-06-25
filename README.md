@@ -78,6 +78,7 @@ Use this for local crash finding and first in-world proof. This is not a communi
 - OpenOS/Lua prompt boots.
 - Basic filesystem, EEPROM, floppy, and disk-drive actions work.
 - Screen output and keyboard input survive save/reload.
+- Disk-drive floppy data survives save/reload.
 - Redstone, modem, inventory, tank, and transposer each get one basic smoke pass.
 - Texture picker reports usable atlas texture names such as `minecraft:block/stone`.
 - Printer creates a print item.

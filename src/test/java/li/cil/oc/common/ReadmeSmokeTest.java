@@ -20,6 +20,7 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("Current pushed first-smoke base"), "README must name the smoke-test base");
         assertTrue(readme.contains("develop"), "README must direct testers to develop");
         assertTrue(readme.contains("290/290"), "README must include current GameTest evidence");
+        assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include current disk-drive persistence smoke item");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
     }
 
