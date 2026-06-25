@@ -14,6 +14,7 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptDir
 $gradlew = Join-Path $repoRoot 'gradlew.bat'
 $collector = Join-Path $scriptDir 'collect-first-smoke-report.ps1'
+$repoCommit = (& git -C $repoRoot rev-parse --short HEAD).Trim()
 
 if ([string]::IsNullOrWhiteSpace($Timestamp)) {
     $Timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -36,6 +37,7 @@ if ($WithLocalMcpServerMod) {
 $extraMods = @($ExtraMod | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 
 Write-Host "First smoke timestamp: $Timestamp"
+Write-Host "Tested commit: $repoCommit"
 Write-Host "Session logs: $sessionDir"
 Write-Host "Client command: $gradlew $($gradleArgs -join ' ')"
 Write-Host "Collector command: $collector $($collectorArgs -join ' ')"
@@ -62,7 +64,7 @@ $processExitCode = 0
 try {
     if ($extraMods.Count -gt 0) {
         New-Item -ItemType Directory -Force -Path $clientModsDir | Out-Null
-        $extraModLines = @()
+        $extraModLines = @("commit=$repoCommit", '')
         foreach ($extraMod in $extraMods) {
             if (-not (Test-Path -LiteralPath $extraMod)) {
                 throw "Extra mod not found: $extraMod"
@@ -87,7 +89,7 @@ try {
         }
         $extraModLines | Set-Content -LiteralPath $extraModsLog -Encoding UTF8
     } else {
-        'No extra mods copied.' | Set-Content -LiteralPath $extraModsLog -Encoding UTF8
+        @("commit=$repoCommit", '', 'No extra mods copied.') | Set-Content -LiteralPath $extraModsLog -Encoding UTF8
     }
 
     $process = Start-Process `

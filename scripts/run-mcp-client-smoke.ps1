@@ -11,6 +11,7 @@ $ErrorActionPreference = 'Stop'
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptDir
 $gradlew = Join-Path $repoRoot 'gradlew.bat'
+$repoCommit = (& git -C $repoRoot rev-parse --short HEAD).Trim()
 $clientRunDir = Join-Path $repoRoot 'run\client'
 $clientModsDir = Join-Path $clientRunDir 'mods'
 $clientLog = Join-Path $clientRunDir 'logs\latest.log'
@@ -92,6 +93,7 @@ Copy-Item -LiteralPath $source -Destination $copiedExtraMod -Force
 $sourceItem = Get-Item -LiteralPath $source
 $sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash
 @(
+    "commit=$repoCommit"
     "source=$source"
     "destination=$copiedExtraMod"
     "sha256=$sourceHash"

@@ -61,6 +61,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("Get-FileHash"), "MCP smoke must record helper jar SHA-256 evidence");
         assertTrue(scriptText.contains("Length"), "MCP smoke must record helper jar byte length evidence");
         assertTrue(scriptText.contains("LastWriteTimeUtc"), "MCP smoke must record helper jar timestamp evidence");
+        assertTrue(scriptText.contains("rev-parse --short HEAD"), "MCP smoke must record the tested git commit");
+        assertTrue(scriptText.contains("commit=$repoCommit"), "MCP smoke manifest must include the tested git commit");
         assertTrue(scriptText.contains("Invoke-McpRequest"), "MCP smoke must probe JSON-RPC endpoint");
         assertTrue(scriptText.contains("tools/list"), "MCP smoke must verify tools/list");
         assertTrue(scriptText.contains("execute_commands"), "MCP smoke must verify command tool");
@@ -78,6 +80,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("Get-FileHash"), "World smoke must record helper jar SHA-256 evidence");
         assertTrue(scriptText.contains("Length"), "World smoke must record helper jar byte length evidence");
         assertTrue(scriptText.contains("LastWriteTimeUtc"), "World smoke must record helper jar timestamp evidence");
+        assertTrue(scriptText.contains("rev-parse --short HEAD"), "World smoke must record the tested git commit");
+        assertTrue(scriptText.contains("commit=$repoCommit"), "World smoke manifest must include the tested git commit");
         assertTrue(scriptText.contains("-Pneoopencomputers.quickPlayWorld="),
             "World smoke must pass quick-play through a Gradle property so NeoGradle launch args are preserved");
         assertTrue(!scriptText.contains("--args="),
@@ -98,6 +102,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("Get-FileHash"), "Device smoke must record helper jar SHA-256 evidence");
         assertTrue(scriptText.contains("Length"), "Device smoke must record helper jar byte length evidence");
         assertTrue(scriptText.contains("LastWriteTimeUtc"), "Device smoke must record helper jar timestamp evidence");
+        assertTrue(scriptText.contains("rev-parse --short HEAD"), "Device smoke must record the tested git commit");
+        assertTrue(scriptText.contains("commit=$repoCommit"), "Device smoke manifest must include the tested git commit");
         assertTrue(scriptText.contains("-Pneoopencomputers.quickPlayWorld="),
             "Device smoke must quick-play through the NeoGradle-safe property");
         assertTrue(!scriptText.contains("--args="),
@@ -180,6 +186,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("Get-FileHash"), "Launcher must record helper jar SHA-256 evidence");
         assertTrue(scriptText.contains("Length"), "Launcher must record helper jar byte length evidence");
         assertTrue(scriptText.contains("LastWriteTimeUtc"), "Launcher must record helper jar timestamp evidence");
+        assertTrue(scriptText.contains("rev-parse --short HEAD"), "Launcher must record the tested git commit");
+        assertTrue(scriptText.contains("commit=$repoCommit"), "Launcher manifest must include the tested git commit");
         assertTrue(scriptText.contains("KeepExtraMods"), "Launcher must let testers keep helper mods when requested");
         assertTrue(scriptText.contains("DryRun"), "Launcher must have a dry-run path for verification");
     }
