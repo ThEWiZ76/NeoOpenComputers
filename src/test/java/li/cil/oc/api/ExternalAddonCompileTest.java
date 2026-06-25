@@ -39,16 +39,34 @@ final class ExternalAddonCompileTest {
 
                 import li.cil.oc.api.Driver;
                 import li.cil.oc.api.FileSystem;
+                import li.cil.oc.api.Machine;
                 import li.cil.oc.api.Network;
+                import li.cil.oc.api.driver.Converter;
+                import li.cil.oc.api.driver.EnvironmentProvider;
                 import li.cil.oc.api.driver.DriverItem;
+                import li.cil.oc.api.driver.InventoryProvider;
                 import li.cil.oc.api.machine.Arguments;
+                import li.cil.oc.api.machine.Architecture;
                 import li.cil.oc.api.machine.Callback;
                 import li.cil.oc.api.machine.Context;
+                import li.cil.oc.api.machine.ExecutionResult;
+                import li.cil.oc.api.network.EnvironmentHost;
+                import li.cil.oc.api.network.ManagedEnvironment;
                 import li.cil.oc.api.network.SimpleComponent;
                 import li.cil.oc.api.network.Visibility;
                 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
                 import li.cil.oc.api.prefab.AbstractValue;
+                import net.minecraft.core.BlockPos;
+                import net.minecraft.core.Direction;
+                import net.minecraft.nbt.CompoundTag;
+                import net.minecraft.world.Container;
+                import net.minecraft.world.SimpleContainer;
+                import net.minecraft.world.entity.player.Player;
                 import net.minecraft.world.item.ItemStack;
+                import net.minecraft.world.item.Items;
+                import net.minecraft.world.level.Level;
+
+                import java.util.Map;
 
                 public final class ExampleAddonComponent extends AbstractManagedEnvironment implements SimpleComponent {
                     public ExampleAddonComponent() {
@@ -67,9 +85,82 @@ final class ExternalAddonCompileTest {
 
                     public void register(final DriverItem driver, final ItemStack stack) {
                         Driver.add(driver);
+                        Driver.add(new ExampleBlockDriver());
+                        Driver.add(new ExampleItemDriver());
+                        Driver.add(new ExampleConverter());
+                        Driver.add(new ExampleEnvironmentProvider());
+                        Driver.add(new ExampleInventoryProvider());
+                        Machine.add(ExampleArchitecture.class);
                         FileSystem.asManagedEnvironment(FileSystem.fromMemory(1024), "addon");
                         new AbstractValue() {};
                         driver.worksWith(stack);
+                    }
+
+                    public static final class ExampleBlockDriver extends li.cil.oc.api.prefab.DriverSidedBlock {
+                        public ExampleBlockDriver() {
+                            super(new ItemStack(Items.STONE));
+                        }
+
+                        @Override
+                        public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
+                            return new ExampleAddonComponent();
+                        }
+                    }
+
+                    public static final class ExampleItemDriver extends li.cil.oc.api.prefab.DriverItem {
+                        public ExampleItemDriver() {
+                            super(new ItemStack(Items.STICK));
+                        }
+
+                        @Override
+                        public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+                            return new ExampleAddonComponent();
+                        }
+
+                        @Override
+                        public String slot(final ItemStack stack) {
+                            return "card";
+                        }
+                    }
+
+                    public static final class ExampleEnvironmentProvider implements EnvironmentProvider {
+                        @Override
+                        public Class<?> getEnvironment(final ItemStack stack) {
+                            return ExampleAddonComponent.class;
+                        }
+                    }
+
+                    public static final class ExampleInventoryProvider implements InventoryProvider {
+                        @Override
+                        public boolean worksWith(final ItemStack stack, final Player player) {
+                            return !stack.isEmpty();
+                        }
+
+                        @Override
+                        public Container getInventory(final ItemStack stack, final Player player) {
+                            return new SimpleContainer(1);
+                        }
+                    }
+
+                    public static final class ExampleConverter implements Converter {
+                        @Override
+                        public void convert(final Object value, final Map<Object, Object> output) {
+                            output.put("class", value.getClass().getName());
+                        }
+                    }
+
+                    @Architecture.Name("Example")
+                    public static final class ExampleArchitecture implements Architecture {
+                        @Override public boolean isInitialized() { return true; }
+                        @Override public boolean recomputeMemory(final Iterable<ItemStack> components) { return true; }
+                        @Override public boolean initialize() { return true; }
+                        @Override public void close() {}
+                        @Override public void runSynchronized() {}
+                        @Override public ExecutionResult runThreaded(final boolean isSynchronizedReturn) { return new ExecutionResult.Sleep(0); }
+                        @Override public void onSignal() {}
+                        @Override public void onConnect() {}
+                        @Override public void load(final CompoundTag nbt) {}
+                        @Override public void save(final CompoundTag nbt) {}
                     }
                 }
                 """);
