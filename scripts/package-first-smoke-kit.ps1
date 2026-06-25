@@ -82,29 +82,33 @@ Generated: $Timestamp
 
 ## Install
 
-Use `neoopencomputers-$modVersion-all.jar` for first smoke testing. It includes the bundled runtime libraries needed by the mod.
+Use neoopencomputers-$modVersion-all.jar for first smoke testing. It includes the bundled runtime libraries needed by the mod.
 
-Copy that jar into a NeoForge 1.21.1 client `mods` folder, start a local world, and run the first-smoke checklist from the repository README.
+Copy that jar into a NeoForge 1.21.1 client mods folder, start a local world, and run the first-smoke checklist from the repository README.
 
 ## Developer Artifacts
 
-- `neoopencomputers-$modVersion.jar` is the plain mod jar.
-- `neoopencomputers-$modVersion-api.jar` contains the public API sources/classes for addon development.
-- `neoopencomputers-$modVersion-javadoc.jar` contains generated public API docs.
+- neoopencomputers-$modVersion.jar is the plain mod jar.
+- neoopencomputers-$modVersion-api.jar contains the public API sources/classes for addon development.
+- neoopencomputers-$modVersion-javadoc.jar contains generated public API docs.
 
 ## Evidence
 
 After testing from the dev workspace, run:
 
-```powershell
-.\scripts\run-first-smoke-client.ps1
-```
+    .\scripts\run-first-smoke-client.ps1
 
 That launcher starts the client and packages logs/screenshots after exit.
 
+For MCP-assisted local smoke testing from the dev workspace, run:
+
+    .\scripts\run-first-smoke-client.ps1 -WithLocalMcpServerMod
+
+The helper jar is expected at M:\development\mcp-server-mod\build\libs\mcp-server-mod-neoforge-1.1.0+neoforge.mc1.21.1.jar. Use -ExtraMod <path> for a different helper jar.
+
 ## Checksums
 
-See `SHA256SUMS.txt`.
+See SHA256SUMS.txt.
 "@ | Set-Content -LiteralPath (Join-Path $kitDir 'README-FIRST-SMOKE.md') -Encoding UTF8
 
 if (-not $NoZip) {

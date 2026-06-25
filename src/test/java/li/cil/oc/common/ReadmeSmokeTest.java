@@ -51,6 +51,14 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("neoopencomputers-$modVersion-javadoc.jar"), "Kit must include Javadoc jar");
         assertTrue(scriptText.contains("SHA256SUMS.txt"), "Kit must write checksums");
         assertTrue(scriptText.contains("DryRun"), "Kit must have a dry-run path for verification");
+        assertTrue(scriptText.contains("Use neoopencomputers-$modVersion-all.jar"),
+            "Kit README must not use PowerShell backticks that corrupt generated filenames");
+        assertTrue(scriptText.contains("-WithLocalMcpServerMod"), "Kit README must document MCP-assisted smoke launch");
+        assertTrue(scriptText.contains("-ExtraMod <path>"), "Kit README must document custom helper mod launch");
+        assertTrue(scriptText.contains("    .\\scripts\\run-first-smoke-client.ps1 -WithLocalMcpServerMod"),
+            "Kit README must render MCP-assisted smoke command without Markdown backtick escapes");
+        assertTrue(!scriptText.contains("`neoopencomputers"),
+            "PowerShell treats Markdown backticks as escapes inside generated README text");
         assertTrue(scriptText.contains("Compress-Archive -Path"), "Kit zip must expand wildcard contents");
         assertTrue(!scriptText.contains("Compress-Archive -LiteralPath (Join-Path $kitDir '*')"),
             "LiteralPath does not expand the kit wildcard when zipping");
