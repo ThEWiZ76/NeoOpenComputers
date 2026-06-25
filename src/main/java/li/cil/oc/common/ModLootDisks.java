@@ -35,6 +35,13 @@ public final class ModLootDisks {
         return bundledFileSystem(OPENOS_PATH);
     }
 
+    public static FileSystem bundledFileSystem(final String path) {
+        if (API.fileSystem == null) {
+            OpenComputersApi.initialize();
+        }
+        return API.fileSystem.fromClass(ModLootDisks.class, NeoOpenComputers.MODID, LOOT_ROOT + "/" + path);
+    }
+
     public static List<ItemStack> bundledStacksForCycling() {
         final List<ItemStack> stacks = new ArrayList<>();
         for (Descriptor descriptor : bundledDescriptors()) {
@@ -109,13 +116,6 @@ public final class ModLootDisks {
             return new Descriptor(path, parts[0], nonNegativeInt(parts[1]), DyeColor.LIGHT_GRAY);
         }
         return new Descriptor(path, value, 1, DyeColor.LIGHT_GRAY);
-    }
-
-    private static FileSystem bundledFileSystem(final String path) {
-        if (API.fileSystem == null) {
-            OpenComputersApi.initialize();
-        }
-        return API.fileSystem.fromClass(ModLootDisks.class, NeoOpenComputers.MODID, LOOT_ROOT + "/" + path);
     }
 
     private static int nonNegativeInt(final String value) {

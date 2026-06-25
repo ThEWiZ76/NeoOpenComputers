@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ItemRegistry;
+import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -24,6 +25,8 @@ import java.util.function.Consumer;
 public class FloppyItem extends Item implements DriverItem {
     private static final String DRIVER_DATA_TAG = "oc:data";
     private static final String FLOPPY_DATA_TAG = "oc:floppy";
+    private static final String LEGACY_LOOT_PATH_TAG = "oc:lootPath";
+    private static final String LEGACY_LABEL_TAG = "oc:fs.label";
 
     public FloppyItem(final Properties properties) {
         super(properties);
@@ -50,6 +53,11 @@ public class FloppyItem extends Item implements DriverItem {
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
         final CompoundTag rootData = rootData(stack);
+        if (rootData.contains(LEGACY_LOOT_PATH_TAG)) {
+            final li.cil.oc.api.fs.FileSystem fileSystem = ModLootDisks.bundledFileSystem(rootData.getString(LEGACY_LOOT_PATH_TAG));
+            final String label = rootData.getString(LEGACY_LABEL_TAG);
+            return FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
+        }
         if (rootData.contains(ItemRegistry.FLOPPY_FACTORY_ID_TAG)) {
             if (!(API.items instanceof ItemRegistry registry)) {
                 return null;

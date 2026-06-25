@@ -506,6 +506,29 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void legacyLootPathFloppyLoadsBundledFilesystemLikeUpstream(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.FLOPPY.get());
+        final CompoundTag data = new CompoundTag();
+        data.putString("oc:lootPath", "openos");
+        data.putString("oc:fs.label", "Legacy OpenOS");
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "Legacy loot floppy has no item driver");
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment != null && environment.node() instanceof li.cil.oc.api.network.Component, "Legacy loot floppy did not create filesystem component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        final Object[] exists = invokeComponent(helper, component, "exists", "init.lua");
+        final Object[] readOnly = invokeComponent(helper, component, "isReadOnly");
+        final Object[] label = invokeComponent(helper, component, "getLabel");
+        helper.assertTrue(Boolean.TRUE.equals(exists[0]), "Legacy loot floppy did not expose bundled OpenOS init.lua");
+        helper.assertTrue(Boolean.TRUE.equals(readOnly[0]), "Legacy loot floppy should be read-only");
+        helper.assertTrue("Legacy OpenOS".equals(label[0]), "Legacy loot floppy did not preserve oc:fs.label");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void serverItemDriverDataTagPersistsRootDataLikeUpstream(final GameTestHelper helper) {
         final ItemStack stack = new ItemStack(ModItems.SERVER_TIER2.get());
         final DriverItem driver = Driver.driverFor(stack);
