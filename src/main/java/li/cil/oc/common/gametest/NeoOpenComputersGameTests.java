@@ -6689,6 +6689,63 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterHidesFluidHandlerDriverByDefaultLikeUpstream(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_TANK_DRIVER, false);
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(adapter.node().network() == computer.node().network(), "Adapter is not on the computer network");
+            helper.assertTrue(componentAddress(computer, "fluid_handler") == null, "Disabled fluid handler driver should not expose a component: " + computer.machine().components());
+            try {
+                restoreCachedConfig(ModSettings.ENABLE_TANK_DRIVER, previous);
+            } catch (Exception e) {
+                helper.fail("Failed to restore tank-driver config: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 120)
+    public static void adapterExposesFluidHandlerDriverWhenEnabledLikeUpstream(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_TANK_DRIVER, true);
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(adapter.node().network() == computer.node().network(), "Adapter is not on the computer network");
+            final String address = componentAddress(computer, "fluid_handler");
+            helper.assertTrue(address != null, "Adapter did not expose enabled fluid handler component: " + computer.machine().components());
+            try {
+                final Object[] result = computer.machine().invoke(address, "getTankInfo", new Object[0]);
+                helper.assertTrue(result.length == 1 && result[0] instanceof Map<?, ?>, "Fluid handler getTankInfo did not return one tank info table");
+                final Map<?, ?> tank = (Map<?, ?>) result[0];
+                helper.assertTrue(Integer.valueOf(1000).equals(tank.get("capacity")), "Fluid handler did not report cauldron capacity");
+                helper.assertTrue(Integer.valueOf(1000).equals(tank.get("amount")), "Fluid handler did not report cauldron amount");
+                helper.assertTrue("minecraft:water".equals(tank.get("name")), "Fluid handler did not report water fluid id");
+                restoreCachedConfig(ModSettings.ENABLE_TANK_DRIVER, previous);
+            } catch (Exception e) {
+                helper.fail("Fluid handler component invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
     public static void adapterInventoryControllerUpgradeReadsChest(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
