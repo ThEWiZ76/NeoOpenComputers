@@ -34,4 +34,19 @@ final class TerminalKeyPayloadTest {
         assertEquals((int) 'x', decoded.character());
         assertEquals(45, decoded.keyCode());
     }
+
+    @Test
+    void streamCodecQuantizesCharacterToUpstreamCharPrecision() {
+        final int codePoint = 0x1F600;
+        final TerminalKeyPayload payload = new TerminalKeyPayload(8, true, codePoint, 45);
+        final RegistryFriendlyByteBuf buffer = new RegistryFriendlyByteBuf(
+            Unpooled.buffer(),
+            RegistryAccess.EMPTY,
+            ConnectionType.NEOFORGE);
+
+        TerminalKeyPayload.STREAM_CODEC.encode(buffer, payload);
+        final TerminalKeyPayload decoded = TerminalKeyPayload.STREAM_CODEC.decode(buffer);
+
+        assertEquals((int) (char) codePoint, decoded.character());
+    }
 }
