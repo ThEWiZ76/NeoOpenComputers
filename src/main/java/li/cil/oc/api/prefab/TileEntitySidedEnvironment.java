@@ -41,12 +41,28 @@ public abstract class TileEntitySidedEnvironment extends BlockEntity implements 
 
     @Override
     public void onChunkUnloaded() {
-        super.onChunkUnloaded();
-        removeNodes();
+        onChunkUnload();
     }
 
     @Override
     public void setRemoved() {
+        invalidate();
+    }
+
+    /**
+     * @deprecated Use {@link #onChunkUnloaded()} in Minecraft 1.21 code.
+     */
+    @Deprecated
+    public void onChunkUnload() {
+        super.onChunkUnloaded();
+        removeNodes();
+    }
+
+    /**
+     * @deprecated Use {@link #setRemoved()} in Minecraft 1.21 code.
+     */
+    @Deprecated
+    public void invalidate() {
         super.setRemoved();
         removeNodes();
     }
@@ -54,6 +70,33 @@ public abstract class TileEntitySidedEnvironment extends BlockEntity implements 
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        readFromNBT(tag);
+    }
+
+    @Override
+    protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        writeToNBT(tag);
+    }
+
+    /**
+     * @deprecated Use {@link #loadAdditional(CompoundTag, HolderLookup.Provider)} in Minecraft 1.21 code.
+     */
+    @Deprecated
+    public void readFromNBT(final CompoundTag tag) {
+        loadNodes(tag);
+    }
+
+    /**
+     * @deprecated Use {@link #saveAdditional(CompoundTag, HolderLookup.Provider)} in Minecraft 1.21 code.
+     */
+    @Deprecated
+    public CompoundTag writeToNBT(final CompoundTag tag) {
+        saveNodes(tag);
+        return tag;
+    }
+
+    private void loadNodes(final CompoundTag tag) {
         for (int index = 0; index < nodes.length; index++) {
             final Node node = nodes[index];
             if (node != null && node.host() == this) {
@@ -62,9 +105,7 @@ public abstract class TileEntitySidedEnvironment extends BlockEntity implements 
         }
     }
 
-    @Override
-    protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
+    private void saveNodes(final CompoundTag tag) {
         for (int index = 0; index < nodes.length; index++) {
             final Node node = nodes[index];
             if (node != null && node.host() == this) {
