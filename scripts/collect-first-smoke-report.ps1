@@ -1,0 +1,135 @@
+param(
+    [string] $OutputDir = '',
+    [string] $Timestamp = '',
+    [switch] $NoZip
+)
+
+$ErrorActionPreference = 'Stop'
+
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoRoot = Split-Path -Parent $scriptDir
+
+if ([string]::IsNullOrWhiteSpace($Timestamp)) {
+    $Timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+}
+
+if ([string]::IsNullOrWhiteSpace($OutputDir)) {
+    $OutputDir = Join-Path $repoRoot 'build\first-smoke-reports'
+}
+
+$reportDir = Join-Path $OutputDir "first-smoke-$Timestamp"
+$logsDir = Join-Path $reportDir 'logs'
+New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
+
+function Copy-IfPresent {
+    param(
+        [string] $Source,
+        [string] $DestinationName
+    )
+
+    if (Test-Path -LiteralPath $Source) {
+        $destination = Join-Path $logsDir $DestinationName
+        Copy-Item -LiteralPath $Source -Destination $destination -Force
+        return $destination
+    }
+
+    return $null
+}
+
+function Read-TextIfPresent {
+    param([string] $Path)
+
+    if (Test-Path -LiteralPath $Path) {
+        return Get-Content -LiteralPath $Path -Raw
+    }
+
+    return ''
+}
+
+$clientRunDir = Join-Path $repoRoot 'run\client'
+$clientLatestLog = Join-Path $clientRunDir 'logs\latest.log'
+$clientDebugLog = Join-Path $clientRunDir 'logs\debug.log'
+$clientCrashDir = Join-Path $clientRunDir 'crash-reports'
+$smokeDir = Join-Path $repoRoot 'build\client-smoke'
+$smokeStdout = Join-Path $smokeDir 'runClient.out.log'
+$smokeStderr = Join-Path $smokeDir 'runClient.err.log'
+
+$copied = @()
+$copied += Copy-IfPresent $clientLatestLog 'client-latest.log'
+$copied += Copy-IfPresent $clientDebugLog 'client-debug.log'
+$copied += Copy-IfPresent $smokeStdout 'bounded-smoke-stdout.log'
+$copied += Copy-IfPresent $smokeStderr 'bounded-smoke-stderr.log'
+$copied = @($copied | Where-Object { $null -ne $_ })
+
+if (Test-Path -LiteralPath $clientCrashDir) {
+    $crashDestination = Join-Path $logsDir 'crash-reports'
+    Copy-Item -LiteralPath $clientCrashDir -Destination $crashDestination -Recurse -Force
+}
+
+$combinedLog = (Read-TextIfPresent $clientLatestLog) + "`n" +
+    (Read-TextIfPresent $clientDebugLog) + "`n" +
+    (Read-TextIfPresent $smokeStdout) + "`n" +
+    (Read-TextIfPresent $smokeStderr)
+
+$failurePatterns = @(
+    '/ERROR]',
+    '/FATAL]',
+    'Missing texture',
+    'missing-texture',
+    'Unable to load model',
+    'FileNotFoundException',
+    'Exception loading',
+    'Crash report'
+)
+$matches = @($failurePatterns | Where-Object { $combinedLog.Contains($_) })
+
+$status = if ($matches.Count -eq 0) { 'No hard failure patterns found in copied logs.' } else { "Hard failure patterns found: $($matches -join ', ')" }
+$reportPath = Join-Path $reportDir 'summary.md'
+$relativeLogs = if ($copied.Count -eq 0) { '- No standard logs were found.' } else { ($copied | ForEach-Object { "- logs/$([System.IO.Path]::GetFileName($_))" }) -join "`n" }
+
+@"
+# NeoOpenComputers First Smoke Report
+
+Generated: $Timestamp
+
+## Log Scan
+
+$status
+
+## Copied Logs
+
+$relativeLogs
+
+## Tester Checklist
+
+- [ ] Client opens local world with NeoOpenComputers installed.
+- [ ] Computer case, screen, keyboard, disk drive, modem, redstone card, printer, and print block place without crash.
+- [ ] OpenOS or Lua prompt boots on a placed computer.
+- [ ] Filesystem, EEPROM, floppy, and disk-drive actions work once.
+- [ ] Screen output and keyboard input survive save/reload.
+- [ ] Disk-drive floppy data survives save/reload.
+- [ ] Redstone, modem, storage, inventory, tank, and transposer each get one basic smoke pass.
+- [ ] Printer creates a print item and placed print renders configured shape data.
+- [ ] Placed print rotation, drops, hit boxes, tooltip/name, light/opacity, and redstone/button activation look sane.
+- [ ] No crash, missing texture, untranslated key, client/server error, or unexpected visual behavior remains unexplained.
+
+## Notes
+
+Record world seed, reproduction steps, screenshots, and any unexpected log lines here.
+"@ | Set-Content -LiteralPath $reportPath -Encoding UTF8
+
+if (-not $NoZip) {
+    $zipPath = "$reportDir.zip"
+    if (Test-Path -LiteralPath $zipPath) {
+        Remove-Item -LiteralPath $zipPath -Force
+    }
+    Compress-Archive -LiteralPath (Join-Path $reportDir '*') -DestinationPath $zipPath -Force
+    Write-Host "First smoke report: $zipPath"
+} else {
+    Write-Host "First smoke report: $reportDir"
+}
+
+Write-Host "Summary: $reportPath"
+if ($matches.Count -gt 0) {
+    Write-Warning $status
+}

@@ -93,6 +93,14 @@ For a bounded launch/log smoke that stops after resource reload and texture atla
 
 5. Save logs for any crash, missing texture, client/server error, or unexpected visual behavior.
 
+To package first-smoke evidence after testing:
+
+```powershell
+.\scripts\collect-first-smoke-report.ps1
+```
+
+This writes a timestamped report under `build\first-smoke-reports`, copies available client and bounded-smoke logs, scans for hard failure patterns, and creates a zipped evidence bundle by default.
+
 ## Run Development Server
 
 ```powershell
