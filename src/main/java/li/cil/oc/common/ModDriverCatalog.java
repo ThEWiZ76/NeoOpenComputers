@@ -53,6 +53,7 @@ import li.cil.oc.common.driver.InventoryBlockDriver;
 import li.cil.oc.common.driver.KeyboardItemDriver;
 import li.cil.oc.common.driver.MinecraftConverters;
 import li.cil.oc.common.driver.MotionSensorItemDriver;
+import li.cil.oc.common.driver.NoteBlockDriver;
 import li.cil.oc.common.driver.ScreenBlockDriver;
 import li.cil.oc.common.driver.ScreenItemDriver;
 import li.cil.oc.common.driver.ServerInventoryProvider;
@@ -65,7 +66,7 @@ import java.util.function.Supplier;
 public final class ModDriverCatalog {
     public static void registerDefaults() {
         if (API.driver instanceof DriverRegistry registry) {
-            registerBlocks(registry, new ComputerCaseBlockDriver(), new ComparatorBlockDriver(), new DiskDriveBlockDriver(), new InventoryBlockDriver(), new ScreenBlockDriver());
+            registerBlocks(registry, new ComputerCaseBlockDriver(), new ComparatorBlockDriver(), new DiskDriveBlockDriver(), new InventoryBlockDriver(), new NoteBlockDriver(), new ScreenBlockDriver());
             registry.add(MinecraftConverters.ITEM_STACK);
             registry.add(MinecraftConverters.LINKED_CARD);
             registry.add(MinecraftConverters.NANOMACHINES);

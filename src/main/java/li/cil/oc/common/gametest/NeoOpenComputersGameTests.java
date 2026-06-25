@@ -157,6 +157,7 @@ import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
+import net.minecraft.world.level.block.NoteBlock;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
@@ -6440,6 +6441,32 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "getOutputSignal", new Object[0], 7);
             } catch (Exception e) {
                 helper.fail("Comparator component invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterExposesNoteBlockDriverLikeUpstream(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.NOTE_BLOCK.defaultBlockState().setValue(NoteBlock.NOTE, 4));
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final String address = componentAddress(computer, "note_block");
+            helper.assertTrue(address != null, "Adapter did not expose note block component: " + computer.machine().components());
+            try {
+                assertInvokeResult(helper, computer, address, "getPitch", new Object[0], 5);
+                assertInvokeResult(helper, computer, address, "setPitch", new Object[]{12}, true);
+                helper.assertTrue(helper.getBlockState(targetPos).getValue(NoteBlock.NOTE) == 11, "setPitch did not write upstream 1-based pitch to note block state");
+                assertInvokeResult(helper, computer, address, "trigger", new Object[]{18}, true);
+                helper.assertTrue(helper.getBlockState(targetPos).getValue(NoteBlock.NOTE) == 17, "trigger pitch argument did not update note block state");
+            } catch (Exception e) {
+                helper.fail("Note block component invocation failed: " + e.getMessage());
             }
         });
     }
