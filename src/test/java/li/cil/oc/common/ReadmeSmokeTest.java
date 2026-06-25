@@ -38,6 +38,7 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("--quickPlaySingleplayer"), "README must document quick-play world entry for MCP world smoke");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
         assertTrue(readme.contains("screenshots"), "README must tell testers screenshots are bundled");
+        assertTrue(readme.contains(".\\scripts\\check-actions-disabled.ps1"), "README must document the GitHub Actions disabled guard script");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
     }
 
@@ -191,6 +192,19 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("Select-Object -First 20"), "Collector must bound copied screenshots");
         assertTrue(scriptText.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
             "Collector checklist must include terminal item input smoke item");
+    }
+
+    @Test
+    void actionsDisabledGuardScriptExists() throws IOException {
+        final Path script = Path.of("scripts/check-actions-disabled.ps1");
+        assertTrue(Files.exists(script), "Missing GitHub Actions disabled guard script");
+
+        final String scriptText = Files.readString(script);
+        assertTrue(scriptText.contains("origin/develop"), "Actions guard must check origin/develop");
+        assertTrue(scriptText.contains(".github/workflows"), "Actions guard must check workflow files");
+        assertTrue(scriptText.contains("ls-tree"), "Actions guard must inspect committed trees");
+        assertTrue(scriptText.contains("Test-Path"), "Actions guard must inspect local workspace state");
+        assertTrue(scriptText.contains("GitHub Actions disabled guard clean"), "Actions guard must print clear success");
     }
 
     @Test

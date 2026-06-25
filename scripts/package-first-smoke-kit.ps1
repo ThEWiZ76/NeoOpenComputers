@@ -100,6 +100,10 @@ After testing from the dev workspace, run:
 
 That launcher starts the client and packages logs/screenshots after exit.
 
+Before pushing any smoke-test changes, keep GitHub Actions disabled:
+
+    .\scripts\check-actions-disabled.ps1
+
 For MCP-assisted local smoke testing from the dev workspace, run:
 
     .\scripts\run-first-smoke-client.ps1 -WithLocalMcpServerMod

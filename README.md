@@ -24,6 +24,12 @@ The port has broad API, machine, network, filesystem, terminal, screen/GPU/input
 
 GitHub Actions are intentionally disabled until the mod is ready enough for CI. Do not add `.github/workflows` yet.
 
+Before pushing, verify Actions are still disabled:
+
+```powershell
+.\scripts\check-actions-disabled.ps1
+```
+
 Chosen upstream reference branch:
 
 - `master-MC1.12`
