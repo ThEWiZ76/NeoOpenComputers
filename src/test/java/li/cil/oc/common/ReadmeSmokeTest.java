@@ -21,6 +21,7 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("develop"), "README must direct testers to develop");
         assertTrue(readme.contains("291/291"), "README must include current GameTest evidence");
         assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include current disk-drive persistence smoke item");
+        assertTrue(readme.contains(".\\scripts\\run-first-smoke-client.ps1"), "README must document interactive first-smoke launcher");
         assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
@@ -29,6 +30,17 @@ final class ReadmeSmokeTest {
     @Test
     void boundedClientSmokeScriptExists() {
         assertTrue(Files.exists(Path.of("scripts/run-client-smoke.ps1")), "Missing bounded client smoke script");
+    }
+
+    @Test
+    void firstSmokeClientLauncherExists() throws IOException {
+        final Path script = Path.of("scripts/run-first-smoke-client.ps1");
+        assertTrue(Files.exists(script), "Missing first-smoke client launcher");
+
+        final String scriptText = Files.readString(script);
+        assertTrue(scriptText.contains("runClient"), "Launcher must start development client");
+        assertTrue(scriptText.contains("collect-first-smoke-report.ps1"), "Launcher must collect evidence after client exit");
+        assertTrue(scriptText.contains("DryRun"), "Launcher must have a dry-run path for verification");
     }
 
     @Test

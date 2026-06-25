@@ -72,6 +72,12 @@ Use this for local crash finding and first in-world proof. This is not a communi
 .\gradlew.bat runClient --no-daemon --console=plain
 ```
 
+For an interactive smoke session that automatically packages logs after the client exits:
+
+```powershell
+.\scripts\run-first-smoke-client.ps1
+```
+
 For a bounded launch/log smoke that stops after resource reload and texture atlas creation:
 
 ```powershell
