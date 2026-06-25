@@ -1,5 +1,7 @@
 package li.cil.oc.api.detail;
 
+import com.typesafe.config.Config;
+import li.cil.oc.api.API;
 import li.cil.oc.api.driver.Converter;
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
@@ -33,6 +35,11 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 @SuppressWarnings("deprecation")
 final class DetailApiContractsTest {
+    @Test
+    void apiConfigKeepsUpstreamTypesafeConfigType() throws NoSuchFieldException {
+        assertEquals(Config.class, API.class.getField("config").getType());
+    }
+
     @Test
     void driverApiUsesModernMinecraftAndNeoForgeTypes() throws NoSuchMethodException {
         Method blockDriver = DriverAPI.class.getMethod("driverFor", Level.class, BlockPos.class, Direction.class);

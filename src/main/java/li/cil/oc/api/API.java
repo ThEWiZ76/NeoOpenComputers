@@ -1,5 +1,6 @@
 package li.cil.oc.api;
 
+import com.typesafe.config.Config;
 import li.cil.oc.api.detail.DriverAPI;
 import li.cil.oc.api.detail.FileSystemAPI;
 import li.cil.oc.api.detail.ItemAPI;
@@ -16,10 +17,9 @@ public final class API {
     public static final String VERSION = "0.1.0";
 
     /**
-     * Placeholder for the loaded mod config. Kept as Object to avoid forcing a
-     * specific config library on API consumers during the Java-first port.
+     * Placeholder for the loaded mod config.
      */
-    public static Object config = null;
+    public static Config config = null;
 
     public static boolean isPowerEnabled = false;
 
