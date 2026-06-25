@@ -1571,6 +1571,20 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void printBlockIgnoresTexturelessShapesForSideSolidityLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "", null));
+
+        final BlockPos pos = BlockPos.ZERO;
+        helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState());
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.loadFromStack(data.createItemStack());
+
+        helper.assertFalse(print.isSideSolid(Direction.DOWN), "Textureless print shape counted as side-solid");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void brokenPrintDropsConfiguredPrintStackLikeUpstream(final GameTestHelper helper) {
         helper.killAllEntities();

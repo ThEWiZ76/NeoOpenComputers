@@ -95,6 +95,9 @@ public class PrintBlockEntity extends BlockEntity {
     public boolean isSideSolid(final Direction side) {
         final Iterable<PrintData.Shape> shapes = activeState ? data.stateOn() : data.stateOff();
         for (PrintData.Shape shape : shapes) {
+            if (shape.texture() == null || shape.texture().isEmpty()) {
+                continue;
+            }
             final AABB bounds = rotateTowardsFacing(shape.bounds());
             final boolean fullX = bounds.minX == 0D && bounds.maxX == 1D;
             final boolean fullY = bounds.minY == 0D && bounds.maxY == 1D;
