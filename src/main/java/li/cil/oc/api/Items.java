@@ -25,14 +25,14 @@ public final class Items {
         if (API.items != null) {
             return API.items.registerFloppy(name, color, factory, doRecipeCycling);
         }
-        return null;
+        return ItemStack.EMPTY;
     }
 
     public static ItemStack registerEEPROM(final String name, final byte[] code, final byte[] data, final boolean readonly) {
         if (API.items != null) {
             return API.items.registerEEPROM(name, code, data, readonly);
         }
-        return null;
+        return ItemStack.EMPTY;
     }
 
     private Items() {

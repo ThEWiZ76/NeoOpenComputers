@@ -224,8 +224,6 @@ final class StaticFacadeApiTest {
         assertNull(Driver.itemDrivers());
         assertNull(Items.get("missing"));
         assertNull(Items.get((ItemStack) null));
-        assertNull(Items.registerFloppy("missing", DyeColor.WHITE, () -> null, false));
-        assertNull(Items.registerEEPROM("missing", null, null, false));
         assertEquals(List.of(), Machine.architectures());
         assertNull(Machine.getArchitectureName(TestArchitecture.class));
         assertNull(Machine.create(null));

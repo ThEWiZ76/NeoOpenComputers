@@ -110,6 +110,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -291,6 +292,23 @@ public final class NeoOpenComputersGameTests {
         ModItems.WIRELESS_NETWORK_CARD_TIER1.get();
         ModItems.WIRELESS_NETWORK_CARD_TIER2.get();
         ModItems.REDSTONE_CARD.get();
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void itemFacadeRegistrationFallbacksMatchUpstream(final GameTestHelper helper) {
+        final li.cil.oc.api.detail.ItemAPI previous = API.items;
+        try {
+            API.items = null;
+
+            final ItemStack floppy = li.cil.oc.api.Items.registerFloppy("addon", DyeColor.BLUE, () -> null, true);
+            final ItemStack eeprom = li.cil.oc.api.Items.registerEEPROM("addon", new byte[0], new byte[0], false);
+
+            helper.assertTrue(floppy == ItemStack.EMPTY, "Uninitialized Items.registerFloppy should return ItemStack.EMPTY");
+            helper.assertTrue(eeprom == ItemStack.EMPTY, "Uninitialized Items.registerEEPROM should return ItemStack.EMPTY");
+        } finally {
+            API.items = previous;
+        }
         helper.succeed();
     }
 
