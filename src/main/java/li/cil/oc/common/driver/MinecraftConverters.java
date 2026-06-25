@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -58,6 +59,18 @@ public final class MinecraftConverters {
     public static final Converter NBT = (value, output) -> {
         if (value instanceof CompoundTag tag) {
             output.put("oc:flatten", convertTag(tag));
+        }
+    };
+
+    public static final Converter FLUID_STACK = (value, output) -> {
+        if (value instanceof FluidStack stack) {
+            output.put("amount", stack.getAmount());
+            output.put("hasTag", !stack.isComponentsPatchEmpty());
+            if (!stack.isEmpty()) {
+                final ResourceLocation id = BuiltInRegistries.FLUID.getKey(stack.getFluid());
+                output.put("name", id == null ? "minecraft:empty" : id.toString());
+                output.put("label", stack.getHoverName().getString());
+            }
         }
     };
 

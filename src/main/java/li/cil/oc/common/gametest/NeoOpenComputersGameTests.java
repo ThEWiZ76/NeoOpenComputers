@@ -24,6 +24,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
+import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
@@ -881,6 +882,24 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(nested.get("c") == map, "Debug test nested map did not preserve cycle");
         helper.assertTrue(result[1] instanceof Value, "Debug test did not return a value handle");
         helper.assertTrue(result[2] == helper.getLevel(), "Debug test did not return host world");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void driverRegistryConvertsFluidStacksLikeUpstream(final GameTestHelper helper) throws Exception {
+        helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+        final DriverRegistry registry = (DriverRegistry) API.driver;
+        final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+        convert.setAccessible(true);
+
+        final Object[] result = (Object[]) convert.invoke(registry, (Object) new Object[]{new FluidStack(Fluids.WATER, 1000)});
+
+        helper.assertTrue(result.length == 1 && result[0] instanceof Map<?, ?>, "FluidStack did not convert to a map");
+        final Map<?, ?> map = (Map<?, ?>) result[0];
+        helper.assertTrue(Integer.valueOf(1000).equals(map.get("amount")), "FluidStack converter did not report amount");
+        helper.assertTrue(Boolean.FALSE.equals(map.get("hasTag")), "FluidStack converter did not report missing tag/components");
+        helper.assertTrue("minecraft:water".equals(map.get("name")), "FluidStack converter did not report water id");
+        helper.assertTrue(map.get("label") instanceof String label && !label.isBlank(), "FluidStack converter did not report label");
         helper.succeed();
     }
 
