@@ -36,6 +36,7 @@ public final class DriverRegistry implements DriverAPI {
     private final List<Converter> converters = new ArrayList<>();
     private final List<EnvironmentProvider> environmentProviders = new ArrayList<>();
     private final List<InventoryProvider> inventoryProviders = new ArrayList<>();
+    private final List<HostBlacklistEntry> hostBlacklist = new ArrayList<>();
     private boolean locked;
 
     @Override
@@ -95,6 +96,9 @@ public final class DriverRegistry implements DriverAPI {
 
     @Override
     public DriverItem driverFor(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
+        if (isHostBlacklisted(stack, host)) {
+            return null;
+        }
         final List<DriverItem> hostAwareMatches = new ArrayList<>();
         for (final DriverItem driver : itemDrivers) {
             if (driver instanceof HostAware) {
@@ -164,6 +168,23 @@ public final class DriverRegistry implements DriverAPI {
         return List.copyOf(itemDrivers);
     }
 
+    public void blacklistHost(final ItemStack stack, final Class<?> host) {
+        if (stack == null || stack.isEmpty() || host == null) {
+            return;
+        }
+        for (HostBlacklistEntry entry : hostBlacklist) {
+            if (ItemStack.isSameItem(entry.stack, stack)) {
+                entry.hosts.add(host);
+                return;
+            }
+        }
+        ItemStack key = stack.copy();
+        key.setCount(1);
+        final Set<Class<?>> hosts = new LinkedHashSet<>();
+        hosts.add(host);
+        hostBlacklist.add(new HostBlacklistEntry(key, hosts));
+    }
+
     int converterCount() {
         return converters.size();
     }
@@ -187,6 +208,25 @@ public final class DriverRegistry implements DriverAPI {
         if (locked) {
             throw new IllegalStateException("Please register all " + type + " in the init phase.");
         }
+    }
+
+    private boolean isHostBlacklisted(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
+        if (stack == null || stack.isEmpty() || host == null) {
+            return false;
+        }
+        for (HostBlacklistEntry entry : hostBlacklist) {
+            if (ItemStack.isSameItem(entry.stack, stack)) {
+                for (Class<?> blacklistedHost : entry.hosts) {
+                    if (blacklistedHost.isAssignableFrom(host)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private record HostBlacklistEntry(ItemStack stack, Set<Class<?>> hosts) {
     }
 
     private Object convertRecursively(final Object value, final IdentityHashMap<Object, Object> memo) {

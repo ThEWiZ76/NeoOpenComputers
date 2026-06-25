@@ -1,6 +1,11 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.internal.Adapter;
+import li.cil.oc.api.internal.Drone;
+import li.cil.oc.api.internal.Microcontroller;
+import li.cil.oc.api.internal.Robot;
+import li.cil.oc.api.internal.Tablet;
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.EnvironmentProvider;
@@ -52,7 +57,10 @@ import li.cil.oc.common.driver.ScreenBlockDriver;
 import li.cil.oc.common.driver.ScreenItemDriver;
 import li.cil.oc.common.driver.ServerInventoryProvider;
 import li.cil.oc.common.driver.TransposerItemDriver;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.function.Supplier;
 
 public final class ModDriverCatalog {
     public static void registerDefaults() {
@@ -148,6 +156,7 @@ public final class ModDriverCatalog {
                 new BlockItemEnvironmentProvider());
             registry.add(new DatabaseInventoryProvider());
             registry.add(new ServerInventoryProvider());
+            registerDefaultHostBlacklists(registry);
         }
     }
 
@@ -171,6 +180,56 @@ public final class ModDriverCatalog {
 
     private static EnvironmentProvider providerFor(final DriverItem driver, final Class<?> environment) {
         return (final ItemStack stack) -> driver.worksWith(stack) ? environment : null;
+    }
+
+    private static void registerDefaultHostBlacklists(final DriverRegistry registry) {
+        blacklistHost(registry, Adapter.class,
+            ModItems.GEOLYZER, ModItems.MOTION_SENSOR, ModItems.KEYBOARD,
+            ModItems.SCREEN_TIER1, ModItems.SCREEN_TIER2, ModItems.SCREEN_TIER3,
+            ModItems.TRANSPOSER, ModItems.POWER_DISTRIBUTOR,
+            ModItems.ANALYZER, ModItems.ANGEL_UPGRADE,
+            ModItems.BATTERY_UPGRADE_TIER1, ModItems.BATTERY_UPGRADE_TIER2, ModItems.BATTERY_UPGRADE_TIER3,
+            ModItems.CHUNKLOADER_UPGRADE, ModItems.CRAFTING_UPGRADE, ModItems.EXPERIENCE_UPGRADE, ModItems.GENERATOR_UPGRADE,
+            ModItems.HOVER_UPGRADE_TIER1, ModItems.HOVER_UPGRADE_TIER2, ModItems.INVENTORY_UPGRADE, ModItems.NAVIGATION_UPGRADE,
+            ModItems.PISTON_UPGRADE, ModItems.STICKY_PISTON_UPGRADE, ModItems.SOLAR_GENERATOR_UPGRADE, ModItems.TANK_UPGRADE,
+            ModItems.TRACTOR_BEAM_UPGRADE, ModItems.LEASH_UPGRADE, ModItems.TRADING_UPGRADE);
+        blacklistHost(registry, Drone.class,
+            ModItems.KEYBOARD, ModItems.SCREEN_TIER1, ModItems.SCREEN_TIER2, ModItems.SCREEN_TIER3,
+            ModItems.TRANSPOSER, ModItems.POWER_DISTRIBUTOR, ModItems.ANALYZER,
+            ModItems.APU_TIER1, ModItems.APU_TIER2,
+            ModItems.GRAPHICS_CARD_TIER1, ModItems.GRAPHICS_CARD_TIER2, ModItems.GRAPHICS_CARD_TIER3,
+            ModItems.NETWORK_CARD, ModItems.REDSTONE_CARD, ModItems.CRAFTING_UPGRADE,
+            ModItems.HOVER_UPGRADE_TIER1, ModItems.HOVER_UPGRADE_TIER2);
+        blacklistHost(registry, Microcontroller.class,
+            ModItems.KEYBOARD, ModItems.SCREEN_TIER1, ModItems.SCREEN_TIER2, ModItems.SCREEN_TIER3,
+            ModItems.POWER_DISTRIBUTOR, ModItems.ANALYZER,
+            ModItems.APU_TIER1, ModItems.APU_TIER2,
+            ModItems.GRAPHICS_CARD_TIER1, ModItems.GRAPHICS_CARD_TIER2, ModItems.GRAPHICS_CARD_TIER3,
+            ModItems.ANGEL_UPGRADE, ModItems.CRAFTING_UPGRADE,
+            ModItems.DATABASE_UPGRADE_TIER1, ModItems.DATABASE_UPGRADE_TIER2, ModItems.DATABASE_UPGRADE_TIER3,
+            ModItems.EXPERIENCE_UPGRADE, ModItems.GENERATOR_UPGRADE,
+            ModItems.HOVER_UPGRADE_TIER1, ModItems.HOVER_UPGRADE_TIER2,
+            ModItems.INVENTORY_UPGRADE, ModItems.INVENTORY_CONTROLLER_UPGRADE, ModItems.NAVIGATION_UPGRADE,
+            ModItems.TANK_UPGRADE, ModItems.TANK_CONTROLLER_UPGRADE, ModItems.TRACTOR_BEAM_UPGRADE,
+            ModItems.LEASH_UPGRADE, ModItems.TRADING_UPGRADE);
+        blacklistHost(registry, Robot.class,
+            ModItems.TRANSPOSER, ModItems.POWER_DISTRIBUTOR, ModItems.ANALYZER, ModItems.LEASH_UPGRADE);
+        blacklistHost(registry, Tablet.class,
+            ModItems.SCREEN_TIER1, ModItems.SCREEN_TIER2, ModItems.SCREEN_TIER3,
+            ModItems.TRANSPOSER, ModItems.POWER_DISTRIBUTOR, ModItems.NETWORK_CARD, ModItems.REDSTONE_CARD,
+            ModItems.ANGEL_UPGRADE, ModItems.CHUNKLOADER_UPGRADE, ModItems.CRAFTING_UPGRADE,
+            ModItems.DATABASE_UPGRADE_TIER1, ModItems.DATABASE_UPGRADE_TIER2, ModItems.DATABASE_UPGRADE_TIER3,
+            ModItems.EXPERIENCE_UPGRADE, ModItems.GENERATOR_UPGRADE,
+            ModItems.HOVER_UPGRADE_TIER1, ModItems.HOVER_UPGRADE_TIER2,
+            ModItems.INVENTORY_UPGRADE, ModItems.INVENTORY_CONTROLLER_UPGRADE,
+            ModItems.TANK_UPGRADE, ModItems.TANK_CONTROLLER_UPGRADE, ModItems.LEASH_UPGRADE, ModItems.TRADING_UPGRADE);
+    }
+
+    @SafeVarargs
+    private static void blacklistHost(final DriverRegistry registry, final Class<?> host, final Supplier<? extends Item>... items) {
+        for (final Supplier<? extends Item> item : items) {
+            registry.blacklistHost(new ItemStack(item.get()), host);
+        }
     }
 
     private ModDriverCatalog() {

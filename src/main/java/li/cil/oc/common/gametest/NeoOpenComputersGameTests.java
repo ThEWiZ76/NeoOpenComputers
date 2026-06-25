@@ -8,6 +8,7 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Chargeable;
 import li.cil.oc.api.driver.item.Container;
+import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
@@ -25,6 +26,7 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
 import li.cil.oc.common.DriverRegistry;
+import li.cil.oc.common.HostBlacklistImc;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
@@ -95,6 +97,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -160,6 +163,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
@@ -1423,6 +1427,49 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(Driver.driverFor(stack, AdapterBlockEntity.class) != null, "No MFU driver for adapter host");
         helper.assertTrue(Driver.driverFor(stack, AgentTestHost.class) == null, "MFU driver accepted non-adapter host");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void driverRegistryHostBlacklistRejectsAssignableHostsLikeUpstream(final GameTestHelper helper) {
+        final DriverRegistry registry = new DriverRegistry();
+        registry.add(new HostBlacklistTestDriver());
+
+        helper.assertTrue(registry.driverFor(new ItemStack(Items.DIAMOND), HostBlacklistChildHost.class) != null, "Baseline driver was not found before host blacklist");
+        registry.blacklistHost(new ItemStack(Items.DIAMOND), HostBlacklistParentHost.class);
+
+        helper.assertTrue(registry.driverFor(new ItemStack(Items.DIAMOND), HostBlacklistChildHost.class) == null, "Host blacklist did not reject subclass host");
+        helper.assertTrue(registry.driverFor(new ItemStack(Items.EMERALD), HostBlacklistChildHost.class) != null, "Host blacklist rejected a different item");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void hostBlacklistImcRegistersBlacklistLikeUpstream(final GameTestHelper helper) {
+        final DriverRegistry registry = new DriverRegistry();
+        registry.add(new HostBlacklistTestDriver());
+        final CompoundTag payload = new CompoundTag();
+        payload.putString("name", "diamond");
+        payload.putString("host", HostBlacklistParentHost.class.getName());
+        payload.put("item", ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, new ItemStack(Items.DIAMOND)).result().orElseGet(CompoundTag::new));
+        final InterModComms.IMCMessage message = new InterModComms.IMCMessage(
+            "addon",
+            NeoOpenComputers.MODID,
+            li.cil.oc.api.IMC.BLACKLIST_HOST,
+            () -> payload
+        );
+
+        HostBlacklistImc.process(registry, Stream.of(message));
+
+        helper.assertTrue(registry.driverFor(new ItemStack(Items.DIAMOND), HostBlacklistChildHost.class) == null, "IMC host blacklist did not reject subclass host");
+        helper.assertTrue(registry.driverFor(new ItemStack(Items.EMERALD), HostBlacklistChildHost.class) != null, "IMC host blacklist rejected a different item");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void defaultHostBlacklistsRejectUpstreamIncompatibleComponents(final GameTestHelper helper) {
+        helper.assertTrue(Driver.driverFor(new ItemStack(ModItems.SCREEN_TIER1.get()), li.cil.oc.api.internal.Tablet.class) == null, "Tablet accepted blacklisted screen");
+        helper.assertTrue(Driver.driverFor(new ItemStack(ModItems.TRANSPOSER.get()), li.cil.oc.api.internal.Robot.class) == null, "Robot accepted blacklisted transposer");
+        helper.assertTrue(Driver.driverFor(new ItemStack(ModItems.NETWORK_CARD.get()), li.cil.oc.api.internal.Drone.class) == null, "Drone accepted blacklisted network card");
         helper.succeed();
     }
 
@@ -7434,6 +7481,44 @@ public final class NeoOpenComputersGameTests {
         @Override
         public void onMessage(final Message message) {
             lastMessage = message;
+        }
+    }
+
+    private interface HostBlacklistParentHost extends li.cil.oc.api.network.EnvironmentHost {
+    }
+
+    private interface HostBlacklistChildHost extends HostBlacklistParentHost {
+    }
+
+    private static final class HostBlacklistTestDriver implements DriverItem, HostAware {
+        @Override
+        public boolean worksWith(final ItemStack stack) {
+            return stack != null && !stack.isEmpty();
+        }
+
+        @Override
+        public boolean worksWith(final ItemStack stack, final Class<? extends li.cil.oc.api.network.EnvironmentHost> host) {
+            return worksWith(stack) && HostBlacklistParentHost.class.isAssignableFrom(host);
+        }
+
+        @Override
+        public ManagedEnvironment createEnvironment(final ItemStack stack, final li.cil.oc.api.network.EnvironmentHost host) {
+            return null;
+        }
+
+        @Override
+        public String slot(final ItemStack stack) {
+            return "test";
+        }
+
+        @Override
+        public int tier(final ItemStack stack) {
+            return 0;
+        }
+
+        @Override
+        public CompoundTag dataTag(final ItemStack stack) {
+            return null;
         }
     }
 

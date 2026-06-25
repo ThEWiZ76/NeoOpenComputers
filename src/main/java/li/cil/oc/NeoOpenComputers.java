@@ -5,6 +5,8 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModContentCatalog;
 import li.cil.oc.common.ModCreativeTabs;
+import li.cil.oc.common.DriverRegistry;
+import li.cil.oc.common.HostBlacklistImc;
 import li.cil.oc.common.ModDriverCatalog;
 import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
@@ -81,6 +83,9 @@ public final class NeoOpenComputers {
             ProgramLocationImc.process(messages.stream());
             AssemblerTemplateImc.process(messages.stream());
             DisassemblerTemplateImc.process(messages.stream());
+            if (li.cil.oc.api.API.driver instanceof DriverRegistry registry) {
+                HostBlacklistImc.process(registry, messages.stream());
+            }
         });
     }
 }
