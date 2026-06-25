@@ -21,6 +21,7 @@ public class PrintBlockEntity extends BlockEntity {
 
     private PrintData data = new PrintData();
     private boolean activeState;
+    private boolean redstoneInput;
     private AABB boundsOff = UNIT_BOUNDS;
     private AABB boundsOn = UNIT_BOUNDS;
     private VoxelShape shapeOff = Shapes.block();
@@ -37,6 +38,7 @@ public class PrintBlockEntity extends BlockEntity {
     public void loadFromStack(final ItemStack stack) {
         data = new PrintData(stack);
         activeState = false;
+        redstoneInput = false;
         updateBounds();
         notifyUpdated();
     }
@@ -62,11 +64,19 @@ public class PrintBlockEntity extends BlockEntity {
         }
     }
 
-    public void updateRedstoneInput(final boolean powered) {
-        if (!data.emitRedstone() && data.hasActiveState() && activeState != powered) {
-            activeState = powered;
-            notifyUpdated();
+    public boolean updateRedstoneInput(final boolean powered) {
+        if (redstoneInput == powered) {
+            return false;
         }
+        redstoneInput = powered;
+        if (!data.emitRedstone() && data.hasActiveState()) {
+            if (activeState != powered) {
+                activeState = powered;
+                notifyUpdated();
+                return activeState && data.isButtonMode();
+            }
+        }
+        return false;
     }
 
     public boolean isActiveState() {
