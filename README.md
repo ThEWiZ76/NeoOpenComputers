@@ -128,6 +128,8 @@ For a bounded MCP device smoke that enters the same world, places a small NeoOpe
 
 This writes placement command and block-scan evidence under `build\mcp-device-smoke`. The layout covers computer case, screen, keyboard, disk drive, printer, redstone I/O, cable, adapter, transposer, rack, RAID, relay, geolyzer, and print.
 
+MCP device smoke does not prove OpenOS prompt boot. The current helper can run commands, move, scan blocks, and read chat, but it cannot right-click GUIs, insert computer components, type into screens, or read screen text. Capture OpenOS prompt boot with the hands-on checklist, or extend the helper with GUI/use/inventory/screen-read tools before automating that proof.
+
 4. In a local test world, check these flows:
 
 - Computer case, screen, and keyboard place without crashing.

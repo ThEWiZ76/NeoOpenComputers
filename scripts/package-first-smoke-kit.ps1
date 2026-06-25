@@ -126,6 +126,8 @@ For a bounded MCP device placement smoke in that same save, run:
 
 This writes placement command and block-scan evidence under build\mcp-device-smoke for core and peripheral blocks.
 
+MCP device smoke does not prove OpenOS prompt boot. The current helper can run commands, move, scan blocks, and read chat, but it cannot right-click GUIs, insert computer components, type into screens, or read screen text. Capture OpenOS prompt boot with the hands-on checklist, or extend the helper with GUI/use/inventory/screen-read tools before automating that proof.
+
 ## Checksums
 
 See SHA256SUMS.txt.

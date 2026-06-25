@@ -37,6 +37,8 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains(".\\scripts\\run-mcp-device-smoke.ps1"), "README must document bounded MCP device smoke script");
         assertTrue(readme.contains("adapter, transposer, rack, RAID, relay, geolyzer, and print"),
             "README must document the broader MCP device layout");
+        assertTrue(readme.contains("MCP device smoke does not prove OpenOS prompt boot"),
+            "README must keep MCP smoke scope distinct from hands-on OpenOS boot proof");
         assertTrue(readme.contains("--quickPlaySingleplayer"), "README must document quick-play world entry for MCP world smoke");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
         assertTrue(readme.contains("screenshots"), "README must tell testers screenshots are bundled");
@@ -150,6 +152,8 @@ final class ReadmeSmokeTest {
             "Kit README must document bounded MCP helper smoke");
         assertTrue(scriptText.contains(".\\scripts\\run-mcp-device-smoke.ps1"),
             "Kit README must document bounded MCP device smoke");
+        assertTrue(scriptText.contains("MCP device smoke does not prove OpenOS prompt boot"),
+            "Kit README must keep MCP smoke scope distinct from hands-on OpenOS boot proof");
         assertTrue(scriptText.contains("helper jar SHA-256"),
             "Kit README must document helper checksum evidence");
         assertTrue(!scriptText.contains("`neoopencomputers"),
