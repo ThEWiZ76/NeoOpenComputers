@@ -56,6 +56,7 @@ import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
+import li.cil.oc.common.blockentity.PrinterBlockEntity;
 import li.cil.oc.common.blockentity.RelayBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
@@ -3075,7 +3076,52 @@ public final class NeoOpenComputersGameTests {
         assertEnvironmentProvider(helper, new ItemStack(ModItems.HOLOGRAM_TIER2.get()), HologramBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.RELAY.get()), RelayBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.REDSTONE_IO.get()), RedstoneIoBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.PRINTER.get()), PrinterBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.WAYPOINT.get()), WaypointBlockEntity.class);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printerBlockExposesUpstreamComponentShell(final GameTestHelper helper) {
+        final BlockPos pos = BlockPos.ZERO;
+        helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());
+        final PrinterBlockEntity printer = helper.getBlockEntity(pos);
+
+        helper.assertTrue(printer.node() instanceof li.cil.oc.api.network.Component, "Printer did not expose a component node");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) printer.node();
+        helper.assertTrue("printer3d".equals(component.name()), "Printer component name mismatch");
+        helper.assertTrue(printer.sidedNode(Direction.UP) == null, "Printer exposed node on top side");
+        helper.assertTrue(printer.sidedNode(Direction.DOWN) == printer.node(), "Printer did not expose node on bottom side");
+        helper.assertTrue(printer.getContainerSize() == 3, "Printer inventory size mismatch");
+        helper.assertTrue(printer.canPlaceItem(PrinterBlockEntity.SLOT_MATERIAL, new ItemStack(ModItems.CHAMELIUM.get())), "Printer rejected print material");
+        helper.assertTrue(printer.canPlaceItem(PrinterBlockEntity.SLOT_INK, new ItemStack(Items.BLACK_DYE)), "Printer rejected ink");
+        helper.assertTrue(!printer.canPlaceItem(PrinterBlockEntity.SLOT_OUTPUT, new ItemStack(ModItems.CHAMELIUM.get())), "Printer accepted input in output slot");
+
+        final Object[] status = invokeComponent(helper, component, "status");
+        helper.assertTrue("idle".equals(status[0]), "Printer status should start idle");
+        helper.assertTrue(Boolean.FALSE.equals(status[1]), "Empty printer model should not be printable");
+
+        invokeComponent(helper, component, "setLabel", "abcdefghijklmnopqrstuvwxyz");
+        final Object[] label = invokeComponent(helper, component, "getLabel");
+        helper.assertTrue("abcdefghijklmnopqrstuvwx".equals(label[0]), "Printer label did not clamp like upstream");
+
+        invokeComponent(helper, component, "setLightLevel", 42);
+        final Object[] light = invokeComponent(helper, component, "getLightLevel");
+        helper.assertTrue(((Number) light[0]).intValue() <= PrintData.UPSTREAM_MAX_BASE_LIGHT_LEVEL, "Printer light level did not clamp");
+
+        final Object[] redstone = invokeComponent(helper, component, "isRedstoneEmitter");
+        helper.assertTrue(Boolean.FALSE.equals(redstone[0]), "Printer should not emit redstone by default");
+
+        final Object[] addShape = invokeComponent(helper, component, "addShape", 0, 0, 0, 16, 16, 16, "minecraft:block/stone");
+        helper.assertTrue(Boolean.TRUE.equals(addShape[0]), "Printer did not accept valid shape");
+        final Object[] shapeCount = invokeComponent(helper, component, "getShapeCount");
+        helper.assertTrue(((Number) shapeCount[0]).intValue() == 1, "Printer did not count off-state shape");
+        final Object[] printable = invokeComponent(helper, component, "status");
+        helper.assertTrue("idle".equals(printable[0]), "Printer status changed before commit");
+        helper.assertTrue(Boolean.TRUE.equals(printable[1]), "Valid printer model should be printable");
+        final Object[] commit = invokeComponent(helper, component, "commit", 2);
+        helper.assertTrue(Boolean.TRUE.equals(commit[0]), "Printer did not commit valid model");
+        helper.assertTrue(printer.isActive(), "Printer did not become active after commit");
         helper.succeed();
     }
 

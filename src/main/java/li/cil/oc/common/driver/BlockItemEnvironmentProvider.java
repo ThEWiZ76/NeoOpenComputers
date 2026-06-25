@@ -5,6 +5,7 @@ import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
+import li.cil.oc.common.blockentity.PrinterBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
 import li.cil.oc.common.blockentity.RelayBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
@@ -23,6 +24,7 @@ public final class BlockItemEnvironmentProvider implements EnvironmentProvider {
         Map.entry(ModBlocks.COMPUTER_CASE_TIER3.get(), ComputerCaseBlockEntity.class),
         Map.entry(ModBlocks.HOLOGRAM_TIER1.get(), HologramBlockEntity.class),
         Map.entry(ModBlocks.HOLOGRAM_TIER2.get(), HologramBlockEntity.class),
+        Map.entry(ModBlocks.PRINTER.get(), PrinterBlockEntity.class),
         Map.entry(ModBlocks.REDSTONE_IO.get(), RedstoneIoBlockEntity.class),
         Map.entry(ModBlocks.RELAY.get(), RelayBlockEntity.class),
         Map.entry(ModBlocks.SCREEN_TIER1.get(), ScreenBlockEntity.class),
