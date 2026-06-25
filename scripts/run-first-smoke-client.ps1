@@ -76,7 +76,14 @@ try {
             $destination = Join-Path $clientModsDir $destinationName
             Copy-Item -LiteralPath $source -Destination $destination -Force
             $copiedExtraMods += $destination
-            $extraModLines += "$source -> $destination"
+            $sourceItem = Get-Item -LiteralPath $source
+            $sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash
+            $extraModLines += "source=$source"
+            $extraModLines += "destination=$destination"
+            $extraModLines += "sha256=$sourceHash"
+            $extraModLines += "Length=$($sourceItem.Length)"
+            $extraModLines += "LastWriteTimeUtc=$($sourceItem.LastWriteTimeUtc.ToString('o'))"
+            $extraModLines += ''
         }
         $extraModLines | Set-Content -LiteralPath $extraModsLog -Encoding UTF8
     } else {

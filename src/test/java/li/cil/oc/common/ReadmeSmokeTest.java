@@ -28,6 +28,8 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("-WithLocalMcpServerMod"), "README must document optional MCP helper mod launch");
         assertTrue(readme.contains("mcp-server-mod-neoforge-1.1.0+neoforge.mc1.21.1.jar"),
             "README must document current local MCP helper jar path");
+        assertTrue(readme.contains("helper jar SHA-256, byte length, and UTC timestamp"),
+            "README must document helper jar checksum evidence");
         assertTrue(readme.contains("build\\first-smoke-sessions"), "README must document interactive session logs");
         assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
         assertTrue(readme.contains(".\\scripts\\run-mcp-client-smoke.ps1"), "README must document bounded MCP client smoke script");
@@ -54,6 +56,9 @@ final class ReadmeSmokeTest {
 
         final String scriptText = Files.readString(script);
         assertTrue(scriptText.contains("McpServerModPath"), "MCP smoke must use local helper mod path");
+        assertTrue(scriptText.contains("Get-FileHash"), "MCP smoke must record helper jar SHA-256 evidence");
+        assertTrue(scriptText.contains("Length"), "MCP smoke must record helper jar byte length evidence");
+        assertTrue(scriptText.contains("LastWriteTimeUtc"), "MCP smoke must record helper jar timestamp evidence");
         assertTrue(scriptText.contains("Invoke-McpRequest"), "MCP smoke must probe JSON-RPC endpoint");
         assertTrue(scriptText.contains("tools/list"), "MCP smoke must verify tools/list");
         assertTrue(scriptText.contains("execute_commands"), "MCP smoke must verify command tool");
@@ -68,6 +73,9 @@ final class ReadmeSmokeTest {
 
         final String scriptText = Files.readString(script);
         assertTrue(scriptText.contains("WorldName"), "World smoke must take an explicit world name");
+        assertTrue(scriptText.contains("Get-FileHash"), "World smoke must record helper jar SHA-256 evidence");
+        assertTrue(scriptText.contains("Length"), "World smoke must record helper jar byte length evidence");
+        assertTrue(scriptText.contains("LastWriteTimeUtc"), "World smoke must record helper jar timestamp evidence");
         assertTrue(scriptText.contains("-Pneoopencomputers.quickPlayWorld="),
             "World smoke must pass quick-play through a Gradle property so NeoGradle launch args are preserved");
         assertTrue(!scriptText.contains("--args="),
@@ -85,6 +93,9 @@ final class ReadmeSmokeTest {
 
         final String scriptText = Files.readString(script);
         assertTrue(scriptText.contains("WorldName"), "Device smoke must take an explicit world name");
+        assertTrue(scriptText.contains("Get-FileHash"), "Device smoke must record helper jar SHA-256 evidence");
+        assertTrue(scriptText.contains("Length"), "Device smoke must record helper jar byte length evidence");
+        assertTrue(scriptText.contains("LastWriteTimeUtc"), "Device smoke must record helper jar timestamp evidence");
         assertTrue(scriptText.contains("-Pneoopencomputers.quickPlayWorld="),
             "Device smoke must quick-play through the NeoGradle-safe property");
         assertTrue(!scriptText.contains("--args="),
@@ -139,6 +150,8 @@ final class ReadmeSmokeTest {
             "Kit README must document bounded MCP helper smoke");
         assertTrue(scriptText.contains(".\\scripts\\run-mcp-device-smoke.ps1"),
             "Kit README must document bounded MCP device smoke");
+        assertTrue(scriptText.contains("helper jar SHA-256"),
+            "Kit README must document helper checksum evidence");
         assertTrue(!scriptText.contains("`neoopencomputers"),
             "PowerShell treats Markdown backticks as escapes inside generated README text");
         assertTrue(scriptText.contains("Compress-Archive -Path"), "Kit zip must expand wildcard contents");
@@ -160,6 +173,9 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("WithLocalMcpServerMod"), "Launcher must support the local MCP helper mod");
         assertTrue(scriptText.contains("ExtraMod"), "Launcher must support extra helper mods");
         assertTrue(scriptText.contains("extra-mods.txt"), "Launcher must record copied helper mods");
+        assertTrue(scriptText.contains("Get-FileHash"), "Launcher must record helper jar SHA-256 evidence");
+        assertTrue(scriptText.contains("Length"), "Launcher must record helper jar byte length evidence");
+        assertTrue(scriptText.contains("LastWriteTimeUtc"), "Launcher must record helper jar timestamp evidence");
         assertTrue(scriptText.contains("KeepExtraMods"), "Launcher must let testers keep helper mods when requested");
         assertTrue(scriptText.contains("DryRun"), "Launcher must have a dry-run path for verification");
     }

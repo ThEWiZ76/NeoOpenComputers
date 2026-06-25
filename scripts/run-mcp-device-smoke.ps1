@@ -122,7 +122,15 @@ $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $source = (Resolve-Path -LiteralPath $McpServerModPath).Path
 $copiedExtraMod = Join-Path $clientModsDir "mcp-device-smoke-$timestamp-$([System.IO.Path]::GetFileName($source))"
 Copy-Item -LiteralPath $source -Destination $copiedExtraMod -Force
-"$source -> $copiedExtraMod" | Set-Content -LiteralPath $extraModsLog -Encoding UTF8
+$sourceItem = Get-Item -LiteralPath $source
+$sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash
+@(
+    "source=$source"
+    "destination=$copiedExtraMod"
+    "sha256=$sourceHash"
+    "Length=$($sourceItem.Length)"
+    "LastWriteTimeUtc=$($sourceItem.LastWriteTimeUtc.ToString('o'))"
+) | Set-Content -LiteralPath $extraModsLog -Encoding UTF8
 
 $startedAt = Get-Date
 $process = $null
