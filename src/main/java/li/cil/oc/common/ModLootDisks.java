@@ -6,6 +6,10 @@ import li.cil.oc.api.Items;
 import li.cil.oc.api.detail.ItemAPI;
 import li.cil.oc.api.fs.FileSystem;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +33,17 @@ public final class ModLootDisks {
 
     public static FileSystem openOsFileSystem() {
         return bundledFileSystem(OPENOS_PATH);
+    }
+
+    public static List<ItemStack> bundledStacksForCycling() {
+        final List<ItemStack> stacks = new ArrayList<>();
+        for (Descriptor descriptor : bundledDescriptors()) {
+            final ItemStack stack = bundledStack(descriptor);
+            if (!stack.isEmpty()) {
+                stacks.add(stack);
+            }
+        }
+        return List.copyOf(stacks);
     }
 
     static List<Descriptor> bundledDescriptors() {
@@ -61,6 +76,28 @@ public final class ModLootDisks {
         } else {
             Items.registerFloppy(descriptor.label(), descriptor.color(), factory, true);
         }
+    }
+
+    private static ItemStack bundledStack(final Descriptor descriptor) {
+        final ItemAPI items = API.items;
+        if (!(items instanceof ItemRegistry registry)) {
+            return ItemStack.EMPTY;
+        }
+        final var info = registry.get(ModContentIds.FLOPPY);
+        if (info == null) {
+            return ItemStack.EMPTY;
+        }
+        final ItemStack stack = info.createItemStack(1);
+        if (stack == null) {
+            return ItemStack.EMPTY;
+        }
+        stack.set(DataComponents.CUSTOM_NAME, Component.literal(descriptor.label()));
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(ItemRegistry.createFloppyData(
+            descriptor.label(),
+            descriptor.color(),
+            factoryId(descriptor.path()),
+            true)));
+        return stack;
     }
 
     static Descriptor parseDescriptor(final String path, final String value) {

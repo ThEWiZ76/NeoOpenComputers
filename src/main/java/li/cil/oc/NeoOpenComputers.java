@@ -16,9 +16,11 @@ import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.ModRecipeSerializers;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.ModWrenches;
 import li.cil.oc.common.NanomachinesRegistry;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.ToolDurabilityProviderImc;
+import li.cil.oc.common.WrenchToolImc;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.MfuTargetEvents;
 import li.cil.oc.common.command.ModCommands;
@@ -74,6 +76,7 @@ public final class NeoOpenComputers {
             ModContentCatalog.registerDefaults();
             ModEeproms.registerDefaults();
             ModItemCharges.registerDefaults();
+            ModWrenches.registerDefaults();
             ModLootDisks.registerDefaults();
             ProgramLocations.registerDefaults();
             ModDriverCatalog.registerDefaults();
@@ -88,6 +91,7 @@ public final class NeoOpenComputers {
             ProgramLocationImc.process(messages.stream());
             ItemChargeImc.process(messages.stream());
             ToolDurabilityProviderImc.process(messages.stream());
+            WrenchToolImc.process(messages.stream());
             AssemblerFilterImc.process(messages.stream());
             AssemblerTemplateImc.process(messages.stream());
             DisassemblerTemplateImc.process(messages.stream());

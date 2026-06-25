@@ -34,10 +34,13 @@ import li.cil.oc.common.ModItemCharges;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModWrenches;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.api.Network;
 import li.cil.oc.common.ToolDurabilityProviderImc;
 import li.cil.oc.common.ToolDurabilityProviders;
+import li.cil.oc.common.WrenchToolImc;
+import li.cil.oc.common.WrenchTools;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.AdapterBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
@@ -74,6 +77,7 @@ import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
 import li.cil.oc.common.network.RackNetworking;
 import li.cil.oc.common.network.RackOpenServerPayload;
+import li.cil.oc.common.recipe.LootDiskCyclingRecipe;
 import li.cil.oc.common.component.LinkedCardEnvironment;
 import li.cil.oc.common.component.DebugCardEnvironment;
 import li.cil.oc.common.component.MfuEnvironment;
@@ -1551,6 +1555,53 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(ItemCharges.canCharge(target), "IMC item charge registry did not accept registered stack");
         helper.assertTrue(ItemCharges.charge(target, 100D) == 25D, "IMC item charge registry did not return provider surplus");
         helper.assertTrue(!ItemCharges.canCharge(new ItemStack(Items.EMERALD)), "IMC item charge registry accepted unrelated stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void defaultWrenchRegistryRecognizesOpenComputersWrench(final GameTestHelper helper) {
+        ModWrenches.registerDefaults();
+
+        helper.assertTrue(WrenchTools.isWrench(new ItemStack(ModItems.WRENCH.get())), "Default wrench registry did not accept OpenComputers wrench");
+        helper.assertTrue(!WrenchTools.isWrench(new ItemStack(Items.DIAMOND)), "Default wrench registry accepted unrelated stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void wrenchToolCheckImcRegistersCheckerLikeUpstream(final GameTestHelper helper) {
+        final ItemStack target = new ItemStack(Items.ECHO_SHARD);
+        helper.assertTrue(!WrenchTools.isWrench(target), "Baseline stack was a wrench before IMC registration");
+        final InterModComms.IMCMessage message = new InterModComms.IMCMessage(
+            "addon",
+            NeoOpenComputers.MODID,
+            li.cil.oc.api.IMC.REGISTER_WRENCH_TOOL_CHECK,
+            () -> NeoOpenComputersGameTests.class.getName() + ".isEchoShardWrench"
+        );
+
+        WrenchToolImc.process(Stream.of(message));
+
+        helper.assertTrue(WrenchTools.isWrench(target), "IMC wrench check did not accept registered stack");
+        helper.assertTrue(!WrenchTools.isWrench(new ItemStack(Items.EMERALD)), "IMC wrench check accepted unrelated stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void lootDiskCyclingRecipeUsesRegisteredWrench(final GameTestHelper helper) {
+        ModWrenches.registerDefaults();
+        final LootDiskCyclingRecipe recipe = new LootDiskCyclingRecipe(net.minecraft.world.item.crafting.CraftingBookCategory.MISC);
+        final ItemStack openOs = lootDisk("OpenOS (Operating System)", DyeColor.GREEN, "neoopencomputers:loot/openos");
+        final ItemStack wrench = new ItemStack(ModItems.WRENCH.get());
+        final CraftingInput input = CraftingInput.of(2, 1, List.of(openOs, wrench));
+
+        helper.assertTrue(recipe.matches(input, helper.getLevel()), "Loot disk cycling recipe did not match loot disk plus registered wrench");
+        final ItemStack result = recipe.assemble(input, helper.getLevel().registryAccess());
+        final CustomData resultData = result.get(DataComponents.CUSTOM_DATA);
+        helper.assertTrue(result.is(ModItems.FLOPPY.get()), "Loot disk cycling recipe returned wrong item");
+        helper.assertTrue(resultData != null && "neoopencomputers:loot/oppm".equals(resultData.copyTag().getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG)), "Loot disk cycling recipe did not advance to next loot disk");
+
+        final NonNullList<ItemStack> remaining = recipe.getRemainingItems(input);
+        helper.assertTrue(remaining.get(0).isEmpty(), "Loot disk cycling recipe kept consumed disk");
+        helper.assertTrue(remaining.get(1).is(ModItems.WRENCH.get()), "Loot disk cycling recipe did not keep wrench");
         helper.succeed();
     }
 
@@ -7870,6 +7921,22 @@ public final class NeoOpenComputersGameTests {
 
     public static double chargeNetherStar(final ItemStack stack, final double amount, final boolean simulate) {
         return stack.is(Items.NETHER_STAR) ? amount * 0.25D : amount;
+    }
+
+    public static boolean isEchoShardWrench(final ItemStack stack) {
+        return stack.is(Items.ECHO_SHARD);
+    }
+
+    private static ItemStack lootDisk(final String label, final DyeColor color, final String factoryId) {
+        final ItemStack stack = new ItemStack(ModItems.FLOPPY.get());
+        final CompoundTag data = new CompoundTag();
+        data.putString(ItemRegistry.FLOPPY_LABEL_TAG, label);
+        data.putString(ItemRegistry.FLOPPY_COLOR_TAG, color.getName());
+        data.putString(ItemRegistry.FLOPPY_FACTORY_ID_TAG, factoryId);
+        data.putBoolean(ItemRegistry.FLOPPY_RECIPE_CYCLING_TAG, true);
+        stack.set(DataComponents.CUSTOM_NAME, Component.literal(label));
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+        return stack;
     }
 
     private static final class StaleRackBlockEntity extends RackBlockEntity {
