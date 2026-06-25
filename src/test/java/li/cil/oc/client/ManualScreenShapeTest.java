@@ -10,9 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -25,12 +27,23 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ManualScreenShapeTest {
+    private static final Path MANUAL_SCREEN_SOURCE = Path.of("src/main/java/li/cil/oc/client/ManualScreen.java");
+
     @Test
     void manualScreenHasRegistryConstructor() throws NoSuchMethodException {
         final Constructor<ManualScreen> constructor = ManualScreen.class.getConstructor(ManualRegistry.class);
 
         assertTrue(Screen.class.isAssignableFrom(ManualScreen.class));
         assertArrayEquals(new Class<?>[]{ManualRegistry.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void manualScreenUsesMinecraftPlatformOpenerForExternalLinks() throws IOException {
+        final String source = Files.readString(MANUAL_SCREEN_SOURCE);
+
+        assertTrue(source.contains("Util.getPlatform().openUri(uri);"));
+        assertFalse(source.contains("java.awt.Desktop"));
+        assertFalse(source.contains("Desktop.getDesktop()"));
     }
 
     @Test

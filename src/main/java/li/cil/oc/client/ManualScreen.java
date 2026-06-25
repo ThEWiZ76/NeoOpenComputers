@@ -3,6 +3,7 @@ package li.cil.oc.client;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ManualRegistry;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -10,7 +11,6 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-import java.awt.Desktop;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
@@ -811,11 +811,8 @@ public class ManualScreen extends Screen {
         }
     }
 
-    private static void browseExternalLink(final URI uri) throws java.io.IOException {
-        if (!Desktop.isDesktopSupported()) {
-            throw new UnsupportedOperationException("Desktop browsing is not supported");
-        }
-        Desktop.getDesktop().browse(uri);
+    private static void browseExternalLink(final URI uri) {
+        Util.getPlatform().openUri(uri);
     }
 
     public record LayoutEntry(ManualDocument.Segment segment, int x, int y, int width, int height) {
