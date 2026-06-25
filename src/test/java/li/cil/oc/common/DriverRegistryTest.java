@@ -102,6 +102,21 @@ final class DriverRegistryTest {
         assertEquals(1, registry.converterCount());
     }
 
+    @Test
+    void duplicateItemDriversAndConvertersAreIgnoredLikeUpstream() {
+        DriverRegistry registry = new DriverRegistry();
+        TestDriverItem item = new TestDriverItem(true);
+        Converter converter = (value, output) -> output.put("key", "value");
+
+        registry.add(item);
+        registry.add(item);
+        registry.add(converter);
+        registry.add(converter);
+
+        assertEquals(1, registry.itemDrivers().size());
+        assertEquals(1, registry.converterCount());
+    }
+
     private record TestDriverBlock(boolean matches) implements DriverBlock {
         @Override
         public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {

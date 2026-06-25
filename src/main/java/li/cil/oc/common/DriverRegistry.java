@@ -32,27 +32,37 @@ public final class DriverRegistry implements DriverAPI {
 
     @Override
     public void add(final DriverBlock driver) {
-        blockDrivers.add(driver);
+        if (!blockDrivers.contains(driver)) {
+            blockDrivers.add(driver);
+        }
     }
 
     @Override
     public void add(final DriverItem driver) {
-        itemDrivers.add(driver);
+        if (!itemDrivers.contains(driver)) {
+            itemDrivers.add(driver);
+        }
     }
 
     @Override
     public void add(final Converter converter) {
-        converters.add(converter);
+        if (!converters.contains(converter)) {
+            converters.add(converter);
+        }
     }
 
     @Override
     public void add(final EnvironmentProvider provider) {
-        environmentProviders.add(provider);
+        if (!environmentProviders.contains(provider)) {
+            environmentProviders.add(provider);
+        }
     }
 
     @Override
     public void add(final InventoryProvider provider) {
-        inventoryProviders.add(provider);
+        if (!inventoryProviders.contains(provider)) {
+            inventoryProviders.add(provider);
+        }
     }
 
     @Override
