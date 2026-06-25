@@ -1,5 +1,6 @@
 package li.cil.oc.api;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,16 @@ final class IMCTest {
         Pair<String, Integer> slot = Pair.of("card", 1);
         assertEquals("card", slot.getLeft());
         assertEquals(1, slot.getRight());
+    }
+
+    @Test
+    void hostBlacklistPayloadUsesUpstreamNbtShape() {
+        CompoundTag payload = IMC.blacklistHostPayload("computer", IMCTest.class, null);
+
+        assertEquals("computer", payload.getString("name"));
+        assertEquals(IMCTest.class.getName(), payload.getString("host"));
+        CompoundTag item = payload.getCompound("item");
+        assertEquals(new CompoundTag(), item);
     }
 
     private static void assertVoidMethod(final String name, final Class<?>... parameterTypes) throws NoSuchMethodException {

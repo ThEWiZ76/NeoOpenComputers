@@ -2,7 +2,9 @@ package li.cil.oc.api;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.InterModComms;
 import org.apache.commons.lang3.tuple.Pair;
@@ -83,7 +85,7 @@ public final class IMC {
     }
 
     public static void blacklistHost(final String name, final Class host, final ItemStack stack) {
-        send(BLACKLIST_HOST, new HostBlacklist(name, host == null ? null : host.getName(), stack));
+        send(BLACKLIST_HOST, blacklistHostPayload(name, host, stack));
     }
 
     public static void registerProgramDiskLabel(final String programName, final String diskLabel, final String... architectures) {
@@ -131,11 +133,28 @@ public final class IMC {
         }
     }
 
-    private static void send(final String key, final Object payload) {
-        InterModComms.sendTo(MOD_ID, key, () -> payload);
+    static CompoundTag blacklistHostPayload(final String name, final Class host, final ItemStack stack) {
+        CompoundTag nbt = new CompoundTag();
+        if (name != null) {
+            nbt.putString("name", name);
+        }
+        if (host != null) {
+            nbt.putString("host", host.getName());
+        }
+        nbt.put("item", encodeStack(stack));
+        return nbt;
     }
 
-    public record HostBlacklist(String name, String hostClass, ItemStack stack) {
+    private static CompoundTag encodeStack(final ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return new CompoundTag();
+        }
+        Tag tag = ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack).result().orElseGet(CompoundTag::new);
+        return tag instanceof CompoundTag compoundTag ? compoundTag : new CompoundTag();
+    }
+
+    private static void send(final String key, final Object payload) {
+        InterModComms.sendTo(MOD_ID, key, () -> payload);
     }
 
     private IMC() {
