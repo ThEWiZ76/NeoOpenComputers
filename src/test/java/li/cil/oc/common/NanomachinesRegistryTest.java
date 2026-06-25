@@ -710,6 +710,33 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerAcceptsByteArrayHeaderAndCommandForStatusCommandsLikeUpstream() {
+        API.network = new NetworkRegistry();
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+        RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint();
+        Network.joinWirelessNetwork(sender);
+        WirelessEndpoint endpoint = (WirelessEndpoint) (Object) controller;
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{
+            "nanomachines".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+            "setResponsePort".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+            322
+        }), sender);
+        runNanomachineCommandDelay(controller);
+        sender.lastPacket = null;
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{
+            "nanomachines".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+            "getPowerState".getBytes(java.nio.charset.StandardCharsets.UTF_8)
+        }), sender);
+        final double expectedBuffer = controller.getLocalBuffer();
+        runNanomachineCommandDelay(controller);
+
+        assertTrue(sender.lastPacket != null);
+        assertEquals(322, sender.lastPacket.port());
+        assertArrayEquals(new Object[]{"nanomachines", "power", expectedBuffer, controller.getLocalBufferSize()}, sender.lastPacket.data());
+    }
+
+    @Test
     void controllerRespondsToInputCountWirelessCommands() {
         API.network = new NetworkRegistry();
         SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
