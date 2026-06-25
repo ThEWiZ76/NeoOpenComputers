@@ -166,12 +166,12 @@ final class TerminalScreenShapeTest {
     void terminalScreenBuildsKeyPayloadForMenu() throws ReflectiveOperationException {
         final TerminalMenu menu = allocateMenu(12);
 
-        final TerminalKeyPayload payload = TerminalScreen.keyPayload(menu, true, 'x', 45);
+        final TerminalKeyPayload payload = TerminalScreen.keyPayload(menu, true, 'x', 999);
 
         assertEquals(12, payload.containerId());
         assertEquals(true, payload.pressed());
         assertEquals((int) 'x', payload.character());
-        assertEquals(45, payload.keyCode());
+        assertEquals(999, payload.keyCode());
     }
 
     @Test
@@ -181,6 +181,46 @@ final class TerminalScreenShapeTest {
         final TerminalKeyPayload payload = TerminalScreen.keyPayload(menu, true, (char) 0, GLFW.GLFW_KEY_ENTER);
 
         assertEquals(0x1C, payload.keyCode());
+    }
+
+    @Test
+    void terminalScreenMapsPrintableGlfwKeysToOpenComputersLegacyCodes() {
+        assertEquals(0x01, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_ESCAPE));
+        assertEquals(0x02, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_1));
+        assertEquals(0x0B, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_0));
+        assertEquals(0x0C, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_MINUS));
+        assertEquals(0x0D, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_EQUAL));
+        assertEquals(0x10, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_Q));
+        assertEquals(0x11, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_W));
+        assertEquals(0x1E, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_A));
+        assertEquals(0x2C, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_Z));
+        assertEquals(0x33, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_COMMA));
+        assertEquals(0x35, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_SLASH));
+    }
+
+    @Test
+    void terminalScreenMapsFunctionAndNavigationKeysToOpenComputersLegacyCodes() {
+        assertEquals(0x3B, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_F1));
+        assertEquals(0x44, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_F10));
+        assertEquals(0x57, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_F11));
+        assertEquals(0x58, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_F12));
+        assertEquals(0xC7, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_HOME));
+        assertEquals(0xC8, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_UP));
+        assertEquals(0xC9, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_PAGE_UP));
+        assertEquals(0xD2, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_INSERT));
+        assertEquals(0xD3, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_DELETE));
+    }
+
+    @Test
+    void terminalScreenMapsKeypadKeysToOpenComputersLegacyCodes() {
+        assertEquals(0x37, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_KP_MULTIPLY));
+        assertEquals(0x47, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_KP_7));
+        assertEquals(0x4A, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_KP_SUBTRACT));
+        assertEquals(0x4F, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_KP_1));
+        assertEquals(0x52, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_KP_0));
+        assertEquals(0x53, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_KP_DECIMAL));
+        assertEquals(0x9C, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_KP_ENTER));
+        assertEquals(0xB5, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_KP_DIVIDE));
     }
 
     @Test
