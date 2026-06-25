@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -27,11 +28,18 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
 
     public static void registerTickHandler() {
         NeoForge.EVENT_BUS.addListener(NanomachinesRegistry::onPlayerTick);
+        NeoForge.EVENT_BUS.addListener(NanomachinesRegistry::onPlayerRespawn);
     }
 
     private static void onPlayerTick(final PlayerTickEvent.Post event) {
         if (API.nanomachines instanceof NanomachinesRegistry registry) {
             registry.update(event.getEntity());
+        }
+    }
+
+    private static void onPlayerRespawn(final PlayerEvent.PlayerRespawnEvent event) {
+        if (API.nanomachines instanceof NanomachinesRegistry registry) {
+            drainPowerOnRespawn(registry.getController(event.getEntity()));
         }
     }
 
@@ -145,6 +153,12 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
         }
         final int interval = Math.max(1, tickFrequency);
         return tickCount % interval == 0;
+    }
+
+    static void drainPowerOnRespawn(final Controller controller) {
+        if (controller != null) {
+            controller.changeBuffer(-controller.getLocalBuffer());
+        }
     }
 
     private static int activeInputCount(final Controller controller) {

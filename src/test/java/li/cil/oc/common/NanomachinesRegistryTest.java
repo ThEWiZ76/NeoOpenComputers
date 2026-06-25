@@ -90,6 +90,15 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerRespawnDrainsPowerLikeUpstream() {
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, new NanomachinesRegistry());
+
+        NanomachinesRegistry.drainPowerOnRespawn(controller);
+
+        assertEquals(0D, controller.getLocalBuffer(), 0.000_001D);
+    }
+
+    @Test
     void controllerRuntimeIsDeferred() {
         NanomachinesRegistry registry = new NanomachinesRegistry();
 
