@@ -72,6 +72,12 @@ Use this for local crash finding and first in-world proof. This is not a communi
 .\gradlew.bat runClient --no-daemon --console=plain
 ```
 
+For a bounded launch/log smoke that stops after resource reload and texture atlas creation:
+
+```powershell
+.\scripts\run-client-smoke.ps1
+```
+
 4. In a local test world, check these flows:
 
 - Computer case, screen, and keyboard place without crashing.

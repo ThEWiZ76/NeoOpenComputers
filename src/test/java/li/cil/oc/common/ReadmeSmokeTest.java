@@ -21,7 +21,13 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("develop"), "README must direct testers to develop");
         assertTrue(readme.contains("290/290"), "README must include current GameTest evidence");
         assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include current disk-drive persistence smoke item");
+        assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
+    }
+
+    @Test
+    void boundedClientSmokeScriptExists() {
+        assertTrue(Files.exists(Path.of("scripts/run-client-smoke.ps1")), "Missing bounded client smoke script");
     }
 
     @Test
