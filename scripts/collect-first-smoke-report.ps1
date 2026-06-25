@@ -190,7 +190,7 @@ $relativeScreenshots
 
 - [ ] Client opens local world with NeoOpenComputers installed.
 - [ ] Bounded MCP world smoke enters a local save and writes mcp-world-player-info.json, mcp-world-blocks.json, and mcp-world-command.json.
-- [ ] Bounded MCP device smoke places computer_case_tier1, screen_tier1, keyboard, disk_drive, printer, redstone, and cable, then writes mcp-device-place-commands.json and mcp-device-blocks.json.
+- [ ] Bounded MCP device smoke places computer_case_tier1, screen_tier1, keyboard, disk_drive, printer, redstone, cable, adapter, transposer, rack, RAID, relay, geolyzer, print, then writes mcp-device-place-commands.json and mcp-device-blocks.json.
 - [ ] Computer case, screen, keyboard, disk drive, modem, redstone card, printer, and print block place without crash.
 - [ ] OpenOS or Lua prompt boots on a placed computer.
 - [ ] Filesystem, EEPROM, floppy, and disk-drive actions work once.

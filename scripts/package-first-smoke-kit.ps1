@@ -120,7 +120,7 @@ For a bounded MCP device placement smoke in that same save, run:
 
     .\scripts\run-mcp-device-smoke.ps1
 
-This writes placement command and block-scan evidence under build\mcp-device-smoke.
+This writes placement command and block-scan evidence under build\mcp-device-smoke for core and peripheral blocks.
 
 ## Checksums
 

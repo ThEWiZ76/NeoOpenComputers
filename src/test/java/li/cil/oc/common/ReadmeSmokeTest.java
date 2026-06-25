@@ -33,6 +33,8 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains(".\\scripts\\run-mcp-client-smoke.ps1"), "README must document bounded MCP client smoke script");
         assertTrue(readme.contains(".\\scripts\\run-mcp-world-smoke.ps1"), "README must document bounded MCP world smoke script");
         assertTrue(readme.contains(".\\scripts\\run-mcp-device-smoke.ps1"), "README must document bounded MCP device smoke script");
+        assertTrue(readme.contains("adapter, transposer, rack, RAID, relay, geolyzer, and print"),
+            "README must document the broader MCP device layout");
         assertTrue(readme.contains("--quickPlaySingleplayer"), "README must document quick-play world entry for MCP world smoke");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
         assertTrue(readme.contains("screenshots"), "README must tell testers screenshots are bundled");
@@ -95,6 +97,13 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("neoopencomputers:printer"), "Device smoke must place a printer");
         assertTrue(scriptText.contains("neoopencomputers:redstone"), "Device smoke must place redstone I/O");
         assertTrue(scriptText.contains("neoopencomputers:cable"), "Device smoke must place cable");
+        assertTrue(scriptText.contains("neoopencomputers:adapter"), "Device smoke must place an adapter");
+        assertTrue(scriptText.contains("neoopencomputers:transposer"), "Device smoke must place a transposer");
+        assertTrue(scriptText.contains("neoopencomputers:rack"), "Device smoke must place a rack");
+        assertTrue(scriptText.contains("neoopencomputers:raid"), "Device smoke must place a RAID");
+        assertTrue(scriptText.contains("neoopencomputers:relay"), "Device smoke must place a relay");
+        assertTrue(scriptText.contains("neoopencomputers:geolyzer"), "Device smoke must place a geolyzer");
+        assertTrue(scriptText.contains("neoopencomputers:print"), "Device smoke must place a print block");
         assertTrue(scriptText.contains("mcp-device-smoke"), "Device smoke must write bounded evidence logs");
     }
 
@@ -176,6 +185,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("mcp-device-place-commands.json"), "Collector must copy bounded MCP device placement proof");
         assertTrue(scriptText.contains("mcp-device-blocks.json"), "Collector must copy bounded MCP device block scan");
         assertTrue(scriptText.contains("mcp-device-extra-mods.txt"), "Collector must copy bounded MCP device helper mod manifest");
+        assertTrue(scriptText.contains("adapter, transposer, rack, RAID, relay, geolyzer, print"),
+            "Collector checklist must include broad MCP device layout evidence");
         assertTrue(scriptText.contains("screenshots"), "Collector must copy recent Minecraft screenshots");
         assertTrue(scriptText.contains("Select-Object -First 20"), "Collector must bound copied screenshots");
         assertTrue(scriptText.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),

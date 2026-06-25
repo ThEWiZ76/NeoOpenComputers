@@ -214,14 +214,21 @@ try {
     $baseY = $y
     $baseZ = $z + 2
     $commands = @(
-        "fill $baseX $baseY $baseZ $($baseX + 6) $($baseY + 2) $($baseZ + 2) minecraft:air",
+        "fill $baseX $baseY $baseZ $($baseX + 6) $($baseY + 2) $($baseZ + 1) minecraft:air",
         "setblock $baseX $baseY $baseZ neoopencomputers:computer_case_tier1",
         "setblock $($baseX + 1) $baseY $baseZ neoopencomputers:screen_tier1",
         "setblock $($baseX + 2) $baseY $baseZ neoopencomputers:keyboard",
         "setblock $($baseX + 3) $baseY $baseZ neoopencomputers:disk_drive",
         "setblock $($baseX + 4) $baseY $baseZ neoopencomputers:printer",
         "setblock $($baseX + 5) $baseY $baseZ neoopencomputers:redstone",
-        "setblock $($baseX + 6) $baseY $baseZ neoopencomputers:cable"
+        "setblock $($baseX + 6) $baseY $baseZ neoopencomputers:cable",
+        "setblock $baseX $baseY $($baseZ + 1) neoopencomputers:adapter",
+        "setblock $($baseX + 1) $baseY $($baseZ + 1) neoopencomputers:transposer",
+        "setblock $($baseX + 2) $baseY $($baseZ + 1) neoopencomputers:rack",
+        "setblock $($baseX + 3) $baseY $($baseZ + 1) neoopencomputers:raid",
+        "setblock $($baseX + 4) $baseY $($baseZ + 1) neoopencomputers:relay",
+        "setblock $($baseX + 5) $baseY $($baseZ + 1) neoopencomputers:geolyzer",
+        "setblock $($baseX + 6) $baseY $($baseZ + 1) neoopencomputers:print"
     )
     $placeResponse = Invoke-McpTool -Name 'execute_commands' -Arguments @{
         commands = $commands
@@ -233,7 +240,7 @@ try {
     Start-Sleep -Seconds 1
     $blockResponse = Invoke-McpTool -Name 'get_blocks_in_area' -Arguments @{
         from = @{ x = $baseX; y = $baseY; z = $baseZ }
-        to = @{ x = ($baseX + 6); y = $baseY; z = $baseZ }
+        to = @{ x = ($baseX + 6); y = $baseY; z = ($baseZ + 1) }
     }
     $blockText = Get-McpToolText $blockResponse
     $blockResponse | ConvertTo-Json -Depth 50 | Set-Content -LiteralPath $blocksLog -Encoding UTF8
@@ -246,7 +253,14 @@ try {
         'neoopencomputers:disk_drive',
         'neoopencomputers:printer',
         'neoopencomputers:redstone',
-        'neoopencomputers:cable'
+        'neoopencomputers:cable',
+        'neoopencomputers:adapter',
+        'neoopencomputers:transposer',
+        'neoopencomputers:rack',
+        'neoopencomputers:raid',
+        'neoopencomputers:relay',
+        'neoopencomputers:geolyzer',
+        'neoopencomputers:print'
     )
     $missingBlockIds = @($expectedBlockIds | Where-Object { -not ($scannedBlockIds -contains $_) })
     if ($missingBlockIds.Count -gt 0) {
@@ -272,7 +286,7 @@ try {
         throw "MCP device smoke found hard failure patterns: $($matches -join ', '). Logs: $clientLog, $stdoutLog, $stderrLog"
     }
 
-    Write-Host "MCP device smoke placed and verified NeoOpenComputers device layout in '$WorldName'."
+    Write-Host "MCP device smoke placed and verified NeoOpenComputers core/peripheral layout in '$WorldName'."
     Write-Host "Player: $($playerInfo.name) in $($playerInfo.dimension) at $x $y $z"
     Write-Host "Layout origin: $baseX $baseY $baseZ"
     Write-Host "Logs: $outputDir"
