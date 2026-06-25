@@ -194,6 +194,33 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenSplitsClipboardPayloadsLikeUpstream() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+        final Method method = TerminalScreen.class.getDeclaredMethod("clipboardPayloads", TerminalMenu.class, String.class);
+        final String value = "x".repeat(16 * 1024) + "y";
+
+        @SuppressWarnings("unchecked")
+        final List<TerminalClipboardPayload> payloads = (List<TerminalClipboardPayload>) method.invoke(null, menu, value);
+
+        assertEquals(2, payloads.size());
+        assertEquals(12, payloads.get(0).containerId());
+        assertEquals("x".repeat(16 * 1024), payloads.get(0).value());
+        assertEquals("y", payloads.get(1).value());
+    }
+
+    @Test
+    void terminalScreenDropsClipboardPayloadsAboveUpstreamLimit() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+        final Method method = TerminalScreen.class.getDeclaredMethod("clipboardPayloads", TerminalMenu.class, String.class);
+        final String value = "x".repeat(64 * 1024 + 1);
+
+        @SuppressWarnings("unchecked")
+        final List<TerminalClipboardPayload> payloads = (List<TerminalClipboardPayload>) method.invoke(null, menu, value);
+
+        assertEquals(List.of(), payloads);
+    }
+
+    @Test
     void terminalScreenBuildsMousePayloadForMenuCoordinates() throws ReflectiveOperationException {
         final TerminalMenu menu = allocateMenu(12);
 

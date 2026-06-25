@@ -24,6 +24,8 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     private static final int TEXT_TOP = 22;
     private static final int TEXT_RIGHT_MARGIN = 12;
     private static final int TEXT_BOTTOM_MARGIN = 12;
+    private static final int CLIPBOARD_CHUNK_SIZE = 16 * 1024;
+    private static final int CLIPBOARD_MAX_LENGTH = 64 * 1024;
 
     record TextRun(int column, String text, int color) {
     }
@@ -244,6 +246,17 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         return new TerminalClipboardPayload(menu.containerId, value);
     }
 
+    static List<TerminalClipboardPayload> clipboardPayloads(final TerminalMenu menu, final String value) {
+        if (value == null || value.isEmpty() || value.length() > CLIPBOARD_MAX_LENGTH) {
+            return List.of();
+        }
+        final List<TerminalClipboardPayload> payloads = new ArrayList<>();
+        for (int offset = 0; offset < value.length(); offset += CLIPBOARD_CHUNK_SIZE) {
+            payloads.add(clipboardPayload(menu, value.substring(offset, Math.min(value.length(), offset + CLIPBOARD_CHUNK_SIZE))));
+        }
+        return payloads;
+    }
+
     static TerminalMousePayload mousePayload(final TerminalMenu menu, final int kind, final double mouseX, final double mouseY, final int buttonOrDelta, final int left, final int top) {
         final double column = Math.floor((mouseX - left - TEXT_LEFT) / CELL_WIDTH);
         final double row = Math.floor((mouseY - top - TEXT_TOP) / LINE_HEIGHT);
@@ -271,8 +284,10 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     private void sendClipboardInput(final String value) {
-        if (acceptsInput(menu.snapshot()) && value != null && !value.isEmpty()) {
-            PacketDistributor.sendToServer(clipboardPayload(menu, value));
+        if (acceptsInput(menu.snapshot())) {
+            for (final TerminalClipboardPayload payload : clipboardPayloads(menu, value)) {
+                PacketDistributor.sendToServer(payload);
+            }
         }
     }
 
