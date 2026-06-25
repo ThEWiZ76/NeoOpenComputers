@@ -28,7 +28,7 @@ public record TerminalMousePayload(int containerId, int kind, double x, double y
         buffer.writeVarInt(payload.kind());
         buffer.writeFloat((float) payload.x());
         buffer.writeFloat((float) payload.y());
-        buffer.writeVarInt(payload.buttonOrDelta());
+        buffer.writeByte(payload.buttonOrDelta());
     }
 
     private static TerminalMousePayload decode(final RegistryFriendlyByteBuf buffer) {
@@ -37,6 +37,6 @@ public record TerminalMousePayload(int containerId, int kind, double x, double y
             buffer.readVarInt(),
             buffer.readFloat(),
             buffer.readFloat(),
-            buffer.readVarInt());
+            buffer.readByte());
     }
 }

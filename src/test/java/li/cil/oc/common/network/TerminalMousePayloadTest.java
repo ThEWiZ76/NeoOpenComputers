@@ -62,4 +62,23 @@ final class TerminalMousePayloadTest {
         assertEquals((double) (float) x, decoded.x());
         assertEquals((double) (float) y, decoded.y());
     }
+
+    @Test
+    void streamCodecQuantizesButtonOrScrollToUpstreamSignedByte() {
+        final TerminalMousePayload payload = new TerminalMousePayload(
+            4,
+            TerminalMousePayload.MOUSE_SCROLL,
+            1.0D,
+            2.0D,
+            130);
+        final RegistryFriendlyByteBuf buffer = new RegistryFriendlyByteBuf(
+            Unpooled.buffer(),
+            RegistryAccess.EMPTY,
+            ConnectionType.NEOFORGE);
+
+        TerminalMousePayload.STREAM_CODEC.encode(buffer, payload);
+        final TerminalMousePayload decoded = TerminalMousePayload.STREAM_CODEC.decode(buffer);
+
+        assertEquals((byte) 130, decoded.buttonOrDelta());
+    }
 }
