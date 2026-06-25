@@ -295,7 +295,7 @@ public class DataCardEnvironment extends AbstractManagedEnvironment implements D
 
     private void requireTier(final int minimumTier) {
         if (tier < minimumTier) {
-            throw new UnsupportedOperationException("unsupported data card tier");
+            throw new IllegalArgumentException("unsupported data card tier");
         }
     }
 

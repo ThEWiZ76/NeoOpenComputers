@@ -109,6 +109,30 @@ final class DataCardEnvironmentTest {
     }
 
     @Test
+    void lowerTierDirectCryptoCallsFailAsLuaArgumentErrors() {
+        OpenComputersApi.initialize();
+
+        DataCardEnvironment tierOne = new DataCardEnvironment(0);
+        charge(tierOne, 100D);
+        byte[] data = bytes("payload");
+        byte[] key = bytes("0123456789abcdef");
+        byte[] iv = bytes("abcdef0123456789");
+
+        IllegalArgumentException tierOneError = assertThrows(
+            IllegalArgumentException.class,
+            () -> tierOne.encrypt(null, new TestArguments(data, key, iv)));
+        assertEquals("unsupported data card tier", tierOneError.getMessage());
+
+        DataCardEnvironment tierTwo = new DataCardEnvironment(1);
+        charge(tierTwo, 100D);
+
+        IllegalArgumentException tierTwoError = assertThrows(
+            IllegalArgumentException.class,
+            () -> tierTwo.generateKeyPair(null, new TestArguments()));
+        assertEquals("unsupported data card tier", tierTwoError.getMessage());
+    }
+
+    @Test
     void tierOneEncodesHashesAndCompressesData() throws Exception {
         OpenComputersApi.initialize();
         DataCardEnvironment card = new DataCardEnvironment(0);
