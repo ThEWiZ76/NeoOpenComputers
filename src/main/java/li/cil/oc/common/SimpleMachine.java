@@ -762,7 +762,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     }
 
     @Override
-    public void consumeCallBudget(final double callCost) throws LimitReachedException {
+    public void consumeCallBudget(final double callCost) {
         if (architecture != null && architecture.isInitialized() && !inSynchronizedCall) {
             final double clampedCost = Math.max(0D, callCost);
             if (clampedCost > callBudget) {

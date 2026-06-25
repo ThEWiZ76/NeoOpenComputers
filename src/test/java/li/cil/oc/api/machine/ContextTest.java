@@ -3,11 +3,22 @@ package li.cil.oc.api.machine;
 import li.cil.oc.api.network.Node;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ContextTest {
+    @Test
+    void consumeCallBudgetKeepsUpstreamNoCheckedExceptionSignature() throws NoSuchMethodException {
+        Method method = Context.class.getMethod("consumeCallBudget", double.class);
+
+        assertArrayEquals(new Class<?>[0], method.getExceptionTypes());
+        assertTrue(RuntimeException.class.isAssignableFrom(LimitReachedException.class));
+    }
+
     @Test
     void exposesComputerControlAndSignalOperations() {
         Node node = TestNodes.node("computer");
