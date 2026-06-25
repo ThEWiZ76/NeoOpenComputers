@@ -167,6 +167,7 @@ import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
@@ -6557,6 +6558,30 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "isBurning", new Object[0], true);
             } catch (Exception e) {
                 helper.fail("Furnace component invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterExposesMobSpawnerBlockDriverLikeUpstream(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.SPAWNER);
+        final SpawnerBlockEntity spawner = helper.getBlockEntity(targetPos);
+        spawner.setEntityId(EntityType.ZOMBIE, helper.getLevel().random);
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final String address = componentAddress(computer, "mob_spawner");
+            helper.assertTrue(address != null, "Adapter did not expose mob spawner component: " + computer.machine().components());
+            try {
+                assertInvokeResult(helper, computer, address, "getSpawningMobName", new Object[0], "minecraft:zombie");
+            } catch (Exception e) {
+                helper.fail("Mob spawner component invocation failed: " + e.getMessage());
             }
         });
     }
