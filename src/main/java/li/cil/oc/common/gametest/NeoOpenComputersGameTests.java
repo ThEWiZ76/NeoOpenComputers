@@ -7384,6 +7384,43 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void screenAndKeyboardStateSurvivesNbtReloadForFirstSmoke(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+        final BlockPos loadedScreenPos = new BlockPos(2, 1, 1);
+        final BlockPos loadedKeyboardPos = new BlockPos(2, 1, 2);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final KeyboardBlockEntity keyboard = helper.getBlockEntity(keyboardPos);
+        Network.joinNewNetwork(screen.node());
+        screen.node().connect(keyboard.node());
+        final String savedKeyboardAddress = keyboard.node().address();
+        screen.set(0, 0, "persisted", false);
+        screen.setPrecise(null, boolArgs(true));
+        screen.setTouchModeInverted(null, boolArgs(true));
+
+        final CompoundTag screenTag = screen.saveWithFullMetadata(helper.getLevel().registryAccess());
+        final CompoundTag keyboardTag = keyboard.saveWithFullMetadata(helper.getLevel().registryAccess());
+
+        helper.setBlock(loadedScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(loadedKeyboardPos, ModBlocks.KEYBOARD.get());
+        final ScreenBlockEntity loadedScreen = helper.getBlockEntity(loadedScreenPos);
+        final KeyboardBlockEntity loadedKeyboard = helper.getBlockEntity(loadedKeyboardPos);
+        loadedScreen.loadWithComponents(screenTag, helper.getLevel().registryAccess());
+        loadedKeyboard.loadWithComponents(keyboardTag, helper.getLevel().registryAccess());
+        loadedScreen.node().connect(loadedKeyboard.node());
+
+        helper.assertTrue(screenText(loadedScreen).contains("persisted"), "Reloaded screen lost terminal text:\n" + screenText(loadedScreen));
+        helper.assertTrue(savedKeyboardAddress.equals(loadedKeyboard.node().address()), "Reloaded keyboard node address changed");
+        helper.assertTrue(java.util.Arrays.equals(new String[]{savedKeyboardAddress}, (String[]) loadedScreen.getKeyboards(null, null)[0]), "Reloaded screen did not list persisted keyboard address");
+        helper.assertTrue(Boolean.TRUE.equals(loadedScreen.isPrecise(null, null)[0]), "Reloaded screen lost precise input mode");
+        helper.assertTrue(Boolean.TRUE.equals(loadedScreen.isTouchModeInverted(null, null)[0]), "Reloaded screen lost touch inversion mode");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void screenBlockClickSignalsReachComputer(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
@@ -7442,6 +7479,10 @@ public final class NeoOpenComputersGameTests {
         computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
         computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, new ItemStack(ModItems.EEPROM.get()));
         helper.assertTrue(computer.toggleMachine(), "Computer did not start with CPU, memory, and EEPROM");
+    }
+
+    private static Arguments boolArgs(final boolean value) {
+        return new SingleBooleanArguments(value);
     }
 
     private static void installBootComputer(final ComputerCaseBlockEntity computer, final ItemStack bootDisk) {
@@ -8123,6 +8164,153 @@ public final class NeoOpenComputersGameTests {
     @FunctionalInterface
     private interface ThrowingRunnable {
         void run() throws Exception;
+    }
+
+    private record SingleBooleanArguments(boolean value) implements Arguments {
+        @Override
+        public int count() {
+            return 1;
+        }
+
+        @Override
+        public Object checkAny(final int index) {
+            return value;
+        }
+
+        @Override
+        public boolean checkBoolean(final int index) {
+            return value;
+        }
+
+        @Override
+        public int checkInteger(final int index) {
+            throw new IllegalArgumentException("expected number");
+        }
+
+        @Override
+        public long checkLong(final int index) {
+            throw new IllegalArgumentException("expected number");
+        }
+
+        @Override
+        public double checkDouble(final int index) {
+            throw new IllegalArgumentException("expected number");
+        }
+
+        @Override
+        public String checkString(final int index) {
+            throw new IllegalArgumentException("expected string");
+        }
+
+        @Override
+        public byte[] checkByteArray(final int index) {
+            throw new IllegalArgumentException("expected byte array");
+        }
+
+        @Override
+        public Map checkTable(final int index) {
+            throw new IllegalArgumentException("expected table");
+        }
+
+        @Override
+        public ItemStack checkItemStack(final int index) {
+            throw new IllegalArgumentException("expected item stack");
+        }
+
+        @Override
+        public Object optAny(final int index, final Object def) {
+            return index == 0 ? value : def;
+        }
+
+        @Override
+        public boolean optBoolean(final int index, final boolean def) {
+            return index == 0 ? value : def;
+        }
+
+        @Override
+        public int optInteger(final int index, final int def) {
+            return def;
+        }
+
+        @Override
+        public long optLong(final int index, final long def) {
+            return def;
+        }
+
+        @Override
+        public double optDouble(final int index, final double def) {
+            return def;
+        }
+
+        @Override
+        public String optString(final int index, final String def) {
+            return def;
+        }
+
+        @Override
+        public byte[] optByteArray(final int index, final byte[] def) {
+            return def;
+        }
+
+        @Override
+        public Map optTable(final int index, final Map def) {
+            return def;
+        }
+
+        @Override
+        public ItemStack optItemStack(final int index, final ItemStack def) {
+            return def;
+        }
+
+        @Override
+        public boolean isBoolean(final int index) {
+            return index == 0;
+        }
+
+        @Override
+        public boolean isInteger(final int index) {
+            return false;
+        }
+
+        @Override
+        public boolean isLong(final int index) {
+            return false;
+        }
+
+        @Override
+        public boolean isDouble(final int index) {
+            return false;
+        }
+
+        @Override
+        public boolean isString(final int index) {
+            return false;
+        }
+
+        @Override
+        public boolean isByteArray(final int index) {
+            return false;
+        }
+
+        @Override
+        public boolean isTable(final int index) {
+            return false;
+        }
+
+        @Override
+        public boolean isItemStack(final int index) {
+            return false;
+        }
+
+        @Override
+        public Object[] toArray() {
+            return new Object[]{value};
+        }
+
+        @Override
+        public java.util.Iterator<Object> iterator() {
+            return java.util.List.<Object>of(value).iterator();
+        }
     }
 
     private static final class RecordingNetworkEnvironment implements li.cil.oc.api.network.Environment {
