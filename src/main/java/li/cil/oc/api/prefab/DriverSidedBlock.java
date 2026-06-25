@@ -38,4 +38,12 @@ public abstract class DriverSidedBlock implements DriverBlock {
 
         return false;
     }
+
+    /**
+     * @deprecated Minecraft 1.21 no longer exposes block metadata; override {@link #worksWith(Block)} instead.
+     */
+    @Deprecated
+    protected boolean worksWith(final Block block, final int metadata) {
+        return worksWith(block);
+    }
 }

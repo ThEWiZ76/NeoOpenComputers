@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,14 @@ final class DriverPrefabTest {
         assertFalse(new TestSidedBlockDriver().worksWith(null, BlockPos.ZERO, Direction.NORTH));
     }
 
+    @Test
+    void sidedBlockDriverKeepsMetadataHookForAddonSourceCompatibility() throws NoSuchMethodException {
+        Method worksWith = DriverSidedBlock.class.getDeclaredMethod("worksWith", Block.class, int.class);
+
+        assertArrayEquals(new Class<?>[]{Block.class, int.class}, worksWith.getParameterTypes());
+        assertFalse(new TestSidedBlockDriver().matches(null, 0));
+    }
+
     private static final class TestTileEntityDriver extends DriverSidedTileEntity {
         private final Class<?> blockEntityClass;
 
@@ -53,6 +62,10 @@ final class DriverPrefabTest {
     private static final class TestSidedBlockDriver extends DriverSidedBlock {
         private TestSidedBlockDriver() {
             super((ItemStack[]) null);
+        }
+
+        private boolean matches(final Block block, final int metadata) {
+            return worksWith(block, metadata);
         }
 
         @Override
