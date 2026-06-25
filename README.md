@@ -10,7 +10,8 @@ This repository is an active Java-first NeoForge 1.21.1 port. It intentionally d
 
 Current pushed first-smoke base:
 
-- `develop` at `1aa421d2e feat(print): render configured print items`
+- Latest pushed `develop`.
+- The Obsidian port dashboard records the exact last verified commit and verification timestamp.
 
 Current verification evidence:
 
