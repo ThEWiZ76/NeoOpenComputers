@@ -43,7 +43,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     private final int maxWidth;
     private final int maxHeight;
     private final TextBuffer.ColorDepth maxDepth;
-    private final int totalVideoMemory;
+    private final double totalVideoMemory;
     private final Map<Integer, VideoBuffer> videoBuffers = new LinkedHashMap<>();
     private String screenAddress;
     private TextBuffer screen;
@@ -56,7 +56,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         maxWidth = ModSettings.screenWidthByTier(clampedTier);
         maxHeight = ModSettings.screenHeightByTier(clampedTier);
         maxDepth = ModSettings.screenDepthByTier(clampedTier);
-        totalVideoMemory = maxWidth * maxHeight * 4;
+        totalVideoMemory = maxWidth * maxHeight * ModSettings.gpuVramSizeByTier(clampedTier);
 
         final var builder = Network.newNode(this, Visibility.Neighbors);
         if (builder != null) {
@@ -648,7 +648,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         return videoBuffers.values().stream().mapToInt(VideoBuffer::size).sum();
     }
 
-    private int freeVideoMemory() {
+    private double freeVideoMemory() {
         return totalVideoMemory - usedVideoMemory();
     }
 

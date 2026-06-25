@@ -99,7 +99,7 @@ final class GraphicsCardEnvironmentTest {
                     OpenComputersApi.initialize();
                     GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(1);
 
-                    assertEquals(13 * 5 * 4, ((Number) gpu.totalMemory(null, new TestArguments())[0]).intValue());
+                    assertEquals(13 * 5 * 2, ((Number) gpu.totalMemory(null, new TestArguments())[0]).intValue());
                     assertArrayEquals(new Object[]{1}, gpu.allocateBuffer(null, new TestArguments()));
                     assertArrayEquals(new Object[]{13, 5}, gpu.getBufferSize(null, new TestArguments(1)));
                     assertArrayEquals(new Object[]{0}, gpu.setActiveBuffer(null, new TestArguments(1)));
@@ -109,6 +109,15 @@ final class GraphicsCardEnvironmentTest {
                     assertEquals("65", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Capacity));
                     assertEquals("1", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Width));
                 })));
+    }
+
+    @Test
+    void totalVideoMemoryUsesUpstreamTierMultipliers() {
+        OpenComputersApi.initialize();
+
+        assertEquals(50 * 16, ((Number) new GraphicsCardEnvironment(0).totalMemory(null, new TestArguments())[0]).intValue());
+        assertEquals(80 * 25 * 2, ((Number) new GraphicsCardEnvironment(1).totalMemory(null, new TestArguments())[0]).intValue());
+        assertEquals(160 * 50 * 3, ((Number) new GraphicsCardEnvironment(2).totalMemory(null, new TestArguments())[0]).intValue());
     }
 
     @Test

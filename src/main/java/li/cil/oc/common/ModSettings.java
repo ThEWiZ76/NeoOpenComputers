@@ -18,6 +18,7 @@ public final class ModSettings {
     private static final List<Integer> DEFAULT_SCREEN_WIDTHS_BY_TIER = List.of(50, 80, 160);
     private static final List<Integer> DEFAULT_SCREEN_HEIGHTS_BY_TIER = List.of(16, 25, 50);
     private static final List<Integer> DEFAULT_SCREEN_DEPTHS_BY_TIER = List.of(1, 4, 8);
+    private static final List<Double> DEFAULT_GPU_VRAM_SIZES = List.of(1D, 2D, 3D);
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
     private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
     private static final List<Double> DEFAULT_WIRELESS_COST_PER_RANGE = List.of(0.05D, 0.05D);
@@ -156,6 +157,7 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_WIDTHS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_HEIGHTS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_DEPTHS_BY_TIER;
+    public static final ModConfigSpec.ConfigValue<List<? extends Double>> GPU_VRAM_SIZES;
     public static final ModConfigSpec.DoubleValue GPU_BITBLT_COST;
     public static final ModConfigSpec.ConfigValue<String> DEBUG_CARD_ACCESS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> DEBUG_CARD_WHITELIST;
@@ -495,6 +497,9 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("gpu");
+        GPU_VRAM_SIZES = builder
+            .comment("Video RAM multiplier per GPU tier. Total VRAM is max screen cells times this value. OpenComputers upstream default is [1, 2, 3].")
+            .defineList("vramSizes", DEFAULT_GPU_VRAM_SIZES, value -> value instanceof Double && (Double) value >= 0D);
         GPU_BITBLT_COST = builder
             .comment("Direct-call budget cost for blitting one full tier-one GPU page to a screen. OpenComputers upstream default is 0.5 and scales by GPU tier.")
             .defineInRange("bitbltCost", 0.5D, 0D, Double.MAX_VALUE);
@@ -995,6 +1000,14 @@ public final class ModSettings {
 
     public static double gpuBitbltCost() {
         return Math.max(0D, doubleValue(GPU_BITBLT_COST));
+    }
+
+    public static double gpuVramSizeByTier(final int tier) {
+        final List<Double> values = doubleListValue(GPU_VRAM_SIZES);
+        if (values.size() != DEFAULT_GPU_VRAM_SIZES.size()) {
+            return DEFAULT_GPU_VRAM_SIZES.get(clampIndex(tier, DEFAULT_GPU_VRAM_SIZES.size()));
+        }
+        return Math.max(0D, values.get(clampIndex(tier, values.size())));
     }
 
     public static List<Integer> hddSizes() {
