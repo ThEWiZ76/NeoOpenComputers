@@ -9,7 +9,9 @@ import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.HostBlacklistImc;
 import li.cil.oc.common.ModDriverCatalog;
 import li.cil.oc.common.ModEeproms;
+import li.cil.oc.common.ItemChargeImc;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModItemCharges;
 import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.ModRecipeSerializers;
@@ -71,6 +73,7 @@ public final class NeoOpenComputers {
             ModCreativeTabs.assignApiCreativeTab();
             ModContentCatalog.registerDefaults();
             ModEeproms.registerDefaults();
+            ModItemCharges.registerDefaults();
             ModLootDisks.registerDefaults();
             ProgramLocations.registerDefaults();
             ModDriverCatalog.registerDefaults();
@@ -83,6 +86,7 @@ public final class NeoOpenComputers {
         event.enqueueWork(() -> {
             final var messages = InterModComms.getMessages(MODID).toList();
             ProgramLocationImc.process(messages.stream());
+            ItemChargeImc.process(messages.stream());
             ToolDurabilityProviderImc.process(messages.stream());
             AssemblerFilterImc.process(messages.stream());
             AssemblerTemplateImc.process(messages.stream());

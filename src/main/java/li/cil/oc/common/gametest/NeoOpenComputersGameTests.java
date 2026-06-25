@@ -27,7 +27,10 @@ import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
 import li.cil.oc.common.DriverRegistry;
 import li.cil.oc.common.HostBlacklistImc;
+import li.cil.oc.common.ItemChargeImc;
+import li.cil.oc.common.ItemCharges;
 import li.cil.oc.common.ItemRegistry;
+import li.cil.oc.common.ModItemCharges;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
@@ -1018,8 +1021,9 @@ public final class NeoOpenComputersGameTests {
     }
 
     @SuppressWarnings("removal")
-    @GameTest(template = "empty")
+    @GameTest(template = "empty", batch = "debugCardPlayerState")
     public static void debugCardPlayerValueUpdatesOnlinePlayerState(final GameTestHelper helper) {
+        removeMockServerPlayers(helper);
         final net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
         player.setGameMode(GameType.SURVIVAL);
         final String playerName = player.getGameProfile().getName();
@@ -1067,8 +1071,9 @@ public final class NeoOpenComputersGameTests {
     }
 
     @SuppressWarnings("removal")
-    @GameTest(template = "empty")
+    @GameTest(template = "empty", batch = "debugCardPlayerInventory")
     public static void debugCardPlayerValueInsertsItemsIntoInventory(final GameTestHelper helper) {
+        removeMockServerPlayers(helper);
         final net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
         player.setGameMode(GameType.SURVIVAL);
         final String playerName = player.getGameProfile().getName();
@@ -1510,6 +1515,42 @@ public final class NeoOpenComputersGameTests {
         final var durability = ToolDurabilityProviders.getDurability(target);
         helper.assertTrue(durability.isPresent() && Math.abs(durability.getAsDouble() - 0.75D) < 0.0001D, "IMC tool durability provider did not supply durability");
         helper.assertTrue(ToolDurabilityProviders.getDurability(new ItemStack(Items.DIAMOND)).isEmpty(), "Provider supplied durability for unrelated stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void defaultItemChargeHandlesOpenComputersChargeableItems(final GameTestHelper helper) {
+        ModItemCharges.registerDefaults();
+        final ItemStack stack = new ItemStack(ModItems.BATTERY_UPGRADE_TIER1.get());
+        final double capacity = ModSettings.batteryUpgradeBuffer(0);
+
+        helper.assertTrue(ItemCharges.canCharge(stack), "Default item charge registry did not accept battery upgrade");
+        helper.assertTrue(ItemCharges.charge(stack, capacity * 0.75D) == 0D, "Default item charge registry did not report fully used charge");
+        helper.assertTrue(ItemCharges.charge(stack, capacity) == capacity * 0.75D, "Default item charge registry did not return unused surplus");
+        helper.assertTrue(!ItemCharges.canCharge(new ItemStack(Items.DIAMOND)), "Default item charge registry accepted unrelated stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void itemChargeImcRegistersProviderLikeUpstream(final GameTestHelper helper) {
+        final ItemStack target = new ItemStack(Items.NETHER_STAR);
+        helper.assertTrue(!ItemCharges.canCharge(target), "Baseline stack was chargeable before IMC registration");
+        final CompoundTag payload = new CompoundTag();
+        payload.putString("name", "test");
+        payload.putString("canCharge", NeoOpenComputersGameTests.class.getName() + ".canChargeNetherStar");
+        payload.putString("charge", NeoOpenComputersGameTests.class.getName() + ".chargeNetherStar");
+        final InterModComms.IMCMessage message = new InterModComms.IMCMessage(
+            "addon",
+            NeoOpenComputers.MODID,
+            li.cil.oc.api.IMC.REGISTER_ITEM_CHARGE,
+            () -> payload
+        );
+
+        ItemChargeImc.process(Stream.of(message));
+
+        helper.assertTrue(ItemCharges.canCharge(target), "IMC item charge registry did not accept registered stack");
+        helper.assertTrue(ItemCharges.charge(target, 100D) == 25D, "IMC item charge registry did not return provider surplus");
+        helper.assertTrue(!ItemCharges.canCharge(new ItemStack(Items.EMERALD)), "IMC item charge registry accepted unrelated stack");
         helper.succeed();
     }
 
@@ -6942,6 +6983,15 @@ public final class NeoOpenComputersGameTests {
         return false;
     }
 
+    private static void removeMockServerPlayers(final GameTestHelper helper) {
+        final var playerList = helper.getLevel().getServer().getPlayerList();
+        for (final net.minecraft.server.level.ServerPlayer player : List.copyOf(playerList.getPlayers())) {
+            if ("test-mock-player".equals(player.getGameProfile().getName())) {
+                playerList.remove(player);
+            }
+        }
+    }
+
     private static boolean hasModForcedTickingChunk(final GameTestHelper helper, final long chunk) {
         final ForcedChunksSavedData data = helper.getLevel().getDataStorage().computeIfAbsent(ForcedChunksSavedData.factory(), ForcedChunksSavedData.FILE_ID);
         for (final LongSet chunks : data.getBlockForcedChunks().getTickingChunks().values()) {
@@ -7812,6 +7862,14 @@ public final class NeoOpenComputersGameTests {
 
     public static double toolDurabilityForNetherStar(final ItemStack stack) {
         return stack.is(Items.NETHER_STAR) ? 0.75D : Double.NaN;
+    }
+
+    public static boolean canChargeNetherStar(final ItemStack stack) {
+        return stack.is(Items.NETHER_STAR);
+    }
+
+    public static double chargeNetherStar(final ItemStack stack, final double amount, final boolean simulate) {
+        return stack.is(Items.NETHER_STAR) ? amount * 0.25D : amount;
     }
 
     private static final class StaleRackBlockEntity extends RackBlockEntity {
