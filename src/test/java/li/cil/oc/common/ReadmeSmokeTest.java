@@ -30,6 +30,7 @@ final class ReadmeSmokeTest {
             "README must document current local MCP helper jar path");
         assertTrue(readme.contains("build\\first-smoke-sessions"), "README must document interactive session logs");
         assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
+        assertTrue(readme.contains(".\\scripts\\run-mcp-client-smoke.ps1"), "README must document bounded MCP client smoke script");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
         assertTrue(readme.contains("screenshots"), "README must tell testers screenshots are bundled");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
@@ -38,6 +39,20 @@ final class ReadmeSmokeTest {
     @Test
     void boundedClientSmokeScriptExists() {
         assertTrue(Files.exists(Path.of("scripts/run-client-smoke.ps1")), "Missing bounded client smoke script");
+    }
+
+    @Test
+    void boundedMcpClientSmokeScriptExists() throws IOException {
+        final Path script = Path.of("scripts/run-mcp-client-smoke.ps1");
+        assertTrue(Files.exists(script), "Missing bounded MCP client smoke script");
+
+        final String scriptText = Files.readString(script);
+        assertTrue(scriptText.contains("McpServerModPath"), "MCP smoke must use local helper mod path");
+        assertTrue(scriptText.contains("Invoke-McpRequest"), "MCP smoke must probe JSON-RPC endpoint");
+        assertTrue(scriptText.contains("tools/list"), "MCP smoke must verify tools/list");
+        assertTrue(scriptText.contains("execute_commands"), "MCP smoke must verify command tool");
+        assertTrue(scriptText.contains("get_player_info"), "MCP smoke must verify player info tool");
+        assertTrue(scriptText.contains("mcp-client-smoke"), "MCP smoke must write bounded evidence logs");
     }
 
     @Test
@@ -57,6 +72,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("-ExtraMod <path>"), "Kit README must document custom helper mod launch");
         assertTrue(scriptText.contains("    .\\scripts\\run-first-smoke-client.ps1 -WithLocalMcpServerMod"),
             "Kit README must render MCP-assisted smoke command without Markdown backtick escapes");
+        assertTrue(scriptText.contains(".\\scripts\\run-mcp-client-smoke.ps1"),
+            "Kit README must document bounded MCP helper smoke");
         assertTrue(!scriptText.contains("`neoopencomputers"),
             "PowerShell treats Markdown backticks as escapes inside generated README text");
         assertTrue(scriptText.contains("Compress-Archive -Path"), "Kit zip must expand wildcard contents");
@@ -96,6 +113,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("interactive-client-stdout.log"), "Collector must copy interactive stdout");
         assertTrue(scriptText.contains("interactive-client-stderr.log"), "Collector must copy interactive stderr");
         assertTrue(scriptText.contains("interactive-extra-mods.txt"), "Collector must copy interactive helper mod manifest");
+        assertTrue(scriptText.contains("mcp-smoke-tools-list.json"), "Collector must copy bounded MCP smoke tools");
+        assertTrue(scriptText.contains("mcp-smoke-extra-mods.txt"), "Collector must copy bounded MCP helper mod manifest");
         assertTrue(scriptText.contains("screenshots"), "Collector must copy recent Minecraft screenshots");
         assertTrue(scriptText.contains("Select-Object -First 20"), "Collector must bound copied screenshots");
         assertTrue(scriptText.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),

@@ -100,6 +100,12 @@ For a bounded launch/log smoke that stops after resource reload and texture atla
 .\scripts\run-client-smoke.ps1
 ```
 
+For a bounded MCP helper smoke that starts the client, verifies `http://localhost:8080/mcp`, and stops after `ping`, `initialize`, and `tools/list` pass:
+
+```powershell
+.\scripts\run-mcp-client-smoke.ps1
+```
+
 4. In a local test world, check these flows:
 
 - Computer case, screen, and keyboard place without crashing.

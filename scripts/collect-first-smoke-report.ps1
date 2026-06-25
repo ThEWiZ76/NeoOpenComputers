@@ -55,6 +55,13 @@ $clientScreenshotsDir = Join-Path $clientRunDir 'screenshots'
 $smokeDir = Join-Path $repoRoot 'build\client-smoke'
 $smokeStdout = Join-Path $smokeDir 'runClient.out.log'
 $smokeStderr = Join-Path $smokeDir 'runClient.err.log'
+$mcpSmokeDir = Join-Path $repoRoot 'build\mcp-client-smoke'
+$mcpSmokeStdout = Join-Path $mcpSmokeDir 'runClient.out.log'
+$mcpSmokeStderr = Join-Path $mcpSmokeDir 'runClient.err.log'
+$mcpSmokeTools = Join-Path $mcpSmokeDir 'tools-list.json'
+$mcpSmokePing = Join-Path $mcpSmokeDir 'ping.json'
+$mcpSmokeInitialize = Join-Path $mcpSmokeDir 'initialize.json'
+$mcpSmokeExtraMods = Join-Path $mcpSmokeDir 'extra-mods.txt'
 $sessionDir = Join-Path (Join-Path $repoRoot 'build\first-smoke-sessions') "session-$Timestamp"
 $sessionStdout = Join-Path $sessionDir 'runClient.out.log'
 $sessionStderr = Join-Path $sessionDir 'runClient.err.log'
@@ -65,6 +72,12 @@ $copied += Copy-IfPresent $clientLatestLog 'client-latest.log'
 $copied += Copy-IfPresent $clientDebugLog 'client-debug.log'
 $copied += Copy-IfPresent $smokeStdout 'bounded-smoke-stdout.log'
 $copied += Copy-IfPresent $smokeStderr 'bounded-smoke-stderr.log'
+$copied += Copy-IfPresent $mcpSmokeStdout 'mcp-smoke-stdout.log'
+$copied += Copy-IfPresent $mcpSmokeStderr 'mcp-smoke-stderr.log'
+$copied += Copy-IfPresent $mcpSmokeTools 'mcp-smoke-tools-list.json'
+$copied += Copy-IfPresent $mcpSmokePing 'mcp-smoke-ping.json'
+$copied += Copy-IfPresent $mcpSmokeInitialize 'mcp-smoke-initialize.json'
+$copied += Copy-IfPresent $mcpSmokeExtraMods 'mcp-smoke-extra-mods.txt'
 $copied += Copy-IfPresent $sessionStdout 'interactive-client-stdout.log'
 $copied += Copy-IfPresent $sessionStderr 'interactive-client-stderr.log'
 $copied += Copy-IfPresent $sessionExtraMods 'interactive-extra-mods.txt'
@@ -92,6 +105,9 @@ $combinedLog = (Read-TextIfPresent $clientLatestLog) + "`n" +
     (Read-TextIfPresent $clientDebugLog) + "`n" +
     (Read-TextIfPresent $smokeStdout) + "`n" +
     (Read-TextIfPresent $smokeStderr) + "`n" +
+    (Read-TextIfPresent $mcpSmokeStdout) + "`n" +
+    (Read-TextIfPresent $mcpSmokeStderr) + "`n" +
+    (Read-TextIfPresent $mcpSmokeTools) + "`n" +
     (Read-TextIfPresent $sessionStdout) + "`n" +
     (Read-TextIfPresent $sessionStderr) + "`n" +
     (Read-TextIfPresent $sessionExtraMods)

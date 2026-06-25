@@ -106,6 +106,10 @@ For MCP-assisted local smoke testing from the dev workspace, run:
 
 The helper jar is expected at M:\development\mcp-server-mod\build\libs\mcp-server-mod-neoforge-1.1.0+neoforge.mc1.21.1.jar. Use -ExtraMod <path> for a different helper jar.
 
+For a bounded MCP helper startup smoke, run:
+
+    .\scripts\run-mcp-client-smoke.ps1
+
 ## Checksums
 
 See SHA256SUMS.txt.
