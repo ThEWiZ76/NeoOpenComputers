@@ -59,6 +59,7 @@ public final class ModDriverCatalog {
             registry.add(MinecraftConverters.BLOCK_STATE);
             registry.add(MinecraftConverters.NBT);
             registry.add(MinecraftConverters.FLUID_STACK);
+            registry.add(MinecraftConverters.FLUID_TANK);
             registry.add(MinecraftConverters.LEVEL);
             register(
                 registry,

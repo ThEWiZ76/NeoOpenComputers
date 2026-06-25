@@ -141,6 +141,7 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.IFluidTank;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -900,6 +901,26 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Boolean.FALSE.equals(map.get("hasTag")), "FluidStack converter did not report missing tag/components");
         helper.assertTrue("minecraft:water".equals(map.get("name")), "FluidStack converter did not report water id");
         helper.assertTrue(map.get("label") instanceof String label && !label.isBlank(), "FluidStack converter did not report label");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void driverRegistryConvertsFluidTanksLikeUpstream(final GameTestHelper helper) throws Exception {
+        helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+        final DriverRegistry registry = (DriverRegistry) API.driver;
+        final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+        convert.setAccessible(true);
+        final FluidTank tank = new FluidTank(4000);
+        tank.fill(new FluidStack(Fluids.WATER, 750), FluidAction.EXECUTE);
+
+        final Object[] result = (Object[]) convert.invoke(registry, (Object) new Object[]{tank});
+
+        helper.assertTrue(result.length == 1 && result[0] instanceof Map<?, ?>, "Fluid tank did not convert to a map");
+        final Map<?, ?> map = (Map<?, ?>) result[0];
+        helper.assertTrue(Integer.valueOf(4000).equals(map.get("capacity")), "Fluid tank converter did not report capacity");
+        helper.assertTrue(Integer.valueOf(750).equals(map.get("amount")), "Fluid tank converter did not report amount");
+        helper.assertTrue("minecraft:water".equals(map.get("name")), "Fluid tank converter did not report fluid id");
+        helper.assertTrue(map.get("label") instanceof String label && !label.isBlank(), "Fluid tank converter did not report label");
         helper.succeed();
     }
 

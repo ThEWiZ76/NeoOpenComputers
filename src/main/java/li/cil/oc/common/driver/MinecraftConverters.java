@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.IFluidTank;
 
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
@@ -68,13 +69,14 @@ public final class MinecraftConverters {
 
     public static final Converter FLUID_STACK = (value, output) -> {
         if (value instanceof FluidStack stack) {
-            output.put("amount", stack.getAmount());
-            output.put("hasTag", !stack.isComponentsPatchEmpty());
-            if (!stack.isEmpty()) {
-                final ResourceLocation id = BuiltInRegistries.FLUID.getKey(stack.getFluid());
-                output.put("name", id == null ? "minecraft:empty" : id.toString());
-                output.put("label", stack.getHoverName().getString());
-            }
+            convertFluidStack(stack, output);
+        }
+    };
+
+    public static final Converter FLUID_TANK = (value, output) -> {
+        if (value instanceof IFluidTank tank) {
+            output.put("capacity", tank.getCapacity());
+            convertFluidStack(tank.getFluid(), output);
         }
     };
 
@@ -106,6 +108,16 @@ public final class MinecraftConverters {
             return 1;
         }
         return level.dimension().location().hashCode();
+    }
+
+    private static void convertFluidStack(final FluidStack stack, final Map<Object, Object> output) {
+        output.put("amount", stack.getAmount());
+        output.put("hasTag", !stack.isComponentsPatchEmpty());
+        if (!stack.isEmpty()) {
+            final ResourceLocation id = BuiltInRegistries.FLUID.getKey(stack.getFluid());
+            output.put("name", id == null ? "minecraft:empty" : id.toString());
+            output.put("label", stack.getHoverName().getString());
+        }
     }
 
     private static Object convertTag(final Tag tag) {
