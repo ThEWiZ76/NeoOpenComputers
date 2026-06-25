@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -16,7 +17,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class PrintBlockEntity extends BlockEntity {
     private static final String TAG_DATA = "data";
+    private static final String TAG_DATA_UPSTREAM = "oc:data";
     private static final String TAG_STATE = "state";
+    private static final String TAG_STATE_UPSTREAM = "oc:state";
     private static final AABB UNIT_BOUNDS = new AABB(0D, 0D, 0D, 1D, 1D, 1D);
 
     private PrintData data = new PrintData();
@@ -135,16 +138,16 @@ public class PrintBlockEntity extends BlockEntity {
 
     public void load(final CompoundTag tag) {
         data = new PrintData();
-        data.load(tag.getCompound(TAG_DATA));
-        activeState = tag.getBoolean(TAG_STATE);
+        data.load(tag.getCompound(tag.contains(TAG_DATA, Tag.TAG_COMPOUND) ? TAG_DATA : TAG_DATA_UPSTREAM));
+        activeState = tag.getBoolean(tag.contains(TAG_STATE) ? TAG_STATE : TAG_STATE_UPSTREAM);
         updateBounds();
     }
 
     public void save(final CompoundTag tag) {
         final CompoundTag dataTag = new CompoundTag();
         data.save(dataTag);
-        tag.put(TAG_DATA, dataTag);
-        tag.putBoolean(TAG_STATE, activeState);
+        tag.put(TAG_DATA_UPSTREAM, dataTag);
+        tag.putBoolean(TAG_STATE_UPSTREAM, activeState);
     }
 
     @Override

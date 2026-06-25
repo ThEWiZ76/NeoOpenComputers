@@ -1581,6 +1581,83 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void printItemPlacesConfiguredPrintLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.setLabel("item-placed-print");
+        data.setLightLevel(6);
+        data.setRedstoneLevel(8);
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 0.5D, 1D), "minecraft:block/stone", null));
+        data.addStateOn(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/redstone_block", null));
+        final ItemStack stack = data.createItemStack();
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+        final BlockPos supportPos = new BlockPos(1, 1, 1);
+        final BlockPos printPos = supportPos.above();
+        helper.setBlock(supportPos, Blocks.STONE);
+        final BlockPos absoluteSupportPos = helper.absolutePos(supportPos);
+        final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absoluteSupportPos), Direction.UP, absoluteSupportPos, false);
+
+        final InteractionResult result = stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+
+        helper.assertTrue(result.consumesAction(), "Configured print item placement did not consume interaction");
+        helper.assertTrue(stack.isEmpty(), "Survival print placement did not consume placed item");
+        helper.assertTrue(helper.getBlockState(printPos).is(ModBlocks.PRINT.get()), "Configured print item did not place print block");
+        final PrintBlockEntity print = helper.getBlockEntity(printPos);
+        helper.assertTrue("item-placed-print".equals(print.data().label()), "Placed print did not load stack label");
+        helper.assertTrue(print.lightLevel() == 6, "Placed print did not expose configured light");
+        helper.assertTrue(print.redstoneSignal() == 0, "Inactive placed print emitted redstone");
+        helper.assertTrue(print.shape().bounds().maxY == 0.5D, "Placed print did not use configured item shape");
+        helper.assertTrue(print.activate(), "Placed print did not activate after item placement");
+        helper.assertTrue(print.redstoneSignal() == 8, "Active placed print did not emit configured redstone");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printBlockEntityLoadsNamespacedNbtLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.setLabel("namespaced-print");
+        data.setRedstoneLevel(9);
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 0.5D, 1D), "minecraft:block/stone", null));
+        data.addStateOn(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/redstone_block", null));
+        final CompoundTag dataTag = new CompoundTag();
+        data.save(dataTag);
+        final CompoundTag rootTag = new CompoundTag();
+        rootTag.put("oc:data", dataTag);
+        rootTag.putBoolean("oc:state", true);
+
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState());
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.load(rootTag);
+
+        helper.assertTrue("namespaced-print".equals(print.data().label()), "Print block entity did not load upstream namespaced data tag");
+        helper.assertTrue(print.isActiveState(), "Print block entity did not load upstream namespaced state tag");
+        helper.assertTrue(print.redstoneSignal() == 9, "Namespaced active print did not expose configured redstone");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printBlockEntitySavesNamespacedNbtLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.setLabel("saved-namespaced-print");
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 0.5D, 1D), "minecraft:block/stone", null));
+        data.addStateOn(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/redstone_block", null));
+
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState());
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.loadFromStack(data.createItemStack());
+        helper.assertTrue(print.activate(), "Print did not activate before namespaced save");
+        final CompoundTag rootTag = new CompoundTag();
+        print.save(rootTag);
+
+        helper.assertTrue(rootTag.contains("oc:data", Tag.TAG_COMPOUND), "Print block entity did not save upstream namespaced data tag");
+        helper.assertTrue(rootTag.getBoolean("oc:state"), "Print block entity did not save upstream namespaced state tag");
+        helper.assertTrue("saved-namespaced-print".equals(rootTag.getCompound("oc:data").getString("label")), "Print block entity namespaced save lost label");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printBlockActivatesWithHeldItemLikeUpstream(final GameTestHelper helper) {
         final PrintData data = new PrintData();
         data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/stone", null));
