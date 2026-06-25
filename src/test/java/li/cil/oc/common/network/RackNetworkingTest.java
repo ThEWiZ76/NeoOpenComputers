@@ -109,6 +109,17 @@ final class RackNetworkingTest {
         assertEquals(1, stopCount.get());
     }
 
+    @Test
+    void applyServerRackControlRejectsInvalidPlayerMenuLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final AtomicInteger stopCount = new AtomicInteger();
+        final ServerRackMountableEnvironment server = allocateServer(null, runningMachine(stopCount));
+        final ServerRackMenu menu = allocateServerMenu(17, server, serverData(true, false));
+
+        assertFalse(RackNetworking.applyServerRackControl(null, menu, new ServerRackControlPayload(17, RackControlPayload.STOP)));
+        assertEquals(0, stopCount.get());
+    }
+
     private static TestRackBlockEntity allocateRack() throws Exception {
         return (TestRackBlockEntity) unsafe().allocateInstance(TestRackBlockEntity.class);
     }

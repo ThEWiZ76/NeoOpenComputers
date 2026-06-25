@@ -98,6 +98,16 @@ public final class RackNetworking {
         return menu.serverInventory() instanceof ServerRackMountableEnvironment server && server.controlPower(payload.action());
     }
 
+    static boolean applyServerRackControl(final Player player, final AbstractContainerMenu containerMenu, final ServerRackControlPayload payload) {
+        if (!(containerMenu instanceof ServerRackMenu menu) || menu.containerId != payload.containerId()) {
+            return false;
+        }
+        if (player == null || !menu.stillValid(player)) {
+            return false;
+        }
+        return applyServerRackControl(containerMenu, payload);
+    }
+
     private static void handleRackControl(final RackControlPayload payload, final IPayloadContext context) {
         applyRackControl(context.player(), context.player().containerMenu, payload);
     }
@@ -107,7 +117,7 @@ public final class RackNetworking {
     }
 
     private static void handleServerRackControl(final ServerRackControlPayload payload, final IPayloadContext context) {
-        applyServerRackControl(context.player().containerMenu, payload);
+        applyServerRackControl(context.player(), context.player().containerMenu, payload);
     }
 
     private static Direction sideFromOrdinal(final int ordinal) {
