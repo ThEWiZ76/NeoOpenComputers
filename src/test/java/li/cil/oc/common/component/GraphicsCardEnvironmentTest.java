@@ -468,6 +468,19 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void videoBufferViewportMatchesUpstreamVramBehavior() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+
+        assertArrayEquals(new Object[]{1}, gpu.allocateBuffer(null, new TestArguments(4, 2)));
+        assertArrayEquals(new Object[]{0}, gpu.setActiveBuffer(null, new TestArguments(1)));
+
+        assertArrayEquals(new Object[]{2, 4}, gpu.getViewport(null, new TestArguments()));
+        assertArrayEquals(new Object[]{false}, gpu.setViewport(null, new TestArguments(3, 1)));
+        assertArrayEquals(new Object[]{2, 4}, gpu.getViewport(null, new TestArguments()));
+    }
+
+    @Test
     void rejectsInvalidVideoBufferRequests() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);

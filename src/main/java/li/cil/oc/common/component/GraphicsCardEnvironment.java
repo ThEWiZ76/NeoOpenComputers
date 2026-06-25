@@ -803,12 +803,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Override
         public boolean setResolution(final int width, final int height) {
-            if (width < 1 || height < 1 || width > maximumWidth || height > maximumHeight) {
-                return false;
-            }
-            resize(width, height);
-            dirty = true;
-            return true;
+            return false;
         }
 
         @Override
@@ -823,23 +818,17 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Override
         public boolean setViewport(final int width, final int height) {
-            if (width < 1 || height < 1 || width > this.width || height > this.height) {
-                return false;
-            }
-            viewportWidth = width;
-            viewportHeight = height;
-            dirty = true;
-            return true;
+            return false;
         }
 
         @Override
         public int getViewportWidth() {
-            return viewportWidth;
+            return height;
         }
 
         @Override
         public int getViewportHeight() {
-            return viewportHeight;
+            return width;
         }
 
         @Override
@@ -1070,12 +1059,12 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Override
         public int renderWidth() {
-            return viewportWidth;
+            return 0;
         }
 
         @Override
         public int renderHeight() {
-            return viewportHeight;
+            return 0;
         }
 
         @Override
@@ -1121,8 +1110,6 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                 nbt.contains(WIDTH_TAG) ? Math.min(maximumWidth, Math.max(1, nbt.getInt(WIDTH_TAG))) : maximumWidth,
                 nbt.contains(HEIGHT_TAG) ? Math.min(maximumHeight, Math.max(1, nbt.getInt(HEIGHT_TAG))) : maximumHeight
             );
-            viewportWidth = nbt.contains(VIEWPORT_WIDTH_TAG) ? Math.min(width, Math.max(1, nbt.getInt(VIEWPORT_WIDTH_TAG))) : width;
-            viewportHeight = nbt.contains(VIEWPORT_HEIGHT_TAG) ? Math.min(height, Math.max(1, nbt.getInt(VIEWPORT_HEIGHT_TAG))) : height;
             foregroundColor = nbt.getInt(FOREGROUND_TAG);
             backgroundColor = nbt.getInt(BACKGROUND_TAG);
             foregroundFromPalette = nbt.getBoolean(FOREGROUND_PALETTE_TAG);
@@ -1147,8 +1134,8 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             nbt.putInt(HEIGHT_TAG, height);
             nbt.putInt(MAXIMUM_WIDTH_TAG, maximumWidth);
             nbt.putInt(MAXIMUM_HEIGHT_TAG, maximumHeight);
-            nbt.putInt(VIEWPORT_WIDTH_TAG, viewportWidth);
-            nbt.putInt(VIEWPORT_HEIGHT_TAG, viewportHeight);
+            nbt.putInt(VIEWPORT_WIDTH_TAG, getViewportWidth());
+            nbt.putInt(VIEWPORT_HEIGHT_TAG, getViewportHeight());
             nbt.putInt(FOREGROUND_TAG, foregroundColor);
             nbt.putInt(BACKGROUND_TAG, backgroundColor);
             nbt.putBoolean(FOREGROUND_PALETTE_TAG, foregroundFromPalette);
@@ -1164,8 +1151,6 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         private void resize(final int width, final int height) {
             this.width = Math.max(1, width);
             this.height = Math.max(1, height);
-            viewportWidth = this.width;
-            viewportHeight = this.height;
             text = new int[this.height][this.width];
             foreground = new int[this.height][this.width];
             background = new int[this.height][this.width];
