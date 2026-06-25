@@ -107,6 +107,7 @@ import li.cil.oc.common.template.DisassemblerTemplate;
 import li.cil.oc.common.template.DisassemblerTemplateImc;
 import li.cil.oc.common.template.DisassemblerTemplates;
 import li.cil.oc.mixin.BeaconBlockEntityAccessor;
+import li.cil.oc.mixin.BrewingStandBlockEntityAccessor;
 import net.neoforged.fml.InterModComms;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -160,6 +161,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.NoteBlock;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
@@ -6497,6 +6499,30 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "getSecondaryEffect", new Object[0], "effect.minecraft.regeneration");
             } catch (Exception e) {
                 helper.fail("Beacon component invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterExposesBrewingStandBlockDriverLikeUpstream(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.BREWING_STAND);
+        final BrewingStandBlockEntity brewingStand = helper.getBlockEntity(targetPos);
+        ((BrewingStandBlockEntityAccessor) brewingStand).neoopencomputers$setBrewTime(123);
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final String address = componentAddress(computer, "brewing_stand");
+            helper.assertTrue(address != null, "Adapter did not expose brewing stand component: " + computer.machine().components());
+            try {
+                assertInvokeResult(helper, computer, address, "getBrewTime", new Object[0], 123);
+            } catch (Exception e) {
+                helper.fail("Brewing stand component invocation failed: " + e.getMessage());
             }
         });
     }
