@@ -34,4 +34,20 @@ final class PrintRenderModelTest {
         assertEquals(PrintRenderModel.FALLBACK_TINT, fallback.getFirst().tint());
         assertEquals(PrintRenderModel.UNIT_BOUNDS, fallback.getFirst().bounds());
     }
+
+    @Test
+    void textureNamesAcceptLegacyBlocksPaths() {
+        final PrintData data = new PrintData();
+        data.addStateOff(new PrintData.Shape(PrintRenderModel.UNIT_BOUNDS, "minecraft:blocks/stone", null));
+        data.addStateOff(new PrintData.Shape(PrintRenderModel.UNIT_BOUNDS, "blocks/stone", null));
+        data.addStateOff(new PrintData.Shape(PrintRenderModel.UNIT_BOUNDS, "block/stone", null));
+        data.addStateOff(new PrintData.Shape(PrintRenderModel.UNIT_BOUNDS, "stone", null));
+
+        final List<PrintRenderModel.RenderShape> shapes = PrintRenderModel.blockShapes(data, false, Direction.SOUTH);
+
+        assertEquals(4, shapes.size());
+        for (PrintRenderModel.RenderShape shape : shapes) {
+            assertEquals("minecraft:block/stone", shape.texture());
+        }
+    }
 }

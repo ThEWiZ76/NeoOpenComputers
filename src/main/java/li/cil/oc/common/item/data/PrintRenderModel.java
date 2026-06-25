@@ -50,7 +50,10 @@ public final class PrintRenderModel {
             return texture.replace(":blocks/", ":block/");
         }
         if (!texture.contains(":")) {
-            return "minecraft:block/" + texture;
+            final String path = texture.startsWith("blocks/")
+                ? "block/" + texture.substring("blocks/".length())
+                : texture.startsWith("block/") ? texture : "block/" + texture;
+            return "minecraft:" + path;
         }
         return texture;
     }
