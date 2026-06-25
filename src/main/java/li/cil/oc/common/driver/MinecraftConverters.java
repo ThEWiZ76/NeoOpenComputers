@@ -18,8 +18,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.IFluidTank;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
 
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
@@ -37,6 +40,24 @@ public final class MinecraftConverters {
             output.put("hasTag", stack.has(DataComponents.CUSTOM_DATA));
             output.put("name", id == null ? "minecraft:air" : id.toString());
             output.put("label", stack.getHoverName().getString());
+        }
+    };
+
+    public static final Converter FLUID_CONTAINER_ITEM = (value, output) -> {
+        if (value instanceof ItemStack stack) {
+            final IFluidHandlerItem handler = stack.getCapability(Capabilities.FluidHandler.ITEM);
+            if (handler != null) {
+                output.put("capacity", totalCapacity(handler));
+                if (handler.getTanks() == 1) {
+                    output.put("fluid", handler.getFluidInTank(0));
+                } else {
+                    final Object[] tanks = new Object[handler.getTanks()];
+                    for (int tank = 0; tank < tanks.length; tank++) {
+                        tanks[tank] = fluidTankMap(handler, tank);
+                    }
+                    output.put("fluid", tanks);
+                }
+            }
         }
     };
 
@@ -118,6 +139,21 @@ public final class MinecraftConverters {
             output.put("name", id == null ? "minecraft:empty" : id.toString());
             output.put("label", stack.getHoverName().getString());
         }
+    }
+
+    private static int totalCapacity(final IFluidHandler handler) {
+        int capacity = 0;
+        for (int tank = 0; tank < handler.getTanks(); tank++) {
+            capacity += handler.getTankCapacity(tank);
+        }
+        return capacity;
+    }
+
+    private static Map<Object, Object> fluidTankMap(final IFluidHandler handler, final int tank) {
+        final Map<Object, Object> output = new LinkedHashMap<>();
+        output.put("capacity", handler.getTankCapacity(tank));
+        convertFluidStack(handler.getFluidInTank(tank), output);
+        return output;
     }
 
     private static Object convertTag(final Tag tag) {

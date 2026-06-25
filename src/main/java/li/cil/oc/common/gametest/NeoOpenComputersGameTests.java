@@ -925,6 +925,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void driverRegistryConvertsFluidContainerItemsLikeUpstream(final GameTestHelper helper) throws Exception {
+        helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+        final DriverRegistry registry = (DriverRegistry) API.driver;
+        final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+        convert.setAccessible(true);
+
+        final Object[] result = (Object[]) convert.invoke(registry, (Object) new Object[]{new ItemStack(Items.WATER_BUCKET)});
+
+        helper.assertTrue(result.length == 1 && result[0] instanceof Map<?, ?>, "Fluid container item did not convert to a map");
+        final Map<?, ?> map = (Map<?, ?>) result[0];
+        helper.assertTrue("minecraft:water_bucket".equals(map.get("name")), "Fluid container item lost item stack fields");
+        helper.assertTrue(Integer.valueOf(1000).equals(map.get("capacity")), "Fluid container item did not report capacity");
+        helper.assertTrue(map.get("fluid") instanceof Map<?, ?>, "Fluid container item did not report nested fluid");
+        final Map<?, ?> fluid = (Map<?, ?>) map.get("fluid");
+        helper.assertTrue(Integer.valueOf(1000).equals(fluid.get("amount")), "Fluid container item did not report fluid amount");
+        helper.assertTrue("minecraft:water".equals(fluid.get("name")), "Fluid container item did not report fluid id");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void driverRegistryConvertsLevelsLikeUpstream(final GameTestHelper helper) throws Exception {
         helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
         final DriverRegistry registry = (DriverRegistry) API.driver;
