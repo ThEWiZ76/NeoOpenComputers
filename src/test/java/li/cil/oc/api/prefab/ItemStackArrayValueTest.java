@@ -31,17 +31,14 @@ final class ItemStackArrayValueTest {
     }
 
     @Test
-    void savesAndLoadsIteratorIndexAndArrayLength() throws Exception {
-        ItemStackArrayValue value = new ItemStackArrayValue(new ItemStack[]{null});
-        value.call(null, new TestArguments());
-
+    void loadWithoutArrayClearsValueAndKeepsZeroCount() throws Exception {
         CompoundTag tag = new CompoundTag();
-        value.save(tag);
+        tag.putInt("Index", 1);
 
         ItemStackArrayValue loaded = new ItemStackArrayValue();
         loaded.load(tag);
 
-        assertArrayEquals(new Object[]{1}, loaded.count(null, new TestArguments()));
+        assertArrayEquals(new Object[]{0}, loaded.count(null, new TestArguments()));
         assertNull(loaded.call(null, new TestArguments()));
     }
 

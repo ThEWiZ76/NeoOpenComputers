@@ -313,6 +313,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void itemStackArrayValueLoadsEmptySlotsLikeUpstream(final GameTestHelper helper) throws Exception {
+        final ItemStackArrayValue value = new ItemStackArrayValue(new ItemStack[]{null});
+        final CompoundTag tag = new CompoundTag();
+        value.save(tag);
+
+        final ItemStackArrayValue loaded = new ItemStackArrayValue();
+        loaded.load(tag);
+
+        final Object[] all = loaded.getAll(null, null);
+        final Object restored = ((Map<?, ?>) all[0]).get(1);
+
+        helper.assertTrue(restored instanceof ItemStack, "Loaded empty item slot should be an ItemStack");
+        helper.assertTrue(((ItemStack) restored).isEmpty(), "Loaded empty item slot should be empty");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void hologramExposesBottomSidedNodeAndAnalyzerNode(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(0, 1, 0);
         helper.setBlock(pos, ModBlocks.HOLOGRAM_TIER1.get());

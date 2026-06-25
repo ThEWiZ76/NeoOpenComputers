@@ -76,7 +76,7 @@ public class ItemStackArrayValue extends AbstractValue {
             for (int index = 0; index < list.size(); index++) {
                 final CompoundTag stackTag = list.getCompound(index);
                 array[index] = stackTag.isEmpty()
-                        ? null
+                        ? ItemStack.EMPTY
                         : ItemStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, stackTag).result().orElse(null);
             }
         } else {
