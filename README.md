@@ -86,6 +86,14 @@ For an interactive smoke session that automatically packages logs after the clie
 
 This stores Gradle client stdout/stderr under `build\first-smoke-sessions` and includes those logs in the first-smoke report bundle.
 
+To include the local MCP server mod helper during that interactive smoke session:
+
+```powershell
+.\scripts\run-first-smoke-client.ps1 -WithLocalMcpServerMod
+```
+
+The helper jar is expected at `M:\development\mcp-server-mod\build\libs\mcp-server-mod-neoforge-1.1.0+neoforge.mc1.21.1.jar`. You can also pass any helper jar with `-ExtraMod <path>`. Copied helper jars are removed from `run\client\mods` after the client exits unless `-KeepExtraMods` is used. The copied helper list is included in the evidence report.
+
 For a bounded launch/log smoke that stops after resource reload and texture atlas creation:
 
 ```powershell

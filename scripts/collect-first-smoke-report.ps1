@@ -58,6 +58,7 @@ $smokeStderr = Join-Path $smokeDir 'runClient.err.log'
 $sessionDir = Join-Path (Join-Path $repoRoot 'build\first-smoke-sessions') "session-$Timestamp"
 $sessionStdout = Join-Path $sessionDir 'runClient.out.log'
 $sessionStderr = Join-Path $sessionDir 'runClient.err.log'
+$sessionExtraMods = Join-Path $sessionDir 'extra-mods.txt'
 
 $copied = @()
 $copied += Copy-IfPresent $clientLatestLog 'client-latest.log'
@@ -66,6 +67,7 @@ $copied += Copy-IfPresent $smokeStdout 'bounded-smoke-stdout.log'
 $copied += Copy-IfPresent $smokeStderr 'bounded-smoke-stderr.log'
 $copied += Copy-IfPresent $sessionStdout 'interactive-client-stdout.log'
 $copied += Copy-IfPresent $sessionStderr 'interactive-client-stderr.log'
+$copied += Copy-IfPresent $sessionExtraMods 'interactive-extra-mods.txt'
 $copied = @($copied | Where-Object { $null -ne $_ })
 
 if (Test-Path -LiteralPath $clientCrashDir) {
@@ -91,7 +93,8 @@ $combinedLog = (Read-TextIfPresent $clientLatestLog) + "`n" +
     (Read-TextIfPresent $smokeStdout) + "`n" +
     (Read-TextIfPresent $smokeStderr) + "`n" +
     (Read-TextIfPresent $sessionStdout) + "`n" +
-    (Read-TextIfPresent $sessionStderr)
+    (Read-TextIfPresent $sessionStderr) + "`n" +
+    (Read-TextIfPresent $sessionExtraMods)
 
 $failurePatterns = @(
     '/ERROR]',

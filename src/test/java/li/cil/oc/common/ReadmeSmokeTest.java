@@ -25,6 +25,9 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
             "README must include current terminal item input smoke item");
         assertTrue(readme.contains(".\\scripts\\run-first-smoke-client.ps1"), "README must document interactive first-smoke launcher");
+        assertTrue(readme.contains("-WithLocalMcpServerMod"), "README must document optional MCP helper mod launch");
+        assertTrue(readme.contains("mcp-server-mod-neoforge-1.1.0+neoforge.mc1.21.1.jar"),
+            "README must document current local MCP helper jar path");
         assertTrue(readme.contains("build\\first-smoke-sessions"), "README must document interactive session logs");
         assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
@@ -64,6 +67,10 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("RedirectStandardOutput"), "Launcher must capture stdout");
         assertTrue(scriptText.contains("RedirectStandardError"), "Launcher must capture stderr");
         assertTrue(scriptText.contains("collect-first-smoke-report.ps1"), "Launcher must collect evidence after client exit");
+        assertTrue(scriptText.contains("WithLocalMcpServerMod"), "Launcher must support the local MCP helper mod");
+        assertTrue(scriptText.contains("ExtraMod"), "Launcher must support extra helper mods");
+        assertTrue(scriptText.contains("extra-mods.txt"), "Launcher must record copied helper mods");
+        assertTrue(scriptText.contains("KeepExtraMods"), "Launcher must let testers keep helper mods when requested");
         assertTrue(scriptText.contains("DryRun"), "Launcher must have a dry-run path for verification");
     }
 
@@ -80,6 +87,7 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("Missing texture"), "Collector must scan missing texture failures");
         assertTrue(scriptText.contains("interactive-client-stdout.log"), "Collector must copy interactive stdout");
         assertTrue(scriptText.contains("interactive-client-stderr.log"), "Collector must copy interactive stderr");
+        assertTrue(scriptText.contains("interactive-extra-mods.txt"), "Collector must copy interactive helper mod manifest");
         assertTrue(scriptText.contains("screenshots"), "Collector must copy recent Minecraft screenshots");
         assertTrue(scriptText.contains("Select-Object -First 20"), "Collector must bound copied screenshots");
         assertTrue(scriptText.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
