@@ -43,6 +43,12 @@ public final class OpenComputersApi {
         }
     }
 
+    public static void lockDriverRegistry() {
+        if (API.driver instanceof DriverRegistry registry) {
+            registry.lockRegistrations();
+        }
+    }
+
     private OpenComputersApi() {
     }
 }

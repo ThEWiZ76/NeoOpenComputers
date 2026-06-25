@@ -29,9 +29,11 @@ public final class DriverRegistry implements DriverAPI {
     private final List<Converter> converters = new ArrayList<>();
     private final List<EnvironmentProvider> environmentProviders = new ArrayList<>();
     private final List<InventoryProvider> inventoryProviders = new ArrayList<>();
+    private boolean locked;
 
     @Override
     public void add(final DriverBlock driver) {
+        ensureUnlocked("drivers");
         if (!blockDrivers.contains(driver)) {
             blockDrivers.add(driver);
         }
@@ -39,6 +41,7 @@ public final class DriverRegistry implements DriverAPI {
 
     @Override
     public void add(final DriverItem driver) {
+        ensureUnlocked("drivers");
         if (!itemDrivers.contains(driver)) {
             itemDrivers.add(driver);
         }
@@ -46,6 +49,7 @@ public final class DriverRegistry implements DriverAPI {
 
     @Override
     public void add(final Converter converter) {
+        ensureUnlocked("converters");
         if (!converters.contains(converter)) {
             converters.add(converter);
         }
@@ -53,6 +57,7 @@ public final class DriverRegistry implements DriverAPI {
 
     @Override
     public void add(final EnvironmentProvider provider) {
+        ensureUnlocked("environment providers");
         if (!environmentProviders.contains(provider)) {
             environmentProviders.add(provider);
         }
@@ -60,6 +65,7 @@ public final class DriverRegistry implements DriverAPI {
 
     @Override
     public void add(final InventoryProvider provider) {
+        ensureUnlocked("inventory providers");
         if (!inventoryProviders.contains(provider)) {
             inventoryProviders.add(provider);
         }
@@ -148,5 +154,15 @@ public final class DriverRegistry implements DriverAPI {
 
     int converterCount() {
         return converters.size();
+    }
+
+    void lockRegistrations() {
+        locked = true;
+    }
+
+    private void ensureUnlocked(final String type) {
+        if (locked) {
+            throw new IllegalStateException("Please register all " + type + " in the init phase.");
+        }
     }
 }

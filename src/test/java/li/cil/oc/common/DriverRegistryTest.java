@@ -18,11 +18,14 @@ import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class DriverRegistryTest {
@@ -115,6 +118,30 @@ final class DriverRegistryTest {
 
         assertEquals(1, registry.itemDrivers().size());
         assertEquals(1, registry.converterCount());
+    }
+
+    @Test
+    void lockedRegistryRejectsLateRegistrationsLikeUpstream() {
+        DriverRegistry registry = new DriverRegistry();
+        registry.add(new TestDriverItem(true));
+        Method lock = assertDoesNotThrow(() -> DriverRegistry.class.getDeclaredMethod("lockRegistrations"));
+        assertDoesNotThrow(() -> lock.invoke(registry));
+
+        assertThrows(IllegalStateException.class, () -> registry.add(new TestDriverItem(true)));
+        assertThrows(IllegalStateException.class, () -> registry.add((Converter) (value, output) -> output.put("key", "value")));
+        assertEquals(1, registry.itemDrivers().size());
+        assertEquals(0, registry.converterCount());
+    }
+
+    @Test
+    void apiLockHelperLocksDriverRegistryAfterSetup() {
+        DriverRegistry registry = new DriverRegistry();
+        API.driver = registry;
+        Method lock = assertDoesNotThrow(() -> OpenComputersApi.class.getDeclaredMethod("lockDriverRegistry"));
+
+        assertDoesNotThrow(() -> lock.invoke(null));
+
+        assertThrows(IllegalStateException.class, () -> registry.add(new TestDriverItem(true)));
     }
 
     private record TestDriverBlock(boolean matches) implements DriverBlock {

@@ -68,6 +68,7 @@ public final class NeoOpenComputers {
             ModEeproms.registerDefaults();
             ModLootDisks.registerDefaults();
             ModDriverCatalog.registerDefaults();
+            OpenComputersApi.lockDriverRegistry();
         });
         LOGGER.debug("NeoOpenComputers common setup complete.");
     }
