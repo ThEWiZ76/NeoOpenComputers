@@ -2564,6 +2564,50 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesWirelessActiveEffectsAcceptsBytesAndSanitizesNamesLikeUpstream(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.api.detail.NanomachinesAPI previous = API.nanomachines;
+        final li.cil.oc.common.NanomachinesRegistry registry = new li.cil.oc.common.NanomachinesRegistry();
+        registry.addProvider(new RecordingNanomachineProvider(java.util.Arrays.asList(
+            new RecordingNanomachineBehavior("speed,boost"),
+            new RecordingNanomachineBehavior("quote\"effect"),
+            new RecordingNanomachineBehavior(""),
+            new RecordingNanomachineBehavior(null)
+        )));
+        API.nanomachines = registry;
+        final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition());
+        Network.joinWirelessNetwork(sender);
+        try {
+            final li.cil.oc.api.nanomachines.Controller controller = registry.debugController(player);
+            final li.cil.oc.api.network.WirelessEndpoint endpoint = (li.cil.oc.api.network.WirelessEndpoint) controller;
+            for (int index = 0; index < controller.getTotalInputCount(); index++) {
+                helper.assertTrue(controller.setInput(index, true), "Nanomachines rejected active-effects input " + index);
+            }
+            endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{
+                "nanomachines".getBytes(StandardCharsets.UTF_8),
+                "setResponsePort".getBytes(StandardCharsets.UTF_8),
+                565
+            }), sender);
+            runNanomachinesCommandDelay(player);
+            sender.lastPacket = null;
+
+            endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{
+                "nanomachines".getBytes(StandardCharsets.UTF_8),
+                "getActiveEffects".getBytes(StandardCharsets.UTF_8)
+            }), sender);
+            runNanomachinesCommandDelay(player);
+
+            helper.assertTrue(sender.lastPacket != null, "Nanomachines active-effects command did not respond");
+            helper.assertTrue(sender.lastPacket.port() == 565, "Nanomachines active-effects command used wrong response port");
+            helper.assertTrue(java.util.Arrays.equals(new Object[]{"nanomachines", "effects", "{speed_boost,quote_effect}"}, sender.lastPacket.data()), "Nanomachines active-effects command returned wrong payload");
+        } finally {
+            Network.leaveWirelessNetwork(sender);
+            API.nanomachines = previous;
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesWirelessCommandsIgnoreFarSenders(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
@@ -9021,13 +9065,22 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static final class RecordingNanomachineBehavior implements li.cil.oc.api.nanomachines.Behavior {
+        private final String nameHint;
         private int enableCount;
         private int disableCount;
         private li.cil.oc.api.nanomachines.DisableReason disableReason;
 
+        private RecordingNanomachineBehavior() {
+            this("recording");
+        }
+
+        private RecordingNanomachineBehavior(final String nameHint) {
+            this.nameHint = nameHint;
+        }
+
         @Override
         public String getNameHint() {
-            return "recording";
+            return nameHint;
         }
 
         @Override
