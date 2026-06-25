@@ -43,6 +43,7 @@ import li.cil.oc.common.driver.DiskDriveContainerDriver;
 import li.cil.oc.common.driver.GeolyzerItemDriver;
 import li.cil.oc.common.driver.InventoryBlockDriver;
 import li.cil.oc.common.driver.KeyboardItemDriver;
+import li.cil.oc.common.driver.MinecraftConverters;
 import li.cil.oc.common.driver.MotionSensorItemDriver;
 import li.cil.oc.common.driver.ScreenBlockDriver;
 import li.cil.oc.common.driver.ScreenItemDriver;
@@ -53,6 +54,9 @@ public final class ModDriverCatalog {
     public static void registerDefaults() {
         if (API.driver instanceof DriverRegistry registry) {
             registerBlocks(registry, new ComputerCaseBlockDriver(), new DiskDriveBlockDriver(), new InventoryBlockDriver(), new ScreenBlockDriver());
+            registry.add(MinecraftConverters.ITEM_STACK);
+            registry.add(MinecraftConverters.BLOCK);
+            registry.add(MinecraftConverters.BLOCK_STATE);
             register(
                 registry,
                 ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(), ModItems.APU_TIER1.get(), ModItems.APU_TIER2.get(),

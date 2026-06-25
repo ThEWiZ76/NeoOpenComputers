@@ -493,12 +493,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             try {
                 callback = component.annotation(method);
             } catch (NoSuchElementException e) {
-                return component.invoke(method, this, args == null ? new Object[0] : args);
+                return OpenComputersApi.convert(component.invoke(method, this, args == null ? new Object[0] : args));
             }
             if (callback.direct()) {
                 consumeCallBudget(1D / callback.limit());
             }
-            return component.invoke(method, this, args == null ? new Object[0] : args);
+            return OpenComputersApi.convert(component.invoke(method, this, args == null ? new Object[0] : args));
         }
         if (node() == null || node().network() == null) {
             throw new IllegalStateException("machine is not in a network");
@@ -516,7 +516,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (annotation.direct()) {
             consumeCallBudget(1D / annotation.limit());
         }
-        return callback.invoke(value, this, new MachineArguments(args == null ? new Object[0] : args));
+        return OpenComputersApi.convert(callback.invoke(value, this, new MachineArguments(args == null ? new Object[0] : args)));
     }
 
     private record ReflectedValueCallbackEntry(Method method) implements ValueCallbackEntry {

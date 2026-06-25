@@ -64,6 +64,7 @@ final class MachineRegistryTest {
     void resetApi() {
         API.machine = null;
         API.network = null;
+        API.driver = null;
         li.cil.oc.api.Machine.LuaArchitecture = null;
         TimedArchitecture.clock = null;
         ProgramLocations.clear();
@@ -201,6 +202,27 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void componentCallbackReturnsUseRegisteredConvertersLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        DriverRegistry registry = new DriverRegistry();
+        TestConvertedValue value = new TestConvertedValue("component");
+        registry.add((candidate, output) -> {
+            if (candidate == value) {
+                output.put("name", value.name);
+            }
+        });
+        API.driver = registry;
+        Machine machine = API.machine.create(null);
+        TestEnvironment environment = new TestEnvironment(value);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+
+        Object[] result = machine.invoke(environment.node().address(), "converted", new Object[0]);
+
+        assertEquals(Map.of("name", "component"), result[0]);
+    }
+
+    @Test
     void valueCallbacksHonorFiltersLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -214,6 +236,24 @@ final class MachineRegistryTest {
         assertArrayEquals(new Object[]{"ok"}, machine.invoke(value, "echo", new Object[0]));
         assertThrows(NoSuchMethodException.class, () -> machine.invoke(value, "hidden", new Object[0]));
         assertThrows(NoSuchMethodException.class, () -> machine.invoke(value, "extra", new Object[0]));
+    }
+
+    @Test
+    void valueCallbackReturnsUseRegisteredConvertersLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        DriverRegistry registry = new DriverRegistry();
+        TestConvertedValue value = new TestConvertedValue("value");
+        registry.add((candidate, output) -> {
+            if (candidate == value) {
+                output.put("name", value.name);
+            }
+        });
+        API.driver = registry;
+        Machine machine = API.machine.create(null);
+
+        Object[] result = machine.invoke(new ConvertedValue(value), "converted", new Object[0]);
+
+        assertEquals(Map.of("name", "value"), result[0]);
     }
 
     @Test
@@ -1721,8 +1761,14 @@ final class MachineRegistryTest {
 
     private static final class TestEnvironment extends AbstractManagedEnvironment {
         private final List<String> messages = new ArrayList<>();
+        private final Object convertedValue;
 
         private TestEnvironment() {
+            this(null);
+        }
+
+        private TestEnvironment(final Object convertedValue) {
+            this.convertedValue = convertedValue;
             setNode(Network.newNode(this, Visibility.Network)
                 .withComponent("test_component", Visibility.Network)
                 .create());
@@ -1731,6 +1777,31 @@ final class MachineRegistryTest {
         @Override
         public void onMessage(final Message message) {
             messages.add(message.name());
+        }
+
+        @Callback
+        public Object[] converted(final Context context, final Arguments arguments) {
+            return new Object[]{convertedValue};
+        }
+    }
+
+    private record TestConvertedValue(String name) {
+        @Override
+        public String toString() {
+            return "converted-value:" + name;
+        }
+    }
+
+    private static final class ConvertedValue extends AbstractValue {
+        private final Object convertedValue;
+
+        private ConvertedValue(final Object convertedValue) {
+            this.convertedValue = convertedValue;
+        }
+
+        @Callback
+        public Object[] converted(final Context context, final Arguments args) {
+            return new Object[]{convertedValue};
         }
     }
 

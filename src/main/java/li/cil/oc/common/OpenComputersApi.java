@@ -49,6 +49,13 @@ public final class OpenComputersApi {
         }
     }
 
+    static Object[] convert(final Object[] values) {
+        if (API.driver instanceof DriverRegistry registry) {
+            return registry.convert(values);
+        }
+        return values;
+    }
+
     private OpenComputersApi() {
     }
 }

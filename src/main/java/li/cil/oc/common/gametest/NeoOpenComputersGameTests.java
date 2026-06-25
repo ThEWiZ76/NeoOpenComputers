@@ -1151,7 +1151,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(metadata.length == 1 && Integer.valueOf(0).equals(metadata[0]), "World value did not report metadata");
 
         final Object[] blockState = invokeValue(helper, world, "getBlockState", absolute.getX(), absolute.getY(), absolute.getZ());
-        helper.assertTrue(blockState.length == 1 && state.equals(blockState[0]), "World value did not report block state");
+        helper.assertTrue(blockState.length == 1 && blockState[0] instanceof Map<?, ?> convertedState && "minecraft:stone".equals(convertedState.get("name")), "World value did not report block state");
         helper.succeed();
     }
 
@@ -5470,7 +5470,7 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "areStacksEquivalent", new Object[]{east, 4, 5}, true);
                 assertInvokeResult(helper, computer, address, "areStacksEquivalent", new Object[]{east, 1, 3}, false);
                 final Object[] stackResult = computer.machine().invoke(address, "getStackInSlot", new Object[]{east, 1});
-                helper.assertTrue(stackResult.length == 1 && stackResult[0] instanceof ItemStack stack && stack.is(net.minecraft.world.item.Items.DIAMOND) && stack.getCount() == 4, "Inventory controller did not expose slot stack");
+                helper.assertTrue(stackResult.length == 1 && stackResult[0] instanceof Map<?, ?> stack && "minecraft:diamond".equals(stack.get("name")) && Integer.valueOf(4).equals(stack.get("size")), "Inventory controller did not expose slot stack");
                 final Object[] stacksResult = computer.machine().invoke(address, "getAllStacks", new Object[]{east});
                 helper.assertTrue(stacksResult.length == 1 && stacksResult[0] instanceof ItemStackArrayValue, "Inventory controller did not expose item-stack array value");
                 final ItemStackArrayValue stacks = (ItemStackArrayValue) stacksResult[0];

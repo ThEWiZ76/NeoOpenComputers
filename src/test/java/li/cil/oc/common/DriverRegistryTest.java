@@ -27,10 +27,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -138,6 +141,49 @@ final class DriverRegistryTest {
     }
 
     @Test
+    void converterRecursivelyNormalizesUnknownValuesLikeUpstream() {
+        DriverRegistry registry = new DriverRegistry();
+        TestConvertedValue value = new TestConvertedValue("root");
+        TestConvertedValue nested = new TestConvertedValue("nested");
+        registry.add((candidate, output) -> {
+            if (candidate instanceof TestConvertedValue converted) {
+                output.put("name", converted.name);
+                output.put("self", candidate);
+                output.put("nested", nested);
+            }
+        });
+
+        Object[] converted = registry.convert(new Object[]{value});
+
+        Map<?, ?> convertedMap = assertInstanceOf(Map.class, converted[0]);
+        assertEquals("root", convertedMap.get("name"));
+        assertSame(convertedMap, convertedMap.get("self"));
+        Map<?, ?> nestedMap = assertInstanceOf(Map.class, convertedMap.get("nested"));
+        assertEquals("nested", nestedMap.get("name"));
+        assertSame(nestedMap, nestedMap.get("self"));
+    }
+
+    @Test
+    void converterFlattenKeyReplacesConvertedValueLikeUpstream() {
+        DriverRegistry registry = new DriverRegistry();
+        TestConvertedValue value = new TestConvertedValue("flat");
+        registry.add((candidate, output) -> {
+            if (candidate == value) {
+                output.put("oc:flatten", "flattened");
+            }
+        });
+
+        assertArrayEquals(new Object[]{"flattened"}, registry.convert(new Object[]{value}));
+    }
+
+    @Test
+    void unknownValuesFallBackToStringLikeUpstream() {
+        DriverRegistry registry = new DriverRegistry();
+
+        assertArrayEquals(new Object[]{"converted-value:plain"}, registry.convert(new Object[]{new TestConvertedValue("plain")}));
+    }
+
+    @Test
     void duplicateItemDriversAndConvertersAreIgnoredLikeUpstream() {
         DriverRegistry registry = new DriverRegistry();
         TestDriverItem item = new TestDriverItem(true);
@@ -185,6 +231,13 @@ final class DriverRegistryTest {
         @Override
         public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
             return null;
+        }
+    }
+
+    private record TestConvertedValue(String name) {
+        @Override
+        public String toString() {
+            return "converted-value:" + name;
         }
     }
 
