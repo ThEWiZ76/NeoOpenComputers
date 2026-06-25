@@ -80,6 +80,7 @@ import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineMagnetProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachinePotionProvider;
 import li.cil.oc.common.template.AssemblerTemplate;
+import li.cil.oc.common.template.AssemblerFilterImc;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.AssemblerTemplates;
 import li.cil.oc.common.template.DisassemblerTemplate;
@@ -1471,6 +1472,24 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Driver.driverFor(new ItemStack(ModItems.TRANSPOSER.get()), li.cil.oc.api.internal.Robot.class) == null, "Robot accepted blacklisted transposer");
         helper.assertTrue(Driver.driverFor(new ItemStack(ModItems.NETWORK_CARD.get()), li.cil.oc.api.internal.Drone.class) == null, "Drone accepted blacklisted network card");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void assemblerFilterImcRejectsMatchingTemplatesLikeUpstream(final GameTestHelper helper) {
+        try (AssemblerTemplates.Registration ignored = AssemblerTemplates.register(new SingleItemAssemblerTemplate("nether_star", Items.NETHER_STAR))) {
+            helper.assertTrue(AssemblerTemplates.select(new ItemStack(Items.NETHER_STAR)).isPresent(), "Baseline assembler template did not match");
+            final InterModComms.IMCMessage message = new InterModComms.IMCMessage(
+                "addon",
+                NeoOpenComputers.MODID,
+                li.cil.oc.api.IMC.REGISTER_ASSEMBLER_FILTER,
+                () -> "li.cil.oc.common.gametest.NeoOpenComputersGameTests.rejectNetherStarAssemblerTemplate"
+            );
+
+            AssemblerFilterImc.process(Stream.of(message));
+
+            helper.assertTrue(AssemblerTemplates.select(new ItemStack(Items.NETHER_STAR)).isEmpty(), "Assembler filter did not reject matching template");
+            helper.succeed();
+        }
     }
 
     @GameTest(template = "empty")
@@ -7522,6 +7541,23 @@ public final class NeoOpenComputersGameTests {
         }
     }
 
+    private record SingleItemAssemblerTemplate(String name, Item item) implements AssemblerTemplate {
+        @Override
+        public boolean matches(final ItemStack stack) {
+            return stack.is(item);
+        }
+
+        @Override
+        public boolean validate(final AssemblerBlockEntity assembler) {
+            return true;
+        }
+
+        @Override
+        public ItemStack assemble(final AssemblerBlockEntity assembler) {
+            return new ItemStack(item);
+        }
+    }
+
     private static final class RecordingConnectorEnvironment implements li.cil.oc.api.network.Environment {
         private final Connector node;
 
@@ -7747,6 +7783,10 @@ public final class NeoOpenComputersGameTests {
 
     public static ItemStack[] disassembleEmeraldTemplate(final ItemStack stack) {
         return new ItemStack[]{new ItemStack(Items.EMERALD)};
+    }
+
+    public static boolean rejectNetherStarAssemblerTemplate(final ItemStack stack) {
+        return !stack.is(Items.NETHER_STAR);
     }
 
     private static final class StaleRackBlockEntity extends RackBlockEntity {

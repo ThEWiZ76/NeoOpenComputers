@@ -25,6 +25,7 @@ import li.cil.oc.common.network.DebugNetworking;
 import li.cil.oc.common.network.NanomachinesNetworking;
 import li.cil.oc.common.network.RackNetworking;
 import li.cil.oc.common.network.TerminalNetworking;
+import li.cil.oc.common.template.AssemblerFilterImc;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.DisassemblerTemplateImc;
 import net.neoforged.bus.api.IEventBus;
@@ -81,6 +82,7 @@ public final class NeoOpenComputers {
         event.enqueueWork(() -> {
             final var messages = InterModComms.getMessages(MODID).toList();
             ProgramLocationImc.process(messages.stream());
+            AssemblerFilterImc.process(messages.stream());
             AssemblerTemplateImc.process(messages.stream());
             DisassemblerTemplateImc.process(messages.stream());
             if (li.cil.oc.api.API.driver instanceof DriverRegistry registry) {
