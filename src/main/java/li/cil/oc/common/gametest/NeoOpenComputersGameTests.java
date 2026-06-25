@@ -44,9 +44,11 @@ import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
 import li.cil.oc.common.blockentity.RelayBlockEntity;
+import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
+import li.cil.oc.common.blockentity.WaypointBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.item.AnalyzerItem;
@@ -2761,6 +2763,20 @@ public final class NeoOpenComputersGameTests {
         assertEnvironmentProvider(helper, new ItemStack(ModItems.TRANSPOSER.get()), li.cil.oc.common.component.TransposerEnvironment.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.SCREEN_TIER2.get()), li.cil.oc.common.blockentity.ScreenItemEnvironment.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.KEYBOARD.get()), li.cil.oc.common.component.KeyboardItemEnvironment.class);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void componentBlocksProvideEnvironmentClassesLikeUpstream(final GameTestHelper helper) {
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.ASSEMBLER.get()), AssemblerBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.COMPUTER_CASE_TIER1.get()), ComputerCaseBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.COMPUTER_CASE_TIER2.get()), ComputerCaseBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.COMPUTER_CASE_TIER3.get()), ComputerCaseBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.HOLOGRAM_TIER1.get()), HologramBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.HOLOGRAM_TIER2.get()), HologramBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.RELAY.get()), RelayBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.REDSTONE_IO.get()), RedstoneIoBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.WAYPOINT.get()), WaypointBlockEntity.class);
         helper.succeed();
     }
 

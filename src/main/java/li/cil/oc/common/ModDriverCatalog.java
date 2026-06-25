@@ -37,6 +37,7 @@ import li.cil.oc.common.component.TractorBeamUpgradeEnvironment;
 import li.cil.oc.common.component.TradingUpgradeEnvironment;
 import li.cil.oc.common.component.TransposerEnvironment;
 import li.cil.oc.common.component.WirelessNetworkCardEnvironment;
+import li.cil.oc.common.driver.BlockItemEnvironmentProvider;
 import li.cil.oc.common.driver.ComputerCaseBlockDriver;
 import li.cil.oc.common.driver.ComparatorBlockDriver;
 import li.cil.oc.common.driver.DiskDriveBlockDriver;
@@ -139,7 +140,8 @@ public final class ModDriverCatalog {
                 providerFor(new ScreenItemDriver(ModItems.SCREEN_TIER3.get(), 2), ScreenItemEnvironment.class),
                 providerFor(new KeyboardItemDriver(), KeyboardItemEnvironment.class),
                 providerFor(new MotionSensorItemDriver(), MotionSensorEnvironment.class),
-                providerFor(new TransposerItemDriver(), TransposerEnvironment.class));
+                providerFor(new TransposerItemDriver(), TransposerEnvironment.class),
+                new BlockItemEnvironmentProvider());
         }
     }
 
