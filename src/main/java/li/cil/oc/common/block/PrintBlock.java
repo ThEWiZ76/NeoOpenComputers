@@ -94,6 +94,14 @@ public class PrintBlock extends HorizontalDirectionalBlock implements EntityBloc
     }
 
     @Override
+    protected void neighborChanged(final BlockState state, final Level level, final BlockPos pos, final Block block, final BlockPos fromPos, final boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof PrintBlockEntity print) {
+            print.updateRedstoneInput(level.hasNeighborSignal(pos));
+        }
+    }
+
+    @Override
     public int getLightEmission(final BlockState state, final BlockGetter level, final BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof PrintBlockEntity print) {
             return print.lightLevel();

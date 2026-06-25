@@ -62,6 +62,13 @@ public class PrintBlockEntity extends BlockEntity {
         }
     }
 
+    public void updateRedstoneInput(final boolean powered) {
+        if (!data.emitRedstone() && data.hasActiveState() && activeState != powered) {
+            activeState = powered;
+            notifyUpdated();
+        }
+    }
+
     public boolean isActiveState() {
         return activeState;
     }

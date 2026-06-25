@@ -1585,6 +1585,25 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void printBlockFollowsExternalRedstoneInputLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/stone", null));
+        data.addStateOn(new PrintData.Shape(new AABB(0D, 0D, 0D, 0.5D, 1D, 1D), "minecraft:block/redstone_block", null));
+
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState());
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.loadFromStack(data.createItemStack());
+
+        helper.assertFalse(print.isActiveState(), "Print started active before redstone input");
+        helper.setBlock(pos.east(), Blocks.REDSTONE_BLOCK);
+        helper.assertTrue(print.isActiveState(), "External redstone did not activate print");
+        helper.setBlock(pos.east(), Blocks.AIR);
+        helper.assertFalse(print.isActiveState(), "Removing external redstone did not deactivate print");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void brokenPrintDropsConfiguredPrintStackLikeUpstream(final GameTestHelper helper) {
         helper.killAllEntities();
