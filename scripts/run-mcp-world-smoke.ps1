@@ -127,10 +127,13 @@ Copy-Item -LiteralPath $source -Destination $copiedExtraMod -Force
 $startedAt = Get-Date
 $process = $null
 try {
-    $quickPlayArgs = if ($WorldName -match '\s') { "--quickPlaySingleplayer `"$WorldName`"" } else { "--quickPlaySingleplayer $WorldName" }
+    if ($WorldName.Contains('"')) {
+        throw 'WorldName must not contain a double quote character.'
+    }
+    $quickPlayProperty = "-Pneoopencomputers.quickPlayWorld=$WorldName"
     $process = Start-Process `
         -FilePath $gradlew `
-        -ArgumentList @('runClient', '--no-daemon', '--console=plain', "--args=$quickPlayArgs") `
+        -ArgumentList @('runClient', '--no-daemon', '--console=plain', $quickPlayProperty) `
         -WorkingDirectory $repoRoot `
         -RedirectStandardOutput $stdoutLog `
         -RedirectStandardError $stderrLog `

@@ -64,11 +64,24 @@ final class ReadmeSmokeTest {
 
         final String scriptText = Files.readString(script);
         assertTrue(scriptText.contains("WorldName"), "World smoke must take an explicit world name");
-        assertTrue(scriptText.contains("--quickPlaySingleplayer"), "World smoke must use Minecraft quick-play singleplayer entry");
+        assertTrue(scriptText.contains("-Pneoopencomputers.quickPlayWorld="),
+            "World smoke must pass quick-play through a Gradle property so NeoGradle launch args are preserved");
+        assertTrue(!scriptText.contains("--args="),
+            "Gradle --args replaces NeoGradle launch args and breaks ModLauncher");
         assertTrue(scriptText.contains("get_player_info"), "World smoke must prove the client reached a real world");
         assertTrue(scriptText.contains("get_blocks_in_area"), "World smoke must prove world block scanning works");
         assertTrue(scriptText.contains("execute_commands"), "World smoke must include a command transport proof");
         assertTrue(scriptText.contains("mcp-world-smoke"), "World smoke must write bounded evidence logs");
+    }
+
+    @Test
+    void buildScriptSupportsQuickPlayWorldProperty() throws IOException {
+        final String buildScript = Files.readString(Path.of("build.gradle"));
+
+        assertTrue(buildScript.contains("neoopencomputers.quickPlayWorld"),
+            "Client run must expose a property for MCP world-smoke quick-play");
+        assertTrue(buildScript.contains("argument '--quickPlaySingleplayer'"),
+            "Client run must append Minecraft quick-play singleplayer argument");
     }
 
     @Test
