@@ -908,6 +908,20 @@ final class NanomachinesRegistryTest {
         assertIterableEquals(List.of(), loaded.getActiveBehaviors());
     }
 
+    @Test
+    void potionProviderCreatesBehaviorsInRegistryOrderLikeUpstream() throws Exception {
+        withCachedConfig(ModSettings.NANOMACHINES_POTION_WHITELIST, List.of("haste", "speed"), () -> {
+            NanomachinePotionProvider provider = new NanomachinePotionProvider();
+            List<String> names = new java.util.ArrayList<>();
+
+            for (final Behavior behavior : provider.createBehaviors(null)) {
+                names.add(behavior.getNameHint());
+            }
+
+            assertEquals(List.of("speed", "haste"), names);
+        });
+    }
+
     private static boolean hasConnectorBackedBehavior(final ListTag behaviors) {
         for (int i = 0; i < behaviors.size(); i++) {
             if (behaviors.getCompound(i).getIntArray("connectorInputs").length > 0) {

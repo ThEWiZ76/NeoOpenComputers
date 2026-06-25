@@ -14,7 +14,10 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.Comparator;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,6 +25,29 @@ public final class NanomachinePotionProvider extends AbstractProvider {
     private static final String PROVIDER_ID = "c29e4eec-5a46-479a-9b3d-ad0f06da784a";
     private static final String POTION_ID_TAG = "potionId";
     private static final int DURATION = 600;
+    private static final Map<String, Integer> UPSTREAM_POTION_ORDER = Map.ofEntries(
+        Map.entry("speed", 1),
+        Map.entry("slowness", 2),
+        Map.entry("haste", 3),
+        Map.entry("mining_fatigue", 4),
+        Map.entry("strength", 5),
+        Map.entry("instant_health", 6),
+        Map.entry("instant_damage", 7),
+        Map.entry("jump_boost", 8),
+        Map.entry("nausea", 9),
+        Map.entry("regeneration", 10),
+        Map.entry("resistance", 11),
+        Map.entry("fire_resistance", 12),
+        Map.entry("water_breathing", 13),
+        Map.entry("invisibility", 14),
+        Map.entry("blindness", 15),
+        Map.entry("night_vision", 16),
+        Map.entry("hunger", 17),
+        Map.entry("weakness", 18),
+        Map.entry("poison", 19),
+        Map.entry("wither", 20),
+        Map.entry("health_boost", 21),
+        Map.entry("absorption", 22));
 
     public NanomachinePotionProvider() {
         super(PROVIDER_ID);
@@ -29,10 +55,20 @@ public final class NanomachinePotionProvider extends AbstractProvider {
 
     @Override
     public Iterable<Behavior> createBehaviors(final Player player) {
-        return potionWhitelist().stream()
-            .map(effectId -> new PotionBehavior(effectId, player))
-            .map(Behavior.class::cast)
-            .toList();
+        final Set<ResourceLocation> whitelist = potionWhitelist();
+        try {
+            return BuiltInRegistries.MOB_EFFECT.holders()
+                .map(NanomachinePotionProvider::effectId)
+                .filter(whitelist::contains)
+                .map(effectId -> new PotionBehavior(effectId, player))
+                .map(Behavior.class::cast)
+                .toList();
+        } catch (final ExceptionInInitializerError | NoClassDefFoundError ignored) {
+            return fallbackPotionOrder(whitelist).stream()
+                .map(effectId -> new PotionBehavior(effectId, player))
+                .map(Behavior.class::cast)
+                .toList();
+        }
     }
 
     @Override
@@ -84,6 +120,18 @@ public final class NanomachinePotionProvider extends AbstractProvider {
         } catch (final IllegalArgumentException | ExceptionInInitializerError | NoClassDefFoundError ignored) {
             return Optional.empty();
         }
+    }
+
+    private static List<ResourceLocation> fallbackPotionOrder(final Set<ResourceLocation> whitelist) {
+        return whitelist.stream()
+            .sorted(Comparator
+                .comparingInt(NanomachinePotionProvider::upstreamPotionOrder)
+                .thenComparing(ResourceLocation::toString))
+            .toList();
+    }
+
+    private static int upstreamPotionOrder(final ResourceLocation effectId) {
+        return UPSTREAM_POTION_ORDER.getOrDefault(effectId.getPath(), Integer.MAX_VALUE);
     }
 
     private static Optional<Holder.Reference<MobEffect>> effectFromId(final ResourceLocation id) {
