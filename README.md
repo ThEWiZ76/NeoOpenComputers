@@ -114,6 +114,14 @@ For a bounded MCP world smoke, first create a local singleplayer test world whos
 
 This starts the client with the MCP helper mod and `--quickPlaySingleplayer NeoOCSmoke`, waits until `get_player_info` proves the client has entered the world, then captures `get_player_info`, `get_blocks_in_area`, and `execute_commands` evidence under `build\mcp-world-smoke`.
 
+For a bounded MCP device smoke that enters the same world, places a small NeoOpenComputers device layout beside the player, and verifies the placed blocks via MCP block scan:
+
+```powershell
+.\scripts\run-mcp-device-smoke.ps1
+```
+
+This writes placement command and block-scan evidence under `build\mcp-device-smoke`.
+
 4. In a local test world, check these flows:
 
 - Computer case, screen, and keyboard place without crashing.

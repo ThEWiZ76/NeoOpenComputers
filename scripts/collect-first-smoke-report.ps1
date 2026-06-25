@@ -70,6 +70,14 @@ $mcpWorldSmokeBlocks = Join-Path $mcpWorldSmokeDir 'blocks.json'
 $mcpWorldSmokeCommand = Join-Path $mcpWorldSmokeDir 'command.json'
 $mcpWorldSmokeTools = Join-Path $mcpWorldSmokeDir 'tools-list.json'
 $mcpWorldSmokeExtraMods = Join-Path $mcpWorldSmokeDir 'extra-mods.txt'
+$mcpDeviceSmokeDir = Join-Path $repoRoot 'build\mcp-device-smoke'
+$mcpDeviceSmokeStdout = Join-Path $mcpDeviceSmokeDir 'runClient.out.log'
+$mcpDeviceSmokeStderr = Join-Path $mcpDeviceSmokeDir 'runClient.err.log'
+$mcpDeviceSmokePlayerInfo = Join-Path $mcpDeviceSmokeDir 'player-info.json'
+$mcpDeviceSmokePlaceCommands = Join-Path $mcpDeviceSmokeDir 'place-commands.json'
+$mcpDeviceSmokeBlocks = Join-Path $mcpDeviceSmokeDir 'blocks.json'
+$mcpDeviceSmokeTools = Join-Path $mcpDeviceSmokeDir 'tools-list.json'
+$mcpDeviceSmokeExtraMods = Join-Path $mcpDeviceSmokeDir 'extra-mods.txt'
 $sessionDir = Join-Path (Join-Path $repoRoot 'build\first-smoke-sessions') "session-$Timestamp"
 $sessionStdout = Join-Path $sessionDir 'runClient.out.log'
 $sessionStderr = Join-Path $sessionDir 'runClient.err.log'
@@ -93,6 +101,13 @@ $copied += Copy-IfPresent $mcpWorldSmokeBlocks 'mcp-world-blocks.json'
 $copied += Copy-IfPresent $mcpWorldSmokeCommand 'mcp-world-command.json'
 $copied += Copy-IfPresent $mcpWorldSmokeTools 'mcp-world-tools-list.json'
 $copied += Copy-IfPresent $mcpWorldSmokeExtraMods 'mcp-world-extra-mods.txt'
+$copied += Copy-IfPresent $mcpDeviceSmokeStdout 'mcp-device-stdout.log'
+$copied += Copy-IfPresent $mcpDeviceSmokeStderr 'mcp-device-stderr.log'
+$copied += Copy-IfPresent $mcpDeviceSmokePlayerInfo 'mcp-device-player-info.json'
+$copied += Copy-IfPresent $mcpDeviceSmokePlaceCommands 'mcp-device-place-commands.json'
+$copied += Copy-IfPresent $mcpDeviceSmokeBlocks 'mcp-device-blocks.json'
+$copied += Copy-IfPresent $mcpDeviceSmokeTools 'mcp-device-tools-list.json'
+$copied += Copy-IfPresent $mcpDeviceSmokeExtraMods 'mcp-device-extra-mods.txt'
 $copied += Copy-IfPresent $sessionStdout 'interactive-client-stdout.log'
 $copied += Copy-IfPresent $sessionStderr 'interactive-client-stderr.log'
 $copied += Copy-IfPresent $sessionExtraMods 'interactive-extra-mods.txt'
@@ -128,6 +143,11 @@ $combinedLog = (Read-TextIfPresent $clientLatestLog) + "`n" +
     (Read-TextIfPresent $mcpWorldSmokePlayerInfo) + "`n" +
     (Read-TextIfPresent $mcpWorldSmokeBlocks) + "`n" +
     (Read-TextIfPresent $mcpWorldSmokeCommand) + "`n" +
+    (Read-TextIfPresent $mcpDeviceSmokeStdout) + "`n" +
+    (Read-TextIfPresent $mcpDeviceSmokeStderr) + "`n" +
+    (Read-TextIfPresent $mcpDeviceSmokePlayerInfo) + "`n" +
+    (Read-TextIfPresent $mcpDeviceSmokePlaceCommands) + "`n" +
+    (Read-TextIfPresent $mcpDeviceSmokeBlocks) + "`n" +
     (Read-TextIfPresent $sessionStdout) + "`n" +
     (Read-TextIfPresent $sessionStderr) + "`n" +
     (Read-TextIfPresent $sessionExtraMods)
@@ -170,6 +190,7 @@ $relativeScreenshots
 
 - [ ] Client opens local world with NeoOpenComputers installed.
 - [ ] Bounded MCP world smoke enters a local save and writes mcp-world-player-info.json, mcp-world-blocks.json, and mcp-world-command.json.
+- [ ] Bounded MCP device smoke places computer_case_tier1, screen_tier1, keyboard, disk_drive, printer, redstone, and cable, then writes mcp-device-place-commands.json and mcp-device-blocks.json.
 - [ ] Computer case, screen, keyboard, disk drive, modem, redstone card, printer, and print block place without crash.
 - [ ] OpenOS or Lua prompt boots on a placed computer.
 - [ ] Filesystem, EEPROM, floppy, and disk-drive actions work once.

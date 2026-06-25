@@ -116,6 +116,12 @@ For a bounded MCP in-world smoke, create a local singleplayer save at run\client
 
 This launches with --quickPlaySingleplayer NeoOCSmoke and writes player-info, block-scan, and command evidence under build\mcp-world-smoke.
 
+For a bounded MCP device placement smoke in that same save, run:
+
+    .\scripts\run-mcp-device-smoke.ps1
+
+This writes placement command and block-scan evidence under build\mcp-device-smoke.
+
 ## Checksums
 
 See SHA256SUMS.txt.

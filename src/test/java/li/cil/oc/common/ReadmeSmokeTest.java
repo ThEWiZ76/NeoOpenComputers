@@ -32,6 +32,7 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
         assertTrue(readme.contains(".\\scripts\\run-mcp-client-smoke.ps1"), "README must document bounded MCP client smoke script");
         assertTrue(readme.contains(".\\scripts\\run-mcp-world-smoke.ps1"), "README must document bounded MCP world smoke script");
+        assertTrue(readme.contains(".\\scripts\\run-mcp-device-smoke.ps1"), "README must document bounded MCP device smoke script");
         assertTrue(readme.contains("--quickPlaySingleplayer"), "README must document quick-play world entry for MCP world smoke");
         assertTrue(readme.contains(".\\scripts\\collect-first-smoke-report.ps1"), "README must document first-smoke evidence collection");
         assertTrue(readme.contains("screenshots"), "README must tell testers screenshots are bundled");
@@ -75,6 +76,29 @@ final class ReadmeSmokeTest {
     }
 
     @Test
+    void boundedMcpDeviceSmokeScriptExists() throws IOException {
+        final Path script = Path.of("scripts/run-mcp-device-smoke.ps1");
+        assertTrue(Files.exists(script), "Missing bounded MCP device smoke script");
+
+        final String scriptText = Files.readString(script);
+        assertTrue(scriptText.contains("WorldName"), "Device smoke must take an explicit world name");
+        assertTrue(scriptText.contains("-Pneoopencomputers.quickPlayWorld="),
+            "Device smoke must quick-play through the NeoGradle-safe property");
+        assertTrue(!scriptText.contains("--args="),
+            "Gradle --args replaces NeoGradle launch args and breaks ModLauncher");
+        assertTrue(scriptText.contains("execute_commands"), "Device smoke must place devices via MCP command transport");
+        assertTrue(scriptText.contains("get_blocks_in_area"), "Device smoke must verify placed blocks via MCP block scan");
+        assertTrue(scriptText.contains("neoopencomputers:computer_case_tier1"), "Device smoke must place a computer case");
+        assertTrue(scriptText.contains("neoopencomputers:screen_tier1"), "Device smoke must place a screen");
+        assertTrue(scriptText.contains("neoopencomputers:keyboard"), "Device smoke must place a keyboard");
+        assertTrue(scriptText.contains("neoopencomputers:disk_drive"), "Device smoke must place a disk drive");
+        assertTrue(scriptText.contains("neoopencomputers:printer"), "Device smoke must place a printer");
+        assertTrue(scriptText.contains("neoopencomputers:redstone"), "Device smoke must place redstone I/O");
+        assertTrue(scriptText.contains("neoopencomputers:cable"), "Device smoke must place cable");
+        assertTrue(scriptText.contains("mcp-device-smoke"), "Device smoke must write bounded evidence logs");
+    }
+
+    @Test
     void buildScriptSupportsQuickPlayWorldProperty() throws IOException {
         final String buildScript = Files.readString(Path.of("build.gradle"));
 
@@ -103,6 +127,8 @@ final class ReadmeSmokeTest {
             "Kit README must render MCP-assisted smoke command without Markdown backtick escapes");
         assertTrue(scriptText.contains(".\\scripts\\run-mcp-client-smoke.ps1"),
             "Kit README must document bounded MCP helper smoke");
+        assertTrue(scriptText.contains(".\\scripts\\run-mcp-device-smoke.ps1"),
+            "Kit README must document bounded MCP device smoke");
         assertTrue(!scriptText.contains("`neoopencomputers"),
             "PowerShell treats Markdown backticks as escapes inside generated README text");
         assertTrue(scriptText.contains("Compress-Archive -Path"), "Kit zip must expand wildcard contents");
@@ -147,6 +173,9 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("mcp-world-player-info.json"), "Collector must copy bounded MCP world player info");
         assertTrue(scriptText.contains("mcp-world-blocks.json"), "Collector must copy bounded MCP world block scan");
         assertTrue(scriptText.contains("mcp-world-command.json"), "Collector must copy bounded MCP world command proof");
+        assertTrue(scriptText.contains("mcp-device-place-commands.json"), "Collector must copy bounded MCP device placement proof");
+        assertTrue(scriptText.contains("mcp-device-blocks.json"), "Collector must copy bounded MCP device block scan");
+        assertTrue(scriptText.contains("mcp-device-extra-mods.txt"), "Collector must copy bounded MCP device helper mod manifest");
         assertTrue(scriptText.contains("screenshots"), "Collector must copy recent Minecraft screenshots");
         assertTrue(scriptText.contains("Select-Object -First 20"), "Collector must bound copied screenshots");
         assertTrue(scriptText.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
