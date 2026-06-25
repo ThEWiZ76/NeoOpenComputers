@@ -1507,6 +1507,25 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void printDataCreatesPrintItemStackLikeUpstreamItemData(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.setLabel("model");
+        data.setTooltip("tooltip");
+        data.setRedstoneLevel(7);
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 0.25D, 0.25D, 0.25D), "minecraft:block/stone", 0x112233));
+
+        final ItemStack stack = data.createItemStack();
+        final PrintData loaded = new PrintData(stack);
+
+        helper.assertTrue(stack.is(ModItems.PRINT.get()), "PrintData did not create a print item stack");
+        helper.assertTrue("model".equals(loaded.label()), "Print item stack lost label");
+        helper.assertTrue("tooltip".equals(loaded.tooltip()), "Print item stack lost tooltip");
+        helper.assertTrue(loaded.redstoneLevel() == 7, "Print item stack lost redstone level");
+        helper.assertTrue(loaded.stateOff().size() == 1, "Print item stack lost model shape");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void mfuDriverIsAdapterOnly(final GameTestHelper helper) {
         final ItemStack stack = new ItemStack(ModItems.MFU.get());
 
@@ -3122,6 +3141,39 @@ public final class NeoOpenComputersGameTests {
         final Object[] commit = invokeComponent(helper, component, "commit", 2);
         helper.assertTrue(Boolean.TRUE.equals(commit[0]), "Printer did not commit valid model");
         helper.assertTrue(printer.isActive(), "Printer did not become active after commit");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printerProducesPrintItemAfterEnergyAndInputLikeUpstream(final GameTestHelper helper) {
+        final BlockPos pos = BlockPos.ZERO;
+        helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());
+        final PrinterBlockEntity printer = helper.getBlockEntity(pos);
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) printer.node();
+        final ComponentConnector connector = (ComponentConnector) printer.node();
+
+        invokeComponent(helper, component, "setLabel", "printed-model");
+        invokeComponent(helper, component, "addShape", 0, 0, 0, 1, 1, 1, "minecraft:block/stone");
+        printer.setItem(PrinterBlockEntity.SLOT_MATERIAL, new ItemStack(ModItems.CHAMELIUM.get()));
+        printer.setItem(PrinterBlockEntity.SLOT_INK, new ItemStack(Items.BLACK_DYE));
+        final Object[] commit = invokeComponent(helper, component, "commit", 1);
+        helper.assertTrue(Boolean.TRUE.equals(commit[0]), "Printer did not accept print job");
+
+        for (int tick = 0; tick < 4_000 && printer.getItem(PrinterBlockEntity.SLOT_OUTPUT).isEmpty(); tick++) {
+            connector.changeBuffer(ModSettings.printerTickAmount());
+            PrinterBlockEntity.serverTick(helper.getLevel(), pos, printer.getBlockState(), printer);
+        }
+
+        final ItemStack output = printer.getItem(PrinterBlockEntity.SLOT_OUTPUT);
+        final PrintData loaded = new PrintData(output);
+        helper.assertTrue(output.is(ModItems.PRINT.get()), "Printer did not output a print item");
+        helper.assertTrue("printed-model".equals(loaded.label()), "Printer output lost print label");
+        helper.assertTrue(loaded.stateOff().size() == 1, "Printer output lost model shape");
+        helper.assertTrue(printer.getItem(PrinterBlockEntity.SLOT_MATERIAL).isEmpty(), "Printer did not consume material input");
+        helper.assertTrue(printer.getItem(PrinterBlockEntity.SLOT_INK).isEmpty(), "Printer did not consume ink input");
+        helper.assertTrue(!printer.isActive(), "Printer did not stop after committed print count");
+        final Object[] status = invokeComponent(helper, component, "status");
+        helper.assertTrue("idle".equals(status[0]), "Printer status did not return to idle");
         helper.succeed();
     }
 

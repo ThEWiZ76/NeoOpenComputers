@@ -248,6 +248,12 @@ public final class PrintData {
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
+    public ItemStack createItemStack() {
+        final ItemStack stack = new ItemStack(ModItems.PRINT.get());
+        save(stack);
+        return stack;
+    }
+
     public static float computeApproximateOpacity(final Iterable<Shape> shapes) {
         final List<Shape> shapeList = new ArrayList<>();
         shapes.forEach(shapeList::add);

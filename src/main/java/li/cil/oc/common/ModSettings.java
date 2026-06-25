@@ -129,11 +129,13 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
+    public static final ModConfigSpec.DoubleValue PRINTER_TICK_AMOUNT;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> BATTERY_UPGRADE_BUFFERS;
     public static final ModConfigSpec.DoubleValue POWER_DISTRIBUTOR_BUFFER;
     public static final ModConfigSpec.DoubleValue TABLET_BUFFER;
     public static final ModConfigSpec.DoubleValue TABLET_ASSEMBLY_BASE_COST;
     public static final ModConfigSpec.DoubleValue TABLET_ASSEMBLY_COMPLEXITY_COST;
+    public static final ModConfigSpec.DoubleValue PRINT_COST;
     public static final ModConfigSpec.DoubleValue CONVERTER_BUFFER;
     public static final ModConfigSpec.DoubleValue COMPUTER_BUFFER;
     public static final ModConfigSpec.DoubleValue ACCESS_POINT_BUFFER;
@@ -385,6 +387,9 @@ public final class ModSettings {
         DISASSEMBLER_TICK_AMOUNT = builder
             .comment("Energy the disassembler can apply per tick. OpenComputers upstream default is 25.")
             .defineInRange("disassemblerTickAmount", 25D, 1D, Double.MAX_VALUE);
+        PRINTER_TICK_AMOUNT = builder
+            .comment("Energy the 3D printer can apply per tick. OpenComputers upstream default is 1.")
+            .defineInRange("printerTickAmount", 1D, 1D, Double.MAX_VALUE);
         MFU_TICK_FREQUENCY = builder
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
@@ -472,6 +477,9 @@ public final class ModSettings {
         DISASSEMBLER_ITEM_COST = builder
             .comment("Energy consumed for each disassembler output item. OpenComputers upstream default is 2000.")
             .defineInRange("disassemblerPerItem", 2000D, 0D, Double.MAX_VALUE);
+        PRINT_COST = builder
+            .comment("Energy consumed for a single 3D print. OpenComputers upstream default is 100.")
+            .defineInRange("printerModel", 100D, 0D, Double.MAX_VALUE);
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
@@ -585,8 +593,16 @@ public final class ModSettings {
         return Math.max(1D, doubleValue(DISASSEMBLER_TICK_AMOUNT));
     }
 
+    public static double printerTickAmount() {
+        return Math.max(1D, doubleValue(PRINTER_TICK_AMOUNT));
+    }
+
     public static double disassemblerItemCost() {
         return Math.max(0D, doubleValue(DISASSEMBLER_ITEM_COST));
+    }
+
+    public static double printCost() {
+        return Math.max(0D, doubleValue(PRINT_COST));
     }
 
     public static List<Double> batteryUpgradeBuffers() {

@@ -11,6 +11,8 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -32,6 +34,15 @@ public class PrinterBlock extends HorizontalDirectionalBlock implements EntityBl
     @Override
     public BlockEntity newBlockEntity(final BlockPos pos, final BlockState state) {
         return new PrinterBlockEntity(pos, state);
+    }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(final Level level, final BlockState state, final BlockEntityType<T> type) {
+        if (level.isClientSide || type != li.cil.oc.common.ModBlockEntities.PRINTER.get()) {
+            return null;
+        }
+        return (tickerLevel, pos, blockState, blockEntity) ->
+            PrinterBlockEntity.serverTick(tickerLevel, pos, blockState, (PrinterBlockEntity) blockEntity);
     }
 
     @Override

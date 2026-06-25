@@ -16,11 +16,13 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.item.data.PrintData;
+import li.cil.oc.common.util.AssemblerWork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Player;
@@ -46,6 +48,9 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
     private static final String TAG_LIMIT = "limit";
     private static final String TAG_MATERIAL = "amountMaterial";
     private static final String TAG_INK = "amountInk";
+    private static final String TAG_OUTPUT = "output";
+    private static final String TAG_TOTAL_ENERGY = "total";
+    private static final String TAG_REMAINING_ENERGY = "remaining";
     private static final int MAX_MATERIAL = 256_000;
     private static final int MAX_INK = 100_000;
     private static final Map<String, String> DEVICE_INFO = Map.of(
@@ -62,6 +67,9 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
     private int limit;
     private int amountMaterial;
     private int amountInk;
+    private ItemStack pendingOutput = ItemStack.EMPTY;
+    private double totalRequiredEnergy;
+    private double requiredEnergy;
 
     public PrinterBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.PRINTER.get(), pos, blockState);
@@ -126,11 +134,12 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     @Override
     public boolean canUpdate() {
-        return false;
+        return true;
     }
 
     @Override
     public void update() {
+        tickPrinting();
     }
 
     @Callback(doc = "function() -- Resets the configuration of the printer and stops accepting new jobs.")
@@ -290,6 +299,9 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     @Callback(doc = "function():string, number or boolean -- The current state of the printer.")
     public Object[] status(final Context context, final Arguments args) {
+        if (isPrinting()) {
+            return new Object[]{"busy", progress()};
+        }
         return new Object[]{"idle", canPrint()};
     }
 
@@ -301,6 +313,21 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     public boolean isActive() {
         return active;
+    }
+
+    public boolean isPrinting() {
+        return !pendingOutput.isEmpty();
+    }
+
+    public double progress() {
+        if (totalRequiredEnergy <= 0D) {
+            return 100D;
+        }
+        return (1D - requiredEnergy / totalRequiredEnergy) * 100D;
+    }
+
+    public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final PrinterBlockEntity printer) {
+        printer.tickPrinting();
     }
 
     @Override
@@ -396,6 +423,8 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
         limit = nbt.getInt(TAG_LIMIT);
         amountMaterial = nbt.getInt(TAG_MATERIAL);
         amountInk = nbt.getInt(TAG_INK);
+        totalRequiredEnergy = nbt.getDouble(TAG_TOTAL_ENERGY);
+        requiredEnergy = nbt.getDouble(TAG_REMAINING_ENERGY);
     }
 
     @Override
@@ -419,12 +448,17 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
         nbt.putInt(TAG_LIMIT, limit);
         nbt.putInt(TAG_MATERIAL, amountMaterial);
         nbt.putInt(TAG_INK, amountInk);
+        nbt.putDouble(TAG_TOTAL_ENERGY, totalRequiredEnergy);
+        nbt.putDouble(TAG_REMAINING_ENERGY, requiredEnergy);
     }
 
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         ContainerHelper.loadAllItems(tag.getCompound(TAG_ITEMS), items, registries);
+        pendingOutput = tag.contains(TAG_OUTPUT)
+            ? ItemStack.OPTIONAL_CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE), tag.get(TAG_OUTPUT)).result().orElse(ItemStack.EMPTY)
+            : ItemStack.EMPTY;
         load(tag);
     }
 
@@ -434,6 +468,11 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
         final CompoundTag itemsTag = new CompoundTag();
         ContainerHelper.saveAllItems(itemsTag, items, registries);
         tag.put(TAG_ITEMS, itemsTag);
+        if (!pendingOutput.isEmpty()) {
+            ItemStack.OPTIONAL_CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE), pendingOutput)
+                .result()
+                .ifPresent(outputTag -> tag.put(TAG_OUTPUT, outputTag));
+        }
         save(tag);
     }
 
@@ -467,6 +506,107 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
     private static Node createNode(final ManagedEnvironment host) {
         final var builder = Network.newNode(host, Visibility.Network);
         return builder == null ? null : builder.withComponent(COMPONENT_NAME, Visibility.Network).withConnector(ModSettings.converterBuffer()).create();
+    }
+
+    private void tickPrinting() {
+        if (level != null && level.isClientSide) {
+            return;
+        }
+        startNextJobIfPossible();
+        progressPendingOutput();
+        consumeMaterialInput();
+        consumeInkInput();
+    }
+
+    private void startNextJobIfPossible() {
+        if (!active || !pendingOutput.isEmpty() || !canMergeOutput()) {
+            return;
+        }
+        final var costs = PrintData.computeCosts(data);
+        if (costs.isEmpty()) {
+            active = false;
+            data = new PrintData();
+            setChanged();
+            return;
+        }
+        final int materialRequired = costs.get().material();
+        final int inkRequired = costs.get().ink();
+        totalRequiredEnergy = ModSettings.printCost();
+        requiredEnergy = totalRequiredEnergy;
+        if (amountMaterial >= materialRequired && amountInk >= inkRequired) {
+            amountMaterial -= materialRequired;
+            amountInk -= inkRequired;
+            limit -= 1;
+            pendingOutput = data.createItemStack();
+            if (limit < 1) {
+                active = false;
+            }
+            setChanged();
+        }
+    }
+
+    private void progressPendingOutput() {
+        if (pendingOutput.isEmpty()) {
+            return;
+        }
+        if (requiredEnergy > 0D) {
+            if (!(node() instanceof ComponentConnector connector)) {
+                return;
+            }
+            final double want = Math.max(1D, Math.min(requiredEnergy, ModSettings.printerTickAmount()));
+            final double remainingDelta = connector.changeBuffer(-want);
+            final double consumed = AssemblerWork.energyConsumed(want, remainingDelta);
+            if (consumed <= 0D) {
+                return;
+            }
+            requiredEnergy = Math.max(0D, requiredEnergy - consumed);
+        }
+        if (requiredEnergy <= 0D) {
+            releasePendingOutput();
+        }
+        setChanged();
+    }
+
+    private void releasePendingOutput() {
+        final ItemStack result = items.get(SLOT_OUTPUT);
+        if (result.isEmpty()) {
+            items.set(SLOT_OUTPUT, pendingOutput.copy());
+        } else if (ItemStack.isSameItemSameComponents(result, pendingOutput) && result.getCount() < result.getMaxStackSize()) {
+            result.grow(1);
+        } else {
+            return;
+        }
+        pendingOutput = ItemStack.EMPTY;
+        totalRequiredEnergy = 0D;
+        requiredEnergy = 0D;
+    }
+
+    private boolean canMergeOutput() {
+        final ItemStack result = items.get(SLOT_OUTPUT);
+        final ItemStack output = data.createItemStack();
+        return result.isEmpty() || ItemStack.isSameItemSameComponents(result, output);
+    }
+
+    private void consumeMaterialInput() {
+        final int value = PrintData.materialValue(items.get(SLOT_MATERIAL));
+        if (value > 0 && MAX_MATERIAL - amountMaterial >= value) {
+            final ItemStack removed = removeItem(SLOT_MATERIAL, 1);
+            if (!removed.isEmpty()) {
+                amountMaterial += value;
+                setChanged();
+            }
+        }
+    }
+
+    private void consumeInkInput() {
+        final int value = PrintData.inkValue(items.get(SLOT_INK));
+        if (value > 0 && MAX_INK - amountInk >= value) {
+            final ItemStack removed = removeItem(SLOT_INK, 1);
+            if (!removed.isEmpty()) {
+                amountInk += value;
+                setChanged();
+            }
+        }
     }
 
     private void removeNode() {

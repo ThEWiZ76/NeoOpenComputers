@@ -88,6 +88,7 @@ final class PrintDataTest {
         printData.getConstructor(ItemStack.class);
         printData.getMethod("load", ItemStack.class);
         printData.getMethod("save", ItemStack.class);
+        printData.getMethod("createItemStack");
     }
 
     public static int inkValue(final ItemStack stack) {
