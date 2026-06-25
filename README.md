@@ -17,7 +17,7 @@ Current verification evidence:
 
 - Unit/build gate: `.\gradlew.bat test build --no-daemon --console=plain`
 - GameTest gate: `.\gradlew.bat runGameTestServer --no-daemon --console=plain`
-- Latest GameTest result: `285/285` required tests passed.
+- Latest GameTest result: `287/287` required tests passed.
 - Bounded client launch smoke reaches resource reload and texture atlas creation without print/model/missing-texture/error matches.
 
 The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, and packaging slices in place. It is ready for first technical smoke testing, not release-ready.
