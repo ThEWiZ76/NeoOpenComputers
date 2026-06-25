@@ -77,10 +77,10 @@ final class PrintShapeRenderer {
         final float x4,
         final float y4,
         final float z4) {
-        vertex(consumer, pose, color, packedLight, packedOverlay, normalX, normalY, normalZ, x1, y1, z1, 0F, 1F);
-        vertex(consumer, pose, color, packedLight, packedOverlay, normalX, normalY, normalZ, x2, y2, z2, 1F, 1F);
-        vertex(consumer, pose, color, packedLight, packedOverlay, normalX, normalY, normalZ, x3, y3, z3, 1F, 0F);
-        vertex(consumer, pose, color, packedLight, packedOverlay, normalX, normalY, normalZ, x4, y4, z4, 0F, 0F);
+        vertex(consumer, pose, color, packedLight, packedOverlay, normalX, normalY, normalZ, x1, y1, z1);
+        vertex(consumer, pose, color, packedLight, packedOverlay, normalX, normalY, normalZ, x2, y2, z2);
+        vertex(consumer, pose, color, packedLight, packedOverlay, normalX, normalY, normalZ, x3, y3, z3);
+        vertex(consumer, pose, color, packedLight, packedOverlay, normalX, normalY, normalZ, x4, y4, z4);
     }
 
     private static void vertex(
@@ -94,14 +94,38 @@ final class PrintShapeRenderer {
         final float normalZ,
         final float x,
         final float y,
-        final float z,
-        final float u,
-        final float v) {
+        final float z) {
+        final float[] uv = cubeMappedUv(normalX, normalY, normalZ, x, y, z);
         consumer.addVertex(pose, x, y, z)
             .setColor(color)
-            .setUv(u, v)
+            .setUv(uv[0], uv[1])
             .setOverlay(packedOverlay)
             .setLight(packedLight)
             .setNormal(pose, normalX, normalY, normalZ);
+    }
+
+    private static float[] cubeMappedUv(
+        final float normalX,
+        final float normalY,
+        final float normalZ,
+        final float x,
+        final float y,
+        final float z) {
+        if (normalY < 0F) {
+            return new float[]{x, 1F - z};
+        }
+        if (normalY > 0F) {
+            return new float[]{x, z};
+        }
+        if (normalZ < 0F) {
+            return new float[]{1F - x, 1F - y};
+        }
+        if (normalZ > 0F) {
+            return new float[]{x, 1F - y};
+        }
+        if (normalX < 0F) {
+            return new float[]{z, 1F - y};
+        }
+        return new float[]{1F - z, 1F - y};
     }
 }
