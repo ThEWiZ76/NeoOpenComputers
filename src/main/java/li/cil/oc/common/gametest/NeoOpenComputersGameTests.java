@@ -1537,7 +1537,7 @@ public final class NeoOpenComputersGameTests {
         data.addStateOn(new PrintData.Shape(new AABB(0D, 0D, 0D, 0.5D, 1D, 1D), "minecraft:block/redstone_block", null));
         final ItemStack stack = data.createItemStack();
 
-        final BlockPos pos = BlockPos.ZERO;
+        final BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState());
         final PrintBlockEntity print = helper.getBlockEntity(pos);
         print.loadFromStack(stack);
@@ -1569,6 +1569,33 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(bounds.minX == 0D && bounds.maxX == 1D, "East-facing print did not rotate shape across X axis");
         helper.assertTrue(bounds.minZ >= 0.75D && bounds.maxZ == 1D, "East-facing print did not rotate shape to south edge like upstream");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void brokenPrintDropsConfiguredPrintStackLikeUpstream(final GameTestHelper helper) {
+        helper.killAllEntities();
+        final PrintData data = new PrintData();
+        data.setLabel("drop-model");
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 0.25D, 1D, 1D), "minecraft:block/stone", null));
+
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState());
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.loadFromStack(data.createItemStack());
+
+        helper.getLevel().destroyBlock(helper.absolutePos(pos), true);
+        helper.runAtTickTime(1, () -> {
+            boolean foundConfiguredPrint = false;
+            for (final ItemEntity entity : helper.getEntities(EntityType.ITEM)) {
+                final ItemStack stack = entity.getItem();
+                if (stack.is(ModItems.PRINT.get()) && "drop-model".equals(new PrintData(stack).label())) {
+                    foundConfiguredPrint = true;
+                    break;
+                }
+            }
+            helper.assertTrue(foundConfiguredPrint, "Broken print did not drop configured print stack");
+            helper.succeed();
+        });
     }
 
     @GameTest(template = "empty")

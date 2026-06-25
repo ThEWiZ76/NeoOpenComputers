@@ -128,6 +128,14 @@ public class PrintBlock extends HorizontalDirectionalBlock implements EntityBloc
     }
 
     @Override
+    protected void onRemove(final BlockState state, final Level level, final BlockPos pos, final BlockState newState, final boolean movedByPiston) {
+        if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof PrintBlockEntity print && !level.isClientSide) {
+            popResource(level, pos, print.createItemStack());
+        }
+        super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    @Override
     public BlockState getStateForPlacement(final BlockPlaceContext context) {
         return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
