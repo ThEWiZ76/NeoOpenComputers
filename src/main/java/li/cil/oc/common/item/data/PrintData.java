@@ -1,10 +1,13 @@
 package li.cil.oc.common.item.data;
 
+import li.cil.oc.common.InkProviders;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -254,6 +257,14 @@ public final class PrintData {
             : baseMaterialRequired;
         final int multiplier = data.noclipOff || data.noclipOn ? UPSTREAM_NOCLIP_MULTIPLIER : 1;
         return Optional.of(new Costs(materialRequired * multiplier, Math.max(totalSurface / 6, 1)));
+    }
+
+    public static void addInkProvider(final Method provider) {
+        InkProviders.add(provider);
+    }
+
+    public static int inkValue(final ItemStack stack) {
+        return InkProviders.inkValue(stack);
     }
 
     public static Shape nbtToShape(final CompoundTag tag) {

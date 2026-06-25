@@ -1,6 +1,7 @@
 package li.cil.oc.common.item.data;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +63,19 @@ final class PrintDataTest {
 
         assertEquals(4696, material(costs));
         assertEquals(256, ink(costs));
+    }
+
+    @Test
+    void inkProviderBridgeMatchesUpstreamPrintDataApi() throws Exception {
+        Class<?> printData = Class.forName("li.cil.oc.common.item.data.PrintData");
+
+        printData.getMethod("addInkProvider", Method.class).invoke(null, PrintDataTest.class.getMethod("inkValue", ItemStack.class));
+
+        assertEquals(0, printData.getMethod("inkValue", ItemStack.class).invoke(null, new Object[]{null}));
+    }
+
+    public static int inkValue(final ItemStack stack) {
+        return stack == null ? 12345 : 0;
     }
 
     private static Class<?> shapeClass(final Class<?> printData) throws ClassNotFoundException {
