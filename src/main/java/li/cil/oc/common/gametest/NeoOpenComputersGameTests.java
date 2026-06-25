@@ -6896,6 +6896,38 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void diskDriveWritableFloppyStateSurvivesNbtReloadForFirstSmoke(final GameTestHelper helper) {
+        final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
+        final BlockPos loadedDiskDrivePos = new BlockPos(3, 1, 1);
+
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        final ItemStack floppy = new ItemStack(ModItems.FLOPPY.get());
+        floppy.set(DataComponents.CUSTOM_NAME, Component.literal("First Smoke Disk"));
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, floppy);
+
+        final Node[] nodes = diskDrive.onAnalyze(null, Direction.NORTH, 0, 0, 0);
+        helper.assertTrue(nodes != null && nodes.length == 1 && nodes[0] instanceof li.cil.oc.api.network.Component, "Disk drive did not expose writable floppy filesystem");
+        final li.cil.oc.api.network.Component filesystem = (li.cil.oc.api.network.Component) nodes[0];
+        chargeConnector(helper, filesystem, 1D);
+        final Object[] open = invokeComponent(helper, filesystem, "open", "drive.txt", "w");
+        invokeComponent(helper, filesystem, "write", open[0], "persisted".getBytes(StandardCharsets.UTF_8));
+        invokeComponent(helper, filesystem, "close", open[0]);
+
+        final CompoundTag saved = diskDrive.saveWithFullMetadata(helper.getLevel().registryAccess());
+
+        helper.setBlock(loadedDiskDrivePos, ModBlocks.DISK_DRIVE.get());
+        final DiskDriveBlockEntity loaded = helper.getBlockEntity(loadedDiskDrivePos);
+        loaded.loadWithComponents(saved, helper.getLevel().registryAccess());
+
+        helper.assertTrue(DiskDriveMenu.mediaStateFor(loaded) == DiskDriveMenu.STATE_LOADED, "Reloaded disk drive did not report loaded media");
+        helper.assertTrue(loaded.getItem(DiskDriveBlockEntity.SLOT_FLOPPY).is(ModItems.FLOPPY.get()), "Reloaded disk drive lost floppy");
+        assertStorageStackContainsFile(helper, loaded.getItem(DiskDriveBlockEntity.SLOT_FLOPPY), "drive.txt", "Reloaded writable floppy");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void analyzerReportsAdapterInstalledUpgradeNode(final GameTestHelper helper) {
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
@@ -8156,16 +8188,20 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static void assertHardDiskContainsFile(final GameTestHelper helper, final ItemStack stack, final String path) {
+        assertStorageStackContainsFile(helper, stack, path, "Dropped hard disk");
+    }
+
+    private static void assertStorageStackContainsFile(final GameTestHelper helper, final ItemStack stack, final String path, final String description) {
         final DriverItem driver = Driver.driverFor(stack);
-        helper.assertTrue(driver != null, "Dropped hard disk has no item driver");
+        helper.assertTrue(driver != null, description + " has no item driver");
         final ManagedEnvironment environment = driver.createEnvironment(stack, null);
-        helper.assertTrue(environment != null && environment.node() instanceof li.cil.oc.api.network.Component, "Dropped hard disk has no filesystem component");
+        helper.assertTrue(environment != null && environment.node() instanceof li.cil.oc.api.network.Component, description + " has no filesystem component");
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         try {
             final Object[] result = component.invoke("exists", null, path);
-            helper.assertTrue(result.length == 1 && Boolean.TRUE.equals(result[0]), "Dropped hard disk is missing " + path);
+            helper.assertTrue(result.length == 1 && Boolean.TRUE.equals(result[0]), description + " is missing " + path);
         } catch (Exception e) {
-            helper.fail("Failed to inspect dropped hard disk: " + e.getMessage());
+            helper.fail("Failed to inspect " + description + ": " + e.getMessage());
         }
     }
 
