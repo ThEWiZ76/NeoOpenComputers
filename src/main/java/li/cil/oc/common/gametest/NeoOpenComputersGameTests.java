@@ -62,6 +62,8 @@ import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
+import li.cil.oc.common.network.RackNetworking;
+import li.cil.oc.common.network.RackOpenServerPayload;
 import li.cil.oc.common.component.LinkedCardEnvironment;
 import li.cil.oc.common.component.DebugCardEnvironment;
 import li.cil.oc.common.component.MfuEnvironment;
@@ -4357,6 +4359,18 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void staleRackMenuCannotOpenServerLikeUpstream(final GameTestHelper helper) {
+        final StaleRackBlockEntity rack = new StaleRackBlockEntity();
+        rack.setItem(0, new ItemStack(ModItems.SERVER_TIER2.get()));
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final RackMenu menu = new RackMenu(17, player.getInventory(), rack);
+
+        helper.assertFalse(invokeApplyRackOpenServer(player, menu, new RackOpenServerPayload(17, 0)),
+            "Stale rack menu opened server menu");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void rackMenuDistinguishesEmptyAndIncompleteServerStates(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());
@@ -7355,6 +7369,20 @@ public final class NeoOpenComputersGameTests {
         }
     }
 
+    private static boolean invokeApplyRackOpenServer(final Player player, final RackMenu menu, final RackOpenServerPayload payload) {
+        try {
+            final Method applyRackOpenServer = RackNetworking.class.getDeclaredMethod(
+                "applyRackOpenServer",
+                Player.class,
+                net.minecraft.world.inventory.AbstractContainerMenu.class,
+                RackOpenServerPayload.class);
+            applyRackOpenServer.setAccessible(true);
+            return (boolean) applyRackOpenServer.invoke(null, player, menu, payload);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Could not invoke rack open-server packet handler", e);
+        }
+    }
+
     private static void sendMotionSignalNow(final MotionSensorBlockEntity sensor, final BlockPos pos, final LivingEntity entity) {
         try {
             final Method sendMotionSignal = MotionSensorBlockEntity.class.getDeclaredMethod("sendMotionSignal", Vec3.class, LivingEntity.class);
@@ -7403,6 +7431,17 @@ public final class NeoOpenComputersGameTests {
 
     public static ItemStack[] disassembleEmeraldTemplate(final ItemStack stack) {
         return new ItemStack[]{new ItemStack(Items.EMERALD)};
+    }
+
+    private static final class StaleRackBlockEntity extends RackBlockEntity {
+        private StaleRackBlockEntity() {
+            super(BlockPos.ZERO, ModBlocks.RACK.get().defaultBlockState());
+        }
+
+        @Override
+        public boolean stillValid(final Player player) {
+            return false;
+        }
     }
 
     private record DatabaseCloneContext(Node node, double[] pauseSeconds) implements Context {

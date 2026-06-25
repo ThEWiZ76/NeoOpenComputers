@@ -74,6 +74,9 @@ public final class RackNetworking {
         if (player == null || !(containerMenu instanceof RackMenu menu) || menu.containerId != payload.containerId()) {
             return false;
         }
+        if (!menu.stillValid(player)) {
+            return false;
+        }
         if (!(menu.rackInventory() instanceof RackBlockEntity rack) || payload.slot() < 0 || payload.slot() >= RackBlockEntity.CONTAINER_SIZE) {
             return false;
         }
