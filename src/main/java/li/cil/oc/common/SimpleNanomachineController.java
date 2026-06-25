@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -924,12 +925,13 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             return;
         }
 
-        final List<Behavior> newBehaviors = new ArrayList<>();
+        final LinkedHashSet<Behavior> newBehaviorSet = new LinkedHashSet<>();
         for (final BehaviorEntry entry : behaviorEntries) {
             if (entry.isActive(inputs, connectors)) {
-                newBehaviors.add(entry.behavior());
+                newBehaviorSet.add(entry.behavior());
             }
         }
+        final List<Behavior> newBehaviors = new ArrayList<>(newBehaviorSet);
         final List<Behavior> addedBehaviors = new ArrayList<>();
         final List<Behavior> removedBehaviors = new ArrayList<>();
         for (final Behavior behavior : newBehaviors) {

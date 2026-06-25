@@ -870,6 +870,28 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void controllerDeduplicatesActiveBehaviorsLikeUpstreamSet() {
+        CountingBehavior behavior = new CountingBehavior("active");
+        NanomachinesRegistry registry = new NanomachinesRegistry();
+        registry.addProvider(new CountingBehaviorProvider(behavior));
+        SimpleNanomachineController controller = new SimpleNanomachineController(null, registry);
+        CompoundTag tag = new CompoundTag();
+        ListTag triggers = new ListTag();
+        triggers.add(triggerTag(true));
+        tag.put("triggers", triggers);
+        ListTag behaviors = new ListTag();
+        behaviors.add(behaviorTag("active", new int[]{0}, new int[0]));
+        behaviors.add(behaviorTag("active", new int[]{0}, new int[0]));
+        tag.put("behaviors", behaviors);
+
+        controller.load(tag);
+
+        assertIterableEquals(List.of(behavior), controller.getActiveBehaviors());
+        controller.update();
+        assertEquals(1, behavior.updateCount);
+    }
+
+    @Test
     void controllerReportsActiveParticleEffectsForClientSync() {
         TestBehavior flame = new TestBehavior("particles.flame");
         NanomachinesRegistry registry = new NanomachinesRegistry();
