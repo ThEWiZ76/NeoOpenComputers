@@ -59,6 +59,8 @@ public final class ModDriverCatalog {
         if (API.driver instanceof DriverRegistry registry) {
             registerBlocks(registry, new ComputerCaseBlockDriver(), new ComparatorBlockDriver(), new DiskDriveBlockDriver(), new InventoryBlockDriver(), new ScreenBlockDriver());
             registry.add(MinecraftConverters.ITEM_STACK);
+            registry.add(MinecraftConverters.LINKED_CARD);
+            registry.add(MinecraftConverters.NANOMACHINES);
             registry.add(MinecraftConverters.FLUID_CONTAINER_ITEM);
             registry.add(MinecraftConverters.BLOCK);
             registry.add(MinecraftConverters.BLOCK_STATE);

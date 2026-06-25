@@ -53,6 +53,7 @@ import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.LinkedCardItem;
+import li.cil.oc.common.item.NanomachineItemData;
 import li.cil.oc.common.item.ServerItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
@@ -944,6 +945,52 @@ public final class NeoOpenComputersGameTests {
         final Map<?, ?> fluid = (Map<?, ?>) map.get("fluid");
         helper.assertTrue(Integer.valueOf(1000).equals(fluid.get("amount")), "Fluid container item did not report fluid amount");
         helper.assertTrue("minecraft:water".equals(fluid.get("name")), "Fluid container item did not report fluid id");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void driverRegistryConvertsLinkedCardsWithChannelLikeUpstream(final GameTestHelper helper) throws Exception {
+        helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+        final DriverRegistry registry = (DriverRegistry) API.driver;
+        final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+        convert.setAccessible(true);
+
+        final Object[] blankResult = (Object[]) convert.invoke(registry, (Object) new Object[]{new ItemStack(ModItems.LINKED_CARD.get())});
+        helper.assertTrue(blankResult.length == 1 && blankResult[0] instanceof Map<?, ?>, "Linked card did not convert to a map");
+        final Map<?, ?> blankMap = (Map<?, ?>) blankResult[0];
+        helper.assertTrue("creative".equals(blankMap.get("linkChannel")), "Blank linked card converter did not report default channel");
+
+        final ItemStack configured = new ItemStack(ModItems.LINKED_CARD.get());
+        final DriverItem driver = Driver.driverFor(configured);
+        helper.assertTrue(driver != null, "No linked card driver");
+        driver.dataTag(configured).putString(LinkedCardItem.TUNNEL_TAG, "relay-channel");
+
+        final Object[] configuredResult = (Object[]) convert.invoke(registry, (Object) new Object[]{configured});
+        helper.assertTrue(configuredResult.length == 1 && configuredResult[0] instanceof Map<?, ?>, "Configured linked card did not convert to a map");
+        final Map<?, ?> configuredMap = (Map<?, ?>) configuredResult[0];
+        helper.assertTrue("relay-channel".equals(configuredMap.get("linkChannel")), "Configured linked card converter did not report stored channel");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void driverRegistryConvertsNanomachinesWithUuidLikeUpstream(final GameTestHelper helper) throws Exception {
+        helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+        final DriverRegistry registry = (DriverRegistry) API.driver;
+        final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+        convert.setAccessible(true);
+
+        final Object[] blankResult = (Object[]) convert.invoke(registry, (Object) new Object[]{new ItemStack(ModItems.NANOMACHINES.get())});
+        helper.assertTrue(blankResult.length == 1 && blankResult[0] instanceof Map<?, ?>, "Blank nanomachines did not convert to a map");
+        final Map<?, ?> blankMap = (Map<?, ?>) blankResult[0];
+        helper.assertTrue(!blankMap.containsKey("nanomachines"), "Blank nanomachines converter reported an empty UUID");
+
+        final ItemStack configured = new ItemStack(ModItems.NANOMACHINES.get());
+        NanomachineItemData.save(NanomachineItemData.dataTag(configured), "nano-uuid", new CompoundTag());
+
+        final Object[] configuredResult = (Object[]) convert.invoke(registry, (Object) new Object[]{configured});
+        helper.assertTrue(configuredResult.length == 1 && configuredResult[0] instanceof Map<?, ?>, "Configured nanomachines did not convert to a map");
+        final Map<?, ?> configuredMap = (Map<?, ?>) configuredResult[0];
+        helper.assertTrue("nano-uuid".equals(configuredMap.get("nanomachines")), "Nanomachines converter did not report stored UUID");
         helper.succeed();
     }
 

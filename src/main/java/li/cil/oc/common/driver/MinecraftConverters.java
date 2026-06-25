@@ -1,6 +1,10 @@
 package li.cil.oc.common.driver;
 
 import li.cil.oc.api.driver.Converter;
+import li.cil.oc.common.ModItems;
+import li.cil.oc.common.component.LinkedNetwork;
+import li.cil.oc.common.item.LinkedCardItem;
+import li.cil.oc.common.item.NanomachineItemData;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.ByteArrayTag;
@@ -18,6 +22,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.item.component.CustomData;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.IFluidTank;
@@ -30,6 +35,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class MinecraftConverters {
+    private static final String ITEM_DRIVER_DATA_TAG = "oc:data";
+
     public static final Converter ITEM_STACK = (value, output) -> {
         if (value instanceof ItemStack stack) {
             final ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
@@ -40,6 +47,24 @@ public final class MinecraftConverters {
             output.put("hasTag", stack.has(DataComponents.CUSTOM_DATA));
             output.put("name", id == null ? "minecraft:air" : id.toString());
             output.put("label", stack.getHoverName().getString());
+        }
+    };
+
+    public static final Converter LINKED_CARD = (value, output) -> {
+        if (value instanceof ItemStack stack && stack.is(ModItems.LINKED_CARD.get())) {
+            final CompoundTag root = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+            final CompoundTag data = root.getCompound(ITEM_DRIVER_DATA_TAG);
+            output.put("linkChannel", LinkedNetwork.normalizeChannel(data.getString(LinkedCardItem.TUNNEL_TAG)));
+        }
+    };
+
+    public static final Converter NANOMACHINES = (value, output) -> {
+        if (value instanceof ItemStack stack && stack.is(ModItems.NANOMACHINES.get())) {
+            final CompoundTag root = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+            final String uuid = NanomachineItemData.uuid(root);
+            if (!uuid.isEmpty()) {
+                output.put("nanomachines", uuid);
+            }
         }
     };
 
