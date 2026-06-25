@@ -18,6 +18,8 @@ import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.WirelessEndpoint;
 import li.cil.oc.api.network.SidedEnvironment;
+import li.cil.oc.api.driver.NamedBlock;
+import li.cil.oc.common.driver.CompoundBlockEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.ByteArrayTag;
@@ -526,16 +528,35 @@ final class NetworkRegistry implements NetworkAPI {
         }
 
         private Map<String, ComponentCallbackEntry> discoverCallbacks(final Environment host) {
+            if (host instanceof CompoundBlockEnvironment compound) {
+                return discoverCompoundCallbacks(compound);
+            }
+            return discoverCallbacks(host, localWhitelist(host));
+        }
+
+        private Map<String, ComponentCallbackEntry> discoverCompoundCallbacks(final CompoundBlockEnvironment compound) {
             final Map<String, ComponentCallbackEntry> discovered = new LinkedHashMap<>();
-            final Set<String> whitelist = host instanceof MethodWhitelist methodWhitelist && methodWhitelist.whitelistedMethods() != null
-                ? Set.copyOf(Arrays.asList(methodWhitelist.whitelistedMethods()))
-                : Set.of();
+            final Set<String> whitelist = compoundWhitelist(compound.environments());
+            final List<CompoundBlockEnvironment.Entry> environments = new ArrayList<>(compound.environments());
+            environments.sort((a, b) -> Integer.compare(priority(b.environment()), priority(a.environment())));
+            for (CompoundBlockEnvironment.Entry entry : environments) {
+                final Map<String, ComponentCallbackEntry> callbacks = discoverCallbacks(entry.environment(), whitelist);
+                for (Map.Entry<String, ComponentCallbackEntry> callback : callbacks.entrySet()) {
+                    discovered.putIfAbsent(callback.getKey(), new TargetedComponentCallbackEntry(entry.environment(), callback.getValue()));
+                }
+            }
+            return discovered;
+        }
+
+        private Map<String, ComponentCallbackEntry> discoverCallbacks(final Environment host, final Set<String> whitelist) {
+            final Map<String, ComponentCallbackEntry> discovered = new LinkedHashMap<>();
+            final Set<String> localWhitelist = whitelist == null ? localWhitelist(host) : whitelist;
             final FilteredEnvironment filter = host instanceof FilteredEnvironment filtered ? filtered : null;
             if (host instanceof ManagedPeripheral peripheral) {
                 final String[] methods = peripheral.methods();
                 if (methods != null) {
                     for (String name : methods) {
-                        if (name != null && (whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
+                        if (name != null && (localWhitelist.isEmpty() || localWhitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
                             discovered.putIfAbsent(name, new ManagedPeripheralCallbackEntry(name));
                         }
                     }
@@ -548,7 +569,7 @@ final class NetworkRegistry implements NetworkAPI {
                     if (callback != null && isValidCallbackMethod(method)) {
                         method.setAccessible(true);
                         final String name = callback.value().trim().isEmpty() ? method.getName() : callback.value();
-                        if ((whitelist.isEmpty() || whitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
+                        if ((localWhitelist.isEmpty() || localWhitelist.contains(name)) && (filter == null || filter.isCallbackEnabled(name))) {
                             discovered.putIfAbsent(name, new ReflectedComponentCallbackEntry(method));
                         }
                     }
@@ -556,6 +577,34 @@ final class NetworkRegistry implements NetworkAPI {
                 type = type.getSuperclass();
             }
             return discovered;
+        }
+
+        private Set<String> localWhitelist(final Environment host) {
+            final Set<String> whitelist = host instanceof MethodWhitelist methodWhitelist && methodWhitelist.whitelistedMethods() != null
+                ? Set.copyOf(Arrays.asList(methodWhitelist.whitelistedMethods()))
+                : Set.of();
+            return whitelist;
+        }
+
+        private Set<String> compoundWhitelist(final List<CompoundBlockEnvironment.Entry> environments) {
+            Set<String> whitelist = null;
+            for (CompoundBlockEnvironment.Entry entry : environments) {
+                final Set<String> local = localWhitelist(entry.environment());
+                if (!local.isEmpty()) {
+                    whitelist = whitelist == null ? new LinkedHashSet<>(local) : intersect(whitelist, local);
+                }
+            }
+            return whitelist == null ? Set.of() : whitelist;
+        }
+
+        private Set<String> intersect(final Set<String> left, final Set<String> right) {
+            final Set<String> result = new LinkedHashSet<>(left);
+            result.retainAll(right);
+            return result;
+        }
+
+        private int priority(final Environment environment) {
+            return environment instanceof NamedBlock named ? named.priority() : 0;
         }
 
         private boolean isValidCallbackMethod(final Method method) {
@@ -601,6 +650,18 @@ final class NetworkRegistry implements NetworkAPI {
                 }
                 throw new RuntimeException(cause);
             }
+        }
+    }
+
+    private record TargetedComponentCallbackEntry(Environment target, ComponentCallbackEntry delegate) implements ComponentCallbackEntry {
+        @Override
+        public Callback annotation() {
+            return delegate.annotation();
+        }
+
+        @Override
+        public Object[] invoke(final Environment host, final Context context, final RuntimeArguments arguments) throws Exception {
+            return delegate.invoke(target, context, arguments);
         }
     }
 

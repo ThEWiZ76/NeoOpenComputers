@@ -8,6 +8,7 @@ import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.api.driver.InventoryProvider;
 import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.common.driver.CompoundBlockDriver;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
@@ -73,12 +74,17 @@ public final class DriverRegistry implements DriverAPI {
 
     @Override
     public DriverBlock driverFor(final Level world, final BlockPos pos, final Direction side) {
+        final List<DriverBlock> matches = new ArrayList<>();
         for (final DriverBlock driver : blockDrivers) {
             if (driver.worksWith(world, pos, side)) {
-                return driver;
+                matches.add(driver);
             }
         }
-        return null;
+        return switch (matches.size()) {
+            case 0 -> null;
+            case 1 -> matches.getFirst();
+            default -> new CompoundBlockDriver(matches);
+        };
     }
 
     @Override

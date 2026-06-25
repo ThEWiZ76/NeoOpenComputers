@@ -6,9 +6,17 @@ import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.api.driver.InventoryProvider;
+import li.cil.oc.api.driver.NamedBlock;
 import li.cil.oc.api.driver.item.HostAware;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -32,6 +40,7 @@ final class DriverRegistryTest {
     @AfterEach
     void resetApi() {
         API.driver = null;
+        API.network = null;
     }
 
     @Test
@@ -55,6 +64,29 @@ final class DriverRegistryTest {
         assertSame(block, registry.driverFor(null, BlockPos.ZERO, Direction.NORTH));
         assertSame(item, registry.driverFor((ItemStack) null));
         assertEquals(2, registry.itemDrivers().size());
+    }
+
+    @Test
+    void matchingBlockDriversAreCombinedLikeUpstream() throws Exception {
+        API.network = new NetworkRegistry();
+        DriverRegistry registry = new DriverRegistry();
+        TestCallbackBlockDriver first = new TestCallbackBlockDriver("alpha", "first", 1);
+        TestCallbackBlockDriver second = new TestCallbackBlockDriver("beta", "second", 2);
+
+        registry.add(first);
+        registry.add(second);
+
+        DriverBlock driver = registry.driverFor(null, BlockPos.ZERO, Direction.NORTH);
+        assertTrue(driver.worksWith(null, BlockPos.ZERO, Direction.NORTH));
+
+        ManagedEnvironment environment = driver.createEnvironment(null, BlockPos.ZERO, Direction.NORTH);
+        assertTrue(environment.node() instanceof Component);
+        Component component = (Component) environment.node();
+        assertEquals("beta", component.name());
+        assertTrue(component.methods().contains("first"));
+        assertTrue(component.methods().contains("second"));
+        assertEquals("first", component.invoke("first", null)[0]);
+        assertEquals("second", component.invoke("second", null)[0]);
     }
 
     @Test
@@ -153,6 +185,101 @@ final class DriverRegistryTest {
         @Override
         public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
             return null;
+        }
+    }
+
+    private record TestCallbackBlockDriver(String name, String method, int priority) implements DriverBlock {
+        @Override
+        public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
+            return true;
+        }
+
+        @Override
+        public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
+            if ("first".equals(method)) {
+                return new FirstCallbackEnvironment(name, priority);
+            }
+            return new SecondCallbackEnvironment(name, priority);
+        }
+    }
+
+    private abstract static class TestCallbackEnvironment implements ManagedEnvironment, NamedBlock {
+        private final String name;
+        private final int priority;
+        private final Node node;
+
+        private TestCallbackEnvironment(final String name, final int priority) {
+            this.name = name;
+            this.priority = priority;
+            node = li.cil.oc.api.Network.newNode(this, Visibility.Network)
+                .withComponent(name, Visibility.Network)
+                .create();
+        }
+
+        @Override
+        public Node node() {
+            return node;
+        }
+
+        @Override
+        public boolean canUpdate() {
+            return false;
+        }
+
+        @Override
+        public void update() {
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
+        }
+
+        @Override
+        public String preferredName() {
+            return name;
+        }
+
+        @Override
+        public int priority() {
+            return priority;
+        }
+    }
+
+    private static final class FirstCallbackEnvironment extends TestCallbackEnvironment {
+        private FirstCallbackEnvironment(final String name, final int priority) {
+            super(name, priority);
+        }
+
+        @Callback
+        public Object[] first(final Context context, final Arguments arguments) {
+            return new Object[]{"first"};
+        }
+    }
+
+    private static final class SecondCallbackEnvironment extends TestCallbackEnvironment {
+        private SecondCallbackEnvironment(final String name, final int priority) {
+            super(name, priority);
+        }
+
+        @Callback
+        public Object[] second(final Context context, final Arguments arguments) {
+            return new Object[]{"second"};
         }
     }
 
