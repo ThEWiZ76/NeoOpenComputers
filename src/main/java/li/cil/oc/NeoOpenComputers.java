@@ -21,6 +21,7 @@ import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.ModWrenches;
 import li.cil.oc.common.NanomachinesRegistry;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.PeripheralBlacklistImc;
 import li.cil.oc.common.ToolDurabilityProviderImc;
 import li.cil.oc.common.WrenchToolImc;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
@@ -94,6 +95,7 @@ public final class NeoOpenComputers {
             ProgramLocationImc.process(messages.stream());
             InkProviderImc.process(messages.stream());
             ItemChargeImc.process(messages.stream());
+            PeripheralBlacklistImc.process(messages.stream());
             ToolDurabilityProviderImc.process(messages.stream());
             WrenchToolImc.process(messages.stream());
             AssemblerFilterImc.process(messages.stream());
