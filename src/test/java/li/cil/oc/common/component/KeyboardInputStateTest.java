@@ -52,14 +52,14 @@ final class KeyboardInputStateTest {
     }
 
     @Test
-    void forwardsClipboardLines() {
+    void forwardsClipboardLinesWithSeparatorsLikeUpstream() {
         CapturingNode node = new CapturingNode();
         KeyboardInputState state = new KeyboardInputState();
 
         state.onMessage(node, new TestMessage("keyboard.clipboard", null, "alpha\nbeta"), player -> true);
 
         assertEquals(2, node.signals.size());
-        assertEquals(Arrays.asList("computer.checked_signal", null, "clipboard", "alpha"), node.signals.get(0));
+        assertEquals(Arrays.asList("computer.checked_signal", null, "clipboard", "alpha\n"), node.signals.get(0));
         assertEquals(Arrays.asList("computer.checked_signal", null, "clipboard", "beta"), node.signals.get(1));
     }
 

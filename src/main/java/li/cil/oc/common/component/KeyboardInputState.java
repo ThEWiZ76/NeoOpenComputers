@@ -4,7 +4,9 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -49,9 +51,30 @@ public final class KeyboardInputState {
             final Player player = (Player) data[0];
             if (isUsable.test(player)) {
                 final String value = String.valueOf(data[1]);
-                value.lines().forEach(line -> node.sendToReachable(SIGNAL_MESSAGE, player, "clipboard", line));
+                linesWithSeparators(value).forEach(line -> node.sendToReachable(SIGNAL_MESSAGE, player, "clipboard", line));
             }
         }
+    }
+
+    private static List<String> linesWithSeparators(final String value) {
+        final List<String> lines = new ArrayList<>();
+        int start = 0;
+        for (int index = 0; index < value.length(); index++) {
+            final char character = value.charAt(index);
+            if (character == '\n' || character == '\r') {
+                int end = index + 1;
+                if (character == '\r' && end < value.length() && value.charAt(end) == '\n') {
+                    end++;
+                }
+                lines.add(value.substring(start, end));
+                start = end;
+                index = end - 1;
+            }
+        }
+        if (start < value.length()) {
+            lines.add(value.substring(start));
+        }
+        return lines;
     }
 
     private static char toCharacter(final Object value) {
