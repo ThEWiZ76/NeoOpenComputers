@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipEntry;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,11 +53,47 @@ final class ModPackagingTest {
         }
     }
 
+    @Test
+    void builtApiJarContainsPublicApiSourcesAndClassesOnly() throws IOException {
+        try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.apiJar"))) {
+            assertContains(jar, "li/cil/oc/api/API.java");
+            assertContains(jar, "li/cil/oc/api/API.class");
+            assertContains(jar, "li/cil/oc/api/Network.java");
+            assertContains(jar, "li/cil/oc/api/Network.class");
+            assertContains(jar, "li/cil/oc/api/machine/Machine.java");
+            assertContains(jar, "li/cil/oc/api/machine/Machine.class");
+            assertContains(jar, "li/cil/oc/api/nanomachines/Controller.java");
+            assertContains(jar, "li/cil/oc/api/nanomachines/Controller.class");
+            assertTrue(!containsEntryStartingWith(jar, "li/cil/oc/common/"), "API jar leaked internal common package");
+        }
+    }
+
+    @Test
+    void builtJavadocJarContainsApiDocumentation() throws IOException {
+        try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.javadocJar"))) {
+            assertContains(jar, "index.html");
+            assertContains(jar, "li/cil/oc/api/API.html");
+            assertContains(jar, "li/cil/oc/api/Network.html");
+            assertContains(jar, "li/cil/oc/api/machine/Machine.html");
+            assertContains(jar, "li/cil/oc/api/nanomachines/Controller.html");
+        }
+    }
+
     private static void assertContains(final ZipFile jar, final String entryName) {
         assertTrue(jar.getEntry(entryName) != null, () -> "Missing packaged entry " + entryName);
     }
 
     private static String readEntry(final ZipFile jar, final String entryName) throws IOException {
         return new String(jar.getInputStream(jar.getEntry(entryName)).readAllBytes(), StandardCharsets.UTF_8);
+    }
+
+    private static boolean containsEntryStartingWith(final ZipFile jar, final String prefix) {
+        final Enumeration<? extends ZipEntry> entries = jar.entries();
+        while (entries.hasMoreElements()) {
+            if (entries.nextElement().getName().startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
