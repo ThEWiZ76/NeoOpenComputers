@@ -33,6 +33,8 @@ import li.cil.oc.common.ModEeproms;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.api.Network;
+import li.cil.oc.common.ToolDurabilityProviderImc;
+import li.cil.oc.common.ToolDurabilityProviders;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.AdapterBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
@@ -1490,6 +1492,25 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(AssemblerTemplates.select(new ItemStack(Items.NETHER_STAR)).isEmpty(), "Assembler filter did not reject matching template");
             helper.succeed();
         }
+    }
+
+    @GameTest(template = "empty")
+    public static void toolDurabilityProviderImcRegistersProviderLikeUpstream(final GameTestHelper helper) {
+        final ItemStack target = new ItemStack(Items.NETHER_STAR);
+        helper.assertTrue(ToolDurabilityProviders.getDurability(target).isEmpty(), "Baseline non-damageable stack had durability");
+        final InterModComms.IMCMessage message = new InterModComms.IMCMessage(
+            "addon",
+            NeoOpenComputers.MODID,
+            li.cil.oc.api.IMC.REGISTER_TOOL_DURABILITY_PROVIDER,
+            () -> NeoOpenComputersGameTests.class.getName() + ".toolDurabilityForNetherStar"
+        );
+
+        ToolDurabilityProviderImc.process(Stream.of(message));
+
+        final var durability = ToolDurabilityProviders.getDurability(target);
+        helper.assertTrue(durability.isPresent() && Math.abs(durability.getAsDouble() - 0.75D) < 0.0001D, "IMC tool durability provider did not supply durability");
+        helper.assertTrue(ToolDurabilityProviders.getDurability(new ItemStack(Items.DIAMOND)).isEmpty(), "Provider supplied durability for unrelated stack");
+        helper.succeed();
     }
 
     @GameTest(template = "empty")
@@ -7787,6 +7808,10 @@ public final class NeoOpenComputersGameTests {
 
     public static boolean rejectNetherStarAssemblerTemplate(final ItemStack stack) {
         return !stack.is(Items.NETHER_STAR);
+    }
+
+    public static double toolDurabilityForNetherStar(final ItemStack stack) {
+        return stack.is(Items.NETHER_STAR) ? 0.75D : Double.NaN;
     }
 
     private static final class StaleRackBlockEntity extends RackBlockEntity {
