@@ -37,6 +37,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class InternetCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "internet";
@@ -166,6 +168,12 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             }
         }
         connections.clear();
+    }
+
+    private void emitInternetReady(final UUID id) {
+        if (node() != null) {
+            node().sendToReachable("computer.signal", "internet_ready", id.toString());
+        }
     }
 
     private static String checkHttpUrl(final String address) {
@@ -388,6 +396,8 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         private final UUID id = UUID.randomUUID();
         private final CompletableFuture<Socket> connection;
         private final InternetCardEnvironment owner;
+        private volatile ScheduledFuture<?> readinessTask;
+        private volatile boolean readinessArmed = true;
 
         private TcpSocket(final String host, final int port, final InternetCardEnvironment owner) {
             this.owner = owner;
@@ -403,6 +413,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
                     throw new CompletionException(e);
                 }
             }, HTTP_EXECUTOR);
+            connection.thenRun(this::startReadinessWatcher);
         }
 
         @Callback(doc = "function():boolean -- Ensures a socket is connected.")
@@ -431,6 +442,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             if (data.length == 0) {
                 return new Object[]{null};
             }
+            readinessArmed = true;
             return new Object[]{data};
         }
 
@@ -461,7 +473,34 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             return connection.join();
         }
 
+        private void startReadinessWatcher() {
+            readinessTask = HTTP_EXECUTOR.scheduleWithFixedDelay(() -> {
+                try {
+                    final Socket socket = socket();
+                    if (socket.isClosed()) {
+                        cancelReadinessWatcher();
+                        return;
+                    }
+                    if (readinessArmed && socket.getInputStream().available() > 0) {
+                        readinessArmed = false;
+                        owner.emitInternetReady(id);
+                    }
+                } catch (IOException | RuntimeException ignored) {
+                    cancelReadinessWatcher();
+                }
+            }, 0, 50, TimeUnit.MILLISECONDS);
+        }
+
+        private void cancelReadinessWatcher() {
+            final ScheduledFuture<?> task = readinessTask;
+            if (task != null) {
+                task.cancel(false);
+                readinessTask = null;
+            }
+        }
+
         private void close() {
+            cancelReadinessWatcher();
             connection.thenAccept(socket -> {
                 try {
                     socket.close();

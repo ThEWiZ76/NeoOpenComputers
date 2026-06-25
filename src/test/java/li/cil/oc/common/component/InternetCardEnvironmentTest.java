@@ -429,6 +429,43 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void tcpSocketSignalsInternetReadyWhenDataIsReadableLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+        TestComputerContext owner = new TestComputerContext();
+        Network.joinNewNetwork(owner.node());
+        owner.node().connect(card.node());
+        ExecutorService serverThread = Executors.newSingleThreadExecutor();
+
+        try (ServerSocket server = new ServerSocket(0)) {
+            serverThread.submit(() -> {
+                try (Socket socket = server.accept()) {
+                    socket.getOutputStream().write("ready".getBytes(StandardCharsets.UTF_8));
+                    socket.getOutputStream().flush();
+                    Thread.sleep(200);
+                }
+                return null;
+            });
+
+            withFilteringRules(List.of("allow all"), () -> {
+                InternetCardEnvironment.TcpSocket socket = assertInstanceOf(
+                    InternetCardEnvironment.TcpSocket.class,
+                    card.connect(owner, new TestArguments("127.0.0.1", server.getLocalPort()))[0]);
+                awaitConnected(socket);
+
+                Message message = owner.message.get(2, TimeUnit.SECONDS);
+                assertEquals("computer.signal", message.name());
+                assertEquals(card.node(), message.source());
+                assertArrayEquals(new Object[]{"internet_ready", socket.id(null, new TestArguments())[0]}, message.data());
+                assertArrayEquals("ready".getBytes(StandardCharsets.UTF_8), awaitRead(socket, 5));
+            });
+        } finally {
+            serverThread.shutdownNow();
+            assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
     void disabledTcpReportsUnavailableWithoutConnecting() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment();
@@ -592,6 +629,7 @@ final class InternetCardEnvironmentTest {
 
     private static final class TestComputerContext implements Context, Environment {
         private final Node node;
+        private final CompletableFuture<Message> message = new CompletableFuture<>();
 
         private TestComputerContext() {
             node = Network.newNode(this, Visibility.Network).create();
@@ -608,6 +646,6 @@ final class InternetCardEnvironmentTest {
         @Override public boolean signal(final String name, final Object... args) { return true; }
         @Override public void onConnect(final Node node) { }
         @Override public void onDisconnect(final Node node) { }
-        @Override public void onMessage(final Message message) { }
+        @Override public void onMessage(final Message message) { this.message.complete(message); }
     }
 }
