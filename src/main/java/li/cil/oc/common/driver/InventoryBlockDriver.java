@@ -13,6 +13,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.util.InventoryComparison;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,12 +27,12 @@ import java.util.Map;
 public final class InventoryBlockDriver implements DriverBlock {
     @Override
     public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
-        return world != null && pos != null && world.getBlockEntity(pos) instanceof Container;
+        return ModSettings.enableInventoryDriver() && world != null && pos != null && world.getBlockEntity(pos) instanceof Container;
     }
 
     @Override
     public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
-        if (world != null && pos != null && world.getBlockEntity(pos) instanceof Container container) {
+        if (ModSettings.enableInventoryDriver() && world != null && pos != null && world.getBlockEntity(pos) instanceof Container container) {
             return new Environment(container);
         }
         return null;

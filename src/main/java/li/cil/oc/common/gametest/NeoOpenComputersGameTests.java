@@ -2058,7 +2058,8 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void mfuLinksRemoteBlockDriverEnvironment(final GameTestHelper helper) {
+    public static void mfuLinksRemoteBlockDriverEnvironment(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(3, 1, 0);
         helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
@@ -2088,11 +2089,13 @@ public final class NeoOpenComputersGameTests {
             }
         }
         helper.assertTrue(foundInventory, "MFU did not link remote inventory component");
+        restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
         helper.succeed();
     }
 
     @GameTest(template = "empty")
-    public static void mfuRefreshesRemoteBlockDriverWhenTargetChanges(final GameTestHelper helper) {
+    public static void mfuRefreshesRemoteBlockDriverWhenTargetChanges(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(3, 1, 0);
         helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
@@ -2118,11 +2121,13 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(targetPos, Blocks.AIR.defaultBlockState());
         environment.update();
         helper.assertFalse(reachableComponent(environment.node(), "inventory"), "MFU kept stale remote inventory component");
+        restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
         helper.succeed();
     }
 
     @GameTest(template = "empty")
-    public static void mfuReadsUpstreamFiveIntTargetTag(final GameTestHelper helper) {
+    public static void mfuReadsUpstreamFiveIntTargetTag(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(3, 1, 0);
         helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
@@ -2147,6 +2152,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(mfu.side() == Direction.NORTH, "MFU read dimension as side for upstream target tag");
         Network.joinNewNetwork(mfu.node());
         helper.assertTrue(reachableComponent(mfu.node(), "inventory"), "MFU did not link remote inventory from upstream target tag");
+        restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
         helper.succeed();
     }
 
@@ -3035,7 +3041,8 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void mfuDisconnectsRemoteTargetWithoutEnergy(final GameTestHelper helper) {
+    public static void mfuDisconnectsRemoteTargetWithoutEnergy(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(2, 1, 0);
         helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
@@ -3066,11 +3073,17 @@ public final class NeoOpenComputersGameTests {
         helper.succeedWhen(() -> {
             environment.update();
             helper.assertFalse(reachableComponent(environment.node(), "inventory"), "MFU kept remote target linked without energy");
+            try {
+                restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
+            } catch (Exception e) {
+                helper.fail("Failed to restore inventory-driver config: " + e.getMessage());
+            }
         });
     }
 
     @GameTest(template = "empty")
-    public static void mfuRefreshesRemoteTargetOnNeighborNotify(final GameTestHelper helper) {
+    public static void mfuRefreshesRemoteTargetOnNeighborNotify(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
         final BlockPos adapterPos = new BlockPos(0, 1, 0);
         final BlockPos targetPos = new BlockPos(2, 1, 0);
         helper.setBlock(targetPos, Blocks.CHEST.defaultBlockState());
@@ -3102,6 +3115,7 @@ public final class NeoOpenComputersGameTests {
             EnumSet.allOf(Direction.class),
             false));
         helper.assertFalse(reachableComponent(environment.node(), "inventory"), "MFU ignored target block change event");
+        restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
         helper.succeed();
     }
 
@@ -6409,7 +6423,8 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
-    public static void adapterExposesBlockDriverComponents(final GameTestHelper helper) {
+    public static void adapterHidesInventoryBlockDriverByDefaultLikeUpstream(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, false);
         final BlockPos computerPos = new BlockPos(0, 1, 1);
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
         final BlockPos targetPos = new BlockPos(2, 1, 1);
@@ -6420,12 +6435,41 @@ public final class NeoOpenComputersGameTests {
 
         helper.succeedWhen(() -> {
             final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(adapter.node().network() == computer.node().network(), "Adapter is not on the computer network");
+            helper.assertTrue(componentAddress(computer, "inventory") == null, "Disabled inventory driver should not expose a component: " + computer.machine().components());
+            try {
+                restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
+            } catch (Exception e) {
+                helper.fail("Failed to restore inventory-driver config: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 120)
+    public static void adapterExposesInventoryBlockDriverWhenEnabledLikeUpstream(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.CHEST);
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(adapter.node().network() == computer.node().network(), "Adapter is not on the computer network");
             final String address = componentAddress(computer, "inventory");
-            helper.assertTrue(address != null, "Adapter did not expose block-driver component: " + computer.machine().components());
+            helper.assertTrue(address != null, "Adapter did not expose enabled inventory component: " + computer.machine().components());
             try {
                 assertInvokeResult(helper, computer, address, "getInventorySize", new Object[0], 27);
+                restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
             } catch (Exception e) {
-                helper.fail("Adapter component invocation failed: " + e.getMessage());
+                helper.fail("Inventory component invocation failed: " + e.getMessage());
             }
         });
     }
@@ -7087,7 +7131,8 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
-    public static void adapterExposesChestInventory(final GameTestHelper helper) {
+    public static void adapterExposesChestInventory(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
         final BlockPos computerPos = new BlockPos(0, 1, 1);
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
         final BlockPos chestPos = new BlockPos(2, 1, 1);
@@ -7120,6 +7165,7 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "transferStack", new Object[]{1, 2, 2}, true);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{1}, 1);
                 assertInvokeResult(helper, computer, address, "getSlotStackSize", new Object[]{2}, 2);
+                restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
             } catch (Exception e) {
                 helper.fail("Chest inventory invocation failed: " + e.getMessage());
             }
@@ -7127,7 +7173,8 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
-    public static void adapterChestHotplugSignalsReachComputer(final GameTestHelper helper) {
+    public static void adapterChestHotplugSignalsReachComputer(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
         final BlockPos computerPos = new BlockPos(0, 1, 1);
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
         final BlockPos chestPos = new BlockPos(2, 1, 1);
@@ -7151,12 +7198,18 @@ public final class NeoOpenComputersGameTests {
         });
         helper.runAtTickTime(4, () -> {
             assertNextSignal(helper, computer, "component_removed", address.get(), "inventory");
+            try {
+                restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
+            } catch (Exception e) {
+                helper.fail("Failed to restore inventory-driver config: " + e.getMessage());
+            }
             helper.succeed();
         });
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
-    public static void adapterInventoryComponentStoresStacksInDatabase(final GameTestHelper helper) {
+    public static void adapterInventoryComponentStoresStacksInDatabase(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
         final BlockPos computerPos = new BlockPos(0, 1, 1);
         final BlockPos adapterPos = new BlockPos(1, 1, 1);
         final BlockPos chestPos = new BlockPos(2, 1, 1);
@@ -7189,6 +7242,7 @@ public final class NeoOpenComputersGameTests {
                 assertInvokeResult(helper, computer, address, "compareStackToDatabase", new Object[]{1, databaseAddress, 1}, true);
                 database.setStackInSlot(0, new ItemStack(Items.DIRT));
                 assertInvokeResult(helper, computer, address, "compareStackToDatabase", new Object[]{1, databaseAddress, 1}, false);
+                restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
             } catch (Exception e) {
                 helper.fail("Inventory component database invocation failed: " + e.getMessage());
             }

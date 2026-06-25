@@ -94,6 +94,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP;
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP_HEADERS;
     public static final ModConfigSpec.BooleanValue ENABLE_TCP;
+    public static final ModConfigSpec.BooleanValue ENABLE_INVENTORY_DRIVER;
     public static final ModConfigSpec.BooleanValue ENABLE_COMMAND_BLOCK_DRIVER;
     public static final ModConfigSpec.BooleanValue ENABLE_TANK_DRIVER;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> FILTERING_RULES;
@@ -364,6 +365,9 @@ public final class ModSettings {
 
         builder.push("integration");
         builder.push("vanilla");
+        ENABLE_INVENTORY_DRIVER = builder
+            .comment("Enable the vanilla inventory driver. This lets computers inspect adjacent vanilla inventories directly. OpenComputers upstream default is false.")
+            .define("enableInventoryDriver", false);
         ENABLE_COMMAND_BLOCK_DRIVER = builder
             .comment("Enable the vanilla command block driver. This lets computers set and execute commands via adjacent command blocks. OpenComputers upstream default is false.")
             .define("enableCommandBlockDriver", false);
@@ -1091,6 +1095,10 @@ public final class ModSettings {
 
     public static boolean enableTcp() {
         return booleanValue(ENABLE_TCP);
+    }
+
+    public static boolean enableInventoryDriver() {
+        return booleanValue(ENABLE_INVENTORY_DRIVER);
     }
 
     public static boolean enableCommandBlockDriver() {
