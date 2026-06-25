@@ -98,6 +98,7 @@ For a bounded launch/log smoke that stops after resource reload and texture atla
 - OpenOS/Lua prompt boots.
 - Basic filesystem, EEPROM, floppy, and disk-drive actions work.
 - Screen output and keyboard input survive save/reload.
+- Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer.
 - Disk-drive floppy data survives save/reload.
 - Redstone, modem, inventory, tank, and transposer each get one basic smoke pass.
 - Texture picker reports usable atlas texture names such as `minecraft:block/stone`.

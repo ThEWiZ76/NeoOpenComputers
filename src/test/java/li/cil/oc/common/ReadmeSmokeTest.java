@@ -22,6 +22,8 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("293/293"), "README must include current GameTest evidence");
         assertTrue(readme.contains(".\\scripts\\package-first-smoke-kit.ps1"), "README must document first-smoke kit packaging");
         assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include current disk-drive persistence smoke item");
+        assertTrue(readme.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
+            "README must include current terminal item input smoke item");
         assertTrue(readme.contains(".\\scripts\\run-first-smoke-client.ps1"), "README must document interactive first-smoke launcher");
         assertTrue(readme.contains("build\\first-smoke-sessions"), "README must document interactive session logs");
         assertTrue(readme.contains(".\\scripts\\run-client-smoke.ps1"), "README must document bounded client smoke script");
@@ -78,6 +80,8 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("interactive-client-stderr.log"), "Collector must copy interactive stderr");
         assertTrue(scriptText.contains("screenshots"), "Collector must copy recent Minecraft screenshots");
         assertTrue(scriptText.contains("Select-Object -First 20"), "Collector must bound copied screenshots");
+        assertTrue(scriptText.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
+            "Collector checklist must include terminal item input smoke item");
     }
 
     @Test

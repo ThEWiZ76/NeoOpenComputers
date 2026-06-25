@@ -134,6 +134,7 @@ $relativeScreenshots
 - [ ] OpenOS or Lua prompt boots on a placed computer.
 - [ ] Filesystem, EEPROM, floppy, and disk-drive actions work once.
 - [ ] Screen output and keyboard input survive save/reload.
+- [ ] Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer.
 - [ ] Disk-drive floppy data survives save/reload.
 - [ ] Redstone, modem, storage, inventory, tank, and transposer each get one basic smoke pass.
 - [ ] Printer creates a print item and placed print renders configured shape data.
