@@ -6,9 +6,12 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Case;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.component.RedstoneControllerHost;
@@ -28,6 +31,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.ComputerCaseMenu;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -86,6 +90,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     };
 
     private final Machine machine;
+    private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, this::energyThroughput);
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private volatile boolean pendingServerThreadChangeMark;
@@ -137,6 +142,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     public Node node() {
         return machine.node();
+    }
+
+    public IEnergyStorage energyStorage(final Direction side) {
+        return energyStorage;
     }
 
     @Override
@@ -406,6 +415,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         return tier;
     }
 
+    public double energyThroughput() {
+        return ModSettings.caseRate(tier);
+    }
+
     @Override
     public int getContainerSize() {
         return items.size();
@@ -623,6 +636,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     private boolean isValidSlotForTier(final int slot) {
         return slot >= 0 && slot < items.size();
+    }
+
+    private Connector connectorNode() {
+        return node() instanceof Connector connector ? connector : null;
     }
 
     private static CaseSlot[] slotLayout(final int tier) {

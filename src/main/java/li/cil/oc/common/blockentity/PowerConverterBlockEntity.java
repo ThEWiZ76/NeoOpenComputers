@@ -8,6 +8,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
@@ -25,7 +26,7 @@ public class PowerConverterBlockEntity extends BlockEntity implements Environmen
     private static final String TAG_NODE = "oc:node";
 
     private final Connector node;
-    private final IEnergyStorage energyStorage = new ForgeEnergyStorage();
+    private final IEnergyStorage energyStorage;
 
     public PowerConverterBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.POWER_CONVERTER.get(), pos, blockState);
@@ -33,6 +34,7 @@ public class PowerConverterBlockEntity extends BlockEntity implements Environmen
         node = Network.newNode(this, Visibility.None)
             .withConnector(connectorBufferSize())
             .create();
+        energyStorage = new ForgeEnergyStorageView(() -> node, PowerConverterBlockEntity::energyThroughput);
     }
 
     @Override
@@ -121,51 +123,4 @@ public class PowerConverterBlockEntity extends BlockEntity implements Environmen
             DeviceInfo.DeviceAttribute.Capacity, Double.toString(energyThroughput()));
     }
 
-    private int receiveForgeEnergy(final int maxReceive, final boolean simulate) {
-        if (maxReceive <= 0 || ModSettings.ignorePower()) {
-            return 0;
-        }
-        final double requestedEnergy = ModSettings.fromForgeEnergy(maxReceive);
-        final double cappedEnergy = Math.max(0D, Math.min(Math.min(energyThroughput(), requestedEnergy), globalDemand()));
-        if (!simulate) {
-            return ModSettings.toForgeEnergy(cappedEnergy - node.changeBuffer(cappedEnergy));
-        }
-        return ModSettings.toForgeEnergy(cappedEnergy);
-    }
-
-    private double globalDemand() {
-        return Math.max(0D, Math.min(energyThroughput(), node.globalBufferSize() - node.globalBuffer()));
-    }
-
-    private final class ForgeEnergyStorage implements IEnergyStorage {
-        @Override
-        public int receiveEnergy(final int toReceive, final boolean simulate) {
-            return receiveForgeEnergy(toReceive, simulate);
-        }
-
-        @Override
-        public int extractEnergy(final int toExtract, final boolean simulate) {
-            return 0;
-        }
-
-        @Override
-        public int getEnergyStored() {
-            return ModSettings.toForgeEnergy(node.globalBuffer());
-        }
-
-        @Override
-        public int getMaxEnergyStored() {
-            return ModSettings.toForgeEnergy(node.globalBufferSize());
-        }
-
-        @Override
-        public boolean canExtract() {
-            return false;
-        }
-
-        @Override
-        public boolean canReceive() {
-            return !ModSettings.ignorePower();
-        }
-    }
 }

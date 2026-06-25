@@ -14,6 +14,7 @@ public final class ModSettings {
     private static final List<Integer> DEFAULT_CPU_COMPONENT_COUNT = List.of(8, 12, 16, 1024);
     private static final List<Integer> DEFAULT_DEVICE_COMPLEXITY_BY_TIER = List.of(12, 24, 32, 9001);
     private static final List<Double> DEFAULT_CALL_BUDGETS = List.of(0.5D, 1.0D, 1.5D);
+    private static final List<Double> DEFAULT_CASE_RATES = List.of(5D, 10D, 20D);
     private static final List<Double> DEFAULT_BATTERY_UPGRADE_BUFFERS = List.of(10_000D, 15_000D, 20_000D);
     private static final List<Integer> DEFAULT_SCREEN_WIDTHS_BY_TIER = List.of(50, 80, 160);
     private static final List<Integer> DEFAULT_SCREEN_HEIGHTS_BY_TIER = List.of(16, 25, 50);
@@ -131,6 +132,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue MFU_TICK_FREQUENCY;
     public static final ModConfigSpec.DoubleValue GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
+    public static final ModConfigSpec.ConfigValue<List<? extends Double>> CASE_RATES;
     public static final ModConfigSpec.DoubleValue POWER_CONVERTER_RATE;
     public static final ModConfigSpec.DoubleValue POWER_VALUE_FORGE_ENERGY;
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
@@ -410,6 +412,9 @@ public final class ModSettings {
             .comment("Energy produced per tick by solar generator upgrades. OpenComputers upstream default is 0.2.")
             .defineInRange("solarGeneratorEfficiency", 0.2D, 0D, Double.MAX_VALUE);
         builder.push("rate");
+        CASE_RATES = builder
+            .comment("Energy throughput per tick accepted by computer case tiers one, two, and three. OpenComputers upstream default is [5, 10, 20].")
+            .defineList("case", DEFAULT_CASE_RATES, value -> value instanceof Double && (Double) value >= 0D);
         POWER_CONVERTER_RATE = builder
             .comment("Energy throughput per tick exposed by power converters. OpenComputers upstream default is 500.")
             .defineInRange("powerConverter", 500D, 0D, Double.MAX_VALUE);
@@ -685,6 +690,19 @@ public final class ModSettings {
 
     public static double powerConverterRate() {
         return Math.max(0D, doubleValue(POWER_CONVERTER_RATE));
+    }
+
+    public static List<Double> caseRates() {
+        final List<Double> values = doubleListValue(CASE_RATES);
+        if (values.size() != DEFAULT_CASE_RATES.size()) {
+            return DEFAULT_CASE_RATES;
+        }
+        return values;
+    }
+
+    public static double caseRate(final int tier) {
+        final List<Double> values = caseRates();
+        return Math.max(0D, values.get(clampIndex(tier, values.size())));
     }
 
     public static double forgeEnergyRatio() {

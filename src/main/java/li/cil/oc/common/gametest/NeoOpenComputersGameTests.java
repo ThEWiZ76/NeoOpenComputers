@@ -5718,6 +5718,43 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void computerCaseAcceptsForgeEnergyCapabilityLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.COMPUTER_BUFFER, 100D, () ->
+            withCachedConfig(ModSettings.CASE_RATES, List.of(5D, 10D, 20D), () ->
+                withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
+                    final BlockPos casePos = new BlockPos(1, 1, 1);
+                    helper.setBlock(casePos, ModBlocks.COMPUTER_CASE_TIER2.get());
+                    Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(casePos));
+
+                    final ComputerCaseBlockEntity computerCase = helper.getBlockEntity(casePos);
+                    final Connector connector = (Connector) computerCase.node();
+                    connector.changeBuffer(-connector.localBuffer());
+                    final IEnergyStorage storage = helper.getLevel().getCapability(
+                        Capabilities.EnergyStorage.BLOCK,
+                        helper.absolutePos(casePos),
+                        helper.getBlockState(casePos),
+                        computerCase,
+                        Direction.NORTH);
+
+                    helper.assertTrue(storage != null, "Computer case did not expose Forge Energy capability");
+                    helper.assertTrue(storage.canReceive(), "Computer case Forge Energy storage did not accept input");
+                    helper.assertTrue(!storage.canExtract(), "Computer case Forge Energy storage allowed extraction");
+                    helper.assertTrue(storage.getEnergyStored() == 0, "Computer case Forge Energy storage started filled after drain");
+                    helper.assertTrue(storage.getMaxEnergyStored() == 1000, "Computer case Forge Energy capacity did not use default 10 FE per OC ratio");
+
+                    final int simulated = storage.receiveEnergy(700, true);
+                    helper.assertTrue(simulated == 100, "Computer case simulated receive did not cap by tier-two case throughput");
+                    helper.assertTrue(Double.compare(0D, connector.localBuffer()) == 0, "Computer case simulation changed buffer");
+
+                    final int received = storage.receiveEnergy(700, false);
+                    helper.assertTrue(received == 100, "Computer case receive did not cap by tier-two case throughput");
+                    helper.assertTrue(Double.compare(10D, connector.localBuffer()) == 0, "Computer case did not fill OC buffer from Forge Energy");
+                    helper.assertTrue(storage.getEnergyStored() == 100, "Computer case Forge Energy stored amount mismatch");
+                })));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void relayForwardsPacketsBetweenSideNetworks(final GameTestHelper helper) {
         final BlockPos relayPos = new BlockPos(1, 1, 1);
         helper.setBlock(relayPos, ModBlocks.RELAY.get());

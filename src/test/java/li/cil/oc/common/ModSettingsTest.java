@@ -37,6 +37,12 @@ final class ModSettingsTest {
         assertEquals(9001, ModSettings.deviceComplexityByTier(3));
         assertEquals(12, ModSettings.deviceComplexityByTier(-1));
         assertEquals(9001, ModSettings.deviceComplexityByTier(99));
+        assertEquals(List.of(5D, 10D, 20D), ModSettings.caseRates());
+        assertEquals(5D, ModSettings.caseRate(0));
+        assertEquals(10D, ModSettings.caseRate(1));
+        assertEquals(20D, ModSettings.caseRate(2));
+        assertEquals(5D, ModSettings.caseRate(-1));
+        assertEquals(20D, ModSettings.caseRate(99));
         assertEquals(500D, ModSettings.powerDistributorBuffer());
         assertEquals(500D, ModSettings.powerConverterRate());
         assertEquals(0.1D, ModSettings.forgeEnergyRatio(), 0.000_001D);
@@ -211,6 +217,7 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
         assertEquals(List.of("power", "generatorEfficiency"), ModSettings.GENERATOR_EFFICIENCY.getPath());
+        assertEquals(List.of("power", "rate", "case"), ModSettings.CASE_RATES.getPath());
         assertEquals(List.of("power", "rate", "powerConverter"), ModSettings.POWER_CONVERTER_RATE.getPath());
         assertEquals(List.of("power", "value", "ForgeEnergy"), ModSettings.POWER_VALUE_FORGE_ENERGY.getPath());
         assertEquals(List.of("power", "buffer", "batteryUpgrades"), ModSettings.BATTERY_UPGRADE_BUFFERS.getPath());
