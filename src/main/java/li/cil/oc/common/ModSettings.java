@@ -166,6 +166,7 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_DEPTHS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> GPU_VRAM_SIZES;
     public static final ModConfigSpec.DoubleValue GPU_BITBLT_COST;
+    public static final ModConfigSpec.BooleanValue INSERT_IDS_IN_CONVERTERS;
     public static final ModConfigSpec.ConfigValue<String> DEBUG_CARD_ACCESS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> DEBUG_CARD_WHITELIST;
 
@@ -247,6 +248,9 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("debug");
+        INSERT_IDS_IN_CONVERTERS = builder
+            .comment("Pass numeric IDs and legacy ore-name-like item tag names in converter output. OpenComputers upstream default is false.")
+            .define("insertIdsInConverters", false);
         DEBUG_CARD_ACCESS = builder
             .comment("Debug card access mode. Allowed values: allow, deny, whitelist. OpenComputers upstream default is allow.")
             .define("debugCardAccess", "allow");
@@ -1187,6 +1191,10 @@ public final class ModSettings {
             case "whitelist" -> "whitelist";
             default -> "deny";
         };
+    }
+
+    public static boolean insertIdsInConverters() {
+        return booleanValue(INSERT_IDS_IN_CONVERTERS);
     }
 
     public static Optional<String> debugCardWhitelistNonce(final String player) {

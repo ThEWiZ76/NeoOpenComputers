@@ -998,6 +998,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void driverRegistryGatesDebugIdsInConvertersLikeUpstream(final GameTestHelper helper) throws Exception {
+        helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
+        final DriverRegistry registry = (DriverRegistry) API.driver;
+        final Method convert = DriverRegistry.class.getDeclaredMethod("convert", Object[].class);
+        convert.setAccessible(true);
+
+        withCachedConfig(ModSettings.INSERT_IDS_IN_CONVERTERS, false, () -> {
+            final Object[] result = (Object[]) convert.invoke(registry, (Object) new Object[]{new ItemStack(Items.DIAMOND_SWORD), new FluidStack(Fluids.WATER, 1000)});
+            helper.assertTrue(result.length == 2 && result[0] instanceof Map<?, ?> && result[1] instanceof Map<?, ?>, "Converters did not return maps");
+            helper.assertFalse(((Map<?, ?>) result[0]).containsKey("id"), "Item converter exposed debug id by default");
+            helper.assertFalse(((Map<?, ?>) result[0]).containsKey("oreNames"), "Item converter exposed tag names by default");
+            helper.assertFalse(((Map<?, ?>) result[1]).containsKey("id"), "Fluid converter exposed debug id by default");
+        });
+
+        withCachedConfig(ModSettings.INSERT_IDS_IN_CONVERTERS, true, () -> {
+            final Object[] result = (Object[]) convert.invoke(registry, (Object) new Object[]{new ItemStack(Items.DIAMOND_SWORD), new FluidStack(Fluids.WATER, 1000)});
+            helper.assertTrue(result.length == 2 && result[0] instanceof Map<?, ?> && result[1] instanceof Map<?, ?>, "Converters did not return maps when debug ids are enabled");
+            final Map<?, ?> item = (Map<?, ?>) result[0];
+            helper.assertTrue(item.get("id") instanceof Number id && id.intValue() == BuiltInRegistries.ITEM.getId(Items.DIAMOND_SWORD), "Item converter did not expose numeric debug id");
+            helper.assertTrue(item.get("oreNames") instanceof String[] oreNames && List.of(oreNames).contains("minecraft:swords"),
+                "Item converter did not expose item tag names as oreNames");
+            final Map<?, ?> fluid = (Map<?, ?>) result[1];
+            helper.assertTrue(fluid.get("id") instanceof Number id && id.intValue() == BuiltInRegistries.FLUID.getId(Fluids.WATER), "Fluid converter did not expose numeric debug id");
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void driverRegistryHidesItemStackNbtTagsByDefaultLikeUpstream(final GameTestHelper helper) throws Exception {
         withCachedConfig(ModSettings.ALLOW_ITEM_STACK_NBT_TAGS, false, () -> {
             helper.assertTrue(API.driver instanceof DriverRegistry, "Driver API is not backed by DriverRegistry");
@@ -3817,6 +3845,33 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(analyze.length == 1 && analyze[0] instanceof Map<?, ?>, "Geolyzer analyze did not return block data");
         final Map<?, ?> data = (Map<?, ?>) analyze[0];
         helper.assertTrue("minecraft:diamond_block".equals(data.get("name")), "Geolyzer analyze did not use rotated host side");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void geolyzerAnalyzeGatesDebugBlockIdsLikeUpstream(final GameTestHelper helper) throws Exception {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.GEOLYZER.get());
+        helper.setBlock(pos.relative(Direction.WEST), Blocks.STONE);
+        final GeolyzerBlockEntity geolyzer = helper.getBlockEntity(pos);
+        final ComponentConnector component = (ComponentConnector) geolyzer.node();
+        component.setLocalBufferSize(10D);
+        component.changeBuffer(10D);
+
+        withCachedConfig(ModSettings.INSERT_IDS_IN_CONVERTERS, false, () -> {
+            final Object[] analyze = invokeComponent(helper, component, "analyze", Direction.WEST.get3DDataValue());
+            helper.assertTrue(analyze.length == 1 && analyze[0] instanceof Map<?, ?>, "Geolyzer analyze did not return block data");
+            helper.assertFalse(((Map<?, ?>) analyze[0]).containsKey("id"), "Geolyzer analyze exposed block id by default");
+        });
+
+        component.changeBuffer(10D);
+        withCachedConfig(ModSettings.INSERT_IDS_IN_CONVERTERS, true, () -> {
+            final Object[] analyze = invokeComponent(helper, component, "analyze", Direction.WEST.get3DDataValue());
+            helper.assertTrue(analyze.length == 1 && analyze[0] instanceof Map<?, ?>, "Geolyzer analyze did not return block data when debug ids are enabled");
+            final Map<?, ?> data = (Map<?, ?>) analyze[0];
+            helper.assertTrue(data.get("id") instanceof Number id && id.intValue() == BuiltInRegistries.BLOCK.getId(Blocks.STONE),
+                "Geolyzer analyze did not expose numeric block id");
+        });
         helper.succeed();
     }
 

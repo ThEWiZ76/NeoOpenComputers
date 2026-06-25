@@ -129,6 +129,7 @@ final class ModSettingsTest {
         assertEquals(false, ModSettings.enableCommandBlockDriver());
         assertEquals(false, ModSettings.enableTankDriver());
         assertEquals(false, ModSettings.allowItemStackNbtTags());
+        assertEquals(false, ModSettings.insertIdsInConverters());
         assertEquals(List.of("removeme", "deny private", "deny bogon", "allow default"), ModSettings.internetFilteringRules());
         assertEquals(0, ModSettings.httpRequestTimeout());
         assertEquals(4, ModSettings.internetThreads());
@@ -276,6 +277,7 @@ final class ModSettingsTest {
         assertEquals(List.of("integration", "vanilla", "enableCommandBlockDriver"), ModSettings.ENABLE_COMMAND_BLOCK_DRIVER.getPath());
         assertEquals(List.of("integration", "vanilla", "enableTankDriver"), ModSettings.ENABLE_TANK_DRIVER.getPath());
         assertEquals(List.of("integration", "vanilla", "allowItemStackNBTTags"), ModSettings.ALLOW_ITEM_STACK_NBT_TAGS.getPath());
+        assertEquals(List.of("debug", "insertIdsInConverters"), ModSettings.INSERT_IDS_IN_CONVERTERS.getPath());
         assertEquals(List.of("client", "enableNanomachinePfx"), ModSettings.ENABLE_NANOMACHINE_PFX.getPath());
         assertEquals(List.of("client", "nanomachineHudPos"), ModSettings.NANOMACHINE_HUD_POS.getPath());
         assertEquals(List.of("hologram", "maxScale"), ModSettings.HOLOGRAM_MAX_SCALE.getPath());

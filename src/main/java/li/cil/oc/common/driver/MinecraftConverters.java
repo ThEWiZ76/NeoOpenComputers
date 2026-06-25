@@ -51,6 +51,13 @@ public final class MinecraftConverters {
     public static final Converter ITEM_STACK = (value, output) -> {
         if (value instanceof ItemStack stack) {
             final ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            if (ModSettings.insertIdsInConverters()) {
+                output.put("id", BuiltInRegistries.ITEM.getId(stack.getItem()));
+                output.put("oreNames", stack.getTags()
+                    .map(tag -> tag.location().toString())
+                    .sorted()
+                    .toArray(String[]::new));
+            }
             output.put("damage", stack.getDamageValue());
             output.put("maxDamage", stack.getMaxDamage());
             output.put("size", stack.getCount());
@@ -175,6 +182,9 @@ public final class MinecraftConverters {
         output.put("hasTag", !stack.isComponentsPatchEmpty());
         if (!stack.isEmpty()) {
             final ResourceLocation id = BuiltInRegistries.FLUID.getKey(stack.getFluid());
+            if (ModSettings.insertIdsInConverters()) {
+                output.put("id", BuiltInRegistries.FLUID.getId(stack.getFluid()));
+            }
             output.put("name", id == null ? "minecraft:empty" : id.toString());
             output.put("label", stack.getHoverName().getString());
         }

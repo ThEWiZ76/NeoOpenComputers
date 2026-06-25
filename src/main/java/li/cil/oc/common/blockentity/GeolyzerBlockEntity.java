@@ -270,6 +270,9 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
         final BlockState state = level.getBlockState(event.pos);
         final var blockKey = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         event.data.put("name", blockKey == null ? "minecraft:air" : blockKey.toString());
+        if (ModSettings.insertIdsInConverters()) {
+            event.data.put("id", BuiltInRegistries.BLOCK.getId(state.getBlock()));
+        }
         event.data.put("hardness", state.getDestroySpeed(level, event.pos));
         event.data.put("color", state.getMapColor(level, event.pos).col);
         final Map<String, String> properties = new HashMap<>();
