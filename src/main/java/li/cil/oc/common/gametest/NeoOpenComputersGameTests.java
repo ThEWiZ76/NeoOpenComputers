@@ -56,6 +56,7 @@ import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
+import li.cil.oc.common.blockentity.PrintBlockEntity;
 import li.cil.oc.common.blockentity.PrinterBlockEntity;
 import li.cil.oc.common.blockentity.RelayBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
@@ -1522,6 +1523,34 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("tooltip".equals(loaded.tooltip()), "Print item stack lost tooltip");
         helper.assertTrue(loaded.redstoneLevel() == 7, "Print item stack lost redstone level");
         helper.assertTrue(loaded.stateOff().size() == 1, "Print item stack lost model shape");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printBlockEntityLoadsStackAndTogglesRedstoneLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.setLabel("placed-print");
+        data.setLightLevel(5);
+        data.setRedstoneLevel(7);
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/stone", null));
+        data.addStateOn(new PrintData.Shape(new AABB(0D, 0D, 0D, 0.5D, 1D, 1D), "minecraft:block/redstone_block", null));
+        final ItemStack stack = data.createItemStack();
+
+        final BlockPos pos = BlockPos.ZERO;
+        helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState());
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.loadFromStack(stack);
+
+        helper.assertTrue("placed-print".equals(print.data().label()), "Print block entity did not load stack label");
+        helper.assertTrue(print.lightLevel() == 5, "Print block entity did not expose configured light");
+        helper.assertTrue(print.redstoneSignal() == 0, "Inactive print emitted redstone");
+        helper.assertTrue(print.isSideSolid(Direction.DOWN), "Full off-state print was not side-solid on bottom");
+        helper.assertTrue(print.activate(), "Print did not toggle to active state");
+        helper.assertTrue(print.isActiveState(), "Print active state did not toggle");
+        helper.assertTrue(print.redstoneSignal() == 7, "Active print did not emit configured redstone");
+        final ItemStack clone = print.createItemStack();
+        helper.assertTrue(clone.is(ModItems.PRINT.get()), "Print block entity did not recreate print stack");
+        helper.assertTrue("placed-print".equals(new PrintData(clone).label()), "Print block entity recreated stack without data");
         helper.succeed();
     }
 

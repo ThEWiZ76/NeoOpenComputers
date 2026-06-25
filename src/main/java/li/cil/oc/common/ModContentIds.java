@@ -105,6 +105,7 @@ public final class ModContentIds {
     public static final String POWER_DISTRIBUTOR = "power_distributor";
     public static final String POWER_DISTRIBUTOR_BLOCK_ENTITY = "power_distributor";
     public static final String PRINT = "print";
+    public static final String PRINT_BLOCK_ENTITY = "print";
     public static final String PRINTER = "printer";
     public static final String PRINTER_BLOCK_ENTITY = "printer";
     public static final String RACK = "rack";

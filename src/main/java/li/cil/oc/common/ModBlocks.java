@@ -12,6 +12,7 @@ import li.cil.oc.common.block.HologramBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
 import li.cil.oc.common.block.PowerDistributorBlock;
+import li.cil.oc.common.block.PrintBlock;
 import li.cil.oc.common.block.PrinterBlock;
 import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.block.RaidBlock;
@@ -100,7 +101,7 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> PRINT = BLOCKS.register(
         ModContentIds.PRINT,
-        () -> new Block(printProperties()));
+        () -> new PrintBlock(printProperties()));
 
     public static final DeferredBlock<Block> PRINTER = BLOCKS.register(
         ModContentIds.PRINTER,
