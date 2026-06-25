@@ -87,6 +87,8 @@ final class ExternalAddonCompileTest {
                         Driver.add(driver);
                         Driver.add(new ExampleBlockDriver());
                         Driver.add(new ExampleItemDriver());
+                        Driver.add(new LegacySidedBlockDriver());
+                        Driver.add(new LegacyItemDriver());
                         Driver.add(new ExampleConverter());
                         Driver.add(new ExampleEnvironmentProvider());
                         Driver.add(new ExampleInventoryProvider());
@@ -99,6 +101,19 @@ final class ExternalAddonCompileTest {
                     public static final class ExampleBlockDriver extends li.cil.oc.api.prefab.DriverSidedBlock {
                         public ExampleBlockDriver() {
                             super(new ItemStack(Items.STONE));
+                        }
+
+                        @Override
+                        public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
+                            return new ExampleAddonComponent();
+                        }
+                    }
+
+                    @SuppressWarnings("deprecation")
+                    public static final class LegacySidedBlockDriver implements li.cil.oc.api.driver.SidedBlock {
+                        @Override
+                        public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
+                            return world != null && pos != null;
                         }
 
                         @Override
@@ -120,6 +135,34 @@ final class ExternalAddonCompileTest {
                         @Override
                         public String slot(final ItemStack stack) {
                             return "card";
+                        }
+                    }
+
+                    @SuppressWarnings("deprecation")
+                    public static final class LegacyItemDriver implements li.cil.oc.api.driver.Item {
+                        @Override
+                        public boolean worksWith(final ItemStack stack) {
+                            return stack != null;
+                        }
+
+                        @Override
+                        public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+                            return new ExampleAddonComponent();
+                        }
+
+                        @Override
+                        public String slot(final ItemStack stack) {
+                            return "upgrade";
+                        }
+
+                        @Override
+                        public int tier(final ItemStack stack) {
+                            return 0;
+                        }
+
+                        @Override
+                        public CompoundTag dataTag(final ItemStack stack) {
+                            return new CompoundTag();
                         }
                     }
 
