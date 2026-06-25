@@ -184,6 +184,8 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.IFluidTank;
@@ -5669,6 +5671,49 @@ public final class NeoOpenComputersGameTests {
                 helper.assertTrue("456.0".equals(info.get(DeviceInfo.DeviceAttribute.Capacity)), "Power converter capacity mismatch");
             });
         });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void powerConverterAcceptsForgeEnergyCapabilityLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
+            withCachedConfig(ModSettings.POWER_CONVERTER_RATE, 50D, () ->
+                withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
+                    final BlockPos converterPos = new BlockPos(1, 1, 1);
+                    helper.setBlock(converterPos, ModBlocks.POWER_CONVERTER.get());
+                    Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(converterPos));
+
+                    final PowerConverterBlockEntity converter = helper.getBlockEntity(converterPos);
+                    final Connector connector = (Connector) converter.node();
+                    final IEnergyStorage storage = helper.getLevel().getCapability(
+                        Capabilities.EnergyStorage.BLOCK,
+                        helper.absolutePos(converterPos),
+                        helper.getBlockState(converterPos),
+                        converter,
+                        Direction.NORTH);
+                    final IEnergyStorage nullSideStorage = helper.getLevel().getCapability(
+                        Capabilities.EnergyStorage.BLOCK,
+                        helper.absolutePos(converterPos),
+                        helper.getBlockState(converterPos),
+                        converter,
+                        (Direction) null);
+
+                    helper.assertTrue(storage != null, "Power converter did not expose Forge Energy capability");
+                    helper.assertTrue(nullSideStorage != null, "Power converter did not expose null-side Forge Energy capability");
+                    helper.assertTrue(storage.canReceive(), "Power converter Forge Energy storage did not accept input");
+                    helper.assertTrue(!storage.canExtract(), "Power converter Forge Energy storage allowed extraction");
+                    helper.assertTrue(storage.getEnergyStored() == 0, "Power converter Forge Energy storage started filled");
+                    helper.assertTrue(storage.getMaxEnergyStored() == 1000, "Power converter Forge Energy capacity did not use default 10 FE per OC ratio");
+
+                    final int simulated = storage.receiveEnergy(700, true);
+                    helper.assertTrue(simulated == 500, "Power converter simulated receive did not cap by throughput");
+                    helper.assertTrue(Double.compare(0D, connector.localBuffer()) == 0, "Power converter simulation changed buffer");
+
+                    final int received = storage.receiveEnergy(700, false);
+                    helper.assertTrue(received == 500, "Power converter receive did not cap by throughput");
+                    helper.assertTrue(Double.compare(50D, connector.localBuffer()) == 0, "Power converter did not fill OC buffer from Forge Energy");
+                    helper.assertTrue(storage.getEnergyStored() == 500, "Power converter Forge Energy stored amount mismatch");
+                })));
         helper.succeed();
     }
 

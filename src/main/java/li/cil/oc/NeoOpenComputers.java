@@ -3,6 +3,7 @@ package li.cil.oc;
 import com.mojang.logging.LogUtils;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModBlocks;
+import li.cil.oc.common.ModCapabilities;
 import li.cil.oc.common.ModContentCatalog;
 import li.cil.oc.common.ModCreativeTabs;
 import li.cil.oc.common.DriverRegistry;
@@ -60,6 +61,7 @@ public final class NeoOpenComputers {
         ModRecipeSerializers.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
+        modEventBus.addListener(ModCapabilities::register);
         MfuTargetEvents.register();
         NeoForge.EVENT_BUS.addListener(ModCommands::register);
         NanomachinesRegistry.registerTickHandler();

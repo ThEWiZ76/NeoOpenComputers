@@ -132,6 +132,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue POWER_CONVERTER_RATE;
+    public static final ModConfigSpec.DoubleValue POWER_VALUE_FORGE_ENERGY;
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue PRINTER_TICK_AMOUNT;
@@ -413,6 +414,11 @@ public final class ModSettings {
             .comment("Energy throughput per tick exposed by power converters. OpenComputers upstream default is 500.")
             .defineInRange("powerConverter", 500D, 0D, Double.MAX_VALUE);
         builder.pop();
+        builder.push("value");
+        POWER_VALUE_FORGE_ENERGY = builder
+            .comment("Forge Energy value used for conversion to internal OC energy. Internal OC value is 1000; upstream Forge Energy default is 100.")
+            .defineInRange("ForgeEnergy", 100D, Double.MIN_VALUE, Double.MAX_VALUE);
+        builder.pop();
         ASSEMBLER_TICK_AMOUNT = builder
             .comment("Energy the assembler can apply per tick. OpenComputers upstream default is 50.")
             .defineInRange("assemblerTickAmount", 50D, 1D, Double.MAX_VALUE);
@@ -679,6 +685,21 @@ public final class ModSettings {
 
     public static double powerConverterRate() {
         return Math.max(0D, doubleValue(POWER_CONVERTER_RATE));
+    }
+
+    public static double forgeEnergyRatio() {
+        return Math.max(Double.MIN_VALUE, doubleValue(POWER_VALUE_FORGE_ENERGY)) / 1_000D;
+    }
+
+    public static double fromForgeEnergy(final int value) {
+        return Math.max(0, value) * forgeEnergyRatio();
+    }
+
+    public static int toForgeEnergy(final double value) {
+        if (value <= 0D) {
+            return 0;
+        }
+        return (int) Math.min(Integer.MAX_VALUE, value / forgeEnergyRatio());
     }
 
     public static double computerBuffer() {
