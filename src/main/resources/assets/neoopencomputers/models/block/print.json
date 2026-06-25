@@ -1,6 +1,7 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/block",
   "textures": {
-    "all": "minecraft:block/smooth_quartz"
-  }
+    "particle": "minecraft:block/stone"
+  },
+  "elements": []
 }

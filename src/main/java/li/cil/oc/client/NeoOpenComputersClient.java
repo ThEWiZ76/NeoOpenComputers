@@ -68,6 +68,7 @@ public final class NeoOpenComputersClient {
 
     @SubscribeEvent
     static void registerEntityRenderers(final EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(ModBlockEntities.PRINT.get(), PrintBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SCREEN.get(), ScreenBlockEntityRenderer::new);
     }
 }

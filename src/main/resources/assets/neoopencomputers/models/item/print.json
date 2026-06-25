@@ -1,3 +1,6 @@
 {
-  "parent": "neoopencomputers:block/print"
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "minecraft:block/stone"
+  }
 }
