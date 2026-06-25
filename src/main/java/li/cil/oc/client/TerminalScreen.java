@@ -13,7 +13,9 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     private static final int DEFAULT_IMAGE_WIDTH = 248;
@@ -26,6 +28,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     private static final int TEXT_BOTTOM_MARGIN = 12;
     private static final int CLIPBOARD_CHUNK_SIZE = 16 * 1024;
     private static final int CLIPBOARD_MAX_LENGTH = 64 * 1024;
+    private final Set<Integer> pressedKeys = new HashSet<>();
 
     record TextRun(int column, String text, int color) {
     }
@@ -87,7 +90,10 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             sendClipboardInput(minecraft.keyboardHandler.getClipboard());
             return true;
         }
-        sendKeyInput(true, (char) 0, keyCode);
+        if (shouldForwardKeyPress(pressedKeys.contains(keyCode), keyCode)) {
+            sendKeyInput(true, (char) 0, keyCode);
+        }
+        pressedKeys.add(keyCode);
         return true;
     }
 
@@ -96,7 +102,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         if (!shouldForwardKeyboardInput(menu.snapshot())) {
             return false;
         }
-        sendKeyInput(false, (char) 0, keyCode);
+        if (shouldForwardKeyRelease(pressedKeys.remove(keyCode))) {
+            sendKeyInput(false, (char) 0, keyCode);
+        }
         return true;
     }
 
@@ -108,6 +116,12 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         sendKeyInput(true, codePoint, 0);
         sendKeyInput(false, codePoint, 0);
         return true;
+    }
+
+    @Override
+    public void removed() {
+        pressedKeys.clear();
+        super.removed();
     }
 
     @Override
@@ -175,6 +189,28 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     static boolean shouldForwardKeyboardInput(final TerminalScreenSnapshot snapshot) {
         return shouldForwardKeyboardInput(acceptsInput(snapshot), ItemSearch.isInputFocused());
+    }
+
+    static boolean shouldForwardKeyPress(final boolean alreadyPressed, final int keyCode) {
+        return !alreadyPressed || !ignoreRepeat(keyCode);
+    }
+
+    static boolean shouldForwardKeyRelease(final boolean wasPressed) {
+        return wasPressed;
+    }
+
+    private static boolean ignoreRepeat(final int keyCode) {
+        return switch (keyCode) {
+            case GLFW.GLFW_KEY_LEFT_CONTROL,
+                 GLFW.GLFW_KEY_RIGHT_CONTROL,
+                 GLFW.GLFW_KEY_LEFT_ALT,
+                 GLFW.GLFW_KEY_RIGHT_ALT,
+                 GLFW.GLFW_KEY_LEFT_SHIFT,
+                 GLFW.GLFW_KEY_RIGHT_SHIFT,
+                 GLFW.GLFW_KEY_LEFT_SUPER,
+                 GLFW.GLFW_KEY_RIGHT_SUPER -> true;
+            default -> false;
+        };
     }
 
     static int imageWidth(final TerminalScreenSnapshot snapshot) {

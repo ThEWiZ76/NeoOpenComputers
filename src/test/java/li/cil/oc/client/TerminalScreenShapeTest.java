@@ -184,6 +184,27 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenSuppressesRepeatedModifierKeysLikeUpstreamInputBuffer() {
+        assertEquals(false, TerminalScreen.shouldForwardKeyPress(true, GLFW.GLFW_KEY_LEFT_CONTROL));
+        assertEquals(false, TerminalScreen.shouldForwardKeyPress(true, GLFW.GLFW_KEY_RIGHT_CONTROL));
+        assertEquals(false, TerminalScreen.shouldForwardKeyPress(true, GLFW.GLFW_KEY_LEFT_ALT));
+        assertEquals(false, TerminalScreen.shouldForwardKeyPress(true, GLFW.GLFW_KEY_RIGHT_ALT));
+        assertEquals(false, TerminalScreen.shouldForwardKeyPress(true, GLFW.GLFW_KEY_LEFT_SHIFT));
+        assertEquals(false, TerminalScreen.shouldForwardKeyPress(true, GLFW.GLFW_KEY_RIGHT_SHIFT));
+        assertEquals(false, TerminalScreen.shouldForwardKeyPress(true, GLFW.GLFW_KEY_LEFT_SUPER));
+        assertEquals(false, TerminalScreen.shouldForwardKeyPress(true, GLFW.GLFW_KEY_RIGHT_SUPER));
+
+        assertEquals(true, TerminalScreen.shouldForwardKeyPress(false, GLFW.GLFW_KEY_LEFT_CONTROL));
+        assertEquals(true, TerminalScreen.shouldForwardKeyPress(true, GLFW.GLFW_KEY_W));
+    }
+
+    @Test
+    void terminalScreenSendsKeyUpOnlyForTrackedPressedKeysLikeUpstreamInputBuffer() {
+        assertEquals(true, TerminalScreen.shouldForwardKeyRelease(true));
+        assertEquals(false, TerminalScreen.shouldForwardKeyRelease(false));
+    }
+
+    @Test
     void terminalScreenBuildsClipboardPayloadForMenu() throws ReflectiveOperationException {
         final TerminalMenu menu = allocateMenu(12);
 
