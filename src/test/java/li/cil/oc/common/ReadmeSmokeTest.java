@@ -46,6 +46,9 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("neoopencomputers-$modVersion-javadoc.jar"), "Kit must include Javadoc jar");
         assertTrue(scriptText.contains("SHA256SUMS.txt"), "Kit must write checksums");
         assertTrue(scriptText.contains("DryRun"), "Kit must have a dry-run path for verification");
+        assertTrue(scriptText.contains("Compress-Archive -Path"), "Kit zip must expand wildcard contents");
+        assertTrue(!scriptText.contains("Compress-Archive -LiteralPath (Join-Path $kitDir '*')"),
+            "LiteralPath does not expand the kit wildcard when zipping");
     }
 
     @Test
