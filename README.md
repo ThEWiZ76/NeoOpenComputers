@@ -6,7 +6,22 @@ The project name intentionally differs from the original mod: **NeoOpenComputers
 
 ## Current State
 
-This repository is a clean NeoForge 1.21.1 scaffold with the first standalone OpenComputers API contracts ported to Java. It intentionally does not compile the old Scala implementation. The old mod is used as a behavioral reference while systems are ported incrementally.
+This repository is an active Java-first NeoForge 1.21.1 port. It intentionally does not compile the old Scala implementation. The old mod is used as a behavioral reference while systems are ported incrementally.
+
+Current pushed first-smoke base:
+
+- `develop` at `1aa421d2e feat(print): render configured print items`
+
+Current verification evidence:
+
+- Unit/build gate: `.\gradlew.bat test build --no-daemon --console=plain`
+- GameTest gate: `.\gradlew.bat runGameTestServer --no-daemon --console=plain`
+- Latest GameTest result: `285/285` required tests passed.
+- Bounded client launch smoke reaches resource reload and texture atlas creation without print/model/missing-texture/error matches.
+
+The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, and packaging slices in place. It is ready for first technical smoke testing, not release-ready.
+
+GitHub Actions are intentionally disabled until the mod is ready enough for CI. Do not add `.github/workflows` yet.
 
 Chosen upstream reference branch:
 
@@ -33,6 +48,42 @@ The built mod jar is written to `build/libs`.
 ```powershell
 .\gradlew.bat runClient
 ```
+
+## First Technical Smoke Test
+
+Use this for local crash finding and first in-world proof. This is not a community beta checklist.
+
+1. Build the jar:
+
+```powershell
+.\gradlew.bat test build --no-daemon --console=plain
+```
+
+2. Run GameTests:
+
+```powershell
+.\gradlew.bat runGameTestServer --no-daemon --console=plain
+```
+
+3. Start the development client:
+
+```powershell
+.\gradlew.bat runClient --no-daemon --console=plain
+```
+
+4. In a local test world, check these flows:
+
+- Computer case, screen, and keyboard place without crashing.
+- OpenOS/Lua prompt boots.
+- Basic filesystem, EEPROM, floppy, and disk-drive actions work.
+- Screen output and keyboard input survive save/reload.
+- Redstone, modem, inventory, tank, and transposer each get one basic smoke pass.
+- Texture picker reports usable atlas texture names such as `minecraft:block/stone`.
+- Printer creates a print item.
+- Print item visually uses configured shape data.
+- Placed print rotates, renders configured shape data, drops configured data, handles button-mode redstone activation, held-item activation, beacon-base setting, tooltip data, opacity setting, and legacy texture names.
+
+5. Save logs for any crash, missing texture, client/server error, or unexpected visual behavior.
 
 ## Run Development Server
 
