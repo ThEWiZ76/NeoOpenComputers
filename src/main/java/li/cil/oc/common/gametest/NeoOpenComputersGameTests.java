@@ -150,6 +150,7 @@ import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
@@ -1620,6 +1621,31 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(print.isActiveState(), "External redstone did not activate button print");
         helper.runAtTickTime(22, () -> {
             helper.assertFalse(print.isActiveState(), "Button print did not release after scheduled tick");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 140)
+    public static void beaconAcceptsConfiguredPrintBaseLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.setBeaconBase(true);
+        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/diamond_block", null));
+        final ItemStack stack = data.createItemStack();
+
+        for (int x = 1; x <= 3; x++) {
+            for (int z = 1; z <= 3; z++) {
+                final BlockPos basePos = new BlockPos(x, 1, z);
+                helper.setBlock(basePos, ModBlocks.PRINT.get().defaultBlockState());
+                final PrintBlockEntity print = helper.getBlockEntity(basePos);
+                print.loadFromStack(stack);
+            }
+        }
+
+        final BlockPos beaconPos = new BlockPos(2, 2, 2);
+        helper.setBlock(beaconPos, Blocks.BEACON);
+        final BeaconBlockEntity beacon = helper.getBlockEntity(beaconPos);
+        helper.runAtTickTime(120, () -> {
+            helper.assertFalse(beacon.getBeamSections().isEmpty(), "Configured print beacon base did not activate beacon");
             helper.succeed();
         });
     }
