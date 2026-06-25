@@ -169,6 +169,11 @@ final class StaticFacadeApiTest {
     }
 
     @Test
+    void networkPacketFactoryKeepsVarargsAddonSignature() throws NoSuchMethodException {
+        assertTrue(Network.class.getMethod("newPacket", String.class, String.class, int.class, Object[].class).isVarArgs());
+    }
+
+    @Test
     void fileSystemFacadeDelegatesToFileSystemApiAndConvenienceOverloadsUseDefaults() {
         TestFileSystemAPI api = new TestFileSystemAPI();
         API.fileSystem = api;

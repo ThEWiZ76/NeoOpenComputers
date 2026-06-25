@@ -31,7 +31,7 @@ public interface NetworkAPI {
 
     Builder.NodeBuilder newNode(Environment host, Visibility reachability);
 
-    Packet newPacket(String source, String destination, int port, Object[] data);
+    Packet newPacket(String source, String destination, int port, Object... data);
 
     Packet newPacket(CompoundTag nbt);
 }

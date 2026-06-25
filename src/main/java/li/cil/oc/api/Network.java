@@ -69,7 +69,7 @@ public final class Network {
         return null;
     }
 
-    public static Packet newPacket(final String source, final String destination, final int port, final Object[] data) {
+    public static Packet newPacket(final String source, final String destination, final int port, final Object... data) {
         if (API.network != null) {
             return API.network.newPacket(source, destination, port, data);
         }
