@@ -34,6 +34,7 @@ import li.cil.oc.common.item.NanomachinesItem;
 import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.NetworkCardItem;
 import li.cil.oc.common.item.PistonUpgradeItem;
+import li.cil.oc.common.item.PrintItem;
 import li.cil.oc.common.item.RedstoneCardItem;
 import li.cil.oc.common.item.ServerItem;
 import li.cil.oc.common.item.SignUpgradeItem;
@@ -153,9 +154,9 @@ public final class ModItems {
         ModContentIds.POWER_DISTRIBUTOR,
         ModBlocks.POWER_DISTRIBUTOR);
 
-    public static final DeferredItem<BlockItem> PRINT = ITEMS.registerSimpleBlockItem(
+    public static final DeferredItem<PrintItem> PRINT = ITEMS.register(
         ModContentIds.PRINT,
-        ModBlocks.PRINT);
+        () -> new PrintItem(ModBlocks.PRINT.get(), new Item.Properties()));
 
     public static final DeferredItem<BlockItem> PRINTER = ITEMS.registerSimpleBlockItem(
         ModContentIds.PRINTER,

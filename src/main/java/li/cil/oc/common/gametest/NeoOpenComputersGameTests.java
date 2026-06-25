@@ -118,6 +118,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.ContainerHelper;
@@ -137,6 +138,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -172,6 +174,7 @@ import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -1525,6 +1528,26 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("tooltip".equals(loaded.tooltip()), "Print item stack lost tooltip");
         helper.assertTrue(loaded.redstoneLevel() == 7, "Print item stack lost redstone level");
         helper.assertTrue(loaded.stateOff().size() == 1, "Print item stack lost model shape");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void printItemTooltipShowsConfiguredDataLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.setTooltip("first line\nsecond line");
+        data.setBeaconBase(true);
+        data.setRedstoneLevel(7);
+        data.setLightLevel(5);
+        final ItemStack stack = data.createItemStack();
+        final List<Component> tooltip = new ArrayList<>();
+
+        ModItems.PRINT.get().appendHoverText(stack, Item.TooltipContext.EMPTY, tooltip, TooltipFlag.NORMAL);
+
+        helper.assertTrue(containsComponentText(tooltip, "first line"), "Print tooltip did not include configured first line");
+        helper.assertTrue(containsComponentText(tooltip, "second line"), "Print tooltip did not include configured second line");
+        helper.assertTrue(containsTranslatableComponent(tooltip, "tooltip.neoopencomputers.print.beacon_base"), "Print tooltip did not include beacon base marker");
+        helper.assertTrue(containsTranslatableComponent(tooltip, "tooltip.neoopencomputers.print.redstone_level"), "Print tooltip did not include redstone marker");
+        helper.assertTrue(containsTranslatableComponent(tooltip, "tooltip.neoopencomputers.print.light_level"), "Print tooltip did not include light marker");
         helper.succeed();
     }
 
@@ -7707,6 +7730,24 @@ public final class NeoOpenComputersGameTests {
                 if (expected.equals(value)) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsComponentText(final List<Component> lines, final String expected) {
+        for (final Component line : lines) {
+            if (line.getString().contains(expected)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsTranslatableComponent(final List<Component> lines, final String key) {
+        for (final Component line : lines) {
+            if (line.getContents() instanceof final TranslatableContents translatable && translatable.getKey().equals(key)) {
+                return true;
             }
         }
         return false;
