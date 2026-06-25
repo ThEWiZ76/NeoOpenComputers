@@ -192,6 +192,12 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void printBlockIdsAreStable() {
+        assertEquals("print", ModContentIds.PRINT);
+        assertEquals("printer", ModContentIds.PRINTER);
+    }
+
+    @Test
     void cpuTier1ItemIdIsStable() {
         assertEquals("cpu_tier1", ModContentIds.CPU_TIER1);
     }

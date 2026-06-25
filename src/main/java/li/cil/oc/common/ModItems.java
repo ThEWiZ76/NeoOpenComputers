@@ -153,6 +153,14 @@ public final class ModItems {
         ModContentIds.POWER_DISTRIBUTOR,
         ModBlocks.POWER_DISTRIBUTOR);
 
+    public static final DeferredItem<BlockItem> PRINT = ITEMS.registerSimpleBlockItem(
+        ModContentIds.PRINT,
+        ModBlocks.PRINT);
+
+    public static final DeferredItem<BlockItem> PRINTER = ITEMS.registerSimpleBlockItem(
+        ModContentIds.PRINTER,
+        ModBlocks.PRINTER);
+
     public static final DeferredItem<BlockItem> RACK = ITEMS.registerSimpleBlockItem(
         ModContentIds.RACK,
         ModBlocks.RACK);

@@ -97,6 +97,14 @@ public final class ModBlocks {
         ModContentIds.POWER_DISTRIBUTOR,
         () -> new PowerDistributorBlock(networkInfrastructureProperties()));
 
+    public static final DeferredBlock<Block> PRINT = BLOCKS.register(
+        ModContentIds.PRINT,
+        () -> new Block(printProperties()));
+
+    public static final DeferredBlock<Block> PRINTER = BLOCKS.register(
+        ModContentIds.PRINTER,
+        () -> new Block(printerProperties()));
+
     public static final DeferredBlock<Block> RACK = BLOCKS.register(
         ModContentIds.RACK,
         () -> new RackBlock(rackProperties()));
@@ -207,6 +215,20 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties printProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_LIGHT_GRAY)
+            .strength(1.0F, 3.0F)
+            .noOcclusion();
+    }
+
+    private static BlockBehaviour.Properties printerProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
+            .strength(2.0F, 6.0F)
+            .noOcclusion();
     }
 
     private static BlockBehaviour.Properties rackProperties() {

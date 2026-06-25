@@ -205,6 +205,8 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.KEYBOARD.get();
         ModBlocks.MOTION_SENSOR.get();
         ModBlocks.POWER_DISTRIBUTOR.get();
+        ModBlocks.PRINT.get();
+        ModBlocks.PRINTER.get();
         ModBlocks.RACK.get();
         ModBlocks.RAID.get();
         ModBlocks.REDSTONE_IO.get();
@@ -248,6 +250,8 @@ public final class NeoOpenComputersGameTests {
         ModItems.ARROW_KEYS.get();
         ModItems.NUM_PAD.get();
         ModItems.POWER_DISTRIBUTOR.get();
+        ModItems.PRINT.get();
+        ModItems.PRINTER.get();
         ModItems.RACK.get();
         ModItems.RAID.get();
         ModItems.CABLE.get();

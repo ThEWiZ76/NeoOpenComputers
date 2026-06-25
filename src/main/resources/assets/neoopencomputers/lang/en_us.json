@@ -12,6 +12,8 @@
   "block.neoopencomputers.hologram_tier2": "Hologram Projector (Tier 2)",
   "block.neoopencomputers.keyboard": "Keyboard",
   "block.neoopencomputers.motion_sensor": "Motion Sensor",
+  "block.neoopencomputers.print": "3D Print",
+  "block.neoopencomputers.printer": "3D Printer",
   "block.neoopencomputers.redstone": "Redstone I/O",
   "block.neoopencomputers.screen_tier1": "Screen (Tier 1)",
   "block.neoopencomputers.screen_tier2": "Screen (Tier 2)",
