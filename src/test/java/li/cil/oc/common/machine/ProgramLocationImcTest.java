@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,5 +41,20 @@ final class ProgramLocationImcTest {
         assertEquals(1, mappings.size());
         assertEquals("dig", mappings.getFirst().program());
         assertEquals("Network", mappings.getFirst().label());
+    }
+
+    @Test
+    void registersUpstreamDefaultProgramDiskLabels() {
+        ProgramLocations.registerDefaults();
+
+        Map<String, String> mappings = ProgramLocations.mappingsByProgram("LuaJ");
+        assertEquals("builder", mappings.get("build"));
+        assertEquals("dig", mappings.get("dig"));
+        assertEquals("data", mappings.get("md5sum"));
+        assertEquals("data", mappings.get("sha256sum"));
+        assertEquals("network", mappings.get("ping"));
+        assertEquals("network", mappings.get("route"));
+        assertEquals("openloader", mappings.get("opl-flash"));
+        assertEquals("oppm", mappings.get("oppm"));
     }
 }

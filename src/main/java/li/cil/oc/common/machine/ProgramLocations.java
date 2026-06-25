@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class ProgramLocations {
+    private static final String[] DEFAULT_ARCHITECTURES = {"Lua 5.2", "Lua 5.3", "LuaJ"};
     private static final Map<String, Map<String, String>> ARCHITECTURE_LOCATIONS = new LinkedHashMap<>();
     private static final Map<String, String> GLOBAL_LOCATIONS = new LinkedHashMap<>();
 
@@ -27,6 +28,26 @@ public final class ProgramLocations {
                     .put(program, label);
             }
         }
+    }
+
+    public static synchronized void registerDefaults() {
+        addMapping("build", "builder", DEFAULT_ARCHITECTURES);
+        addMapping("dig", "dig", DEFAULT_ARCHITECTURES);
+        addMapping("base64", "data", DEFAULT_ARCHITECTURES);
+        addMapping("deflate", "data", DEFAULT_ARCHITECTURES);
+        addMapping("gpg", "data", DEFAULT_ARCHITECTURES);
+        addMapping("inflate", "data", DEFAULT_ARCHITECTURES);
+        addMapping("md5sum", "data", DEFAULT_ARCHITECTURES);
+        addMapping("sha256sum", "data", DEFAULT_ARCHITECTURES);
+        addMapping("refuel", "generator", DEFAULT_ARCHITECTURES);
+        addMapping("irc", "irc", DEFAULT_ARCHITECTURES);
+        addMapping("maze", "maze", DEFAULT_ARCHITECTURES);
+        addMapping("arp", "network", DEFAULT_ARCHITECTURES);
+        addMapping("ifconfig", "network", DEFAULT_ARCHITECTURES);
+        addMapping("ping", "network", DEFAULT_ARCHITECTURES);
+        addMapping("route", "network", DEFAULT_ARCHITECTURES);
+        addMapping("opl-flash", "openloader", DEFAULT_ARCHITECTURES);
+        addMapping("oppm", "oppm", DEFAULT_ARCHITECTURES);
     }
 
     static synchronized List<Mapping> mappings(final String architecture) {

@@ -18,6 +18,7 @@ import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.MfuTargetEvents;
 import li.cil.oc.common.command.ModCommands;
 import li.cil.oc.common.machine.ProgramLocationImc;
+import li.cil.oc.common.machine.ProgramLocations;
 import li.cil.oc.common.network.DebugNetworking;
 import li.cil.oc.common.network.NanomachinesNetworking;
 import li.cil.oc.common.network.RackNetworking;
@@ -67,6 +68,7 @@ public final class NeoOpenComputers {
             ModContentCatalog.registerDefaults();
             ModEeproms.registerDefaults();
             ModLootDisks.registerDefaults();
+            ProgramLocations.registerDefaults();
             ModDriverCatalog.registerDefaults();
             OpenComputersApi.lockDriverRegistry();
         });
