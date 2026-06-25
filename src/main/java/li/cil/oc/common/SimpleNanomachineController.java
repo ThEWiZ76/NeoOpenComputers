@@ -795,8 +795,8 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         final double dy = sender.y() + 0.5D - player.getY();
         final double dz = sender.z() + 0.5D - player.getZ();
         final double range = ModSettings.nanomachinesCommandRange();
-        final double effectiveRange = range * range;
-        return Math.sqrt(dx * dx + dy * dy + dz * dz) <= effectiveRange;
+        final double distanceSquared = dx * dx + dy * dy + dz * dz;
+        return distanceSquared <= range * range;
     }
 
     private int idleSeconds() {

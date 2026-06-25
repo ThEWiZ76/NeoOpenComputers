@@ -2648,6 +2648,20 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void nanomachinesWirelessCommandsUseSquaredRangeLikeUpstream(final GameTestHelper helper) {
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+        final li.cil.oc.api.network.WirelessEndpoint endpoint = (li.cil.oc.api.network.WirelessEndpoint) controller;
+        final RecordingWirelessEndpoint sender = new RecordingWirelessEndpoint(helper.getLevel(), player.blockPosition().offset(3, 0, 0));
+        Network.joinWirelessNetwork(sender);
+
+        endpoint.receivePacket(Network.newPacket("sender", null, 1, new Object[]{"nanomachines", "setInput", 1, true}), sender);
+
+        helper.assertFalse(controller.getInput(0), "Nanomachines command changed input beyond configured command range");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nanomachinesWirelessCommandsIgnoreDeadPlayersLikeUpstream(final GameTestHelper helper) {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
