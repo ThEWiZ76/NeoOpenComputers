@@ -202,7 +202,11 @@ runs {
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
     dependsOn tasks.named('apiJar')
+    dependsOn tasks.named('jar')
+    dependsOn tasks.named('jarJar')
     systemProperty 'neoopencomputers.apiJar', tasks.named('apiJar').flatMap { it.archiveFile }.get().asFile.absolutePath
+    systemProperty 'neoopencomputers.modJar', tasks.named('jar').flatMap { it.archiveFile }.get().asFile.absolutePath
+    systemProperty 'neoopencomputers.allJar', tasks.named('jarJar').flatMap { it.archiveFile }.get().asFile.absolutePath
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipFile;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -17,5 +19,43 @@ final class ModPackagingTest {
 
         assertTrue(build.contains("LICENSE-neoopencomputers.txt"));
         assertTrue(build.contains("LICENSE-luaj.txt"));
+    }
+
+    @Test
+    void builtModJarContainsLoadMetadataLicensesAndBootResources() throws IOException {
+        try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.modJar"))) {
+            assertContains(jar, "META-INF/LICENSE-neoopencomputers.txt");
+            assertContains(jar, "META-INF/LICENSE-luaj.txt");
+            assertContains(jar, "META-INF/LICENSE-typesafe-config.txt");
+            assertContains(jar, "META-INF/neoforge.mods.toml");
+            assertContains(jar, "neoopencomputers.mixins.json");
+            assertContains(jar, "assets/neoopencomputers/loot/openos/init.lua");
+
+            final String modsToml = readEntry(jar, "META-INF/neoforge.mods.toml");
+            assertTrue(!modsToml.contains("${"), "Packaged mods.toml still has unexpanded Gradle tokens");
+            assertTrue(modsToml.contains("modId=\"neoopencomputers\""));
+            assertTrue(modsToml.contains("displayName=\"NeoOpenComputers\""));
+            assertTrue(modsToml.contains("license=\"MIT\""));
+            assertTrue(modsToml.contains("config=\"neoopencomputers.mixins.json\""));
+        }
+    }
+
+    @Test
+    void builtAllJarContainsJarJarLibrariesForRuntime() throws IOException {
+        try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.allJar"))) {
+            assertContains(jar, "META-INF/jarjar/metadata.json");
+            assertContains(jar, "META-INF/jarjar/config-1.4.3.jar");
+            assertContains(jar, "META-INF/jarjar/luaj-jse-3.0.1.jar");
+            assertContains(jar, "META-INF/LICENSE-luaj.txt");
+            assertContains(jar, "META-INF/LICENSE-typesafe-config.txt");
+        }
+    }
+
+    private static void assertContains(final ZipFile jar, final String entryName) {
+        assertTrue(jar.getEntry(entryName) != null, () -> "Missing packaged entry " + entryName);
+    }
+
+    private static String readEntry(final ZipFile jar, final String entryName) throws IOException {
+        return new String(jar.getInputStream(jar.getEntry(entryName)).readAllBytes(), StandardCharsets.UTF_8);
     }
 }
