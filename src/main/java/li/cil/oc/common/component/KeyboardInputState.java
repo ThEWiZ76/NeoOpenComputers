@@ -2,12 +2,14 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public final class KeyboardInputState {
@@ -17,6 +19,15 @@ public final class KeyboardInputState {
     private static final String CLIPBOARD_MESSAGE = "keyboard.clipboard";
 
     private final Map<Player, Map<Integer, Character>> pressedKeys = new HashMap<>();
+    private final Function<Player, String> usernameProvider;
+
+    public KeyboardInputState() {
+        this(player -> player == null ? null : player.getName().getString());
+    }
+
+    KeyboardInputState(final Function<Player, String> usernameProvider) {
+        this.usernameProvider = usernameProvider;
+    }
 
     public void onMessage(final Node node, final Message message, final Predicate<Player> isUsable) {
         if (node == null || message == null) {
@@ -30,7 +41,7 @@ public final class KeyboardInputState {
                 final char character = toCharacter(data[1]);
                 final int code = toInteger(data[2]);
                 pressedKeys.computeIfAbsent(player, ignored -> new HashMap<>()).put(code, character);
-                node.sendToReachable(SIGNAL_MESSAGE, player, "key_down", (int) character, code);
+                sendInputSignal(node, player, "key_down", (int) character, code);
             }
         } else if (KEY_UP_MESSAGE.equals(message.name()) && data.length >= 3) {
             final Player player = (Player) data[0];
@@ -45,15 +56,30 @@ public final class KeyboardInputState {
                 if (!isUsable.test(player)) {
                     return;
                 }
-                node.sendToReachable(SIGNAL_MESSAGE, player, "key_up", (int) character, code);
+                sendInputSignal(node, player, "key_up", (int) character, code);
             }
         } else if (CLIPBOARD_MESSAGE.equals(message.name()) && data.length >= 2) {
             final Player player = (Player) data[0];
             if (isUsable.test(player)) {
                 final String value = String.valueOf(data[1]);
-                linesWithSeparators(value).forEach(line -> node.sendToReachable(SIGNAL_MESSAGE, player, "clipboard", line));
+                linesWithSeparators(value).forEach(line -> sendInputSignal(node, player, "clipboard", line));
             }
         }
+    }
+
+    private void sendInputSignal(final Node node, final Player player, final String signal, final Object... data) {
+        final String username = ModSettings.inputUsername() ? usernameProvider.apply(player) : null;
+        final boolean includeUsername = username != null;
+        final Object[] payload = includeUsername
+            ? new Object[data.length + 3]
+            : new Object[data.length + 2];
+        payload[0] = player;
+        payload[1] = signal;
+        System.arraycopy(data, 0, payload, 2, data.length);
+        if (includeUsername) {
+            payload[payload.length - 1] = username;
+        }
+        node.sendToReachable(SIGNAL_MESSAGE, payload);
     }
 
     private static List<String> linesWithSeparators(final String value) {

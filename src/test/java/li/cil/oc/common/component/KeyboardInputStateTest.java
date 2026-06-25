@@ -5,10 +5,13 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Network;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,12 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class KeyboardInputStateTest {
     @Test
-    void forwardsKeyDownAndMatchingKeyUpSignals() {
+    void forwardsKeyDownAndMatchingKeyUpSignals() throws Exception {
         CapturingNode node = new CapturingNode();
         KeyboardInputState state = new KeyboardInputState();
 
-        state.onMessage(node, new TestMessage("keyboard.keyDown", null, 'a', 30), player -> true);
-        state.onMessage(node, new TestMessage("keyboard.keyUp", null, 'a', 30), player -> true);
+        withCachedConfig(ModSettings.INPUT_USERNAME, false, () -> {
+            state.onMessage(node, new TestMessage("keyboard.keyDown", null, 'a', 30), player -> true);
+            state.onMessage(node, new TestMessage("keyboard.keyUp", null, 'a', 30), player -> true);
+        });
 
         assertEquals(2, node.signals.size());
         assertEquals(Arrays.asList("computer.checked_signal", null, "key_down", (int) 'a', 30), node.signals.get(0));
@@ -40,27 +45,84 @@ final class KeyboardInputStateTest {
     }
 
     @Test
-    void ignoresKeyUpWhenPlayerCanNoLongerInteract() {
+    void ignoresKeyUpWhenPlayerCanNoLongerInteract() throws Exception {
         CapturingNode node = new CapturingNode();
         KeyboardInputState state = new KeyboardInputState();
 
-        state.onMessage(node, new TestMessage("keyboard.keyDown", null, 'a', 30), player -> true);
-        state.onMessage(node, new TestMessage("keyboard.keyUp", null, 'a', 30), player -> false);
+        withCachedConfig(ModSettings.INPUT_USERNAME, false, () -> {
+            state.onMessage(node, new TestMessage("keyboard.keyDown", null, 'a', 30), player -> true);
+            state.onMessage(node, new TestMessage("keyboard.keyUp", null, 'a', 30), player -> false);
+        });
 
         assertEquals(1, node.signals.size());
         assertEquals(Arrays.asList("computer.checked_signal", null, "key_down", (int) 'a', 30), node.signals.getFirst());
     }
 
     @Test
-    void forwardsClipboardLinesWithSeparatorsLikeUpstream() {
+    void forwardsClipboardLinesWithSeparatorsLikeUpstream() throws Exception {
         CapturingNode node = new CapturingNode();
         KeyboardInputState state = new KeyboardInputState();
 
-        state.onMessage(node, new TestMessage("keyboard.clipboard", null, "alpha\nbeta"), player -> true);
+        withCachedConfig(ModSettings.INPUT_USERNAME, false, () ->
+            state.onMessage(node, new TestMessage("keyboard.clipboard", null, "alpha\nbeta"), player -> true));
 
         assertEquals(2, node.signals.size());
         assertEquals(Arrays.asList("computer.checked_signal", null, "clipboard", "alpha\n"), node.signals.get(0));
         assertEquals(Arrays.asList("computer.checked_signal", null, "clipboard", "beta"), node.signals.get(1));
+    }
+
+    @Test
+    void appendsUsernameToInputSignalsWhenConfiguredLikeUpstream() throws Exception {
+        CapturingNode node = new CapturingNode();
+        KeyboardInputState state = new KeyboardInputState(player -> "alice");
+
+        withCachedConfig(ModSettings.INPUT_USERNAME, true, () -> {
+            state.onMessage(node, new TestMessage("keyboard.keyDown", null, 'a', 30), player -> true);
+            state.onMessage(node, new TestMessage("keyboard.keyUp", null, 'a', 30), player -> true);
+            state.onMessage(node, new TestMessage("keyboard.clipboard", null, "alpha\nbeta"), player -> true);
+        });
+
+        assertEquals(4, node.signals.size());
+        assertEquals(Arrays.asList("computer.checked_signal", null, "key_down", (int) 'a', 30, "alice"), node.signals.get(0));
+        assertEquals(Arrays.asList("computer.checked_signal", null, "key_up", (int) 'a', 30, "alice"), node.signals.get(1));
+        assertEquals(Arrays.asList("computer.checked_signal", null, "clipboard", "alpha\n", "alice"), node.signals.get(2));
+        assertEquals(Arrays.asList("computer.checked_signal", null, "clipboard", "beta", "alice"), node.signals.get(3));
+    }
+
+    @Test
+    void omitsUsernameFromInputSignalsWhenConfiguredLikeUpstream() throws Exception {
+        CapturingNode node = new CapturingNode();
+        KeyboardInputState state = new KeyboardInputState(player -> "alice");
+
+        withCachedConfig(ModSettings.INPUT_USERNAME, false, () ->
+            state.onMessage(node, new TestMessage("keyboard.keyDown", null, 'a', 30), player -> true));
+
+        assertEquals(1, node.signals.size());
+        assertEquals(Arrays.asList("computer.checked_signal", null, "key_down", (int) 'a', 30), node.signals.getFirst());
+    }
+
+    @Test
+    void omitsUsernameForInternalNullPlayerInput() throws Exception {
+        CapturingNode node = new CapturingNode();
+        KeyboardInputState state = new KeyboardInputState();
+
+        withCachedConfig(ModSettings.INPUT_USERNAME, true, () ->
+            state.onMessage(node, new TestMessage("keyboard.keyDown", null, 'a', 30), player -> true));
+
+        assertEquals(1, node.signals.size());
+        assertEquals(Arrays.asList("computer.checked_signal", null, "key_down", (int) 'a', 30), node.signals.getFirst());
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
     }
 
     private record TestMessage(String name, Object... data) implements Message {
@@ -161,5 +223,10 @@ final class KeyboardInputStateTest {
     @FunctionalInterface
     interface Usable {
         boolean test(Player player);
+    }
+
+    @FunctionalInterface
+    interface ThrowingRunnable {
+        void run() throws Exception;
     }
 }
