@@ -543,6 +543,35 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void generatedGraphMaintainsSourcePoolFanOutAcrossSeedsLikeUpstream() throws Exception {
+        withCachedConfig(ModSettings.NANOMACHINES_TRIGGER_QUOTA, 0.4D, () ->
+            withCachedConfig(ModSettings.NANOMACHINES_CONNECTOR_QUOTA, 0.2D, () ->
+                withCachedConfig(ModSettings.NANOMACHINE_MAX_INPUTS, 2, () ->
+                    withCachedConfig(ModSettings.NANOMACHINE_MAX_OUTPUTS, 2, () -> {
+                        final List<Behavior> behaviors = java.util.stream.IntStream.range(0, 40)
+                            .mapToObj(index -> (Behavior) new TestBehavior("behavior" + index))
+                            .toList();
+                        for (int seed = 0; seed < 64; seed++) {
+                            NanomachinesRegistry registry = new NanomachinesRegistry();
+                            registry.addProvider(new ListBehaviorProvider(behaviors));
+                            SimpleNanomachineController controller = new SimpleNanomachineController(null, registry, new Random(seed));
+                            CompoundTag tag = new CompoundTag();
+
+                            controller.save(tag);
+
+                            ListTag connectors = tag.getList("connectors", CompoundTag.TAG_COMPOUND);
+                            ListTag savedBehaviors = tag.getList("behaviors", CompoundTag.TAG_COMPOUND);
+                            assertFalse(hasConnectorWithoutInputs(connectors), "seed " + seed + " left dead connector");
+                            assertFalse(hasBehaviorWithoutInputs(savedBehaviors), "seed " + seed + " left dead behavior");
+                            assertTrue(maxTriggerFanOut(connectors, savedBehaviors, controller.getTotalInputCount()) <= ModSettings.nanomachineMaxOutputs(),
+                                "seed " + seed + " exceeded trigger fan-out");
+                            assertTrue(maxConnectorFanOut(savedBehaviors, connectors.size()) <= ModSettings.nanomachineMaxOutputs(),
+                                "seed " + seed + " exceeded connector fan-out");
+                        }
+                    }))));
+    }
+
+    @Test
     void controllerRespondsToSetResponsePortWirelessCommand() {
         API.network = new NetworkRegistry();
         NanomachinesRegistry registry = new NanomachinesRegistry();
@@ -1001,7 +1030,11 @@ final class NanomachinesRegistryTest {
     }
 
     private static int maxTriggerFanOut(final ListTag connectors, final ListTag behaviors) {
-        final int[] counts = new int[16];
+        return maxTriggerFanOut(connectors, behaviors, 16);
+    }
+
+    private static int maxTriggerFanOut(final ListTag connectors, final ListTag behaviors, final int triggerCount) {
+        final int[] counts = new int[Math.max(0, triggerCount)];
         for (int i = 0; i < connectors.size(); i++) {
             for (final int input : connectors.getCompound(i).getIntArray("triggerInputs")) {
                 counts[input]++;
@@ -1020,7 +1053,11 @@ final class NanomachinesRegistryTest {
     }
 
     private static int maxConnectorFanOut(final ListTag behaviors) {
-        final int[] counts = new int[16];
+        return maxConnectorFanOut(behaviors, 16);
+    }
+
+    private static int maxConnectorFanOut(final ListTag behaviors, final int connectorCount) {
+        final int[] counts = new int[Math.max(0, connectorCount)];
         for (int i = 0; i < behaviors.size(); i++) {
             for (final int connector : behaviors.getCompound(i).getIntArray("connectorInputs")) {
                 counts[connector]++;
@@ -1031,6 +1068,15 @@ final class NanomachinesRegistryTest {
             max = Math.max(max, count);
         }
         return max;
+    }
+
+    private static boolean hasConnectorWithoutInputs(final ListTag connectors) {
+        for (int i = 0; i < connectors.size(); i++) {
+            if (connectors.getCompound(i).getIntArray("triggerInputs").length == 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean hasBehaviorWithoutInputs(final ListTag behaviors) {
