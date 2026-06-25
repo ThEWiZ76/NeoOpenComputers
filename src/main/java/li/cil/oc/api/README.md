@@ -7,9 +7,14 @@ Use it to integrate blocks, items, component callbacks, file systems, manual pag
 ## Expose A Block Component
 
 For simple blocks, implement `li.cil.oc.api.network.SimpleComponent` on the block entity and annotate callable methods with `li.cil.oc.api.machine.Callback`.
+If the block needs its own managed node, extend `li.cil.oc.api.prefab.AbstractManagedEnvironment` or `li.cil.oc.api.prefab.TileEntityEnvironment` and create the node with `Network.newNode(...)`.
 
 ```java
-public final class ExampleBlockEntity extends BlockEntity implements SimpleComponent {
+public final class ExampleEnvironment extends AbstractManagedEnvironment implements SimpleComponent {
+    public ExampleEnvironment() {
+        setNode(Network.newNode(this, Visibility.Network).create());
+    }
+
     @Override
     public String getComponentName() {
         return "example";
@@ -22,7 +27,7 @@ public final class ExampleBlockEntity extends BlockEntity implements SimpleCompo
 }
 ```
 
-If the block needs full network control, implement `Environment` or extend `li.cil.oc.api.prefab.TileEntityEnvironment`, then create a node with `Network.newNode(this, Visibility.Network).create()`.
+The API jar compile smoke test builds addon-style source against the generated `apiJar` output to keep this example shape honest.
 
 ## Add Item Or Block Drivers
 

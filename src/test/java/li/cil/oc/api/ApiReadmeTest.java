@@ -18,7 +18,10 @@ final class ApiReadmeTest {
         assertTrue(content.contains("NeoOpenComputers"));
         assertTrue(content.contains("NeoForge"));
         assertTrue(content.contains("SimpleComponent"));
+        assertTrue(content.contains("AbstractManagedEnvironment"));
+        assertTrue(content.contains("Network.newNode"));
         assertTrue(content.contains("Driver.add"));
         assertTrue(content.contains("FileSystem.asManagedEnvironment"));
+        assertTrue(content.contains("apiJar"));
     }
 }
