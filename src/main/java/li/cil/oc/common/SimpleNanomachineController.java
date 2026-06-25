@@ -51,6 +51,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
     private List<Behavior> activeBehaviors = List.of();
     private boolean[] inputs = new boolean[0];
     private boolean activeBehaviorsDirty;
+    private boolean clientStateDirty = true;
     private boolean hadPower = true;
     private String uuid = UUID.randomUUID().toString();
     private int responsePort;
@@ -129,6 +130,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
         if (inputs[index] != value) {
             activeBehaviorsDirty = true;
+            clientStateDirty = true;
         }
         inputs[index] = value;
         saveState();
@@ -253,9 +255,9 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
     }
 
-    void update() {
+    boolean update() {
         if (player != null && !player.isAlive()) {
-            return;
+            return false;
         }
         if (isServerController()) {
             Network.updateWirelessNetwork(this);
@@ -273,7 +275,15 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
             drainActiveInputEnergy();
             damageOverloadedPlayer();
         }
+        final boolean powerChanged = hasPower != hadPower;
         hadPower = hasPower;
+        return powerChanged;
+    }
+
+    boolean consumeClientStateDirty() {
+        final boolean dirty = clientStateDirty;
+        clientStateDirty = false;
+        return dirty;
     }
 
     List<String> activeParticleEffects() {
@@ -377,6 +387,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         }
         loadTriggerStates(graphTag);
         activeBehaviorsDirty = true;
+        clientStateDirty = true;
     }
 
     String uuid() {
@@ -416,6 +427,7 @@ final class SimpleNanomachineController implements Controller, WirelessEndpoint 
         activeBehaviors = List.of();
         inputs = new boolean[computeInputCount(connectors, behaviorEntries, minimumInputCount)];
         activeBehaviorsDirty = true;
+        clientStateDirty = true;
     }
 
     private List<BehaviorEntry> createBehaviorEntries() {

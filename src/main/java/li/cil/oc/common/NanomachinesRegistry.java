@@ -124,8 +124,10 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
         }
         final Controller controller = getController(player);
         if (controller instanceof SimpleNanomachineController simpleController) {
-            simpleController.update();
-            if (player instanceof ServerPlayer serverPlayer) {
+            final boolean powerChanged = simpleController.update();
+            final boolean stateDirty = simpleController.consumeClientStateDirty();
+            if (player instanceof ServerPlayer serverPlayer
+                && shouldSendPowerUpdate(player.tickCount, powerChanged, stateDirty, ModSettings.mfuTickFrequency())) {
                 PacketDistributor.sendToPlayer(serverPlayer, new NanomachinePowerPayload(
                     true,
                     simpleController.getLocalBuffer(),
@@ -135,6 +137,14 @@ public final class NanomachinesRegistry implements NanomachinesAPI {
                     simpleController.activeParticleEffects()));
             }
         }
+    }
+
+    static boolean shouldSendPowerUpdate(final int tickCount, final boolean powerChanged, final boolean stateDirty, final int tickFrequency) {
+        if (powerChanged || stateDirty) {
+            return true;
+        }
+        final int interval = Math.max(1, tickFrequency);
+        return tickCount % interval == 0;
     }
 
     private static int activeInputCount(final Controller controller) {

@@ -81,6 +81,15 @@ final class NanomachinesRegistryTest {
     }
 
     @Test
+    void powerSyncMatchesUpstreamPeriodicAndChangedStateTiming() {
+        assertTrue(NanomachinesRegistry.shouldSendPowerUpdate(20, false, false, 10));
+        assertFalse(NanomachinesRegistry.shouldSendPowerUpdate(21, false, false, 10));
+        assertTrue(NanomachinesRegistry.shouldSendPowerUpdate(21, true, false, 10));
+        assertTrue(NanomachinesRegistry.shouldSendPowerUpdate(21, false, true, 10));
+        assertTrue(NanomachinesRegistry.shouldSendPowerUpdate(21, false, false, 0));
+    }
+
+    @Test
     void controllerRuntimeIsDeferred() {
         NanomachinesRegistry registry = new NanomachinesRegistry();
 
