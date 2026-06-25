@@ -43,6 +43,7 @@ import li.cil.oc.common.component.TradingUpgradeEnvironment;
 import li.cil.oc.common.component.TransposerEnvironment;
 import li.cil.oc.common.component.WirelessNetworkCardEnvironment;
 import li.cil.oc.common.driver.BlockItemEnvironmentProvider;
+import li.cil.oc.common.driver.BeaconBlockDriver;
 import li.cil.oc.common.driver.ComputerCaseBlockDriver;
 import li.cil.oc.common.driver.ComparatorBlockDriver;
 import li.cil.oc.common.driver.DatabaseInventoryProvider;
@@ -66,7 +67,7 @@ import java.util.function.Supplier;
 public final class ModDriverCatalog {
     public static void registerDefaults() {
         if (API.driver instanceof DriverRegistry registry) {
-            registerBlocks(registry, new ComputerCaseBlockDriver(), new ComparatorBlockDriver(), new DiskDriveBlockDriver(), new InventoryBlockDriver(), new NoteBlockDriver(), new ScreenBlockDriver());
+            registerBlocks(registry, new BeaconBlockDriver(), new ComputerCaseBlockDriver(), new ComparatorBlockDriver(), new DiskDriveBlockDriver(), new InventoryBlockDriver(), new NoteBlockDriver(), new ScreenBlockDriver());
             registry.add(MinecraftConverters.ITEM_STACK);
             registry.add(MinecraftConverters.LINKED_CARD);
             registry.add(MinecraftConverters.NANOMACHINES);

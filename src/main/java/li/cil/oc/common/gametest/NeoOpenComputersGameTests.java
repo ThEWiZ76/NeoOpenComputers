@@ -106,6 +106,7 @@ import li.cil.oc.common.template.AssemblerTemplates;
 import li.cil.oc.common.template.DisassemblerTemplate;
 import li.cil.oc.common.template.DisassemblerTemplateImc;
 import li.cil.oc.common.template.DisassemblerTemplates;
+import li.cil.oc.mixin.BeaconBlockEntityAccessor;
 import net.neoforged.fml.InterModComms;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -6467,6 +6468,35 @@ public final class NeoOpenComputersGameTests {
                 helper.assertTrue(helper.getBlockState(targetPos).getValue(NoteBlock.NOTE) == 17, "trigger pitch argument did not update note block state");
             } catch (Exception e) {
                 helper.fail("Note block component invocation failed: " + e.getMessage());
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterExposesBeaconBlockDriverLikeUpstream(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.BEACON);
+        final BeaconBlockEntity beacon = helper.getBlockEntity(targetPos);
+        final BeaconBlockEntityAccessor accessor = (BeaconBlockEntityAccessor) beacon;
+        accessor.neoopencomputers$setLevels(3);
+        accessor.neoopencomputers$setPrimaryPower(MobEffects.MOVEMENT_SPEED);
+        accessor.neoopencomputers$setSecondaryPower(MobEffects.REGENERATION);
+
+        helper.succeedWhen(() -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final String address = componentAddress(computer, "beacon");
+            helper.assertTrue(address != null, "Adapter did not expose beacon component: " + computer.machine().components());
+            try {
+                assertInvokeResult(helper, computer, address, "getLevels", new Object[0], 3);
+                assertInvokeResult(helper, computer, address, "getPrimaryEffect", new Object[0], "effect.minecraft.speed");
+                assertInvokeResult(helper, computer, address, "getSecondaryEffect", new Object[0], "effect.minecraft.regeneration");
+            } catch (Exception e) {
+                helper.fail("Beacon component invocation failed: " + e.getMessage());
             }
         });
     }
