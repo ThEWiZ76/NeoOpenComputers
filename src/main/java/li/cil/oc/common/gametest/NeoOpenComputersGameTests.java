@@ -1698,6 +1698,28 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void printBlockRayTraceHitsNearestConfiguredShapeLikeUpstream(final GameTestHelper helper) {
+        final PrintData data = new PrintData();
+        data.addStateOff(new PrintData.Shape(new AABB(0.25D, 0.25D, 0.125D, 0.75D, 0.75D, 0.25D), "minecraft:block/stone", null));
+        data.addStateOff(new PrintData.Shape(new AABB(0.25D, 0.25D, 0.75D, 0.75D, 0.75D, 0.875D), "minecraft:block/redstone_block", null));
+
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.PRINT.get().defaultBlockState());
+        final PrintBlockEntity print = helper.getBlockEntity(pos);
+        print.loadFromStack(data.createItemStack());
+        final BlockPos absolutePos = helper.absolutePos(pos);
+        final Vec3 start = new Vec3(absolutePos.getX() + 0.5D, absolutePos.getY() + 0.5D, absolutePos.getZ() - 1D);
+        final Vec3 end = new Vec3(absolutePos.getX() + 0.5D, absolutePos.getY() + 0.5D, absolutePos.getZ() + 2D);
+
+        final BlockHitResult hit = print.shape().clip(start, end, absolutePos);
+
+        helper.assertTrue(hit != null, "Configured print ray trace missed separated shapes");
+        helper.assertTrue(hit.getDirection() == Direction.NORTH, "Configured print ray trace hit wrong face");
+        helper.assertTrue(Math.abs(hit.getLocation().z - (absolutePos.getZ() + 0.125D)) < 1.0E-6D, "Configured print ray trace did not hit nearest shape");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printBlockIgnoresTexturelessShapesForSideSolidityLikeUpstream(final GameTestHelper helper) {
         final PrintData data = new PrintData();
         data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "", null));
