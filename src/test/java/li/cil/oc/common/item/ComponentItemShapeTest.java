@@ -42,6 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ComponentItemShapeTest {
@@ -223,6 +225,63 @@ final class ComponentItemShapeTest {
         final Component secondComponent = assertInstanceOf(Component.class, second.node());
 
         assertArrayEquals(new Object[]{"abcdefghijklmnop"}, secondComponent.invoke("getLabel", null));
+    }
+
+    @Test
+    void unmanagedHardDiskDriveExposesRawSectorCallbacksLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final CompoundTag data = new CompoundTag();
+        data.putBoolean("oc:unmanaged", true);
+
+        final ManagedEnvironment environment = HardDiskDriveItem.createEnvironment(1, data, saved -> {}, null);
+        final Component component = assertInstanceOf(Component.class, environment.node());
+
+        assertEquals("drive", component.name());
+        assertTrue(component.methods().contains("getCapacity"));
+        assertTrue(component.methods().contains("getSectorSize"));
+        assertTrue(component.methods().contains("getPlatterCount"));
+        assertTrue(component.methods().contains("readSector"));
+        assertTrue(component.methods().contains("writeSector"));
+        assertTrue(component.methods().contains("readByte"));
+        assertTrue(component.methods().contains("writeByte"));
+        assertArrayEquals(new Object[]{ModSettings.hddSize(1) * 1024}, component.invoke("getCapacity", null));
+        assertArrayEquals(new Object[]{512}, component.invoke("getSectorSize", null));
+        assertArrayEquals(new Object[]{4}, component.invoke("getPlatterCount", null));
+    }
+
+    @Test
+    void unmanagedHardDiskDrivePersistsRawSectorDataInStack() throws Exception {
+        OpenComputersApi.initialize();
+        final CompoundTag data = new CompoundTag();
+        data.putBoolean("oc:unmanaged", true);
+        final CompoundTag savedData = new CompoundTag();
+        final ManagedEnvironment first = HardDiskDriveItem.createEnvironment(0, data, saved -> savedData.put("disk", saved.copy()), null);
+        final Component firstComponent = assertInstanceOf(Component.class, first.node());
+
+        assertNull(firstComponent.invoke("writeSector", null, 1, "boot".getBytes(StandardCharsets.UTF_8)));
+        assertNull(firstComponent.invoke("writeByte", null, 513, 65));
+        first.save(new CompoundTag());
+
+        final ManagedEnvironment second = HardDiskDriveItem.createEnvironment(0, savedData.getCompound("disk"), saved -> {}, null);
+        final Component secondComponent = assertInstanceOf(Component.class, second.node());
+        final byte[] sector = (byte[]) secondComponent.invoke("readSector", null, 1)[0];
+
+        assertEquals("boot", new String(sector, 0, 4, StandardCharsets.UTF_8));
+        assertArrayEquals(new Object[]{65}, secondComponent.invoke("readByte", null, 513));
+    }
+
+    @Test
+    void lockedUnmanagedHardDiskDriveRejectsWritesLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final CompoundTag data = new CompoundTag();
+        data.putBoolean("oc:unmanaged", true);
+        data.putString("oc:lock", "tester");
+        final ManagedEnvironment environment = HardDiskDriveItem.createEnvironment(data, saved -> {}, null);
+        final Component component = assertInstanceOf(Component.class, environment.node());
+
+        assertThrows(Exception.class, () -> component.invoke("setLabel", null, "locked"));
+        assertThrows(Exception.class, () -> component.invoke("writeSector", null, 1, "x".getBytes(StandardCharsets.UTF_8)));
+        assertThrows(Exception.class, () -> component.invoke("writeByte", null, 1, 1));
     }
 
     @Test

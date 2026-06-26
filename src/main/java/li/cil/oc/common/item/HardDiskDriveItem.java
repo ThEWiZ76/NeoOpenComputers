@@ -8,6 +8,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.common.DriveEnvironment;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -21,6 +22,8 @@ import java.util.function.Consumer;
 public class HardDiskDriveItem extends Item implements DriverItem {
     private static final String DRIVER_DATA_TAG = "oc:data";
     private static final String HDD_DATA_TAG = "oc:hdd";
+    private static final String UNMANAGED_TAG = "oc:unmanaged";
+    private static final String LOCK_TAG = "oc:lock";
     private final int tier;
 
     public HardDiskDriveItem(final Properties properties) {
@@ -51,6 +54,20 @@ public class HardDiskDriveItem extends Item implements DriverItem {
 
     static ManagedEnvironment createEnvironment(final int tier, final CompoundTag data, final Consumer<CompoundTag> saveData, final EnvironmentHost host) {
         final int clampedTier = Math.max(0, Math.min(2, tier));
+        if (isUnmanaged(data)) {
+            final ManagedEnvironment environment = new DriveEnvironment(
+                ModSettings.hddSize(clampedTier) * 1024,
+                ModSettings.hddPlatterCount(clampedTier),
+                new ItemDiskLabel(null),
+                host,
+                null,
+                clampedTier + 2,
+                lockInfo(data));
+            if (data != null && !data.isEmpty()) {
+                environment.load(data);
+            }
+            return new StackBackedEnvironment(environment, saveData);
+        }
         final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(ModSettings.hddSize(clampedTier) * 1024L);
         if (fileSystem == null) {
             return null;
@@ -63,6 +80,18 @@ public class HardDiskDriveItem extends Item implements DriverItem {
             environment.load(data);
         }
         return new StackBackedEnvironment(environment, saveData);
+    }
+
+    private static boolean isUnmanaged(final CompoundTag data) {
+        return data != null && data.getBoolean(UNMANAGED_TAG);
+    }
+
+    private static boolean isLocked(final CompoundTag data) {
+        return data != null && data.contains(LOCK_TAG) && !data.getString(LOCK_TAG).isEmpty();
+    }
+
+    private static String lockInfo(final CompoundTag data) {
+        return isLocked(data) ? data.getString(LOCK_TAG) : "";
     }
 
     @Override
