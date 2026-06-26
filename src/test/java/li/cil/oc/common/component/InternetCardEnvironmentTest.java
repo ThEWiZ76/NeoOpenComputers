@@ -274,7 +274,8 @@ final class InternetCardEnvironmentTest {
                     InternetCardEnvironment.HttpRequest.class,
                     card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/silent"))[0]);
                 accepted.get(2, TimeUnit.SECONDS);
-                awaitHttpTimeout(request);
+                awaitHttpFinishFailure(request);
+                assertArrayEquals(new Object[]{null}, request.response(null, new TestArguments()));
             }));
         } finally {
             serverThread.shutdownNow();
@@ -291,7 +292,8 @@ final class InternetCardEnvironmentTest {
             InternetCardEnvironment.HttpRequest.class,
             card.request(null, new TestArguments("http://127.0.0.1:1/denied"))[0]);
 
-        awaitHttpFailure(request, "address is not allowed");
+        awaitHttpFinishFailure(request, "address is not allowed");
+        assertArrayEquals(new Object[]{null}, request.response(null, new TestArguments()));
     }
 
     @Test
@@ -584,23 +586,10 @@ final class InternetCardEnvironmentTest {
         throw new AssertionError("HTTP request did not connect");
     }
 
-    private static void awaitHttpTimeout(final InternetCardEnvironment.HttpRequest request) throws Exception {
-        for (int attempt = 0; attempt < 150; attempt++) {
-            try {
-                Object[] response = request.response(null, new TestArguments());
-                assertArrayEquals(new Object[]{null}, response);
-            } catch (CompletionException e) {
-                return;
-            }
-            Thread.sleep(20);
-        }
-        throw new AssertionError("HTTP request did not time out");
-    }
-
-    private static void awaitHttpFailure(final InternetCardEnvironment.HttpRequest request, final String message) throws Exception {
+    private static void awaitHttpFinishFailure(final InternetCardEnvironment.HttpRequest request, final String message) throws Exception {
         for (int attempt = 0; attempt < 100; attempt++) {
             try {
-                request.response(null, new TestArguments());
+                request.finishConnect(null, new TestArguments());
             } catch (CompletionException e) {
                 assertEquals(message, e.getCause().getMessage());
                 return;
@@ -610,14 +599,14 @@ final class InternetCardEnvironmentTest {
         throw new AssertionError("HTTP request did not fail");
     }
 
-    private static void awaitHttpFailure(final InternetCardEnvironment.HttpRequest request) throws Exception {
-        for (int attempt = 0; attempt < 100; attempt++) {
+    private static void awaitHttpFinishFailure(final InternetCardEnvironment.HttpRequest request) throws Exception {
+        for (int attempt = 0; attempt < 150; attempt++) {
             try {
-                request.response(null, new TestArguments());
+                request.finishConnect(null, new TestArguments());
             } catch (CompletionException e) {
                 return;
             }
-            Thread.sleep(10);
+            Thread.sleep(20);
         }
         throw new AssertionError("HTTP request did not fail");
     }

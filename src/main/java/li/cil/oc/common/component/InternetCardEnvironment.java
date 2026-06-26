@@ -336,7 +336,12 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             if (!response.isDone()) {
                 return new Object[]{null};
             }
-            final HttpResponse value = response.join();
+            final HttpResponse value;
+            try {
+                value = response.join();
+            } catch (CompletionException e) {
+                return new Object[]{null};
+            }
             return new Object[]{value.code(), value.message(), value.headers()};
         }
 
