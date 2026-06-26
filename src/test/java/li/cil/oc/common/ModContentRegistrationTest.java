@@ -575,6 +575,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void driveMenuIdIsStable() {
+        assertEquals("drive", ModContentIds.DRIVE_MENU);
+    }
+
+    @Test
     void raidMenuIdIsStable() {
         assertEquals("raid", ModContentIds.RAID_MENU);
     }

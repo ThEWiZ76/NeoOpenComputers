@@ -5,6 +5,7 @@ import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
+import li.cil.oc.common.menu.DriveMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.RaidMenu;
 import li.cil.oc.common.menu.RelayMenu;
@@ -31,6 +32,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<DiskDriveMenu>> DISK_DRIVE = MENUS.register(
         ModContentIds.DISK_DRIVE_MENU,
         () -> new MenuType<>(DiskDriveMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<DriveMenu>> DRIVE = MENUS.register(
+        ModContentIds.DRIVE_MENU,
+        () -> new MenuType<>(DriveMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static final DeferredHolder<MenuType<?>, MenuType<DisassemblerMenu>> DISASSEMBLER = MENUS.register(
         ModContentIds.DISASSEMBLER_MENU,

@@ -57,6 +57,7 @@ public final class ModContentIds {
     public static final String DISASSEMBLER_BLOCK_ENTITY = "disassembler";
     public static final String DISASSEMBLER_MENU = "disassembler";
     public static final String DISK_PLATTER = "disk_platter";
+    public static final String DRIVE_MENU = "drive";
     public static final String DISK_DRIVE = "disk_drive";
     public static final String DISK_DRIVE_MOUNTABLE = "disk_drive_mountable";
     public static final String DISK_DRIVE_BLOCK_ENTITY = "disk_drive";

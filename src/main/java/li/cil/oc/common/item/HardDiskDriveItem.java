@@ -10,12 +10,21 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.DriveEnvironment;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.menu.DriveMenu;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -38,6 +47,35 @@ public class HardDiskDriveItem extends Item implements DriverItem {
     @Override
     public boolean worksWith(final ItemStack stack) {
         return stack != null && stack.getItem() == this;
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(final Level level, final Player player, final InteractionHand hand) {
+        final ItemStack stack = player.getItemInHand(hand);
+        if (!player.isShiftKeyDown()) {
+            if (!level.isClientSide) {
+                player.openMenu(new SimpleMenuProvider(
+                    (containerId, playerInventory, menuPlayer) -> new DriveMenu(containerId, playerInventory, stack),
+                    driveTitle()));
+            }
+            player.swing(hand);
+        }
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+    }
+
+    @Override
+    public void appendHoverText(final ItemStack stack, final Item.TooltipContext context, final List<Component> tooltip, final TooltipFlag flag) {
+        super.appendHoverText(stack, context, tooltip, flag);
+        final String label = label(stack);
+        if (label != null && !label.isBlank()) {
+            tooltip.add(Component.literal(label));
+        }
+        tooltip.add(Component.translatable(isUnmanaged(stack)
+            ? "tooltip.neoopencomputers.drive.mode.unmanaged"
+            : "tooltip.neoopencomputers.drive.mode.managed"));
+        tooltip.add(isLocked(stack)
+            ? Component.translatable("tooltip.neoopencomputers.drive.locked", lockInfo(stack))
+            : Component.translatable("tooltip.neoopencomputers.drive.unlocked"));
     }
 
     @Override
@@ -82,16 +120,68 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         return new StackBackedEnvironment(environment, saveData);
     }
 
-    private static boolean isUnmanaged(final CompoundTag data) {
+    public static boolean isUnmanaged(final ItemStack stack) {
+        return isUnmanaged(stackDataTag(stack));
+    }
+
+    public static boolean isUnmanaged(final CompoundTag data) {
         return data != null && data.getBoolean(UNMANAGED_TAG);
     }
 
-    private static boolean isLocked(final CompoundTag data) {
+    public static boolean isLocked(final ItemStack stack) {
+        return isLocked(stackDataTag(stack));
+    }
+
+    public static boolean isLocked(final CompoundTag data) {
         return data != null && data.contains(LOCK_TAG) && !data.getString(LOCK_TAG).isEmpty();
     }
 
-    private static String lockInfo(final CompoundTag data) {
+    public static String lockInfo(final ItemStack stack) {
+        return lockInfo(stackDataTag(stack));
+    }
+
+    public static String lockInfo(final CompoundTag data) {
         return isLocked(data) ? data.getString(LOCK_TAG) : "";
+    }
+
+    public static void setUnmanaged(final ItemStack stack, final boolean unmanaged) {
+        final CompoundTag data = stackDataTag(stack);
+        setUnmanaged(data, unmanaged);
+    }
+
+    public static void setUnmanaged(final CompoundTag data, final boolean unmanaged) {
+        if (data == null) {
+            return;
+        }
+        if (isUnmanaged(data) != unmanaged) {
+            data.remove(LOCK_TAG);
+        }
+        data.putBoolean(UNMANAGED_TAG, unmanaged);
+    }
+
+    public static void lock(final ItemStack stack, final Player player) {
+        final CompoundTag data = stackDataTag(stack);
+        if (!isLocked(data)) {
+            final String name = player == null || player.getGameProfile() == null || player.getGameProfile().getName() == null || player.getGameProfile().getName().isBlank()
+                ? "notch"
+                : player.getGameProfile().getName();
+            data.putString(LOCK_TAG, name);
+        }
+    }
+
+    public static void lock(final CompoundTag data, final String lockInfo) {
+        if (data != null && !isLocked(data)) {
+            data.putString(LOCK_TAG, lockInfo == null || lockInfo.isBlank() ? "notch" : lockInfo);
+        }
+    }
+
+    public static Component driveTitle() {
+        return Component.translatable("oc:container.drive");
+    }
+
+    private static String label(final ItemStack stack) {
+        final CompoundTag data = stackDataTag(stack);
+        return data.contains(ItemDiskLabel.TAG) ? data.getString(ItemDiskLabel.TAG) : null;
     }
 
     @Override
@@ -106,6 +196,10 @@ public class HardDiskDriveItem extends Item implements DriverItem {
 
     @Override
     public CompoundTag dataTag(final ItemStack stack) {
+        return stackDataTag(stack);
+    }
+
+    public static CompoundTag stackDataTag(final ItemStack stack) {
         if (stack == null) {
             return new CompoundTag();
         }

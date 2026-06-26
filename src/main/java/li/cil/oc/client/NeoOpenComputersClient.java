@@ -49,6 +49,7 @@ public final class NeoOpenComputersClient {
         event.register(ModMenus.COMPUTER_CASE.get(), ComputerCaseScreen::new);
         event.register(ModMenus.DISASSEMBLER.get(), DisassemblerScreen::new);
         event.register(ModMenus.DISK_DRIVE.get(), DiskDriveScreen::new);
+        event.register(ModMenus.DRIVE.get(), DriveScreen::new);
         event.register(ModMenus.RACK.get(), RackScreen::new);
         event.register(ModMenus.RAID.get(), RaidScreen::new);
         event.register(ModMenus.SERVER_RACK.get(), ServerRackScreen::new);
