@@ -22,6 +22,7 @@ import java.util.concurrent.Callable;
 public final class ModLootDisks {
     static final String LOOT_ROOT = "loot";
     static final String LOOT_PROPERTIES = LOOT_ROOT + "/loot.properties";
+    static final String OPENOS_NAME = "openos";
     static final String OPENOS_PATH = "openos";
 
     public static void registerDefaults() {
@@ -79,7 +80,10 @@ public final class ModLootDisks {
     private static void registerBundledFloppy(final Descriptor descriptor, final Callable<FileSystem> factory) {
         final ItemAPI items = API.items;
         if (items instanceof ItemRegistry registry) {
-            registry.registerFloppy(descriptor.label(), descriptor.color(), factoryId(descriptor.path()), factory, true);
+            final ItemStack stack = registry.registerFloppy(descriptor.label(), descriptor.color(), factoryId(descriptor.path()), factory, true);
+            if (OPENOS_PATH.equals(descriptor.path()) && stack != null && !stack.isEmpty()) {
+                registry.registerStack(OPENOS_NAME, stack::copy);
+            }
         } else {
             Items.registerFloppy(descriptor.label(), descriptor.color(), factory, true);
         }

@@ -9,6 +9,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Chargeable;
 import li.cil.oc.api.driver.item.Container;
 import li.cil.oc.api.driver.item.HostAware;
+import li.cil.oc.api.detail.ItemInfo;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
@@ -370,6 +371,36 @@ public final class NeoOpenComputersGameTests {
         } finally {
             API.items = previous;
         }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void defaultBootMediaAvailableByUpstreamNames(final GameTestHelper helper) {
+        final ItemInfo luaBios = API.items.get("luabios");
+        helper.assertTrue(luaBios != null, "Lua BIOS EEPROM must be available by upstream name");
+        helper.assertTrue("luabios".equals(luaBios.name()), "Lua BIOS descriptor kept wrong name");
+        final ItemStack eeprom = luaBios.createItemStack(1);
+        helper.assertTrue(!eeprom.isEmpty(), "Lua BIOS descriptor did not create an EEPROM stack");
+        helper.assertTrue(eeprom.is(ModItems.EEPROM.get()), "Lua BIOS descriptor did not create the EEPROM item");
+        final CustomData eepromRoot = eeprom.get(DataComponents.CUSTOM_DATA);
+        helper.assertTrue(eepromRoot != null, "Lua BIOS EEPROM has no custom data");
+        final CompoundTag eepromData = eepromRoot.copyTag().getCompound(ItemRegistry.EEPROM_DATA_TAG);
+        helper.assertTrue("EEPROM (Lua BIOS)".equals(eepromData.getString(ItemRegistry.EEPROM_LABEL_TAG)), "Lua BIOS EEPROM kept wrong label");
+        helper.assertTrue(eepromData.getBoolean(ItemRegistry.EEPROM_READONLY_TAG), "Lua BIOS EEPROM should be read-only");
+
+        final ItemInfo openOs = API.items.get("openos");
+        helper.assertTrue(openOs != null, "OpenOS floppy must be available by upstream name");
+        helper.assertTrue("openos".equals(openOs.name()), "OpenOS descriptor kept wrong name");
+        final ItemStack floppy = openOs.createItemStack(1);
+        helper.assertTrue(!floppy.isEmpty(), "OpenOS descriptor did not create a floppy stack");
+        helper.assertTrue(floppy.is(ModItems.FLOPPY.get()), "OpenOS descriptor did not create the floppy item");
+        final CustomData floppyRoot = floppy.get(DataComponents.CUSTOM_DATA);
+        helper.assertTrue(floppyRoot != null, "OpenOS floppy has no custom data");
+        final CompoundTag floppyData = floppyRoot.copyTag();
+        helper.assertTrue("OpenOS (Operating System)".equals(floppyData.getString(ItemRegistry.FLOPPY_LABEL_TAG)), "OpenOS floppy kept wrong label");
+        helper.assertTrue("green".equals(floppyData.getString(ItemRegistry.FLOPPY_COLOR_TAG)), "OpenOS floppy kept wrong color");
+        helper.assertTrue("neoopencomputers:loot/openos".equals(floppyData.getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG)), "OpenOS floppy kept wrong factory id");
+        helper.assertTrue(((ItemRegistry) API.items).floppyFactory(floppy) != null, "OpenOS floppy did not resolve a filesystem factory");
         helper.succeed();
     }
 

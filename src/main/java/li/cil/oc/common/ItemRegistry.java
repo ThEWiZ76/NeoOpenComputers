@@ -32,12 +32,18 @@ public final class ItemRegistry implements ItemAPI {
     public static final String EEPROM_LABEL_TAG = "oc:label";
     public static final String EEPROM_READONLY_TAG = "oc:readonly";
 
-    private final Map<String, RegisteredItemInfo> infosByName = new LinkedHashMap<>();
+    private final Map<String, ItemInfo> infosByName = new LinkedHashMap<>();
     private final Map<String, Callable<FileSystem>> floppyFactoriesById = new LinkedHashMap<>();
     private final List<Supplier<ItemStack>> creativeStackSuppliers = new ArrayList<>();
 
     RegisteredItemInfo register(final String name, final Block block, final Item item) {
         final RegisteredItemInfo info = new RegisteredItemInfo(name, block, item);
+        infosByName.put(name, info);
+        return info;
+    }
+
+    ItemInfo registerStack(final String name, final Supplier<ItemStack> stackSupplier) {
+        final ItemInfo info = new RegisteredStackInfo(name, stackSupplier);
         infosByName.put(name, info);
         return info;
     }
@@ -177,6 +183,36 @@ public final class ItemRegistry implements ItemAPI {
                 return null;
             }
             return new ItemStack(item, size);
+        }
+    }
+
+    private record RegisteredStackInfo(String name, Supplier<ItemStack> stackSupplier) implements ItemInfo {
+        @Override
+        public Block block() {
+            return null;
+        }
+
+        @Override
+        public Item item() {
+            final ItemStack stack = createItemStack(1);
+            return stack == null || stack.isEmpty() ? null : stack.getItem();
+        }
+
+        @Override
+        public ItemStack createItemStack(final int size) {
+            if (stackSupplier == null) {
+                return null;
+            }
+            final ItemStack stack = stackSupplier.get();
+            if (stack == null) {
+                return null;
+            }
+            if (stack.isEmpty()) {
+                return ItemStack.EMPTY;
+            }
+            final ItemStack copy = stack.copy();
+            copy.setCount(size);
+            return copy;
         }
     }
 }
