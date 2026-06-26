@@ -4096,6 +4096,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void inventoryAndTankUpgradeRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.INVENTORY_UPGRADE.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.OAK_PLANKS), new ItemStack(Items.HOPPER), new ItemStack(Items.OAK_PLANKS),
+            new ItemStack(Items.DROPPER), new ItemStack(Items.CHEST), new ItemStack(Items.PISTON),
+            new ItemStack(Items.OAK_PLANKS), new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(Items.OAK_PLANKS)
+        )));
+        assertCraftsItem(helper, ModItems.TANK_UPGRADE.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.OAK_PLANKS), new ItemStack(Items.IRON_BARS), new ItemStack(Items.OAK_PLANKS),
+            new ItemStack(Items.DISPENSER), new ItemStack(Items.CAULDRON), new ItemStack(Items.PISTON),
+            new ItemStack(Items.OAK_PLANKS), new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(Items.OAK_PLANKS)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printerBlockExposesUpstreamComponentShell(final GameTestHelper helper) {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());

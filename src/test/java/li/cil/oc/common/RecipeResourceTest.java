@@ -773,8 +773,8 @@ final class RecipeResourceTest {
         JsonObject inventory = inventoryRecipe.getAsJsonObject("key");
         JsonObject tank = tankRecipe.getAsJsonObject("key");
 
-        assertPattern(inventoryRecipe, "IHI", "DCM", "IBI");
-        assertTag(inventory, "I", "c:ingots/iron");
+        assertPattern(inventoryRecipe, "PHP", "DCM", "PBP");
+        assertTag(inventory, "P", "minecraft:planks");
         assertItem(inventory, "H", "minecraft:hopper");
         assertItem(inventory, "D", "minecraft:dropper");
         assertItem(inventory, "C", "minecraft:chest");
