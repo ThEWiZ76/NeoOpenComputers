@@ -146,6 +146,8 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue ASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_TICK_AMOUNT;
     public static final ModConfigSpec.DoubleValue PRINTER_TICK_AMOUNT;
+    public static final ModConfigSpec.IntValue PRINTER_MAX_SHAPES;
+    public static final ModConfigSpec.IntValue PRINTER_MAX_BASE_LIGHT_LEVEL;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> BATTERY_UPGRADE_BUFFERS;
     public static final ModConfigSpec.DoubleValue POWER_DISTRIBUTOR_BUFFER;
     public static final ModConfigSpec.DoubleValue TABLET_BUFFER;
@@ -487,6 +489,14 @@ public final class ModSettings {
         PRINTER_TICK_AMOUNT = builder
             .comment("Energy the 3D printer can apply per tick. OpenComputers upstream default is 1.")
             .defineInRange("printerTickAmount", 1D, 1D, Double.MAX_VALUE);
+        builder.push("printer");
+        PRINTER_MAX_SHAPES = builder
+            .comment("Maximum number of shapes per 3D printer state. OpenComputers upstream default is 24.")
+            .defineInRange("maxShapes", 24, 0, Integer.MAX_VALUE);
+        PRINTER_MAX_BASE_LIGHT_LEVEL = builder
+            .comment("Maximum base light level for printed blocks. OpenComputers upstream default is 8.")
+            .defineInRange("maxBaseLightLevel", 8, 0, 15);
+        builder.pop();
         MFU_TICK_FREQUENCY = builder
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
@@ -706,6 +716,14 @@ public final class ModSettings {
 
     public static double printerTickAmount() {
         return Math.max(1D, doubleValue(PRINTER_TICK_AMOUNT));
+    }
+
+    public static int printerMaxShapes() {
+        return Math.max(0, intValue(PRINTER_MAX_SHAPES));
+    }
+
+    public static int printerMaxBaseLightLevel() {
+        return Math.max(0, Math.min(intValue(PRINTER_MAX_BASE_LIGHT_LEVEL), 15));
     }
 
     public static double disassemblerItemCost() {

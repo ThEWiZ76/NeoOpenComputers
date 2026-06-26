@@ -3944,6 +3944,31 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void printerCapsHonorConfiguredUpstreamLimits(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.PRINTER_MAX_BASE_LIGHT_LEVEL, 3, () ->
+            withCachedConfig(ModSettings.PRINTER_MAX_SHAPES, 2, () -> {
+                final BlockPos pos = BlockPos.ZERO;
+                helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());
+                final PrinterBlockEntity printer = helper.getBlockEntity(pos);
+                final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) printer.node();
+
+                invokeComponent(helper, component, "setLightLevel", 15);
+                final Object[] light = invokeComponent(helper, component, "getLightLevel");
+                helper.assertTrue(light.length == 1 && Integer.valueOf(3).equals(light[0]), "Printer light cap ignored configured maximum");
+
+                final Object[] maxShapes = invokeComponent(helper, component, "getMaxShapeCount");
+                helper.assertTrue(maxShapes.length == 1 && Integer.valueOf(2).equals(maxShapes[0]), "Printer shape cap ignored configured maximum");
+
+                invokeComponent(helper, component, "addShape", 0, 0, 0, 1, 1, 1, "minecraft:block/stone");
+                invokeComponent(helper, component, "addShape", 1, 0, 0, 2, 1, 1, "minecraft:block/stone");
+                invokeComponent(helper, component, "addShape", 2, 0, 0, 3, 1, 1, "minecraft:block/stone");
+                final Object[] status = invokeComponent(helper, component, "status");
+                helper.assertTrue("idle".equals(status[0]) && Boolean.FALSE.equals(status[1]), "Printer printable state ignored configured shape cap");
+            }));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printerProducesPrintItemAfterEnergyAndInputLikeUpstream(final GameTestHelper helper) {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());

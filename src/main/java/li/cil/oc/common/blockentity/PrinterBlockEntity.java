@@ -180,7 +180,7 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     @Callback(doc = "function(value:number) -- Set what light level the printed block should have.")
     public Object[] setLightLevel(final Context context, final Arguments args) {
-        data.setLightLevel(clamp(args.checkInteger(0), 0, PrintData.UPSTREAM_MAX_BASE_LIGHT_LEVEL));
+        data.setLightLevel(clamp(args.checkInteger(0), 0, ModSettings.printerMaxBaseLightLevel()));
         active = false;
         setChanged();
         return null;
@@ -234,7 +234,7 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     @Callback(doc = "function(minX:number, minY:number, minZ:number, maxX:number, maxY:number, maxZ:number, texture:string[, state:boolean=false][,tint:number]) -- Adds a shape to the printer configuration.")
     public Object[] addShape(final Context context, final Arguments args) {
-        if (data.stateOff().size() > PrintData.UPSTREAM_MAX_SHAPES || data.stateOn().size() > PrintData.UPSTREAM_MAX_SHAPES) {
+        if (data.stateOff().size() > ModSettings.printerMaxShapes() || data.stateOn().size() > ModSettings.printerMaxShapes()) {
             return new Object[]{null, "model too complex"};
         }
 
@@ -287,7 +287,7 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     @Callback(doc = "function():number -- Get the maximum allowed number of shapes.")
     public Object[] getMaxShapeCount(final Context context, final Arguments args) {
-        return new Object[]{PrintData.UPSTREAM_MAX_SHAPES};
+        return new Object[]{ModSettings.printerMaxShapes()};
     }
 
     @Callback(doc = "function([count:number]):boolean -- Commit and begin printing the current configuration.")
@@ -311,8 +311,8 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     public boolean canPrint() {
         return !data.stateOff().isEmpty()
-            && data.stateOff().size() <= PrintData.UPSTREAM_MAX_SHAPES
-            && data.stateOn().size() <= PrintData.UPSTREAM_MAX_SHAPES;
+            && data.stateOff().size() <= ModSettings.printerMaxShapes()
+            && data.stateOn().size() <= ModSettings.printerMaxShapes();
     }
 
     public boolean isActive() {
