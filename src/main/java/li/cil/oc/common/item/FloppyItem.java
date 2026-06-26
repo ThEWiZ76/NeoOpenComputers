@@ -26,6 +26,7 @@ public class FloppyItem extends Item implements DriverItem {
     private static final String DRIVER_DATA_TAG = "oc:data";
     private static final String FLOPPY_DATA_TAG = "oc:floppy";
     private static final String LEGACY_LOOT_PATH_TAG = "oc:lootPath";
+    private static final String LEGACY_LOOT_FACTORY_TAG = "oc:lootFactory";
     private static final String LEGACY_LABEL_TAG = "oc:fs.label";
 
     public FloppyItem(final Properties properties) {
@@ -58,31 +59,47 @@ public class FloppyItem extends Item implements DriverItem {
             final String label = rootData.getString(LEGACY_LABEL_TAG);
             return FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
         }
+        if (rootData.contains(LEGACY_LOOT_FACTORY_TAG)) {
+            if (!(API.items instanceof ItemRegistry registry)) {
+                return null;
+            }
+            return createReadOnlyEnvironment(registry.floppyFactory(rootData.getString(LEGACY_LOOT_FACTORY_TAG)), rootData, host);
+        }
         if (rootData.contains(ItemRegistry.FLOPPY_FACTORY_ID_TAG)) {
             if (!(API.items instanceof ItemRegistry registry)) {
                 return null;
             }
-            final Callable<li.cil.oc.api.fs.FileSystem> factory = registry.floppyFactory(stack);
-            if (factory == null) {
-                return null;
-            }
-            try {
-                final li.cil.oc.api.fs.FileSystem fileSystem = factory.call();
-                if (fileSystem == null) {
-                    return null;
-                }
-                final String label = rootData.getString(ItemRegistry.FLOPPY_LABEL_TAG);
-                final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
-                if (environment != null && environment.node() instanceof li.cil.oc.api.network.Component component) {
-                    component.setVisibility(Visibility.Network);
-                }
-                return environment;
-            } catch (Exception e) {
-                return null;
-            }
+            return createReadOnlyEnvironment(registry.floppyFactory(stack), rootData, host);
         }
 
         return createWritableEnvironment(dataTag(stack), saved -> writeDataTag(stack, saved), rootData, host);
+    }
+
+    private static ManagedEnvironment createReadOnlyEnvironment(final Callable<li.cil.oc.api.fs.FileSystem> factory, final CompoundTag rootData, final EnvironmentHost host) {
+        if (factory == null) {
+            return null;
+        }
+        try {
+            final li.cil.oc.api.fs.FileSystem fileSystem = factory.call();
+            if (fileSystem == null) {
+                return null;
+            }
+            final String label = readLabel(rootData);
+            final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
+            if (environment != null && environment.node() instanceof li.cil.oc.api.network.Component component) {
+                component.setVisibility(Visibility.Network);
+            }
+            return environment;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String readLabel(final CompoundTag rootData) {
+        if (rootData.contains(ItemRegistry.FLOPPY_LABEL_TAG)) {
+            return rootData.getString(ItemRegistry.FLOPPY_LABEL_TAG);
+        }
+        return rootData.getString(LEGACY_LABEL_TAG);
     }
 
     static ManagedEnvironment createWritableEnvironment(final CompoundTag fileSystemData, final Consumer<CompoundTag> saveData, final CompoundTag itemData, final EnvironmentHost host) {

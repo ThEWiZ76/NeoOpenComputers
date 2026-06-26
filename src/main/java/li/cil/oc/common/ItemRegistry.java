@@ -147,7 +147,7 @@ public final class ItemRegistry implements ItemAPI {
         }
     }
 
-    Callable<FileSystem> floppyFactory(final String factoryId) {
+    public Callable<FileSystem> floppyFactory(final String factoryId) {
         return factoryId == null || factoryId.isEmpty() ? null : floppyFactoriesById.get(factoryId);
     }
 
