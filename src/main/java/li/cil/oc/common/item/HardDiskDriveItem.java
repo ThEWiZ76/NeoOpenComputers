@@ -50,7 +50,7 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         if (fileSystem == null) {
             return null;
         }
-        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, "hdd", host, null);
+        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(null), host, null);
         if (environment == null) {
             return null;
         }

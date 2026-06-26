@@ -108,7 +108,7 @@ public class FloppyItem extends Item implements DriverItem {
             return null;
         }
         final String label = itemData == null ? "" : itemData.getString(ItemRegistry.FLOPPY_LABEL_TAG);
-        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
+        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(label.isEmpty() ? null : label), host, null);
         if (environment == null) {
             return null;
         }

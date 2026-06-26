@@ -177,6 +177,22 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void hardDiskDriveLabelIsWritableAndPersistsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final CompoundTag savedData = new CompoundTag();
+        final ManagedEnvironment first = HardDiskDriveItem.createEnvironment(new CompoundTag(), saved -> savedData.put("disk", saved.copy()), null);
+        final Component firstComponent = assertInstanceOf(Component.class, first.node());
+
+        assertArrayEquals(new Object[]{"abcdefghijklmnop"}, firstComponent.invoke("setLabel", null, "abcdefghijklmnopq"));
+        first.save(new CompoundTag());
+
+        final ManagedEnvironment second = HardDiskDriveItem.createEnvironment(savedData.getCompound("disk"), saved -> {}, null);
+        final Component secondComponent = assertInstanceOf(Component.class, second.node());
+
+        assertArrayEquals(new Object[]{"abcdefghijklmnop"}, secondComponent.invoke("getLabel", null));
+    }
+
+    @Test
     void eepromItemIsItemDriver() throws NoSuchMethodException {
         final Constructor<EepromItem> constructor = EepromItem.class.getConstructor(Item.Properties.class);
 
@@ -217,6 +233,22 @@ final class ComponentItemShapeTest {
 
             assertEquals("ok", new String(data, StandardCharsets.UTF_8));
         });
+    }
+
+    @Test
+    void blankFloppyLabelIsWritableAndPersistsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final CompoundTag savedData = new CompoundTag();
+        final ManagedEnvironment first = FloppyItem.createWritableEnvironment(new CompoundTag(), saved -> savedData.put("disk", saved.copy()), new CompoundTag(), null);
+        final Component firstComponent = assertInstanceOf(Component.class, first.node());
+
+        assertArrayEquals(new Object[]{"abcdefghijklmnop"}, firstComponent.invoke("setLabel", null, "abcdefghijklmnopq"));
+        first.save(new CompoundTag());
+
+        final ManagedEnvironment second = FloppyItem.createWritableEnvironment(savedData.getCompound("disk"), saved -> {}, new CompoundTag(), null);
+        final Component secondComponent = assertInstanceOf(Component.class, second.node());
+
+        assertArrayEquals(new Object[]{"abcdefghijklmnop"}, secondComponent.invoke("getLabel", null));
     }
 
     @Test
