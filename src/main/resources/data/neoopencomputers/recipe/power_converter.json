@@ -1,9 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "IGI",
-    "CMC",
-    "IRI"
+    "ICI",
+    "GMG",
+    "IBI"
   ],
   "key": {
     "I": {
@@ -18,8 +18,8 @@
     "M": {
       "item": "neoopencomputers:microchip_tier1"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "result": {

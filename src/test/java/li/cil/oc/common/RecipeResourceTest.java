@@ -296,13 +296,13 @@ final class RecipeResourceTest {
         JsonObject powerConverter = readJson(RECIPE_ROOT.resolve(ModContentIds.POWER_CONVERTER + ".json"));
         JsonObject relay = readJson(RECIPE_ROOT.resolve(ModContentIds.RELAY + ".json"));
 
-        assertPattern(powerConverter, "IGI", "CMC", "IRI");
+        assertPattern(powerConverter, "ICI", "GMG", "IBI");
         JsonObject converterKeys = powerConverter.getAsJsonObject("key");
         assertTag(converterKeys, "I", "c:ingots/iron");
         assertTag(converterKeys, "G", "c:ingots/gold");
         assertItem(converterKeys, "C", "neoopencomputers:" + ModContentIds.CABLE);
         assertItem(converterKeys, "M", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
-        assertItem(converterKeys, "R", "minecraft:redstone");
+        assertItem(converterKeys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
 
         assertPattern(powerDistributor, "IGI", "CMC", "IBI");
         JsonObject distributorKeys = powerDistributor.getAsJsonObject("key");
