@@ -5939,6 +5939,48 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void sneakClickRackDiskDriveInsertsDiskLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.DISK_DRIVE_MOUNTABLE.get()));
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        helper.assertTrue(mountable instanceof net.minecraft.world.Container, "Rack disk drive mountable is not an inventory");
+        final net.minecraft.world.Container inventory = (net.minecraft.world.Container) mountable;
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setShiftKeyDown(true);
+        player.setItemInHand(InteractionHand.MAIN_HAND, openOsFloppyStack());
+
+        final boolean handled = mountable.onActivate(player, InteractionHand.MAIN_HAND, player.getMainHandItem(), 0.5F, 0.5F);
+
+        helper.assertTrue(handled, "Rack disk drive sneak insert was not handled");
+        helper.assertTrue(player.getMainHandItem().isEmpty(), "Rack disk drive sneak insert did not consume held disk");
+        helper.assertTrue(inventory.getItem(DiskDriveBlockEntity.SLOT_FLOPPY).is(ModItems.FLOPPY.get()), "Rack disk drive sneak insert did not store held disk");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void sneakClickRackDiskDriveEjectsDiskLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get().defaultBlockState().setValue(RackBlock.FACING, Direction.EAST));
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.DISK_DRIVE_MOUNTABLE.get()));
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        helper.assertTrue(mountable instanceof net.minecraft.world.Container, "Rack disk drive mountable is not an inventory");
+        final net.minecraft.world.Container inventory = (net.minecraft.world.Container) mountable;
+        inventory.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setShiftKeyDown(true);
+
+        final boolean handled = mountable.onActivate(player, InteractionHand.MAIN_HAND, player.getMainHandItem(), 0.5F, 0.5F);
+
+        helper.assertTrue(handled, "Rack disk drive sneak eject was not handled");
+        helper.assertTrue(inventory.getItem(DiskDriveBlockEntity.SLOT_FLOPPY).isEmpty(), "Rack disk drive sneak eject did not empty the drive");
+        droppedItemEntity(helper, ModItems.FLOPPY.get());
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void rackServerBootsAndReportsWorkingState(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

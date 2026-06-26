@@ -148,6 +148,18 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         if (player == null) {
             return false;
         }
+        if (player.isShiftKeyDown()) {
+            final boolean hasDisk = !getItem(DiskDriveBlockEntity.SLOT_FLOPPY).isEmpty();
+            final ItemStack stackInHand = player.getItemInHand(hand);
+            final boolean isHoldingDisk = canPlaceItem(DiskDriveBlockEntity.SLOT_FLOPPY, stackInHand);
+            if (hasDisk) {
+                spawnEjectedDisk(removeItem(DiskDriveBlockEntity.SLOT_FLOPPY, 1), 0D);
+            }
+            if (isHoldingDisk) {
+                setItem(DiskDriveBlockEntity.SLOT_FLOPPY, stackInHand.split(1));
+            }
+            return hasDisk || isHoldingDisk;
+        }
         player.openMenu(new SimpleMenuProvider(
             (containerId, playerInventory, menuPlayer) -> new DiskDriveMenu(containerId, playerInventory, this),
             net.minecraft.network.chat.Component.translatable("item.neoopencomputers.disk_drive_mountable")));
@@ -176,15 +188,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         if (ejected.isEmpty()) {
             return new Object[]{false};
         }
-        final Level level = world();
-        if (level != null && !level.isClientSide) {
-            final ItemEntity entity = new ItemEntity(level, xPosition(), yPosition(), zPosition(), ejected);
-            if (host instanceof Rack rack) {
-                final Direction facing = rack.facing();
-                entity.setDeltaMovement(facing.getStepX() * velocity, facing.getStepY() * velocity, facing.getStepZ() * velocity);
-            }
-            level.addFreshEntity(entity);
-        }
+        spawnEjectedDisk(ejected, velocity);
         return new Object[]{true};
     }
 
@@ -339,5 +343,18 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
             component.setVisibility(Visibility.Network);
         }
         node().connect(diskEnvironment.node());
+    }
+
+    private void spawnEjectedDisk(final ItemStack stack, final double velocity) {
+        final Level level = world();
+        if (stack.isEmpty() || level == null || level.isClientSide) {
+            return;
+        }
+        final ItemEntity entity = new ItemEntity(level, xPosition(), yPosition(), zPosition(), stack);
+        if (host instanceof Rack rack) {
+            final Direction facing = rack.facing();
+            entity.setDeltaMovement(facing.getStepX() * velocity, facing.getStepY() * velocity, facing.getStepZ() * velocity);
+        }
+        level.addFreshEntity(entity);
     }
 }
