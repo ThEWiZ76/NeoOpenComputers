@@ -318,7 +318,11 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Callback(doc = "function():boolean -- Ensures a response is available.")
         public Object[] finishConnect(final Context context, final Arguments args) {
-            return new Object[]{response.isDone() && !response.isCompletedExceptionally()};
+            if (!response.isDone()) {
+                return new Object[]{false};
+            }
+            response.join();
+            return new Object[]{true};
         }
 
         @Callback(direct = true, doc = "function():number, string, table -- Get response code, message and headers.")

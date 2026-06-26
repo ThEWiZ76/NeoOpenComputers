@@ -101,6 +101,19 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void httpFinishConnectThrowsFailedRequestLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) ->
+            CompletableFuture.failedFuture(new IOException("boom")));
+
+        Object handle = card.request(null, new TestArguments("https://example.test/fail"))[0];
+
+        InternetCardEnvironment.HttpRequest request = assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
+        CompletionException error = assertThrows(CompletionException.class, () -> request.finishConnect(null, new TestArguments()));
+        assertEquals("boom", error.getCause().getMessage());
+    }
+
+    @Test
     void httpRequestIgnoresNonStringPostDataLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
