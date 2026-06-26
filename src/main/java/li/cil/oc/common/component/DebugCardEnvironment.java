@@ -234,7 +234,8 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     @Callback(doc = "function(x:number, y:number, z:number[, worldId:number]):boolean, string, table -- Returns contents at the location.")
     public Object[] scanContentsAt(final Context context, final Arguments args) throws Exception {
         checkAccess();
-        final Level level = host == null ? null : host.world();
+        final Level hostLevel = host == null ? null : host.world();
+        final Level level = args.count() > 3 ? worldByLegacyDimensionId(hostLevel, args.checkInteger(3)) : hostLevel;
         if (level == null) {
             return new Object[]{false, "air", Blocks.AIR};
         }

@@ -1058,6 +1058,25 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardScansBlockContentsInSpecifiedWorld(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+        final net.minecraft.server.level.ServerLevel nether = helper.getLevel().getServer().getLevel(net.minecraft.world.level.Level.NETHER);
+        helper.assertTrue(nether != null, "Nether level not available");
+
+        final BlockPos absolute = helper.absolutePos(new BlockPos(4, 1, 1));
+        final BlockPos target = new BlockPos(absolute.getX(), nether.getMinBuildHeight() + 16, absolute.getZ());
+        nether.getChunkAt(target);
+        helper.assertTrue(nether.setBlockAndUpdate(target, Blocks.GOLD_BLOCK.defaultBlockState()), "Could not place Nether scan target");
+        helper.assertTrue(nether.isLoaded(target) && nether.getBlockState(target).is(Blocks.GOLD_BLOCK), "Nether scan target was not loaded");
+
+        final Object[] result = invokeComponent(helper, component, "scanContentsAt", target.getX(), target.getY(), target.getZ(), -1);
+        helper.assertTrue(result.length == 3 && Boolean.TRUE.equals(result[0]) && "solid".equals(result[1]) && "minecraft:gold_block".equals(convertedBlockName(result[2])), "Debug scanContentsAt ignored explicit world ID: " + java.util.Arrays.toString(result));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardTestCallbackReturnsConversionFixtures(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
         helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
