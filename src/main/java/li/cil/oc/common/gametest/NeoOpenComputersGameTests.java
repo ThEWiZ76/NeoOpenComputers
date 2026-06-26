@@ -129,6 +129,7 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.ContainerHelper;
@@ -4514,6 +4515,7 @@ public final class NeoOpenComputersGameTests {
         assertProcessorComponents(helper, new ItemStack(ModItems.CPU_TIER3.get()), 16);
         assertProcessorComponents(helper, new ItemStack(ModItems.APU_TIER1.get()), 12);
         assertProcessorComponents(helper, new ItemStack(ModItems.APU_TIER2.get()), 16);
+        assertCreativeComponentBusDriver(helper);
         assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER1.get()), 192);
         assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 384);
         assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 768);
@@ -8841,6 +8843,12 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(((Processor) driver).supportedComponents(stack) == supportedComponents, "Expected component bus supported component count " + supportedComponents);
         helper.assertTrue(((Processor) driver).architecture(stack) == null, "Component bus should not provide an architecture");
         helper.assertTrue(driver.createEnvironment(stack, new StaticEnvironmentHost(helper)) == null, "Component bus should not create a component environment");
+    }
+
+    private static void assertCreativeComponentBusDriver(final GameTestHelper helper) {
+        final Item creativeBus = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "component_bus_creative"));
+        helper.assertTrue(creativeBus != Items.AIR, "Creative component bus item is missing");
+        assertComponentBusDriver(helper, new ItemStack(creativeBus), 2, 1024);
     }
 
     private static void assertScreenTier(final GameTestHelper helper, final ScreenBlockEntity screen, final int tier, final int width, final int height, final TextBuffer.ColorDepth depth) {

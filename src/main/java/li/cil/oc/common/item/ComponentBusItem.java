@@ -12,10 +12,12 @@ import net.minecraft.world.item.ItemStack;
 
 public class ComponentBusItem extends Item implements Processor {
     private final int tier;
+    private final int componentTier;
 
     public ComponentBusItem(final Properties properties, final int tier) {
         super(properties);
         this.tier = Math.max(0, Math.min(2, tier));
+        this.componentTier = Math.max(0, Math.min(3, tier));
     }
 
     @Override
@@ -45,7 +47,7 @@ public class ComponentBusItem extends Item implements Processor {
 
     @Override
     public int supportedComponents(final ItemStack stack) {
-        return ModSettings.cpuComponentCount(tier);
+        return ModSettings.cpuComponentCount(componentTier);
     }
 
     @Override

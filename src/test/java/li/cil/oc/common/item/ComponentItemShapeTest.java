@@ -78,6 +78,7 @@ final class ComponentItemShapeTest {
             assertEquals(2, componentBus(0).supportedComponents(null));
             assertEquals(4, componentBus(1).supportedComponents(null));
             assertEquals(6, componentBus(2).supportedComponents(null));
+            assertEquals(64, componentBus(3).supportedComponents(null));
         });
     }
 
@@ -567,7 +568,8 @@ final class ComponentItemShapeTest {
 
     private static ComponentBusItem componentBus(final int tier) throws Exception {
         final ComponentBusItem item = allocate(ComponentBusItem.class);
-        setField(item, "tier", tier);
+        setField(item, "tier", Math.max(0, Math.min(2, tier)));
+        setField(item, "componentTier", Math.max(0, Math.min(3, tier)));
         return item;
     }
 

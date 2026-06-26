@@ -99,7 +99,7 @@ public final class ModDriverCatalog {
                 new DiskDriveContainerDriver(),
                 ModItems.DISK_DRIVE_MOUNTABLE.get(),
                 ModItems.MEMORY_TIER1.get(), ModItems.MEMORY_TIER2.get(), ModItems.MEMORY_TIER3.get(),
-                ModItems.COMPONENT_BUS_TIER1.get(), ModItems.COMPONENT_BUS_TIER2.get(), ModItems.COMPONENT_BUS_TIER3.get(),
+                ModItems.COMPONENT_BUS_TIER1.get(), ModItems.COMPONENT_BUS_TIER2.get(), ModItems.COMPONENT_BUS_TIER3.get(), ModItems.COMPONENT_BUS_CREATIVE.get(),
                 ModItems.HDD_TIER1.get(), ModItems.HDD_TIER2.get(), ModItems.HDD_TIER3.get(),
                 ModItems.HOVER_UPGRADE_TIER1.get(), ModItems.HOVER_UPGRADE_TIER2.get(),
                 ModItems.INVENTORY_CONTROLLER_UPGRADE.get(), ModItems.INVENTORY_UPGRADE.get(), ModItems.CRAFTING_UPGRADE.get(), ModItems.EXPERIENCE_UPGRADE.get(),

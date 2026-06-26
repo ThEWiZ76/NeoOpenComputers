@@ -57,6 +57,7 @@ final class ModContentRegistrationTest {
             Map.entry("component_bus_tier1", ModContentIds.COMPONENT_BUS_TIER1),
             Map.entry("component_bus_tier2", ModContentIds.COMPONENT_BUS_TIER2),
             Map.entry("component_bus_tier3", ModContentIds.COMPONENT_BUS_TIER3),
+            Map.entry("component_bus_creative", ModContentIds.COMPONENT_BUS_CREATIVE),
             Map.entry("microchip_tier1", ModContentIds.MICROCHIP_TIER1),
             Map.entry("microchip_tier2", ModContentIds.MICROCHIP_TIER2),
             Map.entry("microchip_tier3", ModContentIds.MICROCHIP_TIER3),

@@ -19,6 +19,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_COMPONENT_BUS_TIER1 = "componentBus1";
     public static final String COMPAT_COMPONENT_BUS_TIER2 = "componentBus2";
     public static final String COMPAT_COMPONENT_BUS_TIER3 = "componentBus3";
+    public static final String COMPAT_COMPONENT_BUS_CREATIVE = "componentbuscreative";
     public static final String COMPAT_CARD_CONTAINER_TIER1 = "cardcontainer1";
     public static final String COMPAT_CARD_CONTAINER_TIER2 = "cardcontainer2";
     public static final String COMPAT_CARD_CONTAINER_TIER3 = "cardcontainer3";
@@ -253,6 +254,7 @@ public final class ModContentCatalog {
                 ModItems.COMPONENT_BUS_TIER1.get(),
                 ModItems.COMPONENT_BUS_TIER2.get(),
                 ModItems.COMPONENT_BUS_TIER3.get(),
+                ModItems.COMPONENT_BUS_CREATIVE.get(),
                 ModItems.MICROCHIP_TIER1.get(),
                 ModItems.MICROCHIP_TIER2.get(),
                 ModItems.MICROCHIP_TIER3.get(),
@@ -282,6 +284,7 @@ public final class ModContentCatalog {
         final Item componentBusTier1Item,
         final Item componentBusTier2Item,
         final Item componentBusTier3Item,
+        final Item componentBusCreativeItem,
         final Item microchipTier1Item,
         final Item microchipTier2Item,
         final Item microchipTier3Item,
@@ -306,6 +309,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.COMPONENT_BUS_TIER1, null, componentBusTier1Item);
         registry.register(ModContentIds.COMPONENT_BUS_TIER2, null, componentBusTier2Item);
         registry.register(ModContentIds.COMPONENT_BUS_TIER3, null, componentBusTier3Item);
+        registry.register(ModContentIds.COMPONENT_BUS_CREATIVE, null, componentBusCreativeItem);
         registry.register(ModContentIds.MICROCHIP_TIER1, null, microchipTier1Item);
         registry.register(ModContentIds.MICROCHIP_TIER2, null, microchipTier2Item);
         registry.register(ModContentIds.MICROCHIP_TIER3, null, microchipTier3Item);
@@ -330,6 +334,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_COMPONENT_BUS_TIER1, null, componentBusTier1Item);
         registry.register(COMPAT_COMPONENT_BUS_TIER2, null, componentBusTier2Item);
         registry.register(COMPAT_COMPONENT_BUS_TIER3, null, componentBusTier3Item);
+        registry.register(COMPAT_COMPONENT_BUS_CREATIVE, null, componentBusCreativeItem);
         registry.register(COMPAT_CIRCUIT_CHIP_TIER1, null, microchipTier1Item);
         registry.register(COMPAT_CIRCUIT_CHIP_TIER2, null, microchipTier2Item);
         registry.register(COMPAT_CIRCUIT_CHIP_TIER3, null, microchipTier3Item);

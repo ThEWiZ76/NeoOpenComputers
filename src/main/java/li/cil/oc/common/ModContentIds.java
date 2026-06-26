@@ -27,6 +27,7 @@ public final class ModContentIds {
     public static final String COMPONENT_BUS_TIER1 = "component_bus_tier1";
     public static final String COMPONENT_BUS_TIER2 = "component_bus_tier2";
     public static final String COMPONENT_BUS_TIER3 = "component_bus_tier3";
+    public static final String COMPONENT_BUS_CREATIVE = "component_bus_creative";
     public static final String CARD_CONTAINER_TIER1 = "card_container_tier1";
     public static final String CARD_CONTAINER_TIER2 = "card_container_tier2";
     public static final String CARD_CONTAINER_TIER3 = "card_container_tier3";

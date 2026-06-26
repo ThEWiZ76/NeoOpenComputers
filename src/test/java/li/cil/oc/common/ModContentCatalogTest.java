@@ -37,6 +37,7 @@ final class ModContentCatalogTest {
             null,
             null,
             null,
+            null,
             null);
 
         assertNotNull(registry.get(ModContentIds.TRANSISTOR));
@@ -53,6 +54,8 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER3));
+        assertNotNull(registry.get(ModContentIds.COMPONENT_BUS_CREATIVE));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_CREATIVE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MATERIAL_CARD));
         assertEquals(ModContentIds.TRANSISTOR, registry.get(ModContentIds.TRANSISTOR).name());
@@ -68,6 +71,8 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER1, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER2, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER3, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER3).name());
+        assertEquals(ModContentIds.COMPONENT_BUS_CREATIVE, registry.get(ModContentIds.COMPONENT_BUS_CREATIVE).name());
+        assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_CREATIVE, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_CREATIVE).name());
         assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1).name());
     }
 

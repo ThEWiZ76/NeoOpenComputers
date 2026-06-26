@@ -201,6 +201,9 @@ public final class ModItems {
     public static final DeferredItem<ComponentBusItem> COMPONENT_BUS_TIER3 = ITEMS.register(
         ModContentIds.COMPONENT_BUS_TIER3,
         () -> new ComponentBusItem(new Item.Properties(), 2));
+    public static final DeferredItem<ComponentBusItem> COMPONENT_BUS_CREATIVE = ITEMS.register(
+        ModContentIds.COMPONENT_BUS_CREATIVE,
+        () -> new ComponentBusItem(new Item.Properties(), 3));
     public static final DeferredItem<Item> MICROCHIP_TIER1 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER1, new Item.Properties());
     public static final DeferredItem<Item> MICROCHIP_TIER2 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER2, new Item.Properties());
     public static final DeferredItem<Item> MICROCHIP_TIER3 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER3, new Item.Properties());
