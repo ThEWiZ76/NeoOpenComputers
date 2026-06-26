@@ -11,6 +11,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.blockentity.WaypointBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -29,8 +30,7 @@ import java.util.Map;
 public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "navigation";
     private static final int DEFAULT_MAP_SIZE = 128;
-    private static final double MAX_WAYPOINT_RANGE = 400.0D;
-    private static final double WAYPOINT_COST_PER_RANGE = 0.05D * 0.25D;
+    private static final int WAYPOINT_SCAN_TIER = 1;
 
     private final EnvironmentHost host;
     private NavigationMapData mapData;
@@ -105,11 +105,11 @@ public class NavigationUpgradeEnvironment extends AbstractManagedEnvironment imp
 
     @Callback(doc = "function([range:number]):table -- Finds nearby waypoints.")
     public Object[] findWaypoints(final Context context, final Arguments args) {
-        final double range = Math.max(0D, Math.min(args.checkDouble(0), MAX_WAYPOINT_RANGE));
+        final double range = Math.max(0D, Math.min(args.checkDouble(0), ModSettings.maxWirelessRange(WAYPOINT_SCAN_TIER)));
         if (range <= 0D) {
             return new Object[]{new Map[0]};
         }
-        if (!consumeEnergy(range * WAYPOINT_COST_PER_RANGE)) {
+        if (!consumeEnergy(range * ModSettings.wirelessCostPerRange(WAYPOINT_SCAN_TIER) * 0.25D)) {
             return new Object[]{null, "not enough energy"};
         }
         if (context != null) {

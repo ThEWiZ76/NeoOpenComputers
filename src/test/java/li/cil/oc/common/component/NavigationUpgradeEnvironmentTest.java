@@ -11,6 +11,7 @@ import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.NavigationUpgradeEnvironment.NavigationMapData;
 import net.minecraft.core.BlockPos;
@@ -18,10 +19,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -138,6 +142,24 @@ final class NavigationUpgradeEnvironmentTest {
         assertThrows(IndexOutOfBoundsException.class, () -> navigation.findWaypoints(null, new TestArguments()));
     }
 
+    @Test
+    void findWaypointsUsesTierTwoRangeAndCostSettingsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.MAX_WIRELESS_RANGE, List.of(16D, 4D), () ->
+            withCachedConfig(ModSettings.WIRELESS_COST_PER_RANGE, List.of(0.05D, 0.2D), () -> {
+                NavigationUpgradeEnvironment navigation = new NavigationUpgradeEnvironment(new TestHost());
+                ComponentConnector connector = assertInstanceOf(ComponentConnector.class, navigation.node());
+                connector.setLocalBufferSize(1D);
+                connector.changeBuffer(1D);
+
+                Object[] result = navigation.findWaypoints(new RecordingContext(navigation.node()), new TestArguments(8D));
+
+                assertEquals(0, ((Map[]) result[0]).length);
+                assertEquals(0.8D, connector.localBuffer(), 0.000_001D);
+            }));
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = NavigationUpgradeEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
@@ -146,6 +168,23 @@ final class NavigationUpgradeEnvironmentTest {
     private static void assertSynchronizedCallback(final String methodName) throws NoSuchMethodException {
         Method method = NavigationUpgradeEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertFalse(method.getAnnotation(Callback.class).direct());
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static final class RecordingContext implements Context {
