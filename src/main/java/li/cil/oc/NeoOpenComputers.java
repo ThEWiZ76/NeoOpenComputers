@@ -32,6 +32,7 @@ import li.cil.oc.common.component.ExperienceUpgradeHandler;
 import li.cil.oc.common.component.FileSystemAccessHandler;
 import li.cil.oc.common.component.MfuTargetEvents;
 import li.cil.oc.common.component.NetworkActivityHandler;
+import li.cil.oc.common.component.RobotCommonHandler;
 import li.cil.oc.common.component.WirelessNetworkCardHandler;
 import li.cil.oc.common.command.ModCommands;
 import li.cil.oc.common.machine.ProgramLocationImc;
@@ -74,6 +75,7 @@ public final class NeoOpenComputers {
         FileSystemAccessHandler.register();
         MfuTargetEvents.register();
         NetworkActivityHandler.register();
+        RobotCommonHandler.register();
         WirelessNetworkCardHandler.register();
         NeoForge.EVENT_BUS.addListener(ModCommands::register);
         NanomachinesRegistry.registerTickHandler();

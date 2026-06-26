@@ -14,6 +14,7 @@ import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.event.RobotUsedToolEvent;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -5112,6 +5113,19 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(player.totalExperience > before, "Experience upgrade did not award host player experience");
         helper.assertTrue(player.takeXpDelay == 2, "Experience upgrade did not route pickup through XP orb");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotCommonApplyDamageRateReducesToolDamageLikeUpstream(final GameTestHelper helper) {
+        final ItemStack before = new ItemStack(Items.DIAMOND_PICKAXE);
+        before.setDamageValue(2);
+        final ItemStack after = before.copy();
+        after.setDamageValue(12);
+
+        NeoForge.EVENT_BUS.post(new RobotUsedToolEvent.ApplyDamageRate(new RobotTestHost(helper), before, after, 0.4D));
+
+        helper.assertTrue(after.getDamageValue() == 6, "Robot common handler did not reduce final tool damage by damage rate");
         helper.succeed();
     }
 
