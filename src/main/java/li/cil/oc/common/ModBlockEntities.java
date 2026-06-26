@@ -11,6 +11,7 @@ import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
+import li.cil.oc.common.blockentity.NetSplitterBlockEntity;
 import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
 import li.cil.oc.common.blockentity.PowerDistributorBlockEntity;
 import li.cil.oc.common.blockentity.PrintBlockEntity;
@@ -137,6 +138,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.RELAY_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(RelayBlockEntity::new, ModBlocks.RELAY.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NetSplitterBlockEntity>> NET_SPLITTER =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.NET_SPLITTER_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(NetSplitterBlockEntity::new, ModBlocks.NET_SPLITTER.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TransposerBlockEntity>> TRANSPOSER =
         BLOCK_ENTITY_TYPES.register(

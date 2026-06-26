@@ -102,6 +102,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_REDSTONE_CARD = "redstone";
     public static final String COMPAT_REDSTONE_CARD_TIER1_UPSTREAM = "redstonecard1";
     public static final String COMPAT_RELAY = "relay";
+    public static final String COMPAT_NET_SPLITTER = "netSplitter";
+    public static final String COMPAT_NET_SPLITTER_UPSTREAM = "netsplitter";
     public static final String COMPAT_SERVER_TIER1 = "server1";
     public static final String COMPAT_SERVER_TIER2 = "server2";
     public static final String COMPAT_SERVER_TIER3 = "server3";
@@ -210,6 +212,8 @@ public final class ModContentCatalog {
                 ModItems.REDSTONE_IO.get(),
                 ModBlocks.RELAY.get(),
                 ModItems.RELAY.get(),
+                ModBlocks.NET_SPLITTER.get(),
+                ModItems.NET_SPLITTER.get(),
                 ModBlocks.TRANSPOSER.get(),
                 ModItems.TRANSPOSER.get(),
                 ModBlocks.HOLOGRAM_TIER1.get(),
@@ -464,6 +468,8 @@ public final class ModContentCatalog {
         final Item redstoneIoItem,
         final Block relay,
         final Item relayItem,
+        final Block netSplitter,
+        final Item netSplitterItem,
         final Block transposer,
         final Item transposerItem,
         final Block hologramTier1,
@@ -611,6 +617,9 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.REDSTONE_IO, redstoneIo, redstoneIoItem);
         registry.register(ModContentIds.RELAY, relay, relayItem);
         registry.register(COMPAT_RELAY, relay, relayItem);
+        registry.register(ModContentIds.NET_SPLITTER, netSplitter, netSplitterItem);
+        registry.register(COMPAT_NET_SPLITTER, netSplitter, netSplitterItem);
+        registry.register(COMPAT_NET_SPLITTER_UPSTREAM, netSplitter, netSplitterItem);
         registry.register(ModContentIds.TRANSPOSER, transposer, transposerItem);
         registry.register(ModContentIds.HOLOGRAM_TIER1, hologramTier1, hologramTier1Item);
         registry.register(ModContentIds.HOLOGRAM_TIER2, hologramTier2, hologramTier2Item);

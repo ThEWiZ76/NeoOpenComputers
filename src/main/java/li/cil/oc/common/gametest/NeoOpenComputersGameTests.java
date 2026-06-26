@@ -58,6 +58,7 @@ import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
+import li.cil.oc.common.blockentity.NetSplitterBlockEntity;
 import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
@@ -250,6 +251,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.SCREEN_TIER3.get();
         ModBlocks.KEYBOARD.get();
         ModBlocks.MOTION_SENSOR.get();
+        ModBlocks.NET_SPLITTER.get();
         ModBlocks.POWER_DISTRIBUTOR.get();
         ModBlocks.POWER_CONVERTER.get();
         ModBlocks.PRINT.get();
@@ -345,6 +347,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.MEMORY_TIER3.get();
         ModItems.MOTION_SENSOR.get();
         ModItems.NAVIGATION_UPGRADE.get();
+        ModItems.NET_SPLITTER.get();
         ModItems.NETWORK_CARD.get();
         ModItems.PISTON_UPGRADE.get();
         ModItems.REDSTONE_IO.get();
@@ -3904,10 +3907,47 @@ public final class NeoOpenComputersGameTests {
         assertEnvironmentProvider(helper, new ItemStack(ModItems.COMPUTER_CASE_TIER3.get()), ComputerCaseBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.HOLOGRAM_TIER1.get()), HologramBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.HOLOGRAM_TIER2.get()), HologramBlockEntity.class);
+        assertEnvironmentProvider(helper, new ItemStack(ModItems.NET_SPLITTER.get()), NetSplitterBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.RELAY.get()), RelayBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.REDSTONE_IO.get()), RedstoneIoBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.PRINTER.get()), PrinterBlockEntity.class);
         assertEnvironmentProvider(helper, new ItemStack(ModItems.WAYPOINT.get()), WaypointBlockEntity.class);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void netSplitterUpstreamContentIsRegistered(final GameTestHelper helper) {
+        final ItemInfo info = API.items.get("netSplitter");
+        helper.assertTrue(info != null, "Net Splitter was not registered under upstream item API name");
+        helper.assertTrue(info.createItemStack(1) != null && !info.createItemStack(1).isEmpty(), "Net Splitter item API entry did not create an item stack");
+        final ItemInfo upstreamInfo = API.items.get("netsplitter");
+        helper.assertTrue(upstreamInfo != null, "Net Splitter was not registered under lowercase upstream item API name");
+
+        final BlockPos pos = BlockPos.ZERO;
+        helper.setBlock(pos, ModBlocks.NET_SPLITTER.get());
+        final NetSplitterBlockEntity splitter = helper.getBlockEntity(pos);
+        helper.assertTrue(splitter instanceof NetSplitterBlockEntity, "Net Splitter block entity missing");
+        helper.assertFalse(splitter.canConnect(Direction.NORTH), "Net Splitter should default to closed sides");
+        helper.assertTrue(splitter.node() instanceof li.cil.oc.api.network.Component, "Net Splitter node is not a component");
+
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) splitter.node();
+        helper.assertTrue("net_splitter".equals(component.name()), "Net Splitter component name mismatch");
+        final Object[] closed = invokeComponent(helper, component, "getSides");
+        helper.assertTrue(closed.length == 1 && closed[0] instanceof Map<?, ?>, "Net Splitter getSides did not return a table");
+        helper.assertTrue(Boolean.FALSE.equals(((Map<?, ?>) closed[0]).get(Direction.NORTH.ordinal())), "Net Splitter north side should default closed");
+
+        final Map<Object, Object> northOnly = new LinkedHashMap<>();
+        northOnly.put(Direction.NORTH.ordinal(), Boolean.TRUE);
+        final Object[] previous = invokeComponent(helper, component, "setSides", northOnly);
+        helper.assertTrue(previous.length == 1 && previous[0] instanceof Map<?, ?>, "Net Splitter setSides did not return previous table");
+        helper.assertTrue(Boolean.FALSE.equals(((Map<?, ?>) previous[0]).get(Direction.NORTH.ordinal())), "Net Splitter previous north side should be closed");
+        helper.assertTrue(splitter.canConnect(Direction.NORTH), "Net Splitter north side did not open");
+        helper.assertFalse(splitter.canConnect(Direction.SOUTH), "Net Splitter south side should stay closed");
+
+        final Object[] close = invokeComponent(helper, component, "close", Direction.NORTH.get3DDataValue());
+        helper.assertTrue(close.length == 1 && Boolean.TRUE.equals(close[0]), "Net Splitter close did not report changed side");
+        final Object[] invalid = invokeComponent(helper, component, "open", 6);
+        helper.assertTrue(invalid.length == 2 && invalid[0] == null && "invalid direction".equals(invalid[1]), "Net Splitter invalid side result mismatch");
         helper.succeed();
     }
 

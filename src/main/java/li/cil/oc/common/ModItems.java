@@ -183,6 +183,10 @@ public final class ModItems {
         ModContentIds.RELAY,
         ModBlocks.RELAY);
 
+    public static final DeferredItem<BlockItem> NET_SPLITTER = ITEMS.registerSimpleBlockItem(
+        ModContentIds.NET_SPLITTER,
+        ModBlocks.NET_SPLITTER);
+
     public static final DeferredItem<Item> CUTTING_WIRE = ITEMS.registerSimpleItem(ModContentIds.CUTTING_WIRE, new Item.Properties());
     public static final DeferredItem<Item> ACID = ITEMS.registerSimpleItem(ModContentIds.ACID, new Item.Properties());
     public static final DeferredItem<Item> RAW_CIRCUIT_BOARD = ITEMS.registerSimpleItem(ModContentIds.RAW_CIRCUIT_BOARD, new Item.Properties());

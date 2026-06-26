@@ -11,6 +11,7 @@ import li.cil.oc.common.block.GeolyzerBlock;
 import li.cil.oc.common.block.HologramBlock;
 import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
+import li.cil.oc.common.block.NetSplitterBlock;
 import li.cil.oc.common.block.PowerConverterBlock;
 import li.cil.oc.common.block.PowerDistributorBlock;
 import li.cil.oc.common.block.PrintBlock;
@@ -127,6 +128,10 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> RELAY = BLOCKS.register(
         ModContentIds.RELAY,
         () -> new RelayBlock(networkInfrastructureProperties()));
+
+    public static final DeferredBlock<Block> NET_SPLITTER = BLOCKS.register(
+        ModContentIds.NET_SPLITTER,
+        () -> new NetSplitterBlock(networkInfrastructureProperties()));
 
     public static final DeferredBlock<Block> TRANSPOSER = BLOCKS.register(
         ModContentIds.TRANSPOSER,

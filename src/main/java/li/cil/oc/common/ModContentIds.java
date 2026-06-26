@@ -103,6 +103,8 @@ public final class ModContentIds {
     public static final String NANOMACHINES = "nanomachines";
     public static final String NAVIGATION_UPGRADE = "navigation_upgrade";
     public static final String NETWORK_CARD = "network_card";
+    public static final String NET_SPLITTER = "net_splitter";
+    public static final String NET_SPLITTER_BLOCK_ENTITY = "net_splitter";
     public static final String NUM_PAD = "num_pad";
     public static final String PISTON_UPGRADE = "piston_upgrade";
     public static final String POWER_CONVERTER = "power_converter";
