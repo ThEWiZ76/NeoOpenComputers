@@ -3,21 +3,21 @@
   "category": "redstone",
   "key": {
     "C": {
-      "item": "neoopencomputers:microchip_tier1"
+      "item": "neoopencomputers:microchip_tier3"
+    },
+    "I": {
+      "item": "minecraft:iron_nugget"
     },
     "P": {
       "item": "neoopencomputers:printed_circuit_board"
-    },
-    "U": {
-      "item": "neoopencomputers:microchip_tier2"
     }
   },
   "pattern": [
-    "CUC",
+    "CIC",
     " P "
   ],
   "result": {
     "count": 1,
-    "id": "neoopencomputers:memory_tier2"
+    "id": "neoopencomputers:memory_tier5"
   }
 }

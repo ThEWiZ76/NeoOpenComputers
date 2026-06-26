@@ -91,6 +91,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_MEMORY_TIER1 = "ram1";
     public static final String COMPAT_MEMORY_TIER2 = "ram2";
     public static final String COMPAT_MEMORY_TIER3 = "ram3";
+    public static final String COMPAT_MEMORY_TIER4 = "ram4";
+    public static final String COMPAT_MEMORY_TIER5 = "ram5";
+    public static final String COMPAT_MEMORY_TIER6 = "ram6";
     public static final String COMPAT_MFU = "mfu";
     public static final String COMPAT_NANOMACHINES = "nanomachines";
     public static final String COMPAT_NAVIGATION_UPGRADE = "navigationUpgrade";
@@ -270,6 +273,9 @@ public final class ModContentCatalog {
                 ModItems.MEMORY_TIER1.get(),
                 ModItems.MEMORY_TIER2.get(),
                 ModItems.MEMORY_TIER3.get(),
+                ModItems.MEMORY_TIER4.get(),
+                ModItems.MEMORY_TIER5.get(),
+                ModItems.MEMORY_TIER6.get(),
                 ModItems.HDD_TIER1.get(),
                 ModItems.HDD_TIER2.get(),
                 ModItems.HDD_TIER3.get(),
@@ -529,6 +535,9 @@ public final class ModContentCatalog {
         final Item memoryTier1Item,
         final Item memoryTier2Item,
         final Item memoryTier3Item,
+        final Item memoryTier4Item,
+        final Item memoryTier5Item,
+        final Item memoryTier6Item,
         final Item hddTier1Item,
         final Item hddTier2Item,
         final Item hddTier3Item,
@@ -664,6 +673,9 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.MEMORY_TIER1, null, memoryTier1Item);
         registry.register(ModContentIds.MEMORY_TIER2, null, memoryTier2Item);
         registry.register(ModContentIds.MEMORY_TIER3, null, memoryTier3Item);
+        registry.register(ModContentIds.MEMORY_TIER4, null, memoryTier4Item);
+        registry.register(ModContentIds.MEMORY_TIER5, null, memoryTier5Item);
+        registry.register(ModContentIds.MEMORY_TIER6, null, memoryTier6Item);
         registry.register(ModContentIds.HDD_TIER1, null, hddTier1Item);
         registry.register(ModContentIds.HDD_TIER2, null, hddTier2Item);
         registry.register(ModContentIds.HDD_TIER3, null, hddTier3Item);
@@ -737,6 +749,9 @@ public final class ModContentCatalog {
         registry.register(COMPAT_MEMORY_TIER1, null, memoryTier1Item);
         registry.register(COMPAT_MEMORY_TIER2, null, memoryTier2Item);
         registry.register(COMPAT_MEMORY_TIER3, null, memoryTier3Item);
+        registry.register(COMPAT_MEMORY_TIER4, null, memoryTier4Item);
+        registry.register(COMPAT_MEMORY_TIER5, null, memoryTier5Item);
+        registry.register(COMPAT_MEMORY_TIER6, null, memoryTier6Item);
         registry.register(COMPAT_HDD_TIER1, null, hddTier1Item);
         registry.register(COMPAT_HDD_TIER2, null, hddTier2Item);
         registry.register(COMPAT_HDD_TIER3, null, hddTier3Item);

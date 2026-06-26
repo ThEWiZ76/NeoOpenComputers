@@ -23,7 +23,7 @@ public class MemoryItem extends Item implements Memory, CallBudget {
 
     public MemoryItem(final Properties properties, final int tier) {
         super(properties);
-        this.tier = Math.max(0, Math.min(2, tier));
+        this.tier = Math.max(0, Math.min(5, tier));
     }
 
     @Override
@@ -43,7 +43,7 @@ public class MemoryItem extends Item implements Memory, CallBudget {
 
     @Override
     public int tier(final ItemStack stack) {
-        return tier;
+        return tier / 2;
     }
 
     @Override
@@ -55,8 +55,11 @@ public class MemoryItem extends Item implements Memory, CallBudget {
     public double amount(final ItemStack stack) {
         return switch (tier) {
             case 0 -> 192;
-            case 1 -> 384;
-            default -> 768;
+            case 1 -> 256;
+            case 2 -> 384;
+            case 3 -> 512;
+            case 4 -> 768;
+            default -> 1024;
         };
     }
 

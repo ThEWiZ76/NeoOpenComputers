@@ -404,6 +404,18 @@ public final class ModItems {
         ModContentIds.MEMORY_TIER3,
         () -> new MemoryItem(new Item.Properties(), 2));
 
+    public static final DeferredItem<MemoryItem> MEMORY_TIER4 = ITEMS.register(
+        ModContentIds.MEMORY_TIER4,
+        () -> new MemoryItem(new Item.Properties(), 3));
+
+    public static final DeferredItem<MemoryItem> MEMORY_TIER5 = ITEMS.register(
+        ModContentIds.MEMORY_TIER5,
+        () -> new MemoryItem(new Item.Properties(), 4));
+
+    public static final DeferredItem<MemoryItem> MEMORY_TIER6 = ITEMS.register(
+        ModContentIds.MEMORY_TIER6,
+        () -> new MemoryItem(new Item.Properties(), 5));
+
     public static final DeferredItem<NavigationUpgradeItem> NAVIGATION_UPGRADE = ITEMS.register(
         ModContentIds.NAVIGATION_UPGRADE,
         () -> new NavigationUpgradeItem(new Item.Properties()));

@@ -117,6 +117,9 @@ final class RecipeResourceTest {
             ModContentIds.MEMORY_TIER1,
             ModContentIds.MEMORY_TIER2,
             ModContentIds.MEMORY_TIER3,
+            ModContentIds.MEMORY_TIER4,
+            ModContentIds.MEMORY_TIER5,
+            ModContentIds.MEMORY_TIER6,
             ModContentIds.MOTION_SENSOR,
             ModContentIds.NAVIGATION_UPGRADE,
             ModContentIds.NETWORK_CARD,
@@ -251,11 +254,11 @@ final class RecipeResourceTest {
         JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.SERVER_TIER2 + ".json"));
         JsonObject tier3 = readJson(RECIPE_ROOT.resolve(ModContentIds.SERVER_TIER3 + ".json"));
 
-        assertServerRecipe(tier1, "c:ingots/iron", ModContentIds.MEMORY_TIER1, ModContentIds.MICROCHIP_TIER1, ModContentIds.COMPONENT_BUS_TIER1);
-        assertServerRecipe(tier2, "c:ingots/gold", ModContentIds.MEMORY_TIER2, ModContentIds.MICROCHIP_TIER2, ModContentIds.COMPONENT_BUS_TIER2);
+        assertServerRecipe(tier1, "c:ingots/iron", ModContentIds.MEMORY_TIER2, ModContentIds.MICROCHIP_TIER1, ModContentIds.COMPONENT_BUS_TIER1);
+        assertServerRecipe(tier2, "c:ingots/gold", ModContentIds.MEMORY_TIER4, ModContentIds.MICROCHIP_TIER2, ModContentIds.COMPONENT_BUS_TIER2);
         assertPattern(tier3, "IMI", "CUC", "OBO");
         assertItem(tier3.getAsJsonObject("key"), "I", "minecraft:diamond");
-        assertItem(tier3.getAsJsonObject("key"), "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER3);
+        assertItem(tier3.getAsJsonObject("key"), "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER6);
         assertItem(tier3.getAsJsonObject("key"), "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
         assertItem(tier3.getAsJsonObject("key"), "U", "neoopencomputers:" + ModContentIds.COMPONENT_BUS_TIER3);
         assertItem(tier3.getAsJsonObject("key"), "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
@@ -406,19 +409,32 @@ final class RecipeResourceTest {
     }
 
     @Test
-    void memoryRecipesUseMaterialProgression() throws IOException {
+    void memoryRecipesUseUpstreamRamProgression() throws IOException {
         JsonObject tier1 = recipeKeys(ModContentIds.MEMORY_TIER1);
         JsonObject tier2 = recipeKeys(ModContentIds.MEMORY_TIER2);
         JsonObject tier3 = recipeKeys(ModContentIds.MEMORY_TIER3);
+        JsonObject tier4 = recipeKeys(ModContentIds.MEMORY_TIER4);
+        JsonObject tier5 = recipeKeys(ModContentIds.MEMORY_TIER5);
+        JsonObject tier6 = recipeKeys(ModContentIds.MEMORY_TIER6);
 
-        assertItem(tier1, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
-        assertItem(tier2, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
-        assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
-        assertItem(tier2, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
-        assertItem(tier3, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
-        assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
-        assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER2);
+        assertItem(tier1, "I", "minecraft:iron_nugget");
+        assertItem(tier1, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(tier2, "U", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier2, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier3, "I", "minecraft:iron_nugget");
+        assertItem(tier3, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier4, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier4, "U", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier4, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier5, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier5, "I", "minecraft:iron_nugget");
+        assertItem(tier5, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier6, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(tier6, "U", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier6, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
     @Test

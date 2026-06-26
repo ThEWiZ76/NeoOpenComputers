@@ -197,6 +197,9 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.MEMORY_TIER1));
         assertNotNull(registry.get(ModContentIds.MEMORY_TIER2));
         assertNotNull(registry.get(ModContentIds.MEMORY_TIER3));
+        assertNotNull(registry.get(ModContentIds.MEMORY_TIER4));
+        assertNotNull(registry.get(ModContentIds.MEMORY_TIER5));
+        assertNotNull(registry.get(ModContentIds.MEMORY_TIER6));
         assertNotNull(registry.get(ModContentIds.HDD_TIER1));
         assertNotNull(registry.get(ModContentIds.HDD_TIER2));
         assertNotNull(registry.get(ModContentIds.HDD_TIER3));
@@ -264,6 +267,9 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MEMORY_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MEMORY_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MEMORY_TIER3));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_MEMORY_TIER4));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_MEMORY_TIER5));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_MEMORY_TIER6));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_HDD_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_HDD_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_HDD_TIER3));
@@ -411,6 +417,9 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.MEMORY_TIER1, registry.get(ModContentIds.MEMORY_TIER1).name());
         assertEquals(ModContentIds.MEMORY_TIER2, registry.get(ModContentIds.MEMORY_TIER2).name());
         assertEquals(ModContentIds.MEMORY_TIER3, registry.get(ModContentIds.MEMORY_TIER3).name());
+        assertEquals(ModContentIds.MEMORY_TIER4, registry.get(ModContentIds.MEMORY_TIER4).name());
+        assertEquals(ModContentIds.MEMORY_TIER5, registry.get(ModContentIds.MEMORY_TIER5).name());
+        assertEquals(ModContentIds.MEMORY_TIER6, registry.get(ModContentIds.MEMORY_TIER6).name());
         assertEquals(ModContentIds.HDD_TIER1, registry.get(ModContentIds.HDD_TIER1).name());
         assertEquals(ModContentIds.HDD_TIER2, registry.get(ModContentIds.HDD_TIER2).name());
         assertEquals(ModContentIds.HDD_TIER3, registry.get(ModContentIds.HDD_TIER3).name());
@@ -478,6 +487,9 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_MEMORY_TIER1, registry.get(ModContentCatalog.COMPAT_MEMORY_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_MEMORY_TIER2, registry.get(ModContentCatalog.COMPAT_MEMORY_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_MEMORY_TIER3, registry.get(ModContentCatalog.COMPAT_MEMORY_TIER3).name());
+        assertEquals(ModContentCatalog.COMPAT_MEMORY_TIER4, registry.get(ModContentCatalog.COMPAT_MEMORY_TIER4).name());
+        assertEquals(ModContentCatalog.COMPAT_MEMORY_TIER5, registry.get(ModContentCatalog.COMPAT_MEMORY_TIER5).name());
+        assertEquals(ModContentCatalog.COMPAT_MEMORY_TIER6, registry.get(ModContentCatalog.COMPAT_MEMORY_TIER6).name());
         assertEquals(ModContentCatalog.COMPAT_HDD_TIER1, registry.get(ModContentCatalog.COMPAT_HDD_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_HDD_TIER2, registry.get(ModContentCatalog.COMPAT_HDD_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_HDD_TIER3, registry.get(ModContentCatalog.COMPAT_HDD_TIER3).name());

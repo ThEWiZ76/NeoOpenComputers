@@ -121,8 +121,11 @@ final class ComponentItemShapeTest {
     void memoryItemUsesConfiguredCallBudgets() throws Exception {
         withCachedConfig(ModSettings.CALL_BUDGETS, List.of(0.25D, 0.75D, 2.0D), () -> {
             assertEquals(0.25D, memory(0).getCallBudget(null));
-            assertEquals(0.75D, memory(1).getCallBudget(null));
-            assertEquals(2.0D, memory(2).getCallBudget(null));
+            assertEquals(0.25D, memory(1).getCallBudget(null));
+            assertEquals(0.75D, memory(2).getCallBudget(null));
+            assertEquals(0.75D, memory(3).getCallBudget(null));
+            assertEquals(2.0D, memory(4).getCallBudget(null));
+            assertEquals(2.0D, memory(5).getCallBudget(null));
         });
     }
 

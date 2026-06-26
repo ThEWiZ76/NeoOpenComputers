@@ -97,6 +97,9 @@ public final class ModContentIds {
     public static final String MEMORY_TIER1 = "memory_tier1";
     public static final String MEMORY_TIER2 = "memory_tier2";
     public static final String MEMORY_TIER3 = "memory_tier3";
+    public static final String MEMORY_TIER4 = "memory_tier4";
+    public static final String MEMORY_TIER5 = "memory_tier5";
+    public static final String MEMORY_TIER6 = "memory_tier6";
     public static final String MICROCHIP_TIER1 = "microchip_tier1";
     public static final String MICROCHIP_TIER2 = "microchip_tier2";
     public static final String MICROCHIP_TIER3 = "microchip_tier3";

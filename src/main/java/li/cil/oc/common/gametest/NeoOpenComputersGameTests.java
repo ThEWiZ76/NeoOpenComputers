@@ -348,6 +348,9 @@ public final class NeoOpenComputersGameTests {
         ModItems.MEMORY_TIER1.get();
         ModItems.MEMORY_TIER2.get();
         ModItems.MEMORY_TIER3.get();
+        ModItems.MEMORY_TIER4.get();
+        ModItems.MEMORY_TIER5.get();
+        ModItems.MEMORY_TIER6.get();
         ModItems.MOTION_SENSOR.get();
         ModItems.NAVIGATION_UPGRADE.get();
         ModItems.NET_SPLITTER.get();
@@ -500,8 +503,11 @@ public final class NeoOpenComputersGameTests {
         assertItemTier(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.CARD_CONTAINER_TIER3.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER1.get()), 0);
-        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 1);
-        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 0);
+        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER4.get()), 1);
+        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER5.get()), 2);
+        assertItemTier(helper, new ItemStack(ModItems.MEMORY_TIER6.get()), 2);
         assertItemTier(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()), 0);
         assertItemTier(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER2.get()), 1);
         assertItemTier(helper, new ItemStack(ModItems.GRAPHICS_CARD_TIER3.get()), 2);
@@ -3980,6 +3986,37 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void memoryItemsUseUpstreamRamHalfTiers(final GameTestHelper helper) {
+        assertMemoryApiItem(helper, "ram1", 0, 192D);
+        assertMemoryApiItem(helper, "ram2", 0, 256D);
+        assertMemoryApiItem(helper, "ram3", 1, 384D);
+        assertMemoryApiItem(helper, "ram4", 1, 512D);
+        assertMemoryApiItem(helper, "ram5", 2, 768D);
+        assertMemoryApiItem(helper, "ram6", 2, 1024D);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void serverRecipesUseUpstreamRamInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.SERVER_TIER1.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_INGOT), apiItemStack(helper, "ram2"), new ItemStack(Items.IRON_INGOT),
+            new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(ModItems.COMPONENT_BUS_TIER1.get()), new ItemStack(ModItems.MICROCHIP_TIER1.get()),
+            new ItemStack(Items.OBSIDIAN), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.OBSIDIAN)
+        )));
+        assertCraftsItem(helper, ModItems.SERVER_TIER2.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.GOLD_INGOT), apiItemStack(helper, "ram4"), new ItemStack(Items.GOLD_INGOT),
+            new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(ModItems.COMPONENT_BUS_TIER2.get()), new ItemStack(ModItems.MICROCHIP_TIER2.get()),
+            new ItemStack(Items.OBSIDIAN), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.OBSIDIAN)
+        )));
+        assertCraftsItem(helper, ModItems.SERVER_TIER3.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.DIAMOND), apiItemStack(helper, "ram6"), new ItemStack(Items.DIAMOND),
+            new ItemStack(ModItems.MICROCHIP_TIER3.get()), new ItemStack(ModItems.COMPONENT_BUS_TIER3.get()), new ItemStack(ModItems.MICROCHIP_TIER3.get()),
+            new ItemStack(Items.OBSIDIAN), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.OBSIDIAN)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printerBlockExposesUpstreamComponentShell(final GameTestHelper helper) {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());
@@ -4906,8 +4943,11 @@ public final class NeoOpenComputersGameTests {
         assertProcessorComponents(helper, new ItemStack(ModItems.APU_TIER2.get()), 16);
         assertCreativeComponentBusDriver(helper);
         assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER1.get()), 192);
-        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 384);
-        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 768);
+        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER2.get()), 256);
+        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER3.get()), 384);
+        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER4.get()), 512);
+        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER5.get()), 768);
+        assertMemoryAmount(helper, new ItemStack(ModItems.MEMORY_TIER6.get()), 1024);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER1.get()), 1024L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER2.get()), 2048L * 1024L);
         assertHardDiskCapacity(helper, new ItemStack(ModItems.HDD_TIER3.get()), 4096L * 1024L);
@@ -7124,10 +7164,10 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(relay.getContainerSize() == RelayBlockEntity.CONTAINER_SIZE, "Relay inventory size mismatch");
         helper.assertTrue(relay.canPlaceItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.CPU_TIER3.get())), "Relay rejected CPU slot");
-        helper.assertTrue(relay.canPlaceItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get())), "Relay rejected memory slot");
+        helper.assertTrue(relay.canPlaceItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER5.get())), "Relay rejected memory slot");
         helper.assertTrue(relay.canPlaceItem(RelayBlockEntity.HDD_SLOT, new ItemStack(ModItems.HDD_TIER3.get())), "Relay rejected HDD slot");
         helper.assertTrue(relay.canPlaceItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get())), "Relay rejected wireless card slot");
-        helper.assertTrue(!relay.canPlaceItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get())), "Relay accepted memory in CPU slot");
+        helper.assertTrue(!relay.canPlaceItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.MEMORY_TIER5.get())), "Relay accepted memory in CPU slot");
         helper.assertTrue(!relay.canPlaceItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.INTERNET_CARD.get())), "Relay accepted unsupported card");
 
         final int baseDelay = relay.relayDelay();
@@ -7135,7 +7175,7 @@ public final class NeoOpenComputersGameTests {
         final int baseQueueSize = relay.maxQueueSize();
 
         relay.setItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.CPU_TIER3.get()));
-        relay.setItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        relay.setItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER5.get()));
         relay.setItem(RelayBlockEntity.HDD_SLOT, new ItemStack(ModItems.HDD_TIER3.get()));
         relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()));
 
@@ -7173,7 +7213,7 @@ public final class NeoOpenComputersGameTests {
                                 helper.assertTrue(relay.maxQueueSize() == 11, "Relay ignored configured base queue size");
 
                                 relay.setItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.CPU_TIER3.get()));
-                                relay.setItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get()));
+                                relay.setItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER5.get()));
                                 relay.setItem(RelayBlockEntity.HDD_SLOT, new ItemStack(ModItems.HDD_TIER3.get()));
 
                                 helper.assertTrue(relay.relayDelay() == 1, "Relay ignored configured CPU delay upgrade");
@@ -7247,14 +7287,14 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(relayPos, ModBlocks.RELAY.get());
         final RelayBlockEntity relay = helper.getBlockEntity(relayPos);
         relay.setItem(RelayBlockEntity.CPU_SLOT, new ItemStack(ModItems.CPU_TIER3.get()));
-        relay.setItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        relay.setItem(RelayBlockEntity.MEMORY_SLOT, new ItemStack(ModItems.MEMORY_TIER5.get()));
         relay.setItem(RelayBlockEntity.HDD_SLOT, new ItemStack(ModItems.HDD_TIER3.get()));
         relay.setItem(RelayBlockEntity.CARD_SLOT, new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()));
 
         helper.getLevel().destroyBlock(helper.absolutePos(relayPos), true);
         helper.runAtTickTime(1, () -> {
             helper.assertTrue(droppedItemCount(helper, ModItems.CPU_TIER3.get()) == 1, "Broken relay did not drop installed CPU");
-            helper.assertTrue(droppedItemCount(helper, ModItems.MEMORY_TIER3.get()) == 1, "Broken relay did not drop installed memory");
+            helper.assertTrue(droppedItemCount(helper, ModItems.MEMORY_TIER5.get()) == 1, "Broken relay did not drop installed memory");
             helper.assertTrue(droppedItemCount(helper, ModItems.HDD_TIER3.get()) == 1, "Broken relay did not drop installed HDD");
             helper.assertTrue(droppedItemCount(helper, ModItems.WIRELESS_NETWORK_CARD_TIER2.get()) == 1, "Broken relay did not drop installed wireless card");
             helper.succeed();
@@ -9951,12 +9991,33 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(tiered.tier() == expectedTier, "Expected " + apiName + " tier " + expectedTier + " but got " + tiered.tier());
     }
 
+    private static void assertMemoryApiItem(final GameTestHelper helper, final String apiName, final int expectedTier, final double expectedAmount) {
+        final ItemStack stack = apiItemStack(helper, apiName);
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver instanceof Memory, "No memory driver for " + apiName);
+        helper.assertTrue(driver.tier(stack) == expectedTier, "Expected " + apiName + " tier " + expectedTier + " but got " + driver.tier(stack));
+        helper.assertTrue(Double.compare(((Memory) driver).amount(stack), expectedAmount) == 0,
+            "Expected " + apiName + " amount " + expectedAmount + " but got " + ((Memory) driver).amount(stack));
+    }
+
+    private static ItemStack apiItemStack(final GameTestHelper helper, final String apiName) {
+        final ItemInfo info = API.items.get(apiName);
+        helper.assertTrue(info != null, "No API item entry for " + apiName);
+        final ItemStack stack = info.createItemStack(1);
+        helper.assertTrue(!stack.isEmpty(), "API item entry created empty stack for " + apiName);
+        return stack;
+    }
+
     private static void assertCraftsMicrocontrollerCase(final GameTestHelper helper, final Item expectedItem, final CraftingInput input) {
+        assertCraftsItem(helper, expectedItem, input);
+    }
+
+    private static void assertCraftsItem(final GameTestHelper helper, final Item expectedItem, final CraftingInput input) {
         final Optional<RecipeHolder<CraftingRecipe>> recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
-        helper.assertTrue(recipe.isPresent(), "No microcontroller case recipe matched upstream inputs for " + expectedItem);
+        helper.assertTrue(recipe.isPresent(), "No recipe matched upstream inputs for " + expectedItem);
         final ItemStack result = recipe.get().value().assemble(input, helper.getLevel().registryAccess());
-        helper.assertTrue(result.is(expectedItem), "Microcontroller case recipe returned wrong item");
-        helper.assertTrue(result.getCount() == 1, "Microcontroller case recipe should craft one item");
+        helper.assertTrue(result.is(expectedItem), "Recipe returned wrong item");
+        helper.assertTrue(result.getCount() == 1, "Recipe should craft one item");
     }
 
     private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method, final Object... args) {

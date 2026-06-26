@@ -289,6 +289,21 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void memoryTier4ItemIdIsStable() {
+        assertEquals("memory_tier4", ModContentIds.MEMORY_TIER4);
+    }
+
+    @Test
+    void memoryTier5ItemIdIsStable() {
+        assertEquals("memory_tier5", ModContentIds.MEMORY_TIER5);
+    }
+
+    @Test
+    void memoryTier6ItemIdIsStable() {
+        assertEquals("memory_tier6", ModContentIds.MEMORY_TIER6);
+    }
+
+    @Test
     void hardDiskDriveTier1ItemIdIsStable() {
         assertEquals("hdd_tier1", ModContentIds.HDD_TIER1);
     }

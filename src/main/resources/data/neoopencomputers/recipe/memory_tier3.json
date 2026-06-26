@@ -2,19 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "B": {
-      "item": "neoopencomputers:printed_circuit_board"
-    },
     "C": {
-      "item": "neoopencomputers:microchip_tier3"
+      "item": "neoopencomputers:microchip_tier2"
     },
-    "M": {
-      "item": "neoopencomputers:memory_tier2"
+    "I": {
+      "item": "minecraft:iron_nugget"
+    },
+    "P": {
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "pattern": [
-    "CCC",
-    "MBM"
+    "CIC",
+    " P "
   ],
   "result": {
     "count": 1,

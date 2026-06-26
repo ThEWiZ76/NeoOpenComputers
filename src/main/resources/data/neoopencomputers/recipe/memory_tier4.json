@@ -3,13 +3,13 @@
   "category": "redstone",
   "key": {
     "C": {
-      "item": "neoopencomputers:microchip_tier1"
+      "item": "neoopencomputers:microchip_tier2"
     },
     "P": {
       "item": "neoopencomputers:printed_circuit_board"
     },
     "U": {
-      "item": "neoopencomputers:microchip_tier2"
+      "item": "neoopencomputers:microchip_tier3"
     }
   },
   "pattern": [
@@ -18,6 +18,6 @@
   ],
   "result": {
     "count": 1,
-    "id": "neoopencomputers:memory_tier2"
+    "id": "neoopencomputers:memory_tier4"
   }
 }
