@@ -27,6 +27,7 @@ import li.cil.oc.common.ToolDurabilityProviderImc;
 import li.cil.oc.common.WrenchToolImc;
 import li.cil.oc.common.component.AngelUpgradeHandler;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
+import li.cil.oc.common.component.ChunkloaderUpgradeHandler;
 import li.cil.oc.common.component.ExperienceUpgradeHandler;
 import li.cil.oc.common.component.FileSystemAccessHandler;
 import li.cil.oc.common.component.MfuTargetEvents;
@@ -68,6 +69,7 @@ public final class NeoOpenComputers {
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
         modEventBus.addListener(ModCapabilities::register);
         AngelUpgradeHandler.register();
+        ChunkloaderUpgradeHandler.register();
         ExperienceUpgradeHandler.register();
         FileSystemAccessHandler.register();
         MfuTargetEvents.register();

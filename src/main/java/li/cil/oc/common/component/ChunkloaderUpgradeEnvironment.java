@@ -18,7 +18,9 @@ import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
 import net.neoforged.neoforge.common.world.chunk.TicketController;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "chunkloader";
@@ -33,8 +35,9 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
     );
 
     private final EnvironmentHost host;
+    private final Set<ChunkPos> forcedChunks = new HashSet<>();
     private boolean active;
-    private boolean forced;
+    private BlockPos ticketOwner;
 
     public ChunkloaderUpgradeEnvironment(final EnvironmentHost host) {
         this.host = host;
@@ -108,21 +111,59 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
         return true;
     }
 
+    void refreshForcedChunks() {
+        updateChunkTicket();
+    }
+
     private void updateChunkTicket() {
-        final boolean shouldForce = active && host != null && host.world() instanceof ServerLevel;
-        if (forced == shouldForce) {
+        final ServerLevel level = host != null && host.world() instanceof ServerLevel serverLevel ? serverLevel : null;
+        if (level == null) {
+            forcedChunks.clear();
+            ticketOwner = null;
             return;
         }
-        final ServerLevel level = host != null && host.world() instanceof ServerLevel serverLevel ? serverLevel : null;
-        if (level != null) {
-            final BlockPos owner = ownerPosition();
-            final ChunkPos chunk = new ChunkPos(owner);
-            TICKETS.forceChunk(level, owner, chunk.x, chunk.z, shouldForce, true);
+
+        final BlockPos owner = ownerPosition();
+        final Set<ChunkPos> desiredChunks = active ? chunksAround(new ChunkPos(owner)) : Set.of();
+        final BlockPos oldOwner = ticketOwner != null ? ticketOwner : owner;
+        final boolean ownerChanged = ticketOwner != null && !ticketOwner.equals(owner);
+
+        if (ownerChanged || !active) {
+            for (final ChunkPos chunk : forcedChunks) {
+                TICKETS.forceChunk(level, oldOwner, chunk.x, chunk.z, false, true);
+            }
+            forcedChunks.clear();
+        } else {
+            for (final ChunkPos chunk : Set.copyOf(forcedChunks)) {
+                if (!desiredChunks.contains(chunk)) {
+                    TICKETS.forceChunk(level, oldOwner, chunk.x, chunk.z, false, true);
+                    forcedChunks.remove(chunk);
+                }
+            }
         }
-        forced = shouldForce;
+
+        for (final ChunkPos chunk : desiredChunks) {
+            if (!forcedChunks.contains(chunk)) {
+                TICKETS.forceChunk(level, owner, chunk.x, chunk.z, true, true);
+            }
+        }
+
+        forcedChunks.clear();
+        forcedChunks.addAll(desiredChunks);
+        ticketOwner = forcedChunks.isEmpty() ? null : owner;
     }
 
     private BlockPos ownerPosition() {
         return BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition());
+    }
+
+    private static Set<ChunkPos> chunksAround(final ChunkPos center) {
+        final Set<ChunkPos> chunks = new HashSet<>();
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                chunks.add(new ChunkPos(center.x + x, center.z + z));
+            }
+        }
+        return chunks;
     }
 }

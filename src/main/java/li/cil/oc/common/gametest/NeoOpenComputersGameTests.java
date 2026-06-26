@@ -4897,7 +4897,7 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void chunkloaderUpgradeForcesHostChunkWhenActive(final GameTestHelper helper) throws Exception {
+    public static void chunkloaderUpgradeForcesHostChunksWhenActive(final GameTestHelper helper) throws Exception {
         final ItemStack stack = new ItemStack(ModItems.CHUNKLOADER_UPGRADE.get());
         final DriverItem driver = Driver.driverFor(stack);
         helper.assertTrue(driver != null, "No driver for chunkloader upgrade");
@@ -4910,10 +4910,10 @@ public final class NeoOpenComputersGameTests {
         final ComponentConnector component = (ComponentConnector) environment.node();
 
         component.invoke("setActive", null, true);
-        helper.assertTrue(hasModForcedTickingChunk(helper, ownerChunk.toLong()), "Chunkloader did not add forced chunk ticket");
+        assertModForcedTickingChunksAround(helper, ownerChunk, true);
 
         component.invoke("setActive", null, false);
-        helper.assertFalse(hasModForcedTickingChunk(helper, ownerChunk.toLong()), "Chunkloader did not remove forced chunk ticket");
+        assertModForcedTickingChunksAround(helper, ownerChunk, false);
         helper.succeed();
     }
 
@@ -8843,6 +8843,19 @@ public final class NeoOpenComputersGameTests {
             }
         }
         return false;
+    }
+
+    private static void assertModForcedTickingChunksAround(final GameTestHelper helper, final ChunkPos center, final boolean expected) {
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                final ChunkPos chunk = new ChunkPos(center.x + x, center.z + z);
+                if (expected) {
+                    helper.assertTrue(hasModForcedTickingChunk(helper, chunk.toLong()), "Chunkloader did not add forced chunk ticket for " + chunk);
+                } else {
+                    helper.assertFalse(hasModForcedTickingChunk(helper, chunk.toLong()), "Chunkloader did not remove forced chunk ticket for " + chunk);
+                }
+            }
+        }
     }
 
     private static void assertProcessorComponents(final GameTestHelper helper, final ItemStack stack, final int supportedComponents) {
