@@ -96,6 +96,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_RACK = "rack";
     public static final String COMPAT_RAID = "raid";
     public static final String COMPAT_REDSTONE_CARD = "redstone";
+    public static final String COMPAT_REDSTONE_CARD_TIER1_UPSTREAM = "redstonecard1";
     public static final String COMPAT_RELAY = "relay";
     public static final String COMPAT_SERVER_TIER1 = "server1";
     public static final String COMPAT_SERVER_TIER2 = "server2";
@@ -737,6 +738,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_REDSTONE_CARD, null, redstoneCardItem);
+        registry.register(COMPAT_REDSTONE_CARD_TIER1_UPSTREAM, null, redstoneCardItem);
         registry.register(COMPAT_GENERATOR_UPGRADE, null, generatorUpgradeItem);
         registry.register(COMPAT_SOLAR_GENERATOR_UPGRADE, null, solarGeneratorUpgradeItem);
         registry.register(COMPAT_TANK_UPGRADE, null, tankUpgradeItem);
