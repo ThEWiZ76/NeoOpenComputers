@@ -210,9 +210,10 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             final ServerPlayer player = serverLevel.getServer().getPlayerList().getPlayerByName(playerName);
             if (player != null && player.connection != null) {
                 PacketDistributor.sendToPlayer(player, new DebugClipboardPayload(value));
+                return new Object[]{true};
             }
         }
-        return new Object[0];
+        return new Object[]{false, "no such player"};
     }
 
     @Callback(doc = "function(address:string, data...) -- Sends data to the debug card with the specified address.")

@@ -954,7 +954,7 @@ public final class NeoOpenComputersGameTests {
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
 
         final Object[] result = invokeComponent(helper, component, "sendToClipboard", "offline-player", "copied text");
-        helper.assertTrue(result.length == 0, "Debug sendToClipboard returned unexpected values");
+        helper.assertTrue(result.length == 2 && Boolean.FALSE.equals(result[0]) && "no such player".equals(result[1]), "Debug sendToClipboard returned unexpected values");
 
         helper.succeed();
     }

@@ -67,6 +67,15 @@ final class DebugCardEnvironmentTest {
         assertArrayEquals(new Object[]{false}, component.invoke("isModLoaded", null, "definitely_missing_debug_card_test_mod"));
     }
 
+    @Test
+    void sendToClipboardReportsMissingPlayerLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        DebugCardEnvironment card = new DebugCardEnvironment(new TestEnvironmentHost());
+        Component component = assertInstanceOf(Component.class, card.node());
+
+        assertArrayEquals(new Object[]{false, "no such player"}, component.invoke("sendToClipboard", null, "missing-player", "payload"));
+    }
+
     private static ModConfigSpec.ConfigValue<String> debugCardAccessConfig() throws Exception {
         Field field = ModSettings.class.getDeclaredField("DEBUG_CARD_ACCESS");
         return (ModConfigSpec.ConfigValue<String>) field.get(null);
