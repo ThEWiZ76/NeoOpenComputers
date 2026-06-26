@@ -25,6 +25,7 @@ import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.PeripheralBlacklistImc;
 import li.cil.oc.common.ToolDurabilityProviderImc;
 import li.cil.oc.common.WrenchToolImc;
+import li.cil.oc.common.component.AngelUpgradeHandler;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.FileSystemAccessHandler;
 import li.cil.oc.common.component.MfuTargetEvents;
@@ -64,6 +65,7 @@ public final class NeoOpenComputers {
         ModCreativeTabs.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
         modEventBus.addListener(ModCapabilities::register);
+        AngelUpgradeHandler.register();
         FileSystemAccessHandler.register();
         MfuTargetEvents.register();
         NetworkActivityHandler.register();
