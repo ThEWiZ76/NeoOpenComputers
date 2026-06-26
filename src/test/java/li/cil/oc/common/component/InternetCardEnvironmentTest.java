@@ -134,6 +134,23 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void httpRequestIgnoresNonStringMethodLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
+            assertEquals("https://example.test/default-method", url);
+            assertEquals(null, postData);
+            assertEquals("GET", method);
+            return CompletableFuture.completedFuture(new InternetCardEnvironment.HttpResponse(204, "No Content", Map.of(), new byte[0]));
+        });
+
+        Object handle = card.request(null, new TestArguments("https://example.test/default-method", null, null, true))[0];
+
+        InternetCardEnvironment.HttpRequest request = assertInstanceOf(InternetCardEnvironment.HttpRequest.class, handle);
+        assertArrayEquals(new Object[]{true}, request.finishConnect(null, new TestArguments()));
+        assertArrayEquals(new Object[]{204, "No Content", Map.of()}, request.response(null, new TestArguments()));
+    }
+
+    @Test
     void httpRequestReadUsesConfiguredMaxReadBuffer() throws Exception {
         OpenComputersApi.initialize();
         byte[] body = "abcdef".getBytes(StandardCharsets.UTF_8);

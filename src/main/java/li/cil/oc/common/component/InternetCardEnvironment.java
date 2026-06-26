@@ -96,7 +96,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         if (!ModSettings.enableHttpHeaders() && !headers.isEmpty()) {
             return new Object[]{null, "http request headers are unavailable"};
         }
-        final String method = args.count() > 3 && args.checkAny(3) != null ? args.checkString(3) : (postData == null ? "GET" : "POST");
+        final String method = args.isString(3) ? args.checkString(3) : (postData == null ? "GET" : "POST");
         ensureConnectionSlot();
         final HttpRequest request = new HttpRequest(transport.request(url, postData, headers, method), this);
         connections.add(request);
