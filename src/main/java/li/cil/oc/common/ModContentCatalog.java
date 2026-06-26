@@ -116,6 +116,12 @@ public final class ModContentCatalog {
     public static final String COMPAT_MATERIAL_CUTTING_WIRE = "materialCuttingWire";
     public static final String COMPAT_MATERIAL_DISK = "materialDisk";
     public static final String COMPAT_MATERIAL_INTERWEB = "materialInterweb";
+    public static final String COMPAT_CUTTING_WIRE = "cuttingwire";
+    public static final String COMPAT_CONTROL_UNIT = "cu";
+    public static final String COMPAT_DISK_PLATTER = "disk";
+    public static final String COMPAT_BUTTON_GROUP = "buttongroup";
+    public static final String COMPAT_ARROW_KEYS = "arrowkeys";
+    public static final String COMPAT_NUM_PAD = "numpad";
     public static final String COMPAT_INK_CARTRIDGE_EMPTY = "inkCartridgeEmpty";
     public static final String COMPAT_INK_CARTRIDGE = "inkCartridge";
     public static final String COMPAT_MATERIAL_NUM_PAD = "materialNumPad";
@@ -365,6 +371,12 @@ public final class ModContentCatalog {
         registry.register(COMPAT_MATERIAL_BUTTON_GROUP, null, buttonGroupItem);
         registry.register(COMPAT_MATERIAL_ARROW_KEY, null, arrowKeysItem);
         registry.register(COMPAT_MATERIAL_NUM_PAD, null, numPadItem);
+        registry.register(COMPAT_CUTTING_WIRE, null, cuttingWireItem);
+        registry.register(COMPAT_CONTROL_UNIT, null, controlUnitItem);
+        registry.register(COMPAT_DISK_PLATTER, null, diskPlatterItem);
+        registry.register(COMPAT_BUTTON_GROUP, null, buttonGroupItem);
+        registry.register(COMPAT_ARROW_KEYS, null, arrowKeysItem);
+        registry.register(COMPAT_NUM_PAD, null, numPadItem);
     }
 
     static void register(

@@ -67,6 +67,12 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER2_UPSTREAM));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER3_UPSTREAM));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MATERIAL_CARD));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CUTTING_WIRE));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CONTROL_UNIT));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_DISK_PLATTER));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_BUTTON_GROUP));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_ARROW_KEYS));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_NUM_PAD));
         assertEquals(ModContentIds.TRANSISTOR, registry.get(ModContentIds.TRANSISTOR).name());
         assertEquals(ModContentIds.CAPACITOR, registry.get(ModContentIds.CAPACITOR).name());
         assertEquals(ModContentIds.CHAMELIUM, registry.get(ModContentIds.CHAMELIUM).name());
@@ -92,6 +98,12 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1_UPSTREAM, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1_UPSTREAM).name());
         assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER2_UPSTREAM, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER2_UPSTREAM).name());
         assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER3_UPSTREAM, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER3_UPSTREAM).name());
+        assertEquals(ModContentCatalog.COMPAT_CUTTING_WIRE, registry.get(ModContentCatalog.COMPAT_CUTTING_WIRE).name());
+        assertEquals(ModContentCatalog.COMPAT_CONTROL_UNIT, registry.get(ModContentCatalog.COMPAT_CONTROL_UNIT).name());
+        assertEquals(ModContentCatalog.COMPAT_DISK_PLATTER, registry.get(ModContentCatalog.COMPAT_DISK_PLATTER).name());
+        assertEquals(ModContentCatalog.COMPAT_BUTTON_GROUP, registry.get(ModContentCatalog.COMPAT_BUTTON_GROUP).name());
+        assertEquals(ModContentCatalog.COMPAT_ARROW_KEYS, registry.get(ModContentCatalog.COMPAT_ARROW_KEYS).name());
+        assertEquals(ModContentCatalog.COMPAT_NUM_PAD, registry.get(ModContentCatalog.COMPAT_NUM_PAD).name());
     }
 
     @Test
