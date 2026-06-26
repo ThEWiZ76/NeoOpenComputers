@@ -6927,6 +6927,27 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalServerDataExposesAddressAndKeysLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+        final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
+
+        helper.assertTrue(TerminalItem.bindToTerminalServer(terminal, rack, 0), "Terminal did not bind to terminal server");
+        final CompoundTag terminalData = terminal.get(DataComponents.CUSTOM_DATA).copyTag().getCompound(TerminalItem.DATA_TAG);
+        final CompoundTag mountableData = terminalServer.getData();
+        final ListTag keys = mountableData.getList("keys", Tag.TAG_STRING);
+
+        helper.assertTrue(terminalServer.node().address().equals(mountableData.getString("terminalAddress")),
+            "Terminal server data did not expose upstream terminalAddress");
+        helper.assertTrue(keys.size() == 1 && terminalData.getString(TerminalItem.KEY_TAG).equals(keys.getString(0)),
+            "Terminal server data did not expose upstream keys");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void terminalServerOnActivateBindsTerminalItemLikeUpstream(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

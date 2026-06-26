@@ -38,6 +38,8 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     private static final String TAG_SCREEN = "screen";
     private static final String TAG_KEYBOARD = "keyboard";
     private static final String TAG_KEYS = "oc:keys";
+    private static final String TAG_DATA_KEYS = "keys";
+    private static final String TAG_TERMINAL_ADDRESS = "terminalAddress";
     private static final int MAX_TERMINALS = 4;
 
     private final EnvironmentHost host;
@@ -69,6 +71,19 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     public CompoundTag getData() {
         final CompoundTag data = new CompoundTag();
         data.putString(TAG_KIND, "terminal_server");
+        if (node() != null) {
+            if (node().network() == null) {
+                Network.joinNewNetwork(node());
+            }
+            if (node().address() != null) {
+                data.putString(TAG_TERMINAL_ADDRESS, node().address());
+            }
+        }
+        final ListTag keyTags = new ListTag();
+        for (final String key : keys) {
+            keyTags.add(StringTag.valueOf(key));
+        }
+        data.put(TAG_DATA_KEYS, keyTags);
         return data;
     }
 
