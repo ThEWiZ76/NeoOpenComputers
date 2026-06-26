@@ -54,6 +54,8 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CHAMELIUM));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_INK_CARTRIDGE_EMPTY));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_INK_CARTRIDGE));
+        assertNotNull(registry.get("inkcartridgeempty"));
+        assertNotNull(registry.get("inkcartridge"));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER3));
@@ -86,6 +88,8 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_CHAMELIUM, registry.get(ModContentCatalog.COMPAT_CHAMELIUM).name());
         assertEquals(ModContentCatalog.COMPAT_INK_CARTRIDGE_EMPTY, registry.get(ModContentCatalog.COMPAT_INK_CARTRIDGE_EMPTY).name());
         assertEquals(ModContentCatalog.COMPAT_INK_CARTRIDGE, registry.get(ModContentCatalog.COMPAT_INK_CARTRIDGE).name());
+        assertEquals("inkcartridgeempty", registry.get("inkcartridgeempty").name());
+        assertEquals("inkcartridge", registry.get("inkcartridge").name());
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER1, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER2, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER3, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_TIER3).name());
@@ -147,6 +151,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER3));
         assertNotNull(registry.get(ModContentIds.DISASSEMBLER));
         assertNotNull(registry.get(ModContentIds.DISK_DRIVE));
+        assertNotNull(registry.get("diskdrivemountable"));
         assertNotNull(registry.get(ModContentIds.SCREEN_TIER1));
         assertNotNull(registry.get(ModContentIds.SCREEN_TIER2));
         assertNotNull(registry.get(ModContentIds.SCREEN_TIER3));
@@ -226,6 +231,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.INTERNET_CARD));
         assertNotNull(registry.get(ModContentIds.LINKED_CARD));
         assertNotNull(registry.get(ModContentIds.NAVIGATION_UPGRADE));
+        assertNotNull(registry.get("navigationupgrade"));
         assertNotNull(registry.get(ModContentIds.EEPROM));
         assertNotNull(registry.get(ModContentIds.FLOPPY));
         assertNotNull(registry.get(ModContentIds.GRAPHICS_CARD_TIER1));
@@ -351,6 +357,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER2, registry.get(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER3, registry.get(ModContentCatalog.COMPAT_COMPUTER_CASE_TIER3).name());
         assertEquals(ModContentIds.DISK_DRIVE, registry.get(ModContentIds.DISK_DRIVE).name());
+        assertEquals("diskdrivemountable", registry.get("diskdrivemountable").name());
         assertEquals(ModContentIds.SCREEN_TIER1, registry.get(ModContentIds.SCREEN_TIER1).name());
         assertEquals(ModContentIds.SCREEN_TIER2, registry.get(ModContentIds.SCREEN_TIER2).name());
         assertEquals(ModContentIds.SCREEN_TIER3, registry.get(ModContentIds.SCREEN_TIER3).name());
@@ -438,6 +445,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.INTERNET_CARD, registry.get(ModContentIds.INTERNET_CARD).name());
         assertEquals(ModContentIds.LINKED_CARD, registry.get(ModContentIds.LINKED_CARD).name());
         assertEquals(ModContentIds.NAVIGATION_UPGRADE, registry.get(ModContentIds.NAVIGATION_UPGRADE).name());
+        assertEquals("navigationupgrade", registry.get("navigationupgrade").name());
         assertEquals(ModContentIds.EEPROM, registry.get(ModContentIds.EEPROM).name());
         assertEquals(ModContentIds.FLOPPY, registry.get(ModContentIds.FLOPPY).name());
         assertEquals(ModContentIds.GRAPHICS_CARD_TIER1, registry.get(ModContentIds.GRAPHICS_CARD_TIER1).name());

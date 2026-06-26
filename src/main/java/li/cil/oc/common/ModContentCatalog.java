@@ -50,6 +50,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_DEBUG_CARD = "debugCard";
     public static final String COMPAT_DEBUG_CARD_UPSTREAM = "debugcard";
     public static final String COMPAT_DISK_DRIVE_MOUNTABLE = "diskDriveMountable";
+    public static final String COMPAT_DISK_DRIVE_MOUNTABLE_UPSTREAM = "diskdrivemountable";
     public static final String COMPAT_DISK_DRIVE_UPSTREAM = "diskdrive";
     public static final String COMPAT_DATABASE_UPGRADE_TIER1 = "databaseUpgrade1";
     public static final String COMPAT_DATABASE_UPGRADE_TIER2 = "databaseUpgrade2";
@@ -88,6 +89,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_MFU = "mfu";
     public static final String COMPAT_NANOMACHINES = "nanomachines";
     public static final String COMPAT_NAVIGATION_UPGRADE = "navigationUpgrade";
+    public static final String COMPAT_NAVIGATION_UPGRADE_UPSTREAM = "navigationupgrade";
     public static final String COMPAT_NETWORK_CARD = "lancard";
     public static final String COMPAT_MOTION_SENSOR_UPSTREAM = "motionsensor";
     public static final String COMPAT_PISTON_UPGRADE = "pistonUpgrade";
@@ -156,6 +158,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_NUM_PAD = "numpad";
     public static final String COMPAT_INK_CARTRIDGE_EMPTY = "inkCartridgeEmpty";
     public static final String COMPAT_INK_CARTRIDGE = "inkCartridge";
+    public static final String COMPAT_INK_CARTRIDGE_EMPTY_UPSTREAM = "inkcartridgeempty";
+    public static final String COMPAT_INK_CARTRIDGE_UPSTREAM = "inkcartridge";
     public static final String COMPAT_MATERIAL_NUM_PAD = "materialNumPad";
     public static final String COMPAT_MATERIAL_TRANSISTOR = "materialTransistor";
     public static final String COMPAT_CAPACITOR = "capacitor";
@@ -404,6 +408,8 @@ public final class ModContentCatalog {
         registry.register(COMPAT_MATERIAL_INTERWEB, null, interwebItem);
         registry.register(COMPAT_INK_CARTRIDGE_EMPTY, null, inkCartridgeEmptyItem);
         registry.register(COMPAT_INK_CARTRIDGE, null, inkCartridgeItem);
+        registry.register(COMPAT_INK_CARTRIDGE_EMPTY_UPSTREAM, null, inkCartridgeEmptyItem);
+        registry.register(COMPAT_INK_CARTRIDGE_UPSTREAM, null, inkCartridgeItem);
         registry.register(COMPAT_MATERIAL_BUTTON_GROUP, null, buttonGroupItem);
         registry.register(COMPAT_MATERIAL_ARROW_KEY, null, arrowKeysItem);
         registry.register(COMPAT_MATERIAL_NUM_PAD, null, numPadItem);
@@ -581,6 +587,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_DISK_DRIVE_UPSTREAM, diskDrive, diskDriveItem);
         registry.register(ModContentIds.DISK_DRIVE_MOUNTABLE, null, diskDriveMountableItem);
         registry.register(COMPAT_DISK_DRIVE_MOUNTABLE, null, diskDriveMountableItem);
+        registry.register(COMPAT_DISK_DRIVE_MOUNTABLE_UPSTREAM, null, diskDriveMountableItem);
         registry.register(ModContentIds.GEOLYZER, geolyzer, geolyzerItem);
         registry.register(ModContentIds.SCREEN_TIER1, screenTier1, screenTier1Item);
         registry.register(ModContentIds.SCREEN_TIER2, screenTier2, screenTier2Item);
@@ -713,6 +720,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_INTERNET_CARD, null, internetCardItem);
         registry.register(COMPAT_LINKED_CARD, null, linkedCardItem);
         registry.register(COMPAT_NAVIGATION_UPGRADE, null, navigationUpgradeItem);
+        registry.register(COMPAT_NAVIGATION_UPGRADE_UPSTREAM, null, navigationUpgradeItem);
         registry.register(COMPAT_EXPERIENCE_UPGRADE, null, experienceUpgradeItem);
         registry.register(COMPAT_EXPERIENCE_UPGRADE_UPSTREAM, null, experienceUpgradeItem);
         registry.register(COMPAT_GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
