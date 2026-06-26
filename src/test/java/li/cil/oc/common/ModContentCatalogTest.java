@@ -355,6 +355,14 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR, registry.get(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR).name());
         assertEquals(ModContentIds.POWER_CONVERTER, registry.get(ModContentIds.POWER_CONVERTER).name());
         assertEquals(ModContentCatalog.COMPAT_POWER_CONVERTER, registry.get(ModContentCatalog.COMPAT_POWER_CONVERTER).name());
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_DISK_DRIVE_UPSTREAM));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_MOTION_SENSOR_UPSTREAM));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_POWER_CONVERTER_UPSTREAM));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR_UPSTREAM));
+        assertEquals(ModContentCatalog.COMPAT_DISK_DRIVE_UPSTREAM, registry.get(ModContentCatalog.COMPAT_DISK_DRIVE_UPSTREAM).name());
+        assertEquals(ModContentCatalog.COMPAT_MOTION_SENSOR_UPSTREAM, registry.get(ModContentCatalog.COMPAT_MOTION_SENSOR_UPSTREAM).name());
+        assertEquals(ModContentCatalog.COMPAT_POWER_CONVERTER_UPSTREAM, registry.get(ModContentCatalog.COMPAT_POWER_CONVERTER_UPSTREAM).name());
+        assertEquals(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR_UPSTREAM, registry.get(ModContentCatalog.COMPAT_POWER_DISTRIBUTOR_UPSTREAM).name());
         assertEquals(ModContentIds.RACK, registry.get(ModContentIds.RACK).name());
         assertEquals(ModContentCatalog.COMPAT_RACK, registry.get(ModContentCatalog.COMPAT_RACK).name());
         assertEquals(ModContentIds.RAID, registry.get(ModContentIds.RAID).name());

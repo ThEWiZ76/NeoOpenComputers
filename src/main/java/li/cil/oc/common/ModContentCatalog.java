@@ -49,6 +49,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_DATA_CARD = "datacard";
     public static final String COMPAT_DEBUG_CARD = "debugCard";
     public static final String COMPAT_DISK_DRIVE_MOUNTABLE = "diskDriveMountable";
+    public static final String COMPAT_DISK_DRIVE_UPSTREAM = "diskdrive";
     public static final String COMPAT_DATABASE_UPGRADE_TIER1 = "databaseUpgrade1";
     public static final String COMPAT_DATABASE_UPGRADE_TIER2 = "databaseUpgrade2";
     public static final String COMPAT_DATABASE_UPGRADE_TIER3 = "databaseUpgrade3";
@@ -86,9 +87,12 @@ public final class ModContentCatalog {
     public static final String COMPAT_NANOMACHINES = "nanomachines";
     public static final String COMPAT_NAVIGATION_UPGRADE = "navigationUpgrade";
     public static final String COMPAT_NETWORK_CARD = "lancard";
+    public static final String COMPAT_MOTION_SENSOR_UPSTREAM = "motionsensor";
     public static final String COMPAT_PISTON_UPGRADE = "pistonUpgrade";
     public static final String COMPAT_POWER_CONVERTER = "powerConverter";
     public static final String COMPAT_POWER_DISTRIBUTOR = "powerDistributor";
+    public static final String COMPAT_POWER_CONVERTER_UPSTREAM = "powerconverter";
+    public static final String COMPAT_POWER_DISTRIBUTOR_UPSTREAM = "powerdistributor";
     public static final String COMPAT_RACK = "rack";
     public static final String COMPAT_RAID = "raid";
     public static final String COMPAT_REDSTONE_CARD = "redstone";
@@ -559,6 +563,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_COMPUTER_CASE_TIER3, computerCaseTier3, computerCaseTier3Item);
         registry.register(ModContentIds.DISASSEMBLER, disassembler, disassemblerItem);
         registry.register(ModContentIds.DISK_DRIVE, diskDrive, diskDriveItem);
+        registry.register(COMPAT_DISK_DRIVE_UPSTREAM, diskDrive, diskDriveItem);
         registry.register(ModContentIds.DISK_DRIVE_MOUNTABLE, null, diskDriveMountableItem);
         registry.register(COMPAT_DISK_DRIVE_MOUNTABLE, null, diskDriveMountableItem);
         registry.register(ModContentIds.GEOLYZER, geolyzer, geolyzerItem);
@@ -570,10 +575,13 @@ public final class ModContentCatalog {
         registry.register(COMPAT_SCREEN_TIER3, screenTier3, screenTier3Item);
         registry.register(ModContentIds.KEYBOARD, keyboard, keyboardItem);
         registry.register(ModContentIds.MOTION_SENSOR, motionSensor, motionSensorItem);
+        registry.register(COMPAT_MOTION_SENSOR_UPSTREAM, motionSensor, motionSensorItem);
         registry.register(ModContentIds.POWER_DISTRIBUTOR, powerDistributor, powerDistributorItem);
         registry.register(COMPAT_POWER_DISTRIBUTOR, powerDistributor, powerDistributorItem);
+        registry.register(COMPAT_POWER_DISTRIBUTOR_UPSTREAM, powerDistributor, powerDistributorItem);
         registry.register(ModContentIds.POWER_CONVERTER, powerConverter, powerConverterItem);
         registry.register(COMPAT_POWER_CONVERTER, powerConverter, powerConverterItem);
+        registry.register(COMPAT_POWER_CONVERTER_UPSTREAM, powerConverter, powerConverterItem);
         registry.register(ModContentIds.RACK, rack, rackItem);
         registry.register(COMPAT_RACK, rack, rackItem);
         registry.register(ModContentIds.RAID, raid, raidItem);
