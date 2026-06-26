@@ -5,11 +5,15 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Network;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.KeyboardEnvironment;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.HolderLookup;
@@ -19,6 +23,8 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +56,20 @@ final class ScreenBlockEntityTest {
         assertArrayEquals(new Object[]{true}, screen.isPrecise(null, new TestArguments()));
         assertArrayEquals(new Object[]{true}, screen.setPrecise(null, new TestArguments(false)));
         assertArrayEquals(new Object[]{false}, screen.isPrecise(null, new TestArguments()));
+    }
+
+    @Test
+    void preciseModeMouseEventsUseDoubleCoordinatesLikeUpstream() throws Exception {
+        ScreenBlockEntity screen = allocateScreen();
+        CapturingNode node = new CapturingNode();
+        setField(screen, "inputDispatcher", new ScreenInputDispatcher());
+        setField(screen, "node", node);
+        screen.setPrecise(null, new TestArguments(true));
+
+        screen.mouseDown(1.25D, 2.75D, 0, null);
+
+        assertEquals(1, node.reachableMessages.size());
+        assertEquals(Arrays.asList("computer.checked_signal", null, "touch", 1.25D, 2.75D, 0), node.reachableMessages.getFirst());
     }
 
     @Test
@@ -206,9 +226,40 @@ final class ScreenBlockEntityTest {
     }
 
     private static void initializeBuffer(final ScreenBlockEntity screen) throws Exception {
-        Field field = ScreenBlockEntity.class.getDeclaredField("buffer");
+        setField(screen, "buffer", new TextBufferState(1, 1));
+    }
+
+    private static void setField(final Object target, final String name, final Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(name);
         field.setAccessible(true);
-        field.set(screen, new TextBufferState(1, 1));
+        field.set(target, value);
+    }
+
+    private static final class CapturingNode implements Node {
+        private final List<List<Object>> reachableMessages = new ArrayList<>();
+
+        @Override public Environment host() { return null; }
+        @Override public Visibility reachability() { return Visibility.Neighbors; }
+        @Override public String address() { return "screen"; }
+        @Override public Network network() { return null; }
+        @Override public boolean isNeighborOf(final Node other) { return false; }
+        @Override public boolean canBeReachedFrom(final Node other) { return false; }
+        @Override public Iterable<Node> neighbors() { return List.of(); }
+        @Override public Iterable<Node> reachableNodes() { return List.of(); }
+        @Override public void connect(final Node node) {}
+        @Override public void disconnect(final Node node) {}
+        @Override public void remove() {}
+        @Override public void sendToAddress(final String target, final String name, final Object... data) {}
+        @Override public void sendToNeighbors(final String name, final Object... data) {}
+        @Override public void sendToReachable(final String name, final Object... data) {
+            List<Object> message = new ArrayList<>();
+            message.add(name);
+            message.addAll(Arrays.asList(data));
+            reachableMessages.add(message);
+        }
+        @Override public void sendToVisible(final String name, final Object... data) {}
+        @Override public void load(final CompoundTag nbt) {}
+        @Override public void save(final CompoundTag nbt) {}
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

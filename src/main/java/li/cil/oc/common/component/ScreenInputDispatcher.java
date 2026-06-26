@@ -19,19 +19,35 @@ public final class ScreenInputDispatcher {
     }
 
     public void mouseDown(final Node node, final double x, final double y, final int button, final Player player) {
-        sendMouseEvent(node, player, "touch", x, y, button);
+        mouseDown(node, x, y, button, player, false);
+    }
+
+    public void mouseDown(final Node node, final double x, final double y, final int button, final Player player, final boolean precise) {
+        sendMouseEvent(node, player, "touch", x, y, button, precise);
     }
 
     public void mouseDrag(final Node node, final double x, final double y, final int button, final Player player) {
-        sendMouseEvent(node, player, "drag", x, y, button);
+        mouseDrag(node, x, y, button, player, false);
+    }
+
+    public void mouseDrag(final Node node, final double x, final double y, final int button, final Player player, final boolean precise) {
+        sendMouseEvent(node, player, "drag", x, y, button, precise);
     }
 
     public void mouseUp(final Node node, final double x, final double y, final int button, final Player player) {
-        sendMouseEvent(node, player, "drop", x, y, button);
+        mouseUp(node, x, y, button, player, false);
+    }
+
+    public void mouseUp(final Node node, final double x, final double y, final int button, final Player player, final boolean precise) {
+        sendMouseEvent(node, player, "drop", x, y, button, precise);
     }
 
     public void mouseScroll(final Node node, final double x, final double y, final int delta, final Player player) {
-        sendMouseEvent(node, player, "scroll", x, y, delta);
+        mouseScroll(node, x, y, delta, player, false);
+    }
+
+    public void mouseScroll(final Node node, final double x, final double y, final int delta, final Player player, final boolean precise) {
+        sendMouseEvent(node, player, "scroll", x, y, delta, precise);
     }
 
     private static void sendToKeyboard(final Node node, final String name, final Object... data) {
@@ -40,8 +56,10 @@ public final class ScreenInputDispatcher {
         }
     }
 
-    private static void sendMouseEvent(final Node node, final Player player, final String name, final double x, final double y, final int data) {
-        if (node != null) {
+    private static void sendMouseEvent(final Node node, final Player player, final String name, final double x, final double y, final int data, final boolean precise) {
+        if (node != null && precise) {
+            node.sendToReachable(SIGNAL_MESSAGE, player, name, x, y, data);
+        } else if (node != null) {
             node.sendToReachable(SIGNAL_MESSAGE, player, name, (int) x + 1, (int) y + 1, data);
         }
     }

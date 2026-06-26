@@ -447,22 +447,22 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
 
     @Override
     public void mouseDown(final double x, final double y, final int button, final Player player) {
-        inputDispatcher.mouseDown(node(), x, y, button, player);
+        inputDispatcher.mouseDown(node(), x, y, button, player, precisionMode);
     }
 
     @Override
     public void mouseDrag(final double x, final double y, final int button, final Player player) {
-        inputDispatcher.mouseDrag(node(), x, y, button, player);
+        inputDispatcher.mouseDrag(node(), x, y, button, player, precisionMode);
     }
 
     @Override
     public void mouseUp(final double x, final double y, final int button, final Player player) {
-        inputDispatcher.mouseUp(node(), x, y, button, player);
+        inputDispatcher.mouseUp(node(), x, y, button, player, precisionMode);
     }
 
     @Override
     public void mouseScroll(final double x, final double y, final int delta, final Player player) {
-        inputDispatcher.mouseScroll(node(), x, y, delta, player);
+        inputDispatcher.mouseScroll(node(), x, y, delta, player, precisionMode);
     }
 
     @Override
