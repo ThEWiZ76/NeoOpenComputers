@@ -11,8 +11,10 @@ import li.cil.oc.api.driver.item.Container;
 import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.detail.ItemInfo;
 import li.cil.oc.api.driver.item.Memory;
+import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -4584,6 +4586,28 @@ public final class NeoOpenComputersGameTests {
         assertComponentBusDriver(helper, new ItemStack(ModItems.COMPONENT_BUS_TIER1.get()), 0, 8);
         assertComponentBusDriver(helper, new ItemStack(ModItems.COMPONENT_BUS_TIER2.get()), 1, 12);
         assertComponentBusDriver(helper, new ItemStack(ModItems.COMPONENT_BUS_TIER3.get()), 2, 16);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void cpuPersistsSelectedArchitectureLikeUpstream(final GameTestHelper helper) {
+        final ItemStack stack = new ItemStack(ModItems.CPU_TIER1.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        final MutableProcessor processor = (MutableProcessor) driver;
+
+        helper.assertTrue(processor.allArchitectures().contains(li.cil.oc.api.Machine.LuaArchitecture), "CPU did not expose default architecture");
+        helper.assertTrue(processor.architecture(stack) == li.cil.oc.api.Machine.LuaArchitecture, "CPU did not default to first registered architecture");
+        if (!processor.allArchitectures().contains(TestArchitecture.class)) {
+            li.cil.oc.api.Machine.add(TestArchitecture.class);
+        }
+        helper.assertTrue(processor.allArchitectures().contains(TestArchitecture.class), "CPU did not expose registered architecture");
+
+        processor.setArchitecture(stack, TestArchitecture.class);
+
+        helper.assertTrue(processor.architecture(stack) == TestArchitecture.class, "CPU did not load persisted architecture class");
+        final CompoundTag data = driver.dataTag(stack);
+        helper.assertTrue(TestArchitecture.class.getName().equals(data.getString("oc:archClass")), "CPU did not persist architecture class");
+        helper.assertTrue("test".equals(data.getString("oc:archName")), "CPU did not persist architecture name");
         helper.succeed();
     }
 
@@ -10401,6 +10425,10 @@ public final class NeoOpenComputersGameTests {
         @Override
         public void update() {
         }
+    }
+
+    @Architecture.Name("test")
+    private abstract static class TestArchitecture implements Architecture {
     }
 
     private NeoOpenComputersGameTests() {

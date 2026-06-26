@@ -15,6 +15,7 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
@@ -47,6 +48,7 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(CpuItem.class));
         assertTrue(Processor.class.isAssignableFrom(CpuItem.class));
+        assertTrue(MutableProcessor.class.isAssignableFrom(CpuItem.class));
         assertTrue(CallBudget.class.isAssignableFrom(CpuItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
     }
