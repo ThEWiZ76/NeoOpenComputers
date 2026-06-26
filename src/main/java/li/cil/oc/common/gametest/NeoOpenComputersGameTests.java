@@ -1695,11 +1695,11 @@ public final class NeoOpenComputersGameTests {
         final BlockPos cauldron = helper.absolutePos(cauldronRelative);
 
         final Object[] inserted = invokeValue(helper, world, "insertFluid", "minecraft:water", 1000, cauldron.getX(), cauldron.getY(), cauldron.getZ(), Direction.UP.get3DDataValue());
-        helper.assertTrue(inserted.length == 1 && Boolean.TRUE.equals(inserted[0]), "World insertFluid did not report success");
+        helper.assertTrue(inserted.length == 1 && Integer.valueOf(1000).equals(inserted[0]), "World insertFluid did not report inserted amount");
         helper.assertTrue(helper.getBlockState(cauldronRelative).is(Blocks.WATER_CAULDRON), "World insertFluid did not fill cauldron");
 
         final Object[] removed = invokeValue(helper, world, "removeFluid", 1000, cauldron.getX(), cauldron.getY(), cauldron.getZ(), Direction.UP.get3DDataValue());
-        helper.assertTrue(removed.length == 1 && Boolean.TRUE.equals(removed[0]), "World removeFluid did not report success");
+        helper.assertTrue(removed.length == 1 && removed[0] instanceof Map<?, ?> removedFluid && Integer.valueOf(1000).equals(removedFluid.get("amount")) && "minecraft:water".equals(removedFluid.get("name")), "World removeFluid did not report removed fluid");
         helper.assertTrue(helper.getBlockState(cauldronRelative).is(Blocks.CAULDRON), "World removeFluid did not drain cauldron");
 
         final BlockPos air = helper.absolutePos(cauldronRelative.east());

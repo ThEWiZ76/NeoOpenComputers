@@ -1111,7 +1111,7 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
                 return new Object[]{null, "no tank"};
             }
             final int filled = handler.fill(new FluidStack(fluid, amount), FluidAction.EXECUTE);
-            return new Object[]{filled > 0};
+            return new Object[]{filled};
         }
 
         @Callback(doc = "function(amount:number, x:number, y:number, z:number, side:number):boolean -- Remove some fluid from a tank at the specified location.")
@@ -1124,7 +1124,7 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             if (handler == null) {
                 return new Object[]{null, "no tank"};
             }
-            return new Object[]{!handler.drain(amount, FluidAction.EXECUTE).isEmpty()};
+            return new Object[]{handler.drain(amount, FluidAction.EXECUTE)};
         }
 
         @Callback(doc = "function():boolean -- Get whether it is raining.")
