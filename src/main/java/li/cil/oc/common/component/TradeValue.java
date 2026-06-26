@@ -98,7 +98,7 @@ public class TradeValue extends AbstractValue {
     @Callback(doc = "function():boolean -- Returns whether the merchant currently wants to trade this.")
     public Object[] isEnabled(final Context context, final Arguments arguments) {
         final MerchantOffer offer = offer();
-        return new Object[]{merchantEntity != null && merchantEntity.isAlive() && isInRange() && offer != null && !offer.isOutOfStock()};
+        return new Object[]{merchantEntity != null && offer != null && !offer.isOutOfStock()};
     }
 
     @Callback(doc = "function():boolean, string -- Returns true when trade succeeds and nil, error when not.")

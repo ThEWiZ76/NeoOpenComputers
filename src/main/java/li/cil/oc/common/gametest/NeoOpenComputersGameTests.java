@@ -5627,6 +5627,47 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tradingUpgradeIsEnabledIgnoresRangeLikeUpstream(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for trading upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        host.mainInventory().setItem(0, new ItemStack(Items.EMERALD));
+        final BlockPos villagerPos = helper.absolutePos(new BlockPos(1, 0, 0));
+        final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "Villager did not spawn");
+        final MerchantOffers offers = new MerchantOffers();
+        offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 1), new ItemStack(Items.BREAD, 3), 4, 1, 0.05F));
+        villager.setOffers(offers);
+        villager.setNoAi(true);
+        villager.moveTo(villagerPos.getX() + 0.5D, villagerPos.getY(), villagerPos.getZ() + 0.5D, 0, 0);
+        helper.getLevel().addFreshEntity(villager);
+
+        final Object[][] resultHolder = new Object[1][];
+        withCachedConfig(ModSettings.TRADING_RANGE, 8D, () -> {
+            final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRADING_UPGRADE.get()), host);
+            helper.assertTrue(environment != null, "Trading upgrade did not create trading environment");
+            final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+            resultHolder[0] = component.invoke("getTrades", null);
+        });
+        final Object[] result = resultHolder[0] == null ? new Object[0] : resultHolder[0];
+        helper.assertTrue(result.length == 1 && result[0] instanceof Object[] trades && trades.length == 1, "Trading upgrade did not list nearby trade");
+        final Object trade = ((Object[]) result[0])[0];
+
+        withCachedConfig(ModSettings.TRADING_RANGE, 0.25D, () -> {
+            final Method isEnabled = trade.getClass().getMethod("isEnabled", Context.class, Arguments.class);
+            final Object[] enabled = (Object[]) isEnabled.invoke(trade, null, null);
+            helper.assertTrue(enabled.length == 1 && Boolean.TRUE.equals(enabled[0]), "Trade isEnabled checked range unlike upstream");
+
+            final Method tradeMethod = trade.getClass().getMethod("trade", Context.class, Arguments.class);
+            final Object[] traded = (Object[]) tradeMethod.invoke(trade, null, null);
+            helper.assertTrue(traded.length == 2 && Boolean.FALSE.equals(traded[0]) && "trade has become invalid".equals(traded[1]),
+                "Out-of-range trade did not stay invalid while isEnabled ignored range");
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tradingUpgradeAcceptsMatchingItemCostComponents(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for trading upgrade");
