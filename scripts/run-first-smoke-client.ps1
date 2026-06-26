@@ -14,6 +14,7 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptDir
 $gradlew = Join-Path $repoRoot 'gradlew.bat'
 $collector = Join-Path $scriptDir 'collect-first-smoke-report.ps1'
+$mcpConfigScript = Join-Path $scriptDir 'write-mcp-client-config.ps1'
 $repoCommit = (& git -C $repoRoot rev-parse --short HEAD).Trim()
 
 if ([string]::IsNullOrWhiteSpace($Timestamp)) {
@@ -24,6 +25,7 @@ $sessionDir = Join-Path (Join-Path $repoRoot 'build\first-smoke-sessions') "sess
 $stdoutLog = Join-Path $sessionDir 'runClient.out.log'
 $stderrLog = Join-Path $sessionDir 'runClient.err.log'
 $extraModsLog = Join-Path $sessionDir 'extra-mods.txt'
+$clientRunDir = Join-Path $repoRoot 'run\client'
 $clientModsDir = Join-Path $repoRoot 'run\client\mods'
 $gradleArgs = @('runClient', '--no-daemon', '--console=plain')
 $collectorArgs = @('-Timestamp', $Timestamp)
@@ -62,9 +64,17 @@ Remove-Item -LiteralPath $stdoutLog, $stderrLog -Force -ErrorAction SilentlyCont
 $copiedExtraMods = @()
 $processExitCode = 0
 try {
+    $mcpConfigPath = ''
+    if ($WithLocalMcpServerMod) {
+        $mcpConfigPath = & $mcpConfigScript -ClientRunDir $clientRunDir
+    }
     if ($extraMods.Count -gt 0) {
         New-Item -ItemType Directory -Force -Path $clientModsDir | Out-Null
         $extraModLines = @("commit=$repoCommit", '')
+        if (-not [string]::IsNullOrWhiteSpace($mcpConfigPath)) {
+            $extraModLines += "mcpClientConfig=$mcpConfigPath"
+            $extraModLines += ''
+        }
         foreach ($extraMod in $extraMods) {
             if (-not (Test-Path -LiteralPath $extraMod)) {
                 throw "Extra mod not found: $extraMod"

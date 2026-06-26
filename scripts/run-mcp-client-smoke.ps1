@@ -15,6 +15,7 @@ $repoCommit = (& git -C $repoRoot rev-parse --short HEAD).Trim()
 $clientRunDir = Join-Path $repoRoot 'run\client'
 $clientModsDir = Join-Path $clientRunDir 'mods'
 $clientLog = Join-Path $clientRunDir 'logs\latest.log'
+$mcpConfigScript = Join-Path $scriptDir 'write-mcp-client-config.ps1'
 $outputDir = Join-Path $repoRoot 'build\mcp-client-smoke'
 $stdoutLog = Join-Path $outputDir 'runClient.out.log'
 $stderrLog = Join-Path $outputDir 'runClient.err.log'
@@ -85,6 +86,7 @@ if (-not (Test-Path -LiteralPath $McpServerModPath)) {
     throw "MCP helper mod not found: $McpServerModPath"
 }
 
+$mcpConfigPath = & $mcpConfigScript -ClientRunDir $clientRunDir -McpUrl $McpUrl
 New-Item -ItemType Directory -Force -Path $clientModsDir | Out-Null
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $source = (Resolve-Path -LiteralPath $McpServerModPath).Path
@@ -99,6 +101,7 @@ $sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash
     "sha256=$sourceHash"
     "Length=$($sourceItem.Length)"
     "LastWriteTimeUtc=$($sourceItem.LastWriteTimeUtc.ToString('o'))"
+    "mcpClientConfig=$mcpConfigPath"
 ) | Set-Content -LiteralPath $extraModsLog -Encoding UTF8
 
 $startedAt = Get-Date

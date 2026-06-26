@@ -100,6 +100,8 @@ To include the local MCP server mod helper during that interactive smoke session
 
 The helper jar is expected at `M:\development\mcp-server-mod\build\libs\mcp-server-mod-neoforge-1.1.0+neoforge.mc1.21.1.jar`. You can also pass any helper jar with `-ExtraMod <path>`. Copied helper jars are removed from `run\client\mods` after the client exits unless `-KeepExtraMods` is used. The copied helper list, helper jar SHA-256, byte length, and UTC timestamp are included in the evidence report.
 
+MCP-assisted smoke checks require the helper config under the game root at `config\mcp-client.json`. The repository smoke scripts write `run\client\config\mcp-client.json` automatically from `scripts\mcp-client.example.json`; for external profiles, copy that example file into the profile `config` folder as `mcp-client.json`. The config enables unsafe command tools and GUI automation tools for local test profiles.
+
 For a bounded launch/log smoke that stops after resource reload and texture atlas creation:
 
 ```powershell

@@ -17,6 +17,7 @@ $clientRunDir = Join-Path $repoRoot 'run\client'
 $clientModsDir = Join-Path $clientRunDir 'mods'
 $clientLog = Join-Path $clientRunDir 'logs\latest.log'
 $worldDir = Join-Path (Join-Path $clientRunDir 'saves') $WorldName
+$mcpConfigScript = Join-Path $scriptDir 'write-mcp-client-config.ps1'
 $outputDir = Join-Path $repoRoot 'build\mcp-world-smoke'
 $stdoutLog = Join-Path $outputDir 'runClient.out.log'
 $stderrLog = Join-Path $outputDir 'runClient.err.log'
@@ -118,6 +119,7 @@ if (-not (Test-Path -LiteralPath $worldDir)) {
     throw "MCP world smoke requires an existing local save at $worldDir. Create a singleplayer test world with folder/name '$WorldName', then rerun this script."
 }
 
+$mcpConfigPath = & $mcpConfigScript -ClientRunDir $clientRunDir -McpUrl $McpUrl
 New-Item -ItemType Directory -Force -Path $clientModsDir | Out-Null
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $source = (Resolve-Path -LiteralPath $McpServerModPath).Path
@@ -132,6 +134,7 @@ $sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash
     "sha256=$sourceHash"
     "Length=$($sourceItem.Length)"
     "LastWriteTimeUtc=$($sourceItem.LastWriteTimeUtc.ToString('o'))"
+    "mcpClientConfig=$mcpConfigPath"
 ) | Set-Content -LiteralPath $extraModsLog -Encoding UTF8
 
 $startedAt = Get-Date

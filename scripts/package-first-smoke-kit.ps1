@@ -12,6 +12,7 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptDir
 $gradlew = Join-Path $repoRoot 'gradlew.bat'
 $outputRoot = Join-Path $repoRoot 'build\first-smoke-kits'
+$mcpConfigExample = Join-Path $scriptDir 'mcp-client.example.json'
 
 if ([string]::IsNullOrWhiteSpace($Timestamp)) {
     $Timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -95,6 +96,15 @@ if (Test-Path -LiteralPath $McpServerModPath) {
         Path = (Join-Path $helperDir 'MCP-HELPER-MANIFEST.txt')
         Source = 'generated'
     }
+    if (Test-Path -LiteralPath $mcpConfigExample) {
+        $configDestination = Join-Path $helperDir 'mcp-client.example.json'
+        Copy-Item -LiteralPath $mcpConfigExample -Destination $configDestination -Force
+        $optionalArtifacts += [pscustomobject]@{
+            Name = 'optional-mcp-helper/mcp-client.example.json'
+            Path = $configDestination
+            Source = $mcpConfigExample
+        }
+    }
 }
 
 $commit = (& git -C $repoRoot rev-parse --short=9 HEAD).Trim()
@@ -132,7 +142,7 @@ Use neoopencomputers-$modVersion-all.jar for first smoke testing. It includes th
 
 Copy that jar into a NeoForge 1.21.1 client mods folder, start a local world, and run the first-smoke checklist from the repository README.
 
-If present, optional-mcp-helper contains the local MCP server mod helper jar and MCP-HELPER-MANIFEST.txt with source path, SHA-256, byte length, and UTC timestamp. Copy the helper jar into the same mods folder only when running MCP-assisted smoke checks.
+If present, optional-mcp-helper contains the local MCP server mod helper jar, MCP-HELPER-MANIFEST.txt with source path, SHA-256, byte length, and UTC timestamp, and mcp-client.example.json. Copy the helper jar into the same mods folder only when running MCP-assisted smoke checks. Copy mcp-client.example.json to the game profile config folder as mcp-client.json before MCP-assisted testing; it enables unsafe command tools and GUI automation tools used by deeper smoke checks.
 
 ## Developer Artifacts
 
@@ -156,7 +166,7 @@ For MCP-assisted local smoke testing from the dev workspace, run:
 
     .\scripts\run-first-smoke-client.ps1 -WithLocalMcpServerMod
 
-The helper jar is expected at M:\development\mcp-server-mod\build\libs\mcp-server-mod-neoforge-1.1.0+neoforge.mc1.21.1.jar. Use -ExtraMod <path> for a different helper jar. MCP/helper evidence manifests include helper jar SHA-256, byte length, and UTC timestamp.
+The helper jar is expected at M:\development\mcp-server-mod\build\libs\mcp-server-mod-neoforge-1.1.0+neoforge.mc1.21.1.jar. Use -ExtraMod <path> for a different helper jar. MCP/helper evidence manifests include helper jar SHA-256, byte length, UTC timestamp, and the generated mcp-client.json path. The MCP smoke scripts write run\client\config\mcp-client.json automatically with unsafe command tools and GUI automation tools enabled.
 
 For a bounded MCP helper startup smoke, run:
 
