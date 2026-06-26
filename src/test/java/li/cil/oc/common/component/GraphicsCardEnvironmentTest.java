@@ -142,6 +142,23 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void setResolutionUsesUpstreamAreaLimitInsteadOfGpuMaxHeight() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        FakeTextBuffer screen = new FakeTextBuffer();
+        Network.joinNewNetwork(gpu.node());
+        gpu.node().connect(screen.node());
+        gpu.bind(null, new TestArguments(screen.node().address(), true));
+
+        assertArrayEquals(new Object[]{true}, gpu.setResolution(null, new TestArguments(20, 20)));
+        assertArrayEquals(new Object[]{20, 20}, gpu.getResolution(null, new TestArguments()));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> gpu.setResolution(null, new TestArguments(41, 20)));
+        assertEquals("unsupported resolution", error.getMessage());
+    }
+
+    @Test
     void computerStoppedMessageKeepsBindingAndResetsScreen() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);

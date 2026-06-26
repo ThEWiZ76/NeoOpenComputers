@@ -656,7 +656,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     private static void checkSize(final int width, final int height, final int maxWidth, final int maxHeight, final String message) {
-        if (width < 1 || height < 1 || width > maxWidth || height > maxHeight || (long) width * height > (long) maxWidth * maxHeight) {
+        if (width < 1 || height < 1 || width > maxWidth || height > maxWidth || (long) width * height > (long) maxWidth * maxHeight) {
             throw new IllegalArgumentException(message);
         }
     }
