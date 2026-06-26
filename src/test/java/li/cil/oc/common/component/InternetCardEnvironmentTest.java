@@ -583,6 +583,39 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void tcpReadReturnsNullOnRemoteCloseLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+        ExecutorService serverThread = Executors.newSingleThreadExecutor();
+
+        try (ServerSocket server = new ServerSocket(0)) {
+            CompletableFuture<Void> closed = new CompletableFuture<>();
+            serverThread.submit(() -> {
+                try (Socket ignored = server.accept()) {
+                    closed.complete(null);
+                } catch (Throwable e) {
+                    closed.completeExceptionally(e);
+                    throw e;
+                }
+                return null;
+            });
+
+            withFilteringRules(List.of("allow all"), () -> {
+                InternetCardEnvironment.TcpSocket socket = assertInstanceOf(
+                    InternetCardEnvironment.TcpSocket.class,
+                    card.connect(null, new TestArguments("127.0.0.1", server.getLocalPort()))[0]);
+                awaitConnected(socket);
+                closed.get(2, TimeUnit.SECONDS);
+
+                assertArrayEquals(new Object[]{null}, awaitTcpEndOfStream(socket));
+            });
+        } finally {
+            serverThread.shutdownNow();
+            assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
     void tcpFinishConnectReturnsFalseOnFailedConnectionLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment();
@@ -700,6 +733,17 @@ final class InternetCardEnvironmentTest {
             Thread.sleep(10);
         }
         throw new AssertionError("TCP socket did not fail");
+    }
+
+    private static Object[] awaitTcpEndOfStream(final InternetCardEnvironment.TcpSocket socket) throws Exception {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            Object[] result = socket.read(null, new TestArguments(16));
+            if (result.length > 0 && result[0] == null) {
+                return result;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("TCP socket did not report end-of-stream");
     }
 
     @SuppressWarnings("unchecked")

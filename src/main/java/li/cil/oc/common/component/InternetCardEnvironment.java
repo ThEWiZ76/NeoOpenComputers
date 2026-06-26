@@ -23,6 +23,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -457,6 +458,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
                     final Socket socket = new Socket();
                     socket.connect(new InetSocketAddress(resolved, port), 10_000);
                     socket.setTcpNoDelay(true);
+                    socket.setSoTimeout(1);
                     return socket;
                 } catch (IOException e) {
                     throw new CompletionException(e);
@@ -486,13 +488,31 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             }
             final Socket socket = socket();
             final InputStream input = socket.getInputStream();
-            final int available = input.available();
-            if (available <= 0) {
-                return socket.isClosed() ? new Object[]{null} : new Object[]{new byte[0]};
-            }
             final int maxReadBuffer = ModSettings.maxReadBuffer();
-            final int count = Math.min(Math.max(0, args.optInteger(0, maxReadBuffer)), Math.min(maxReadBuffer, available));
-            final byte[] data = input.readNBytes(count);
+            final int count = Math.min(Math.max(0, args.optInteger(0, maxReadBuffer)), maxReadBuffer);
+            if (count <= 0) {
+                return new Object[]{new byte[0]};
+            }
+            final int available = input.available();
+            final byte[] data;
+            if (available <= 0) {
+                final int first;
+                try {
+                    first = input.read();
+                } catch (SocketTimeoutException e) {
+                    return socket.isClosed() ? new Object[]{null} : new Object[]{new byte[0]};
+                }
+                if (first < 0) {
+                    return new Object[]{null};
+                }
+                final int restCount = Math.min(count - 1, input.available());
+                final byte[] rest = input.readNBytes(restCount);
+                data = new byte[1 + rest.length];
+                data[0] = (byte) first;
+                System.arraycopy(rest, 0, data, 1, rest.length);
+            } else {
+                data = input.readNBytes(Math.min(count, available));
+            }
             if (data.length == 0) {
                 return new Object[]{null};
             }
