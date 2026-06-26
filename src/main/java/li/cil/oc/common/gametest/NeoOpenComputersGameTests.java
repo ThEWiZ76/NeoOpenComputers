@@ -540,6 +540,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void callbackArgumentsConvertItemStackTablesLikeUpstream(final GameTestHelper helper) {
+        final Map<Object, Object> table = new LinkedHashMap<>();
+        table.put("name".getBytes(StandardCharsets.UTF_8), "minecraft:diamond_sword".getBytes(StandardCharsets.UTF_8));
+        table.put("damage".getBytes(StandardCharsets.UTF_8), 7D);
+        table.put("size".getBytes(StandardCharsets.UTF_8), 64D);
+
+        final ItemStackArgumentEnvironment environment = new ItemStackArgumentEnvironment();
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        assertItemStackArgumentResult(helper, invokeComponent(helper, component, "itemStackInfo", table), "Component callback");
+
+        assertItemStackArgumentResult(helper, invokeValue(helper, new ItemStackArgumentValue(), "itemStackInfo", table), "Value callback");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void legacyLootPathFloppyLoadsBundledFilesystemLikeUpstream(final GameTestHelper helper) {
         final ItemStack stack = new ItemStack(ModItems.FLOPPY.get());
         final CompoundTag data = new CompoundTag();
@@ -8986,6 +9001,24 @@ public final class NeoOpenComputersGameTests {
         }
     }
 
+    private static void assertItemStackArgumentResult(final GameTestHelper helper, final Object[] result, final String label) {
+        helper.assertTrue(result.length == 4, label + " returned wrong result size");
+        helper.assertTrue(Boolean.TRUE.equals(result[0]), label + " did not convert item name");
+        helper.assertTrue(Integer.valueOf(1).equals(result[1]), label + " did not ignore table size");
+        helper.assertTrue(Integer.valueOf(7).equals(result[2]), label + " did not preserve damage");
+        helper.assertTrue(Boolean.TRUE.equals(result[3]), label + " did not report table as item stack");
+    }
+
+    private static Object[] itemStackArgumentInfo(final Arguments arguments) {
+        final ItemStack stack = arguments.checkItemStack(0);
+        return new Object[]{
+            stack.is(Items.DIAMOND_SWORD),
+            stack.getCount(),
+            stack.getDamageValue(),
+            arguments.isItemStack(0)
+        };
+    }
+
     private static Map<String, Object> typedNbt(final int type, final Object value) {
         final Map<String, Object> result = new LinkedHashMap<>();
         result.put("type", type);
@@ -9469,6 +9502,65 @@ public final class NeoOpenComputersGameTests {
         @Override
         public void onMessage(final Message message) {
             lastMessage = message;
+        }
+    }
+
+    private static final class ItemStackArgumentEnvironment implements li.cil.oc.api.network.Environment {
+        private final Node node = Network.newNode(this, Visibility.Network).withComponent("argument_test", Visibility.Network).create();
+
+        @Override
+        public Node node() {
+            return node;
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
+        }
+
+        @Callback
+        public Object[] itemStackInfo(final Context context, final Arguments arguments) {
+            return itemStackArgumentInfo(arguments);
+        }
+    }
+
+    private static final class ItemStackArgumentValue implements Value {
+        @Callback
+        public Object[] itemStackInfo(final Context context, final Arguments arguments) {
+            return itemStackArgumentInfo(arguments);
+        }
+
+        @Override
+        public Object apply(final Context context, final Arguments arguments) {
+            return null;
+        }
+
+        @Override
+        public void unapply(final Context context, final Arguments arguments) {
+        }
+
+        @Override
+        public Object[] call(final Context context, final Arguments arguments) {
+            return new Object[0];
+        }
+
+        @Override
+        public void dispose(final Context context) {
+        }
+
+        @Override
+        public void load(final CompoundTag tag) {
+        }
+
+        @Override
+        public void save(final CompoundTag tag) {
         }
     }
 

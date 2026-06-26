@@ -1443,11 +1443,7 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public ItemStack checkItemStack(final int index) {
-            final Object value = checkAny(index);
-            if (value instanceof ItemStack typedValue) {
-                return typedValue;
-            }
-            throw new IllegalArgumentException("bad argument #" + (index + 1) + " (item stack expected)");
+            return ArgumentUtils.checkItemStack(index, checkAny(index));
         }
 
         @Override
@@ -1532,7 +1528,7 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public boolean isItemStack(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof ItemStack;
+            return index >= 0 && index < values.length && ArgumentUtils.isItemStack(values[index]);
         }
 
         @Override

@@ -19,6 +19,7 @@ import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.common.ArgumentUtils;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.util.FontWidths;
@@ -2651,7 +2652,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public ItemStack checkItemStack(final int index) {
-            return (ItemStack) checkAny(index);
+            return ArgumentUtils.checkItemStack(index, checkAny(index));
         }
 
         @Override
@@ -2736,7 +2737,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public boolean isItemStack(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof ItemStack;
+            return index >= 0 && index < values.length && ArgumentUtils.isItemStack(values[index]);
         }
 
         @Override

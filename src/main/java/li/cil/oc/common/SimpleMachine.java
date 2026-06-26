@@ -1241,9 +1241,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             throw typeError(index, "table");
         }
         @Override public ItemStack checkItemStack(final int index) {
-            final Object value = checkAny(index);
-            if (value instanceof ItemStack stack) return stack;
-            throw typeError(index, "item stack");
+            return ArgumentUtils.checkItemStack(index, checkAny(index));
         }
         @Override public Object optAny(final int index, final Object def) { return isDefined(index) ? values[index] : def; }
         @Override public boolean optBoolean(final int index, final boolean def) { return isDefined(index) ? checkBoolean(index) : def; }
@@ -1261,7 +1259,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         @Override public boolean isString(final int index) { return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]); }
         @Override public boolean isByteArray(final int index) { return index >= 0 && index < values.length && (values[index] instanceof String || values[index] instanceof byte[]); }
         @Override public boolean isTable(final int index) { return index >= 0 && index < values.length && values[index] instanceof Map; }
-        @Override public boolean isItemStack(final int index) { return index >= 0 && index < values.length && values[index] instanceof ItemStack; }
+        @Override public boolean isItemStack(final int index) { return index >= 0 && index < values.length && ArgumentUtils.isItemStack(values[index]); }
         @Override public Object[] toArray() {
             final Object[] result = Arrays.copyOf(values, values.length);
             for (int index = 0; index < result.length; index++) {
