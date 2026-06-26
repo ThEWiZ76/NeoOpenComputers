@@ -12,6 +12,9 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.component.NavigationUpgradeEnvironment.NavigationMapData;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -47,14 +50,60 @@ final class NavigationUpgradeEnvironmentTest {
     @Test
     void reportsHostPositionFacingAndRange() {
         OpenComputersApi.initialize();
-        NavigationUpgradeEnvironment navigation = new NavigationUpgradeEnvironment(new TestHost());
+        NavigationUpgradeEnvironment navigation = new NavigationUpgradeEnvironment(new TestHost(), new NavigationMapData(8, -8, 1, NavigationMapData.NO_MAP_ID));
 
-        assertArrayEquals(new Object[]{10.5D, 64.0D, -4.5D}, navigation.getPosition(null, new TestArguments()));
+        assertArrayEquals(new Object[]{2.5D, 64.0D, 3.5D}, navigation.getPosition(null, new TestArguments()));
         assertArrayEquals(new Object[]{Direction.EAST.get3DDataValue()}, navigation.getFacing(null, new TestArguments()));
-        assertArrayEquals(new Object[]{64.0D}, navigation.getRange(null, new TestArguments()));
+        assertArrayEquals(new Object[]{128.0D}, navigation.getRange(null, new TestArguments()));
         DeviceInfo info = (DeviceInfo) navigation;
         assertEquals("PathFinder v3", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Product));
-        assertEquals("128", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("256", info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Capacity));
+    }
+
+    @Test
+    void reportsOutOfRangeLikeUpstream() {
+        OpenComputersApi.initialize();
+        NavigationUpgradeEnvironment navigation = new NavigationUpgradeEnvironment(new TestHost(), new NavigationMapData(-118, -4, 0, NavigationMapData.NO_MAP_ID));
+
+        assertArrayEquals(new Object[]{null, "out of range"}, navigation.getPosition(null, new TestArguments()));
+        assertArrayEquals(new Object[]{64.0D}, navigation.getRange(null, new TestArguments()));
+    }
+
+    @Test
+    void tabletUseWritesMapRelativeBlockPosition() {
+        OpenComputersApi.initialize();
+        NavigationUpgradeEnvironment navigation = new NavigationUpgradeEnvironment(new TestHost(), new NavigationMapData(8, -8, 1, NavigationMapData.NO_MAP_ID));
+        CompoundTag tag = new CompoundTag();
+
+        navigation.onMessage(new TestMessage("tablet.use", tag, null, null, new BlockPos(15, 70, -2)));
+
+        assertEquals(7, tag.getInt("posX"));
+        assertEquals(70, tag.getInt("posY"));
+        assertEquals(6, tag.getInt("posZ"));
+    }
+
+    @Test
+    void persistsNavigationMapData() {
+        OpenComputersApi.initialize();
+        NavigationUpgradeEnvironment navigation = new NavigationUpgradeEnvironment(new TestHost(), new NavigationMapData(8, -8, 2, 42));
+        CompoundTag tag = new CompoundTag();
+        navigation.save(tag);
+
+        NavigationUpgradeEnvironment loaded = new NavigationUpgradeEnvironment(new TestHost());
+        loaded.load(tag);
+
+        assertArrayEquals(new Object[]{2.5D, 64.0D, 3.5D}, loaded.getPosition(null, new TestArguments()));
+        assertArrayEquals(new Object[]{256.0D}, loaded.getRange(null, new TestArguments()));
+    }
+
+    @Test
+    void navigationMapDataPersistsMapIdForWorldResolution() {
+        CompoundTag tag = new CompoundTag();
+
+        new NavigationMapData(0, 0, 0, 7).saveToDataTag(tag);
+
+        NavigationMapData mapData = NavigationMapData.fromDataTag(tag, null);
+        assertEquals(7, mapData.mapId());
     }
 
     @Test
@@ -125,6 +174,11 @@ final class NavigationUpgradeEnvironmentTest {
         @Override public void onConnect(final Node node) { }
         @Override public void onDisconnect(final Node node) { }
         @Override public void onMessage(final Message message) { }
+    }
+
+    private record TestMessage(String name, Object... data) implements Message {
+        @Override public Node source() { return null; }
+        @Override public void cancel() { }
     }
 
     private static final class TestHost implements EnvironmentHost, li.cil.oc.api.internal.Rotatable {

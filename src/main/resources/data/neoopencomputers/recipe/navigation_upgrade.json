@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "neoopencomputers:navigation_upgrade",
   "category": "misc",
   "key": {
     "C": {

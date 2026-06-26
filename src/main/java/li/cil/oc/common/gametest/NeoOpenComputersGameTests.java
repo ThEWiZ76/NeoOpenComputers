@@ -74,6 +74,7 @@ import li.cil.oc.common.block.PrintBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.NanomachineItemData;
+import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.item.ServerItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TerminalItem;
@@ -156,6 +157,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemLore;
@@ -168,6 +170,7 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
@@ -1670,6 +1673,28 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(driver != null, "No driver for linked card result");
         final String tunnel = driver.dataTag(result).getString(LinkedCardItem.TUNNEL_TAG);
         helper.assertTrue(!tunnel.isBlank(), "Linked card recipe did not assign a tunnel");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void navigationUpgradeRecipeKeepsFilledMapData(final GameTestHelper helper) {
+        final ItemStack filledMap = MapItem.create(helper.getLevel(), 128, -128, (byte) 2, true, false);
+        final MapItemSavedData savedData = MapItem.getSavedData(filledMap, helper.getLevel());
+        helper.assertTrue(savedData != null, "Generated filled map has no saved data");
+        final CraftingInput input = CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.COMPASS), new ItemStack(Items.GOLD_INGOT),
+            new ItemStack(ModItems.MICROCHIP_TIER2.get()), filledMap, new ItemStack(ModItems.MICROCHIP_TIER2.get()),
+            new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.POTION), new ItemStack(Items.GOLD_INGOT)
+        ));
+        final Optional<RecipeHolder<CraftingRecipe>> recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
+
+        helper.assertTrue(recipe.isPresent(), "No navigation upgrade recipe matched");
+        final ItemStack result = recipe.get().value().assemble(input, helper.getLevel().registryAccess());
+        helper.assertTrue(result.is(ModItems.NAVIGATION_UPGRADE.get()), "Navigation upgrade recipe returned wrong item");
+        final var mapData = NavigationUpgradeItem.mapData(result, helper.getLevel());
+        helper.assertTrue(mapData.centerX() == savedData.centerX, "Navigation upgrade did not preserve map center X");
+        helper.assertTrue(mapData.centerZ() == savedData.centerZ, "Navigation upgrade did not preserve map center Z");
+        helper.assertTrue(mapData.scale() == savedData.scale, "Navigation upgrade did not preserve map scale");
         helper.succeed();
     }
 

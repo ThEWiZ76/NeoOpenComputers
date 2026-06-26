@@ -1199,7 +1199,10 @@ final class RecipeResourceTest {
 
     private static void assertKnownRecipeType(final JsonObject json) {
         String type = json.get("type").getAsString();
-        assertTrue(type.startsWith("minecraft:crafting_") || "minecraft:smelting".equals(type) || "neoopencomputers:linked_card".equals(type));
+        assertTrue(type.startsWith("minecraft:crafting_")
+            || "minecraft:smelting".equals(type)
+            || "neoopencomputers:linked_card".equals(type)
+            || "neoopencomputers:navigation_upgrade".equals(type));
     }
 
     private static void assertIngredientCount(final JsonObject json, final int expected) {
