@@ -7030,6 +7030,46 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void terminalServerPersistsUpstreamNamespacedVirtualTerminalTags(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+
+        final CompoundTag saved = new CompoundTag();
+        terminalServer.save(saved);
+
+        helper.assertTrue(saved.contains("oc:buffer", Tag.TAG_COMPOUND), "Terminal server did not save upstream oc:buffer tag");
+        helper.assertTrue(saved.contains("oc:keyboard", Tag.TAG_COMPOUND), "Terminal server did not save upstream oc:keyboard tag");
+        helper.assertTrue(saved.contains("oc:keys", Tag.TAG_LIST), "Terminal server did not save upstream oc:keys tag");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void terminalServerLoadsUpstreamNamespacedVirtualTerminalTags(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        rack.setItem(0, new ItemStack(ModItems.TERMINAL_SERVER.get()));
+        final TerminalServerRackMountableEnvironment terminalServer = (TerminalServerRackMountableEnvironment) rack.getMountable(0);
+        terminalServer.screen().set(0, 0, "upstream", false);
+        final CompoundTag saved = new CompoundTag();
+        terminalServer.save(saved);
+        saved.put("oc:buffer", saved.getCompound("screen"));
+        saved.put("oc:keyboard", saved.getCompound("keyboard"));
+        saved.remove("screen");
+        saved.remove("keyboard");
+
+        final TerminalServerRackMountableEnvironment loaded = new TerminalServerRackMountableEnvironment();
+        loaded.load(saved);
+
+        helper.assertTrue(loaded.screenSnapshot().line(0).startsWith("upstream"), "Terminal server did not load upstream oc:buffer tag");
+        loaded.removeVirtualNodes();
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void terminalServerKeepsOnlyLatestFourTerminalKeys(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

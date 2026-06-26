@@ -37,6 +37,8 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     private static final String TAG_KIND = "kind";
     private static final String TAG_SCREEN = "screen";
     private static final String TAG_KEYBOARD = "keyboard";
+    private static final String TAG_BUFFER = "oc:buffer";
+    private static final String TAG_UPSTREAM_KEYBOARD = "oc:keyboard";
     private static final String TAG_KEYS = "oc:keys";
     private static final String TAG_DATA_KEYS = "keys";
     private static final String TAG_TERMINAL_ADDRESS = "terminalAddress";
@@ -91,10 +93,14 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
     public void load(final CompoundTag nbt) {
         super.load(nbt);
         TerminalServerRegistry.remove(this);
-        if (nbt.contains(TAG_SCREEN)) {
+        if (nbt.contains(TAG_BUFFER)) {
+            screen.load(nbt.getCompound(TAG_BUFFER));
+        } else if (nbt.contains(TAG_SCREEN)) {
             screen.load(nbt.getCompound(TAG_SCREEN));
         }
-        if (nbt.contains(TAG_KEYBOARD)) {
+        if (nbt.contains(TAG_UPSTREAM_KEYBOARD)) {
+            keyboard.load(nbt.getCompound(TAG_UPSTREAM_KEYBOARD));
+        } else if (nbt.contains(TAG_KEYBOARD)) {
             keyboard.load(nbt.getCompound(TAG_KEYBOARD));
         }
         keys.clear();
@@ -110,9 +116,11 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
         super.save(nbt);
         final CompoundTag screenTag = new CompoundTag();
         screen.save(screenTag);
+        nbt.put(TAG_BUFFER, screenTag.copy());
         nbt.put(TAG_SCREEN, screenTag);
         final CompoundTag keyboardTag = new CompoundTag();
         keyboard.save(keyboardTag);
+        nbt.put(TAG_UPSTREAM_KEYBOARD, keyboardTag.copy());
         nbt.put(TAG_KEYBOARD, keyboardTag);
         final ListTag keyTags = new ListTag();
         for (final String key : keys) {
