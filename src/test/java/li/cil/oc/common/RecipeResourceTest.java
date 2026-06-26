@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class RecipeResourceTest {
@@ -601,12 +602,12 @@ final class RecipeResourceTest {
         JsonObject recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.CARD + ".json"));
         JsonObject keys = recipe.getAsJsonObject("key");
 
-        assertPattern(recipe, "ICT", "IPP", "IGG");
+        assertPattern(recipe, "I  ", "IP ", "IG ");
         assertTag(keys, "I", "c:nuggets/iron");
-        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
-        assertItem(keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
         assertItem(keys, "P", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertTag(keys, "G", "c:nuggets/gold");
+        assertFalse(keys.has("C"));
+        assertFalse(keys.has("T"));
         assertResultCount(recipe, 1);
     }
 

@@ -2,9 +2,6 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "C": {
-      "item": "neoopencomputers:microchip_tier1"
-    },
     "G": {
       "tag": "c:nuggets/gold"
     },
@@ -13,15 +10,12 @@
     },
     "P": {
       "item": "neoopencomputers:printed_circuit_board"
-    },
-    "T": {
-      "item": "neoopencomputers:transistor"
     }
   },
   "pattern": [
-    "ICT",
-    "IPP",
-    "IGG"
+    "I  ",
+    "IP ",
+    "IG "
   ],
   "result": {
     "count": 1,
