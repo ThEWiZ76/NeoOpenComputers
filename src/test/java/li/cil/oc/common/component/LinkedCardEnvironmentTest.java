@@ -167,6 +167,18 @@ final class LinkedCardEnvironmentTest {
     }
 
     @Test
+    void unaddressedPacketsFromUnaddressedNodeAreRejectedLikeUpstream() {
+        OpenComputersApi.initialize();
+        TestMachineHost host = new TestMachineHost();
+        LinkedCardEnvironment receiver = new LinkedCardEnvironment(host, "pair");
+        receiver.setWakeMessage(null, new TestArguments("boot", false));
+
+        receiver.receiveLinkedPacket(new TestPacket(null, null, 0, new Object[]{"boot"}));
+
+        assertEquals(List.of(), host.signals);
+    }
+
+    @Test
     void sendRequiresEnergyAndConsumesBuffer() {
         OpenComputersApi.initialize();
         TestMachineHost rightHost = new TestMachineHost();
@@ -362,6 +374,13 @@ final class LinkedCardEnvironmentTest {
         @Override public void onConnect(final Node node) {}
         @Override public void onDisconnect(final Node node) {}
         @Override public void onMessage(final Message message) { messages.add(message); }
+    }
+
+    private record TestPacket(String source, String destination, int port, Object[] data) implements Packet {
+        @Override public int size() { return data.length; }
+        @Override public int ttl() { return 16; }
+        @Override public Packet hop() { return this; }
+        @Override public void save(final CompoundTag nbt) {}
     }
 
     private record TestArguments(Object... values) implements Arguments {

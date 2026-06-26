@@ -17,6 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 
 public class LinkedCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo, LinkedNetwork.Endpoint {
     private static final String COMPONENT_NAME = "tunnel";
@@ -161,7 +162,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         if (node() == null) {
             return;
         }
-        if (node().address() != null && node().address().equals(packet.source())) {
+        if (Objects.equals(node().address(), packet.source())) {
             return;
         }
         final Object[] data = packet.data();
