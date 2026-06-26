@@ -16,6 +16,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_CIRCUIT_CHIP_TIER1 = "circuitChip1";
     public static final String COMPAT_CIRCUIT_CHIP_TIER2 = "circuitChip2";
     public static final String COMPAT_CIRCUIT_CHIP_TIER3 = "circuitChip3";
+    public static final String COMPAT_CIRCUIT_CHIP_TIER1_UPSTREAM = "chip1";
+    public static final String COMPAT_CIRCUIT_CHIP_TIER2_UPSTREAM = "chip2";
+    public static final String COMPAT_CIRCUIT_CHIP_TIER3_UPSTREAM = "chip3";
     public static final String COMPAT_COMPONENT_BUS_TIER1 = "componentBus1";
     public static final String COMPAT_COMPONENT_BUS_TIER2 = "componentBus2";
     public static final String COMPAT_COMPONENT_BUS_TIER3 = "componentBus3";
@@ -344,6 +347,9 @@ public final class ModContentCatalog {
         registry.register(COMPAT_CIRCUIT_CHIP_TIER1, null, microchipTier1Item);
         registry.register(COMPAT_CIRCUIT_CHIP_TIER2, null, microchipTier2Item);
         registry.register(COMPAT_CIRCUIT_CHIP_TIER3, null, microchipTier3Item);
+        registry.register(COMPAT_CIRCUIT_CHIP_TIER1_UPSTREAM, null, microchipTier1Item);
+        registry.register(COMPAT_CIRCUIT_CHIP_TIER2_UPSTREAM, null, microchipTier2Item);
+        registry.register(COMPAT_CIRCUIT_CHIP_TIER3_UPSTREAM, null, microchipTier3Item);
         registry.register(COMPAT_MATERIAL_ALU, null, aluItem);
         registry.register(COMPAT_MATERIAL_CONTROL_UNIT, null, controlUnitItem);
         registry.register(COMPAT_MATERIAL_DISK, null, diskPlatterItem);

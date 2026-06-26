@@ -60,6 +60,9 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.COMPONENT_BUS_CREATIVE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_CREATIVE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1_UPSTREAM));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER2_UPSTREAM));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER3_UPSTREAM));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MATERIAL_CARD));
         assertEquals(ModContentIds.TRANSISTOR, registry.get(ModContentIds.TRANSISTOR).name());
         assertEquals(ModContentIds.CAPACITOR, registry.get(ModContentIds.CAPACITOR).name());
@@ -80,6 +83,9 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.COMPONENT_BUS_CREATIVE, registry.get(ModContentIds.COMPONENT_BUS_CREATIVE).name());
         assertEquals(ModContentCatalog.COMPAT_COMPONENT_BUS_CREATIVE, registry.get(ModContentCatalog.COMPAT_COMPONENT_BUS_CREATIVE).name());
         assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1).name());
+        assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1_UPSTREAM, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER1_UPSTREAM).name());
+        assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER2_UPSTREAM, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER2_UPSTREAM).name());
+        assertEquals(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER3_UPSTREAM, registry.get(ModContentCatalog.COMPAT_CIRCUIT_CHIP_TIER3_UPSTREAM).name());
     }
 
     @Test
