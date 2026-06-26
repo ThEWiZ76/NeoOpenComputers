@@ -15,9 +15,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.FakePlayerFactory;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -97,6 +100,9 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
         }
 
         final String[] lines = normalizedLines(arguments.checkString(adapterMode ? 1 : 0));
+        if (isChangeDenied(sign)) {
+            return new Object[]{null, "not allowed"};
+        }
         final SignChangeEvent.Pre pre = new SignChangeEvent.Pre(sign, lines);
         NeoForge.EVENT_BUS.post(pre);
         if (pre.isCanceled()) {
@@ -111,6 +117,20 @@ public class SignUpgradeEnvironment extends AbstractManagedEnvironment implement
         NeoForge.EVENT_BUS.post(new SignChangeEvent.Post(sign, lines));
         host.markChanged();
         return new Object[]{text(sign)};
+    }
+
+    private boolean isChangeDenied(final SignBlockEntity sign) {
+        if (!(host.world() instanceof ServerLevel level)) {
+            return false;
+        }
+        final BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(
+            level,
+            sign.getBlockPos(),
+            sign.getBlockState(),
+            FakePlayerFactory.getMinecraft(level)
+        );
+        NeoForge.EVENT_BUS.post(event);
+        return event.isCanceled();
     }
 
     private SignBlockEntity findSign() {

@@ -121,6 +121,7 @@ import li.cil.oc.mixin.AbstractFurnaceBlockEntityAccessor;
 import li.cil.oc.mixin.BeaconBlockEntityAccessor;
 import li.cil.oc.mixin.BrewingStandBlockEntityAccessor;
 import net.neoforged.fml.InterModComms;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -5335,6 +5336,49 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(set.length == 1 && "alpha\nbeta\n\n".equals(set[0]), "Sign upgrade did not write normalized sign text");
         final Object[] get = component.invoke("getValue", null);
         helper.assertTrue(get.length == 1 && "alpha\nbeta\n\n".equals(get[0]), "Sign upgrade did not read sign text");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void signUpgradeBreakEventCanDenyWritesLikeUpstream(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.SIGN_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for sign upgrade");
+
+        final BlockPos hostPos = new BlockPos(1, 1, 1);
+        helper.setBlock(hostPos, Blocks.OAK_SIGN);
+        final SignBlockEntity sign = helper.getBlockEntity(hostPos);
+        SignText text = sign.getFrontText();
+        text = text.setMessage(0, Component.literal("keep"));
+        sign.setText(text, true);
+
+        final ManagedEnvironment environment = driver.createEnvironment(
+            new ItemStack(ModItems.SIGN_UPGRADE.get()),
+            new StaticRotatablePositionEnvironmentHost(helper, hostPos, Direction.NORTH)
+        );
+        helper.assertTrue(environment != null, "Sign upgrade did not create sign environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Sign node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        final AtomicBoolean sawBreakEvent = new AtomicBoolean(false);
+        final Object listener = new Object() {
+            @SubscribeEvent
+            public void onBreak(final BlockEvent.BreakEvent event) {
+                if (event.getPos().equals(helper.absolutePos(hostPos))) {
+                    sawBreakEvent.set(true);
+                    event.setCanceled(true);
+                }
+            }
+        };
+
+        NeoForge.EVENT_BUS.register(listener);
+        try {
+            final Object[] denied = component.invoke("setValue", null, "blocked");
+            helper.assertTrue(sawBreakEvent.get(), "Sign upgrade did not post break event before changing text");
+            helper.assertTrue(denied.length == 2 && denied[0] == null && "not allowed".equals(denied[1]), "Sign upgrade did not return upstream denial result");
+            final Object[] get = component.invoke("getValue", null);
+            helper.assertTrue(get.length == 1 && "keep\n\n\n".equals(get[0]), "Denied sign upgrade write changed sign text");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(listener);
+        }
         helper.succeed();
     }
 
