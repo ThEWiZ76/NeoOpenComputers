@@ -8,13 +8,20 @@
     "C": {
       "item": "neoopencomputers:microchip_tier3"
     },
-    "U": {
-      "item": "neoopencomputers:generator_upgrade"
+    "L": {
+      "item": "minecraft:lapis_block"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
     }
   },
   "pattern": [
     "GGG",
-    "CUC"
+    "CLC",
+    "IBI"
   ],
   "result": {
     "count": 1,

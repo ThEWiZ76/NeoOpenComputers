@@ -937,10 +937,12 @@ final class RecipeResourceTest {
         assertItem(mfu, "T", "neoopencomputers:" + ModContentIds.LINKED_CARD);
         assertItem(mfu, "A", "neoopencomputers:" + ModContentIds.ADAPTER);
 
-        assertPattern(solarRecipe, "GGG", "CUC");
+        assertPattern(solarRecipe, "GGG", "CLC", "IBI");
         assertItem(solar, "G", "minecraft:glass");
         assertItem(solar, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
-        assertItem(solar, "U", "neoopencomputers:generator_upgrade");
+        assertItem(solar, "L", "minecraft:lapis_block");
+        assertTag(solar, "I", "c:ingots/iron");
+        assertItem(solar, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
 
         assertItem(hover1, "F", "minecraft:feather");
         assertItem(hover1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
