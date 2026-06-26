@@ -54,6 +54,18 @@ final class ServerRackMountableEnvironmentShapeTest {
     }
 
     @Test
+    void diskDriveMountableExposesUpstreamDeviceInfoMetadata() throws Exception {
+        DiskDriveMountableEnvironment diskDrive = allocateDiskDriveMountable();
+
+        Map<String, String> metadata = diskDrive.getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Disk, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Floppy disk drive", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("RackDrive 100 Rev. 2", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
     void terminalServerAnalyzeReturnsVirtualScreenAndKeyboardNodesLikeUpstream() {
         final TerminalServerRackMountableEnvironment terminalServer = new TerminalServerRackMountableEnvironment();
         final Analyzable analyzable = assertInstanceOf(Analyzable.class, terminalServer);
@@ -94,5 +106,11 @@ final class ServerRackMountableEnvironmentShapeTest {
         unsafe.putInt(server, unsafe.objectFieldOffset(tierField), tier);
         unsafe.putObject(server, unsafe.objectFieldOffset(itemsField), items);
         return server;
+    }
+
+    private static DiskDriveMountableEnvironment allocateDiskDriveMountable() throws Exception {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        return (DiskDriveMountableEnvironment) ((Unsafe) unsafeField.get(null)).allocateInstance(DiskDriveMountableEnvironment.class);
     }
 }

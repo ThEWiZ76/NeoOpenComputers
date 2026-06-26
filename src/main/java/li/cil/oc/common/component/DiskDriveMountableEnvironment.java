@@ -42,7 +42,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Disk,
         DeviceInfo.DeviceAttribute.Description, "Floppy disk drive",
         DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
-        DeviceInfo.DeviceAttribute.Product, "Spinner 520p1"
+        DeviceInfo.DeviceAttribute.Product, "RackDrive 100 Rev. 2"
     );
 
     private final EnvironmentHost host;
