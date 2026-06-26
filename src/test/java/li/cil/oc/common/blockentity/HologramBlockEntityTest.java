@@ -116,6 +116,17 @@ final class HologramBlockEntityTest {
         assertArrayEquals(new Object[]{0.25D, 0.5D, -0.25D}, hologram.getTranslation(null, new TestArguments()));
     }
 
+    @Test
+    void copyPauseUsesClippedTargetAreaLikeUpstream() throws Exception {
+        HologramBlockEntity hologram = allocateHologram(1);
+        TrackingContext context = new TrackingContext();
+
+        hologram.copy(context, new TestArguments(1, 1, HologramBlockEntity.WIDTH, HologramBlockEntity.WIDTH, 1, 0));
+
+        final double expectedPause = 46D * 47D / (HologramBlockEntity.WIDTH * HologramBlockEntity.WIDTH) - 0.25D;
+        assertEquals(expectedPause, context.pauseSeconds, 0.000_001D);
+    }
+
     private static HologramBlockEntity allocateHologram(final int tier) throws Exception {
         Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);

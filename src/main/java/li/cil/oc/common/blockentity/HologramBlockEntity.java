@@ -273,7 +273,7 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
                 volume[targetIndex + WIDTH * WIDTH] = previous[sourceIndex + WIDTH * WIDTH];
             }
         }
-        context.pause(Math.max(0D, (width * depth) / (double) (WIDTH * WIDTH) - 0.25D));
+        context.pause(copyPause(x, z, width, depth, tx, tz));
         setChanged();
         return null;
     }
@@ -524,6 +524,15 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
 
     private static int clamp(final int value, final int min, final int max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    private static double copyPause(final int x, final int z, final int width, final int depth, final int tx, final int tz) {
+        final int dx0 = Math.max(0, Math.min(WIDTH - 1, x + tx + width - 1));
+        final int dx1 = Math.max(0, Math.min(WIDTH, x + tx));
+        final int dz0 = Math.max(0, Math.min(WIDTH - 1, z + tz + depth - 1));
+        final int dz1 = Math.max(0, Math.min(WIDTH, z + tz));
+        final int area = Math.abs(dx0 - dx1) * Math.abs(dz0 - dz1);
+        return Math.max(0D, area / (double) (WIDTH * WIDTH) - 0.25D);
     }
 
     private static int tierFromState(final BlockState state) {
