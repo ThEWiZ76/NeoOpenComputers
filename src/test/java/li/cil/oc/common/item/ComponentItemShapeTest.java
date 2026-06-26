@@ -678,6 +678,7 @@ final class ComponentItemShapeTest {
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/StickyPistonUpgradeItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/TankControllerUpgradeItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/TankUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/TabletItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/driver/TransposerItemDriver.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/TractorBeamUpgradeItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/WirelessNetworkCardItem.java");

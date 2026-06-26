@@ -9,6 +9,7 @@ import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
@@ -64,6 +65,26 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
+        final ItemStack filesystem = firstFilesystemComponent(stack);
+        if (filesystem.isEmpty()) {
+            return null;
+        }
+        final DriverItem driver = Driver.driverFor(filesystem);
+        if (driver == null) {
+            return null;
+        }
+        final ManagedEnvironment environment = driver.createEnvironment(filesystem, host);
+        if (environment == null || environment.node() == null) {
+            return null;
+        }
+        if (environment.node() instanceof li.cil.oc.api.network.Component component) {
+            component.setVisibility(Visibility.Network);
+            environment.save(dataTag(stack));
+            return environment;
+        }
         return null;
     }
 
@@ -282,6 +303,16 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
             final CompoundTag entry = components.getCompound(index);
             if (entry.getInt(SLOT_TAG) == slot) {
                 return decodeStack(entry.getCompound(STACK_TAG));
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    private ItemStack firstFilesystemComponent(final ItemStack stack) {
+        for (int slot = 0; slot < COMPONENT_SLOTS; slot++) {
+            final ItemStack component = getComponent(stack, slot);
+            if (isFilesystemComponent(component)) {
+                return component;
             }
         }
         return ItemStack.EMPTY;

@@ -3432,6 +3432,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tabletCreatesEnvironmentFromInstalledFilesystem(final GameTestHelper helper) {
+        final TabletItem tablet = ModItems.TABLET.get();
+        final ItemStack stack = tablet.assembleFromCase(
+            new ItemStack(ModItems.TABLET_CASE_TIER1.get()),
+            ItemStack.EMPTY,
+            new ItemStack(ModItems.HDD_TIER1.get()));
+        final DriverItem tabletDriver = Driver.driverFor(stack);
+        helper.assertTrue(tabletDriver != null, "No driver registered for tablet item");
+
+        final ManagedEnvironment environment = tabletDriver.createEnvironment(stack, new StaticEnvironmentHost(helper));
+
+        helper.assertTrue(environment != null, "Tablet did not create installed filesystem environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Tablet filesystem environment did not expose a component node");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("filesystem".equals(component.name()), "Tablet did not expose installed filesystem component");
+        helper.assertTrue(component.visibility() == Visibility.Network, "Tablet filesystem component was not network-visible");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tabletItemAssemblesFromCaseAndComponents(final GameTestHelper helper) throws Exception {
         final TabletItem tablet = ModItems.TABLET.get();
         final ItemStack container = new ItemStack(ModItems.CARD_CONTAINER_TIER1.get());
