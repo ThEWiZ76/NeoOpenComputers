@@ -17,6 +17,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.wrapper.InvWrapper;
 
@@ -160,7 +161,7 @@ public final class DriverRegistry implements DriverAPI {
                 return inventory == null ? null : new InvWrapper(inventory);
             }
         }
-        return null;
+        return stack == null || stack.isEmpty() ? null : stack.getCapability(Capabilities.ItemHandler.ITEM);
     }
 
     @Override

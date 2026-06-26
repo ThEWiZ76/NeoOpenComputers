@@ -31,6 +31,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -142,6 +144,13 @@ final class DriverRegistryTest {
 
         assertNull(registry.itemHandlerFor(null, null));
         assertEquals(1, registry.converterCount());
+    }
+
+    @Test
+    void itemHandlerForFallsBackToNeoForgeItemCapabilityLikeUpstream() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/DriverRegistry.java"));
+
+        assertTrue(source.contains("stack.getCapability(Capabilities.ItemHandler.ITEM)"));
     }
 
     @Test
