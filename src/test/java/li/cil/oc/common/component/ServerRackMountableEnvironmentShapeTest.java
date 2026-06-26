@@ -18,6 +18,7 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -127,6 +128,30 @@ final class ServerRackMountableEnvironmentShapeTest {
         assertEquals("13", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
     }
 
+    @Test
+    void serverDataMatchesUpstreamPayloadShape() throws Exception {
+        ServerRackMountableEnvironment server = allocateServer(1);
+
+        CompoundTag data = server.getData();
+
+        assertFalse(data.getBoolean("isRunning"));
+        assertFalse(data.getBoolean("hasErrored"));
+        assertEquals(0L, data.getLong("lastFileSystemAccess"));
+        assertEquals(0L, data.getLong("lastNetworkActivity"));
+        assertFalse(data.contains("kind"));
+        assertFalse(data.contains("tier"));
+    }
+
+    @Test
+    void serverRecordsFilesystemAccessLikeUpstream() throws Exception {
+        ServerRackMountableEnvironment server = allocateServer(1);
+        Node filesystem = new TestNode("filesystem-address");
+        setField(server, ServerRackMountableEnvironment.class, "componentSlots", new HashMap<>(Map.of(filesystem.address(), 2)));
+
+        assertTrue(server.recordFileSystemAccess(filesystem, 2468L));
+        assertEquals(2468L, server.getData().getLong("lastFileSystemAccess"));
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static ServerRackMountableEnvironment allocateServer(final int tier) throws Exception {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
@@ -139,8 +164,10 @@ final class ServerRackMountableEnvironmentShapeTest {
         }
         final Field tierField = ServerRackMountableEnvironment.class.getDeclaredField("tier");
         final Field itemsField = ServerRackMountableEnvironment.class.getDeclaredField("items");
+        final Field componentSlotsField = ServerRackMountableEnvironment.class.getDeclaredField("componentSlots");
         unsafe.putInt(server, unsafe.objectFieldOffset(tierField), tier);
         unsafe.putObject(server, unsafe.objectFieldOffset(itemsField), items);
+        unsafe.putObject(server, unsafe.objectFieldOffset(componentSlotsField), new HashMap<String, Integer>());
         return server;
     }
 
@@ -167,6 +194,25 @@ final class ServerRackMountableEnvironmentShapeTest {
         @Override public void onConnect(final Node node) {}
         @Override public void onDisconnect(final Node node) {}
         @Override public void onMessage(final Message message) {}
+        @Override public void load(final CompoundTag nbt) {}
+        @Override public void save(final CompoundTag nbt) {}
+    }
+
+    private record TestNode(String address) implements Node {
+        @Override public li.cil.oc.api.network.Environment host() { return null; }
+        @Override public Visibility reachability() { return Visibility.Network; }
+        @Override public li.cil.oc.api.network.Network network() { return null; }
+        @Override public boolean isNeighborOf(final Node other) { return false; }
+        @Override public boolean canBeReachedFrom(final Node other) { return false; }
+        @Override public Iterable<Node> neighbors() { return java.util.List.of(); }
+        @Override public Iterable<Node> reachableNodes() { return java.util.List.of(); }
+        @Override public void connect(final Node node) {}
+        @Override public void disconnect(final Node node) {}
+        @Override public void remove() {}
+        @Override public void sendToAddress(final String target, final String name, final Object... data) {}
+        @Override public void sendToNeighbors(final String name, final Object... data) {}
+        @Override public void sendToReachable(final String name, final Object... data) {}
+        @Override public void sendToVisible(final String name, final Object... data) {}
         @Override public void load(final CompoundTag nbt) {}
         @Override public void save(final CompoundTag nbt) {}
     }

@@ -23,11 +23,18 @@ public final class FileSystemAccessHandler {
         final long timestamp = System.currentTimeMillis();
         for (int slot = 0; slot < RackBlockEntity.CONTAINER_SIZE; slot++) {
             final RackMountable mountable = rack.getMountable(slot);
-            if (mountable instanceof DiskDriveMountableEnvironment diskDrive
-                && diskDrive.recordFileSystemAccess(event.getNode(), timestamp)) {
+            if (recordsFileSystemAccess(mountable, event, timestamp)) {
                 rack.markChanged(slot);
             }
         }
+    }
+
+    private static boolean recordsFileSystemAccess(final RackMountable mountable, final FileSystemAccessEvent.Server event, final long timestamp) {
+        if (mountable instanceof ServerRackMountableEnvironment server) {
+            return server.recordFileSystemAccess(event.getNode(), timestamp);
+        }
+        return mountable instanceof DiskDriveMountableEnvironment diskDrive
+            && diskDrive.recordFileSystemAccess(event.getNode(), timestamp);
     }
 
     private static RackBlockEntity rackFor(final FileSystemAccessEvent.Server event) {

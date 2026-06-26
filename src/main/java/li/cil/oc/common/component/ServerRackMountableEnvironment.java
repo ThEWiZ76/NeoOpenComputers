@@ -42,9 +42,11 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     public static final int MISSING_MEMORY = 2;
     public static final int MISSING_EEPROM = 4;
 
-    private static final String TAG_KIND = "kind";
     private static final String TAG_MACHINE = "machine";
-    private static final String TAG_TIER = "tier";
+    private static final String TAG_IS_RUNNING = "isRunning";
+    private static final String TAG_HAS_ERRORED = "hasErrored";
+    private static final String TAG_LAST_FILE_SYSTEM_ACCESS = "lastFileSystemAccess";
+    private static final String TAG_LAST_NETWORK_ACTIVITY = "lastNetworkActivity";
     public static final String SLOT_TYPE_EEPROM = "eeprom";
     private static final int TIER_ANY = Integer.MAX_VALUE;
     private static final ServerSlot[][] SLOT_LAYOUTS = {
@@ -106,6 +108,9 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     private final List<RackBusConnectable> busConnectables = new ArrayList<>();
     private int pendingComponentSlot = -1;
     private boolean wasWorking;
+    private boolean hadErrored;
+    private long lastFileSystemAccess;
+    private long lastNetworkActivity;
 
     public ServerRackMountableEnvironment(final Rack rack, final int slot, final int tier) {
         this(rack, slot, tier, null, null);
@@ -136,8 +141,10 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     @Override
     public CompoundTag getData() {
         final CompoundTag data = new CompoundTag();
-        data.putString(TAG_KIND, "server");
-        data.putInt(TAG_TIER, tier);
+        data.putBoolean(TAG_IS_RUNNING, machine != null && machine.isRunning());
+        data.putBoolean(TAG_HAS_ERRORED, machine != null && machine.lastError() != null);
+        data.putLong(TAG_LAST_FILE_SYSTEM_ACCESS, lastFileSystemAccess);
+        data.putLong(TAG_LAST_NETWORK_ACTIVITY, lastNetworkActivity);
         return data;
     }
 
@@ -186,7 +193,15 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public int componentSlot(final String address) {
-        return address == null ? -1 : componentSlots.getOrDefault(address, -1);
+        return address == null || componentSlots == null ? -1 : componentSlots.getOrDefault(address, -1);
+    }
+
+    boolean recordFileSystemAccess(final Node accessedNode, final long timestamp) {
+        if (accessedNode == null || componentSlot(accessedNode.address()) < 0) {
+            return false;
+        }
+        lastFileSystemAccess = timestamp;
+        return true;
     }
 
     @Override
@@ -572,10 +587,12 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     private boolean updateWorkingState() {
         final boolean working = machine.isRunning() || machine.isPaused();
-        if (wasWorking == working) {
+        final boolean errored = machine.lastError() != null;
+        if (wasWorking == working && hadErrored == errored) {
             return false;
         }
         wasWorking = working;
+        hadErrored = errored;
         return true;
     }
 
