@@ -2,6 +2,11 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Component;
+import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Slot;
 import net.minecraft.core.Direction;
@@ -87,6 +92,16 @@ final class ServerRackMountableEnvironmentShapeTest {
     }
 
     @Test
+    void diskDriveMountableRecordsFilesystemAccessLikeUpstream() throws Exception {
+        DiskDriveMountableEnvironment diskDrive = allocateDiskDriveMountable();
+        TestManagedEnvironment filesystem = new TestManagedEnvironment();
+        setField(diskDrive, DiskDriveMountableEnvironment.class, "diskEnvironment", filesystem);
+
+        assertTrue(diskDrive.recordFileSystemAccess(filesystem.node(), 1234L));
+        assertEquals(1234L, diskDrive.getData().getLong("lastAccess"));
+    }
+
+    @Test
     void terminalServerAnalyzeReturnsVirtualScreenAndKeyboardNodesLikeUpstream() {
         final TerminalServerRackMountableEnvironment terminalServer = new TerminalServerRackMountableEnvironment();
         final Analyzable analyzable = assertInstanceOf(Analyzable.class, terminalServer);
@@ -133,5 +148,26 @@ final class ServerRackMountableEnvironmentShapeTest {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
         return (DiskDriveMountableEnvironment) ((Unsafe) unsafeField.get(null)).allocateInstance(DiskDriveMountableEnvironment.class);
+    }
+
+    private static void setField(final Object target, final Class<?> owner, final String name, final Object value) throws Exception {
+        final Field field = owner.getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(target, value);
+    }
+
+    private static final class TestManagedEnvironment implements ManagedEnvironment {
+        private final Node node = Network.newNode(this, Visibility.Network)
+            .withComponent("filesystem", Visibility.Neighbors)
+            .create();
+
+        @Override public boolean canUpdate() { return false; }
+        @Override public void update() {}
+        @Override public Node node() { return node; }
+        @Override public void onConnect(final Node node) {}
+        @Override public void onDisconnect(final Node node) {}
+        @Override public void onMessage(final Message message) {}
+        @Override public void load(final CompoundTag nbt) {}
+        @Override public void save(final CompoundTag nbt) {}
     }
 }

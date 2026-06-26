@@ -26,6 +26,7 @@ import li.cil.oc.common.PeripheralBlacklistImc;
 import li.cil.oc.common.ToolDurabilityProviderImc;
 import li.cil.oc.common.WrenchToolImc;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
+import li.cil.oc.common.component.FileSystemAccessHandler;
 import li.cil.oc.common.component.MfuTargetEvents;
 import li.cil.oc.common.command.ModCommands;
 import li.cil.oc.common.machine.ProgramLocationImc;
@@ -62,6 +63,7 @@ public final class NeoOpenComputers {
         ModCreativeTabs.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
         modEventBus.addListener(ModCapabilities::register);
+        FileSystemAccessHandler.register();
         MfuTargetEvents.register();
         NeoForge.EVENT_BUS.addListener(ModCommands::register);
         NanomachinesRegistry.registerTickHandler();

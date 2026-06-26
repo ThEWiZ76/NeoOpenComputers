@@ -73,6 +73,14 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         return data;
     }
 
+    boolean recordFileSystemAccess(final Node accessedNode, final long timestamp) {
+        if (accessedNode == null || diskEnvironment == null || diskEnvironment.node() != accessedNode) {
+            return false;
+        }
+        lastAccess = timestamp;
+        return true;
+    }
+
     @Override
     public void onConnect(final Node node) {
         if (diskEnvironment != null) {
@@ -189,6 +197,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
     @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
+        lastAccess = nbt.getLong(TAG_LAST_ACCESS);
         ContainerHelper.loadAllItems(nbt, items, world() == null ? null : world().registryAccess());
         refreshDiskEnvironment();
         if (nbt.contains(TAG_DISK) && diskEnvironment != null) {
