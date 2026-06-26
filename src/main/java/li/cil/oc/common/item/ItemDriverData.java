@@ -1,5 +1,6 @@
 package li.cil.oc.common.item;
 
+import li.cil.oc.api.network.EnvironmentHost;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -31,5 +32,9 @@ public final class ItemDriverData {
             root.put(TAG_DATA, new CompoundTag());
         }
         return root.getCompound(TAG_DATA);
+    }
+
+    public static boolean isClientSide(final EnvironmentHost host) {
+        return host != null && host.world() != null && host.world().isClientSide;
     }
 }

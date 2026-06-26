@@ -21,6 +21,9 @@ public class InternetCardItem extends Item implements DriverItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return new InternetCardEnvironment();
     }
 

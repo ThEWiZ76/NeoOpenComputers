@@ -33,6 +33,8 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -643,6 +645,20 @@ final class ComponentItemShapeTest {
         assertTrue(Item.class.isAssignableFrom(DataCardItem.class));
         assertTrue(DriverItem.class.isAssignableFrom(DataCardItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void cardDriversKeepUpstreamClientWorldEnvironmentGuard() throws Exception {
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/DataCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/InternetCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/LinkedCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/WirelessNetworkCardItem.java");
+    }
+
+    private static void assertClientWorldGuard(final String sourcePath) throws Exception {
+        final String source = Files.readString(Path.of(sourcePath));
+
+        assertTrue(source.contains("ItemDriverData.isClientSide(host)"), sourcePath + " does not guard client-world environment creation like upstream");
     }
 
     private static void assertHardDiskCapacity(final int tier, final long expectedCapacity) throws Exception {

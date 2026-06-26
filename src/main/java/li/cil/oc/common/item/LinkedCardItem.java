@@ -28,6 +28,9 @@ public class LinkedCardItem extends Item implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return new LinkedCardEnvironment(host, dataTag(stack).getString(TUNNEL_TAG));
     }
 
