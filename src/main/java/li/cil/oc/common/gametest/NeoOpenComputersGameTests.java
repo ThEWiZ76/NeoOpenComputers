@@ -309,6 +309,9 @@ public final class NeoOpenComputersGameTests {
         ModItems.CARD_CONTAINER_TIER1.get();
         ModItems.CARD_CONTAINER_TIER2.get();
         ModItems.CARD_CONTAINER_TIER3.get();
+        ModItems.MICROCONTROLLER_CASE_TIER1.get();
+        ModItems.MICROCONTROLLER_CASE_TIER2.get();
+        ModItems.MICROCONTROLLER_CASE_CREATIVE.get();
         ModItems.TABLET_CASE_TIER1.get();
         ModItems.TABLET_CASE_TIER2.get();
         ModItems.TABLET_CASE_CREATIVE.get();
@@ -3948,6 +3951,16 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(close.length == 1 && Boolean.TRUE.equals(close[0]), "Net Splitter close did not report changed side");
         final Object[] invalid = invokeComponent(helper, component, "open", 6);
         helper.assertTrue(invalid.length == 2 && invalid[0] == null && "invalid direction".equals(invalid[1]), "Net Splitter invalid side result mismatch");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void microcontrollerCaseItemsUseUpstreamApiNames(final GameTestHelper helper) {
+        assertMicrocontrollerCaseItem(helper, "microcontrollerCase1", 0);
+        assertMicrocontrollerCaseItem(helper, "microcontrollerCase2", 1);
+        assertMicrocontrollerCaseItem(helper, "microcontrollercase1", 0);
+        assertMicrocontrollerCaseItem(helper, "microcontrollercase2", 1);
+        assertMicrocontrollerCaseItem(helper, "microcontrollercasecreative", 3);
         helper.succeed();
     }
 
@@ -9911,6 +9924,16 @@ public final class NeoOpenComputersGameTests {
 
     private static void assertComputerCaseTier(final GameTestHelper helper, final ComputerCaseBlockEntity computerCase, final int tier) {
         helper.assertTrue(computerCase.tier() == tier, "Expected computer case tier " + tier + " but got " + computerCase.tier());
+    }
+
+    private static void assertMicrocontrollerCaseItem(final GameTestHelper helper, final String apiName, final int expectedTier) {
+        final ItemInfo info = API.items.get(apiName);
+        helper.assertTrue(info != null, "No microcontroller case item API entry for " + apiName);
+        final ItemStack stack = info.createItemStack(1);
+        helper.assertTrue(!stack.isEmpty(), "Microcontroller case item API entry created empty stack for " + apiName);
+        helper.assertTrue(stack.getItem() instanceof li.cil.oc.api.internal.Tiered, "Microcontroller case item is not tiered for " + apiName);
+        final li.cil.oc.api.internal.Tiered tiered = (li.cil.oc.api.internal.Tiered) stack.getItem();
+        helper.assertTrue(tiered.tier() == expectedTier, "Expected " + apiName + " tier " + expectedTier + " but got " + tiered.tier());
     }
 
     private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method, final Object... args) {

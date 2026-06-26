@@ -30,6 +30,7 @@ import li.cil.oc.common.item.LeashUpgradeItem;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.ManualItem;
 import li.cil.oc.common.item.MemoryItem;
+import li.cil.oc.common.item.MicrocontrollerCaseItem;
 import li.cil.oc.common.item.MfuItem;
 import li.cil.oc.common.item.NanomachinesItem;
 import li.cil.oc.common.item.NavigationUpgradeItem;
@@ -250,6 +251,18 @@ public final class ModItems {
     public static final DeferredItem<CardContainerItem> CARD_CONTAINER_TIER3 = ITEMS.register(
         ModContentIds.CARD_CONTAINER_TIER3,
         () -> new CardContainerItem(new Item.Properties(), 2));
+
+    public static final DeferredItem<MicrocontrollerCaseItem> MICROCONTROLLER_CASE_TIER1 = ITEMS.register(
+        ModContentIds.MICROCONTROLLER_CASE_TIER1,
+        () -> new MicrocontrollerCaseItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<MicrocontrollerCaseItem> MICROCONTROLLER_CASE_TIER2 = ITEMS.register(
+        ModContentIds.MICROCONTROLLER_CASE_TIER2,
+        () -> new MicrocontrollerCaseItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<MicrocontrollerCaseItem> MICROCONTROLLER_CASE_CREATIVE = ITEMS.register(
+        ModContentIds.MICROCONTROLLER_CASE_CREATIVE,
+        () -> new MicrocontrollerCaseItem(new Item.Properties(), 3));
 
     public static final DeferredItem<TabletCaseItem> TABLET_CASE_TIER1 = ITEMS.register(
         ModContentIds.TABLET_CASE_TIER1,

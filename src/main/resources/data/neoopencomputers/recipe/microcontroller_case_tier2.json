@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "P": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "GRG",
+    "CPC",
+    "GRG"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:microcontroller_case_tier2"
+  }
+}
