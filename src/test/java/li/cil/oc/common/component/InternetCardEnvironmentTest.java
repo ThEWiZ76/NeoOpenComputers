@@ -282,6 +282,13 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void defaultFilteringRulesDenyEmbeddedPrivateIpv4InIpv6LikeUpstream() throws Exception {
+        InetAddress embeddedLoopback = InetAddress.getByName("2002:7f00:1::");
+
+        assertEquals(false, isAddressAllowed(embeddedLoopback, "embedded.test"));
+    }
+
+    @Test
     void disabledHttpHeadersRejectsRequestsWithHeaders() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
@@ -695,6 +702,12 @@ final class InternetCardEnvironmentTest {
         Method apply = ruleClass.getDeclaredMethod("apply", InetAddress.class, String.class);
         apply.setAccessible(true);
         return (Boolean) apply.invoke(parsed, address, host);
+    }
+
+    private static boolean isAddressAllowed(final InetAddress address, final String host) throws Exception {
+        Method method = InternetCardEnvironment.class.getDeclaredMethod("isAddressAllowed", InetAddress.class, String.class);
+        method.setAccessible(true);
+        return (Boolean) method.invoke(null, address, host);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

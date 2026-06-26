@@ -308,16 +308,24 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             return false;
         }
         try {
-            for (final String rule : ModSettings.internetFilteringRules()) {
-                final Boolean result = InternetFilteringRule.parse(rule).apply(address, host);
-                if (result != null) {
-                    return result;
-                }
+            final InetAddress embeddedIpv4 = InternetFilteringRule.embeddedIpv4ClientAddress(address);
+            if (embeddedIpv4 != null && Boolean.FALSE.equals(firstMatchingFilteringRule(embeddedIpv4, host))) {
+                return false;
             }
-            return false;
+            return Boolean.TRUE.equals(firstMatchingFilteringRule(address, host));
         } catch (final IllegalArgumentException ignored) {
             return false;
         }
+    }
+
+    private static Boolean firstMatchingFilteringRule(final InetAddress address, final String host) {
+        for (final String rule : ModSettings.internetFilteringRules()) {
+            final Boolean result = InternetFilteringRule.parse(rule).apply(address, host);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
     }
 
     @FunctionalInterface
@@ -677,11 +685,31 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         }
 
         private static boolean hasEmbeddedIpv4ClientAddress(final InetAddress address) {
+            return embeddedIpv4ClientAddress(address) != null;
+        }
+
+        private static InetAddress embeddedIpv4ClientAddress(final InetAddress address) {
             if (!(address instanceof Inet6Address)) {
-                return false;
+                return null;
             }
             final byte[] bytes = address.getAddress();
-            return isIpv4CompatibleAddress(bytes) || is6to4Address(bytes) || isTeredoAddress(bytes);
+            final byte[] embedded = new byte[4];
+            if (isIpv4CompatibleAddress(bytes)) {
+                System.arraycopy(bytes, 12, embedded, 0, embedded.length);
+            } else if (is6to4Address(bytes)) {
+                System.arraycopy(bytes, 2, embedded, 0, embedded.length);
+            } else if (isTeredoAddress(bytes)) {
+                for (int i = 0; i < embedded.length; i++) {
+                    embedded[i] = (byte) ~bytes[12 + i];
+                }
+            } else {
+                return null;
+            }
+            try {
+                return InetAddress.getByAddress(embedded);
+            } catch (final IOException e) {
+                throw new IllegalArgumentException("invalid embedded IPv4 address", e);
+            }
         }
 
         private static boolean isIpv4CompatibleAddress(final byte[] bytes) {
