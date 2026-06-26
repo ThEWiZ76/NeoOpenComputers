@@ -310,6 +310,38 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void httpRequestDoesNotExposeErrorStreamLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+        ExecutorService serverThread = Executors.newSingleThreadExecutor();
+
+        try (ServerSocket server = new ServerSocket(0)) {
+            serverThread.submit(() -> {
+                try (Socket socket = server.accept()) {
+                    socket.getInputStream().readNBytes(1);
+                    socket.getOutputStream().write((
+                        "HTTP/1.1 404 Not Found\r\n" +
+                            "Content-Length: 7\r\n" +
+                            "\r\n" +
+                            "missing").getBytes(StandardCharsets.ISO_8859_1));
+                    socket.getOutputStream().flush();
+                }
+                return null;
+            });
+
+            withFilteringRules(List.of("allow all"), () -> {
+                InternetCardEnvironment.HttpRequest request = assertInstanceOf(
+                    InternetCardEnvironment.HttpRequest.class,
+                    card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/missing"))[0]);
+                awaitHttpFailure(request);
+            });
+        } finally {
+            serverThread.shutdownNow();
+            assertTrue(serverThread.awaitTermination(2, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
     void invalidHttpSchemeFailsLikeUpstream() {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
@@ -553,6 +585,18 @@ final class InternetCardEnvironmentTest {
                 request.response(null, new TestArguments());
             } catch (CompletionException e) {
                 assertEquals(message, e.getCause().getMessage());
+                return;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("HTTP request did not fail");
+    }
+
+    private static void awaitHttpFailure(final InternetCardEnvironment.HttpRequest request) throws Exception {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            try {
+                request.response(null, new TestArguments());
+            } catch (CompletionException e) {
                 return;
             }
             Thread.sleep(10);

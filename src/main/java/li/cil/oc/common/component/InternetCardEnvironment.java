@@ -249,7 +249,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
                 }
                 final int code = connection.getResponseCode();
                 final String message = connection.getResponseMessage();
-                try (InputStream in = inputStream(connection)) {
+                try (InputStream in = connection.getInputStream()) {
                     return new HttpResponse(code, message, responseHeaders(connection.getHeaderFields()), in.readAllBytes());
                 }
             } catch (IOException e) {
@@ -260,11 +260,6 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
                 }
             }
         }, HTTP_EXECUTOR);
-    }
-
-    private static InputStream inputStream(final HttpURLConnection connection) throws IOException {
-        final InputStream error = connection.getErrorStream();
-        return error != null ? error : connection.getInputStream();
     }
 
     private static Map<String, List<String>> responseHeaders(final Map<String, List<String>> headers) {
