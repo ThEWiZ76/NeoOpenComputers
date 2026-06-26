@@ -30,6 +30,7 @@ import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import li.cil.oc.common.component.FileSystemAccessHandler;
 import li.cil.oc.common.component.MfuTargetEvents;
 import li.cil.oc.common.component.NetworkActivityHandler;
+import li.cil.oc.common.component.WirelessNetworkCardHandler;
 import li.cil.oc.common.command.ModCommands;
 import li.cil.oc.common.machine.ProgramLocationImc;
 import li.cil.oc.common.machine.ProgramLocations;
@@ -69,6 +70,7 @@ public final class NeoOpenComputers {
         FileSystemAccessHandler.register();
         MfuTargetEvents.register();
         NetworkActivityHandler.register();
+        WirelessNetworkCardHandler.register();
         NeoForge.EVENT_BUS.addListener(ModCommands::register);
         NanomachinesRegistry.registerTickHandler();
         modEventBus.addListener(ChunkloaderUpgradeEnvironment::registerTicketController);
