@@ -1008,6 +1008,32 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardPersistsConnectedBlockNode(final GameTestHelper helper) {
+        final BlockPos targetPos = new BlockPos(1, 1, 1);
+        helper.setBlock(targetPos, ModBlocks.HOLOGRAM_TIER1.get());
+        final BlockPos absoluteTarget = helper.absolutePos(targetPos);
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        Network.joinNewNetwork(card.node());
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+        final Object[] result = invokeComponent(helper, component, "connectToBlock", absoluteTarget.getX(), absoluteTarget.getY(), absoluteTarget.getZ());
+        helper.assertTrue(result.length == 1 && Boolean.TRUE.equals(result[0]), "Debug connectToBlock did not report success");
+
+        final CompoundTag tag = new CompoundTag();
+        card.save(tag);
+        helper.assertTrue(tag.getInt("oc:remoteX") == absoluteTarget.getX(), "Debug card did not save remote X");
+        helper.assertTrue(tag.getInt("oc:remoteY") == absoluteTarget.getY(), "Debug card did not save remote Y");
+        helper.assertTrue(tag.getInt("oc:remoteZ") == absoluteTarget.getZ(), "Debug card did not save remote Z");
+
+        final DebugCardEnvironment loaded = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        loaded.load(tag);
+        Network.joinNewNetwork(loaded.node());
+        helper.assertTrue(reachableComponent(loaded.node(), "hologram"), "Loaded debug card did not reconnect target component");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardScansBlockContents(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
         helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");

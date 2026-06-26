@@ -91,12 +91,16 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static final String DATA_TAG = "oc:data";
     private static final String PLAYER_TAG = "oc:player";
     private static final String ACCESS_NONCE_TAG = "oc:accessNonce";
+    private static final String REMOTE_X_TAG = "oc:remoteX";
+    private static final String REMOTE_Y_TAG = "oc:remoteY";
+    private static final String REMOTE_Z_TAG = "oc:remoteZ";
     private static final Integer[] VANILLA_WORLD_IDS = new Integer[]{0, -1, 1};
     private static final Map<String, DebugCardEnvironment> ENDPOINTS = new ConcurrentHashMap<>();
 
     private final EnvironmentHost host;
     private AccessContext access;
     private Node remoteNode;
+    private BlockPos remoteNodePosition;
 
     public DebugCardEnvironment(final EnvironmentHost host) {
         this(host, null);
@@ -277,6 +281,7 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             node().disconnect(remoteNode);
         }
         remoteNode = other;
+        remoteNodePosition = pos;
         node().connect(other);
         return new Object[]{true};
     }
@@ -299,6 +304,7 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         super.onConnect(node);
         if (node == node() && node != null && node.address() != null) {
             ENDPOINTS.put(node.address(), this);
+            reconnectRemoteNode();
         }
     }
 
@@ -307,6 +313,12 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         super.onDisconnect(node);
         if (node == node() && node != null && node.address() != null) {
             ENDPOINTS.remove(node.address(), this);
+            if (remoteNode != null) {
+                remoteNode.disconnect(node);
+            }
+        } else if (node == remoteNode) {
+            remoteNode = null;
+            remoteNodePosition = null;
         }
     }
 
@@ -352,12 +364,39 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
     public void load(final CompoundTag nbt) {
         super.load(nbt);
         access = loadAccess(nbt);
+        if (nbt.contains(REMOTE_X_TAG)) {
+            remoteNodePosition = new BlockPos(nbt.getInt(REMOTE_X_TAG), nbt.getInt(REMOTE_Y_TAG), nbt.getInt(REMOTE_Z_TAG));
+            if (node() != null && node().network() != null) {
+                reconnectRemoteNode();
+            }
+        } else {
+            remoteNodePosition = null;
+        }
     }
 
     @Override
     public void save(final CompoundTag nbt) {
         super.save(nbt);
         saveAccess(nbt, access);
+        if (remoteNodePosition != null) {
+            nbt.putInt(REMOTE_X_TAG, remoteNodePosition.getX());
+            nbt.putInt(REMOTE_Y_TAG, remoteNodePosition.getY());
+            nbt.putInt(REMOTE_Z_TAG, remoteNodePosition.getZ());
+        }
+    }
+
+    private void reconnectRemoteNode() {
+        if (remoteNodePosition == null || node() == null) {
+            return;
+        }
+        final Node other = findNode(remoteNodePosition);
+        if (other == null) {
+            remoteNode = null;
+            remoteNodePosition = null;
+            return;
+        }
+        remoteNode = other;
+        node().connect(other);
     }
 
     public static AccessContext loadAccess(final CompoundTag root) {
