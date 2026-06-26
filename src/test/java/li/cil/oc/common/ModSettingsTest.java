@@ -231,6 +231,7 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "cost", "mfuRelay"), ModSettings.MFU_RELAY_COST.getPath());
         assertEquals(List.of("power", "ignorePower"), ModSettings.IGNORE_POWER.getPath());
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
+        assertEquals(List.of("power", "cost", "chunkloaderCost"), ModSettings.CHUNKLOADER_COST.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
         assertEquals(List.of("power", "generatorEfficiency"), ModSettings.GENERATOR_EFFICIENCY.getPath());
         assertEquals(List.of("power", "rate", "accessPoint"), ModSettings.ACCESS_POINT_RATE.getPath());

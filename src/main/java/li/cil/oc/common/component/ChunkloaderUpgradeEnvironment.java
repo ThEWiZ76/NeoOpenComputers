@@ -5,11 +5,13 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -49,6 +51,19 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
 
     public static void registerTicketController(final RegisterTicketControllersEvent event) {
         event.register(TICKETS);
+    }
+
+    @Override
+    public boolean canUpdate() {
+        return true;
+    }
+
+    @Override
+    public void update() {
+        super.update();
+        if (host == null || host.world() == null || host.world().getGameTime() % ModSettings.mfuTickFrequency() == 0) {
+            tickPowerCost();
+        }
     }
 
     @Override
@@ -113,6 +128,16 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
 
     void refreshForcedChunks() {
         updateChunkTicket();
+    }
+
+    void tickPowerCost() {
+        if (!active || !(node() instanceof Connector connector)) {
+            return;
+        }
+        final double cost = ModSettings.chunkloaderCost() * ModSettings.mfuTickFrequency();
+        if (cost > 0D && !connector.tryChangeBuffer(-cost)) {
+            setActive(false);
+        }
     }
 
     private void updateChunkTicket() {

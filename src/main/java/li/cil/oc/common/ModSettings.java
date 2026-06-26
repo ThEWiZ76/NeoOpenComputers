@@ -113,6 +113,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue HOLOGRAM_SET_RAW_DELAY;
     public static final ModConfigSpec.BooleanValue IGNORE_POWER;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
+    public static final ModConfigSpec.DoubleValue CHUNKLOADER_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
     public static final ModConfigSpec.DoubleValue EEPROM_WRITE_COST;
     public static final ModConfigSpec.DoubleValue DATA_CARD_TRIVIAL;
@@ -578,6 +579,9 @@ public final class ModSettings {
         MFU_RELAY_COST = builder
             .comment("MFU relay energy cost per block and tick-frequency interval.")
             .defineInRange("mfuRelay", 1D, 0D, Double.MAX_VALUE);
+        CHUNKLOADER_COST = builder
+            .comment("Energy consumed per tick while the chunkloader upgrade is active. OpenComputers upstream default is 0.06.")
+            .defineInRange("chunkloaderCost", 0.06D, 0D, Double.MAX_VALUE);
         NANOMACHINES_INPUT_COST = builder
             .comment("Energy consumed per tick per active nanomachine input. OpenComputers upstream default is 0.5.")
             .defineInRange("nanomachineInput", 0.5D, 0D, Double.MAX_VALUE);
@@ -662,6 +666,10 @@ public final class ModSettings {
 
     public static double mfuRelayCost() {
         return doubleValue(MFU_RELAY_COST);
+    }
+
+    public static double chunkloaderCost() {
+        return Math.max(0D, doubleValue(CHUNKLOADER_COST));
     }
 
     public static boolean ignorePower() {
