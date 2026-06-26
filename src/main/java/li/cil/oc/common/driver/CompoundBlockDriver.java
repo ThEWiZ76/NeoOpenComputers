@@ -2,6 +2,7 @@ package li.cil.oc.common.driver;
 
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.driver.NamedBlock;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -64,7 +65,13 @@ public final class CompoundBlockDriver implements DriverBlock {
                 best = named;
             }
         }
-        return best == null ? "component" : best.preferredName();
+        if (best != null) {
+            return best.preferredName();
+        }
+        if (environments.size() == 1 && environments.getFirst().environment().node() instanceof Component component) {
+            return component.name();
+        }
+        return "component";
     }
 
     private static String cleanName(final String name) {

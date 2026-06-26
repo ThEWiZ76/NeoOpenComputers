@@ -17,6 +17,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.driver.CompoundBlockDriver;
 import li.cil.oc.common.driver.MinecraftConverters;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -70,9 +71,32 @@ final class DriverRegistryTest {
         registry.add(new TestDriverItem(false));
         registry.add(item);
 
-        assertSame(block, registry.driverFor(null, BlockPos.ZERO, Direction.NORTH));
+        DriverBlock blockDriver = registry.driverFor(null, BlockPos.ZERO, Direction.NORTH);
+        assertInstanceOf(CompoundBlockDriver.class, blockDriver);
+        assertTrue(blockDriver.worksWith(null, BlockPos.ZERO, Direction.NORTH));
         assertSame(item, registry.driverFor((ItemStack) null));
         assertEquals(2, registry.itemDrivers().size());
+    }
+
+    @Test
+    void singleMatchingBlockDriverIsWrappedLikeUpstream() {
+        DriverRegistry registry = new DriverRegistry();
+        registry.add(new TestDriverBlock(true));
+
+        assertInstanceOf(CompoundBlockDriver.class, registry.driverFor(null, BlockPos.ZERO, Direction.NORTH));
+    }
+
+    @Test
+    void singleWrappedBlockDriverKeepsChildComponentName() {
+        API.network = new NetworkRegistry();
+        DriverRegistry registry = new DriverRegistry();
+        registry.add(new TestComponentBlockDriver("inventory"));
+
+        DriverBlock driver = registry.driverFor(null, BlockPos.ZERO, Direction.NORTH);
+        ManagedEnvironment environment = driver.createEnvironment(null, BlockPos.ZERO, Direction.NORTH);
+
+        Component component = assertInstanceOf(Component.class, environment.node());
+        assertEquals("inventory", component.name());
     }
 
     @Test
@@ -309,6 +333,62 @@ final class DriverRegistryTest {
                 return new FirstCallbackEnvironment(name, priority);
             }
             return new SecondCallbackEnvironment(name, priority);
+        }
+    }
+
+    private record TestComponentBlockDriver(String name) implements DriverBlock {
+        @Override
+        public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
+            return true;
+        }
+
+        @Override
+        public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
+            return new TestComponentEnvironment(name);
+        }
+    }
+
+    private static final class TestComponentEnvironment implements ManagedEnvironment {
+        private final Node node;
+
+        private TestComponentEnvironment(final String name) {
+            node = li.cil.oc.api.Network.newNode(this, Visibility.Network)
+                .withComponent(name, Visibility.Network)
+                .create();
+        }
+
+        @Override
+        public Node node() {
+            return node;
+        }
+
+        @Override
+        public boolean canUpdate() {
+            return false;
+        }
+
+        @Override
+        public void update() {
+        }
+
+        @Override
+        public void onConnect(final Node node) {
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+        }
+
+        @Override
+        public void onMessage(final Message message) {
+        }
+
+        @Override
+        public void load(final CompoundTag nbt) {
+        }
+
+        @Override
+        public void save(final CompoundTag nbt) {
         }
     }
 

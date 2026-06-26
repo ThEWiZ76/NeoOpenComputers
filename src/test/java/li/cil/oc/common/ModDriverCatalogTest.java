@@ -4,6 +4,7 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.common.driver.CompoundBlockDriver;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ModDriverCatalogTest {
     @Test
@@ -38,7 +41,9 @@ final class ModDriverCatalogTest {
 
         ModDriverCatalog.registerBlocks(registry, first);
 
-        assertSame(first, registry.driverFor(null, BlockPos.ZERO, Direction.NORTH));
+        final DriverBlock driver = registry.driverFor(null, BlockPos.ZERO, Direction.NORTH);
+        assertInstanceOf(CompoundBlockDriver.class, driver);
+        assertTrue(driver.worksWith(null, BlockPos.ZERO, Direction.NORTH));
     }
 
     private static final class TestBlockDriver implements DriverBlock {

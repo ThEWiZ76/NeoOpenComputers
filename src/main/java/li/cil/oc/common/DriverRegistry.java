@@ -88,11 +88,7 @@ public final class DriverRegistry implements DriverAPI {
                 matches.add(driver);
             }
         }
-        return switch (matches.size()) {
-            case 0 -> null;
-            case 1 -> matches.getFirst();
-            default -> new CompoundBlockDriver(matches);
-        };
+        return matches.isEmpty() ? null : new CompoundBlockDriver(matches);
     }
 
     @Override
