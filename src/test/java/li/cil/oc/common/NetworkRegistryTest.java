@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,6 +38,7 @@ final class NetworkRegistryTest {
     @AfterEach
     void resetApi() {
         API.network = null;
+        API.driver = null;
     }
 
     @Test
@@ -171,6 +173,25 @@ final class NetworkRegistryTest {
         assertTrue(component.methods().contains("ping"));
         assertEquals("function():string -- Test callback.", component.annotation("ping").doc());
         assertArrayEquals(new Object[]{"pong", "data"}, component.invoke("ping", null, "data"));
+    }
+
+    @Test
+    void componentCallbackReturnsUseRegisteredConvertersLikeUpstream() throws Exception {
+        DriverRegistry driverRegistry = new DriverRegistry();
+        TestConvertedValue value = new TestConvertedValue("component");
+        driverRegistry.add((candidate, output) -> {
+            if (candidate == value) {
+                output.put("name", value.name);
+            }
+        });
+        API.driver = driverRegistry;
+        NetworkRegistry registry = new NetworkRegistry();
+        ConvertedCallbackEnvironment host = new ConvertedCallbackEnvironment(value);
+        Component component = registry.newNode(host, Visibility.Network).withComponent("test", Visibility.Network).create();
+
+        Object[] result = component.invoke("converted", null);
+
+        assertEquals(Map.of("name", "component"), result[0]);
     }
 
     @Test
@@ -354,6 +375,22 @@ final class NetworkRegistryTest {
         public Object[] ping(final Context context, final Arguments arguments) {
             return new Object[]{"pong", arguments.checkString(0)};
         }
+    }
+
+    private static final class ConvertedCallbackEnvironment extends TestEnvironment {
+        private final Object value;
+
+        private ConvertedCallbackEnvironment(final Object value) {
+            this.value = value;
+        }
+
+        @Callback
+        public Object[] converted(final Context context, final Arguments arguments) {
+            return new Object[]{value};
+        }
+    }
+
+    private record TestConvertedValue(String name) {
     }
 
     private static final class BlankCallbackNameEnvironment extends TestEnvironment {

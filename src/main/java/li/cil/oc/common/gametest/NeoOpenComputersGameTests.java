@@ -989,19 +989,19 @@ public final class NeoOpenComputersGameTests {
 
         final BlockPos air = helper.absolutePos(new BlockPos(1, 1, 1));
         final Object[] airResult = invokeComponent(helper, component, "scanContentsAt", air.getX(), air.getY(), air.getZ());
-        helper.assertTrue(airResult.length == 3 && Boolean.FALSE.equals(airResult[0]) && "air".equals(airResult[1]) && airResult[2] == Blocks.AIR, "Debug scanContentsAt did not report air");
+        helper.assertTrue(airResult.length == 3 && Boolean.FALSE.equals(airResult[0]) && "air".equals(airResult[1]) && convertedBlockName(airResult[2]).equals("minecraft:air"), "Debug scanContentsAt did not report air");
 
         final BlockPos stoneRelative = new BlockPos(2, 1, 1);
         helper.setBlock(stoneRelative, Blocks.STONE.defaultBlockState());
         final BlockPos stone = helper.absolutePos(stoneRelative);
         final Object[] solidResult = invokeComponent(helper, component, "scanContentsAt", stone.getX(), stone.getY(), stone.getZ());
-        helper.assertTrue(solidResult.length == 3 && Boolean.TRUE.equals(solidResult[0]) && "solid".equals(solidResult[1]) && solidResult[2] == Blocks.STONE, "Debug scanContentsAt did not report solid block");
+        helper.assertTrue(solidResult.length == 3 && Boolean.TRUE.equals(solidResult[0]) && "solid".equals(solidResult[1]) && convertedBlockName(solidResult[2]).equals("minecraft:stone"), "Debug scanContentsAt did not report solid block");
 
         final BlockPos waterRelative = new BlockPos(3, 1, 1);
         helper.setBlock(waterRelative, Blocks.WATER.defaultBlockState());
         final BlockPos water = helper.absolutePos(waterRelative);
         final Object[] liquidResult = invokeComponent(helper, component, "scanContentsAt", water.getX(), water.getY(), water.getZ());
-        helper.assertTrue(liquidResult.length == 3 && Boolean.FALSE.equals(liquidResult[0]) && "liquid".equals(liquidResult[1]) && liquidResult[2] == Blocks.WATER, "Debug scanContentsAt did not report liquid block");
+        helper.assertTrue(liquidResult.length == 3 && Boolean.FALSE.equals(liquidResult[0]) && "liquid".equals(liquidResult[1]) && convertedBlockName(liquidResult[2]).equals("minecraft:water"), "Debug scanContentsAt did not report liquid block");
         helper.succeed();
     }
 
@@ -1022,7 +1022,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("test".equals(nested.get("b")), "Debug test nested map did not include string value");
         helper.assertTrue(nested.get("c") == map, "Debug test nested map did not preserve cycle");
         helper.assertTrue(result[1] instanceof Value, "Debug test did not return a value handle");
-        helper.assertTrue(result[2] == helper.getLevel(), "Debug test did not return host world");
+        helper.assertTrue(result[2] instanceof Map<?, ?> world && "minecraft:overworld".equals(world.get("name")), "Debug test did not return converted host world");
         helper.succeed();
     }
 
@@ -5190,8 +5190,8 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("trading".equals(component.name()), "Trading component name mismatch");
 
         final Object[] result = component.invoke("getTrades", null);
-        helper.assertTrue(result.length == 1 && result[0] instanceof java.util.List<?> trades && trades.size() == 1, "Trading upgrade did not list nearby trade");
-        final Object trade = ((java.util.List<?>) result[0]).getFirst();
+        helper.assertTrue(result.length == 1 && result[0] instanceof Object[] trades && trades.length == 1, "Trading upgrade did not list nearby trade");
+        final Object trade = ((Object[]) result[0])[0];
         final Method getMerchantId = trade.getClass().getMethod("getMerchantId", Context.class, Arguments.class);
         final Object[] merchantId = (Object[]) getMerchantId.invoke(trade, null, null);
         helper.assertTrue(merchantId.length == 1 && Integer.valueOf(1).equals(merchantId[0]), "Trade merchant id mismatch");
@@ -5229,7 +5229,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment != null, "Trading upgrade did not create trading environment");
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         final Object[] result = component.invoke("getTrades", null);
-        final Object trade = ((java.util.List<?>) result[0]).getFirst();
+        final Object trade = ((Object[]) result[0])[0];
         final Method tradeMethod = trade.getClass().getMethod("trade", Context.class, Arguments.class);
         final Object[] traded = (Object[]) tradeMethod.invoke(trade, null, null);
 
@@ -5263,7 +5263,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment != null, "Trading upgrade did not create trading environment");
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         final Object[] result = component.invoke("getTrades", null);
-        final Object trade = ((java.util.List<?>) result[0]).getFirst();
+        final Object trade = ((Object[]) result[0])[0];
         final Method tradeMethod = trade.getClass().getMethod("trade", Context.class, Arguments.class);
         final Object[] traded = (Object[]) tradeMethod.invoke(trade, null, null);
 
@@ -5300,7 +5300,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment != null, "Trading upgrade did not create trading environment");
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
         final Object[] result = component.invoke("getTrades", null);
-        final Object trade = ((java.util.List<?>) result[0]).getFirst();
+        final Object trade = ((Object[]) result[0])[0];
         final Method tradeMethod = trade.getClass().getMethod("trade", Context.class, Arguments.class);
         final Object[] traded = (Object[]) tradeMethod.invoke(trade, null, null);
 
@@ -5329,7 +5329,7 @@ public final class NeoOpenComputersGameTests {
         final StaticPositionEnvironmentHost host = new StaticPositionEnvironmentHost(helper, hostPos);
         final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRADING_UPGRADE.get()), host);
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
-        final Object trade = ((java.util.List<?>) component.invoke("getTrades", null)[0]).getFirst();
+        final Object trade = ((Object[]) component.invoke("getTrades", null)[0])[0];
         final CompoundTag saved = new CompoundTag();
         ((li.cil.oc.api.machine.Value) trade).save(saved);
 
@@ -7562,14 +7562,15 @@ public final class NeoOpenComputersGameTests {
         connector.changeBuffer(1D);
 
         final Object[] result = invokeComponent(helper, (li.cil.oc.api.network.Component) environment.node(), "findWaypoints", 8D);
-        helper.assertTrue(result.length == 1 && result[0] instanceof Map[], "Navigation upgrade did not return waypoint list");
-        final Map[] waypoints = (Map[]) result[0];
+        helper.assertTrue(result.length == 1 && result[0] instanceof Object[], "Navigation upgrade did not return waypoint list");
+        final Object[] waypoints = (Object[]) result[0];
         helper.assertTrue(waypoints.length == 1, "Navigation upgrade did not find exactly one waypoint");
-        final Object[] position = (Object[]) waypoints[0].get("position");
+        final Map<?, ?> waypoint = (Map<?, ?>) waypoints[0];
+        final Object[] position = (Object[]) waypoint.get("position");
         helper.assertTrue(Double.valueOf(2D).equals(position[0]), "Navigation waypoint X target mismatch: " + java.util.Arrays.toString(position));
         helper.assertTrue(Double.valueOf(0D).equals(position[1]), "Navigation waypoint Y target mismatch: " + java.util.Arrays.toString(position));
         helper.assertTrue(Double.valueOf(-1D).equals(position[2]), "Navigation waypoint Z target mismatch: " + java.util.Arrays.toString(position));
-        helper.assertTrue(Integer.valueOf(15).equals(waypoints[0].get("redstone")), "Navigation waypoint redstone mismatch: " + waypoints[0]);
+        helper.assertTrue(Integer.valueOf(15).equals(waypoint.get("redstone")), "Navigation waypoint redstone mismatch: " + waypoint);
         helper.succeed();
     }
 
@@ -8946,6 +8947,16 @@ public final class NeoOpenComputersGameTests {
             helper.fail("Component invocation failed: " + method + " " + e.getMessage());
             return new Object[0];
         }
+    }
+
+    private static String convertedBlockName(final Object value) {
+        if (value instanceof Map<?, ?> map) {
+            final Object name = map.get("name");
+            if (name instanceof String string) {
+                return string;
+            }
+        }
+        return "";
     }
 
     private static void assertComponentFailureMessage(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method, final String message, final Object... args) {

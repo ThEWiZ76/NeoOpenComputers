@@ -524,7 +524,7 @@ final class NetworkRegistry implements NetworkAPI {
             if (callback == null) {
                 throw new NoSuchMethodException(method);
             }
-            return callback.invoke(host(), context, new RuntimeArguments(arguments));
+            return OpenComputersApi.convert(callback.invoke(host(), context, new RuntimeArguments(arguments)));
         }
 
         private Map<String, ComponentCallbackEntry> discoverCallbacks(final Environment host) {

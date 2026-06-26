@@ -493,12 +493,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             try {
                 callback = component.annotation(method);
             } catch (NoSuchElementException e) {
-                return OpenComputersApi.convert(component.invoke(method, this, args == null ? new Object[0] : args));
+                return component.invoke(method, this, args == null ? new Object[0] : args);
             }
             if (callback.direct()) {
                 consumeCallBudget(1D / callback.limit());
             }
-            return OpenComputersApi.convert(component.invoke(method, this, args == null ? new Object[0] : args));
+            return component.invoke(method, this, args == null ? new Object[0] : args);
         }
         if (node() == null || node().network() == null) {
             throw new IllegalStateException("machine is not in a network");
