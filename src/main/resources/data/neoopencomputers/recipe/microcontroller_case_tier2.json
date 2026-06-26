@@ -3,22 +3,25 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "neoopencomputers:microchip_tier2"
+      "item": "neoopencomputers:microchip_tier3"
     },
     "G": {
-      "tag": "c:ingots/gold"
+      "item": "minecraft:gold_nugget"
     },
     "P": {
       "item": "neoopencomputers:printed_circuit_board"
     },
     "R": {
-      "item": "minecraft:redstone"
+      "item": "minecraft:redstone_block"
+    },
+    "H": {
+      "item": "minecraft:chest"
     }
   },
   "pattern": [
-    "GRG",
-    "CPC",
-    "GRG"
+    "GCG",
+    "RHR",
+    "GPG"
   ],
   "result": {
     "count": 1,

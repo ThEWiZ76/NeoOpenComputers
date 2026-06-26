@@ -6,19 +6,22 @@
       "item": "neoopencomputers:microchip_tier1"
     },
     "I": {
-      "tag": "c:ingots/iron"
+      "item": "minecraft:iron_nugget"
     },
     "P": {
       "item": "neoopencomputers:printed_circuit_board"
     },
     "R": {
       "item": "minecraft:redstone"
+    },
+    "H": {
+      "item": "minecraft:chest"
     }
   },
   "pattern": [
-    "IRI",
-    "CPC",
-    "IRI"
+    "ICI",
+    "RHR",
+    "IPI"
   ],
   "result": {
     "count": 1,

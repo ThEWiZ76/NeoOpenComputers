@@ -3965,6 +3965,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void microcontrollerCaseRecipesMatchUpstreamInputs(final GameTestHelper helper) {
+        assertCraftsMicrocontrollerCase(helper, ModItems.MICROCONTROLLER_CASE_TIER1.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(Items.IRON_NUGGET),
+            new ItemStack(Items.REDSTONE), new ItemStack(Items.CHEST), new ItemStack(Items.REDSTONE),
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.IRON_NUGGET)
+        )));
+        assertCraftsMicrocontrollerCase(helper, ModItems.MICROCONTROLLER_CASE_TIER2.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(ModItems.MICROCHIP_TIER3.get()), new ItemStack(Items.GOLD_NUGGET),
+            new ItemStack(Items.REDSTONE_BLOCK), new ItemStack(Items.CHEST), new ItemStack(Items.REDSTONE_BLOCK),
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.GOLD_NUGGET)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printerBlockExposesUpstreamComponentShell(final GameTestHelper helper) {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());
@@ -9934,6 +9949,14 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(stack.getItem() instanceof li.cil.oc.api.internal.Tiered, "Microcontroller case item is not tiered for " + apiName);
         final li.cil.oc.api.internal.Tiered tiered = (li.cil.oc.api.internal.Tiered) stack.getItem();
         helper.assertTrue(tiered.tier() == expectedTier, "Expected " + apiName + " tier " + expectedTier + " but got " + tiered.tier());
+    }
+
+    private static void assertCraftsMicrocontrollerCase(final GameTestHelper helper, final Item expectedItem, final CraftingInput input) {
+        final Optional<RecipeHolder<CraftingRecipe>> recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
+        helper.assertTrue(recipe.isPresent(), "No microcontroller case recipe matched upstream inputs for " + expectedItem);
+        final ItemStack result = recipe.get().value().assemble(input, helper.getLevel().registryAccess());
+        helper.assertTrue(result.is(expectedItem), "Microcontroller case recipe returned wrong item");
+        helper.assertTrue(result.getCount() == 1, "Microcontroller case recipe should craft one item");
     }
 
     private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method, final Object... args) {
