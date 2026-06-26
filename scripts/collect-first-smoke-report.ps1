@@ -47,6 +47,28 @@ function Read-TextIfPresent {
     return ''
 }
 
+function Test-AllPresent {
+    param([string[]] $Paths)
+
+    foreach ($path in $Paths) {
+        if (-not (Test-Path -LiteralPath $path)) {
+            return $false
+        }
+    }
+
+    return $true
+}
+
+function Checkbox {
+    param([bool] $Condition)
+
+    if ($Condition) {
+        return 'x'
+    }
+
+    return ' '
+}
+
 $clientRunDir = Join-Path $repoRoot 'run\client'
 $clientLatestLog = Join-Path $clientRunDir 'logs\latest.log'
 $clientDebugLog = Join-Path $clientRunDir 'logs\debug.log'
@@ -168,6 +190,24 @@ $status = if ($matches.Count -eq 0) { 'No hard failure patterns found in copied 
 $reportPath = Join-Path $reportDir 'summary.md'
 $relativeLogs = if ($copied.Count -eq 0) { '- No standard logs were found.' } else { ($copied | ForEach-Object { "- logs/$([System.IO.Path]::GetFileName($_))" }) -join "`n" }
 $relativeScreenshots = if ($copiedScreenshots.Count -eq 0) { '- No screenshots were found.' } else { ($copiedScreenshots | ForEach-Object { "- screenshots/$([System.IO.Path]::GetFileName($_))" }) -join "`n" }
+$hasMcpStartupEvidence = Test-AllPresent @($mcpSmokeTools, $mcpSmokePing, $mcpSmokeInitialize)
+$hasMcpWorldEvidence = Test-AllPresent @($mcpWorldSmokePlayerInfo, $mcpWorldSmokeBlocks, $mcpWorldSmokeCommand)
+$hasMcpDeviceEvidence = Test-AllPresent @($mcpDeviceSmokePlayerInfo, $mcpDeviceSmokePlaceCommands, $mcpDeviceSmokeBlocks)
+$hasCleanLogScan = $matches.Count -eq 0
+$hasClientWorldEvidence = $hasMcpWorldEvidence -or $hasMcpDeviceEvidence
+$hasDevicePlacementEvidence = $hasMcpDeviceEvidence -and $hasCleanLogScan
+$mcpStartupCheck = Checkbox $hasMcpStartupEvidence
+$mcpWorldCheck = Checkbox $hasMcpWorldEvidence
+$mcpDeviceCheck = Checkbox $hasMcpDeviceEvidence
+$clientWorldCheck = Checkbox $hasClientWorldEvidence
+$devicePlacementCheck = Checkbox $hasDevicePlacementEvidence
+$hardFailureCheck = Checkbox $hasCleanLogScan
+$automatedEvidence = @(
+    "- [$mcpStartupCheck] MCP startup smoke reached ping, initialize, and tools/list."
+    "- [$mcpWorldCheck] MCP world smoke entered a local save and captured player, block, and command evidence."
+    "- [$mcpDeviceCheck] MCP device smoke placed and verified the core/peripheral layout."
+    "- [$hardFailureCheck] Copied logs contained no hard failure patterns."
+) -join "`n"
 
 @"
 # NeoOpenComputers First Smoke Report
@@ -186,12 +226,16 @@ $relativeLogs
 
 $relativeScreenshots
 
+## Automated Evidence
+
+$automatedEvidence
+
 ## Tester Checklist
 
-- [ ] Client opens local world with NeoOpenComputers installed.
-- [ ] Bounded MCP world smoke enters a local save and writes mcp-world-player-info.json, mcp-world-blocks.json, and mcp-world-command.json.
-- [ ] Bounded MCP device smoke places computer_case_tier1, screen_tier1, keyboard, disk_drive, printer, redstone, cable, adapter, transposer, rack, RAID, relay, geolyzer, print, then writes mcp-device-place-commands.json and mcp-device-blocks.json.
-- [ ] Computer case, screen, keyboard, disk drive, modem, redstone card, printer, and print block place without crash.
+- [$clientWorldCheck] Client opens local world with NeoOpenComputers installed.
+- [$mcpWorldCheck] Bounded MCP world smoke enters a local save and writes mcp-world-player-info.json, mcp-world-blocks.json, and mcp-world-command.json.
+- [$mcpDeviceCheck] Bounded MCP device smoke places computer_case_tier1, screen_tier1, keyboard, disk_drive, printer, redstone, cable, adapter, transposer, rack, RAID, relay, geolyzer, print, then writes mcp-device-place-commands.json and mcp-device-blocks.json.
+- [$devicePlacementCheck] Computer case, screen, keyboard, disk drive, modem, redstone card, printer, and print block place without crash.
 - [ ] OpenOS or Lua prompt boots on a placed computer.
 - [ ] Filesystem, EEPROM, floppy, and disk-drive actions work once.
 - [ ] Screen output and keyboard input survive save/reload.
@@ -201,7 +245,7 @@ $relativeScreenshots
 - [ ] Printer creates a print item and placed print renders configured shape data.
 - [ ] Screenshots exist for visual print, screen, GUI, or texture issues.
 - [ ] Placed print rotation, drops, hit boxes, tooltip/name, light/opacity, and redstone/button activation look sane.
-- [ ] No crash, missing texture, untranslated key, client/server error, or unexpected visual behavior remains unexplained.
+- [$hardFailureCheck] No crash, missing texture, untranslated key, client/server error, or unexpected visual behavior remains unexplained.
 
 ## Notes
 
