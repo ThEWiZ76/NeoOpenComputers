@@ -120,10 +120,12 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_WRENCH));
         assertNotNull(registry.get(ModContentIds.TEXTURE_PICKER));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TEXTURE_PICKER));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_TEXTURE_PICKER_UPSTREAM));
         assertNotNull(registry.get(ModContentIds.TERMINAL));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TERMINAL));
         assertNotNull(registry.get(ModContentIds.TERMINAL_SERVER));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TERMINAL_SERVER));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_TERMINAL_SERVER_UPSTREAM));
         assertNotNull(registry.get(ModContentIds.NANOMACHINES));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_NANOMACHINES));
         assertNotNull(registry.get(ModContentIds.SERVER_TIER1));
@@ -186,6 +188,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER1));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER2));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER3));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_DEBUG_CARD_UPSTREAM));
         assertNotNull(registry.get(ModContentIds.MEMORY_TIER1));
         assertNotNull(registry.get(ModContentIds.MEMORY_TIER2));
         assertNotNull(registry.get(ModContentIds.MEMORY_TIER3));
@@ -322,10 +325,12 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_WRENCH, registry.get(ModContentCatalog.COMPAT_WRENCH).name());
         assertEquals(ModContentIds.TEXTURE_PICKER, registry.get(ModContentIds.TEXTURE_PICKER).name());
         assertEquals(ModContentCatalog.COMPAT_TEXTURE_PICKER, registry.get(ModContentCatalog.COMPAT_TEXTURE_PICKER).name());
+        assertEquals(ModContentCatalog.COMPAT_TEXTURE_PICKER_UPSTREAM, registry.get(ModContentCatalog.COMPAT_TEXTURE_PICKER_UPSTREAM).name());
         assertEquals(ModContentIds.TERMINAL, registry.get(ModContentIds.TERMINAL).name());
         assertEquals(ModContentCatalog.COMPAT_TERMINAL, registry.get(ModContentCatalog.COMPAT_TERMINAL).name());
         assertEquals(ModContentIds.TERMINAL_SERVER, registry.get(ModContentIds.TERMINAL_SERVER).name());
         assertEquals(ModContentCatalog.COMPAT_TERMINAL_SERVER, registry.get(ModContentCatalog.COMPAT_TERMINAL_SERVER).name());
+        assertEquals(ModContentCatalog.COMPAT_TERMINAL_SERVER_UPSTREAM, registry.get(ModContentCatalog.COMPAT_TERMINAL_SERVER_UPSTREAM).name());
         assertEquals(ModContentIds.NANOMACHINES, registry.get(ModContentIds.NANOMACHINES).name());
         assertEquals(ModContentCatalog.COMPAT_NANOMACHINES, registry.get(ModContentCatalog.COMPAT_NANOMACHINES).name());
         assertEquals(ModContentIds.SERVER_TIER1, registry.get(ModContentIds.SERVER_TIER1).name());
@@ -395,6 +400,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.DATA_CARD_TIER1, registry.get(ModContentIds.DATA_CARD_TIER1).name());
         assertEquals(ModContentIds.DATA_CARD_TIER2, registry.get(ModContentIds.DATA_CARD_TIER2).name());
         assertEquals(ModContentIds.DATA_CARD_TIER3, registry.get(ModContentIds.DATA_CARD_TIER3).name());
+        assertEquals(ModContentCatalog.COMPAT_DEBUG_CARD_UPSTREAM, registry.get(ModContentCatalog.COMPAT_DEBUG_CARD_UPSTREAM).name());
         assertEquals(ModContentIds.MEMORY_TIER1, registry.get(ModContentIds.MEMORY_TIER1).name());
         assertEquals(ModContentIds.MEMORY_TIER2, registry.get(ModContentIds.MEMORY_TIER2).name());
         assertEquals(ModContentIds.MEMORY_TIER3, registry.get(ModContentIds.MEMORY_TIER3).name());

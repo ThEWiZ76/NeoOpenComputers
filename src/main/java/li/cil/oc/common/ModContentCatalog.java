@@ -48,6 +48,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_DATA_CARD_TIER3 = "datacard3";
     public static final String COMPAT_DATA_CARD = "datacard";
     public static final String COMPAT_DEBUG_CARD = "debugCard";
+    public static final String COMPAT_DEBUG_CARD_UPSTREAM = "debugcard";
     public static final String COMPAT_DISK_DRIVE_MOUNTABLE = "diskDriveMountable";
     public static final String COMPAT_DISK_DRIVE_UPSTREAM = "diskdrive";
     public static final String COMPAT_DATABASE_UPGRADE_TIER1 = "databaseUpgrade1";
@@ -115,7 +116,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_TANK_UPGRADE_UPSTREAM = "tankupgrade";
     public static final String COMPAT_TERMINAL = "terminal";
     public static final String COMPAT_TERMINAL_SERVER = "terminalServer";
+    public static final String COMPAT_TERMINAL_SERVER_UPSTREAM = "terminalserver";
     public static final String COMPAT_TEXTURE_PICKER = "texturePicker";
+    public static final String COMPAT_TEXTURE_PICKER_UPSTREAM = "texturepicker";
     public static final String COMPAT_TRADING_UPGRADE = "tradingUpgrade";
     public static final String COMPAT_TRACTOR_BEAM_UPGRADE = "tractorBeamUpgrade";
     public static final String COMPAT_TRADING_UPGRADE_UPSTREAM = "tradingupgrade";
@@ -546,10 +549,12 @@ public final class ModContentCatalog {
         registry.register(COMPAT_WRENCH, null, wrenchItem);
         registry.register(ModContentIds.TEXTURE_PICKER, null, texturePickerItem);
         registry.register(COMPAT_TEXTURE_PICKER, null, texturePickerItem);
+        registry.register(COMPAT_TEXTURE_PICKER_UPSTREAM, null, texturePickerItem);
         registry.register(ModContentIds.TERMINAL, null, terminalItem);
         registry.register(COMPAT_TERMINAL, null, terminalItem);
         registry.register(ModContentIds.TERMINAL_SERVER, null, terminalServerItem);
         registry.register(COMPAT_TERMINAL_SERVER, null, terminalServerItem);
+        registry.register(COMPAT_TERMINAL_SERVER_UPSTREAM, null, terminalServerItem);
         registry.register(ModContentIds.NANOMACHINES, null, nanomachinesItem);
         registry.register(COMPAT_NANOMACHINES, null, nanomachinesItem);
         registry.register(ModContentIds.SERVER_TIER1, null, serverTier1Item);
@@ -680,6 +685,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_DATA_CARD_TIER3, null, dataCardTier3Item);
         registry.register(COMPAT_DATA_CARD, null, dataCardTier1Item);
         registry.register(COMPAT_DEBUG_CARD, null, debugCardItem);
+        registry.register(COMPAT_DEBUG_CARD_UPSTREAM, null, debugCardItem);
         registry.register(COMPAT_DATABASE_UPGRADE_TIER1, null, databaseUpgradeTier1Item);
         registry.register(COMPAT_DATABASE_UPGRADE_TIER2, null, databaseUpgradeTier2Item);
         registry.register(COMPAT_DATABASE_UPGRADE_TIER3, null, databaseUpgradeTier3Item);
