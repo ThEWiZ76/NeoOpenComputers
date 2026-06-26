@@ -4793,6 +4793,24 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void generatorUpgradeInsertZeroValidatesSelectedSlot(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for generator upgrade");
+
+        final AgentTestHost host = new AgentTestHost(helper);
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.GENERATOR_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Generator upgrade did not create generator environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Generator node is not a component connector");
+
+        final ComponentConnector connector = (ComponentConnector) environment.node();
+        final Object[] insert = connector.invoke("insert", null, 0);
+
+        helper.assertTrue(insert[0] == null, "Generator insert(0) skipped upstream selected-slot validation");
+        helper.assertTrue("selected slot is empty".equals(insert[1]), "Generator insert(0) returned wrong empty-slot message");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void generatorUpgradeRestoresFuelWhenContainerInventoryFull(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for generator upgrade");

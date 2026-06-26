@@ -53,9 +53,6 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
         final int requestedCount = Math.max(0, arguments.optInteger(0, 64));
         final Container inventory = host.mainInventory();
         final int selectedSlot = host.selectedSlot();
-        if (requestedCount == 0) {
-            return new Object[]{true, 0};
-        }
         if (selectedSlot < 0 || selectedSlot >= inventory.getContainerSize()) {
             return new Object[]{null, "selected slot is empty"};
         }
@@ -76,6 +73,9 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
         final int space = queueLimit - queueCount;
         if (space <= 0) {
             return new Object[]{null, "queue is full"};
+        }
+        if (requestedCount == 0) {
+            return new Object[]{true, 0};
         }
 
         final int inserted = Math.min(selectedStack.getCount(), Math.min(space, requestedCount));
