@@ -1,6 +1,7 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.network.EnvironmentHost;
@@ -10,7 +11,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-public class DiskDriveMountableItem extends Item implements DriverItem {
+public class DiskDriveMountableItem extends Item implements DriverItem, HostAware {
     public DiskDriveMountableItem(final Properties properties) {
         super(properties.stacksTo(1));
     }
@@ -18,6 +19,11 @@ public class DiskDriveMountableItem extends Item implements DriverItem {
     @Override
     public boolean worksWith(final ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() == this;
+    }
+
+    @Override
+    public boolean worksWith(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
+        return worksWith(stack);
     }
 
     @Override

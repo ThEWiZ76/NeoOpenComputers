@@ -1,6 +1,7 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.internal.Rack;
@@ -19,7 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 
-public class ServerItem extends Item implements DriverItem, Tiered {
+public class ServerItem extends Item implements DriverItem, HostAware, Tiered {
     private static final String RACK_MOUNTABLE_DATA_TAG = "oc:rackMountable";
 
     private final int tier;
@@ -37,6 +38,11 @@ public class ServerItem extends Item implements DriverItem, Tiered {
     @Override
     public boolean worksWith(final ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() == this;
+    }
+
+    @Override
+    public boolean worksWith(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
+        return worksWith(stack);
     }
 
     @Override
