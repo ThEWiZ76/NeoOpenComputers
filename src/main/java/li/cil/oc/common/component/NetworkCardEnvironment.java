@@ -3,6 +3,7 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.component.RackBusConnectable;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.event.NetworkActivityEvent;
 import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -16,6 +17,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -138,6 +140,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         }
 
         doSend(context, address, packet);
+        networkActivity();
         return new Object[]{true};
     }
 
@@ -154,6 +157,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         }
 
         doBroadcast(context, packet);
+        networkActivity();
         return new Object[]{true};
     }
 
@@ -253,6 +257,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
 
         final Object[] packetData = packet.data();
         if (openPorts.contains(packet.port())) {
+            networkActivity();
             emitModemMessage(packet, distance, packetData);
         }
         if (isWakePacket(packetData)) {
@@ -311,6 +316,18 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             return wakeMessage.equals(new String(value, StandardCharsets.UTF_8));
         }
         return false;
+    }
+
+    private void networkActivity() {
+        if (host == null || node() == null) {
+            return;
+        }
+        NeoForge.EVENT_BUS.post(new NetworkActivityEvent.Server(
+            host.world(),
+            host.xPosition(),
+            host.yPosition(),
+            host.zPosition(),
+            node()));
     }
 
     private static Object[] remaining(final Arguments args, final int offset) {

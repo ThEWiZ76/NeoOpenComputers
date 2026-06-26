@@ -2,6 +2,7 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.event.NetworkActivityEvent;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Architecture;
@@ -21,6 +22,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.common.NeoForge;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -391,6 +393,31 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void sendAndAcceptedReceivePostNetworkActivityEventsLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost senderHost = new TestMachineHost(1, 2, 3);
+        TestMachineHost receiverHost = new TestMachineHost(4, 5, 6);
+        NetworkCardEnvironment sender = new NetworkCardEnvironment(senderHost);
+        NetworkCardEnvironment receiver = new NetworkCardEnvironment(receiverHost);
+        List<NetworkActivityEvent.Server> events = new ArrayList<>();
+        Network.joinNewNetwork(sender.node());
+        sender.node().connect(receiver.node());
+        receiver.open(null, new TestArguments(123));
+        NeoForge.EVENT_BUS.start();
+        NeoForge.EVENT_BUS.addListener(NetworkActivityEvent.Server.class, event -> {
+            if (event.getNode() == sender.node() || event.getNode() == receiver.node()) {
+                events.add(event);
+            }
+        });
+
+        assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments(receiver.node().address(), 123, "payload")));
+
+        assertEquals(2, events.size());
+        assertNetworkActivity(events, sender.node(), 1.5D, 2.5D, 3.5D);
+        assertNetworkActivity(events, receiver.node(), 4.5D, 5.5D, 6.5D);
+    }
+
+    @Test
     void receivedPacketOnOpenPortQueuesModemMessageSignal() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost host = new TestMachineHost();
@@ -705,6 +732,24 @@ final class NetworkCardEnvironmentTest {
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = NetworkCardEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static void assertNetworkActivity(
+        final List<NetworkActivityEvent.Server> events,
+        final Node node,
+        final double x,
+        final double y,
+        final double z
+    ) {
+        for (NetworkActivityEvent.Server event : events) {
+            if (event.getNode() == node) {
+                assertEquals(x, event.getX());
+                assertEquals(y, event.getY());
+                assertEquals(z, event.getZ());
+                return;
+            }
+        }
+        throw new AssertionError("Missing network activity event for " + node);
     }
 
     private record RecordingContext(Node node) implements li.cil.oc.api.machine.Context {
