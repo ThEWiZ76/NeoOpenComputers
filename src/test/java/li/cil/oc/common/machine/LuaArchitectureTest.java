@@ -2403,6 +2403,24 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void treatsNullOptionalArgumentsAsUndefinedLikeUpstream() throws Exception {
+        Map<String, String> tableDefault = Map.of("value", "default");
+        byte[] byteDefault = utf8("default");
+        Object anyDefault = new Object();
+        Arguments arguments = luaArguments(null, null, null, null, null, null, null, null, null);
+
+        assertEquals(anyDefault, arguments.optAny(0, anyDefault));
+        assertEquals(true, arguments.optBoolean(1, true));
+        assertEquals(42, arguments.optInteger(2, 42));
+        assertEquals(43L, arguments.optLong(3, 43L));
+        assertEquals(44D, arguments.optDouble(4, 44D));
+        assertEquals("default", arguments.optString(5, "default"));
+        assertArrayEquals(byteDefault, arguments.optByteArray(6, byteDefault));
+        assertEquals(tableDefault, arguments.optTable(7, tableDefault));
+        assertEquals(null, arguments.optItemStack(8, null));
+    }
+
+    @Test
     void rejectsNaNIntegerArgumentsLikeUpstream() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""
