@@ -217,7 +217,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
             if (oldValue != newValue) {
                 inputs[index] = newValue;
                 if (node() != null) {
-                    node().sendToReachable("computer.signal", "redstone_changed", node().address(), index, oldValue, newValue);
+                    node().sendToReachable("computer.signal", "redstone_changed", index, oldValue, newValue);
                     if (oldValue < wakeThreshold && newValue >= wakeThreshold) {
                         node().sendToReachable("computer.start");
                     }

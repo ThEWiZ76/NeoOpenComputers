@@ -9054,6 +9054,46 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 160)
+    public static void redstoneIoQueuesInputChangeSignalLikeUpstream(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos cablePos = new BlockPos(1, 1, 1);
+        final BlockPos redstoneIoPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(cablePos, ModBlocks.CABLE.get());
+        helper.setBlock(redstoneIoPos, ModBlocks.REDSTONE_IO.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final ItemStack bootDisk = bootableHardDiskStack(helper, """
+            while true do
+              local event, address, side, oldValue, newValue = computer.pullSignal(1)
+              if event == 'redstone_changed' then
+                computer.pushSignal('redstone_io_change_seen', address, side, oldValue, newValue)
+                break
+              end
+            end
+            """);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootDisk);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        final RedstoneIoBlockEntity redstoneIo = helper.getBlockEntity(redstoneIoPos);
+
+        helper.runAtTickTime(10, () -> {
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(redstoneIo.node().network() == computer.node().network(), "Redstone I/O is not on the computer network");
+            helper.assertTrue(computer.toggleMachine(), "Computer did not start with Redstone I/O");
+        });
+        helper.runAtTickTime(50, () -> helper.setBlock(redstoneIoPos.east(), Blocks.REDSTONE_BLOCK));
+        helper.runAtTickTime(130, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Computer stopped while waiting for Redstone I/O change: " + computer.machine().lastError());
+            assertNextSignal(helper, computer, "redstone_io_change_seen", redstoneIo.node().address(), 5D, 0D, 15D);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void installedNetworkCardsExchangeModemMessages(final GameTestHelper helper) {
         final BlockPos receiverPos = new BlockPos(1, 1, 1);
