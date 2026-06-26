@@ -51,6 +51,7 @@ public final class ModSettings {
 
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
+    public static final ModConfigSpec.DoubleValue TRADING_RANGE;
     public static final ModConfigSpec.BooleanValue INPUT_USERNAME;
     public static final ModConfigSpec.BooleanValue CAN_COMPUTERS_BE_OWNED;
     public static final ModConfigSpec.IntValue MAX_USERS;
@@ -194,6 +195,9 @@ public final class ModSettings {
         MFU_RANGE = builder
             .comment("Radius the MFU is able to operate in.")
             .defineInRange("mfuRange", 3D, 0D, 128D);
+        TRADING_RANGE = builder
+            .comment("Radius in which trading upgrades can find and use merchants. OpenComputers upstream default is 8.0.")
+            .defineInRange("tradingRange", 8D, 0D, Double.MAX_VALUE);
         INPUT_USERNAME = builder
             .comment("Include player and entity names in input-related signals. OpenComputers upstream default is true.")
             .define("inputUsername", true);
@@ -662,6 +666,10 @@ public final class ModSettings {
 
     public static double mfuRange() {
         return doubleValue(MFU_RANGE);
+    }
+
+    public static double tradingRange() {
+        return doubleValue(TRADING_RANGE);
     }
 
     public static double mfuRelayCost() {

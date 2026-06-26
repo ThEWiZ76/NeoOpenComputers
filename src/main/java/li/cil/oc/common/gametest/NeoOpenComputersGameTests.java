@@ -5552,6 +5552,48 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tradingUpgradeUsesConfiguredRange(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for trading upgrade");
+
+        final BlockPos hostPos = new BlockPos(2, 1, 2);
+        final BlockPos villagerPos = helper.absolutePos(hostPos.relative(Direction.EAST, 6));
+        final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "Villager did not spawn");
+        final MerchantOffers offers = new MerchantOffers();
+        offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 1), new ItemStack(Items.BREAD, 3), 4, 1, 0.05F));
+        villager.setOffers(offers);
+        villager.setNoAi(true);
+        villager.moveTo(villagerPos.getX() + 0.5D, villagerPos.getY() + 0.5D, villagerPos.getZ() + 0.5D, 0, 0);
+        helper.getLevel().addFreshEntity(villager);
+
+        withCachedConfig(ModSettings.TRADING_RANGE, 4D, () -> {
+            final ManagedEnvironment environment = driver.createEnvironment(
+                new ItemStack(ModItems.TRADING_UPGRADE.get()),
+                new StaticPositionEnvironmentHost(helper, hostPos)
+            );
+            helper.assertTrue(environment != null, "Trading upgrade did not create trading environment");
+            final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+            final Object[] result = component.invoke("getTrades", null);
+            helper.assertTrue(result.length == 1 && result[0] instanceof Object[] trades && trades.length == 0,
+                "Trading upgrade ignored configured range and listed far merchant");
+        });
+
+        withCachedConfig(ModSettings.TRADING_RANGE, 10D, () -> {
+            final ManagedEnvironment environment = driver.createEnvironment(
+                new ItemStack(ModItems.TRADING_UPGRADE.get()),
+                new StaticPositionEnvironmentHost(helper, hostPos)
+            );
+            helper.assertTrue(environment != null, "Trading upgrade did not create trading environment");
+            final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+            final Object[] result = component.invoke("getTrades", null);
+            helper.assertTrue(result.length == 1 && result[0] instanceof Object[] trades && trades.length == 1,
+                "Trading upgrade did not list merchant inside configured range");
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tradingUpgradeExecutesVillagerTrade(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for trading upgrade");

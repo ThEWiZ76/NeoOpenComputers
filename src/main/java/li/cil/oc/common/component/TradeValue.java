@@ -6,6 +6,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.internal.Agent;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.prefab.AbstractValue;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -20,7 +21,6 @@ import java.util.UUID;
 import java.util.function.Predicate;
 
 public class TradeValue extends AbstractValue {
-    private static final double TRADING_RANGE = 8.0D;
     private static final String MERCHANT_UUID_MOST_TAG = "merchantUUIDMost";
     private static final String MERCHANT_UUID_LEAST_TAG = "merchantUUIDLeast";
     private static final String OFFER_INDEX_TAG = "offerIndex";
@@ -149,9 +149,10 @@ public class TradeValue extends AbstractValue {
     }
 
     private boolean isInRange() {
+        final double range = ModSettings.tradingRange();
         return host != null
             && merchantEntity != null
-            && merchantEntity.distanceToSqr(host.xPosition(), host.yPosition(), host.zPosition()) <= TRADING_RANGE * TRADING_RANGE;
+            && merchantEntity.distanceToSqr(host.xPosition(), host.yPosition(), host.zPosition()) <= range * range;
     }
 
     private void bindMerchant(final UUID uuid) {
@@ -165,11 +166,12 @@ public class TradeValue extends AbstractValue {
             entity = serverLevel.getEntity(uuid);
         }
         if (entity == null) {
+            final double range = ModSettings.tradingRange();
             final AABB bounds = AABB.ofSize(
                 new net.minecraft.world.phys.Vec3(host.xPosition(), host.yPosition(), host.zPosition()),
-                TRADING_RANGE * 2D,
-                TRADING_RANGE * 2D,
-                TRADING_RANGE * 2D);
+                range * 2D,
+                range * 2D,
+                range * 2D);
             entity = host.world().getEntitiesOfClass(Entity.class, bounds, candidate -> uuid.equals(candidate.getUUID()))
                 .stream()
                 .findFirst()

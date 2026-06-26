@@ -8,6 +8,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.trading.Merchant;
@@ -23,7 +24,6 @@ import java.util.UUID;
 
 public class TradingUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "trading";
-    private static final double TRADING_RANGE = 8.0D;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Trading upgrade",
@@ -68,7 +68,8 @@ public class TradingUpgradeEnvironment extends AbstractManagedEnvironment implem
     private List<Entity> merchants() {
         final Level level = host.world();
         final BlockPos center = BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition());
-        return level.getEntitiesOfClass(Entity.class, AABB.ofSize(center.getCenter(), TRADING_RANGE * 2D, TRADING_RANGE * 2D, TRADING_RANGE * 2D))
+        final double range = ModSettings.tradingRange();
+        return level.getEntitiesOfClass(Entity.class, AABB.ofSize(center.getCenter(), range * 2D, range * 2D, range * 2D))
             .stream()
             .filter(entity -> entity instanceof Merchant)
             .filter(this::isInRange)
@@ -77,7 +78,8 @@ public class TradingUpgradeEnvironment extends AbstractManagedEnvironment implem
     }
 
     private boolean isInRange(final Entity entity) {
-        return entity.distanceToSqr(host.xPosition(), host.yPosition(), host.zPosition()) <= TRADING_RANGE * TRADING_RANGE;
+        final double range = ModSettings.tradingRange();
+        return entity.distanceToSqr(host.xPosition(), host.yPosition(), host.zPosition()) <= range * range;
     }
 
     private static Map<UUID, Integer> merchantIds(final List<Entity> merchants) {
