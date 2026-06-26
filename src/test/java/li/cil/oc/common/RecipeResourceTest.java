@@ -356,6 +356,8 @@ final class RecipeResourceTest {
 
     @Test
     void communicationCardRecipesUseMaterialParts() throws IOException {
+        JsonObject internetRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.INTERNET_CARD + ".json"));
+        JsonObject linkedRecipe = readJson(RECIPE_ROOT.resolve(ModContentIds.LINKED_CARD + ".json"));
         JsonObject redstone = recipeKeys(ModContentIds.REDSTONE_CARD);
         JsonObject internet = recipeKeys(ModContentIds.INTERNET_CARD);
         JsonObject linked = recipeKeys(ModContentIds.LINKED_CARD);
@@ -363,12 +365,18 @@ final class RecipeResourceTest {
         assertItem(redstone, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(redstone, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(redstone, "T", "minecraft:redstone_torch");
+        assertPattern(internetRecipe, "ICT", " BO");
         assertItem(internet, "I", "neoopencomputers:" + ModContentIds.INTERWEB);
-        assertItem(internet, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
-        assertItem(internet, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+        assertItem(internet, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(internet, "T", "minecraft:redstone_torch");
+        assertItem(internet, "B", "neoopencomputers:" + ModContentIds.CARD);
+        assertItem(internet, "O", "minecraft:obsidian");
+        assertPattern(linkedRecipe, "E E", "WIW", "C C");
+        assertResultCount(linkedRecipe, 2);
+        assertItem(linked, "E", "minecraft:ender_eye");
         assertItem(linked, "I", "neoopencomputers:" + ModContentIds.INTERWEB);
         assertItem(linked, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
-        assertItem(linked, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+        assertItem(linked, "W", "neoopencomputers:" + ModContentIds.NETWORK_CARD);
     }
 
     @Test

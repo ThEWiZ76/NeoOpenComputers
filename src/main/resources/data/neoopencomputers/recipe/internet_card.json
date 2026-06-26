@@ -3,7 +3,7 @@
   "category": "redstone",
   "key": {
     "C": {
-      "item": "neoopencomputers:microchip_tier3"
+      "item": "neoopencomputers:microchip_tier2"
     },
     "I": {
       "item": "neoopencomputers:interweb"
@@ -14,13 +14,13 @@
     "T": {
       "item": "minecraft:redstone_torch"
     },
-    "W": {
-      "item": "neoopencomputers:wireless_network_card_tier2"
+    "B": {
+      "item": "neoopencomputers:card"
     }
   },
   "pattern": [
     "ICT",
-    " WO"
+    " BO"
   ],
   "result": {
     "count": 1,

@@ -1755,7 +1755,7 @@ public final class NeoOpenComputersGameTests {
     public static void linkedCardRecipeAssignsSharedTunnel(final GameTestHelper helper) {
         final CraftingInput input = CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),
-            new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()), new ItemStack(ModItems.INTERWEB.get()), new ItemStack(ModItems.WIRELESS_NETWORK_CARD_TIER2.get()),
+            new ItemStack(ModItems.NETWORK_CARD.get()), new ItemStack(ModItems.INTERWEB.get()), new ItemStack(ModItems.NETWORK_CARD.get()),
             new ItemStack(ModItems.MICROCHIP_TIER3.get()), ItemStack.EMPTY, new ItemStack(ModItems.MICROCHIP_TIER3.get())
         ));
         final Optional<RecipeHolder<CraftingRecipe>> recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
@@ -4044,6 +4044,20 @@ public final class NeoOpenComputersGameTests {
             new ItemStack(ModItems.MICROCHIP_TIER3.get()), new ItemStack(ModItems.ALU.get()), apiItemStack(helper, "ram5"),
             ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), ItemStack.EMPTY
         )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void communicationCardRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.INTERNET_CARD.get(), CraftingInput.of(3, 2, List.of(
+            new ItemStack(ModItems.INTERWEB.get()), new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(Items.REDSTONE_TORCH),
+            ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), new ItemStack(Items.OBSIDIAN)
+        )));
+        assertCraftsItem(helper, ModItems.LINKED_CARD.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.ENDER_EYE), ItemStack.EMPTY, new ItemStack(Items.ENDER_EYE),
+            new ItemStack(ModItems.NETWORK_CARD.get()), new ItemStack(ModItems.INTERWEB.get()), new ItemStack(ModItems.NETWORK_CARD.get()),
+            new ItemStack(ModItems.MICROCHIP_TIER3.get()), ItemStack.EMPTY, new ItemStack(ModItems.MICROCHIP_TIER3.get())
+        )), 2);
         helper.succeed();
     }
 
@@ -10044,11 +10058,15 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static void assertCraftsItem(final GameTestHelper helper, final Item expectedItem, final CraftingInput input) {
+        assertCraftsItem(helper, expectedItem, input, 1);
+    }
+
+    private static void assertCraftsItem(final GameTestHelper helper, final Item expectedItem, final CraftingInput input, final int expectedCount) {
         final Optional<RecipeHolder<CraftingRecipe>> recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
         helper.assertTrue(recipe.isPresent(), "No recipe matched upstream inputs for " + expectedItem);
         final ItemStack result = recipe.get().value().assemble(input, helper.getLevel().registryAccess());
         helper.assertTrue(result.is(expectedItem), "Recipe returned wrong item");
-        helper.assertTrue(result.getCount() == 1, "Recipe should craft one item");
+        helper.assertTrue(result.getCount() == expectedCount, "Recipe should craft expected item count");
     }
 
     private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method, final Object... args) {

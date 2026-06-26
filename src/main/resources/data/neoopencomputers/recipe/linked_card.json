@@ -12,7 +12,7 @@
       "item": "neoopencomputers:interweb"
     },
     "W": {
-      "item": "neoopencomputers:wireless_network_card_tier2"
+      "item": "neoopencomputers:network_card"
     }
   },
   "pattern": [
