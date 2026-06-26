@@ -534,6 +534,26 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentValidatesIoArgumentsBeforeHandleOwnershipLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(4096);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+        charge(environment, 1D);
+        RecordingContext owner = new RecordingContext("owner");
+        RecordingContext stranger = new RecordingContext("stranger");
+
+        Object handle = component.invoke("open", owner, "data.txt", "w")[0];
+
+        IllegalArgumentException readError = assertThrows(IllegalArgumentException.class, () -> component.invoke("read", stranger, handle, "bad"));
+        assertEquals("bad argument #2 (integer expected)", readError.getMessage());
+        IllegalArgumentException writeError = assertThrows(IllegalArgumentException.class, () -> component.invoke("write", stranger, handle, new Object()));
+        assertEquals("bad argument #2 (byte array expected)", writeError.getMessage());
+        IllegalArgumentException seekError = assertThrows(IllegalArgumentException.class, () -> component.invoke("seek", stranger, handle, "set", "bad"));
+        assertEquals("bad argument #3 (integer expected)", seekError.getMessage());
+    }
+
+    @Test
     void managedFileSystemEnvironmentLimitsOpenHandlesPerContext() throws Exception {
         withCachedConfig(ModSettings.MAX_HANDLES, 2, () -> {
             assertOpenHandleLimit(2);

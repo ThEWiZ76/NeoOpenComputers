@@ -210,9 +210,10 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     public Object[] read(final Context context, final Arguments arguments) throws IOException, LimitReachedException {
         consumeCallBudget(context, READ_COSTS[costIndex]);
         final int handleId = checkHandle(arguments, 0);
+        final int count = Math.min(ModSettings.maxReadBuffer(), Math.max(0, arguments.checkInteger(1)));
         checkOwner(context, handleId);
         final Handle handle = getHandle(handleId);
-        final byte[] buffer = new byte[Math.min(ModSettings.maxReadBuffer(), Math.max(0, arguments.checkInteger(1)))];
+        final byte[] buffer = new byte[count];
         final int read = handle.read(buffer);
         if (read < 0) {
             return new Object[]{null};
@@ -231,10 +232,10 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     public Object[] seek(final Context context, final Arguments arguments) throws IOException, LimitReachedException {
         consumeCallBudget(context, SEEK_COSTS[costIndex]);
         final int handleId = checkHandle(arguments, 0);
-        checkOwner(context, handleId);
-        final Handle handle = getHandle(handleId);
         final String whence = arguments.checkString(1);
         final long offset = arguments.checkLong(2);
+        checkOwner(context, handleId);
+        final Handle handle = getHandle(handleId);
         final long position = switch (whence) {
             case "cur" -> handle.seek(handle.position() + offset);
             case "set" -> handle.seek(offset);
@@ -248,8 +249,8 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
     public Object[] write(final Context context, final Arguments arguments) throws IOException, LimitReachedException {
         consumeCallBudget(context, WRITE_COSTS[costIndex]);
         final int handleId = checkHandle(arguments, 0);
-        checkOwner(context, handleId);
         final byte[] value = arguments.checkByteArray(1);
+        checkOwner(context, handleId);
         consumeEnergy(ModSettings.hddWriteCost() * value.length);
         getHandle(handleId).write(value);
         diskActivity();
