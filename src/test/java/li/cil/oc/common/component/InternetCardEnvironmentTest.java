@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -507,6 +508,29 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void ignoresReachableNonNeighborComputerAsOwnerLikeUpstream() {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
+            throw new AssertionError("non-neighbor computer must not own card");
+        });
+        TestComputerContext computer = new TestComputerContext();
+        TestEnvironment bridgeNearComputer = new TestEnvironment();
+        TestEnvironment bridgeNearCard = new TestEnvironment();
+        Network.joinNewNetwork(computer.node());
+        Network.joinNewNetwork(card.node());
+        computer.node().connect(bridgeNearComputer.node());
+        card.node().connect(bridgeNearCard.node());
+        bridgeNearComputer.node().connect(bridgeNearCard.node());
+
+        assertTrue(computer.node().canBeReachedFrom(card.node()));
+        assertFalse(computer.node().isNeighborOf(card.node()));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> card.request(computer, new TestArguments("https://example.test/non-neighbor")));
+        assertEquals("can only be used by the owning computer", error.getMessage());
+    }
+
+    @Test
     void tcpSocketConnectsWritesAndReadsLoopbackData() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment();
@@ -786,5 +810,14 @@ final class InternetCardEnvironmentTest {
         @Override public void onConnect(final Node node) { }
         @Override public void onDisconnect(final Node node) { }
         @Override public void onMessage(final Message message) { this.message.complete(message); }
+    }
+
+    private static final class TestEnvironment implements Environment {
+        private final Node node = Network.newNode(this, Visibility.Network).create();
+
+        @Override public Node node() { return node; }
+        @Override public void onConnect(final Node node) { }
+        @Override public void onDisconnect(final Node node) { }
+        @Override public void onMessage(final Message message) { }
     }
 }

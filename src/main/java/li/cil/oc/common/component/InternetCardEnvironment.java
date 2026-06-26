@@ -143,7 +143,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     @Override
     public synchronized void onConnect(final Node node) {
         super.onConnect(node);
-        if (owner == null && node.host() instanceof Context context) {
+        if (owner == null && node.host() instanceof Context context && node.isNeighborOf(this.node())) {
             owner = context;
         }
     }
