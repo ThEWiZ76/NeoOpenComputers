@@ -12,6 +12,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
@@ -32,9 +33,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
+import java.util.EnumSet;
 import java.util.Map;
 
-public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo {
+public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo, StateAware {
     public static final int SLOT_MATERIAL = 0;
     public static final int SLOT_INK = 1;
     public static final int SLOT_OUTPUT = 2;
@@ -317,6 +319,17 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     public boolean isPrinting() {
         return !pendingOutput.isEmpty();
+    }
+
+    @Override
+    public EnumSet<StateAware.State> getCurrentState() {
+        if (isPrinting()) {
+            return EnumSet.of(StateAware.State.IsWorking);
+        }
+        if (canPrint()) {
+            return EnumSet.of(StateAware.State.CanWork);
+        }
+        return EnumSet.noneOf(StateAware.State.class);
     }
 
     public double progress() {

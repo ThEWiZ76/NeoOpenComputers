@@ -3819,6 +3819,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(printer.node() instanceof li.cil.oc.api.network.Component, "Printer did not expose a component node");
         final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) printer.node();
         helper.assertTrue("printer3d".equals(component.name()), "Printer component name mismatch");
+        helper.assertTrue(printer instanceof li.cil.oc.api.util.StateAware, "Printer did not expose upstream StateAware state");
         helper.assertTrue(printer.sidedNode(Direction.UP) == null, "Printer exposed node on top side");
         helper.assertTrue(printer.sidedNode(Direction.DOWN) == printer.node(), "Printer did not expose node on bottom side");
         helper.assertTrue(printer.getContainerSize() == 3, "Printer inventory size mismatch");
@@ -3841,16 +3842,23 @@ public final class NeoOpenComputersGameTests {
         final Object[] redstone = invokeComponent(helper, component, "isRedstoneEmitter");
         helper.assertTrue(Boolean.FALSE.equals(redstone[0]), "Printer should not emit redstone by default");
 
-        final Object[] addShape = invokeComponent(helper, component, "addShape", 0, 0, 0, 16, 16, 16, "minecraft:block/stone");
+        final Object[] addShape = invokeComponent(helper, component, "addShape", 0, 0, 0, 1, 1, 1, "minecraft:block/stone");
         helper.assertTrue(Boolean.TRUE.equals(addShape[0]), "Printer did not accept valid shape");
         final Object[] shapeCount = invokeComponent(helper, component, "getShapeCount");
         helper.assertTrue(((Number) shapeCount[0]).intValue() == 1, "Printer did not count off-state shape");
         final Object[] printable = invokeComponent(helper, component, "status");
         helper.assertTrue("idle".equals(printable[0]), "Printer status changed before commit");
         helper.assertTrue(Boolean.TRUE.equals(printable[1]), "Valid printer model should be printable");
+        final li.cil.oc.api.util.StateAware printerState = (li.cil.oc.api.util.StateAware) printer;
+        helper.assertTrue(printerState.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.CanWork), "Printable printer did not report CanWork state");
         final Object[] commit = invokeComponent(helper, component, "commit", 2);
         helper.assertTrue(Boolean.TRUE.equals(commit[0]), "Printer did not commit valid model");
         helper.assertTrue(printer.isActive(), "Printer did not become active after commit");
+        printer.setItem(PrinterBlockEntity.SLOT_MATERIAL, new ItemStack(ModItems.CHAMELIUM.get()));
+        printer.setItem(PrinterBlockEntity.SLOT_INK, new ItemStack(Items.BLACK_DYE));
+        PrinterBlockEntity.serverTick(helper.getLevel(), pos, printer.getBlockState(), printer);
+        PrinterBlockEntity.serverTick(helper.getLevel(), pos, printer.getBlockState(), printer);
+        helper.assertTrue(printerState.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.IsWorking), "Printing printer did not report IsWorking state");
         helper.succeed();
     }
 
