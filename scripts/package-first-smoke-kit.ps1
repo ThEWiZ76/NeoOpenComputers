@@ -1,5 +1,6 @@
 param(
     [string] $Timestamp = '',
+    [string] $McpServerModPath = 'M:\development\mcp-server-mod\build\libs\mcp-server-mod-neoforge-1.1.0+neoforge.mc1.21.1.jar',
     [switch] $SkipBuild,
     [switch] $NoZip,
     [switch] $DryRun
@@ -36,6 +37,12 @@ Write-Host "Kit directory: $kitDir"
 if ($DryRun) {
     Write-Host "Dry run artifact list:"
     $artifacts | ForEach-Object { Write-Host " - $_" }
+    if (Test-Path -LiteralPath $McpServerModPath) {
+        Write-Host "Optional MCP helper jar:"
+        Write-Host " - $McpServerModPath"
+    } else {
+        Write-Host "Optional MCP helper jar not found: $McpServerModPath"
+    }
     Write-Host 'Dry run complete. Build was not run and no kit was written.'
     return
 }
@@ -63,11 +70,50 @@ if ($missing.Count -gt 0) {
     throw "Missing first-smoke kit artifacts: $($missing -join ', ')"
 }
 
+$optionalArtifacts = @()
+if (Test-Path -LiteralPath $McpServerModPath) {
+    $helperSource = (Resolve-Path -LiteralPath $McpServerModPath).Path
+    $helperName = [System.IO.Path]::GetFileName($helperSource)
+    $helperDir = Join-Path $kitDir 'optional-mcp-helper'
+    New-Item -ItemType Directory -Force -Path $helperDir | Out-Null
+    $helperDestination = Join-Path $helperDir $helperName
+    Copy-Item -LiteralPath $helperSource -Destination $helperDestination -Force
+    $optionalArtifacts += [pscustomobject]@{
+        Name = "optional-mcp-helper/$helperName"
+        Path = $helperDestination
+        Source = $helperSource
+    }
+    $helperItem = Get-Item -LiteralPath $helperSource
+    @(
+        "source=$helperSource",
+        "sha256=$((Get-FileHash -LiteralPath $helperSource -Algorithm SHA256).Hash)",
+        "Length=$($helperItem.Length)",
+        "LastWriteTimeUtc=$($helperItem.LastWriteTimeUtc.ToString('o'))"
+    ) | Set-Content -LiteralPath (Join-Path $helperDir 'MCP-HELPER-MANIFEST.txt') -Encoding UTF8
+    $optionalArtifacts += [pscustomobject]@{
+        Name = 'optional-mcp-helper/MCP-HELPER-MANIFEST.txt'
+        Path = (Join-Path $helperDir 'MCP-HELPER-MANIFEST.txt')
+        Source = 'generated'
+    }
+}
+
 $commit = (& git -C $repoRoot rev-parse --short=9 HEAD).Trim()
-$checksums = foreach ($artifact in $artifacts) {
-    $copied = Join-Path $kitDir $artifact
-    $hash = Get-FileHash -LiteralPath $copied -Algorithm SHA256
-    "$($hash.Hash.ToLowerInvariant())  $artifact"
+$checksumTargets = @()
+foreach ($artifact in $artifacts) {
+    $checksumTargets += [pscustomobject]@{
+        Name = $artifact
+        Path = (Join-Path $kitDir $artifact)
+    }
+}
+foreach ($artifact in $optionalArtifacts) {
+    $checksumTargets += [pscustomobject]@{
+        Name = $artifact.Name
+        Path = $artifact.Path
+    }
+}
+$checksums = foreach ($target in $checksumTargets) {
+    $hash = Get-FileHash -LiteralPath $target.Path -Algorithm SHA256
+    "$($hash.Hash.ToLowerInvariant())  $($target.Name)"
 }
 
 $checksumsPath = Join-Path $kitDir 'SHA256SUMS.txt'
@@ -85,6 +131,8 @@ Generated: $Timestamp
 Use neoopencomputers-$modVersion-all.jar for first smoke testing. It includes the bundled runtime libraries needed by the mod.
 
 Copy that jar into a NeoForge 1.21.1 client mods folder, start a local world, and run the first-smoke checklist from the repository README.
+
+If present, optional-mcp-helper contains the local MCP server mod helper jar and MCP-HELPER-MANIFEST.txt with source path, SHA-256, byte length, and UTC timestamp. Copy the helper jar into the same mods folder only when running MCP-assisted smoke checks.
 
 ## Developer Artifacts
 

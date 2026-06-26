@@ -147,6 +147,9 @@ final class ReadmeSmokeTest {
         assertTrue(scriptText.contains("neoopencomputers-$modVersion-api.jar"), "Kit must include API jar");
         assertTrue(scriptText.contains("neoopencomputers-$modVersion-javadoc.jar"), "Kit must include Javadoc jar");
         assertTrue(scriptText.contains("SHA256SUMS.txt"), "Kit must write checksums");
+        assertTrue(scriptText.contains("optional-mcp-helper"), "Kit must include local MCP helper jar when present");
+        assertTrue(scriptText.contains("MCP-HELPER-MANIFEST.txt"), "Kit must write MCP helper manifest when present");
+        assertTrue(scriptText.contains("McpServerModPath"), "Kit must allow overriding MCP helper jar path");
         assertTrue(scriptText.contains("DryRun"), "Kit must have a dry-run path for verification");
         assertTrue(scriptText.contains("Use neoopencomputers-$modVersion-all.jar"),
             "Kit README must not use PowerShell backticks that corrupt generated filenames");
