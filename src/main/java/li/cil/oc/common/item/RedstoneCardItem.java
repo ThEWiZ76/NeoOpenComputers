@@ -26,6 +26,9 @@ public class RedstoneCardItem extends Item implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return new RedstoneCardEnvironment(host);
     }
 

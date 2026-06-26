@@ -23,6 +23,9 @@ public final class MotionSensorItemDriver implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return new MotionSensorEnvironment(host);
     }
 

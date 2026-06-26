@@ -649,9 +649,14 @@ final class ComponentItemShapeTest {
 
     @Test
     void cardDriversKeepUpstreamClientWorldEnvironmentGuard() throws Exception {
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/ApuItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/DataCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/GraphicsCardItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/InternetCardItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/LinkedCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/driver/MotionSensorItemDriver.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/NetworkCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/RedstoneCardItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/WirelessNetworkCardItem.java");
     }
 
