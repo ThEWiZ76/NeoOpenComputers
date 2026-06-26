@@ -346,7 +346,12 @@ final class InternetCardEnvironmentTest {
                 InternetCardEnvironment.HttpRequest request = assertInstanceOf(
                     InternetCardEnvironment.HttpRequest.class,
                     card.request(null, new TestArguments("http://127.0.0.1:" + server.getLocalPort() + "/missing"))[0]);
-                awaitHttpFailure(request);
+                Object[] response = awaitHttpResponse(request);
+                assertEquals(404, response[0]);
+                assertEquals("Not Found", response[1]);
+                assertInstanceOf(Map.class, response[2]);
+                assertThrows(CompletionException.class, () -> request.finishConnect(null, new TestArguments()));
+                assertThrows(CompletionException.class, () -> request.read(null, new TestArguments(32)));
             });
         } finally {
             serverThread.shutdownNow();
@@ -615,6 +620,17 @@ final class InternetCardEnvironmentTest {
             Thread.sleep(10);
         }
         throw new AssertionError("HTTP request did not fail");
+    }
+
+    private static Object[] awaitHttpResponse(final InternetCardEnvironment.HttpRequest request) throws Exception {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            Object[] response = request.response(null, new TestArguments());
+            if (response.length > 0 && response[0] != null) {
+                return response;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("HTTP request did not produce response metadata");
     }
 
     private static byte[] awaitRead(final InternetCardEnvironment.TcpSocket socket, final int length) throws Exception {

@@ -249,8 +249,11 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
                 }
                 final int code = connection.getResponseCode();
                 final String message = connection.getResponseMessage();
+                final Map<String, List<String>> responseHeaders = responseHeaders(connection.getHeaderFields());
                 try (InputStream in = connection.getInputStream()) {
-                    return new HttpResponse(code, message, responseHeaders(connection.getHeaderFields()), in.readAllBytes());
+                    return new HttpResponse(code, message, responseHeaders, in.readAllBytes());
+                } catch (IOException e) {
+                    return new HttpResponse(code, message, responseHeaders, new byte[0], e);
                 }
             } catch (IOException e) {
                 throw new CompletionException(e);
@@ -300,7 +303,10 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         CompletableFuture<HttpResponse> request(String url, byte[] postData, Map<String, String> headers, String method);
     }
 
-    public record HttpResponse(int code, String message, Map<String, List<String>> headers, byte[] body) {
+    public record HttpResponse(int code, String message, Map<String, List<String>> headers, byte[] body, IOException bodyFailure) {
+        public HttpResponse(final int code, final String message, final Map<String, List<String>> headers, final byte[] body) {
+            this(code, message, headers, body, null);
+        }
     }
 
     private record TcpAddress(String host, int port) {
@@ -321,7 +327,7 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             if (!response.isDone()) {
                 return new Object[]{false};
             }
-            response.join();
+            throwBodyFailure(response.join());
             return new Object[]{true};
         }
 
@@ -339,7 +345,9 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             if (!response.isDone()) {
                 return new Object[]{new byte[0]};
             }
-            final byte[] body = response.join().body();
+            final HttpResponse value = response.join();
+            throwBodyFailure(value);
+            final byte[] body = value.body();
             if (offset >= body.length) {
                 return new Object[]{null};
             }
@@ -380,6 +388,12 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         private void close() {
             response.cancel(true);
             owner.unregisterConnection(this);
+        }
+
+        private static void throwBodyFailure(final HttpResponse response) {
+            if (response.bodyFailure() != null) {
+                throw new CompletionException(response.bodyFailure());
+            }
         }
 
         @Override
