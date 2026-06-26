@@ -73,6 +73,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_CRAFTING_UPGRADE = "craftingUpgrade";
     public static final String COMPAT_EXPERIENCE_UPGRADE = "experienceUpgrade";
     public static final String COMPAT_INVENTORY_UPGRADE = "inventoryUpgrade";
+    public static final String COMPAT_INVENTORY_CONTROLLER_UPGRADE_UPSTREAM = "inventorycontrollerupgrade";
     public static final String COMPAT_CRAFTING_UPGRADE_UPSTREAM = "craftingupgrade";
     public static final String COMPAT_EXPERIENCE_UPGRADE_UPSTREAM = "experienceupgrade";
     public static final String COMPAT_INVENTORY_UPGRADE_UPSTREAM = "inventoryupgrade";
@@ -698,6 +699,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_HDD_TIER1, null, hddTier1Item);
         registry.register(COMPAT_HDD_TIER2, null, hddTier2Item);
         registry.register(COMPAT_HDD_TIER3, null, hddTier3Item);
+        registry.register(COMPAT_INVENTORY_CONTROLLER_UPGRADE_UPSTREAM, null, inventoryControllerUpgradeItem);
         registry.register(COMPAT_INVENTORY_UPGRADE, null, inventoryUpgradeItem);
         registry.register(COMPAT_CRAFTING_UPGRADE, null, craftingUpgradeItem);
         registry.register(COMPAT_INVENTORY_UPGRADE_UPSTREAM, null, inventoryUpgradeItem);
