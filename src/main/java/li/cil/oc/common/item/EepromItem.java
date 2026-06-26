@@ -5,12 +5,15 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.component.EepromEnvironment;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.LevelReader;
 
 public class EepromItem extends Item implements DriverItem {
     private static final String EEPROM_SLOT = "eeprom";
@@ -50,6 +53,11 @@ public class EepromItem extends Item implements DriverItem {
     @Override
     public int tier(final ItemStack stack) {
         return 0;
+    }
+
+    @Override
+    public boolean doesSneakBypassUse(final ItemStack stack, final LevelReader level, final BlockPos pos, final Player player) {
+        return true;
     }
 
     @Override

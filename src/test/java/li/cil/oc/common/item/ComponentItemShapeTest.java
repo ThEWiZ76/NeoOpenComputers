@@ -294,12 +294,28 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void eepromItemSneakBypassesBlockUseLikeUpstream() throws Exception {
+        assertArrayEquals(
+            new Class<?>[]{ItemStack.class, LevelReader.class, BlockPos.class, Player.class},
+            EepromItem.class.getDeclaredMethod("doesSneakBypassUse", ItemStack.class, LevelReader.class, BlockPos.class, Player.class).getParameterTypes());
+        assertTrue(allocate(EepromItem.class).doesSneakBypassUse(null, null, BlockPos.ZERO, null));
+    }
+
+    @Test
     void floppyItemIsItemDriver() throws NoSuchMethodException {
         final Constructor<FloppyItem> constructor = FloppyItem.class.getConstructor(Item.Properties.class);
 
         assertTrue(Item.class.isAssignableFrom(FloppyItem.class));
         assertTrue(DriverItem.class.isAssignableFrom(FloppyItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void floppyItemSneakBypassesBlockUseLikeUpstream() throws Exception {
+        assertArrayEquals(
+            new Class<?>[]{ItemStack.class, LevelReader.class, BlockPos.class, Player.class},
+            FloppyItem.class.getDeclaredMethod("doesSneakBypassUse", ItemStack.class, LevelReader.class, BlockPos.class, Player.class).getParameterTypes());
+        assertTrue(allocate(FloppyItem.class).doesSneakBypassUse(null, null, BlockPos.ZERO, null));
     }
 
     @Test
