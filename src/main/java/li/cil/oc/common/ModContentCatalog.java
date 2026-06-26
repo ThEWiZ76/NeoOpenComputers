@@ -109,6 +109,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_MATERIAL_CIRCUIT_BOARD = "materialCircuitBoard";
     public static final String COMPAT_MATERIAL_CIRCUIT_BOARD_PRINTED = "materialCircuitBoardPrinted";
     public static final String COMPAT_MATERIAL_CIRCUIT_BOARD_RAW = "materialCircuitBoardRaw";
+    public static final String COMPAT_RAW_CIRCUIT_BOARD = "rawcircuitboard";
+    public static final String COMPAT_CIRCUIT_BOARD = "circuitboard";
+    public static final String COMPAT_PRINTED_CIRCUIT_BOARD = "printedcircuitboard";
     public static final String COMPAT_MATERIAL_CONTROL_UNIT = "materialCU";
     public static final String COMPAT_MATERIAL_CUTTING_WIRE = "materialCuttingWire";
     public static final String COMPAT_MATERIAL_DISK = "materialDisk";
@@ -333,6 +336,9 @@ public final class ModContentCatalog {
         registry.register(COMPAT_MATERIAL_CIRCUIT_BOARD_RAW, null, rawCircuitBoardItem);
         registry.register(COMPAT_MATERIAL_CIRCUIT_BOARD, null, circuitBoardItem);
         registry.register(COMPAT_MATERIAL_CIRCUIT_BOARD_PRINTED, null, printedCircuitBoardItem);
+        registry.register(COMPAT_RAW_CIRCUIT_BOARD, null, rawCircuitBoardItem);
+        registry.register(COMPAT_CIRCUIT_BOARD, null, circuitBoardItem);
+        registry.register(COMPAT_PRINTED_CIRCUIT_BOARD, null, printedCircuitBoardItem);
         registry.register(COMPAT_MATERIAL_CARD, null, cardItem);
         registry.register(COMPAT_CHAMELIUM, null, chameliumItem);
         registry.register(COMPAT_MATERIAL_TRANSISTOR, null, transistorItem);

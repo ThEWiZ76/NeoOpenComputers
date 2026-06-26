@@ -46,6 +46,9 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.INK_CARTRIDGE_EMPTY));
         assertNotNull(registry.get(ModContentIds.INK_CARTRIDGE));
         assertNotNull(registry.get(ModContentIds.PRINTED_CIRCUIT_BOARD));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_RAW_CIRCUIT_BOARD));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CIRCUIT_BOARD));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_PRINTED_CIRCUIT_BOARD));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CAPACITOR));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_CHAMELIUM));
@@ -69,6 +72,9 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.CHAMELIUM, registry.get(ModContentIds.CHAMELIUM).name());
         assertEquals(ModContentIds.INK_CARTRIDGE_EMPTY, registry.get(ModContentIds.INK_CARTRIDGE_EMPTY).name());
         assertEquals(ModContentIds.INK_CARTRIDGE, registry.get(ModContentIds.INK_CARTRIDGE).name());
+        assertEquals(ModContentCatalog.COMPAT_RAW_CIRCUIT_BOARD, registry.get(ModContentCatalog.COMPAT_RAW_CIRCUIT_BOARD).name());
+        assertEquals(ModContentCatalog.COMPAT_CIRCUIT_BOARD, registry.get(ModContentCatalog.COMPAT_CIRCUIT_BOARD).name());
+        assertEquals(ModContentCatalog.COMPAT_PRINTED_CIRCUIT_BOARD, registry.get(ModContentCatalog.COMPAT_PRINTED_CIRCUIT_BOARD).name());
         assertEquals(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR, registry.get(ModContentCatalog.COMPAT_MATERIAL_TRANSISTOR).name());
         assertEquals(ModContentCatalog.COMPAT_CAPACITOR, registry.get(ModContentCatalog.COMPAT_CAPACITOR).name());
         assertEquals(ModContentCatalog.COMPAT_CHAMELIUM, registry.get(ModContentCatalog.COMPAT_CHAMELIUM).name());
