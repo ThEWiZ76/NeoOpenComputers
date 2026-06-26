@@ -5936,6 +5936,9 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(rackServer.machine().components().containsValue("filesystem"), "Rack server filesystem is not visible before boot: " + rackServer.machine().components());
         helper.assertTrue(rackServer.machine().start(), "Rack server machine did not start");
         helper.assertTrue(mountable.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.IsWorking), "Rack server did not report working state");
+        helper.assertTrue(rack instanceof li.cil.oc.api.util.StateAware, "Rack did not expose upstream aggregate StateAware state");
+        final li.cil.oc.api.util.StateAware rackState = (li.cil.oc.api.util.StateAware) rack;
+        helper.assertTrue(rackState.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.IsWorking), "Rack did not aggregate working mountable state");
         final CompoundTag data = mountable.getData();
         mountable.save(data);
         helper.assertTrue(data.contains("machine"), "Rack server did not persist machine state");

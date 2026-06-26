@@ -16,6 +16,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
@@ -44,9 +45,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.RackMenu;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
-public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, Analyzable {
+public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, Analyzable, StateAware {
     public static final int CONTAINER_SIZE = 4;
     public static final String DATA_TAG = "oc:rack";
     private static final String NETWORK_MESSAGE = "network.message";
@@ -152,6 +154,17 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             saveMountableData(slot);
             setChanged();
         }
+    }
+
+    @Override
+    public EnumSet<StateAware.State> getCurrentState() {
+        final EnumSet<StateAware.State> result = EnumSet.noneOf(StateAware.State.class);
+        for (final RackMountable mountable : mountables) {
+            if (mountable != null) {
+                result.addAll(mountable.getCurrentState());
+            }
+        }
+        return result;
     }
 
     @Override
