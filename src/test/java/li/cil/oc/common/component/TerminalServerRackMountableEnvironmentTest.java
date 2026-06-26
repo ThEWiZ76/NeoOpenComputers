@@ -28,6 +28,13 @@ final class TerminalServerRackMountableEnvironmentTest {
     }
 
     @Test
+    void terminalServerReportsNoStateLikeUpstream() {
+        final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment();
+
+        assertTrue(terminal.getCurrentState().isEmpty());
+    }
+
+    @Test
     void registryPromotesAddresslessTerminalServersLikeUpstreamCache() throws Exception {
         TerminalServerRegistry.clear();
         final TerminalServerRackMountableEnvironment terminal = new TerminalServerRackMountableEnvironment();

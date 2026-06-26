@@ -209,7 +209,7 @@ public final class TerminalServerRackMountableEnvironment extends AbstractManage
 
     @Override
     public EnumSet<StateAware.State> getCurrentState() {
-        return EnumSet.of(StateAware.State.CanWork);
+        return EnumSet.noneOf(StateAware.State.class);
     }
 
     @Override
