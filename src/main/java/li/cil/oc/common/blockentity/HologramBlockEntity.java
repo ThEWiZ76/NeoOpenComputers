@@ -332,10 +332,14 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
         if (tier == 0) {
             return new Object[]{null, "not supported"};
         }
-        rotationAngle = (float) (args.checkDouble(0) % 360D);
-        rotationX = (float) args.checkDouble(1);
-        rotationY = (float) args.checkDouble(2);
-        rotationZ = (float) args.checkDouble(3);
+        final float nextAngle = (float) (args.checkDouble(0) % 360D);
+        final float nextX = (float) args.checkDouble(1);
+        final float nextY = (float) args.checkDouble(2);
+        final float nextZ = (float) args.checkDouble(3);
+        rotationAngle = nextAngle;
+        rotationX = nextX;
+        rotationY = nextY;
+        rotationZ = nextZ;
         setChanged();
         return new Object[]{true};
     }
@@ -345,10 +349,14 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
         if (tier == 0) {
             return new Object[]{null, "not supported"};
         }
-        rotationSpeed = (float) Math.max(-1440D, Math.min(1440D, args.checkDouble(0)));
-        rotationSpeedX = (float) args.checkDouble(1);
-        rotationSpeedY = (float) args.checkDouble(2);
-        rotationSpeedZ = (float) args.checkDouble(3);
+        final float nextSpeed = (float) Math.max(-1440D, Math.min(1440D, args.checkDouble(0)));
+        final float nextX = (float) args.checkDouble(1);
+        final float nextY = (float) args.checkDouble(2);
+        final float nextZ = (float) args.checkDouble(3);
+        rotationSpeed = nextSpeed;
+        rotationSpeedX = nextX;
+        rotationSpeedY = nextY;
+        rotationSpeedZ = nextZ;
         setChanged();
         return new Object[]{true};
     }

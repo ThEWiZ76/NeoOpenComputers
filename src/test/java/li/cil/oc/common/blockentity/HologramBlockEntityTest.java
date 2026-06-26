@@ -117,6 +117,32 @@ final class HologramBlockEntityTest {
     }
 
     @Test
+    void setRotationValidatesAllAxesBeforeMutationLikeUpstream() throws Exception {
+        HologramBlockEntity hologram = allocateHologram(1);
+        hologram.setRotation(null, new TestArguments(30D, 1D, 2D, 3D));
+
+        assertThrows(RuntimeException.class, () -> hologram.setRotation(null, new TestArguments(60D, "bad", 4D, 5D)));
+
+        assertEquals(30F, getFloatField(hologram, "rotationAngle"));
+        assertEquals(1F, getFloatField(hologram, "rotationX"));
+        assertEquals(2F, getFloatField(hologram, "rotationY"));
+        assertEquals(3F, getFloatField(hologram, "rotationZ"));
+    }
+
+    @Test
+    void setRotationSpeedValidatesAllAxesBeforeMutationLikeUpstream() throws Exception {
+        HologramBlockEntity hologram = allocateHologram(1);
+        hologram.setRotationSpeed(null, new TestArguments(90D, 1D, 2D, 3D));
+
+        assertThrows(RuntimeException.class, () -> hologram.setRotationSpeed(null, new TestArguments(180D, "bad", 4D, 5D)));
+
+        assertEquals(90F, getFloatField(hologram, "rotationSpeed"));
+        assertEquals(1F, getFloatField(hologram, "rotationSpeedX"));
+        assertEquals(2F, getFloatField(hologram, "rotationSpeedY"));
+        assertEquals(3F, getFloatField(hologram, "rotationSpeedZ"));
+    }
+
+    @Test
     void copyPauseUsesClippedTargetAreaLikeUpstream() throws Exception {
         HologramBlockEntity hologram = allocateHologram(1);
         TrackingContext context = new TrackingContext();
@@ -142,6 +168,12 @@ final class HologramBlockEntityTest {
         Field field = HologramBlockEntity.class.getDeclaredField(name);
         field.setAccessible(true);
         field.set(hologram, value);
+    }
+
+    private static float getFloatField(final HologramBlockEntity hologram, final String name) throws Exception {
+        Field field = HologramBlockEntity.class.getDeclaredField(name);
+        field.setAccessible(true);
+        return field.getFloat(hologram);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
