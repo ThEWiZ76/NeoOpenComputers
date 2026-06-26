@@ -219,8 +219,10 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     @Callback(doc = "function(collideOff:boolean, collideOn:boolean) -- Set whether the printed block should be collidable or not.")
     public Object[] setCollidable(final Context context, final Arguments args) {
-        data.setNoclipOff(!args.checkBoolean(0));
-        data.setNoclipOn(!args.checkBoolean(1));
+        final boolean collideOff = args.checkBoolean(0);
+        final boolean collideOn = args.checkBoolean(1);
+        data.setNoclipOff(!collideOff);
+        data.setNoclipOn(!collideOn);
         setChanged();
         return null;
     }
