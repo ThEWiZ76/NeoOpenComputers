@@ -4,9 +4,12 @@ import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Network;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +45,30 @@ final class ScreenInputDispatcherTest {
         assertEquals(Arrays.asList("computer.checked_signal", null, "drag", 4, 5, 1), node.reachableMessages.get(1));
         assertEquals(Arrays.asList("computer.checked_signal", null, "drop", 6, 7, 2), node.reachableMessages.get(2));
         assertEquals(Arrays.asList("computer.checked_signal", null, "scroll", 8, 9, -1), node.reachableMessages.get(3));
+    }
+
+    @Test
+    void appendsUsernameToMouseEventsWhenConfiguredLikeUpstream() throws Exception {
+        CapturingNode node = new CapturingNode();
+        ScreenInputDispatcher dispatcher = new ScreenInputDispatcher(player -> "alice");
+
+        withCachedConfig(ModSettings.INPUT_USERNAME, true, () ->
+            dispatcher.mouseDown(node, 1.2, 2.8, 0, null));
+
+        assertEquals(1, node.reachableMessages.size());
+        assertEquals(Arrays.asList("computer.checked_signal", null, "touch", 2, 3, 0, "alice"), node.reachableMessages.getFirst());
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
     }
 
     private static final class CapturingNode implements Node {
@@ -135,5 +162,10 @@ final class ScreenInputDispatcherTest {
         @Override
         public void save(final CompoundTag nbt) {
         }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 }

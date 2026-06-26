@@ -1,10 +1,24 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.network.Node;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.world.entity.player.Player;
+
+import java.util.Arrays;
+import java.util.function.Function;
 
 public final class ScreenInputDispatcher {
     private static final String SIGNAL_MESSAGE = "computer.checked_signal";
+
+    private final Function<Player, String> usernameProvider;
+
+    public ScreenInputDispatcher() {
+        this(player -> player == null ? null : player.getName().getString());
+    }
+
+    ScreenInputDispatcher(final Function<Player, String> usernameProvider) {
+        this.usernameProvider = usernameProvider;
+    }
 
     public void keyDown(final Node node, final char character, final int code, final Player player) {
         sendToKeyboard(node, "keyboard.keyDown", player, character, code);
@@ -56,11 +70,20 @@ public final class ScreenInputDispatcher {
         }
     }
 
-    private static void sendMouseEvent(final Node node, final Player player, final String name, final double x, final double y, final int data, final boolean precise) {
-        if (node != null && precise) {
-            node.sendToReachable(SIGNAL_MESSAGE, player, name, x, y, data);
-        } else if (node != null) {
-            node.sendToReachable(SIGNAL_MESSAGE, player, name, (int) x + 1, (int) y + 1, data);
+    private void sendMouseEvent(final Node node, final Player player, final String name, final double x, final double y, final int data, final boolean precise) {
+        if (node == null) {
+            return;
+        }
+        final Object[] payload = precise
+            ? new Object[]{player, name, x, y, data}
+            : new Object[]{player, name, (int) x + 1, (int) y + 1, data};
+        final String username = ModSettings.inputUsername() ? usernameProvider.apply(player) : null;
+        if (username == null) {
+            node.sendToReachable(SIGNAL_MESSAGE, payload);
+        } else {
+            final Object[] payloadWithUsername = Arrays.copyOf(payload, payload.length + 1);
+            payloadWithUsername[payload.length] = username;
+            node.sendToReachable(SIGNAL_MESSAGE, payloadWithUsername);
         }
     }
 }
