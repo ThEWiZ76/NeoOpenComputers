@@ -1058,6 +1058,37 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void debugCardScanContentsHonorsBreakEventDenial(final GameTestHelper helper) {
+        final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
+        helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) card.node();
+
+        final BlockPos waterRelative = new BlockPos(1, 1, 1);
+        helper.setBlock(waterRelative, Blocks.WATER.defaultBlockState());
+        final BlockPos water = helper.absolutePos(waterRelative);
+        final AtomicBoolean sawBreakEvent = new AtomicBoolean(false);
+        final Object listener = new Object() {
+            @SubscribeEvent
+            public void onBreak(final BlockEvent.BreakEvent event) {
+                if (event.getPos().equals(water)) {
+                    sawBreakEvent.set(true);
+                    event.setCanceled(true);
+                }
+            }
+        };
+
+        NeoForge.EVENT_BUS.register(listener);
+        try {
+            final Object[] liquidResult = invokeComponent(helper, component, "scanContentsAt", water.getX(), water.getY(), water.getZ());
+            helper.assertTrue(sawBreakEvent.get(), "Debug scanContentsAt did not post break event for liquid");
+            helper.assertTrue(liquidResult.length == 3 && Boolean.TRUE.equals(liquidResult[0]) && "liquid".equals(liquidResult[1]) && convertedBlockName(liquidResult[2]).equals("minecraft:water"), "Debug scanContentsAt did not report protected liquid block");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(listener);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void debugCardScansBlockContentsInSpecifiedWorld(final GameTestHelper helper) {
         final DebugCardEnvironment card = new DebugCardEnvironment(new StaticEnvironmentHost(helper));
         helper.assertTrue(card.node() instanceof li.cil.oc.api.network.Component, "Debug card did not expose component");

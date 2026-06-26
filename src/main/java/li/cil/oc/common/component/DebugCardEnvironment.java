@@ -69,6 +69,9 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.FakePlayerFactory;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
@@ -259,10 +262,10 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             return new Object[]{false, "air", block};
         }
         if (!state.getFluidState().isEmpty()) {
-            return new Object[]{false, "liquid", block};
+            return new Object[]{isBreakDenied(level, pos, state), "liquid", block};
         }
         if (state.canBeReplaced()) {
-            return new Object[]{false, "replaceable", block};
+            return new Object[]{isBreakDenied(level, pos, state), "replaceable", block};
         }
         if (state.getCollisionShape(level, pos).isEmpty()) {
             return new Object[]{true, "passable", block};
@@ -499,6 +502,17 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
             case 1 -> serverLevel.getServer().getLevel(Level.END);
             default -> null;
         };
+    }
+
+    private static boolean isBreakDenied(final Level level, final BlockPos pos, final BlockState state) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return false;
+        }
+        final ServerPlayer player = FakePlayerFactory.getMinecraft(serverLevel);
+        player.moveTo(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 0F, 0F);
+        final BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(serverLevel, pos, state, player);
+        NeoForge.EVENT_BUS.post(event);
+        return event.isCanceled();
     }
 
     private static final class CapturingCommandSource implements CommandSource {
