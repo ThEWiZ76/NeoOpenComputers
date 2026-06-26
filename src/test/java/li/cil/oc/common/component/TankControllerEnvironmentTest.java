@@ -3,6 +3,7 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
@@ -12,9 +13,12 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,6 +31,16 @@ final class TankControllerEnvironmentTest {
         assertCallback("getTankLevel");
         assertCallback("getTankCapacity");
         assertCallback("getFluidInTank");
+    }
+
+    @Test
+    void agentControllerExposesInternalTankCallbacksLikeUpstream() {
+        assertCallback(TankControllerEnvironment.AgentTankControllerEnvironment.class, "getTankLevelInSlot");
+        assertCallback(TankControllerEnvironment.AgentTankControllerEnvironment.class, "getTankCapacityInSlot");
+        assertCallback(TankControllerEnvironment.AgentTankControllerEnvironment.class, "getFluidInTankInSlot");
+        assertCallback(TankControllerEnvironment.AgentTankControllerEnvironment.class, "getFluidInInternalTank");
+        assertCallback(TankControllerEnvironment.AgentTankControllerEnvironment.class, "drain");
+        assertCallback(TankControllerEnvironment.AgentTankControllerEnvironment.class, "fill");
     }
 
     @Test
@@ -63,9 +77,58 @@ final class TankControllerEnvironmentTest {
         });
     }
 
+    @Test
+    void internalFluidInfoCallbacksHonorInspectionConfigLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        withCachedConfig(ModSettings.ALLOW_ITEM_STACK_INSPECTION, false, () -> {
+            final var controller = new TankControllerEnvironment.AgentTankControllerEnvironment(testAgent());
+
+            assertArrayEquals(new Object[]{null, "not enabled in config"},
+                invokeIfPresent(controller, "getFluidInTankInSlot", new TestArguments(1)));
+            assertArrayEquals(new Object[]{null, "not enabled in config"},
+                invokeIfPresent(controller, "getFluidInInternalTank", new TestArguments(1)));
+        });
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
-        Method method = TankControllerEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
+        assertCallback(TankControllerEnvironment.class, methodName);
+    }
+
+    private static void assertCallback(final Class<?> type, final String methodName) {
+        final Method method;
+        try {
+            method = type.getMethod(methodName, Context.class, Arguments.class);
+        } catch (final NoSuchMethodException e) {
+            throw new AssertionError("Missing callback " + methodName, e);
+        }
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static Object[] invokeIfPresent(final Object target, final String methodName, final Arguments arguments) throws Exception {
+        try {
+            final Method method = target.getClass().getMethod(methodName, Context.class, Arguments.class);
+            return (Object[]) method.invoke(target, null, arguments);
+        } catch (final NoSuchMethodException ignored) {
+            return new Object[]{"missing callback"};
+        }
+    }
+
+    private static li.cil.oc.api.internal.Agent testAgent() {
+        final InvocationHandler handler = (proxy, method, args) -> switch (method.getName()) {
+            case "mainInventory", "equipmentInventory", "tank", "player", "machine", "world" -> null;
+            case "selectedSlot", "selectedTank", "componentSlot" -> 0;
+            case "setSelectedSlot", "setSelectedTank", "markChanged", "onMachineConnect", "onMachineDisconnect", "setName" -> null;
+            case "internalComponents" -> java.util.List.<ItemStack>of();
+            case "facing", "toGlobal", "toLocal" -> net.minecraft.core.Direction.NORTH;
+            case "xPosition", "yPosition", "zPosition" -> 0D;
+            case "name", "ownerName" -> "";
+            case "ownerUUID" -> new UUID(0L, 0L);
+            default -> throw new UnsupportedOperationException(method.toString());
+        };
+        return (li.cil.oc.api.internal.Agent) Proxy.newProxyInstance(
+            TankControllerEnvironmentTest.class.getClassLoader(),
+            new Class<?>[]{li.cil.oc.api.internal.Agent.class},
+            handler);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
