@@ -1794,6 +1794,25 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void luaBiosRecipeCraftsConfiguredEeprom(final GameTestHelper helper) {
+        final CraftingInput input = CraftingInput.of(2, 1, List.of(
+            new ItemStack(ModItems.EEPROM.get()), new ItemStack(ModItems.MANUAL.get())
+        ));
+        final Optional<RecipeHolder<CraftingRecipe>> recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
+
+        helper.assertTrue(recipe.isPresent(), "No Lua BIOS recipe matched");
+        final ItemStack result = recipe.get().value().assemble(input, helper.getLevel().registryAccess());
+        helper.assertTrue(result.is(ModItems.EEPROM.get()), "Lua BIOS recipe returned wrong item");
+        final CustomData root = result.get(DataComponents.CUSTOM_DATA);
+        helper.assertTrue(root != null, "Lua BIOS recipe result has no custom data");
+        final CompoundTag eepromData = root.copyTag().getCompound(ItemRegistry.EEPROM_DATA_TAG);
+        helper.assertTrue("EEPROM (Lua BIOS)".equals(eepromData.getString(ItemRegistry.EEPROM_LABEL_TAG)), "Lua BIOS recipe kept wrong label");
+        helper.assertTrue(eepromData.getBoolean(ItemRegistry.EEPROM_READONLY_TAG), "Lua BIOS recipe result should be read-only");
+        helper.assertTrue(eepromData.getByteArray(ItemRegistry.EEPROM_CODE_TAG).length == ModEeproms.luaBiosCode().length, "Lua BIOS recipe wrote wrong code length");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void inkCartridgeLeavesEmptyCraftingRemainder(final GameTestHelper helper) {
         final Item filled = ModItems.INK_CARTRIDGE.get();
 

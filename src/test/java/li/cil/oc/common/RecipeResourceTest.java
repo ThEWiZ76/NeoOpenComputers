@@ -689,6 +689,14 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void luaBiosRecipeUsesUpstreamInputs() throws IOException {
+        JsonObject recipe = readJson(RECIPE_ROOT.resolve("lua_bios.json"));
+
+        assertEquals("neoopencomputers:lua_bios", recipe.get("type").getAsString());
+        assertEquals("misc", recipe.get("category").getAsString());
+    }
+
+    @Test
     void chameliumRecipeUsesUpstreamInputs() throws IOException {
         JsonObject chamelium = readJson(RECIPE_ROOT.resolve(ModContentIds.CHAMELIUM + ".json"));
         JsonObject keys = chamelium.getAsJsonObject("key");
@@ -1278,6 +1286,8 @@ final class RecipeResourceTest {
         assertTrue(type.startsWith("minecraft:crafting_")
             || "minecraft:smelting".equals(type)
             || "neoopencomputers:linked_card".equals(type)
+            || "neoopencomputers:loot_disk_cycling".equals(type)
+            || "neoopencomputers:lua_bios".equals(type)
             || "neoopencomputers:navigation_upgrade".equals(type));
     }
 
