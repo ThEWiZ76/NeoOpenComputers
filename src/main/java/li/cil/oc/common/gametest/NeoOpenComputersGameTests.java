@@ -93,6 +93,7 @@ import li.cil.oc.common.network.TerminalKeyPayload;
 import li.cil.oc.common.network.TerminalMousePayload;
 import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.recipe.LootDiskCyclingRecipe;
+import li.cil.oc.common.component.InventoryControllerEnvironment;
 import li.cil.oc.common.component.LinkedCardEnvironment;
 import li.cil.oc.common.component.DebugCardEnvironment;
 import li.cil.oc.common.component.MfuEnvironment;
@@ -7699,6 +7700,28 @@ public final class NeoOpenComputersGameTests {
                 helper.fail("Inventory controller database invocation failed: " + e.getMessage());
             }
         });
+    }
+
+    @GameTest(template = "empty")
+    public static void robotInventoryControllerEquipSwapsSelectedSlot(final GameTestHelper helper) throws Exception {
+        final ItemStack stack = new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get());
+        final DriverItem driver = Driver.driverFor(stack, RobotTestHost.class);
+        helper.assertTrue(driver != null, "No inventory controller driver for robot host");
+        final RobotTestHost host = new RobotTestHost(helper);
+        host.equipmentInventory().setItem(0, new ItemStack(Items.DIAMOND_PICKAXE));
+        host.mainInventory().setItem(2, new ItemStack(Items.STICK, 3));
+        host.setSelectedSlot(2);
+
+        final ManagedEnvironment environment = driver.createEnvironment(stack, host);
+        helper.assertTrue(environment instanceof InventoryControllerEnvironment.RobotInventoryControllerEnvironment,
+            "Robot inventory controller did not use robot-specific environment");
+        final Object[] result = ((InventoryControllerEnvironment.RobotInventoryControllerEnvironment) environment).equip(null, null);
+
+        helper.assertTrue(Boolean.TRUE.equals(result[0]), "Robot inventory controller equip did not report success");
+        helper.assertTrue(host.equipmentInventory().getItem(0).is(Items.STICK)
+            && host.equipmentInventory().getItem(0).getCount() == 3, "Equip did not move selected stack into tool slot");
+        helper.assertTrue(host.mainInventory().getItem(2).is(Items.DIAMOND_PICKAXE), "Equip did not move tool into selected slot");
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)

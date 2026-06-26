@@ -1,6 +1,9 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
@@ -12,6 +15,8 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class InventoryControllerEnvironmentTest {
     @Test
@@ -35,6 +40,22 @@ final class InventoryControllerEnvironmentTest {
         final Component component = assertInstanceOf(Component.class, controller.node());
 
         assertEquals(Visibility.Neighbors, component.visibility());
+    }
+
+    @Test
+    void equipCallbackIsRobotSpecificLikeUpstream() {
+        assertFalse(hasDeclaredEquipCallback(InventoryControllerEnvironment.class),
+            "Adapter/drone inventory controller must not expose robot-only equip callback");
+        assertTrue(hasDeclaredEquipCallback(InventoryControllerEnvironment.RobotInventoryControllerEnvironment.class),
+            "Robot inventory controller must expose upstream equip callback");
+    }
+
+    private static boolean hasDeclaredEquipCallback(final Class<?> type) {
+        try {
+            return type.getDeclaredMethod("equip", Context.class, Arguments.class).isAnnotationPresent(Callback.class);
+        } catch (final NoSuchMethodException ignored) {
+            return false;
+        }
     }
 
     private static final class TestEnvironmentHost implements EnvironmentHost {

@@ -32,7 +32,10 @@ public class InventoryControllerUpgradeItem extends Item implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        if (host instanceof Adapter || host instanceof Drone || host instanceof Robot) {
+        if (host instanceof Robot robot) {
+            return new InventoryControllerEnvironment.RobotInventoryControllerEnvironment(robot);
+        }
+        if (host instanceof Adapter || host instanceof Drone) {
             return new InventoryControllerEnvironment(host);
         }
         return null;

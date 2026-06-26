@@ -7,6 +7,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.internal.Database;
+import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
@@ -185,5 +186,30 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
             return false;
         }
         return stackA.getTags().anyMatch(stackB::is);
+    }
+
+    public static final class RobotInventoryControllerEnvironment extends InventoryControllerEnvironment {
+        private final Robot robot;
+
+        public RobotInventoryControllerEnvironment(final Robot robot) {
+            super(robot);
+            this.robot = robot;
+        }
+
+        @Callback(doc = "function():boolean -- Swaps the equipped tool with the content of the currently selected inventory slot.")
+        public Object[] equip(final Context context, final Arguments arguments) {
+            final Container inventory = robot.mainInventory();
+            if (inventory.getContainerSize() <= 0) {
+                return new Object[]{false};
+            }
+            final Container equipment = robot.equipmentInventory();
+            final int selectedSlot = robot.selectedSlot();
+            final ItemStack equipped = equipment.getItem(0);
+            final ItemStack selected = inventory.getItem(selectedSlot);
+            equipment.setItem(0, selected);
+            inventory.setItem(selectedSlot, equipped);
+            robot.markChanged();
+            return new Object[]{true};
+        }
     }
 }
