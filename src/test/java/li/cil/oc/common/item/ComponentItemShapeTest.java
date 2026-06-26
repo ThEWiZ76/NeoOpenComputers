@@ -16,6 +16,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.driver.item.MutableProcessor;
+import li.cil.oc.common.driver.ScreenItemDriver;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
@@ -154,6 +155,15 @@ final class ComponentItemShapeTest {
         assertTrue(DriverItem.class.isAssignableFrom(DiskDriveMountableItem.class));
         assertTrue(HostAware.class.isAssignableFrom(DiskDriveMountableItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void screenItemDriverIsHostAwareLikeUpstreamDriverScreen() throws NoSuchMethodException {
+        final Constructor<ScreenItemDriver> constructor = ScreenItemDriver.class.getConstructor(Item.class, int.class);
+
+        assertTrue(DriverItem.class.isAssignableFrom(ScreenItemDriver.class));
+        assertTrue(HostAware.class.isAssignableFrom(ScreenItemDriver.class));
+        assertArrayEquals(new Class<?>[]{Item.class, int.class}, constructor.getParameterTypes());
     }
 
     @Test

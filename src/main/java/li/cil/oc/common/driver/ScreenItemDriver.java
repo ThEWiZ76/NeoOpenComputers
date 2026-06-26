@@ -1,6 +1,6 @@
 package li.cil.oc.common.driver;
 
-import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -10,7 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-public final class ScreenItemDriver implements DriverItem {
+public final class ScreenItemDriver implements HostAware {
     private final Item item;
     private final int tier;
 
@@ -22,6 +22,11 @@ public final class ScreenItemDriver implements DriverItem {
     @Override
     public boolean worksWith(final ItemStack stack) {
         return stack != null && stack.getItem() == item;
+    }
+
+    @Override
+    public boolean worksWith(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
+        return worksWith(stack);
     }
 
     @Override
