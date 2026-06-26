@@ -238,6 +238,42 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void disabledInternetAccessReportsUnavailableBeforeHttpSpecificFailureLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
+            throw new AssertionError("transport should not be called when internet access is unavailable");
+        });
+
+        withCachedConfig(ModSettings.ENABLE_HTTP, false, () ->
+            withCachedConfig(ModSettings.ENABLE_TCP, false, () ->
+                assertArrayEquals(new Object[]{null, "internet access is unavailable"},
+                    card.request(null, new TestArguments("https://example.test/disabled")))));
+    }
+
+    @Test
+    void disabledInternetAccessReportsUnavailableBeforeTcpSpecificFailureLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+
+        withCachedConfig(ModSettings.ENABLE_HTTP, false, () ->
+            withCachedConfig(ModSettings.ENABLE_TCP, false, () ->
+                assertArrayEquals(new Object[]{null, "internet access is unavailable"},
+                    card.connect(null, new TestArguments("127.0.0.1", 1)))));
+    }
+
+    @Test
+    void invalidFilteringRulesMakeInternetAccessUnavailableBeforeTransportLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
+            throw new AssertionError("transport should not be called when filtering rules are invalid");
+        });
+
+        withFilteringRules(List.of("bogus"), () ->
+            assertArrayEquals(new Object[]{null, "internet access is unavailable"},
+                card.request(null, new TestArguments("https://example.test/invalid-rules"))));
+    }
+
+    @Test
     void disabledHttpHeadersRejectsRequestsWithHeaders() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {

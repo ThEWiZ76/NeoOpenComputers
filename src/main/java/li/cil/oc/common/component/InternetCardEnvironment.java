@@ -84,6 +84,9 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     @Callback(doc = "function(url:string[, postData:string[, headers:table[, method:string]]]):userdata -- Starts an HTTP request.")
     public synchronized Object[] request(final Context context, final Arguments args) throws IOException {
         checkOwner(context);
+        if (!internetAccessAllowed()) {
+            return new Object[]{null, "internet access is unavailable"};
+        }
         if (!ModSettings.enableHttp()) {
             return new Object[]{null, "http requests are unavailable"};
         }
@@ -108,6 +111,9 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
     @Callback(doc = "function(address:string[, port:number]):userdata -- Opens a new TCP connection.")
     public synchronized Object[] connect(final Context context, final Arguments args) throws IOException {
         checkOwner(context);
+        if (!internetAccessAllowed()) {
+            return new Object[]{null, "internet access is unavailable"};
+        }
         if (!ModSettings.enableTcp()) {
             return new Object[]{null, "tcp connections are unavailable"};
         }
@@ -282,8 +288,23 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         }
     }
 
+    private static boolean internetAccessAllowed() {
+        return (ModSettings.enableHttp() || ModSettings.enableTcp()) && internetFilteringRulesValid();
+    }
+
+    private static boolean internetFilteringRulesValid() {
+        try {
+            for (final String rule : ModSettings.internetFilteringRules()) {
+                InternetFilteringRule.parse(rule);
+            }
+            return true;
+        } catch (final IllegalArgumentException ignored) {
+            return false;
+        }
+    }
+
     private static boolean isAddressAllowed(final InetAddress address, final String host) {
-        if (!ModSettings.enableHttp() && !ModSettings.enableTcp()) {
+        if (!internetAccessAllowed()) {
             return false;
         }
         try {
