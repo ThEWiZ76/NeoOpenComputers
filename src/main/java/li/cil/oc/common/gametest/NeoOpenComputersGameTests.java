@@ -5668,6 +5668,31 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tradingUpgradeInvalidRecipeReturnsNilStacksLikeUpstream(final GameTestHelper helper) throws Exception {
+        final BlockPos hostPos = new BlockPos(2, 1, 2);
+        final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "Villager did not spawn");
+        villager.setOffers(new MerchantOffers());
+        villager.setNoAi(true);
+        villager.moveTo(helper.absolutePos(hostPos).getX() + 0.5D, helper.absolutePos(hostPos).getY(), helper.absolutePos(hostPos).getZ() + 0.5D, 0, 0);
+        helper.getLevel().addFreshEntity(villager);
+
+        final li.cil.oc.common.component.TradeValue trade = new li.cil.oc.common.component.TradeValue(
+            new StaticPositionEnvironmentHost(helper, hostPos),
+            villager,
+            villager,
+            0,
+            1
+        );
+
+        final Object[] input = trade.getInput(null, null);
+        helper.assertTrue(input.length == 2 && input[0] == null && input[1] == null, "Invalid trade input did not return nil stacks like upstream");
+        final Object[] output = trade.getOutput(null, null);
+        helper.assertTrue(output.length == 1 && output[0] == null, "Invalid trade output did not return nil like upstream");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tradingUpgradeAcceptsMatchingItemCostComponents(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for trading upgrade");

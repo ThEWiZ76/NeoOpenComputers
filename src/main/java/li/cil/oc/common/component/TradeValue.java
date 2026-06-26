@@ -83,7 +83,7 @@ public class TradeValue extends AbstractValue {
     public Object[] getInput(final Context context, final Arguments arguments) {
         final MerchantOffer offer = offer();
         if (offer == null) {
-            return new Object[]{ItemStack.EMPTY, ItemStack.EMPTY};
+            return new Object[]{null, null};
         }
         final ItemStack costB = offer.getCostB();
         return new Object[]{offer.getCostA().copy(), costB.isEmpty() ? null : costB.copy()};
@@ -92,7 +92,7 @@ public class TradeValue extends AbstractValue {
     @Callback(doc = "function():table -- Returns the item the merchant offers for this trade.")
     public Object[] getOutput(final Context context, final Arguments arguments) {
         final MerchantOffer offer = offer();
-        return new Object[]{offer == null ? ItemStack.EMPTY : offer.getResult().copy()};
+        return new Object[]{offer == null ? null : offer.getResult().copy()};
     }
 
     @Callback(doc = "function():boolean -- Returns whether the merchant currently wants to trade this.")
