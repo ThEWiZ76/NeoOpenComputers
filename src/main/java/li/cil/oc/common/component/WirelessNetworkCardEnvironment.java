@@ -183,7 +183,7 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
     }
 
     private void consumeWirelessEnergy(final Context context) throws IOException {
-        if (context == null || !(node() instanceof Connector connector)) {
+        if (!(node() instanceof Connector connector)) {
             return;
         }
         final double cost = strength * ModSettings.wirelessCostPerRange(tier);
