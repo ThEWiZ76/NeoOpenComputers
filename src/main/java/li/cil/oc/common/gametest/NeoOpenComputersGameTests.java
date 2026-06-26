@@ -4996,6 +4996,33 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void leashUpgradeDoesNotStealAlreadyLeashedEntityLikeUpstream(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.LEASH_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for leash upgrade");
+
+        final Player hostPlayer = helper.makeMockPlayer(GameType.SURVIVAL);
+        final AgentTestHost host = new AgentTestHost(helper, hostPlayer);
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.LEASH_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Leash upgrade did not create environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Leash node is not a component");
+        final Player otherPlayer = helper.makeMockPlayer(GameType.SURVIVAL);
+        final LivingEntity sheep = EntityType.SHEEP.create(helper.getLevel());
+        helper.assertTrue(sheep != null, "Failed to create sheep");
+        sheep.moveTo(host.xPosition() + 0.5D, host.yPosition(), host.zPosition() - 1.5D);
+        helper.getLevel().addFreshEntity(sheep);
+        helper.assertTrue(sheep instanceof Leashable, "Sheep is not leashable");
+        final Leashable leashable = (Leashable) sheep;
+        leashable.setLeashedTo(otherPlayer, true);
+
+        final Object[] result = ((li.cil.oc.api.network.Component) environment.node()).invoke("leash", null, Direction.NORTH.get3DDataValue());
+
+        helper.assertTrue(result.length == 2 && result[0] == null && "no unleashed entity".equals(result[1]),
+            "Leash upgrade stole an already leashed entity: " + java.util.Arrays.toString(result));
+        helper.assertTrue(leashable.getLeashHolder() == otherPlayer, "Leash upgrade changed holder of already leashed entity");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tractorBeamUpgradeRejectsNonRobotAgentHost(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for tractor beam upgrade");
