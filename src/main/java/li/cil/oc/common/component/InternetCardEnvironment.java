@@ -645,6 +645,8 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
                     predicates.add((address, host) -> address instanceof Inet4Address);
                 } else if ("ipv6".equals(filter)) {
                     predicates.add((address, host) -> address instanceof Inet6Address);
+                } else if ("ipv4-embedded-ipv6".equals(filter)) {
+                    predicates.add((address, host) -> hasEmbeddedIpv4ClientAddress(address));
                 } else if (filter.startsWith("ip:")) {
                     final String value = filter.substring("ip:".length());
                     final String[] range = value.split("/", 2);
@@ -672,6 +674,36 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
 
         private static boolean isPrivate(final InetAddress address) {
             return address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress() || address.isSiteLocalAddress();
+        }
+
+        private static boolean hasEmbeddedIpv4ClientAddress(final InetAddress address) {
+            if (!(address instanceof Inet6Address)) {
+                return false;
+            }
+            final byte[] bytes = address.getAddress();
+            return isIpv4CompatibleAddress(bytes) || is6to4Address(bytes) || isTeredoAddress(bytes);
+        }
+
+        private static boolean isIpv4CompatibleAddress(final byte[] bytes) {
+            for (int i = 0; i < 12; i++) {
+                if (bytes[i] != 0) {
+                    return false;
+                }
+            }
+            for (int i = 12; i < 15; i++) {
+                if (bytes[i] != 0) {
+                    return true;
+                }
+            }
+            return bytes[15] != 0 && bytes[15] != 1;
+        }
+
+        private static boolean is6to4Address(final byte[] bytes) {
+            return Byte.toUnsignedInt(bytes[0]) == 0x20 && Byte.toUnsignedInt(bytes[1]) == 0x02;
+        }
+
+        private static boolean isTeredoAddress(final byte[] bytes) {
+            return Byte.toUnsignedInt(bytes[0]) == 0x20 && Byte.toUnsignedInt(bytes[1]) == 0x01 && bytes[2] == 0 && bytes[3] == 0;
         }
 
         private static InetAddress parseAddress(final String value) {

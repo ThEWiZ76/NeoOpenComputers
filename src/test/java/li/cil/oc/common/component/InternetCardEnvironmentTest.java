@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -271,6 +272,13 @@ final class InternetCardEnvironmentTest {
         withFilteringRules(List.of("bogus"), () ->
             assertArrayEquals(new Object[]{null, "internet access is unavailable"},
                 card.request(null, new TestArguments("https://example.test/invalid-rules"))));
+    }
+
+    @Test
+    void internetFilteringRulesSupportEmbeddedIpv4Ipv6LikeUpstream() throws Exception {
+        InetAddress embedded = InetAddress.getByName("2002:7f00:1::");
+
+        assertEquals(Boolean.TRUE, applyInternetFilteringRule("allow ipv4-embedded-ipv6", embedded, "embedded.test"));
     }
 
     @Test
@@ -677,6 +685,16 @@ final class InternetCardEnvironmentTest {
             Thread.sleep(10);
         }
         throw new AssertionError("socket did not read data");
+    }
+
+    private static Boolean applyInternetFilteringRule(final String rule, final InetAddress address, final String host) throws Exception {
+        Class<?> ruleClass = Class.forName("li.cil.oc.common.component.InternetCardEnvironment$InternetFilteringRule");
+        Method parse = ruleClass.getDeclaredMethod("parse", String.class);
+        parse.setAccessible(true);
+        Object parsed = parse.invoke(null, rule);
+        Method apply = ruleClass.getDeclaredMethod("apply", InetAddress.class, String.class);
+        apply.setAccessible(true);
+        return (Boolean) apply.invoke(parsed, address, host);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
