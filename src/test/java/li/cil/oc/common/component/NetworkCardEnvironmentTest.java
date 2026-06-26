@@ -265,6 +265,21 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void unaddressedPacketsFromUnaddressedNodeAreRejectedLikeUpstream() {
+        OpenComputersApi.initialize();
+        TestMachineHost host = new TestMachineHost();
+        NetworkCardEnvironment card = new NetworkCardEnvironment(host);
+        card.setWakeMessage(null, new TestArguments("boot", false));
+
+        card.onMessage(new TestMessage(null, "network.message", new Object[]{
+            new TestPacket(null, null, 123, new Object[]{"boot"})
+        }));
+
+        assertEquals(0, host.machine.starts);
+        assertEquals(List.of(), host.signals);
+    }
+
+    @Test
     void fuzzyWakeMessageAllowsAdditionalPacketData() {
         OpenComputersApi.initialize();
         TestMachineHost host = new TestMachineHost();

@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class NetworkCardEnvironment extends AbstractManagedEnvironment implements RackBusConnectable, DeviceInfo {
@@ -254,7 +255,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
             return;
         }
         final String localAddress = node().address();
-        if ((localAddress != null && localAddress.equals(packet.source())) ||
+        if (Objects.equals(localAddress, packet.source()) ||
             (packet.destination() != null && (localAddress == null || !localAddress.equals(packet.destination())))) {
             return;
         }
