@@ -4068,6 +4068,26 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty")
     public static void communicationCardRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.TRANSISTOR.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(Items.IRON_NUGGET), new ItemStack(Items.IRON_NUGGET),
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(Items.PAPER), new ItemStack(Items.GOLD_NUGGET),
+            ItemStack.EMPTY, new ItemStack(Items.REDSTONE), ItemStack.EMPTY
+        )), 8);
+        assertCraftsItem(helper, ModItems.MICROCHIP_TIER1.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_NUGGET), ItemStack.EMPTY, new ItemStack(Items.IRON_NUGGET),
+            new ItemStack(ModItems.TRANSISTOR.get()), new ItemStack(Items.GOLD_NUGGET), new ItemStack(ModItems.TRANSISTOR.get()),
+            new ItemStack(Items.IRON_NUGGET), ItemStack.EMPTY, new ItemStack(Items.IRON_NUGGET)
+        )), 8);
+        assertCraftsItem(helper, ModItems.MICROCHIP_TIER2.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(Items.LAPIS_LAZULI), new ItemStack(Items.GOLD_NUGGET),
+            new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(Items.QUARTZ), new ItemStack(ModItems.MICROCHIP_TIER1.get()),
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(Items.LAPIS_LAZULI), new ItemStack(Items.GOLD_NUGGET)
+        )), 4);
+        assertCraftsItem(helper, ModItems.MICROCHIP_TIER3.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.GLOWSTONE_DUST), new ItemStack(Items.COMPARATOR), new ItemStack(Items.GLOWSTONE_DUST),
+            new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(Items.DIAMOND), new ItemStack(ModItems.MICROCHIP_TIER2.get()),
+            new ItemStack(Items.GLOWSTONE_DUST), new ItemStack(Items.COMPARATOR), new ItemStack(Items.GLOWSTONE_DUST)
+        )), 2);
         assertCraftsItem(helper, ModItems.CARD.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_NUGGET), ItemStack.EMPTY, ItemStack.EMPTY,
             new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), ItemStack.EMPTY,

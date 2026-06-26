@@ -621,7 +621,7 @@ final class RecipeResourceTest {
         assertTag(keys, "G", "c:nuggets/gold");
         assertItem(keys, "P", "minecraft:paper");
         assertItem(keys, "R", "minecraft:redstone");
-        assertResultCount(recipe, 1);
+        assertResultCount(recipe, 8);
     }
 
     @Test
@@ -633,7 +633,7 @@ final class RecipeResourceTest {
         assertTag(keys, "I", "c:nuggets/iron");
         assertItem(keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
         assertTag(keys, "G", "c:nuggets/gold");
-        assertResultCount(recipe, 1);
+        assertResultCount(recipe, 8);
     }
 
     @Test
@@ -648,14 +648,14 @@ final class RecipeResourceTest {
         assertItem(tier2Keys, "L", "minecraft:lapis_lazuli");
         assertItem(tier2Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(tier2Keys, "Q", "minecraft:quartz");
-        assertResultCount(tier2, 1);
+        assertResultCount(tier2, 4);
 
         assertPattern(tier3, "RPR", "CDC", "RPR");
         assertItem(tier3Keys, "R", "minecraft:glowstone_dust");
         assertItem(tier3Keys, "P", "minecraft:comparator");
         assertItem(tier3Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
         assertItem(tier3Keys, "D", "minecraft:diamond");
-        assertResultCount(tier3, 1);
+        assertResultCount(tier3, 2);
     }
 
     @Test
