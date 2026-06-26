@@ -41,6 +41,7 @@ final class RecipeResourceTest {
             ModContentIds.INTERWEB,
             ModContentIds.POWER_CONVERTER,
             ModContentIds.POWER_DISTRIBUTOR,
+            ModContentIds.PRINTER,
             ModContentIds.RACK,
             ModContentIds.RAID,
             ModContentIds.RELAY,
@@ -1177,6 +1178,20 @@ final class RecipeResourceTest {
         assertItem(transposer, "H", "minecraft:hopper");
         assertItem(transposer, "B", "minecraft:bucket");
         assertTag(transposer, "G", "c:ingots/iron");
+    }
+
+    @Test
+    void printerRecipeUsesUpstreamDefaultInputs() throws IOException {
+        JsonObject printer = readJson(RECIPE_ROOT.resolve(ModContentIds.PRINTER + ".json"));
+        JsonObject keys = printer.getAsJsonObject("key");
+
+        assertPattern(printer, "IHI", "PCP", "IBI");
+        assertTag(keys, "I", "c:ingots/iron");
+        assertItem(keys, "H", "minecraft:hopper");
+        assertItem(keys, "P", "minecraft:piston");
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertResultCount(printer, 1);
     }
 
     @Test
