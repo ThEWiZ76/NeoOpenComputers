@@ -13,6 +13,9 @@ public class StickyPistonUpgradeItem extends PistonUpgradeItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return host instanceof Rotatable rotatable ? new StickyPistonUpgradeEnvironment(host, rotatable) : null;
     }
 

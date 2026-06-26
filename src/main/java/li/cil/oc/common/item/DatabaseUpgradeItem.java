@@ -39,6 +39,9 @@ public class DatabaseUpgradeItem extends Item implements li.cil.oc.api.driver.Dr
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return createEnvironment(tier(stack), dataTag(stack), saved -> writeDataTag(stack, saved), host);
     }
 

@@ -35,6 +35,9 @@ public class EepromItem extends Item implements DriverItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         final CompoundTag data = dataTag(stack);
         return new EepromEnvironment(data, () -> writeDataTag(stack, data));
     }

@@ -649,14 +649,36 @@ final class ComponentItemShapeTest {
 
     @Test
     void cardDriversKeepUpstreamClientWorldEnvironmentGuard() throws Exception {
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/AngelUpgradeItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/ApuItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/BatteryUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/ChunkloaderUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/CraftingUpgradeItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/DataCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/DatabaseUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/DebugCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/EepromItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/FloppyItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/GeneratorUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/driver/GeolyzerItemDriver.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/GraphicsCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/HardDiskDriveItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/InternetCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/InventoryControllerUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/LeashUpgradeItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/LinkedCardItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/driver/MotionSensorItemDriver.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/NavigationUpgradeItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/NetworkCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/PistonUpgradeItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/RedstoneCardItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/SignUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/SolarGeneratorUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/StickyPistonUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/TankControllerUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/TankUpgradeItem.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/driver/TransposerItemDriver.java");
+        assertClientWorldGuard("src/main/java/li/cil/oc/common/item/TractorBeamUpgradeItem.java");
         assertClientWorldGuard("src/main/java/li/cil/oc/common/item/WirelessNetworkCardItem.java");
     }
 

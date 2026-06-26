@@ -27,6 +27,9 @@ public class PistonUpgradeItem extends Item implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return host instanceof Rotatable rotatable ? new PistonUpgradeEnvironment(host, rotatable) : null;
     }
 

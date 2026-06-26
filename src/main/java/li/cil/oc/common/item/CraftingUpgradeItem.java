@@ -22,11 +22,14 @@ public class CraftingUpgradeItem extends Item implements HostAware {
 
     @Override
     public boolean worksWith(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
-        return worksWith(stack);
+        return worksWith(stack) && Robot.class.isAssignableFrom(host);
     }
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return host instanceof Robot robot ? new CraftingUpgradeEnvironment(robot) : null;
     }
 

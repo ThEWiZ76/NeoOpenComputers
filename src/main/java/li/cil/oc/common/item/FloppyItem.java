@@ -55,6 +55,9 @@ public class FloppyItem extends Item implements DriverItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         final CompoundTag rootData = rootData(stack);
         if (rootData.contains(LEGACY_LOOT_PATH_TAG)) {
             final li.cil.oc.api.fs.FileSystem fileSystem = ModLootDisks.bundledFileSystem(rootData.getString(LEGACY_LOOT_PATH_TAG));

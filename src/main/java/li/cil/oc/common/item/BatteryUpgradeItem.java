@@ -35,6 +35,9 @@ public class BatteryUpgradeItem extends Item implements HostAware, Chargeable {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return new BatteryUpgradeEnvironment(tier(stack));
     }
 

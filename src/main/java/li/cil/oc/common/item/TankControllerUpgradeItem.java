@@ -29,6 +29,9 @@ public class TankControllerUpgradeItem extends Item implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         if (host instanceof Adapter || host instanceof Drone || host instanceof Robot) {
             return new TankControllerEnvironment(host);
         }

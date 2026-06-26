@@ -28,6 +28,9 @@ public class SignUpgradeItem extends Item implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         if (host == null) {
             return null;
         }

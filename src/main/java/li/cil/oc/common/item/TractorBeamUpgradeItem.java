@@ -15,6 +15,9 @@ public class TractorBeamUpgradeItem extends BasicUpgradeItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         if (host instanceof Robot robot) {
             return new TractorBeamUpgradeEnvironment(robot);
         }

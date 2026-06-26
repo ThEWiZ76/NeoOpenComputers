@@ -12,7 +12,7 @@ public class ChunkloaderUpgradeItem extends BasicUpgradeItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        if (host != null && host.world() != null && host.world().isClientSide()) {
+        if (ItemDriverData.isClientSide(host)) {
             return null;
         }
         return new ChunkloaderUpgradeEnvironment(host);

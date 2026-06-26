@@ -27,6 +27,9 @@ public class GeneratorUpgradeItem extends Item implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
+        if (ItemDriverData.isClientSide(host)) {
+            return null;
+        }
         return host instanceof Agent agent ? new GeneratorUpgradeEnvironment(agent) : null;
     }
 
