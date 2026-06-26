@@ -17,6 +17,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
@@ -368,16 +369,25 @@ final class InternetCardEnvironmentTest {
             throw new AssertionError("transport should not be called for invalid scheme");
         });
 
-        try {
-            card.request(null, new TestArguments("file:///tmp/data.txt"));
-        } catch (IllegalArgumentException e) {
-            assertEquals("unsupported protocol", e.getMessage());
-            return;
-        } catch (Exception e) {
-            throw new AssertionError(e);
-        }
+        FileNotFoundException error = assertThrows(
+            FileNotFoundException.class,
+            () -> card.request(null, new TestArguments("file:///tmp/data.txt")));
 
-        throw new AssertionError("expected invalid scheme to fail");
+        assertEquals("unsupported protocol", error.getMessage());
+    }
+
+    @Test
+    void invalidHttpAddressFailsLikeUpstream() {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment((url, postData, headers, method) -> {
+            throw new AssertionError("transport should not be called for invalid address");
+        });
+
+        FileNotFoundException error = assertThrows(
+            FileNotFoundException.class,
+            () -> card.request(null, new TestArguments("not a url")));
+
+        assertEquals("invalid address", error.getMessage());
     }
 
     @Test

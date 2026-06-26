@@ -13,6 +13,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -176,18 +177,18 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         }
     }
 
-    private static String checkHttpUrl(final String address) {
+    private static String checkHttpUrl(final String address) throws FileNotFoundException {
         try {
             final URL url = new URL(address);
             final String protocol = url.getProtocol();
             if (!"http".equals(protocol) && !"https".equals(protocol)) {
-                throw new IllegalArgumentException("unsupported protocol");
+                throw new FileNotFoundException("unsupported protocol");
             }
             return address;
-        } catch (IllegalArgumentException e) {
+        } catch (FileNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalArgumentException("invalid address", e);
+            throw new FileNotFoundException("invalid address");
         }
     }
 
