@@ -182,11 +182,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
             node().sendToReachable("computer.signal", signalArgs);
         }
         if (isWakePacket(data)) {
-            if (host instanceof MachineHost machineHost && machineHost.machine() != null) {
-                machineHost.machine().start();
-            } else {
-                node().sendToNeighbors("computer.start");
-            }
+            node().sendToNeighbors("computer.start");
         }
     }
 

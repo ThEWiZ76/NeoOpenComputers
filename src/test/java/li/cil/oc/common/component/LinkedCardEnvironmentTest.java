@@ -147,6 +147,26 @@ final class LinkedCardEnvironmentTest {
     }
 
     @Test
+    void wakePacketSendsComputerStartToNeighborsLikeUpstreamLinkedCard() {
+        OpenComputersApi.initialize();
+        LinkedCardEnvironment sender = new LinkedCardEnvironment(new TestMachineHost(), "pair");
+        LinkedCardEnvironment receiver = new LinkedCardEnvironment(new TestMachineHost(), "pair");
+        RecordingEnvironment computer = new RecordingEnvironment();
+        Network.joinNewNetwork(sender.node());
+        Network.joinNewNetwork(receiver.node());
+        receiver.node().connect(computer.node());
+        receiver.setWakeMessage(null, new TestArguments("boot", false));
+        charge(sender, 101D);
+
+        assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments("boot")));
+
+        assertEquals(1, computer.messages.size());
+        Message message = computer.messages.get(0);
+        assertEquals("computer.start", message.name());
+        assertArrayEquals(new Object[0], message.data());
+    }
+
+    @Test
     void sendRequiresEnergyAndConsumesBuffer() {
         OpenComputersApi.initialize();
         TestMachineHost rightHost = new TestMachineHost();
