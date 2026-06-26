@@ -87,8 +87,7 @@ public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlo
             if (click == null) {
                 return InteractionResult.PASS;
             }
-            screen.mouseDown(click.x(), click.y(), 0, player);
-            screen.mouseUp(click.x(), click.y(), 0, player);
+            ScreenClickHandler.clickScreen(screen, click, player);
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;

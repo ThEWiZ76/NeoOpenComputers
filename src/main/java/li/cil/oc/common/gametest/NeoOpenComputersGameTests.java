@@ -9241,7 +9241,6 @@ public final class NeoOpenComputersGameTests {
 
         helper.runAtTickTime(5, () -> {
             assertNextSignal(helper, computer, "touch", screen.node().address(), 13, 5, 0);
-            assertNextSignal(helper, computer, "drop", screen.node().address(), 13, 5, 0);
             helper.succeed();
         });
     }
