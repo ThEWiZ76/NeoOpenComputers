@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -37,6 +38,16 @@ final class GeolyzerEnvironmentTest {
                 IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> environment.scan(null, new TestArguments(3, 0, 0, 1, 1, 1)));
                 assertEquals("location out of bounds", error.getMessage());
             }));
+    }
+
+    @Test
+    void analyzeHonorsItemStackInspectionConfigLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        withCachedConfig(ModSettings.ALLOW_ITEM_STACK_INSPECTION, false, () -> {
+            GeolyzerEnvironment environment = new GeolyzerEnvironment(null);
+
+            assertArrayEquals(new Object[]{null, "not enabled in config"}, environment.analyze(null, new TestArguments(0)));
+        });
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

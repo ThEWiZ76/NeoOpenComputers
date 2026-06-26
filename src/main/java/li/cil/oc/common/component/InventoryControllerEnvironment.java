@@ -13,6 +13,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.util.InventoryComparison;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -54,6 +55,9 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
 
     @Callback(doc = "function(side:number):string -- Get the registry name of the inventory on the specified side.")
     public Object[] getInventoryName(final Context context, final Arguments arguments) {
+        if (!ModSettings.allowItemStackInspection()) {
+            return notEnabled();
+        }
         final BlockEntity blockEntity = blockEntity(arguments.checkInteger(0));
         final var key = BuiltInRegistries.BLOCK.getKey(blockEntity.getBlockState().getBlock());
         return new Object[]{key == null ? "unknown" : key.toString()};
@@ -100,12 +104,18 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
 
     @Callback(doc = "function(side:number, slot:number):table -- Get the raw item stack in the specified inventory slot.")
     public Object[] getStackInSlot(final Context context, final Arguments arguments) {
+        if (!ModSettings.allowItemStackInspection()) {
+            return notEnabled();
+        }
         final Container container = container(arguments.checkInteger(0));
         return new Object[]{container.getItem(checkSlot(container, arguments.checkInteger(1)))};
     }
 
     @Callback(doc = "function(side:number):table -- Get raw item stacks for all slots in the specified inventory.")
     public Object[] getAllStacks(final Context context, final Arguments arguments) {
+        if (!ModSettings.allowItemStackInspection()) {
+            return notEnabled();
+        }
         final Container container = container(arguments.checkInteger(0));
         final ItemStack[] stacks = new ItemStack[container.getContainerSize()];
         for (int slot = 0; slot < stacks.length; slot++) {
@@ -186,6 +196,10 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
             return false;
         }
         return stackA.getTags().anyMatch(stackB::is);
+    }
+
+    private static Object[] notEnabled() {
+        return new Object[]{null, "not enabled in config"};
     }
 
     public static final class RobotInventoryControllerEnvironment extends InventoryControllerEnvironment {

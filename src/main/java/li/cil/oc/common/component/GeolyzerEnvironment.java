@@ -117,6 +117,9 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
 
     @Callback(doc = "function(side:number[,options:table]):table -- Get some information on a directly adjacent block.")
     public Object[] analyze(final Context context, final Arguments args) {
+        if (!ModSettings.allowItemStackInspection()) {
+            return notEnabled();
+        }
         final BlockPos target = relativeBlock(args.checkInteger(0));
         final Map<?, ?> options = args.optTable(1, Map.of());
         if (!consumeEnergy()) {
@@ -249,6 +252,10 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
 
     private static Object[] noEnergy() {
         return new Object[]{null, "not enough energy"};
+    }
+
+    private static Object[] notEnabled() {
+        return new Object[]{null, "not enabled in config"};
     }
 
     private static Map<?, ?> scanOptions(final Arguments args, final int index) {

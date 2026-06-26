@@ -10,6 +10,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.util.FluidDescriptions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -87,6 +88,9 @@ public class TankControllerEnvironment extends AbstractManagedEnvironment implem
 
     @Callback(doc = "function(side:number[, tank:number]):table -- Get fluid info for the specified tank, or all tanks on the side.")
     public Object[] getFluidInTank(final Context context, final Arguments arguments) {
+        if (!ModSettings.allowItemStackInspection()) {
+            return notEnabled();
+        }
         final IFluidHandler handler = handler(arguments.checkInteger(0));
         if (handler == null) {
             return noTank();
@@ -116,6 +120,10 @@ public class TankControllerEnvironment extends AbstractManagedEnvironment implem
 
     private static Object[] noTank() {
         return new Object[]{null, "no tank"};
+    }
+
+    private static Object[] notEnabled() {
+        return new Object[]{null, "not enabled in config"};
     }
 
     private static int checkTank(final IFluidHandler handler, final int tank) {

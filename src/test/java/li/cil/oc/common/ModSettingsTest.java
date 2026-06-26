@@ -111,6 +111,7 @@ final class ModSettingsTest {
         assertEquals(0.05D, ModSettings.disassemblerBreakChance());
         assertEquals(0.1D, ModSettings.redstoneDelay());
         assertEquals(500, ModSettings.diskActivitySoundDelay());
+        assertEquals(true, ModSettings.allowItemStackInspection());
         assertEquals(5, ModSettings.defaultRelayDelay());
         assertEquals(1.5D, ModSettings.relayDelayUpgrade());
         assertEquals(20, ModSettings.defaultMaxQueueSize());
@@ -262,6 +263,7 @@ final class ModSettingsTest {
         assertEquals(List.of("misc", "disassemblerBreakChance"), ModSettings.DISASSEMBLER_BREAK_CHANCE.getPath());
         assertEquals(List.of("misc", "redstoneDelay"), ModSettings.REDSTONE_DELAY.getPath());
         assertEquals(List.of("misc", "diskActivitySoundDelay"), ModSettings.DISK_ACTIVITY_SOUND_DELAY.getPath());
+        assertEquals(List.of("misc", "allowItemStackInspection"), ModSettings.ALLOW_ITEM_STACK_INSPECTION.getPath());
         assertEquals(List.of("misc", "defaultRelayDelay"), ModSettings.DEFAULT_RELAY_DELAY.getPath());
         assertEquals(List.of("misc", "relayDelayUpgrade"), ModSettings.RELAY_DELAY_UPGRADE.getPath());
         assertEquals(List.of("misc", "defaultMaxQueueSize"), ModSettings.DEFAULT_MAX_QUEUE_SIZE.getPath());

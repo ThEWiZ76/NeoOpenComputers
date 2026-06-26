@@ -100,12 +100,18 @@ public final class TransposerEnvironment extends AbstractManagedEnvironment impl
 
     @Callback(doc = "function(side:number, slot:number):table -- Get the raw item stack in the specified slot.")
     public Object[] getStackInSlot(final Context context, final Arguments args) {
+        if (!ModSettings.allowItemStackInspection()) {
+            return notEnabled();
+        }
         final Container container = container(args.checkInteger(0));
         return new Object[]{container.getItem(checkSlot(container, args.checkInteger(1)))};
     }
 
     @Callback(doc = "function(side:number):table -- Get raw item stacks for all slots in the specified inventory.")
     public Object[] getAllStacks(final Context context, final Arguments args) {
+        if (!ModSettings.allowItemStackInspection()) {
+            return notEnabled();
+        }
         final Container container = container(args.checkInteger(0));
         final ItemStack[] stacks = new ItemStack[container.getContainerSize()];
         for (int slot = 0; slot < stacks.length; slot++) {
@@ -116,6 +122,9 @@ public final class TransposerEnvironment extends AbstractManagedEnvironment impl
 
     @Callback(doc = "function(side:number):string -- Get the registry name of the inventory block on the specified side.")
     public Object[] getInventoryName(final Context context, final Arguments args) {
+        if (!ModSettings.allowItemStackInspection()) {
+            return notEnabled();
+        }
         final BlockEntity blockEntity = blockEntity(args.checkInteger(0));
         final var key = BuiltInRegistries.BLOCK.getKey(blockEntity.getBlockState().getBlock());
         return new Object[]{key == null ? "unknown" : key.toString()};
@@ -193,6 +202,9 @@ public final class TransposerEnvironment extends AbstractManagedEnvironment impl
 
     @Callback(doc = "function(side:number[, tank:number]):table -- Get fluid info for the specified tank, or all tanks on the side.")
     public Object[] getFluidInTank(final Context context, final Arguments args) {
+        if (!ModSettings.allowItemStackInspection()) {
+            return notEnabled();
+        }
         final IFluidHandler handler = fluidHandler(args.checkInteger(0));
         if (args.count() > 1 && args.checkAny(1) != null) {
             return FluidDescriptions.describe(handler, checkTank(handler, args.checkInteger(1)));
@@ -252,6 +264,10 @@ public final class TransposerEnvironment extends AbstractManagedEnvironment impl
 
     private static Object[] noEnergy() {
         return new Object[]{null, "not enough energy"};
+    }
+
+    private static Object[] notEnabled() {
+        return new Object[]{null, "not enabled in config"};
     }
 
     private Container container(final int side) {

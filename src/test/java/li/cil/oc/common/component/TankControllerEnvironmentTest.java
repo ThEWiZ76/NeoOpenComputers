@@ -4,11 +4,14 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map;
@@ -50,9 +53,35 @@ final class TankControllerEnvironmentTest {
         assertArrayEquals(new Object[]{null, "no tank"}, controller.getFluidInTank(null, new TestArguments(0)));
     }
 
+    @Test
+    void fluidInfoCallbackHonorsInspectionConfigLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        withCachedConfig(ModSettings.ALLOW_ITEM_STACK_INSPECTION, false, () -> {
+            TankControllerEnvironment controller = new TankControllerEnvironment(new TestHost());
+
+            assertArrayEquals(new Object[]{null, "not enabled in config"}, controller.getFluidInTank(null, new TestArguments(0)));
+        });
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = TankControllerEnvironment.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
+    }
+
+    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+        final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
+        cachedValue.setAccessible(true);
+        final Object previous = cachedValue.get(value);
+        cachedValue.set(value, override);
+        try {
+            action.run();
+        } finally {
+            cachedValue.set(value, previous);
+        }
+    }
+
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private static final class TestHost implements EnvironmentHost {
