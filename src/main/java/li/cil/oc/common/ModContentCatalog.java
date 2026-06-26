@@ -209,6 +209,10 @@ public final class ModContentCatalog {
                 ModItems.HOLOGRAM_TIER2.get(),
                 ModBlocks.WAYPOINT.get(),
                 ModItems.WAYPOINT.get(),
+                ModBlocks.PRINT.get(),
+                ModItems.PRINT.get(),
+                ModBlocks.PRINTER.get(),
+                ModItems.PRINTER.get(),
                 ModItems.MANUAL.get(),
                 ModItems.ANALYZER.get(),
                 ModItems.WRENCH.get(),
@@ -457,6 +461,10 @@ public final class ModContentCatalog {
         final Item hologramTier2Item,
         final Block waypoint,
         final Item waypointItem,
+        final Block print,
+        final Item printItem,
+        final Block printer,
+        final Item printerItem,
         final Item manualItem,
         final Item analyzerItem,
         final Item wrenchItem,
@@ -593,6 +601,8 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.HOLOGRAM_TIER1, hologramTier1, hologramTier1Item);
         registry.register(ModContentIds.HOLOGRAM_TIER2, hologramTier2, hologramTier2Item);
         registry.register(ModContentIds.WAYPOINT, waypoint, waypointItem);
+        registry.register(ModContentIds.PRINT, print, printItem);
+        registry.register(ModContentIds.PRINTER, printer, printerItem);
         registry.register(ModContentIds.CPU_TIER1, null, cpuTier1Item);
         registry.register(ModContentIds.CPU_TIER2, null, cpuTier2Item);
         registry.register(ModContentIds.CPU_TIER3, null, cpuTier3Item);
