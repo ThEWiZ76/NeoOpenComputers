@@ -177,6 +177,15 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void hardDiskDriveUsesUpstreamFilesystemSpeeds() throws Exception {
+        OpenComputersApi.initialize();
+
+        assertHardDiskClock(0, "140/140/60");
+        assertHardDiskClock(1, "200/200/80");
+        assertHardDiskClock(2, "260/260/100");
+    }
+
+    @Test
     void hardDiskDriveLabelIsWritableAndPersistsLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         final CompoundTag savedData = new CompoundTag();
@@ -600,6 +609,13 @@ final class ComponentItemShapeTest {
         final Component component = assertInstanceOf(Component.class, environment.node());
 
         assertEquals(expectedCapacity, component.invoke("spaceTotal", null)[0]);
+    }
+
+    private static void assertHardDiskClock(final int tier, final String expectedClock) {
+        final ManagedEnvironment environment = HardDiskDriveItem.createEnvironment(tier, new CompoundTag(), saved -> {}, null);
+        final DeviceInfo info = assertInstanceOf(DeviceInfo.class, environment);
+
+        assertEquals(expectedClock, info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Clock));
     }
 
     private static CpuItem cpu(final int tier) throws Exception {

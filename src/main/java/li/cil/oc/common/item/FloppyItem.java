@@ -2,6 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.API;
 import li.cil.oc.api.FileSystem;
+import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
@@ -19,6 +20,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
@@ -172,7 +174,7 @@ public class FloppyItem extends Item implements DriverItem {
         return customData.copyTag().getCompound(FLOPPY_DATA_TAG);
     }
 
-    private record StackBackedEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData) implements ManagedEnvironment {
+    private record StackBackedEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData) implements ManagedEnvironment, DeviceInfo {
         @Override
         public Node node() {
             return delegate.node();
@@ -214,6 +216,11 @@ public class FloppyItem extends Item implements DriverItem {
             if (saveData != null) {
                 saveData.accept(nbt.copy());
             }
+        }
+
+        @Override
+        public Map<String, String> getDeviceInfo() {
+            return delegate instanceof DeviceInfo info ? info.getDeviceInfo() : Map.of();
         }
     }
 }
