@@ -4793,6 +4793,31 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void generatorUpgradeRestoresFuelWhenContainerInventoryFull(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for generator upgrade");
+
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            player.getInventory().setItem(slot, new ItemStack(Items.DIRT, Items.DIRT.getDefaultMaxStackSize()));
+        }
+        final AgentTestHost host = new AgentTestHost(helper, player);
+        host.mainInventory().setItem(0, new ItemStack(Items.LAVA_BUCKET, 1));
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.GENERATOR_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Generator upgrade did not create generator environment");
+        helper.assertTrue(environment.node() instanceof ComponentConnector, "Generator node is not a component connector");
+
+        final ComponentConnector connector = (ComponentConnector) environment.node();
+        final Object[] insert = connector.invoke("insert", null, 1);
+
+        helper.assertTrue(Boolean.FALSE.equals(insert[0]), "Generator insert did not fail when fuel container inventory was full");
+        helper.assertTrue("no space in inventory for fuel containers".equals(insert[1]), "Generator insert used non-upstream full-container-inventory message");
+        helper.assertTrue(host.mainInventory().getItem(0).is(Items.LAVA_BUCKET), "Generator did not restore selected fuel after failed container insert");
+        helper.assertTrue(!containsStack(player.getInventory(), Items.BUCKET, 1), "Generator inserted fuel container into full inventory");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void generatorUpgradeConsumesFuelContainerOnRemove(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for generator upgrade");

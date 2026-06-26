@@ -94,7 +94,7 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
             container.setCount(container.getCount() * inserted);
             if (!host.player().getInventory().add(container)) {
                 inventory.setItem(selectedSlot, previousSelectedFuel);
-                return new Object[]{false, "no inventory space available for fuel containers"};
+                return new Object[]{false, "no space in inventory for fuel containers"};
             }
             if (!container.isEmpty()) {
                 host.player().drop(container.copy(), false);
