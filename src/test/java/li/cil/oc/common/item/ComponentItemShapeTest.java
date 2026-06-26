@@ -313,6 +313,7 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(ApuItem.class));
         assertTrue(Processor.class.isAssignableFrom(ApuItem.class));
+        assertTrue(HostAware.class.isAssignableFrom(ApuItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class, int.class}, constructor.getParameterTypes());
     }
 

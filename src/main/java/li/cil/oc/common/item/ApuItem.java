@@ -1,11 +1,12 @@
 package li.cil.oc.common.item;
 
+import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.ApuEnvironment;
 import net.minecraft.world.item.ItemStack;
 
-public final class ApuItem extends CpuItem {
+public final class ApuItem extends CpuItem implements HostAware {
     private final int gpuTier;
 
     public ApuItem(final Properties properties, final int tier) {
@@ -16,5 +17,10 @@ public final class ApuItem extends CpuItem {
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
         return new ApuEnvironment(gpuTier);
+    }
+
+    @Override
+    public boolean worksWith(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
+        return worksWith(stack);
     }
 }
