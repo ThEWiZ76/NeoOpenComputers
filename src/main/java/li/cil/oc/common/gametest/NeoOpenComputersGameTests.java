@@ -5302,6 +5302,31 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void stickyPistonUpgradeRejectsObstructedPullLikeUpstream(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.STICKY_PISTON_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for sticky piston upgrade");
+
+        final BlockPos hostPos = new BlockPos(2, 1, 2);
+        final BlockPos targetPos = hostPos.relative(Direction.WEST);
+        final BlockPos sourcePos = targetPos.relative(Direction.WEST);
+        helper.setBlock(targetPos, Blocks.OBSIDIAN);
+        helper.setBlock(sourcePos, Blocks.DIRT);
+        final ManagedEnvironment environment = driver.createEnvironment(
+            new ItemStack(ModItems.STICKY_PISTON_UPGRADE.get()),
+            new RotatedPositionEnvironmentHost(helper, hostPos, Direction.EAST)
+        );
+        helper.assertTrue(environment != null, "Sticky piston upgrade did not create piston environment");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        final Object[] pull = component.invoke("pull", null);
+        helper.assertTrue(pull.length == 2 && Boolean.FALSE.equals(pull[0]) && "path is obstructed".equals(pull[1]),
+            "Sticky piston obstructed pull did not return upstream obstruction result: " + java.util.Arrays.toString(pull));
+        helper.assertTrue(helper.getBlockState(targetPos).is(Blocks.OBSIDIAN), "Sticky piston obstructed pull moved obstruction");
+        helper.assertTrue(helper.getBlockState(sourcePos).is(Blocks.DIRT), "Sticky piston obstructed pull moved source block");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tabletPistonPushesDownFromFeetLikeUpstream(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.PISTON_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for piston upgrade");
