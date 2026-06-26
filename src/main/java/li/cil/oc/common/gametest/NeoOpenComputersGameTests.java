@@ -4062,6 +4062,20 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void hardDiskRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.HDD_TIER1.get(), hardDiskRecipeInput(
+            new ItemStack(ModItems.MICROCHIP_TIER1.get()),
+            new ItemStack(Items.IRON_INGOT)));
+        assertCraftsItem(helper, ModItems.HDD_TIER2.get(), hardDiskRecipeInput(
+            new ItemStack(ModItems.MICROCHIP_TIER2.get()),
+            new ItemStack(Items.GOLD_INGOT)));
+        assertCraftsItem(helper, ModItems.HDD_TIER3.get(), hardDiskRecipeInput(
+            new ItemStack(ModItems.MICROCHIP_TIER3.get()),
+            new ItemStack(Items.DIAMOND)));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printerBlockExposesUpstreamComponentShell(final GameTestHelper helper) {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());
@@ -10055,6 +10069,14 @@ public final class NeoOpenComputersGameTests {
 
     private static void assertCraftsMicrocontrollerCase(final GameTestHelper helper, final Item expectedItem, final CraftingInput input) {
         assertCraftsItem(helper, expectedItem, input);
+    }
+
+    private static CraftingInput hardDiskRecipeInput(final ItemStack chip, final ItemStack shell) {
+        return CraftingInput.of(3, 3, List.of(
+            chip.copy(), new ItemStack(ModItems.DISK_PLATTER.get()), shell.copy(),
+            new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(ModItems.DISK_PLATTER.get()), new ItemStack(Items.PISTON),
+            chip.copy(), new ItemStack(ModItems.DISK_PLATTER.get()), shell.copy()
+        ));
     }
 
     private static void assertCraftsItem(final GameTestHelper helper, final Item expectedItem, final CraftingInput input) {

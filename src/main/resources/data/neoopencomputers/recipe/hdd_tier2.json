@@ -8,17 +8,20 @@
     "C": {
       "item": "neoopencomputers:microchip_tier2"
     },
-    "G": {
+    "D": {
+      "item": "neoopencomputers:disk_platter"
+    },
+    "I": {
       "tag": "c:ingots/gold"
     },
-    "H": {
-      "item": "neoopencomputers:hdd_tier1"
+    "P": {
+      "item": "minecraft:piston"
     }
   },
   "pattern": [
-    "GHG",
-    "CBC",
-    "GHG"
+    "CDI",
+    "BDP",
+    "CDI"
   ],
   "result": {
     "count": 1,

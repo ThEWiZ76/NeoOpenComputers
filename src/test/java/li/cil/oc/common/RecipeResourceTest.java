@@ -478,6 +478,9 @@ final class RecipeResourceTest {
         JsonObject eeprom = recipeKeys(ModContentIds.EEPROM);
         JsonObject floppy = recipeKeys(ModContentIds.FLOPPY);
         JsonObject drive = recipeKeys(ModContentIds.DISK_DRIVE);
+        JsonObject hdd1Recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.HDD_TIER1 + ".json"));
+        JsonObject hdd2Recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.HDD_TIER2 + ".json"));
+        JsonObject hdd3Recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.HDD_TIER3 + ".json"));
         JsonObject hdd1 = recipeKeys(ModContentIds.HDD_TIER1);
         JsonObject hdd2 = recipeKeys(ModContentIds.HDD_TIER2);
         JsonObject hdd3 = recipeKeys(ModContentIds.HDD_TIER3);
@@ -494,17 +497,24 @@ final class RecipeResourceTest {
         assertItem(drive, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(drive, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(drive, "P", "minecraft:piston");
+        assertPattern(hdd1Recipe, "CDI", "BDP", "CDI");
         assertItem(hdd1, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(hdd1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(hdd1, "D", "neoopencomputers:" + ModContentIds.DISK_PLATTER);
+        assertTag(hdd1, "I", "c:ingots/iron");
         assertItem(hdd1, "P", "minecraft:piston");
+        assertPattern(hdd2Recipe, "CDI", "BDP", "CDI");
         assertItem(hdd2, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(hdd2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
-        assertItem(hdd2, "H", "neoopencomputers:" + ModContentIds.HDD_TIER1);
+        assertItem(hdd2, "D", "neoopencomputers:" + ModContentIds.DISK_PLATTER);
+        assertTag(hdd2, "I", "c:ingots/gold");
+        assertItem(hdd2, "P", "minecraft:piston");
+        assertPattern(hdd3Recipe, "CDI", "BDP", "CDI");
         assertItem(hdd3, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
         assertItem(hdd3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
-        assertItem(hdd3, "H", "neoopencomputers:" + ModContentIds.HDD_TIER2);
-        assertItem(hdd3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
+        assertItem(hdd3, "D", "neoopencomputers:" + ModContentIds.DISK_PLATTER);
+        assertItem(hdd3, "I", "minecraft:diamond");
+        assertItem(hdd3, "P", "minecraft:piston");
     }
 
     @Test

@@ -8,17 +8,20 @@
     "C": {
       "item": "neoopencomputers:microchip_tier3"
     },
-    "H": {
-      "item": "neoopencomputers:hdd_tier2"
+    "D": {
+      "item": "neoopencomputers:disk_platter"
     },
-    "M": {
-      "item": "neoopencomputers:memory_tier1"
+    "I": {
+      "item": "minecraft:diamond"
+    },
+    "P": {
+      "item": "minecraft:piston"
     }
   },
   "pattern": [
-    "CHC",
-    "MBM",
-    "CHC"
+    "CDI",
+    "BDP",
+    "CDI"
   ],
   "result": {
     "count": 1,
