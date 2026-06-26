@@ -18,6 +18,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 final class HologramBlockEntityTest {
     @Test
@@ -103,6 +104,16 @@ final class HologramBlockEntityTest {
         hologram.loadAdditional(tag, null);
 
         assertArrayEquals(new Object[]{9.0D}, hologram.getScale(null, new TestArguments()));
+    }
+
+    @Test
+    void setTranslationValidatesAllAxesBeforeMutationLikeUpstream() throws Exception {
+        HologramBlockEntity hologram = allocateHologram(1);
+        hologram.setTranslation(null, new TestArguments(0.25D, 0.5D, -0.25D));
+
+        assertThrows(RuntimeException.class, () -> hologram.setTranslation(null, new TestArguments(1.5D, "bad", 1.5D)));
+
+        assertArrayEquals(new Object[]{0.25D, 0.5D, -0.25D}, hologram.getTranslation(null, new TestArguments()));
     }
 
     private static HologramBlockEntity allocateHologram(final int tier) throws Exception {

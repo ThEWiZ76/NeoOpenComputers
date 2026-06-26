@@ -298,9 +298,12 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
     @Callback(doc = "function(tx:number, ty:number, tz:number) -- Sets relative projection offsets.")
     public Object[] setTranslation(final Context context, final Arguments args) {
         final double maxTranslation = maxTranslation();
-        translationX = Math.max(-maxTranslation, Math.min(maxTranslation, args.checkDouble(0)));
-        translationY = Math.max(0D, Math.min(maxTranslation * 2D, args.checkDouble(1)));
-        translationZ = Math.max(-maxTranslation, Math.min(maxTranslation, args.checkDouble(2)));
+        final double nextX = Math.max(-maxTranslation, Math.min(maxTranslation, args.checkDouble(0)));
+        final double nextY = Math.max(0D, Math.min(maxTranslation * 2D, args.checkDouble(1)));
+        final double nextZ = Math.max(-maxTranslation, Math.min(maxTranslation, args.checkDouble(2)));
+        translationX = nextX;
+        translationY = nextY;
+        translationZ = nextZ;
         setChanged();
         return null;
     }
