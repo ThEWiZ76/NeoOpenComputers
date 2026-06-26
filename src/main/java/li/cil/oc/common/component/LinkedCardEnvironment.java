@@ -25,7 +25,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
     private static final String WAKE_MESSAGE_TAG = "wakeMessage";
     private static final String WAKE_MESSAGE_FUZZY_TAG = "wakeMessageFuzzy";
     private static final String MODEM_MESSAGE_SIGNAL = "modem_message";
-    private static final double LINKED_CARD_BASE_COST = 0.05D * 400D * 5D;
+    private static final int TIER_TWO = 1;
 
     private final EnvironmentHost host;
     private String channel;
@@ -81,7 +81,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         if (!(node() instanceof Connector connector)) {
             return true;
         }
-        final double cost = packet.size() / 32.0D + LINKED_CARD_BASE_COST;
+        final double cost = packet.size() / 32.0D + ModSettings.wirelessCostPerRange(TIER_TWO) * ModSettings.maxWirelessRange(TIER_TWO) * 5D;
         return connector.tryChangeBuffer(-cost);
     }
 

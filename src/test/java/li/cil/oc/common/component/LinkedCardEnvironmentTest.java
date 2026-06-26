@@ -223,6 +223,28 @@ final class LinkedCardEnvironmentTest {
     }
 
     @Test
+    void sendCostUsesConfiguredTierTwoWirelessRangeLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+
+        withCachedConfig(ModSettings.WIRELESS_COST_PER_RANGE, List.of(0.05D, 0.2D), () ->
+            withCachedConfig(ModSettings.MAX_WIRELESS_RANGE, List.of(16D, 10D), () -> {
+                TestMachineHost rightHost = new TestMachineHost();
+                LinkedCardEnvironment left = new LinkedCardEnvironment(new TestMachineHost(), "pair");
+                LinkedCardEnvironment right = new LinkedCardEnvironment(rightHost, "pair");
+                ComponentConnector connector = assertInstanceOf(ComponentConnector.class, left.node());
+                Network.joinNewNetwork(left.node());
+                Network.joinNewNetwork(right.node());
+                connector.setLocalBufferSize(11D);
+                connector.changeBuffer(11D);
+
+                assertArrayEquals(new Object[]{true}, left.send(null, new TestArguments("payload")));
+
+                assertEquals(0.71875D, connector.localBuffer(), 0.000_001D);
+                assertEquals(List.of(Arrays.asList("modem_message", left.node().address(), 0, 0D, "payload")), rightHost.signals);
+            }));
+    }
+
+    @Test
     void ignoresCardsOnOtherChannels() {
         OpenComputersApi.initialize();
         TestMachineHost receiverHost = new TestMachineHost();
