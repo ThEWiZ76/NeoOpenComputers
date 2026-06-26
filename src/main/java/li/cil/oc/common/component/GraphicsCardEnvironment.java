@@ -240,6 +240,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         if (size > freeVideoMemory()) {
             return new Object[]{null, "not enough video memory"};
         }
+        if (node() == null) {
+            return new Object[]{null, "graphics card appears disconnected"};
+        }
         final int index = nextBufferIndex();
         videoBuffers.put(index, new VideoBuffer(width, height, maxDepth));
         return new Object[]{index};

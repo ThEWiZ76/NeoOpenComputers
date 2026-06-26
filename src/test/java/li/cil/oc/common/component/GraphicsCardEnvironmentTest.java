@@ -491,6 +491,17 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void allocateBufferRejectsDisconnectedGpuLikeUpstream() {
+        OpenComputersApi.initialize();
+        DisconnectableGraphicsCardEnvironment gpu = new DisconnectableGraphicsCardEnvironment(0);
+
+        gpu.disconnectNode();
+
+        assertArrayEquals(new Object[]{null, "graphics card appears disconnected"}, gpu.allocateBuffer(null, new TestArguments(2, 2)));
+        assertArrayEquals(new int[0], (int[]) gpu.buffers(null, new TestArguments())[0]);
+    }
+
+    @Test
     void bitbltCopiesBetweenVideoBuffers() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
@@ -568,6 +579,16 @@ final class GraphicsCardEnvironmentTest {
     @FunctionalInterface
     private interface ThrowingRunnable {
         void run() throws Exception;
+    }
+
+    private static final class DisconnectableGraphicsCardEnvironment extends GraphicsCardEnvironment {
+        private DisconnectableGraphicsCardEnvironment(final int tier) {
+            super(tier);
+        }
+
+        private void disconnectNode() {
+            setNode(null);
+        }
     }
 
     private static final class RecordingContext implements Context {
