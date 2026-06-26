@@ -57,7 +57,7 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         if (node() == null) {
             return new Object[]{false};
         }
-        final Packet packet = Network.newPacket(node().address(), null, 0, args.toArray());
+        final Packet packet = Network.newPacket(node().address(), null, 0, rawArguments(args));
         if (packet == null) {
             return new Object[]{false};
         }
@@ -66,6 +66,14 @@ public class LinkedCardEnvironment extends AbstractManagedEnvironment implements
         }
         LinkedNetwork.send(channel, this, packet);
         return new Object[]{true};
+    }
+
+    private static Object[] rawArguments(final Arguments args) {
+        final Object[] values = new Object[args.count()];
+        for (int index = 0; index < values.length; index++) {
+            values[index] = args.checkAny(index);
+        }
+        return values;
     }
 
     private boolean consumeEnergy(final Packet packet) {

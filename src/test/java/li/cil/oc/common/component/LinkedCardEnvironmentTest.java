@@ -109,6 +109,25 @@ final class LinkedCardEnvironmentTest {
     }
 
     @Test
+    void sendPreservesByteArrayPayloadsLikeUpstream() {
+        OpenComputersApi.initialize();
+        TestMachineHost rightHost = new TestMachineHost();
+        LinkedCardEnvironment left = new LinkedCardEnvironment(new TestMachineHost(), "pair");
+        LinkedCardEnvironment right = new LinkedCardEnvironment(rightHost, "pair");
+        byte[] payload = new byte[]{0, 1, 2, 3};
+        Network.joinNewNetwork(left.node());
+        Network.joinNewNetwork(right.node());
+        charge(left, 101D);
+
+        assertArrayEquals(new Object[]{true}, left.send(null, new RuntimeLikeArguments(payload)));
+
+        assertEquals(1, rightHost.signals.size());
+        Object value = rightHost.signals.getFirst().get(4);
+        assertInstanceOf(byte[].class, value);
+        assertArrayEquals(payload, (byte[]) value);
+    }
+
+    @Test
     void receivePacketSignalsReachableNodeWhenHostIsNotMachineHostLikeUpstream() {
         OpenComputersApi.initialize();
         LinkedCardEnvironment sender = new LinkedCardEnvironment(new TestMachineHost(), "pair");
@@ -354,6 +373,52 @@ final class LinkedCardEnvironmentTest {
         @Override public boolean isTable(final int index) { return values[index] instanceof Map; }
         @Override public boolean isItemStack(final int index) { return values[index] instanceof ItemStack; }
         @Override public Object[] toArray() { return values; }
+        @Override public Iterator<Object> iterator() { return Arrays.asList(values).iterator(); }
+    }
+
+    private record RuntimeLikeArguments(Object... values) implements Arguments {
+        @Override public int count() { return values.length; }
+        @Override public Object checkAny(final int index) { return values[index]; }
+        @Override public boolean checkBoolean(final int index) { return (Boolean) values[index]; }
+        @Override public int checkInteger(final int index) { return ((Number) values[index]).intValue(); }
+        @Override public long checkLong(final int index) { return ((Number) values[index]).longValue(); }
+        @Override public double checkDouble(final int index) { return ((Number) values[index]).doubleValue(); }
+        @Override public String checkString(final int index) {
+            Object value = values[index];
+            return value instanceof byte[] bytes ? new String(bytes, java.nio.charset.StandardCharsets.UTF_8) : (String) value;
+        }
+        @Override public byte[] checkByteArray(final int index) {
+            Object value = values[index];
+            return value instanceof String string ? string.getBytes(java.nio.charset.StandardCharsets.UTF_8) : (byte[]) value;
+        }
+        @Override public Map checkTable(final int index) { return (Map) values[index]; }
+        @Override public ItemStack checkItemStack(final int index) { return (ItemStack) values[index]; }
+        @Override public Object optAny(final int index, final Object def) { return index < values.length ? values[index] : def; }
+        @Override public boolean optBoolean(final int index, final boolean def) { return index < values.length ? checkBoolean(index) : def; }
+        @Override public int optInteger(final int index, final int def) { return index < values.length ? checkInteger(index) : def; }
+        @Override public long optLong(final int index, final long def) { return index < values.length ? checkLong(index) : def; }
+        @Override public double optDouble(final int index, final double def) { return index < values.length ? checkDouble(index) : def; }
+        @Override public String optString(final int index, final String def) { return index < values.length ? checkString(index) : def; }
+        @Override public byte[] optByteArray(final int index, final byte[] def) { return index < values.length ? checkByteArray(index) : def; }
+        @Override public Map optTable(final int index, final Map def) { return index < values.length ? checkTable(index) : def; }
+        @Override public ItemStack optItemStack(final int index, final ItemStack def) { return index < values.length ? checkItemStack(index) : def; }
+        @Override public boolean isBoolean(final int index) { return values[index] instanceof Boolean; }
+        @Override public boolean isInteger(final int index) { return values[index] instanceof Integer; }
+        @Override public boolean isLong(final int index) { return values[index] instanceof Long; }
+        @Override public boolean isDouble(final int index) { return values[index] instanceof Double; }
+        @Override public boolean isString(final int index) { return values[index] instanceof String || values[index] instanceof byte[]; }
+        @Override public boolean isByteArray(final int index) { return values[index] instanceof String || values[index] instanceof byte[]; }
+        @Override public boolean isTable(final int index) { return values[index] instanceof Map; }
+        @Override public boolean isItemStack(final int index) { return values[index] instanceof ItemStack; }
+        @Override public Object[] toArray() {
+            Object[] result = Arrays.copyOf(values, values.length);
+            for (int index = 0; index < result.length; index++) {
+                if (result[index] instanceof byte[] bytes) {
+                    result[index] = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+                }
+            }
+            return result;
+        }
         @Override public Iterator<Object> iterator() { return Arrays.asList(values).iterator(); }
     }
 }
