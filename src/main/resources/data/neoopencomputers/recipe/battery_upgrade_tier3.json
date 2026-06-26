@@ -8,14 +8,14 @@
     "D": {
       "item": "minecraft:diamond"
     },
-    "T": {
-      "item": "neoopencomputers:transistor"
+    "I": {
+      "tag": "c:nuggets/iron"
     }
   },
   "pattern": [
-    "DCD",
-    "TCT",
-    "DCD"
+    "ICI",
+    "CDC",
+    "ICI"
   ],
   "result": {
     "count": 1,

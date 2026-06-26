@@ -718,20 +718,28 @@ final class RecipeResourceTest {
 
     @Test
     void batteryUpgradeRecipesUseCapacitorProgression() throws IOException {
-        JsonObject tier1 = recipeKeys(ModContentIds.BATTERY_UPGRADE_TIER1);
-        JsonObject tier2 = recipeKeys(ModContentIds.BATTERY_UPGRADE_TIER2);
-        JsonObject tier3 = recipeKeys(ModContentIds.BATTERY_UPGRADE_TIER3);
+        JsonObject tier1Recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.BATTERY_UPGRADE_TIER1 + ".json"));
+        JsonObject tier2Recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.BATTERY_UPGRADE_TIER2 + ".json"));
+        JsonObject tier3Recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.BATTERY_UPGRADE_TIER3 + ".json"));
+        JsonObject tier1 = tier1Recipe.getAsJsonObject("key");
+        JsonObject tier2 = tier2Recipe.getAsJsonObject("key");
+        JsonObject tier3 = tier3Recipe.getAsJsonObject("key");
 
-        assertTag(tier1, "I", "c:ingots/iron");
+        assertPattern(tier1Recipe, "IGI", "BCB", "IGI");
+        assertTag(tier1, "I", "c:nuggets/iron");
         assertTag(tier1, "G", "c:nuggets/gold");
-        assertItem(tier1, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(tier1, "B", "minecraft:iron_bars");
         assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
-        assertTag(tier2, "I", "c:ingots/gold");
+
+        assertPattern(tier2Recipe, "ICI", "BGB", "ICI");
+        assertTag(tier2, "I", "c:nuggets/iron");
         assertTag(tier2, "G", "c:nuggets/gold");
-        assertItem(tier2, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(tier2, "B", "minecraft:iron_bars");
         assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
+
+        assertPattern(tier3Recipe, "ICI", "CDC", "ICI");
+        assertTag(tier3, "I", "c:nuggets/iron");
         assertItem(tier3, "D", "minecraft:diamond");
-        assertItem(tier3, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
         assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
     }
 

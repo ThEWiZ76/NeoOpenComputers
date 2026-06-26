@@ -9,15 +9,15 @@
       "tag": "c:nuggets/gold"
     },
     "I": {
-      "tag": "c:ingots/iron"
+      "tag": "c:nuggets/iron"
     },
-    "T": {
-      "item": "neoopencomputers:transistor"
+    "B": {
+      "item": "minecraft:iron_bars"
     }
   },
   "pattern": [
     "IGI",
-    "TCT",
+    "BCB",
     "IGI"
   ],
   "result": {

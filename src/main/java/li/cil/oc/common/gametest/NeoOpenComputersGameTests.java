@@ -4076,6 +4076,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void batteryUpgradeRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.BATTERY_UPGRADE_TIER1.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(Items.GOLD_NUGGET), new ItemStack(Items.IRON_NUGGET),
+            new ItemStack(Items.IRON_BARS), new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(Items.IRON_BARS),
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(Items.GOLD_NUGGET), new ItemStack(Items.IRON_NUGGET)
+        )));
+        assertCraftsItem(helper, ModItems.BATTERY_UPGRADE_TIER2.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(Items.IRON_NUGGET),
+            new ItemStack(Items.IRON_BARS), new ItemStack(Items.GOLD_NUGGET), new ItemStack(Items.IRON_BARS),
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(Items.IRON_NUGGET)
+        )));
+        assertCraftsItem(helper, ModItems.BATTERY_UPGRADE_TIER3.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(Items.IRON_NUGGET),
+            new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(Items.DIAMOND), new ItemStack(ModItems.CAPACITOR.get()),
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(Items.IRON_NUGGET)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printerBlockExposesUpstreamComponentShell(final GameTestHelper helper) {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());
