@@ -1,6 +1,7 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -9,7 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-public class GraphicsCardItem extends Item implements DriverItem {
+public class GraphicsCardItem extends Item implements DriverItem, HostAware {
     private final int tier;
 
     public GraphicsCardItem(final Properties properties) {
@@ -29,6 +30,11 @@ public class GraphicsCardItem extends Item implements DriverItem {
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
         return new GraphicsCardEnvironment(tier(stack));
+    }
+
+    @Override
+    public boolean worksWith(final ItemStack stack, final Class<? extends EnvironmentHost> host) {
+        return worksWith(stack);
     }
 
     @Override

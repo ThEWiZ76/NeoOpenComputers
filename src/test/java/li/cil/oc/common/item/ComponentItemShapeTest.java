@@ -304,6 +304,7 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(GraphicsCardItem.class));
         assertTrue(DriverItem.class.isAssignableFrom(GraphicsCardItem.class));
+        assertTrue(HostAware.class.isAssignableFrom(GraphicsCardItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
     }
 
