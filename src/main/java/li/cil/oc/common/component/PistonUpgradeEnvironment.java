@@ -3,6 +3,7 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Rotatable;
+import li.cil.oc.api.internal.Tablet;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -71,7 +72,7 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
         }
 
         final Direction direction = direction(arguments);
-        final BlockPos hostPos = hostPosition();
+        final BlockPos hostPos = pushOrigin(direction);
         final BlockPos sourcePos = extending ? hostPos.relative(direction) : hostPos.relative(direction).relative(direction);
         final BlockState sourceState = level.getBlockState(sourcePos);
         if (sourceState.isAir()) {
@@ -111,6 +112,14 @@ public class PistonUpgradeEnvironment extends AbstractManagedEnvironment impleme
 
     private BlockPos hostPosition() {
         return BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition());
+    }
+
+    private BlockPos pushOrigin(final Direction direction) {
+        final BlockPos origin = hostPosition();
+        if (direction == Direction.DOWN && host instanceof Tablet tablet && tablet.player() != null && tablet.player().getEyeHeight() > 1.0F) {
+            return origin.below();
+        }
+        return origin;
     }
 
     private static void moveBlocks(final Level level, final PistonStructureResolver resolver, final Direction moveDirection) {

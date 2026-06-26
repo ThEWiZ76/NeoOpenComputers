@@ -5216,6 +5216,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tabletPistonPushesDownFromFeetLikeUpstream(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.PISTON_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for piston upgrade");
+
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final BlockPos playerPos = new BlockPos(2, 3, 2);
+        player.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(playerPos)));
+        final BlockPos sourcePos = playerPos.below();
+        final BlockPos targetPos = sourcePos.below();
+        helper.setBlock(sourcePos, Blocks.DIRT);
+        helper.setBlock(targetPos, Blocks.AIR);
+
+        final ManagedEnvironment environment = driver.createEnvironment(
+            new ItemStack(ModItems.PISTON_UPGRADE.get()),
+            new TabletTestHost(helper, player)
+        );
+        helper.assertTrue(environment != null, "Tablet piston upgrade did not create piston environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Tablet piston node is not a component");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        final Object[] push = component.invoke("push", null, Direction.DOWN.get3DDataValue());
+        helper.assertTrue(push.length == 1 && Boolean.TRUE.equals(push[0]), "Tablet piston did not push down from feet: " + java.util.Arrays.toString(push));
+        helper.assertTrue(helper.getBlockState(sourcePos).isAir(), "Tablet piston did not clear block below feet");
+        helper.assertTrue(helper.getBlockState(targetPos).is(Blocks.DIRT), "Tablet piston did not push block below feet down");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tradingUpgradeListsNearbyVillagerTrades(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for trading upgrade");
@@ -10518,7 +10546,7 @@ public final class NeoOpenComputersGameTests {
 
         @Override
         public double yPosition() {
-            return player.getY();
+            return player.getEyeY();
         }
 
         @Override
