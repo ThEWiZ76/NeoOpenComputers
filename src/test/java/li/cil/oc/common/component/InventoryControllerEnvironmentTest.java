@@ -15,9 +15,13 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -58,6 +62,18 @@ final class InventoryControllerEnvironmentTest {
     }
 
     @Test
+    void robotControllerExposesInternalInventoryAnalyticsLikeUpstream() {
+        assertTrue(hasDeclaredCallback(InventoryControllerEnvironment.RobotInventoryControllerEnvironment.class, "getStackInInternalSlot"),
+            "Robot inventory controller must expose upstream getStackInInternalSlot callback");
+        assertTrue(hasDeclaredCallback(InventoryControllerEnvironment.RobotInventoryControllerEnvironment.class, "isEquivalentTo"),
+            "Robot inventory controller must expose upstream isEquivalentTo callback");
+        assertTrue(hasDeclaredCallback(InventoryControllerEnvironment.RobotInventoryControllerEnvironment.class, "storeInternal"),
+            "Robot inventory controller must expose upstream storeInternal callback");
+        assertTrue(hasDeclaredCallback(InventoryControllerEnvironment.RobotInventoryControllerEnvironment.class, "compareToDatabase"),
+            "Robot inventory controller must expose upstream compareToDatabase callback");
+    }
+
+    @Test
     void rawStackCallbacksHonorInspectionConfigLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         withCachedConfig(ModSettings.ALLOW_ITEM_STACK_INSPECTION, false, () -> {
@@ -69,12 +85,59 @@ final class InventoryControllerEnvironmentTest {
         });
     }
 
+    @Test
+    void internalRawStackCallbackHonorsInspectionConfigLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        withCachedConfig(ModSettings.ALLOW_ITEM_STACK_INSPECTION, false, () -> {
+            final var controller = new InventoryControllerEnvironment.RobotInventoryControllerEnvironment(testRobot());
+
+            assertArrayEquals(new Object[]{null, "not enabled in config"},
+                invokeIfPresent(controller, "getStackInInternalSlot", new TestArguments(1)));
+        });
+    }
+
     private static boolean hasDeclaredEquipCallback(final Class<?> type) {
+        return hasDeclaredCallback(type, "equip");
+    }
+
+    private static boolean hasDeclaredCallback(final Class<?> type, final String methodName) {
         try {
-            return type.getDeclaredMethod("equip", Context.class, Arguments.class).isAnnotationPresent(Callback.class);
+            return type.getMethod(methodName, Context.class, Arguments.class).isAnnotationPresent(Callback.class);
         } catch (final NoSuchMethodException ignored) {
             return false;
         }
+    }
+
+    private static Object[] invokeIfPresent(final Object target, final String methodName, final Arguments arguments) throws Exception {
+        try {
+            final Method method = target.getClass().getMethod(methodName, Context.class, Arguments.class);
+            method.setAccessible(true);
+            return (Object[]) method.invoke(target, null, arguments);
+        } catch (final NoSuchMethodException ignored) {
+            return new Object[]{"missing callback"};
+        }
+    }
+
+    private static li.cil.oc.api.internal.Robot testRobot() {
+        final InvocationHandler handler = (proxy, method, args) -> switch (method.getName()) {
+            case "mainInventory", "equipmentInventory" -> null;
+            case "selectedSlot" -> 0;
+            case "setSelectedSlot", "setSelectedTank", "markChanged", "onConnect", "onDisconnect", "onMessage", "onMachineConnect", "onMachineDisconnect", "synchronizeSlot", "setName" -> null;
+            case "selectedTank", "tier", "componentCount", "componentSlot", "getContainerSize", "getMaxStackSize" -> 0;
+            case "tank", "player", "machine", "node", "world", "getComponentInSlot", "getItem", "removeItem", "removeItemNoUpdate" -> null;
+            case "internalComponents" -> java.util.List.<ItemStack>of();
+            case "facing", "toGlobal", "toLocal" -> net.minecraft.core.Direction.NORTH;
+            case "xPosition", "yPosition", "zPosition" -> 0D;
+            case "shouldAnimate", "isEmpty", "canPlaceItem", "canTakeItem" -> false;
+            case "name", "ownerName" -> "";
+            case "ownerUUID" -> new UUID(0L, 0L);
+            case "setItem", "setChanged", "clearContent" -> null;
+            default -> throw new UnsupportedOperationException(method.toString());
+        };
+        return (li.cil.oc.api.internal.Robot) Proxy.newProxyInstance(
+            InventoryControllerEnvironmentTest.class.getClassLoader(),
+            new Class<?>[]{li.cil.oc.api.internal.Robot.class},
+            handler);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

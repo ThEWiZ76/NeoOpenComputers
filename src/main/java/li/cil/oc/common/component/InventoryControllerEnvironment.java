@@ -3,6 +3,7 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Adapter;
+import li.cil.oc.api.internal.Agent;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -159,7 +160,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         throw new IllegalArgumentException("no inventory");
     }
 
-    private static int checkSlot(final Container container, final int slot) {
+    protected static int checkSlot(final Container container, final int slot) {
         final int index = slot - 1;
         if (index < 0 || index >= container.getContainerSize()) {
             throw new IllegalArgumentException("invalid slot");
@@ -167,7 +168,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         return index;
     }
 
-    private static int checkSlot(final Database database, final int slot) {
+    protected static int checkSlot(final Database database, final int slot) {
         final int index = slot - 1;
         if (index < 0 || index >= database.size()) {
             throw new IllegalArgumentException("invalid slot");
@@ -175,7 +176,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         return index;
     }
 
-    private Database database(final String address) {
+    protected Database database(final String address) {
         if (node() == null || node().network() == null) {
             throw new IllegalArgumentException("no such component");
         }
@@ -188,7 +189,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         return database;
     }
 
-    private static boolean areEquivalent(final ItemStack stackA, final ItemStack stackB) {
+    protected static boolean areEquivalent(final ItemStack stackA, final ItemStack stackB) {
         if (ItemStack.isSameItemSameComponents(stackA, stackB)) {
             return true;
         }
@@ -198,11 +199,72 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         return stackA.getTags().anyMatch(stackB::is);
     }
 
-    private static Object[] notEnabled() {
+    protected static Object[] notEnabled() {
         return new Object[]{null, "not enabled in config"};
     }
 
-    public static final class RobotInventoryControllerEnvironment extends InventoryControllerEnvironment {
+    public static class AgentInventoryControllerEnvironment extends InventoryControllerEnvironment {
+        protected final Agent agent;
+
+        public AgentInventoryControllerEnvironment(final Agent agent) {
+            super(agent);
+            this.agent = agent;
+        }
+
+        @Callback(doc = "function([slot:number]):table -- Get the raw item stack in the specified internal slot or selected slot.")
+        public Object[] getStackInInternalSlot(final Context context, final Arguments arguments) {
+            if (!ModSettings.allowItemStackInspection()) {
+                return notEnabled();
+            }
+            final Container inventory = agent.mainInventory();
+            return new Object[]{inventory.getItem(checkInternalSlot(inventory, arguments, 0))};
+        }
+
+        @Callback(doc = "function(otherSlot:number):boolean -- Check whether the selected stack shares an item tag with the specified internal slot.")
+        public Object[] isEquivalentTo(final Context context, final Arguments arguments) {
+            final Container inventory = agent.mainInventory();
+            final int selectedSlot = checkSelectedSlot(inventory);
+            final int otherSlot = checkSlot(inventory, arguments.checkInteger(0));
+            return new Object[]{areEquivalent(inventory.getItem(selectedSlot), inventory.getItem(otherSlot))};
+        }
+
+        @Callback(doc = "function(slot:number, dbAddress:string, dbSlot:number):boolean -- Store an internal item stack description in the specified database slot.")
+        public Object[] storeInternal(final Context context, final Arguments arguments) {
+            final Container inventory = agent.mainInventory();
+            final int localSlot = checkSlot(inventory, arguments.checkInteger(0));
+            final Database database = database(arguments.checkString(1));
+            final int databaseSlot = checkSlot(database, arguments.checkInteger(2));
+            final boolean overwritten = !database.getStackInSlot(databaseSlot).isEmpty();
+            database.setStackInSlot(databaseSlot, inventory.getItem(localSlot).copy());
+            return new Object[]{overwritten};
+        }
+
+        @Callback(doc = "function(slot:number, dbAddress:string, dbSlot:number[, checkNBT:boolean=false]):boolean -- Compare an internal item stack with a database stack.")
+        public Object[] compareToDatabase(final Context context, final Arguments arguments) {
+            final Container inventory = agent.mainInventory();
+            final int localSlot = checkSlot(inventory, arguments.checkInteger(0));
+            final Database database = database(arguments.checkString(1));
+            final int databaseSlot = checkSlot(database, arguments.checkInteger(2));
+            return new Object[]{InventoryComparison.sameItem(inventory.getItem(localSlot), database.getStackInSlot(databaseSlot), arguments.optBoolean(3, false))};
+        }
+
+        private int checkInternalSlot(final Container inventory, final Arguments arguments, final int index) {
+            if (arguments.count() > index && arguments.checkAny(index) != null) {
+                return checkSlot(inventory, arguments.checkInteger(index));
+            }
+            return checkSelectedSlot(inventory);
+        }
+
+        private int checkSelectedSlot(final Container inventory) {
+            final int selectedSlot = agent.selectedSlot();
+            if (selectedSlot < 0 || selectedSlot >= inventory.getContainerSize()) {
+                throw new IllegalArgumentException("invalid slot");
+            }
+            return selectedSlot;
+        }
+    }
+
+    public static final class RobotInventoryControllerEnvironment extends AgentInventoryControllerEnvironment {
         private final Robot robot;
 
         public RobotInventoryControllerEnvironment(final Robot robot) {

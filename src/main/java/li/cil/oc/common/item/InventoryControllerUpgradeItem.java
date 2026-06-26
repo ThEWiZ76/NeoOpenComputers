@@ -35,7 +35,10 @@ public class InventoryControllerUpgradeItem extends Item implements HostAware {
         if (host instanceof Robot robot) {
             return new InventoryControllerEnvironment.RobotInventoryControllerEnvironment(robot);
         }
-        if (host instanceof Adapter || host instanceof Drone) {
+        if (host instanceof Drone drone) {
+            return new InventoryControllerEnvironment.AgentInventoryControllerEnvironment(drone);
+        }
+        if (host instanceof Adapter) {
             return new InventoryControllerEnvironment(host);
         }
         return null;
