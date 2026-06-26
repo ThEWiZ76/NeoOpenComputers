@@ -3895,14 +3895,18 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(handler != null, "Database upgrade did not provide an item inventory");
         helper.assertTrue(handler.getSlots() == 9, "Tier 1 database inventory had wrong slot count");
         final ItemStack remainder = handler.insertItem(0, new ItemStack(Items.DIAMOND, 3), false);
-        helper.assertTrue(remainder.isEmpty(), "Database inventory rejected inserted stack");
+        helper.assertTrue(remainder.is(Items.DIAMOND) && remainder.getCount() == 2, "Database inventory did not enforce upstream stack limit");
+        final ItemStack selfRemainder = handler.insertItem(1, stack, false);
+        helper.assertTrue(selfRemainder == stack, "Database inventory accepted its container stack");
 
         final DriverItem driver = Driver.driverFor(stack);
         helper.assertTrue(driver != null, "No database driver after inventory insert");
         final ManagedEnvironment environment = driver.createEnvironment(stack, null);
         helper.assertTrue(environment instanceof li.cil.oc.api.internal.Database, "Database inventory did not persist through stack data");
         final ItemStack stored = ((li.cil.oc.api.internal.Database) environment).getStackInSlot(0);
-        helper.assertTrue(stored.is(Items.DIAMOND) && stored.getCount() == 3, "Database inventory did not persist inserted stack");
+        final ItemStack blocked = ((li.cil.oc.api.internal.Database) environment).getStackInSlot(1);
+        helper.assertTrue(stored.is(Items.DIAMOND) && stored.getCount() == 1, "Database inventory did not persist one ghost stack");
+        helper.assertTrue(blocked.isEmpty(), "Database inventory persisted its container stack");
         helper.succeed();
     }
 

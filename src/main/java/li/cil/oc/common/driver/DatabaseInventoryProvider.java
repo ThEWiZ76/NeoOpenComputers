@@ -28,16 +28,18 @@ public final class DatabaseInventoryProvider implements InventoryProvider {
         }
         final ManagedEnvironment environment = driver.createEnvironment(stack, null);
         if (environment instanceof Database database) {
-            return new DatabaseInventory(database, environment);
+            return new DatabaseInventory(stack, database, environment);
         }
         return null;
     }
 
     private static final class DatabaseInventory implements Container {
+        private final ItemStack container;
         private final Database database;
         private final ManagedEnvironment environment;
 
-        private DatabaseInventory(final Database database, final ManagedEnvironment environment) {
+        private DatabaseInventory(final ItemStack container, final Database database, final ManagedEnvironment environment) {
+            this.container = container;
             this.database = database;
             this.environment = environment;
         }
@@ -104,6 +106,16 @@ public final class DatabaseInventoryProvider implements InventoryProvider {
         @Override
         public void setChanged() {
             persist();
+        }
+
+        @Override
+        public int getMaxStackSize() {
+            return 1;
+        }
+
+        @Override
+        public boolean canPlaceItem(final int slot, final ItemStack stack) {
+            return stack != container;
         }
 
         @Override
