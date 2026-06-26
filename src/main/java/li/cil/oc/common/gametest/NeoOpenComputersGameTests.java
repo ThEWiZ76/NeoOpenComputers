@@ -9024,6 +9024,36 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 120)
+    public static void redstoneIoWakeThresholdStartsReachableComputer(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos cablePos = new BlockPos(1, 1, 1);
+        final BlockPos redstoneIoPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(cablePos, ModBlocks.CABLE.get());
+        helper.setBlock(redstoneIoPos, ModBlocks.REDSTONE_IO.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootableHardDiskStack(helper, "while true do computer.pullSignal(1) end"));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        final RedstoneIoBlockEntity redstoneIo = helper.getBlockEntity(redstoneIoPos);
+        redstoneIo.setWakeThreshold(15);
+
+        helper.runAtTickTime(10, () -> {
+            helper.assertTrue(computer.node().network() != null, "Computer has no network");
+            helper.assertTrue(redstoneIo.node().network() == computer.node().network(), "Redstone I/O is not on the computer network");
+        });
+        helper.runAtTickTime(20, () -> helper.setBlock(redstoneIoPos.east(), Blocks.REDSTONE_BLOCK));
+        helper.runAtTickTime(80, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Reachable computer did not wake from redstone I/O threshold crossing");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void installedNetworkCardsExchangeModemMessages(final GameTestHelper helper) {
         final BlockPos receiverPos = new BlockPos(1, 1, 1);
