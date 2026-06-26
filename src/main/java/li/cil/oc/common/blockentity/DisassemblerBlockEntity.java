@@ -8,6 +8,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
@@ -37,9 +38,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
 import java.util.ArrayDeque;
+import java.util.EnumSet;
 import java.util.Map;
 
-public class DisassemblerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, Container, MenuProvider, DeviceInfo {
+public class DisassemblerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, Container, MenuProvider, DeviceInfo, StateAware {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT_START = 1;
     public static final int OUTPUT_SLOT_COUNT = 9;
@@ -58,6 +60,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     private final ArrayDeque<ItemStack> queuedOutputs = new ArrayDeque<>();
     private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, DisassemblerBlockEntity::energyThroughput);
     private Node node;
+    private boolean active;
     private double disassemblyBuffer;
 
     public DisassemblerBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -96,6 +99,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         if (queuedOutputs.isEmpty()) {
             return false;
         }
+        active = false;
         items.set(SLOT_INPUT, ItemStack.EMPTY);
         disassemblyBuffer = 0D;
         setChanged();
@@ -108,6 +112,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         if (!outputsFit(outputs) && outputs.length > 0 && !hasAdjacentInventory()) {
             return false;
         }
+        active = false;
         items.set(SLOT_INPUT, ItemStack.EMPTY);
         routeOutputs(outputs);
         setChanged();
@@ -116,6 +121,17 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     public static void serverTick(final net.minecraft.world.level.Level level, final BlockPos pos, final BlockState state, final DisassemblerBlockEntity disassembler) {
         disassembler.tickDisassembly();
+    }
+
+    @Override
+    public EnumSet<StateAware.State> getCurrentState() {
+        if (active && !queuedOutputs.isEmpty()) {
+            return EnumSet.of(StateAware.State.IsWorking);
+        }
+        if (!queuedOutputs.isEmpty()) {
+            return EnumSet.of(StateAware.State.CanWork);
+        }
+        return EnumSet.noneOf(StateAware.State.class);
     }
 
     @Override
@@ -270,6 +286,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
                 .filter(stack -> !stack.isEmpty())
                 .ifPresent(queuedOutputs::add);
         }
+        active = false;
         disassemblyBuffer = tag.getDouble(TAG_BUFFER);
     }
 
@@ -309,6 +326,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     private void tickDisassembly() {
         if (queuedOutputs.isEmpty() || !(node() instanceof li.cil.oc.api.network.Connector connector)) {
+            active = false;
             return;
         }
 
@@ -317,9 +335,11 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
             final double remainingDelta = connector.changeBuffer(-want);
             final double consumed = Math.clamp(want + remainingDelta, 0D, want);
             if (consumed <= 0D) {
+                active = false;
                 return;
             }
             disassemblyBuffer += consumed;
+            active = true;
         }
 
         final RandomSource random = level == null ? RandomSource.create() : level.random;
@@ -331,6 +351,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
             }
         }
         if (queuedOutputs.isEmpty()) {
+            active = false;
             disassemblyBuffer = 0D;
         }
         setChanged();

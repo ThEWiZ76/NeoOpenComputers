@@ -4351,12 +4351,17 @@ public final class NeoOpenComputersGameTests {
 
             helper.assertTrue(AssemblerMenu.stateFor(assembler) == AssemblerMenu.STATE_IDLE, "Empty assembler did not report idle state");
             helper.assertTrue(AssemblerMenu.progressFor(assembler) == 0, "Idle assembler reported progress");
+            helper.assertTrue(assembler instanceof li.cil.oc.api.util.StateAware, "Assembler did not expose upstream StateAware state");
+            final li.cil.oc.api.util.StateAware assemblerState = (li.cil.oc.api.util.StateAware) assembler;
+            helper.assertTrue(assemblerState.getCurrentState().isEmpty(), "Empty assembler reported work state");
 
             assembler.setItem(AssemblerBlockEntity.SLOT_TEMPLATE, new ItemStack(Items.DIAMOND));
             helper.assertTrue(AssemblerMenu.stateFor(assembler) == AssemblerMenu.STATE_READY, "Ready assembler did not report ready state");
+            helper.assertTrue(assemblerState.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.CanWork), "Ready assembler did not report CanWork state");
 
             helper.assertTrue(assembler.start(false), "Assembler did not start menu status recipe");
             helper.assertTrue(AssemblerMenu.stateFor(assembler) == AssemblerMenu.STATE_BUSY, "Started assembler did not report busy state");
+            helper.assertTrue(assemblerState.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.IsWorking), "Started assembler did not report IsWorking state");
 
             final ComponentConnector connector = (ComponentConnector) assembler.node();
             connector.changeBuffer(ASSEMBLER_TEST_TICK_ENERGY);
@@ -4515,7 +4520,48 @@ public final class NeoOpenComputersGameTests {
                     DisassemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), disassembler);
                     helper.assertTrue(disassembler.containsOutput(Items.EMERALD), "Disassembler did not release output after configured item energy");
                     helper.succeed();
-                })));
+            })));
+        }
+    }
+
+    @GameTest(template = "empty")
+    public static void disassemblerReportsStateAwareLikeUpstream(final GameTestHelper helper) throws Exception {
+        try (DisassemblerTemplates.Registration ignored = DisassemblerTemplates.register(new DisassemblerTemplate() {
+            @Override
+            public String name() {
+                return "state_aware_test";
+            }
+
+            @Override
+            public boolean matches(final ItemStack stack) {
+                return stack.is(Items.DIAMOND);
+            }
+
+            @Override
+            public ItemStack[] disassemble(final ItemStack stack) {
+                return new ItemStack[]{new ItemStack(Items.EMERALD)};
+            }
+        })) {
+            withCachedConfig(ModSettings.DISASSEMBLER_TICK_AMOUNT, 3D, () ->
+                withCachedConfig(ModSettings.DISASSEMBLER_ITEM_COST, 6D, () -> {
+                    final BlockPos pos = new BlockPos(1, 1, 1);
+                    helper.setBlock(pos, ModBlocks.DISASSEMBLER.get());
+                    final DisassemblerBlockEntity disassembler = helper.getBlockEntity(pos);
+
+                    helper.assertTrue(disassembler instanceof li.cil.oc.api.util.StateAware, "Disassembler did not expose upstream StateAware state");
+                    final li.cil.oc.api.util.StateAware disassemblerState = (li.cil.oc.api.util.StateAware) disassembler;
+                    helper.assertTrue(disassemblerState.getCurrentState().isEmpty(), "Empty disassembler reported work state");
+
+                    disassembler.setItem(DisassemblerBlockEntity.SLOT_INPUT, new ItemStack(Items.DIAMOND));
+                    helper.assertTrue(disassembler.disassemble(), "Disassembler did not queue output");
+                    helper.assertTrue(disassemblerState.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.CanWork), "Queued disassembler did not report CanWork state");
+
+                    final Connector connector = (Connector) disassembler.sidedNode(Direction.NORTH);
+                    connector.changeBuffer(3D);
+                    DisassemblerBlockEntity.serverTick(helper.getLevel(), helper.absolutePos(pos), helper.getBlockState(pos), disassembler);
+                    helper.assertTrue(disassemblerState.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.IsWorking), "Powered disassembler did not report IsWorking state");
+                    helper.succeed();
+                }));
         }
     }
 

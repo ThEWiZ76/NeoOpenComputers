@@ -13,6 +13,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
@@ -39,9 +40,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
+import java.util.EnumSet;
 import java.util.Map;
 
-public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo, MenuProvider {
+public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo, MenuProvider, StateAware {
     public static final int SLOT_TEMPLATE = 0;
     public static final int SLOT_CONTAINER_START = 1;
     public static final int CONTAINER_SLOT_COUNT = 3;
@@ -82,6 +84,17 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
 
     public boolean isAssembling() {
         return requiredEnergy > 0D;
+    }
+
+    @Override
+    public EnumSet<StateAware.State> getCurrentState() {
+        if (isAssembling()) {
+            return EnumSet.of(StateAware.State.IsWorking);
+        }
+        if (canAssemble()) {
+            return EnumSet.of(StateAware.State.CanWork);
+        }
+        return EnumSet.noneOf(StateAware.State.class);
     }
 
     public double progress() {
