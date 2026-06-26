@@ -45,19 +45,19 @@ public class RedstoneCardEnvironment extends AbstractManagedEnvironment implemen
     @Callback(direct = true, doc = "function([side:number]):number or table -- Gets redstone output level for one side or all sides.")
     public Object[] getOutput(final Context context, final Arguments args) {
         final RedstoneControllerHost redstone = redstoneHost();
-        if (args.count() == 0) {
-            return new Object[]{valuesToMap(redstone, false)};
+        if (args.count() == 1) {
+            return new Object[]{redstone.redstoneOutput(side(redstone, args.checkInteger(0)))};
         }
-        return new Object[]{redstone.redstoneOutput(side(redstone, args.checkInteger(0)))};
+        return new Object[]{valuesToMap(redstone, false)};
     }
 
     @Callback(direct = true, doc = "function([side:number]):number or table -- Gets redstone input level for one side or all sides.")
     public Object[] getInput(final Context context, final Arguments args) {
         final RedstoneControllerHost redstone = redstoneHost();
-        if (args.count() == 0) {
-            return new Object[]{valuesToMap(redstone, true)};
+        if (args.count() == 1) {
+            return new Object[]{redstone.redstoneInput(side(redstone, args.checkInteger(0)))};
         }
-        return new Object[]{redstone.redstoneInput(side(redstone, args.checkInteger(0)))};
+        return new Object[]{valuesToMap(redstone, true)};
     }
 
     @Callback(doc = "function([side:number, ]value:number or table):number or table -- Sets redstone output and returns previous value.")

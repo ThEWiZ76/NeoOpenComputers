@@ -145,18 +145,18 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
 
     @Callback(direct = true, doc = "function([side:number]):number or table -- Get redstone input for one side or all sides.")
     public Object[] getInput(final Context context, final Arguments args) {
-        if (args.count() == 0) {
-            return new Object[]{valuesToMap(inputs)};
+        if (args.count() == 1) {
+            return new Object[]{redstoneInput(side(args.checkInteger(0)))};
         }
-        return new Object[]{redstoneInput(side(args.checkInteger(0)))};
+        return new Object[]{valuesToMap(inputs)};
     }
 
     @Callback(direct = true, doc = "function([side:number]):number or table -- Get redstone output for one side or all sides.")
     public Object[] getOutput(final Context context, final Arguments args) {
-        if (args.count() == 0) {
-            return new Object[]{valuesToMap(outputs)};
+        if (args.count() == 1) {
+            return new Object[]{redstoneOutput(side(args.checkInteger(0)))};
         }
-        return new Object[]{redstoneOutput(side(args.checkInteger(0)))};
+        return new Object[]{valuesToMap(outputs)};
     }
 
     @Callback(doc = "function([side:number, ]value:number or table):number or table -- Set redstone output and return previous value.")

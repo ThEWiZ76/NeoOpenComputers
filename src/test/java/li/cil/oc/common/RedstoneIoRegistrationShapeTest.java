@@ -87,6 +87,22 @@ final class RedstoneIoRegistrationShapeTest {
         });
     }
 
+    @Test
+    void getInputAndOutputIgnoreSideWhenExtraArgumentsExistLikeUpstream() throws Exception {
+        final RedstoneIoBlockEntity redstone = allocateRedstoneIo();
+        final int[] inputs = new int[6];
+        final int[] outputs = new int[6];
+        inputs[Direction.NORTH.get3DDataValue()] = 7;
+        outputs[Direction.NORTH.get3DDataValue()] = 11;
+        setField(redstone, "inputs", inputs);
+        setField(redstone, "outputs", outputs);
+
+        assertEquals(Map.of(0, 0, 1, 0, 2, 7, 3, 0, 4, 0, 5, 0),
+            redstone.getInput(null, new TestArguments(2, "ignored"))[0]);
+        assertEquals(Map.of(0, 0, 1, 0, 2, 11, 3, 0, 4, 0, 5, 0),
+            redstone.getOutput(null, new TestArguments(2, "ignored"))[0]);
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = RedstoneIoBlockEntity.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));

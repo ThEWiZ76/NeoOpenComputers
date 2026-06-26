@@ -66,6 +66,20 @@ final class RedstoneCardEnvironmentTest {
     }
 
     @Test
+    void getInputAndOutputIgnoreSideWhenExtraArgumentsExistLikeUpstream() {
+        OpenComputersApi.initialize();
+        TestRedstoneHost host = new TestRedstoneHost();
+        RedstoneCardEnvironment card = new RedstoneCardEnvironment(host);
+        host.inputs[Direction.NORTH.get3DDataValue()] = 7;
+        host.outputs[Direction.NORTH.get3DDataValue()] = 11;
+
+        assertEquals(Map.of(0, 0, 1, 0, 2, 7, 3, 0, 4, 0, 5, 0),
+            card.getInput(null, new TestArguments(2, "ignored"))[0]);
+        assertEquals(Map.of(0, 0, 1, 0, 2, 11, 3, 0, 4, 0, 5, 0),
+            card.getOutput(null, new TestArguments(2, "ignored"))[0]);
+    }
+
+    @Test
     void setOutputUsesConfiguredRedstoneDelayLikeUpstream() throws Exception {
         withCachedConfig(ModSettings.REDSTONE_DELAY, 0.25D, () -> {
             OpenComputersApi.initialize();
