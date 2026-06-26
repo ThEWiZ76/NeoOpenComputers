@@ -432,6 +432,7 @@ final class GraphicsCardEnvironmentTest {
         gpu.setBackground(null, new TestArguments(0x123456));
         gpu.set(null, new TestArguments(2, 1, "B"));
 
+        assertArrayEquals(new Object[]{"A", 0x112233, 0x445566, 3, 4}, gpu.get(null, new TestArguments(1, 1)));
         assertArrayEquals(new Object[]{"B", 0xABCDEF, 0x123456, null, null}, gpu.get(null, new TestArguments(2, 1)));
     }
 
@@ -538,6 +539,29 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void bitbltCopiesPaletteFlagsBetweenVideoBuffersLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        gpu.allocateBuffer(null, new TestArguments(2, 1));
+        gpu.allocateBuffer(null, new TestArguments(2, 1));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+        gpu.setPaletteColor(null, new TestArguments(2, 0x223344));
+        gpu.setPaletteColor(null, new TestArguments(3, 0x556677));
+        gpu.setForeground(null, new TestArguments(2, true));
+        gpu.setBackground(null, new TestArguments(3, true));
+        gpu.set(null, new TestArguments(1, 1, "A"));
+        gpu.setActiveBuffer(null, new TestArguments(2));
+        gpu.setPaletteColor(null, new TestArguments(2, 0x223344));
+        gpu.setPaletteColor(null, new TestArguments(3, 0x556677));
+        gpu.setActiveBuffer(null, new TestArguments(1));
+
+        assertArrayEquals(new Object[]{true}, gpu.bitblt(null, new TestArguments(2, 1, 1, 1, 1, 1, 1, 1)));
+
+        gpu.setActiveBuffer(null, new TestArguments(2));
+        assertArrayEquals(new Object[]{"A", 0x223344, 0x556677, 2, 3}, gpu.get(null, new TestArguments(1, 1)));
+    }
+
+    @Test
     void bitbltClipsSourceAndDestinationLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
@@ -561,9 +585,16 @@ final class GraphicsCardEnvironmentTest {
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         gpu.allocateBuffer(null, new TestArguments(3, 2));
         gpu.setActiveBuffer(null, new TestArguments(1));
+        gpu.setPaletteColor(null, new TestArguments(2, 0x223344));
+        gpu.setPaletteColor(null, new TestArguments(3, 0x556677));
+        gpu.setForeground(null, new TestArguments(2, true));
+        gpu.setBackground(null, new TestArguments(3, true));
         gpu.setForeground(null, new TestArguments(0x112233));
         gpu.setBackground(null, new TestArguments(0x445566));
         gpu.set(null, new TestArguments(1, 1, "XY"));
+        gpu.setForeground(null, new TestArguments(2, true));
+        gpu.setBackground(null, new TestArguments(3, true));
+        gpu.set(null, new TestArguments(3, 1, "Z"));
         CompoundTag tag = new CompoundTag();
 
         gpu.save(tag);
@@ -574,6 +605,7 @@ final class GraphicsCardEnvironmentTest {
         assertArrayEquals(new int[]{1}, (int[]) restored.buffers(null, new TestArguments())[0]);
         assertArrayEquals(new Object[]{"X", 0x112233, 0x445566, null, null}, restored.get(null, new TestArguments(1, 1)));
         assertArrayEquals(new Object[]{"Y", 0x112233, 0x445566, null, null}, restored.get(null, new TestArguments(2, 1)));
+        assertArrayEquals(new Object[]{"Z", 0x223344, 0x556677, 2, 3}, restored.get(null, new TestArguments(3, 1)));
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {

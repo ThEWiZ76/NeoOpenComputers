@@ -411,6 +411,10 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         dst.rawSetText(region.dstX(), region.dstY(), textSnapshot(src, region.srcX(), region.srcY(), region.width(), region.height()));
         dst.rawSetForeground(region.dstX(), region.dstY(), foregroundSnapshot(src, region.srcX(), region.srcY(), region.width(), region.height()));
         dst.rawSetBackground(region.dstX(), region.dstY(), backgroundSnapshot(src, region.srcX(), region.srcY(), region.width(), region.height()));
+        if (dst instanceof VideoBuffer videoBuffer) {
+            videoBuffer.rawSetForegroundPalette(region.dstX(), region.dstY(), foregroundPaletteSnapshot(src, region.srcX(), region.srcY(), region.width(), region.height()));
+            videoBuffer.rawSetBackgroundPalette(region.dstX(), region.dstY(), backgroundPaletteSnapshot(src, region.srcX(), region.srcY(), region.width(), region.height()));
+        }
         return new Object[]{true};
     }
 
@@ -639,6 +643,26 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         return snapshot;
     }
 
+    private static boolean[][] foregroundPaletteSnapshot(final TextBuffer source, final int column, final int row, final int width, final int height) {
+        final boolean[][] snapshot = new boolean[Math.max(0, height)][Math.max(0, width)];
+        for (int y = 0; y < snapshot.length; y++) {
+            for (int x = 0; x < snapshot[y].length; x++) {
+                snapshot[y][x] = source.isForegroundFromPalette(column + x, row + y);
+            }
+        }
+        return snapshot;
+    }
+
+    private static boolean[][] backgroundPaletteSnapshot(final TextBuffer source, final int column, final int row, final int width, final int height) {
+        final boolean[][] snapshot = new boolean[Math.max(0, height)][Math.max(0, width)];
+        for (int y = 0; y < snapshot.length; y++) {
+            for (int x = 0; x < snapshot[y].length; x++) {
+                snapshot[y][x] = source.isBackgroundFromPalette(column + x, row + y);
+            }
+        }
+        return snapshot;
+    }
+
     private int nextBufferIndex() {
         int index = 1;
         while (videoBuffers.containsKey(index)) {
@@ -720,6 +744,8 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         private static final String TEXT_TAG = "text";
         private static final String CELL_FOREGROUND_TAG = "cellForeground";
         private static final String CELL_BACKGROUND_TAG = "cellBackground";
+        private static final String CELL_FOREGROUND_PALETTE_TAG = "cellForegroundPalette";
+        private static final String CELL_BACKGROUND_PALETTE_TAG = "cellBackgroundPalette";
 
         private final ColorDepth maximumDepth;
         private final int maximumWidth;
@@ -737,6 +763,8 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         private int[][] text;
         private int[][] foreground;
         private int[][] background;
+        private boolean[][] foregroundPalette;
+        private boolean[][] backgroundPalette;
         private boolean dirty = true;
 
         private VideoBuffer(final int width, final int height, final ColorDepth maximumDepth) {
@@ -920,6 +948,8 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             final Snapshot textSnapshot = snapshot(text, column, row, width, height);
             final Snapshot foregroundSnapshot = snapshot(foreground, column, row, width, height);
             final Snapshot backgroundSnapshot = snapshot(background, column, row, width, height);
+            final BooleanSnapshot foregroundPaletteSnapshot = snapshot(foregroundPalette, column, row, width, height);
+            final BooleanSnapshot backgroundPaletteSnapshot = snapshot(backgroundPalette, column, row, width, height);
             for (int y = 0; y < textSnapshot.values().length; y++) {
                 for (int x = 0; x < textSnapshot.values()[y].length; x++) {
                     if (textSnapshot.valid()[y][x]) {
@@ -928,7 +958,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                             row + y + verticalTranslation,
                             textSnapshot.values()[y][x],
                             foregroundSnapshot.values()[y][x],
-                            backgroundSnapshot.values()[y][x]);
+                            backgroundSnapshot.values()[y][x],
+                            foregroundPaletteSnapshot.values()[y][x],
+                            backgroundPaletteSnapshot.values()[y][x]);
                     }
                 }
             }
@@ -949,7 +981,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                 int targetX = Math.max(column, 0);
                 final int steps = Math.max(0, Math.min(column + width, this.width) - targetX);
                 for (int step = 0; step < steps && targetX < this.width; step++) {
-                    put(targetX, y, value, foregroundColor, backgroundColor);
+                    put(targetX, y, value, foregroundColor, backgroundColor, foregroundFromPalette, backgroundFromPalette);
                     targetX += displayWidth(value);
                 }
             }
@@ -969,7 +1001,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                 final int limit = Math.min(row + codePoints.length, height);
                 int index = 0;
                 for (int y = Math.max(row, 0); y < limit && index < codePoints.length; y++) {
-                    put(column, y, codePoints[index], foregroundColor, backgroundColor);
+                    put(column, y, codePoints[index], foregroundColor, backgroundColor, foregroundFromPalette, backgroundFromPalette);
                     index++;
                 }
             } else {
@@ -980,7 +1012,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                 final int steps = Math.max(0, Math.min(column + codePoints.length, width) - targetX);
                 for (int index = 0; index < steps && index < codePoints.length && targetX < width; index++) {
                     final int codePoint = codePoints[index];
-                    put(targetX, row, codePoint, foregroundColor, backgroundColor);
+                    put(targetX, row, codePoint, foregroundColor, backgroundColor, foregroundFromPalette, backgroundFromPalette);
                     targetX += displayWidth(codePoint);
                 }
             }
@@ -1004,7 +1036,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Override
         public boolean isForegroundFromPalette(final int column, final int row) {
-            return foregroundFromPalette;
+            return isInside(column, row) ? foregroundPalette[row][column] : foregroundFromPalette;
         }
 
         @Override
@@ -1014,7 +1046,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
         @Override
         public boolean isBackgroundFromPalette(final int column, final int row) {
-            return backgroundFromPalette;
+            return isInside(column, row) ? backgroundPalette[row][column] : backgroundFromPalette;
         }
 
         @Override
@@ -1052,6 +1084,16 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         @Override
         public void rawSetBackground(final int column, final int row, final int[][] color) {
             rawSetColor(background, column, row, color);
+            dirty = true;
+        }
+
+        private void rawSetForegroundPalette(final int column, final int row, final boolean[][] value) {
+            rawSetPalette(foregroundPalette, column, row, value);
+            dirty = true;
+        }
+
+        private void rawSetBackgroundPalette(final int column, final int row, final boolean[][] value) {
+            rawSetPalette(backgroundPalette, column, row, value);
             dirty = true;
         }
 
@@ -1128,6 +1170,8 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             loadRows(nbt.getList(TEXT_TAG, Tag.TAG_INT_ARRAY), text);
             loadRows(nbt.getList(CELL_FOREGROUND_TAG, Tag.TAG_INT_ARRAY), foreground);
             loadRows(nbt.getList(CELL_BACKGROUND_TAG, Tag.TAG_INT_ARRAY), background);
+            loadBooleanRows(nbt.getList(CELL_FOREGROUND_PALETTE_TAG, Tag.TAG_INT_ARRAY), foregroundPalette);
+            loadBooleanRows(nbt.getList(CELL_BACKGROUND_PALETTE_TAG, Tag.TAG_INT_ARRAY), backgroundPalette);
             dirty = true;
         }
 
@@ -1148,6 +1192,8 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             nbt.put(TEXT_TAG, saveRows(text));
             nbt.put(CELL_FOREGROUND_TAG, saveRows(foreground));
             nbt.put(CELL_BACKGROUND_TAG, saveRows(background));
+            nbt.put(CELL_FOREGROUND_PALETTE_TAG, saveRows(foregroundPalette));
+            nbt.put(CELL_BACKGROUND_PALETTE_TAG, saveRows(backgroundPalette));
             dirty = false;
         }
 
@@ -1157,10 +1203,12 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             text = new int[this.height][this.width];
             foreground = new int[this.height][this.width];
             background = new int[this.height][this.width];
+            foregroundPalette = new boolean[this.height][this.width];
+            backgroundPalette = new boolean[this.height][this.width];
             fill(0, 0, this.width, this.height, ' ');
         }
 
-        private void put(final int column, final int row, final int value, final int foregroundColor, final int backgroundColor) {
+        private void put(final int column, final int row, final int value, final int foregroundColor, final int backgroundColor, final boolean foregroundFromPalette, final boolean backgroundFromPalette) {
             if (isInside(column, row)) {
                 final int displayWidth = displayWidth(value);
                 if (displayWidth > 1 && column >= width - 1) {
@@ -1169,11 +1217,15 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
                 text[row][column] = value;
                 foreground[row][column] = foregroundColor;
                 background[row][column] = backgroundColor;
+                foregroundPalette[row][column] = foregroundFromPalette;
+                backgroundPalette[row][column] = backgroundFromPalette;
                 for (int offset = 1; offset < displayWidth && column + offset < width; offset++) {
                     final int targetColumn = column + offset;
                     text[row][targetColumn] = ' ';
                     foreground[row][targetColumn] = foregroundColor;
                     background[row][targetColumn] = backgroundColor;
+                    foregroundPalette[row][targetColumn] = foregroundFromPalette;
+                    backgroundPalette[row][targetColumn] = backgroundFromPalette;
                 }
                 if (column > 0 && displayWidth(text[row][column - 1]) > 1) {
                     text[row][column - 1] = ' ';
@@ -1202,6 +1254,21 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             }
         }
 
+        private void rawSetPalette(final boolean[][] target, final int column, final int row, final boolean[][] value) {
+            if (value == null) {
+                return;
+            }
+            for (int y = 0; y < value.length; y++) {
+                for (int x = 0; x < value[y].length; x++) {
+                    final int targetX = column + x;
+                    final int targetY = row + y;
+                    if (isInside(targetX, targetY)) {
+                        target[targetY][targetX] = value[y][x];
+                    }
+                }
+            }
+        }
+
         private Snapshot snapshot(final int[][] source, final int column, final int row, final int width, final int height) {
             final int[][] snapshot = new int[Math.max(0, height)][Math.max(0, width)];
             final boolean[][] valid = new boolean[snapshot.length][snapshot.length == 0 ? 0 : snapshot[0].length];
@@ -1216,10 +1283,36 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             return new Snapshot(snapshot, valid);
         }
 
+        private BooleanSnapshot snapshot(final boolean[][] source, final int column, final int row, final int width, final int height) {
+            final boolean[][] snapshot = new boolean[Math.max(0, height)][Math.max(0, width)];
+            final boolean[][] valid = new boolean[snapshot.length][snapshot.length == 0 ? 0 : snapshot[0].length];
+            for (int y = 0; y < snapshot.length; y++) {
+                for (int x = 0; x < snapshot[y].length; x++) {
+                    final int sourceX = column + x;
+                    final int sourceY = row + y;
+                    valid[y][x] = isInside(sourceX, sourceY);
+                    snapshot[y][x] = valid[y][x] && source[sourceY][sourceX];
+                }
+            }
+            return new BooleanSnapshot(snapshot, valid);
+        }
+
         private ListTag saveRows(final int[][] source) {
             final ListTag rows = new ListTag();
             for (int y = 0; y < height; y++) {
                 rows.add(new IntArrayTag(source[y]));
+            }
+            return rows;
+        }
+
+        private ListTag saveRows(final boolean[][] source) {
+            final ListTag rows = new ListTag();
+            for (int y = 0; y < height; y++) {
+                final int[] row = new int[width];
+                for (int x = 0; x < width; x++) {
+                    row[x] = source[y][x] ? 1 : 0;
+                }
+                rows.add(new IntArrayTag(row));
             }
             return rows;
         }
@@ -1233,6 +1326,15 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             }
         }
 
+        private void loadBooleanRows(final ListTag rows, final boolean[][] target) {
+            for (int y = 0; y < Math.min(rows.size(), height); y++) {
+                final int[] row = rows.getIntArray(y);
+                for (int x = 0; x < Math.min(row.length, width); x++) {
+                    target[y][x] = row[x] != 0;
+                }
+            }
+        }
+
         private boolean isInside(final int column, final int row) {
             return column >= 0 && row >= 0 && column < width && row < height;
         }
@@ -1242,6 +1344,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         }
 
         private record Snapshot(int[][] values, boolean[][] valid) {
+        }
+
+        private record BooleanSnapshot(boolean[][] values, boolean[][] valid) {
         }
     }
 }
