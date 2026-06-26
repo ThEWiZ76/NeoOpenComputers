@@ -218,12 +218,16 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         return host instanceof Rack ? Visibility.Neighbors : Visibility.Network;
     }
 
+    protected Visibility wiredTrafficReachability() {
+        return host instanceof Rack ? Visibility.Neighbors : Visibility.Network;
+    }
+
     private boolean isNeighborComputerMessage(final Message message) {
         return node() != null && message.source() != null && node().isNeighborOf(message.source());
     }
 
     protected void doSend(final Context context, final String address, final Packet packet) throws IOException {
-        if (node().reachability() == Visibility.Neighbors) {
+        if (wiredTrafficReachability() == Visibility.Neighbors) {
             node().sendToNeighbors(NETWORK_MESSAGE, packet);
         } else {
             node().sendToReachable(NETWORK_MESSAGE, packet);
@@ -231,7 +235,7 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
     }
 
     protected void doBroadcast(final Context context, final Packet packet) throws IOException {
-        if (node().reachability() == Visibility.Neighbors) {
+        if (wiredTrafficReachability() == Visibility.Neighbors) {
             node().sendToNeighbors(NETWORK_MESSAGE, packet);
         } else {
             node().sendToReachable(NETWORK_MESSAGE, packet);

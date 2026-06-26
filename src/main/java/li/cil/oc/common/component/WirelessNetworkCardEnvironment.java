@@ -118,6 +118,11 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
     }
 
     @Override
+    protected Visibility nodeReachability() {
+        return Visibility.Network;
+    }
+
+    @Override
     protected void doSend(final Context context, final String address, final Packet packet) throws IOException {
         if (strength > 0D) {
             consumeWirelessEnergy(context);

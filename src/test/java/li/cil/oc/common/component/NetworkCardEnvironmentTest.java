@@ -141,13 +141,13 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
-    void rackNetworkCardsUseNeighborReachabilityLikeUpstream() {
+    void rackNetworkCardsMatchUpstreamNodeReachability() {
         OpenComputersApi.initialize();
         NetworkCardEnvironment wired = new NetworkCardEnvironment(rackHost());
         WirelessNetworkCardEnvironment wireless = new WirelessNetworkCardEnvironment(rackHost(), 1);
 
         assertEquals(Visibility.Neighbors, wired.node().reachability());
-        assertEquals(Visibility.Neighbors, wireless.node().reachability());
+        assertEquals(Visibility.Network, wireless.node().reachability());
     }
 
     @Test
@@ -563,6 +563,24 @@ final class NetworkCardEnvironmentTest {
         receiver.open(null, new TestArguments(123));
 
         assertArrayEquals(new Object[]{true}, sender.broadcast(null, new TestArguments(123, "payload")));
+
+        assertEquals(List.of(), receiverHost.signals);
+    }
+
+    @Test
+    void rackTierTwoWirelessWiredFallbackDoesNotReachNonNeighborModems() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost receiverHost = new TestMachineHost();
+        WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(rackHost(), 1);
+        NetworkCardEnvironment receiver = new NetworkCardEnvironment(receiverHost);
+        Node bridge = Network.newNode(new BridgeEnvironment(), Visibility.Network).create();
+        Network.joinNewNetwork(sender.node());
+        sender.node().connect(bridge);
+        bridge.connect(receiver.node());
+        receiver.open(null, new TestArguments(123));
+        sender.setStrength(null, new TestArguments(0D));
+
+        assertArrayEquals(new Object[]{true}, sender.send(null, new TestArguments(receiver.node().address(), 123, "payload")));
 
         assertEquals(List.of(), receiverHost.signals);
     }
