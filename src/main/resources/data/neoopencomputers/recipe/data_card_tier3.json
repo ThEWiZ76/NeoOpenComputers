@@ -2,14 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "B": {
+      "item": "neoopencomputers:card"
+    },
     "C": {
       "item": "neoopencomputers:cpu_tier2"
     },
-    "D": {
-      "item": "neoopencomputers:data_card_tier2"
-    },
     "M": {
-      "item": "neoopencomputers:memory_tier3"
+      "item": "neoopencomputers:memory_tier5"
     },
     "X": {
       "item": "minecraft:diamond"
@@ -17,7 +17,7 @@
   },
   "pattern": [
     "XCM",
-    " D "
+    " B "
   ],
   "result": {
     "count": 1,

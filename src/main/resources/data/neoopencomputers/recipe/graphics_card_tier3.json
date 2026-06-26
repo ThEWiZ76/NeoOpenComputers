@@ -2,18 +2,21 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "A": {
+      "item": "neoopencomputers:alu"
+    },
     "B": {
-      "item": "neoopencomputers:graphics_card_tier2"
+      "item": "neoopencomputers:card"
     },
     "C": {
       "item": "neoopencomputers:microchip_tier3"
     },
     "M": {
-      "item": "neoopencomputers:memory_tier3"
+      "item": "neoopencomputers:memory_tier5"
     }
   },
   "pattern": [
-    "CCM",
+    "CAM",
     " B "
   ],
   "result": {

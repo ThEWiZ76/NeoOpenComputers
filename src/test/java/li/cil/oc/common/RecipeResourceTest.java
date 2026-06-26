@@ -372,7 +372,7 @@ final class RecipeResourceTest {
     }
 
     @Test
-    void dataCardRecipesUseMaterialProgression() throws IOException {
+    void dataCardRecipesUseUpstreamDefaultInputs() throws IOException {
         JsonObject tier1 = recipeKeys(ModContentIds.DATA_CARD_TIER1);
         JsonObject tier2 = recipeKeys(ModContentIds.DATA_CARD_TIER2);
         JsonObject tier3 = recipeKeys(ModContentIds.DATA_CARD_TIER3);
@@ -380,18 +380,21 @@ final class RecipeResourceTest {
         assertItem(tier1, "A", "neoopencomputers:" + ModContentIds.ALU);
         assertItem(tier1, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(tier1, "I", "minecraft:iron_nugget");
+        assertPattern(readJson(RECIPE_ROOT.resolve(ModContentIds.DATA_CARD_TIER2 + ".json")), "GCM", " B ");
+        assertItem(tier2, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.CPU_TIER1);
-        assertItem(tier2, "D", "neoopencomputers:" + ModContentIds.DATA_CARD_TIER1);
         assertItem(tier2, "M", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
         assertTag(tier2, "G", "c:nuggets/gold");
+        assertPattern(readJson(RECIPE_ROOT.resolve(ModContentIds.DATA_CARD_TIER3 + ".json")), "XCM", " B ");
+        assertItem(tier3, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.CPU_TIER2);
-        assertItem(tier3, "D", "neoopencomputers:" + ModContentIds.DATA_CARD_TIER2);
-        assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER3);
+        assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER5);
         assertItem(tier3, "X", "minecraft:diamond");
     }
 
     @Test
-    void graphicsCardRecipesUseMaterialProgression() throws IOException {
+    void graphicsCardRecipesUseUpstreamDefaultInputs() throws IOException {
         JsonObject tier1 = recipeKeys(ModContentIds.GRAPHICS_CARD_TIER1);
         JsonObject tier2 = recipeKeys(ModContentIds.GRAPHICS_CARD_TIER2);
         JsonObject tier3 = recipeKeys(ModContentIds.GRAPHICS_CARD_TIER3);
@@ -400,12 +403,14 @@ final class RecipeResourceTest {
         assertItem(tier1, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(tier1, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER1);
-        assertItem(tier2, "B", "neoopencomputers:" + ModContentIds.GRAPHICS_CARD_TIER1);
+        assertItem(tier2, "A", "neoopencomputers:" + ModContentIds.ALU);
+        assertItem(tier2, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
-        assertItem(tier2, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER2);
-        assertItem(tier3, "B", "neoopencomputers:" + ModContentIds.GRAPHICS_CARD_TIER2);
+        assertItem(tier2, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER3);
+        assertItem(tier3, "A", "neoopencomputers:" + ModContentIds.ALU);
+        assertItem(tier3, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
-        assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER3);
+        assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER5);
     }
 
     @Test
@@ -446,14 +451,18 @@ final class RecipeResourceTest {
         assertItem(tier1, "A", "neoopencomputers:" + ModContentIds.ALU);
         assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(tier1, "U", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
+        assertItem(tier2, "A", "neoopencomputers:" + ModContentIds.ALU);
         assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
-        assertItem(tier2, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER2);
-        assertItem(tier2, "P", "neoopencomputers:" + ModContentIds.CPU_TIER1);
+        assertItem(tier2, "R", "minecraft:redstone");
+        assertItem(tier2, "U", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
         assertTag(tier2, "G", "c:nuggets/gold");
+        assertPattern(readJson(RECIPE_ROOT.resolve(ModContentIds.CPU_TIER2 + ".json")), "GRG", "CUC", "GAG");
+        assertItem(tier3, "A", "neoopencomputers:" + ModContentIds.ALU);
         assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
-        assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER3);
-        assertItem(tier3, "P", "neoopencomputers:" + ModContentIds.CPU_TIER2);
+        assertItem(tier3, "R", "minecraft:redstone");
+        assertItem(tier3, "U", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
         assertItem(tier3, "X", "minecraft:diamond");
+        assertPattern(readJson(RECIPE_ROOT.resolve(ModContentIds.CPU_TIER3 + ".json")), "XRX", "CUC", "XAX");
     }
 
     @Test

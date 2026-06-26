@@ -2,23 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "A": {
+      "item": "neoopencomputers:alu"
+    },
     "C": {
       "item": "neoopencomputers:microchip_tier3"
     },
-    "M": {
-      "item": "neoopencomputers:memory_tier3"
+    "R": {
+      "item": "minecraft:redstone"
     },
-    "P": {
-      "item": "neoopencomputers:cpu_tier2"
+    "U": {
+      "item": "neoopencomputers:control_unit"
     },
     "X": {
       "item": "minecraft:diamond"
     }
   },
   "pattern": [
-    "XMX",
-    "CPC",
-    "XMX"
+    "XRX",
+    "CUC",
+    "XAX"
   ],
   "result": {
     "count": 1,

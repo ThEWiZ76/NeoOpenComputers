@@ -4017,6 +4017,37 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void processorAndCardRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.CPU_TIER2.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(Items.REDSTONE), new ItemStack(Items.GOLD_NUGGET),
+            new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(ModItems.CONTROL_UNIT.get()), new ItemStack(ModItems.MICROCHIP_TIER2.get()),
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(ModItems.ALU.get()), new ItemStack(Items.GOLD_NUGGET)
+        )));
+        assertCraftsItem(helper, ModItems.CPU_TIER3.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.DIAMOND), new ItemStack(Items.REDSTONE), new ItemStack(Items.DIAMOND),
+            new ItemStack(ModItems.MICROCHIP_TIER3.get()), new ItemStack(ModItems.CONTROL_UNIT.get()), new ItemStack(ModItems.MICROCHIP_TIER3.get()),
+            new ItemStack(Items.DIAMOND), new ItemStack(ModItems.ALU.get()), new ItemStack(Items.DIAMOND)
+        )));
+        assertCraftsItem(helper, ModItems.DATA_CARD_TIER2.get(), CraftingInput.of(3, 2, List.of(
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(ModItems.CPU_TIER1.get()), new ItemStack(ModItems.MICROCHIP_TIER3.get()),
+            ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), ItemStack.EMPTY
+        )));
+        assertCraftsItem(helper, ModItems.DATA_CARD_TIER3.get(), CraftingInput.of(3, 2, List.of(
+            new ItemStack(Items.DIAMOND), new ItemStack(ModItems.CPU_TIER2.get()), apiItemStack(helper, "ram5"),
+            ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), ItemStack.EMPTY
+        )));
+        assertCraftsItem(helper, ModItems.GRAPHICS_CARD_TIER2.get(), CraftingInput.of(3, 2, List.of(
+            new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(ModItems.ALU.get()), apiItemStack(helper, "ram3"),
+            ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), ItemStack.EMPTY
+        )));
+        assertCraftsItem(helper, ModItems.GRAPHICS_CARD_TIER3.get(), CraftingInput.of(3, 2, List.of(
+            new ItemStack(ModItems.MICROCHIP_TIER3.get()), new ItemStack(ModItems.ALU.get()), apiItemStack(helper, "ram5"),
+            ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), ItemStack.EMPTY
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printerBlockExposesUpstreamComponentShell(final GameTestHelper helper) {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());

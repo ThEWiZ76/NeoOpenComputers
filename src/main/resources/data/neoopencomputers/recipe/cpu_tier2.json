@@ -2,23 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
+    "A": {
+      "item": "neoopencomputers:alu"
+    },
     "C": {
       "item": "neoopencomputers:microchip_tier2"
     },
     "G": {
       "tag": "c:nuggets/gold"
     },
-    "M": {
-      "item": "neoopencomputers:memory_tier2"
+    "R": {
+      "item": "minecraft:redstone"
     },
-    "P": {
-      "item": "neoopencomputers:cpu_tier1"
+    "U": {
+      "item": "neoopencomputers:control_unit"
     }
   },
   "pattern": [
-    "GMG",
-    "CPC",
-    "GMG"
+    "GRG",
+    "CUC",
+    "GAG"
   ],
   "result": {
     "count": 1,
