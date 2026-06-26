@@ -4176,6 +4176,16 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void netSplitterRecipeUsesUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.NET_SPLITTER.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_INGOT), new ItemStack(ModItems.CABLE.get()), new ItemStack(Items.IRON_INGOT),
+            new ItemStack(ModItems.CABLE.get()), new ItemStack(Items.PISTON), new ItemStack(ModItems.CABLE.get()),
+            new ItemStack(Items.IRON_INGOT), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.IRON_INGOT)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void screenRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
         assertCraftsItem(helper, ModItems.SCREEN_TIER1.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_INGOT), new ItemStack(Items.REDSTONE), new ItemStack(Items.IRON_INGOT),

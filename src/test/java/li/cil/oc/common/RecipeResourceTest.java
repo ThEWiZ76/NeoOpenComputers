@@ -44,6 +44,7 @@ final class RecipeResourceTest {
             ModContentIds.RACK,
             ModContentIds.RAID,
             ModContentIds.RELAY,
+            ModContentIds.NET_SPLITTER,
             ModContentIds.INK_CARTRIDGE_EMPTY,
             ModContentIds.INK_CARTRIDGE,
             ModContentIds.BUTTON_GROUP,
@@ -295,6 +296,7 @@ final class RecipeResourceTest {
         JsonObject powerDistributor = readJson(RECIPE_ROOT.resolve(ModContentIds.POWER_DISTRIBUTOR + ".json"));
         JsonObject powerConverter = readJson(RECIPE_ROOT.resolve(ModContentIds.POWER_CONVERTER + ".json"));
         JsonObject relay = readJson(RECIPE_ROOT.resolve(ModContentIds.RELAY + ".json"));
+        JsonObject netSplitter = readJson(RECIPE_ROOT.resolve(ModContentIds.NET_SPLITTER + ".json"));
 
         assertPattern(powerConverter, "ICI", "GMG", "IBI");
         JsonObject converterKeys = powerConverter.getAsJsonObject("key");
@@ -318,6 +320,13 @@ final class RecipeResourceTest {
         assertItem(relayKeys, "C", "neoopencomputers:" + ModContentIds.CABLE);
         assertItem(relayKeys, "N", "neoopencomputers:" + ModContentIds.NETWORK_CARD);
         assertItem(relayKeys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+
+        assertPattern(netSplitter, "ICI", "CPC", "IBI");
+        JsonObject splitterKeys = netSplitter.getAsJsonObject("key");
+        assertTag(splitterKeys, "I", "c:ingots/iron");
+        assertItem(splitterKeys, "C", "neoopencomputers:" + ModContentIds.CABLE);
+        assertItem(splitterKeys, "P", "minecraft:piston");
+        assertItem(splitterKeys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
     @Test
