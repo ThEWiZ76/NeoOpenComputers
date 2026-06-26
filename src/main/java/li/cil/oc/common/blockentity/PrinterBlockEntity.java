@@ -309,6 +309,11 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
         return new Object[]{"idle", canPrint()};
     }
 
+    @Callback(doc = "function():number -- The estimated remaining print time in seconds.")
+    public Object[] timeRemaining(final Context context, final Arguments args) {
+        return new Object[]{(int) (requiredEnergy / ModSettings.assemblerTickAmount() / 20D)};
+    }
+
     public boolean canPrint() {
         return !data.stateOff().isEmpty()
             && data.stateOff().size() <= ModSettings.printerMaxShapes()

@@ -3989,7 +3989,7 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void printerProducesPrintItemAfterEnergyAndInputLikeUpstream(final GameTestHelper helper) {
+    public static void printerProducesPrintItemAfterEnergyAndInputLikeUpstream(final GameTestHelper helper) throws Exception {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());
         final PrinterBlockEntity printer = helper.getBlockEntity(pos);
@@ -4002,6 +4002,14 @@ public final class NeoOpenComputersGameTests {
         printer.setItem(PrinterBlockEntity.SLOT_INK, new ItemStack(Items.BLACK_DYE));
         final Object[] commit = invokeComponent(helper, component, "commit", 1);
         helper.assertTrue(Boolean.TRUE.equals(commit[0]), "Printer did not accept print job");
+        connector.changeBuffer(ModSettings.printerTickAmount());
+        PrinterBlockEntity.serverTick(helper.getLevel(), pos, printer.getBlockState(), printer);
+        connector.changeBuffer(ModSettings.printerTickAmount());
+        PrinterBlockEntity.serverTick(helper.getLevel(), pos, printer.getBlockState(), printer);
+        withCachedConfig(ModSettings.ASSEMBLER_TICK_AMOUNT, 1D, () -> {
+            final Object[] timeRemaining = invokeComponent(helper, component, "timeRemaining");
+            helper.assertTrue(timeRemaining.length == 1 && Integer.valueOf(4).equals(timeRemaining[0]), "Printer did not expose upstream timeRemaining formula");
+        });
 
         for (int tick = 0; tick < 4_000 && printer.getItem(PrinterBlockEntity.SLOT_OUTPUT).isEmpty(); tick++) {
             connector.changeBuffer(ModSettings.printerTickAmount());
