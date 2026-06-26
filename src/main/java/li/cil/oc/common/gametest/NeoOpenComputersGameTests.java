@@ -5061,6 +5061,31 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tractorBeamUpgradeUsesUpstreamBlockGrownPickupBounds(final GameTestHelper helper) throws Exception {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for tractor beam upgrade");
+
+        final RobotTestHost host = new RobotTestHost(helper);
+        final ItemEntity drop = new ItemEntity(
+            helper.getLevel(),
+            host.xPosition() + 3.5D,
+            host.yPosition() + 0.5D,
+            host.zPosition() + 0.5D,
+            new ItemStack(Items.DIAMOND));
+        helper.getLevel().addFreshEntity(drop);
+
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()), host);
+        helper.assertTrue(environment != null, "Tractor beam upgrade did not create tractor beam environment");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+
+        final Object[] suck = component.invoke("suck", null);
+
+        helper.assertTrue(Boolean.TRUE.equals(suck[0]), "Tractor beam did not suck item inside upstream block-grown range");
+        helper.assertTrue(host.mainInventory().getItem(0).is(Items.DIAMOND), "Tractor beam did not insert positive-edge item");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tractorBeamUpgradeSucksNearbyItemStackIntoTabletPlayerInventory(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for tractor beam upgrade");

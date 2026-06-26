@@ -10,6 +10,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -89,13 +90,7 @@ public class TractorBeamUpgradeEnvironment extends AbstractManagedEnvironment im
     }
 
     private AABB pickupBounds() {
-        return new AABB(
-            host.xPosition() - PICKUP_RADIUS,
-            host.yPosition() - PICKUP_RADIUS,
-            host.zPosition() - PICKUP_RADIUS,
-            host.xPosition() + PICKUP_RADIUS,
-            host.yPosition() + PICKUP_RADIUS,
-            host.zPosition() + PICKUP_RADIUS);
+        return new AABB(BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition())).inflate(PICKUP_RADIUS);
     }
 
     private static void pickupByPlayer(final Player player, final ItemEntity entity) {
