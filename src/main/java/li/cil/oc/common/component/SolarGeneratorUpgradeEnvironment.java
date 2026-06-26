@@ -61,10 +61,14 @@ public class SolarGeneratorUpgradeEnvironment extends AbstractManagedEnvironment
         }
         final Level level = host.world();
         final BlockPos pos = BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()).above();
+        final boolean biomeHasPrecipitation = level.getBiome(pos).value().hasPrecipitation();
         return level.isDay()
             && !Level.NETHER.equals(level.dimension())
             && level.canSeeSky(pos)
-            && !level.isRaining()
-            && !level.isThundering();
+            && weatherAllowsSun(biomeHasPrecipitation, level.isRaining(), level.isThundering());
+    }
+
+    static boolean weatherAllowsSun(final boolean biomeHasPrecipitation, final boolean raining, final boolean thundering) {
+        return !biomeHasPrecipitation || (!raining && !thundering);
     }
 }
