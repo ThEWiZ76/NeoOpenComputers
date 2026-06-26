@@ -73,6 +73,7 @@ import li.cil.oc.common.blockentity.WaypointBlockEntity;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.PrintBlock;
+import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.NanomachineItemData;
@@ -5914,6 +5915,26 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(inventory.canPlaceItem(DiskDriveBlockEntity.SLOT_FLOPPY, floppy), "Disk drive mountable rejected floppy");
         inventory.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, floppy);
         helper.assertTrue(!inventory.isEmpty(), "Disk drive mountable did not keep inserted floppy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void rackDiskDriveEjectUsesRackFacingLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get().defaultBlockState().setValue(RackBlock.FACING, Direction.EAST));
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+
+        rack.setItem(0, new ItemStack(ModItems.DISK_DRIVE_MOUNTABLE.get()));
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        helper.assertTrue(mountable instanceof net.minecraft.world.Container, "Rack disk drive mountable is not an inventory");
+        final net.minecraft.world.Container inventory = (net.minecraft.world.Container) mountable;
+        inventory.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) mountable.node();
+        assertSingleResult(helper, invokeComponent(helper, component, "eject", 1D), Boolean.TRUE, "Rack disk drive eject");
+        final ItemEntity entity = droppedItemEntity(helper, ModItems.FLOPPY.get());
+        helper.assertTrue(entity.getDeltaMovement().x > 0.5D, "Rack disk drive ejected disk did not move along rack facing: " + entity.getDeltaMovement());
+        helper.assertTrue(Math.abs(entity.getDeltaMovement().z) < 0.001D, "Rack disk drive ejected disk kept north/south velocity: " + entity.getDeltaMovement());
         helper.succeed();
     }
 

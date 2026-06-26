@@ -6,6 +6,7 @@ import li.cil.oc.api.component.RackBusConnectable;
 import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.internal.Rack;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -170,13 +171,19 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
 
     @Callback(doc = "function([velocity:number]):boolean -- Eject the currently present medium from the drive.")
     public Object[] eject(final Context context, final Arguments args) {
+        final double velocity = Math.max(0D, Math.min(args.optDouble(0, 0D), 1D));
         final ItemStack ejected = removeItem(DiskDriveBlockEntity.SLOT_FLOPPY, 1);
         if (ejected.isEmpty()) {
             return new Object[]{false};
         }
         final Level level = world();
         if (level != null && !level.isClientSide) {
-            level.addFreshEntity(new ItemEntity(level, xPosition(), yPosition(), zPosition(), ejected));
+            final ItemEntity entity = new ItemEntity(level, xPosition(), yPosition(), zPosition(), ejected);
+            if (host instanceof Rack rack) {
+                final Direction facing = rack.facing();
+                entity.setDeltaMovement(facing.getStepX() * velocity, facing.getStepY() * velocity, facing.getStepZ() * velocity);
+            }
+            level.addFreshEntity(entity);
         }
         return new Object[]{true};
     }
