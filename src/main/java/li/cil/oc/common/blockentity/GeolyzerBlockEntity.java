@@ -17,6 +17,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.component.GeolyzerEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -126,12 +127,22 @@ public class GeolyzerBlockEntity extends BlockEntity implements Environment, Env
 
     @Callback(doc = "function():boolean -- Returns whether there is a clear line of sight to the sky directly above.")
     public Object[] canSeeSky(final Context context, final Arguments args) {
-        return new Object[]{level != null && level.canSeeSky(getBlockPos().above())};
+        return new Object[]{level != null && !Level.NETHER.equals(level.dimension()) && level.canSeeSky(getBlockPos().above())};
     }
 
     @Callback(doc = "function():boolean -- Return whether the sun is currently visible directly above.")
     public Object[] isSunVisible(final Context context, final Arguments args) {
-        return new Object[]{level != null && level.isDay() && level.canSeeSky(getBlockPos().above()) && !level.isRaining() && !level.isThundering()};
+        if (level == null) {
+            return new Object[]{false};
+        }
+        final BlockPos pos = getBlockPos().above();
+        final boolean biomeHasPrecipitation = level.getBiome(pos).value().hasPrecipitation();
+        return new Object[]{
+            level.isDay()
+                && !Level.NETHER.equals(level.dimension())
+                && level.canSeeSky(pos)
+                && GeolyzerEnvironment.weatherAllowsSun(biomeHasPrecipitation, level.isRaining(), level.isThundering())
+        };
     }
 
     @Callback(doc = "function(x:number, z:number[, y:number, w:number, d:number, h:number][, ignoreReplaceable:boolean|options:table]):table -- Scans block hardness in the specified relative bounds.")

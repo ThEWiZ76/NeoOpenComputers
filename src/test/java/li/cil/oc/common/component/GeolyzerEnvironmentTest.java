@@ -16,8 +16,10 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class GeolyzerEnvironmentTest {
     @Test
@@ -48,6 +50,18 @@ final class GeolyzerEnvironmentTest {
 
             assertArrayEquals(new Object[]{null, "not enabled in config"}, environment.analyze(null, new TestArguments(0)));
         });
+    }
+
+    @Test
+    void weatherBlocksSunOnlyForBiomesWithPrecipitationLikeUpstream() {
+        assertTrue(GeolyzerEnvironment.weatherAllowsSun(false, true, false));
+        assertTrue(GeolyzerEnvironment.weatherAllowsSun(false, false, true));
+        assertTrue(GeolyzerEnvironment.weatherAllowsSun(false, true, true));
+        assertTrue(GeolyzerEnvironment.weatherAllowsSun(true, false, false));
+
+        assertFalse(GeolyzerEnvironment.weatherAllowsSun(true, true, false));
+        assertFalse(GeolyzerEnvironment.weatherAllowsSun(true, false, true));
+        assertFalse(GeolyzerEnvironment.weatherAllowsSun(true, true, true));
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

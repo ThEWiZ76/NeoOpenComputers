@@ -84,13 +84,23 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
     @Callback(doc = "function():boolean -- Returns whether there is a clear line of sight to the sky directly above.")
     public Object[] canSeeSky(final Context context, final Arguments args) {
         final Level level = level();
-        return new Object[]{level != null && level.canSeeSky(hostPos().above())};
+        return new Object[]{level != null && !Level.NETHER.equals(level.dimension()) && level.canSeeSky(hostPos().above())};
     }
 
     @Callback(doc = "function():boolean -- Return whether the sun is currently visible directly above.")
     public Object[] isSunVisible(final Context context, final Arguments args) {
         final Level level = level();
-        return new Object[]{level != null && level.isDay() && level.canSeeSky(hostPos().above()) && !level.isRaining() && !level.isThundering()};
+        if (level == null) {
+            return new Object[]{false};
+        }
+        final BlockPos pos = hostPos().above();
+        final boolean biomeHasPrecipitation = level.getBiome(pos).value().hasPrecipitation();
+        return new Object[]{
+            level.isDay()
+                && !Level.NETHER.equals(level.dimension())
+                && level.canSeeSky(pos)
+                && weatherAllowsSun(biomeHasPrecipitation, level.isRaining(), level.isThundering())
+        };
     }
 
     @Callback(doc = "function(x:number, z:number[, y:number, w:number, d:number, h:number][, ignoreReplaceable:boolean|options:table]):table -- Scans block hardness in the specified relative bounds.")
@@ -256,6 +266,10 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
 
     private static Object[] notEnabled() {
         return new Object[]{null, "not enabled in config"};
+    }
+
+    public static boolean weatherAllowsSun(final boolean biomeHasPrecipitation, final boolean raining, final boolean thundering) {
+        return !biomeHasPrecipitation || (!raining && !thundering);
     }
 
     private static Map<?, ?> scanOptions(final Arguments args, final int index) {
