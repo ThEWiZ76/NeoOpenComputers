@@ -1,0 +1,44 @@
+package li.cil.oc.common.component;
+
+import li.cil.oc.api.component.RackMountable;
+import li.cil.oc.api.event.NetworkActivityEvent;
+import li.cil.oc.common.blockentity.RackBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.neoforged.neoforge.common.NeoForge;
+
+public final class NetworkActivityHandler {
+    private NetworkActivityHandler() {
+    }
+
+    public static void register() {
+        NeoForge.EVENT_BUS.addListener(NetworkActivityHandler::onNetworkActivity);
+    }
+
+    private static void onNetworkActivity(final NetworkActivityEvent.Server event) {
+        final RackBlockEntity rack = rackFor(event);
+        if (rack == null) {
+            return;
+        }
+        final long timestamp = System.currentTimeMillis();
+        for (int slot = 0; slot < RackBlockEntity.CONTAINER_SIZE; slot++) {
+            final RackMountable mountable = rack.getMountable(slot);
+            if (mountable instanceof ServerRackMountableEnvironment server
+                && server.recordNetworkActivity(event.getNode(), timestamp)) {
+                rack.markChanged(slot);
+            }
+        }
+    }
+
+    private static RackBlockEntity rackFor(final NetworkActivityEvent.Server event) {
+        final BlockEntity blockEntity = event.getTileEntity();
+        if (blockEntity instanceof RackBlockEntity rack) {
+            return rack;
+        }
+        if (event.getWorld() == null) {
+            return null;
+        }
+        final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
+        return event.getWorld().getBlockEntity(pos) instanceof RackBlockEntity rack ? rack : null;
+    }
+}

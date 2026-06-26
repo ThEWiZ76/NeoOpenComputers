@@ -204,6 +204,14 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         return true;
     }
 
+    boolean recordNetworkActivity(final Node activeNode, final long timestamp) {
+        if (activeNode == null || componentSlot(activeNode.address()) < 0) {
+            return false;
+        }
+        lastNetworkActivity = timestamp;
+        return true;
+    }
+
     @Override
     public void onMachineConnect(final Node node) {
         if (node != null && node.address() != null && pendingComponentSlot >= 0) {

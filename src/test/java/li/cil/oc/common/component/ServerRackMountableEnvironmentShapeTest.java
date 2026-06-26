@@ -157,6 +157,16 @@ final class ServerRackMountableEnvironmentShapeTest {
     }
 
     @Test
+    void serverRecordsNetworkActivityLikeUpstream() throws Exception {
+        ServerRackMountableEnvironment server = allocateServer(1);
+        Node networkCard = new TestNode("network-card-address");
+        setField(server, ServerRackMountableEnvironment.class, "componentSlots", new HashMap<>(Map.of(networkCard.address(), 1)));
+
+        assertTrue(server.recordNetworkActivity(networkCard, 1357L));
+        assertEquals(1357L, server.getData().getLong("lastNetworkActivity"));
+    }
+
+    @Test
     void serverReportsNoStateWhenStoppedLikeUpstream() throws Exception {
         ServerRackMountableEnvironment server = allocateServer(1);
         setField(server, ServerRackMountableEnvironment.class, "machine", testMachine(false, false, null));
