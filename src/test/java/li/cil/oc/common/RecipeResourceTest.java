@@ -368,14 +368,18 @@ final class RecipeResourceTest {
 
     @Test
     void wirelessCardRecipesUseCardProgression() throws IOException {
-        JsonObject tier1 = recipeKeys(ModContentIds.WIRELESS_NETWORK_CARD_TIER1);
-        JsonObject tier2 = recipeKeys(ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
+        JsonObject tier1Recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.WIRELESS_NETWORK_CARD_TIER1 + ".json"));
+        JsonObject tier2Recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.WIRELESS_NETWORK_CARD_TIER2 + ".json"));
+        JsonObject tier1 = tier1Recipe.getAsJsonObject("key");
+        JsonObject tier2 = tier2Recipe.getAsJsonObject("key");
 
+        assertPattern(tier1Recipe, "TCT", " B ");
         assertItem(tier1, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
-        assertItem(tier1, "N", "neoopencomputers:" + ModContentIds.NETWORK_CARD);
+        assertItem(tier1, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(tier1, "T", "minecraft:redstone_torch");
+        assertPattern(tier2Recipe, "PC ", " B ");
         assertItem(tier2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
-        assertItem(tier2, "N", "neoopencomputers:" + ModContentIds.NETWORK_CARD);
+        assertItem(tier2, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(tier2, "P", "minecraft:ender_pearl");
     }
 

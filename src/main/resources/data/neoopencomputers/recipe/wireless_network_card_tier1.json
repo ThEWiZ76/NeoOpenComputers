@@ -5,8 +5,8 @@
     "C": {
       "item": "neoopencomputers:microchip_tier1"
     },
-    "N": {
-      "item": "neoopencomputers:network_card"
+    "B": {
+      "item": "neoopencomputers:card"
     },
     "T": {
       "item": "minecraft:redstone_torch"
@@ -14,7 +14,7 @@
   },
   "pattern": [
     "TCT",
-    " N "
+    " B "
   ],
   "result": {
     "count": 1,

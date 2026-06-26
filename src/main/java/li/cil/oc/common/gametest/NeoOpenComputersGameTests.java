@@ -4201,6 +4201,19 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void wirelessNetworkCardRecipesUseUpstreamMaterialCardInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.WIRELESS_NETWORK_CARD_TIER1.get(), CraftingInput.of(3, 2, List.of(
+            new ItemStack(Items.REDSTONE_TORCH), new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(Items.REDSTONE_TORCH),
+            ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), ItemStack.EMPTY
+        )));
+        assertCraftsItem(helper, ModItems.WIRELESS_NETWORK_CARD_TIER2.get(), CraftingInput.of(3, 2, List.of(
+            new ItemStack(Items.ENDER_PEARL), new ItemStack(ModItems.MICROCHIP_TIER2.get()), ItemStack.EMPTY,
+            ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), ItemStack.EMPTY
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void screenRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
         assertCraftsItem(helper, ModItems.SCREEN_TIER1.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_INGOT), new ItemStack(Items.REDSTONE), new ItemStack(Items.IRON_INGOT),
