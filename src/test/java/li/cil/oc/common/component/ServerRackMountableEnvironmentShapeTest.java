@@ -9,6 +9,8 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.util.StateAware;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -17,7 +19,9 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -152,6 +156,22 @@ final class ServerRackMountableEnvironmentShapeTest {
         assertEquals(2468L, server.getData().getLong("lastFileSystemAccess"));
     }
 
+    @Test
+    void serverReportsNoStateWhenStoppedLikeUpstream() throws Exception {
+        ServerRackMountableEnvironment server = allocateServer(1);
+        setField(server, ServerRackMountableEnvironment.class, "machine", testMachine(false, false, null));
+
+        assertTrue(server.getCurrentState().isEmpty());
+    }
+
+    @Test
+    void serverReportsWorkingOnlyWhenRunningLikeUpstream() throws Exception {
+        ServerRackMountableEnvironment server = allocateServer(1);
+        setField(server, ServerRackMountableEnvironment.class, "machine", testMachine(true, false, null));
+
+        assertEquals(EnumSet.of(StateAware.State.IsWorking), server.getCurrentState());
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static ServerRackMountableEnvironment allocateServer(final int tier) throws Exception {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
@@ -181,6 +201,37 @@ final class ServerRackMountableEnvironmentShapeTest {
         final Field field = owner.getDeclaredField(name);
         field.setAccessible(true);
         field.set(target, value);
+    }
+
+    private static Machine testMachine(final boolean running, final boolean paused, final String lastError) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "isRunning" -> running;
+                case "isPaused" -> paused;
+                case "lastError" -> lastError;
+                case "toString" -> "TestMachine";
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "equals" -> proxy == args[0];
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Object defaultValue(final Class<?> type) {
+        if (!type.isPrimitive()) {
+            return null;
+        }
+        if (type == boolean.class) {
+            return false;
+        }
+        if (type == void.class) {
+            return null;
+        }
+        if (type == char.class) {
+            return '\0';
+        }
+        return 0;
     }
 
     private static final class TestManagedEnvironment implements ManagedEnvironment {

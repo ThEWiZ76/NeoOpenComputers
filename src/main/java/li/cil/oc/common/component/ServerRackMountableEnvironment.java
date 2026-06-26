@@ -319,13 +319,10 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public EnumSet<StateAware.State> getCurrentState() {
-        if (machine.isRunning() || machine.isPaused()) {
+        if (machine != null && machine.isRunning()) {
             return EnumSet.of(StateAware.State.IsWorking);
         }
-        if (canStartMachine()) {
-            return EnumSet.of(StateAware.State.CanWork);
-        }
-        return EnumSet.of(StateAware.State.None);
+        return EnumSet.noneOf(StateAware.State.class);
     }
 
     public int missingRequiredComponents() {
