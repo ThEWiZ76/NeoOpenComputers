@@ -4146,6 +4146,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void screenRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.SCREEN_TIER1.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_INGOT), new ItemStack(Items.REDSTONE), new ItemStack(Items.IRON_INGOT),
+            new ItemStack(Items.REDSTONE), new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(Items.GLASS),
+            new ItemStack(Items.IRON_INGOT), new ItemStack(Items.REDSTONE), new ItemStack(Items.IRON_INGOT)
+        )));
+        assertCraftsItem(helper, ModItems.SCREEN_TIER2.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.RED_DYE), new ItemStack(Items.GOLD_INGOT),
+            new ItemStack(Items.GREEN_DYE), new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(Items.GLASS),
+            new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.BLUE_DYE), new ItemStack(Items.GOLD_INGOT)
+        )));
+        assertCraftsItem(helper, ModItems.SCREEN_TIER3.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.OBSIDIAN), new ItemStack(Items.GLOWSTONE_DUST), new ItemStack(Items.OBSIDIAN),
+            new ItemStack(Items.GLOWSTONE_DUST), new ItemStack(ModItems.MICROCHIP_TIER3.get()), new ItemStack(Items.GLASS),
+            new ItemStack(Items.OBSIDIAN), new ItemStack(Items.GLOWSTONE_DUST), new ItemStack(Items.OBSIDIAN)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printerBlockExposesUpstreamComponentShell(final GameTestHelper helper) {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());

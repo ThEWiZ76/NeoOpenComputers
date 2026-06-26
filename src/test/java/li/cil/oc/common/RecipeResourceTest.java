@@ -996,7 +996,7 @@ final class RecipeResourceTest {
     }
 
     @Test
-    void screenRecipesUseHardmodeProgression() throws IOException {
+    void screenRecipesUseUpstreamDefaultInputs() throws IOException {
         JsonObject tier1 = readJson(RECIPE_ROOT.resolve(ModContentIds.SCREEN_TIER1 + ".json"));
         JsonObject tier2 = readJson(RECIPE_ROOT.resolve(ModContentIds.SCREEN_TIER2 + ".json"));
         JsonObject tier3 = readJson(RECIPE_ROOT.resolve(ModContentIds.SCREEN_TIER3 + ".json"));
@@ -1004,27 +1004,25 @@ final class RecipeResourceTest {
         JsonObject tier2Keys = tier2.getAsJsonObject("key");
         JsonObject tier3Keys = tier3.getAsJsonObject("key");
 
-        assertPattern(tier1, "IIG", "RTG", "IIG");
+        assertPattern(tier1, "IRI", "RCG", "IRI");
         assertTag(tier1Keys, "I", "c:ingots/iron");
-        assertItem(tier1Keys, "G", "minecraft:glass");
         assertItem(tier1Keys, "R", "minecraft:redstone");
-        assertItem(tier1Keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(tier1Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(tier1Keys, "G", "minecraft:glass");
 
-        assertPattern(tier2, "IRI", "CGS", "IBI");
+        assertPattern(tier2, "IRI", "GCL", "IBI");
         assertTag(tier2Keys, "I", "c:ingots/gold");
         assertItem(tier2Keys, "R", "minecraft:red_dye");
         assertItem(tier2Keys, "G", "minecraft:green_dye");
         assertItem(tier2Keys, "B", "minecraft:blue_dye");
         assertItem(tier2Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
-        assertItem(tier2Keys, "S", "neoopencomputers:" + ModContentIds.SCREEN_TIER1);
+        assertItem(tier2Keys, "L", "minecraft:glass");
 
-        assertPattern(tier3, "OBC", "RQS", "OBC");
+        assertPattern(tier3, "OYO", "YCG", "OYO");
         assertItem(tier3Keys, "O", "minecraft:obsidian");
-        assertItem(tier3Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+        assertItem(tier3Keys, "Y", "minecraft:glowstone_dust");
         assertItem(tier3Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
-        assertItem(tier3Keys, "R", "minecraft:blaze_rod");
-        assertItem(tier3Keys, "Q", "minecraft:quartz");
-        assertItem(tier3Keys, "S", "neoopencomputers:" + ModContentIds.SCREEN_TIER2);
+        assertItem(tier3Keys, "G", "minecraft:glass");
     }
 
     @Test

@@ -11,14 +11,14 @@
     "R": {
       "item": "minecraft:redstone"
     },
-    "T": {
-      "item": "neoopencomputers:transistor"
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
     }
   },
   "pattern": [
-    "IIG",
-    "RTG",
-    "IIG"
+    "IRI",
+    "RCG",
+    "IRI"
   ],
   "result": {
     "count": 1,

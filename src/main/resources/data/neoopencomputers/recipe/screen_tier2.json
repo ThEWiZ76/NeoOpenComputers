@@ -14,16 +14,16 @@
     "I": {
       "tag": "c:ingots/gold"
     },
+    "L": {
+      "item": "minecraft:glass"
+    },
     "R": {
       "item": "minecraft:red_dye"
-    },
-    "S": {
-      "item": "neoopencomputers:screen_tier1"
     }
   },
   "pattern": [
     "IRI",
-    "CGS",
+    "GCL",
     "IBI"
   ],
   "result": {
