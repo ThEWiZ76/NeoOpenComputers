@@ -9,6 +9,7 @@ import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
@@ -34,12 +35,13 @@ import li.cil.oc.common.menu.ComputerCaseMenu;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
 import java.util.HashMap;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider, DeviceInfo, RedstoneControllerHost {
+public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider, DeviceInfo, RedstoneControllerHost, StateAware {
     public static final int SLOT_CARD_0 = 0;
     public static final int SLOT_CARD_1 = 1;
     public static final int SLOT_MEMORY_0 = 2;
@@ -151,6 +153,14 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     public Map<String, String> getDeviceInfo() {
         return deviceInfo(getContainerSize());
+    }
+
+    @Override
+    public EnumSet<StateAware.State> getCurrentState() {
+        if (machine != null && machine.isRunning()) {
+            return EnumSet.of(StateAware.State.IsWorking);
+        }
+        return EnumSet.noneOf(StateAware.State.class);
     }
 
     @Override

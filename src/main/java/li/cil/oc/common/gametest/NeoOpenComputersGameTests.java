@@ -8221,12 +8221,18 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
 
         final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        helper.assertTrue(computer instanceof li.cil.oc.api.util.StateAware, "Computer case did not expose upstream StateAware state");
+        final li.cil.oc.api.util.StateAware computerState = (li.cil.oc.api.util.StateAware) computer;
+        helper.assertTrue(computerState.getCurrentState().isEmpty(), "Stopped computer case reported work state");
         computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
         computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
         computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, new ItemStack(ModItems.EEPROM.get()));
 
         helper.assertTrue(computer.toggleMachine(), "Computer case did not start with CPU, memory, and EEPROM");
-        helper.succeedWhen(() -> helper.assertTrue(computer.machine().isRunning(), "Computer machine is not running"));
+        helper.succeedWhen(() -> {
+            helper.assertTrue(computer.machine().isRunning(), "Computer machine is not running");
+            helper.assertTrue(computerState.getCurrentState().contains(li.cil.oc.api.util.StateAware.State.IsWorking), "Running computer case did not report IsWorking state");
+        });
     }
 
     @GameTest(template = "empty")
