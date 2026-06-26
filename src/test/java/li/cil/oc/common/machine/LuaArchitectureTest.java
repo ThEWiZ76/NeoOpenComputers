@@ -2395,6 +2395,14 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void clampsJavaLongIntegerArgumentsLikeUpstream() throws Exception {
+        Arguments arguments = luaArguments(Long.MAX_VALUE, Long.MIN_VALUE);
+
+        assertEquals(Integer.MAX_VALUE, arguments.checkInteger(0));
+        assertEquals(Integer.MIN_VALUE, arguments.checkInteger(1));
+    }
+
+    @Test
     void rejectsNaNIntegerArgumentsLikeUpstream() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""
@@ -4889,6 +4897,13 @@ final class LuaArchitectureTest {
         }
         fail("missing byte-array key: " + key);
         return null;
+    }
+
+    private static Arguments luaArguments(final Object... values) throws Exception {
+        final Class<?> argumentsClass = Class.forName("li.cil.oc.common.machine.LuaArchitecture$LuaArguments");
+        final java.lang.reflect.Constructor<?> constructor = argumentsClass.getDeclaredConstructor(Object[].class);
+        constructor.setAccessible(true);
+        return (Arguments) constructor.newInstance((Object) values);
     }
 
     private static Callback callback(final String name) {
