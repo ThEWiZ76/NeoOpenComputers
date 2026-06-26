@@ -317,6 +317,21 @@ final class ComponentItemShapeTest {
     }
 
     @Test
+    void apuItemCreatesUpstreamDeviceInfoEnvironment() throws Exception {
+        final ManagedEnvironment environment = allocate(ApuItem.class).createEnvironment(null, null);
+        final DeviceInfo info = assertInstanceOf(DeviceInfo.class, environment);
+        final Map<String, String> metadata = info.getDeviceInfo();
+
+        assertEquals(DeviceInfo.DeviceClass.Processor, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("APU", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
+        assertEquals("FlexiArch 1 Processor (Builtin Graphics)", metadata.get(DeviceInfo.DeviceAttribute.Product));
+        assertEquals("800", metadata.get(DeviceInfo.DeviceAttribute.Capacity));
+        assertEquals("1", metadata.get(DeviceInfo.DeviceAttribute.Width));
+        assertEquals("500+640/640/40/1280/320/640", metadata.get(DeviceInfo.DeviceAttribute.Clock));
+    }
+
+    @Test
     void hoverUpgradeItemIsHostAwareUpgradeDriver() throws NoSuchMethodException {
         final Constructor<HoverUpgradeItem> constructor = HoverUpgradeItem.class.getConstructor(Item.Properties.class, int.class);
 

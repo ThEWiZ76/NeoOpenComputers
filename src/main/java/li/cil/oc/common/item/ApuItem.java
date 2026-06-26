@@ -2,7 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.common.component.GraphicsCardEnvironment;
+import li.cil.oc.common.component.ApuEnvironment;
 import net.minecraft.world.item.ItemStack;
 
 public final class ApuItem extends CpuItem {
@@ -15,6 +15,6 @@ public final class ApuItem extends CpuItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return new GraphicsCardEnvironment(gpuTier);
+        return new ApuEnvironment(gpuTier);
     }
 }
