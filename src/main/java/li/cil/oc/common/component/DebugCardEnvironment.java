@@ -1008,7 +1008,8 @@ public final class DebugCardEnvironment extends AbstractManagedEnvironment {
         @Callback(doc = "function(x:number, y:number, z:number):number -- Get the light value (emission) of the block at the specified coordinates.")
         public Object[] getLightValue(final Context context, final Arguments args) throws Exception {
             checkAccess(access);
-            return new Object[]{blockState(blockPos(args)).getLightEmission()};
+            final BlockPos pos = blockPos(args);
+            return new Object[]{level == null ? 0 : level.getRawBrightness(pos, 0)};
         }
 
         @Callback(doc = "function(x:number, y:number, z:number):boolean -- Get whether the block at the specified coordinates is directly under the sky.")

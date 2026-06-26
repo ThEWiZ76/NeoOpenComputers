@@ -1620,6 +1620,9 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(lightValue.length == 1 && Integer.valueOf(state.getLightEmission()).equals(lightValue[0]), "World value did not report light value");
 
         final BlockPos air = absolute.above();
+        final Object[] litAirValue = invokeValue(helper, world, "getLightValue", air.getX(), air.getY(), air.getZ());
+        helper.assertTrue(litAirValue.length == 1 && Integer.valueOf(helper.getLevel().getRawBrightness(air, 0)).equals(litAirValue[0]), "World value did not report world light at lit air");
+
         final Object[] canSeeSky = invokeValue(helper, world, "canSeeSky", air.getX(), air.getY(), air.getZ());
         helper.assertTrue(canSeeSky.length == 1 && Boolean.valueOf(helper.getLevel().canSeeSky(air)).equals(canSeeSky[0]), "World value did not report sky visibility");
         helper.succeed();
