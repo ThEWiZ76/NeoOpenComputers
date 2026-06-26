@@ -14,6 +14,7 @@ import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.event.RobotMoveEvent;
 import li.cil.oc.api.event.RobotUsedToolEvent;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.Arguments;
@@ -5126,6 +5127,37 @@ public final class NeoOpenComputersGameTests {
         NeoForge.EVENT_BUS.post(new RobotUsedToolEvent.ApplyDamageRate(new RobotTestHost(helper), before, after, 0.4D));
 
         helper.assertTrue(after.getDamageValue() == 6, "Robot common handler did not reduce final tool damage by damage rate");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotCommonFlightLimitCancelsUnsupportedUpMoveLikeUpstream(final GameTestHelper helper) {
+        final RobotMoveEvent.Pre event = new RobotMoveEvent.Pre(new RobotTestHost(helper, new BlockPos(0, 20, 0)), Direction.UP);
+
+        NeoForge.EVENT_BUS.post(event);
+
+        helper.assertTrue(event.isCanceled(), "Robot common handler did not cancel unsupported upward movement");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotCommonFlightLimitAllowsDownMoveLikeUpstream(final GameTestHelper helper) {
+        final RobotMoveEvent.Pre event = new RobotMoveEvent.Pre(new RobotTestHost(helper, new BlockPos(0, 20, 0)), Direction.DOWN);
+
+        NeoForge.EVENT_BUS.post(event);
+
+        helper.assertFalse(event.isCanceled(), "Robot common handler canceled downward movement");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotCommonFlightLimitAllowsMoveBesideSolidFaceLikeUpstream(final GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 20, 0), Blocks.STONE);
+        final RobotMoveEvent.Pre event = new RobotMoveEvent.Pre(new RobotTestHost(helper, new BlockPos(0, 20, 0)), Direction.EAST);
+
+        NeoForge.EVENT_BUS.post(event);
+
+        helper.assertFalse(event.isCanceled(), "Robot common handler canceled movement beside a solid face");
         helper.succeed();
     }
 
@@ -10319,17 +10351,23 @@ public final class NeoOpenComputersGameTests {
     private static class AgentTestHost implements li.cil.oc.api.internal.Agent {
         private final GameTestHelper helper;
         private final Player player;
+        private final BlockPos pos;
         private final SimpleContainer mainInventory = new SimpleContainer(9);
         private final SimpleContainer equipmentInventory = new SimpleContainer(4);
         private int selectedSlot;
 
         private AgentTestHost(final GameTestHelper helper) {
-            this(helper, null);
+            this(helper, null, BlockPos.ZERO);
         }
 
         private AgentTestHost(final GameTestHelper helper, final Player player) {
+            this(helper, player, BlockPos.ZERO);
+        }
+
+        private AgentTestHost(final GameTestHelper helper, final Player player, final BlockPos pos) {
             this.helper = helper;
             this.player = player;
+            this.pos = pos;
         }
 
         @Override
@@ -10420,17 +10458,17 @@ public final class NeoOpenComputersGameTests {
 
         @Override
         public double xPosition() {
-            return helper.absolutePos(BlockPos.ZERO).getX();
+            return helper.absolutePos(pos).getX();
         }
 
         @Override
         public double yPosition() {
-            return helper.absolutePos(BlockPos.ZERO).getY();
+            return helper.absolutePos(pos).getY();
         }
 
         @Override
         public double zPosition() {
-            return helper.absolutePos(BlockPos.ZERO).getZ();
+            return helper.absolutePos(pos).getZ();
         }
 
         @Override
@@ -10456,6 +10494,10 @@ public final class NeoOpenComputersGameTests {
     private static final class RobotTestHost extends AgentTestHost implements li.cil.oc.api.internal.Robot {
         private RobotTestHost(final GameTestHelper helper) {
             super(helper);
+        }
+
+        private RobotTestHost(final GameTestHelper helper, final BlockPos pos) {
+            super(helper, null, pos);
         }
 
         @Override

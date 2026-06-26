@@ -19,6 +19,7 @@ public final class ModSettings {
     private static final List<Integer> DEFAULT_SCREEN_WIDTHS_BY_TIER = List.of(50, 80, 160);
     private static final List<Integer> DEFAULT_SCREEN_HEIGHTS_BY_TIER = List.of(16, 25, 50);
     private static final List<Integer> DEFAULT_SCREEN_DEPTHS_BY_TIER = List.of(1, 4, 8);
+    private static final List<Integer> DEFAULT_UPGRADE_FLIGHT_HEIGHTS = List.of(64, 256);
     private static final List<Double> DEFAULT_GPU_VRAM_SIZES = List.of(1D, 2D, 3D);
     private static final List<Integer> DEFAULT_MAX_OPEN_PORTS = List.of(16, 1, 16);
     private static final List<Double> DEFAULT_MAX_WIRELESS_RANGE = List.of(16D, 400D);
@@ -175,6 +176,8 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue ROBOT_ORE_XP_RATE;
     public static final ModConfigSpec.DoubleValue TOOL_EFFICIENCY_PER_LEVEL;
     public static final ModConfigSpec.DoubleValue HARVEST_SPEED_BOOST_PER_LEVEL;
+    public static final ModConfigSpec.IntValue LIMIT_FLIGHT_HEIGHT;
+    public static final ModConfigSpec.ConfigValue<List<? extends Integer>> UPGRADE_FLIGHT_HEIGHTS;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_WIDTHS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_HEIGHTS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_DEPTHS_BY_TIER;
@@ -321,6 +324,12 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("robot");
+        LIMIT_FLIGHT_HEIGHT = builder
+            .comment("Limit robot flight height. Set to -1 to disable. OpenComputers upstream default is 8.")
+            .defineInRange("limitFlightHeight", 8, -1, Integer.MAX_VALUE);
+        UPGRADE_FLIGHT_HEIGHTS = builder
+            .comment("Maximum robot flight heights for hover upgrade tiers one and two. OpenComputers upstream default is [64, 256].")
+            .defineList("upgradeFlightHeight", DEFAULT_UPGRADE_FLIGHT_HEIGHTS, value -> value instanceof Integer && (Integer) value >= 0);
         builder.push("xp");
         ROBOT_ACTION_XP = builder
             .comment("Experience gained by a robot for successful actions. OpenComputers upstream default is 0.05.")
@@ -806,6 +815,19 @@ public final class ModSettings {
 
     public static double harvestSpeedBoostPerLevel() {
         return Math.max(0D, doubleValue(HARVEST_SPEED_BOOST_PER_LEVEL));
+    }
+
+    public static int limitFlightHeight() {
+        return Math.max(-1, intValue(LIMIT_FLIGHT_HEIGHT));
+    }
+
+    public static List<Integer> upgradeFlightHeights() {
+        return positiveTierList(UPGRADE_FLIGHT_HEIGHTS, DEFAULT_UPGRADE_FLIGHT_HEIGHTS);
+    }
+
+    public static int upgradeFlightHeight(final int tier) {
+        final List<Integer> heights = upgradeFlightHeights();
+        return heights.get(clampIndex(tier, heights.size()));
     }
 
     public static List<Integer> screenWidthsByTier() {

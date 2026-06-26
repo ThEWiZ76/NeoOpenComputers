@@ -64,6 +64,12 @@ final class ModSettingsTest {
         assertEquals(4D, ModSettings.robotOreXpRate());
         assertEquals(0.01D, ModSettings.toolEfficiencyPerLevel());
         assertEquals(0.02D, ModSettings.harvestSpeedBoostPerLevel());
+        assertEquals(8, ModSettings.limitFlightHeight());
+        assertEquals(List.of(64, 256), ModSettings.upgradeFlightHeights());
+        assertEquals(64, ModSettings.upgradeFlightHeight(0));
+        assertEquals(256, ModSettings.upgradeFlightHeight(1));
+        assertEquals(64, ModSettings.upgradeFlightHeight(-1));
+        assertEquals(256, ModSettings.upgradeFlightHeight(99));
         assertEquals(List.of(50, 80, 160), ModSettings.screenWidthsByTier());
         assertEquals(50, ModSettings.screenWidthByTier(0));
         assertEquals(80, ModSettings.screenWidthByTier(1));
@@ -248,6 +254,8 @@ final class ModSettingsTest {
         assertEquals(List.of("robot", "xp", "bufferPerLevel"), ModSettings.EXPERIENCE_BUFFER_PER_LEVEL.getPath());
         assertEquals(List.of("robot", "xp", "toolEfficiencyPerLevel"), ModSettings.TOOL_EFFICIENCY_PER_LEVEL.getPath());
         assertEquals(List.of("robot", "xp", "harvestSpeedBoostPerLevel"), ModSettings.HARVEST_SPEED_BOOST_PER_LEVEL.getPath());
+        assertEquals(List.of("robot", "limitFlightHeight"), ModSettings.LIMIT_FLIGHT_HEIGHT.getPath());
+        assertEquals(List.of("robot", "upgradeFlightHeight"), ModSettings.UPGRADE_FLIGHT_HEIGHTS.getPath());
         assertEquals(List.of("screen", "widthsByTier"), ModSettings.SCREEN_WIDTHS_BY_TIER.getPath());
         assertEquals(List.of("screen", "heightsByTier"), ModSettings.SCREEN_HEIGHTS_BY_TIER.getPath());
         assertEquals(List.of("screen", "depthsByTier"), ModSettings.SCREEN_DEPTHS_BY_TIER.getPath());
