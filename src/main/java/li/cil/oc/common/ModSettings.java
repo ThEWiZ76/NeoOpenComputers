@@ -170,6 +170,11 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue NANOMACHINES_DISINTEGRATION_RANGE;
     public static final ModConfigSpec.ConfigValue<List<? extends Object>> NANOMACHINES_POTION_WHITELIST;
     public static final ModConfigSpec.DoubleValue EXPERIENCE_BUFFER_PER_LEVEL;
+    public static final ModConfigSpec.DoubleValue ROBOT_ACTION_XP;
+    public static final ModConfigSpec.DoubleValue ROBOT_EXHAUSTION_XP_RATE;
+    public static final ModConfigSpec.DoubleValue ROBOT_ORE_XP_RATE;
+    public static final ModConfigSpec.DoubleValue TOOL_EFFICIENCY_PER_LEVEL;
+    public static final ModConfigSpec.DoubleValue HARVEST_SPEED_BOOST_PER_LEVEL;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_WIDTHS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_HEIGHTS_BY_TIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> SCREEN_DEPTHS_BY_TIER;
@@ -317,9 +322,24 @@ public final class ModSettings {
 
         builder.push("robot");
         builder.push("xp");
+        ROBOT_ACTION_XP = builder
+            .comment("Experience gained by a robot for successful actions. OpenComputers upstream default is 0.05.")
+            .defineInRange("actionXp", 0.05D, 0D, Double.MAX_VALUE);
+        ROBOT_EXHAUSTION_XP_RATE = builder
+            .comment("Experience multiplier for robot exhaustion. OpenComputers upstream default is 1.0.")
+            .defineInRange("exhaustionXpRate", 1D, 0D, Double.MAX_VALUE);
+        ROBOT_ORE_XP_RATE = builder
+            .comment("Experience multiplier for ore XP collected by robots. OpenComputers upstream default is 4.0.")
+            .defineInRange("oreXpRate", 4D, 0D, Double.MAX_VALUE);
         EXPERIENCE_BUFFER_PER_LEVEL = builder
             .comment("Additional energy buffer per robot experience level. OpenComputers upstream default is 5000.")
             .defineInRange("bufferPerLevel", 5_000D, 0D, Double.MAX_VALUE);
+        TOOL_EFFICIENCY_PER_LEVEL = builder
+            .comment("Robot tool damage-rate reduction per experience level. OpenComputers upstream default is 0.01.")
+            .defineInRange("toolEfficiencyPerLevel", 0.01D, 0D, Double.MAX_VALUE);
+        HARVEST_SPEED_BOOST_PER_LEVEL = builder
+            .comment("Robot block harvest-time reduction per experience level. OpenComputers upstream default is 0.02.")
+            .defineInRange("harvestSpeedBoostPerLevel", 0.02D, 0D, Double.MAX_VALUE);
         builder.pop();
         builder.pop();
 
@@ -766,6 +786,26 @@ public final class ModSettings {
 
     public static double experienceBufferPerLevel() {
         return Math.max(0D, doubleValue(EXPERIENCE_BUFFER_PER_LEVEL));
+    }
+
+    public static double robotActionXp() {
+        return Math.max(0D, doubleValue(ROBOT_ACTION_XP));
+    }
+
+    public static double robotExhaustionXpRate() {
+        return Math.max(0D, doubleValue(ROBOT_EXHAUSTION_XP_RATE));
+    }
+
+    public static double robotOreXpRate() {
+        return Math.max(0D, doubleValue(ROBOT_ORE_XP_RATE));
+    }
+
+    public static double toolEfficiencyPerLevel() {
+        return Math.max(0D, doubleValue(TOOL_EFFICIENCY_PER_LEVEL));
+    }
+
+    public static double harvestSpeedBoostPerLevel() {
+        return Math.max(0D, doubleValue(HARVEST_SPEED_BOOST_PER_LEVEL));
     }
 
     public static List<Integer> screenWidthsByTier() {

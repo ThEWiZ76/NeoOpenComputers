@@ -59,6 +59,11 @@ final class ModSettingsTest {
         assertEquals(500D, ModSettings.computerBuffer());
         assertEquals(600D, ModSettings.accessPointBuffer());
         assertEquals(5000D, ModSettings.experienceBufferPerLevel());
+        assertEquals(0.05D, ModSettings.robotActionXp());
+        assertEquals(1D, ModSettings.robotExhaustionXpRate());
+        assertEquals(4D, ModSettings.robotOreXpRate());
+        assertEquals(0.01D, ModSettings.toolEfficiencyPerLevel());
+        assertEquals(0.02D, ModSettings.harvestSpeedBoostPerLevel());
         assertEquals(List.of(50, 80, 160), ModSettings.screenWidthsByTier());
         assertEquals(50, ModSettings.screenWidthByTier(0));
         assertEquals(80, ModSettings.screenWidthByTier(1));
@@ -237,7 +242,12 @@ final class ModSettingsTest {
         assertEquals(List.of("power", "buffer", "converter"), ModSettings.CONVERTER_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "computer"), ModSettings.COMPUTER_BUFFER.getPath());
         assertEquals(List.of("power", "buffer", "accessPoint"), ModSettings.ACCESS_POINT_BUFFER.getPath());
+        assertEquals(List.of("robot", "xp", "actionXp"), ModSettings.ROBOT_ACTION_XP.getPath());
+        assertEquals(List.of("robot", "xp", "exhaustionXpRate"), ModSettings.ROBOT_EXHAUSTION_XP_RATE.getPath());
+        assertEquals(List.of("robot", "xp", "oreXpRate"), ModSettings.ROBOT_ORE_XP_RATE.getPath());
         assertEquals(List.of("robot", "xp", "bufferPerLevel"), ModSettings.EXPERIENCE_BUFFER_PER_LEVEL.getPath());
+        assertEquals(List.of("robot", "xp", "toolEfficiencyPerLevel"), ModSettings.TOOL_EFFICIENCY_PER_LEVEL.getPath());
+        assertEquals(List.of("robot", "xp", "harvestSpeedBoostPerLevel"), ModSettings.HARVEST_SPEED_BOOST_PER_LEVEL.getPath());
         assertEquals(List.of("screen", "widthsByTier"), ModSettings.SCREEN_WIDTHS_BY_TIER.getPath());
         assertEquals(List.of("screen", "heightsByTier"), ModSettings.SCREEN_HEIGHTS_BY_TIER.getPath());
         assertEquals(List.of("screen", "depthsByTier"), ModSettings.SCREEN_DEPTHS_BY_TIER.getPath());

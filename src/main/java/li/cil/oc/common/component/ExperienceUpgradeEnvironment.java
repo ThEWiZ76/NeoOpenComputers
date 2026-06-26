@@ -126,6 +126,10 @@ public class ExperienceUpgradeEnvironment extends AbstractManagedEnvironment imp
         return BASE_XP_TO_LEVEL + Math.pow(level * CONSTANT_XP_GROWTH, EXPONENTIAL_XP_GROWTH);
     }
 
+    int storedLevel() {
+        return level;
+    }
+
     private void updateXpInfo() {
         level = calculateLevelFromExperience(experience);
         if (node() instanceof Connector connector) {
