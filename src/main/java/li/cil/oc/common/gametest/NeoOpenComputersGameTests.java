@@ -5636,6 +5636,48 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void databaseUpgradeClearTreatsZeroSizeStackAsOccupied(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
+        helper.assertTrue(driver != null, "No driver for database upgrade");
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        helper.assertTrue(environment instanceof li.cil.oc.api.internal.Database, "Environment is not a database");
+        Network.joinNewNetwork(environment.node());
+
+        ((li.cil.oc.api.internal.Database) environment).setStackInSlot(0, new ItemStack(Items.DIAMOND, 0));
+        try {
+            final Object[] result = ((li.cil.oc.api.network.Component) environment.node()).invoke("clear", null, 1);
+            helper.assertTrue(result.length == 1 && Boolean.TRUE.equals(result[0]), "Zero-size database stack was not treated as occupied");
+        } catch (Exception e) {
+            helper.fail("Database clear failed: " + e.getMessage());
+        }
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void databaseUpgradeCopyTreatsZeroSizeTargetAsOccupied(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
+        helper.assertTrue(driver != null, "No driver for database upgrade");
+        final ManagedEnvironment sourceEnvironment = driver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        final ManagedEnvironment targetEnvironment = driver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        helper.assertTrue(sourceEnvironment instanceof li.cil.oc.api.internal.Database, "Source is not a database");
+        helper.assertTrue(targetEnvironment instanceof li.cil.oc.api.internal.Database, "Target is not a database");
+        Network.joinNewNetwork(sourceEnvironment.node());
+        sourceEnvironment.node().connect(targetEnvironment.node());
+
+        ((li.cil.oc.api.internal.Database) sourceEnvironment).setStackInSlot(0, new ItemStack(Items.DIAMOND, 2));
+        ((li.cil.oc.api.internal.Database) targetEnvironment).setStackInSlot(0, new ItemStack(Items.GOLD_INGOT, 0));
+        try {
+            final Object[] result = ((li.cil.oc.api.network.Component) sourceEnvironment.node()).invoke("copy", null, 1, 1, targetEnvironment.node().address());
+            helper.assertTrue(result.length == 1 && Boolean.TRUE.equals(result[0]), "Zero-size target stack was not reported overwritten");
+        } catch (Exception e) {
+            helper.fail("Database copy failed: " + e.getMessage());
+        }
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void databaseUpgradeCopiesEntriesToAddressedDatabase(final GameTestHelper helper) {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
         helper.assertTrue(driver != null, "No driver for database upgrade");

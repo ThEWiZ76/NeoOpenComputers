@@ -68,7 +68,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
             return ItemStack.EMPTY;
         }
         final ItemStack stack = items[slot];
-        return stack == null ? ItemStack.EMPTY : stack.copy();
+        return copyStoredStack(stack);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
         if (slot < 0 || slot >= items.length) {
             return;
         }
-        items[slot] = stack == null || stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
+        items[slot] = copyStoredStack(stack);
     }
 
     @Override
@@ -113,7 +113,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
         final ListTag list = new ListTag();
         for (int slot = 0; slot < items.length; slot++) {
             final ItemStack stack = items[slot];
-            if (stack != null && !stack.isEmpty()) {
+            if (isOccupied(stack) && !stack.isEmpty()) {
                 final CompoundTag entry = new CompoundTag();
                 entry.putInt(TAG_SLOT, slot);
                 entry.put(TAG_STACK, ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack).result().orElseGet(CompoundTag::new));
@@ -146,7 +146,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
     @Callback(doc = "function(slot:number):boolean -- Clears the specified slot. Returns true if there was something in the slot before.")
     public Object[] clear(final Context context, final Arguments arguments) {
         final int slot = checkSlot(arguments, 0);
-        final boolean hadStack = items[slot] != null && !items[slot].isEmpty();
+        final boolean hadStack = isOccupied(items[slot]);
         items[slot] = ItemStack.EMPTY;
         return new Object[]{hadStack};
     }
@@ -156,7 +156,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
         final int fromSlot = checkSlot(arguments, 0);
         final Database target = arguments.count() > 2 ? database(arguments.checkString(2)) : this;
         final int toSlot = checkSlot(arguments, 1, target.size());
-        final boolean overwritten = !target.getStackInSlot(toSlot).isEmpty();
+        final boolean overwritten = isOccupied(target.getStackInSlot(toSlot));
         target.setStackInSlot(toSlot, getStackInSlot(fromSlot));
         return new Object[]{overwritten};
     }
@@ -203,6 +203,20 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
         for (int slot = 0; slot < items.length; slot++) {
             items[slot] = ItemStack.EMPTY;
         }
+    }
+
+    private static boolean isOccupied(final ItemStack stack) {
+        return stack != null && stack != ItemStack.EMPTY;
+    }
+
+    private static ItemStack copyStoredStack(final ItemStack stack) {
+        if (!isOccupied(stack)) {
+            return ItemStack.EMPTY;
+        }
+        if (stack.isEmpty()) {
+            return new ItemStack(stack.getItemHolder(), stack.getCount(), stack.getComponentsPatch());
+        }
+        return stack.copy();
     }
 
     private static String hash(final ItemStack stack) {
