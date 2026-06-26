@@ -2,8 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "A": {
-      "item": "neoopencomputers:analyzer"
+    "C": {
+      "item": "minecraft:compass"
     },
     "B": {
       "item": "neoopencomputers:printed_circuit_board"
@@ -19,7 +19,7 @@
     }
   },
   "pattern": [
-    "GAG",
+    "GCG",
     "EME",
     "GBG"
   ],

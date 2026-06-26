@@ -151,12 +151,12 @@ final class RecipeResourceTest {
     }
 
     @Test
-    void geolyzerRecipeUsesAnalyzer() throws IOException {
+    void geolyzerRecipeUsesUpstreamCompass() throws IOException {
         JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.GEOLYZER + ".json"));
         JsonObject keys = json.getAsJsonObject("key");
 
-        assertTrue(keys.has("A"), "Geolyzer recipe must define an Analyzer ingredient key");
-        assertEquals("neoopencomputers:" + ModContentIds.ANALYZER, keys.getAsJsonObject("A").get("item").getAsString());
+        assertPattern(json, "GCG", "EME", "GBG");
+        assertItem(keys, "C", "minecraft:compass");
     }
 
     @Test
