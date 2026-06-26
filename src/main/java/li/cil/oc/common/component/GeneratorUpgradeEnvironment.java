@@ -122,7 +122,7 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
     public Object[] remove(final Context context, final Arguments arguments) {
         final int count = Math.max(0, arguments.optInteger(0, Integer.MAX_VALUE));
         if (count == 0) {
-            return new Object[]{true, 0};
+            return new Object[]{true};
         }
         if (queuedFuel.isEmpty()) {
             return new Object[]{false, "queue is empty"};

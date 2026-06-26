@@ -4780,6 +4780,9 @@ public final class NeoOpenComputersGameTests {
         final Object[] insert = connector.invoke("insert", null, 1);
         helper.assertTrue(Boolean.TRUE.equals(insert[0]) && Integer.valueOf(1).equals(insert[1]), "Generator did not queue lava bucket fuel");
 
+        final Object[] removeZero = connector.invoke("remove", null, 0);
+        helper.assertTrue(removeZero.length == 1 && Boolean.TRUE.equals(removeZero[0]), "Generator remove zero did not match upstream result shape");
+
         host.mainInventory().setItem(0, new ItemStack(Items.BUCKET, 1));
         final Object[] remove = connector.invoke("remove", null, 1);
 
