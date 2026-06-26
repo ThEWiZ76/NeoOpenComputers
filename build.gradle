@@ -132,12 +132,38 @@ runs {
 }
 
 tasks.register('syncGameTestStructures', Sync) {
-    from layout.projectDirectory.dir('gameteststructures')
-    into layout.projectDirectory.dir('run/gameTestServer/gameteststructures')
+    def sourceDir = layout.projectDirectory.dir('gameteststructures')
+    def outputDir = layout.projectDirectory.dir('run/gameTestServer/gameteststructures')
+    from sourceDir
+    into outputDir
+}
+
+tasks.register('generateEmptyGameTestStructure') {
+    def emptyStructure = layout.projectDirectory.file('run/gameTestServer/gameteststructures/empty.snbt')
+    outputs.file emptyStructure
+    doLast {
+        def output = emptyStructure.asFile
+        if (!output.exists()) {
+            output.parentFile.mkdirs()
+            output.text = '''{
+  DataVersion: 3955,
+  size: [4, 3, 3],
+  entities: [],
+  blocks: [],
+  palette: [{Name: "minecraft:air"}]
+}
+'''
+        }
+    }
 }
 
 tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     dependsOn tasks.named('syncGameTestStructures')
+    dependsOn tasks.named('generateEmptyGameTestStructure')
+}
+
+tasks.named('generateEmptyGameTestStructure') {
+    mustRunAfter tasks.named('syncGameTestStructures')
 }
 
 // Sets up a dependency configuration called 'localRuntime'.

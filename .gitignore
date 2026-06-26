@@ -8,6 +8,12 @@ build/
 .worktrees
 .worktrees/
 
+### Local Codex helper scripts ###
+scripts/
+
+### Local/generated GameTest structures ###
+gameteststructures/
+
 ### IntelliJ IDEA ###
 .idea/
 *.iws
