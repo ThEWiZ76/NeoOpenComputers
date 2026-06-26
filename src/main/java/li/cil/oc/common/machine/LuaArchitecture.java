@@ -2717,7 +2717,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
         @Override
         public boolean isDouble(final int index) {
-            return index >= 0 && index < values.length && values[index] instanceof Double;
+            return index >= 0 && index < values.length && values[index] instanceof Number;
         }
 
         @Override

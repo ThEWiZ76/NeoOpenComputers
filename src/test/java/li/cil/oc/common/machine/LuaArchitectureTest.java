@@ -2379,6 +2379,22 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void treatsLuaNumberArgumentsAsDoublesLikeUpstream() {
+        TestValue value = new TestValue();
+        LuaArchitecture architecture = new LuaArchitecture("""
+            value = component.invoke('fs-address', 'make')
+            result = userdata.apply(value, 'double?', 4)
+            """);
+        architecture.bind(machineWithValueSupport(value));
+
+        assertTrue(architecture.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        resumeSynchronizedCallback(architecture);
+
+        assertEquals("double", architecture.globalString("result"));
+    }
+
+    @Test
     void rejectsNaNIntegerArgumentsLikeUpstream() {
         TestValue value = new TestValue();
         LuaArchitecture architecture = new LuaArchitecture("""
@@ -4920,6 +4936,9 @@ final class LuaArchitectureTest {
             }
             if ("long?".equals(arguments.checkString(0))) {
                 return arguments.isLong(1) ? "long" : "not-long";
+            }
+            if ("double?".equals(arguments.checkString(0))) {
+                return arguments.isDouble(1) ? "double" : "not-double";
             }
             if ("long-value".equals(arguments.checkString(0))) {
                 return "long:" + arguments.checkLong(1);
