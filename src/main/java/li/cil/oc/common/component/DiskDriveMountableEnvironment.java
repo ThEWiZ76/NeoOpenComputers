@@ -141,7 +141,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
 
     @Override
     public EnumSet<StateAware.State> getCurrentState() {
-        return EnumSet.of(StateAware.State.CanWork);
+        return EnumSet.noneOf(StateAware.State.class);
     }
 
     @Override

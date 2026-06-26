@@ -17,6 +17,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ServerRackMountableEnvironmentShapeTest {
     @Test
@@ -63,6 +64,13 @@ final class ServerRackMountableEnvironmentShapeTest {
         assertEquals("Floppy disk drive", metadata.get(DeviceInfo.DeviceAttribute.Description));
         assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("RackDrive 100 Rev. 2", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
+    void diskDriveMountableReportsNoStateLikeUpstream() throws Exception {
+        DiskDriveMountableEnvironment diskDrive = allocateDiskDriveMountable();
+
+        assertTrue(diskDrive.getCurrentState().isEmpty());
     }
 
     @Test
