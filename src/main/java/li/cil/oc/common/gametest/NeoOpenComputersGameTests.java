@@ -4146,6 +4146,16 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void analyzerRecipeUsesUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.ANALYZER.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.REDSTONE_TORCH), ItemStack.EMPTY, ItemStack.EMPTY,
+            new ItemStack(ModItems.TRANSISTOR.get()), new ItemStack(Items.GOLD_NUGGET), ItemStack.EMPTY,
+            new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.GOLD_NUGGET), ItemStack.EMPTY
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void screenRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
         assertCraftsItem(helper, ModItems.SCREEN_TIER1.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_INGOT), new ItemStack(Items.REDSTONE), new ItemStack(Items.IRON_INGOT),

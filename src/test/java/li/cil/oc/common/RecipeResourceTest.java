@@ -171,12 +171,14 @@ final class RecipeResourceTest {
     }
 
     @Test
-    void analyzerRecipeUsesMaterialParts() throws IOException {
+    void analyzerRecipeUsesUpstreamDefaultInputs() throws IOException {
         JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.ANALYZER + ".json"));
         JsonObject keys = json.getAsJsonObject("key");
 
+        assertPattern(json, "X  ", "TG ", "BG ");
+        assertItem(keys, "X", "minecraft:redstone_torch");
         assertItem(keys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
-        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertTag(keys, "G", "c:nuggets/gold");
         assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
