@@ -83,6 +83,7 @@ final class RecipeResourceTest {
             ModContentIds.DATABASE_UPGRADE_TIER3,
             ModContentIds.DISASSEMBLER,
             ModContentIds.DISK_DRIVE,
+            ModContentIds.DISK_DRIVE_MOUNTABLE,
             ModContentIds.EEPROM,
             ModContentIds.FLOPPY,
             ModContentIds.GEOLYZER,
@@ -233,6 +234,19 @@ final class RecipeResourceTest {
         assertItem(keys, "N", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER1);
         assertItem(keys, "W", "neoopencomputers:" + ModContentIds.WIRELESS_NETWORK_CARD_TIER2);
         assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
+    void diskDriveMountableRecipeUsesUpstreamDefaultInputs() throws IOException {
+        JsonObject json = readJson(RECIPE_ROOT.resolve(ModContentIds.DISK_DRIVE_MOUNTABLE + ".json"));
+        JsonObject keys = json.getAsJsonObject("key");
+
+        assertPattern(json, "OCO", "FDF", "OBO");
+        assertItem(keys, "O", "minecraft:obsidian");
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
+        assertItem(keys, "F", "minecraft:iron_bars");
+        assertItem(keys, "D", "neoopencomputers:" + ModContentIds.DISK_DRIVE);
         assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 

@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    },
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
+    },
+    "D": {
+      "item": "neoopencomputers:disk_drive"
+    },
+    "F": {
+      "item": "minecraft:iron_bars"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
+  },
+  "pattern": [
+    "OCO",
+    "FDF",
+    "OBO"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoopencomputers:disk_drive_mountable"
+  }
+}

@@ -4156,6 +4156,16 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void diskDriveMountableRecipeUsesUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.DISK_DRIVE_MOUNTABLE.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.OBSIDIAN), new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(Items.OBSIDIAN),
+            new ItemStack(Items.IRON_BARS), new ItemStack(ModItems.DISK_DRIVE.get()), new ItemStack(Items.IRON_BARS),
+            new ItemStack(Items.OBSIDIAN), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.OBSIDIAN)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void screenRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
         assertCraftsItem(helper, ModItems.SCREEN_TIER1.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_INGOT), new ItemStack(Items.REDSTONE), new ItemStack(Items.IRON_INGOT),
