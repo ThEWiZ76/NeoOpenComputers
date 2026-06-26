@@ -867,17 +867,15 @@ final class RecipeResourceTest {
         assertItem(waypoint, "W", "neoopencomputers:" + ModContentIds.INTERWEB);
         assertItem(waypoint, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
 
-        assertPattern(craftingRecipe, "IPI", "CTC", "IBI");
+        assertPattern(craftingRecipe, "I I", "CTC", "IBI");
         assertTag(crafting, "I", "c:ingots/iron");
-        assertItem(crafting, "P", "minecraft:piston");
         assertItem(crafting, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertItem(crafting, "T", "minecraft:crafting_table");
         assertItem(crafting, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
 
-        assertPattern(experienceRecipe, "GAG", "CEC", "GBG");
+        assertPattern(experienceRecipe, "G G", "CEC", "GBG");
         assertTag(experience, "G", "c:ingots/gold");
-        assertItem(experience, "A", "neoopencomputers:" + ModContentIds.ANALYZER);
-        assertItem(experience, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
+        assertItem(experience, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
         assertItem(experience, "E", "minecraft:emerald");
         assertItem(experience, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
 

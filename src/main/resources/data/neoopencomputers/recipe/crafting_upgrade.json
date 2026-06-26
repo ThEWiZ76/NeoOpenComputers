@@ -5,9 +5,6 @@
     "I": {
       "tag": "c:ingots/iron"
     },
-    "P": {
-      "item": "minecraft:piston"
-    },
     "C": {
       "item": "neoopencomputers:microchip_tier1"
     },
@@ -19,7 +16,7 @@
     }
   },
   "pattern": [
-    "IPI",
+    "I I",
     "CTC",
     "IBI"
   ],

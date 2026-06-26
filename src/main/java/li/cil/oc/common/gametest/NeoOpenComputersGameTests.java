@@ -4111,6 +4111,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void craftingAndExperienceUpgradeRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.CRAFTING_UPGRADE.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_INGOT), ItemStack.EMPTY, new ItemStack(Items.IRON_INGOT),
+            new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(Items.CRAFTING_TABLE), new ItemStack(ModItems.MICROCHIP_TIER1.get()),
+            new ItemStack(Items.IRON_INGOT), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.IRON_INGOT)
+        )));
+        assertCraftsItem(helper, ModItems.EXPERIENCE_UPGRADE.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.GOLD_INGOT), ItemStack.EMPTY, new ItemStack(Items.GOLD_INGOT),
+            new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(Items.EMERALD), new ItemStack(ModItems.MICROCHIP_TIER2.get()),
+            new ItemStack(Items.GOLD_INGOT), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.GOLD_INGOT)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printerBlockExposesUpstreamComponentShell(final GameTestHelper helper) {
         final BlockPos pos = BlockPos.ZERO;
         helper.setBlock(pos, ModBlocks.PRINTER.get().defaultBlockState());

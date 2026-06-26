@@ -5,11 +5,8 @@
     "G": {
       "tag": "c:ingots/gold"
     },
-    "A": {
-      "item": "neoopencomputers:analyzer"
-    },
     "C": {
-      "item": "neoopencomputers:microchip_tier3"
+      "item": "neoopencomputers:microchip_tier2"
     },
     "E": {
       "item": "minecraft:emerald"
@@ -19,7 +16,7 @@
     }
   },
   "pattern": [
-    "GAG",
+    "G G",
     "CEC",
     "GBG"
   ],
