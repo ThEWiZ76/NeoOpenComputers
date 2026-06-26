@@ -148,6 +148,10 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue PRINTER_TICK_AMOUNT;
     public static final ModConfigSpec.IntValue PRINTER_MAX_SHAPES;
     public static final ModConfigSpec.IntValue PRINTER_MAX_BASE_LIGHT_LEVEL;
+    public static final ModConfigSpec.DoubleValue PRINTER_RECYCLE_RATE;
+    public static final ModConfigSpec.IntValue PRINTER_CUSTOM_REDSTONE_COST;
+    public static final ModConfigSpec.IntValue PRINTER_MATERIAL_VALUE;
+    public static final ModConfigSpec.DoubleValue PRINTER_NOCLIP_MULTIPLIER;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> BATTERY_UPGRADE_BUFFERS;
     public static final ModConfigSpec.DoubleValue POWER_DISTRIBUTOR_BUFFER;
     public static final ModConfigSpec.DoubleValue TABLET_BUFFER;
@@ -496,6 +500,18 @@ public final class ModSettings {
         PRINTER_MAX_BASE_LIGHT_LEVEL = builder
             .comment("Maximum base light level for printed blocks. OpenComputers upstream default is 8.")
             .defineInRange("maxBaseLightLevel", 8, 0, 15);
+        PRINTER_RECYCLE_RATE = builder
+            .comment("Material returned when recycling prints. OpenComputers upstream default is 0.75.")
+            .defineInRange("recycleRate", 0.75D, 0D, Double.MAX_VALUE);
+        PRINTER_CUSTOM_REDSTONE_COST = builder
+            .comment("Extra material cost for prints with custom redstone levels between 1 and 14. OpenComputers upstream default is 300.")
+            .defineInRange("customRedstoneCost", 300, 0, Integer.MAX_VALUE);
+        PRINTER_MATERIAL_VALUE = builder
+            .comment("Material value supplied by one Chamelium item. OpenComputers upstream default is 2000.")
+            .defineInRange("materialValue", 2000, 0, Integer.MAX_VALUE);
+        PRINTER_NOCLIP_MULTIPLIER = builder
+            .comment("Material multiplier for prints with noclip state. OpenComputers upstream default is 2.")
+            .defineInRange("noclipMultiplier", 2D, 0D, Double.MAX_VALUE);
         builder.pop();
         MFU_TICK_FREQUENCY = builder
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
@@ -724,6 +740,22 @@ public final class ModSettings {
 
     public static int printerMaxBaseLightLevel() {
         return Math.max(0, Math.min(intValue(PRINTER_MAX_BASE_LIGHT_LEVEL), 15));
+    }
+
+    public static double printerRecycleRate() {
+        return Math.max(0D, doubleValue(PRINTER_RECYCLE_RATE));
+    }
+
+    public static int printerCustomRedstoneCost() {
+        return Math.max(0, intValue(PRINTER_CUSTOM_REDSTONE_COST));
+    }
+
+    public static int printerMaterialValue() {
+        return Math.max(0, intValue(PRINTER_MATERIAL_VALUE));
+    }
+
+    public static double printerNoclipMultiplier() {
+        return Math.max(0D, doubleValue(PRINTER_NOCLIP_MULTIPLIER));
     }
 
     public static double disassemblerItemCost() {

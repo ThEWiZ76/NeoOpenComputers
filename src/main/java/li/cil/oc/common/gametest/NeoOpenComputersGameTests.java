@@ -1828,6 +1828,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void printDataMaterialValuesHonorConfiguredUpstreamSettings(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.PRINTER_MATERIAL_VALUE, 1234, () ->
+            withCachedConfig(ModSettings.PRINTER_CUSTOM_REDSTONE_COST, 10, () ->
+                withCachedConfig(ModSettings.PRINTER_NOCLIP_MULTIPLIER, 3D, () ->
+                    withCachedConfig(ModSettings.PRINTER_RECYCLE_RATE, 0.5D, () -> {
+                        final PrintData data = new PrintData();
+                        data.setRedstoneLevel(7);
+                        data.setNoclipOff(true);
+                        data.addStateOff(new PrintData.Shape(new AABB(0D, 0D, 0D, 1D, 1D, 1D), "minecraft:block/stone", null));
+                        final ItemStack print = data.createItemStack();
+                        final PrintData.Costs costs = PrintData.computeCosts(data).orElseThrow();
+
+                        helper.assertTrue(PrintData.materialValue(new ItemStack(ModItems.CHAMELIUM.get())) == 1234, "Chamelium material value did not honor config");
+                        helper.assertTrue(costs.material() == 6174, "Configured custom redstone cost or noclip multiplier was not used");
+                        helper.assertTrue(PrintData.materialValue(print) == 3087, "Print recycling material value did not honor configured recycle rate");
+                    }))));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void printDataPersistsThroughItemStackCustomDataLikeUpstream(final GameTestHelper helper) {
         final ItemStack stack = new ItemStack(ModItems.CHAMELIUM.get());
         final CompoundTag root = new CompoundTag();

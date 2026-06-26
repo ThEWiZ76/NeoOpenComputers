@@ -2,6 +2,7 @@ package li.cil.oc.common.item.data;
 
 import li.cil.oc.common.InkProviders;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModSettings;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -289,10 +290,10 @@ public final class PrintData {
         }
         final int baseMaterialRequired = Math.max(totalVolume / 2, 1);
         final int materialRequired = data.redstoneLevel > 0 && data.redstoneLevel < 15
-            ? baseMaterialRequired + UPSTREAM_CUSTOM_REDSTONE_COST
+            ? baseMaterialRequired + ModSettings.printerCustomRedstoneCost()
             : baseMaterialRequired;
-        final int multiplier = data.noclipOff || data.noclipOn ? UPSTREAM_NOCLIP_MULTIPLIER : 1;
-        return Optional.of(new Costs(materialRequired * multiplier, Math.max(totalSurface / 6, 1)));
+        final double multiplier = data.noclipOff || data.noclipOn ? ModSettings.printerNoclipMultiplier() : 1D;
+        return Optional.of(new Costs((int) (materialRequired * multiplier), Math.max(totalSurface / 6, 1)));
     }
 
     public static void addInkProvider(final Method provider) {
@@ -307,7 +308,16 @@ public final class PrintData {
         if (stack == null || stack.isEmpty()) {
             return 0;
         }
-        return stack.is(ModItems.CHAMELIUM.get()) ? UPSTREAM_MATERIAL_VALUE : 0;
+        if (stack.is(ModItems.CHAMELIUM.get())) {
+            return ModSettings.printerMaterialValue();
+        }
+        if (stack.is(ModItems.PRINT.get())) {
+            final PrintData data = new PrintData(stack);
+            return computeCosts(data)
+                .map(costs -> (int) (costs.material() * ModSettings.printerRecycleRate()))
+                .orElse(0);
+        }
+        return 0;
     }
 
     public static Shape nbtToShape(final CompoundTag tag) {
