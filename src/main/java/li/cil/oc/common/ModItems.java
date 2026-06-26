@@ -14,6 +14,7 @@ import li.cil.oc.common.item.CpuItem;
 import li.cil.oc.common.item.DataCardItem;
 import li.cil.oc.common.item.DatabaseUpgradeItem;
 import li.cil.oc.common.item.DebugCardItem;
+import li.cil.oc.common.item.DiskDriveMountableItem;
 import li.cil.oc.common.item.EepromItem;
 import li.cil.oc.common.item.ExperienceUpgradeItem;
 import li.cil.oc.common.item.FloppyItem;
@@ -137,6 +138,10 @@ public final class ModItems {
     public static final DeferredItem<BlockItem> DISK_DRIVE = ITEMS.registerSimpleBlockItem(
         ModContentIds.DISK_DRIVE,
         ModBlocks.DISK_DRIVE);
+
+    public static final DeferredItem<DiskDriveMountableItem> DISK_DRIVE_MOUNTABLE = ITEMS.register(
+        ModContentIds.DISK_DRIVE_MOUNTABLE,
+        () -> new DiskDriveMountableItem(new Item.Properties()));
 
     public static final DeferredItem<BlockItem> GEOLYZER = ITEMS.registerSimpleBlockItem(
         ModContentIds.GEOLYZER,

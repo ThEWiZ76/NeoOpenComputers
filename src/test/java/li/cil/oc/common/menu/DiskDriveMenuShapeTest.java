@@ -2,8 +2,10 @@ package li.cil.oc.common.menu;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
@@ -48,5 +50,56 @@ final class DiskDriveMenuShapeTest {
     @Test
     void nonDiskDriveInventoryReportsEmptyState() {
         assertEquals(DiskDriveMenu.STATE_EMPTY, DiskDriveMenu.mediaStateFor(null));
+    }
+
+    @Test
+    void diskDriveMenuReportsLoadedStateForAnyLoadedDiskInventory() {
+        assertEquals(DiskDriveMenu.STATE_LOADED, DiskDriveMenu.mediaStateFor(loadedInventory()));
+    }
+
+    private static Container loadedInventory() {
+        return new Container() {
+            @Override
+            public int getContainerSize() {
+                return DiskDriveMenu.DRIVE_SLOT_COUNT;
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return false;
+            }
+
+            @Override
+            public ItemStack getItem(final int slot) {
+                return ItemStack.EMPTY;
+            }
+
+            @Override
+            public ItemStack removeItem(final int slot, final int amount) {
+                return ItemStack.EMPTY;
+            }
+
+            @Override
+            public ItemStack removeItemNoUpdate(final int slot) {
+                return ItemStack.EMPTY;
+            }
+
+            @Override
+            public void setItem(final int slot, final ItemStack stack) {
+            }
+
+            @Override
+            public void setChanged() {
+            }
+
+            @Override
+            public boolean stillValid(final Player player) {
+                return true;
+            }
+
+            @Override
+            public void clearContent() {
+            }
+        };
     }
 }

@@ -88,7 +88,7 @@ public class DiskDriveMenu extends AbstractContainerMenu {
     }
 
     public static int mediaStateFor(final Container diskInventory) {
-        return diskInventory instanceof DiskDriveBlockEntity && !diskInventory.isEmpty() ? STATE_LOADED : STATE_EMPTY;
+        return diskInventory != null && !diskInventory.isEmpty() ? STATE_LOADED : STATE_EMPTY;
     }
 
     private static ContainerData driveData(final Container diskInventory) {

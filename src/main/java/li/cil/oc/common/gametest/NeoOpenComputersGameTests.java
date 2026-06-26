@@ -5429,6 +5429,33 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void rackAcceptsDiskDriveMountableLikeUpstream(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+        final ItemStack diskDrive = new ItemStack(ModItems.DISK_DRIVE_MOUNTABLE.get());
+
+        final DriverItem driver = Driver.driverFor(diskDrive);
+        helper.assertTrue(driver != null, "Disk drive has no item driver");
+        helper.assertTrue(Slot.RackMountable.equals(driver.slot(diskDrive)), "Disk drive mountable should use rack_mountable slot like upstream");
+        helper.assertTrue(rack.canPlaceItem(0, diskDrive), "Rack rejected disk drive mountable");
+
+        rack.setItem(0, diskDrive);
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        helper.assertTrue(mountable != null, "Rack did not create disk drive mountable");
+        helper.assertTrue(mountable.node() instanceof li.cil.oc.api.network.Component, "Disk drive mountable has no component node");
+        helper.assertTrue("disk_drive".equals(((li.cil.oc.api.network.Component) mountable.node()).name()), "Disk drive mountable component name mismatch");
+        helper.assertTrue(mountable instanceof net.minecraft.world.Container, "Disk drive mountable is not an inventory");
+
+        final net.minecraft.world.Container inventory = (net.minecraft.world.Container) mountable;
+        final ItemStack floppy = openOsFloppyStack();
+        helper.assertTrue(inventory.canPlaceItem(DiskDriveBlockEntity.SLOT_FLOPPY, floppy), "Disk drive mountable rejected floppy");
+        inventory.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, floppy);
+        helper.assertTrue(!inventory.isEmpty(), "Disk drive mountable did not keep inserted floppy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void rackServerBootsAndReportsWorkingState(final GameTestHelper helper) {
         final BlockPos rackPos = new BlockPos(1, 1, 1);
         helper.setBlock(rackPos, ModBlocks.RACK.get());

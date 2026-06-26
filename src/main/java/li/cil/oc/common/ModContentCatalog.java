@@ -36,6 +36,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_DATA_CARD_TIER3 = "datacard3";
     public static final String COMPAT_DATA_CARD = "datacard";
     public static final String COMPAT_DEBUG_CARD = "debugCard";
+    public static final String COMPAT_DISK_DRIVE_MOUNTABLE = "diskDriveMountable";
     public static final String COMPAT_DATABASE_UPGRADE_TIER1 = "databaseUpgrade1";
     public static final String COMPAT_DATABASE_UPGRADE_TIER2 = "databaseUpgrade2";
     public static final String COMPAT_DATABASE_UPGRADE_TIER3 = "databaseUpgrade3";
@@ -132,6 +133,7 @@ public final class ModContentCatalog {
                 ModItems.DISASSEMBLER.get(),
                 ModBlocks.DISK_DRIVE.get(),
                 ModItems.DISK_DRIVE.get(),
+                ModItems.DISK_DRIVE_MOUNTABLE.get(),
                 ModBlocks.GEOLYZER.get(),
                 ModItems.GEOLYZER.get(),
                 ModBlocks.SCREEN_TIER1.get(),
@@ -360,6 +362,7 @@ public final class ModContentCatalog {
         final Item disassemblerItem,
         final Block diskDrive,
         final Item diskDriveItem,
+        final Item diskDriveMountableItem,
         final Block geolyzer,
         final Item geolyzerItem,
         final Block screenTier1,
@@ -498,6 +501,8 @@ public final class ModContentCatalog {
         registry.register(COMPAT_COMPUTER_CASE_TIER3, computerCaseTier3, computerCaseTier3Item);
         registry.register(ModContentIds.DISASSEMBLER, disassembler, disassemblerItem);
         registry.register(ModContentIds.DISK_DRIVE, diskDrive, diskDriveItem);
+        registry.register(ModContentIds.DISK_DRIVE_MOUNTABLE, null, diskDriveMountableItem);
+        registry.register(COMPAT_DISK_DRIVE_MOUNTABLE, null, diskDriveMountableItem);
         registry.register(ModContentIds.GEOLYZER, geolyzer, geolyzerItem);
         registry.register(ModContentIds.SCREEN_TIER1, screenTier1, screenTier1Item);
         registry.register(ModContentIds.SCREEN_TIER2, screenTier2, screenTier2Item);
