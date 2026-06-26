@@ -6,6 +6,7 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.Slot;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
@@ -16,6 +17,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -71,6 +73,17 @@ final class ServerRackMountableEnvironmentShapeTest {
         DiskDriveMountableEnvironment diskDrive = allocateDiskDriveMountable();
 
         assertTrue(diskDrive.getCurrentState().isEmpty());
+    }
+
+    @Test
+    void diskDriveMountableDataMatchesUpstreamPayloadShape() throws Exception {
+        DiskDriveMountableEnvironment diskDrive = allocateDiskDriveMountable();
+
+        CompoundTag data = diskDrive.getData();
+
+        assertEquals(0L, data.getLong("lastAccess"));
+        assertTrue(data.contains("disk"));
+        assertFalse(data.contains("kind"));
     }
 
     @Test

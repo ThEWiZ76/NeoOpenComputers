@@ -23,6 +23,7 @@ import li.cil.oc.common.menu.DiskDriveMenu;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionHand;
@@ -36,7 +37,7 @@ import java.util.EnumSet;
 import java.util.Map;
 
 public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironment implements RackMountable, EnvironmentHost, Container, DeviceInfo, Analyzable {
-    private static final String TAG_KIND = "kind";
+    private static final String TAG_LAST_ACCESS = "lastAccess";
     private static final String TAG_DISK = "disk";
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Disk,
@@ -49,6 +50,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
     private final int slot;
     private final NonNullList<ItemStack> items = NonNullList.withSize(DiskDriveBlockEntity.CONTAINER_SIZE, ItemStack.EMPTY);
     private ManagedEnvironment diskEnvironment;
+    private long lastAccess;
 
     public DiskDriveMountableEnvironment(final EnvironmentHost host, final int slot) {
         OpenComputersApi.initialize();
@@ -63,7 +65,11 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
     @Override
     public CompoundTag getData() {
         final CompoundTag data = new CompoundTag();
-        data.putString(TAG_KIND, "disk_drive_mountable");
+        data.putLong(TAG_LAST_ACCESS, lastAccess);
+        final ItemStack disk = items == null ? null : getItem(DiskDriveBlockEntity.SLOT_FLOPPY);
+        data.put(TAG_DISK, disk == null || disk.isEmpty()
+            ? new CompoundTag()
+            : ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, disk).result().orElseGet(CompoundTag::new));
         return data;
     }
 
