@@ -5627,6 +5627,33 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tradingUpgradeTradeRejectsExactRangeBoundaryLikeUpstream(final GameTestHelper helper) throws Exception {
+        final AgentTestHost host = new AgentTestHost(helper);
+        host.mainInventory().setItem(0, new ItemStack(Items.EMERALD));
+
+        final Villager villager = EntityType.VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "Villager did not spawn");
+        final MerchantOffer offer = new MerchantOffer(new ItemCost(Items.EMERALD, 1), new ItemStack(Items.BREAD, 3), 4, 1, 0.05F);
+        final MerchantOffers offers = new MerchantOffers();
+        offers.add(offer);
+        villager.setOffers(offers);
+        villager.setNoAi(true);
+        villager.moveTo(host.xPosition() + 1D, host.yPosition(), host.zPosition(), 0, 0);
+        helper.getLevel().addFreshEntity(villager);
+
+        final li.cil.oc.common.component.TradeValue trade = new li.cil.oc.common.component.TradeValue(host, villager, villager, 0, 1);
+        withCachedConfig(ModSettings.TRADING_RANGE, 1D, () -> {
+            final Object[] traded = trade.trade(null, null);
+            helper.assertTrue(traded.length == 2 && Boolean.FALSE.equals(traded[0]) && "trade has become invalid".equals(traded[1]),
+                "Trade did not reject exact range boundary like upstream");
+        });
+        helper.assertTrue(offer.getUses() == 0, "Boundary trade unexpectedly notified merchant");
+        helper.assertTrue(containsStack(host.mainInventory(), Items.EMERALD, 1), "Boundary trade consumed emerald");
+        helper.assertTrue(!containsStack(host.mainInventory(), Items.BREAD, 1), "Boundary trade inserted output");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tradingUpgradeIsEnabledIgnoresRangeLikeUpstream(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.TRADING_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for trading upgrade");

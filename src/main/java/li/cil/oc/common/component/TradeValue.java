@@ -152,7 +152,7 @@ public class TradeValue extends AbstractValue {
         final double range = ModSettings.tradingRange();
         return host != null
             && merchantEntity != null
-            && merchantEntity.distanceToSqr(host.xPosition(), host.yPosition(), host.zPosition()) <= range * range;
+            && merchantEntity.distanceToSqr(host.xPosition(), host.yPosition(), host.zPosition()) < range * range;
     }
 
     private void bindMerchant(final UUID uuid) {
