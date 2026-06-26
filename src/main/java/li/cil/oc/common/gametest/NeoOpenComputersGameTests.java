@@ -93,9 +93,10 @@ import li.cil.oc.common.network.TerminalKeyPayload;
 import li.cil.oc.common.network.TerminalMousePayload;
 import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.recipe.LootDiskCyclingRecipe;
+import li.cil.oc.common.component.DatabaseEnvironment;
+import li.cil.oc.common.component.DebugCardEnvironment;
 import li.cil.oc.common.component.InventoryControllerEnvironment;
 import li.cil.oc.common.component.LinkedCardEnvironment;
-import li.cil.oc.common.component.DebugCardEnvironment;
 import li.cil.oc.common.component.MfuEnvironment;
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
@@ -3873,6 +3874,31 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(environment instanceof li.cil.oc.api.internal.Database, "Database inventory did not persist through stack data");
         final ItemStack stored = ((li.cil.oc.api.internal.Database) environment).getStackInSlot(0);
         helper.assertTrue(stored.is(Items.DIAMOND) && stored.getCount() == 3, "Database inventory did not persist inserted stack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void databaseEmptySlotsDoNotMatchHashesLikeUpstream(final GameTestHelper helper) {
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()));
+        helper.assertTrue(driver != null, "No driver for database upgrade");
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.DATABASE_UPGRADE_TIER1.get()), null);
+        helper.assertTrue(environment instanceof DatabaseEnvironment, "Database upgrade did not create database environment");
+        final DatabaseEnvironment database = (DatabaseEnvironment) environment;
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) database.node();
+
+        try {
+            helper.assertTrue(component.invoke("computeHash", null, 1) == null, "Empty database slot produced a hash result");
+            helper.assertTrue(database.findStackWithHash("") == -1, "Empty database slot matched empty hash");
+            helper.assertTrue(Integer.valueOf(-1).equals(component.invoke("indexOf", null, "")[0]), "Empty database slot matched callback hash lookup");
+
+            database.setStackInSlot(1, new ItemStack(Items.DIAMOND, 2));
+            final String hash = (String) component.invoke("computeHash", null, 2)[0];
+            helper.assertTrue(hash != null && !hash.isEmpty(), "Non-empty database slot did not produce a hash");
+            helper.assertTrue(database.findStackWithHash(hash) == 1, "Non-empty database hash did not find zero-based slot");
+            helper.assertTrue(Integer.valueOf(2).equals(component.invoke("indexOf", null, hash)[0]), "Non-empty database hash did not find Lua slot");
+        } catch (Exception e) {
+            helper.fail("Database hash callback failed: " + e.getMessage());
+        }
         helper.succeed();
     }
 

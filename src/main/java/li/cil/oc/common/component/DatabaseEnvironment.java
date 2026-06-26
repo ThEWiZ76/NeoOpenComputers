@@ -80,7 +80,8 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
     @Override
     public int findStackWithHash(final String needle) {
         for (int slot = 0; slot < items.length; slot++) {
-            if (hash(getStackInSlot(slot)).equals(needle)) {
+            final String hash = hash(getStackInSlot(slot));
+            if (hash != null && hash.equals(needle)) {
                 return slot;
             }
         }
@@ -130,7 +131,8 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
 
     @Callback(doc = "function(slot:number):string -- Computes a hash value for the item stack in the specified slot.")
     public Object[] computeHash(final Context context, final Arguments arguments) {
-        return new Object[]{hash(getStackInSlot(checkSlot(arguments, 0)))};
+        final String hash = hash(getStackInSlot(checkSlot(arguments, 0)));
+        return hash == null ? null : new Object[]{hash};
     }
 
     @Callback(doc = "function(hash:string):number -- Get the index of an item stack with the specified hash. Returns a negative value if no such stack was found.")
@@ -203,7 +205,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
 
     private static String hash(final ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
-            return "";
+            return null;
         }
         final Tag encoded = ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack).result().orElseGet(CompoundTag::new);
         try {
