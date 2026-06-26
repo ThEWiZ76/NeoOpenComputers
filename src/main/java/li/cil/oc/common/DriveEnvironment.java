@@ -71,7 +71,7 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
 
     @Callback(direct = true, doc = "function():string -- Get the current label of the drive.")
     public Object[] getLabel(final Context context, final Arguments arguments) {
-        return new Object[]{label == null ? null : label.getLabel()};
+        return label == null ? null : new Object[]{label.getLabel()};
     }
 
     @Callback(doc = "function(value:string):string -- Sets the label of the drive. Returns the new value, which may be truncated.")

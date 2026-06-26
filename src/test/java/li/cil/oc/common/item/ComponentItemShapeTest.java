@@ -17,6 +17,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.common.driver.ScreenItemDriver;
+import li.cil.oc.common.DriveEnvironment;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
@@ -225,6 +226,15 @@ final class ComponentItemShapeTest {
         final Component secondComponent = assertInstanceOf(Component.class, second.node());
 
         assertArrayEquals(new Object[]{"abcdefghijklmnop"}, secondComponent.invoke("getLabel", null));
+    }
+
+    @Test
+    void driveWithoutLabelReturnsNoLabelResultLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        final ManagedEnvironment environment = new DriveEnvironment(512, 1, null, null, null, 0, null);
+        final Component component = assertInstanceOf(Component.class, environment.node());
+
+        assertNull(component.invoke("getLabel", null));
     }
 
     @Test

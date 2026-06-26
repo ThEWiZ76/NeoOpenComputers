@@ -377,6 +377,16 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemWithoutLabelReturnsNoLabelResultLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(256);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, (Label) null, null, null, 1);
+        Component component = (Component) environment.node();
+
+        assertNull(component.invoke("getLabel", null));
+    }
+
+    @Test
     void managedFileSystemEnvironmentReadsAndWritesFiles() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(4096);
