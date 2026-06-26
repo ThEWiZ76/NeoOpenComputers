@@ -38,6 +38,13 @@ final class DiskDriveBlockEntityTest {
     }
 
     @Test
+    void diskDriveInventoryHasUpstreamSingleItemLimit() throws Exception {
+        final DiskDriveBlockEntity diskDrive = allocateDiskDrive();
+
+        assertEquals(1, diskDrive.getMaxStackSize());
+    }
+
+    @Test
     void diskDriveIsNetworkedContainerHost() {
         assertTrue(ManagedEnvironment.class.isAssignableFrom(DiskDriveBlockEntity.class));
         assertTrue(EnvironmentHost.class.isAssignableFrom(DiskDriveBlockEntity.class));

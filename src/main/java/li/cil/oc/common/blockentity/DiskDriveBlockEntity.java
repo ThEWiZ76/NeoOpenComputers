@@ -228,6 +228,11 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     @Override
+    public int getMaxStackSize() {
+        return 1;
+    }
+
+    @Override
     public boolean stillValid(final Player player) {
         return !isRemoved();
     }
