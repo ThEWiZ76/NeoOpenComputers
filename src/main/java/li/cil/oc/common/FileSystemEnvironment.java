@@ -233,7 +233,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
         consumeCallBudget(context, SEEK_COSTS[costIndex]);
         final int handleId = checkHandle(arguments, 0);
         final String whence = arguments.checkString(1);
-        final long offset = arguments.checkLong(2);
+        final int offset = arguments.checkInteger(2);
         checkOwner(context, handleId);
         final Handle handle = getHandle(handleId);
         final long position = switch (whence) {

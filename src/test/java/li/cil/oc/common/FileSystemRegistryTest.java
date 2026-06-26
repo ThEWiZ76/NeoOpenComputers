@@ -407,6 +407,18 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void managedFileSystemEnvironmentClampsSeekOffsetToIntegerLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        FileSystem fileSystem = API.fileSystem.fromMemory(-1);
+        ManagedEnvironment environment = API.fileSystem.asManagedEnvironment(fileSystem, "tmp", null, null, 1);
+        Component component = (Component) environment.node();
+
+        Object handle = component.invoke("open", null, "data.txt", "w")[0];
+
+        assertArrayEquals(new Object[]{(long) Integer.MAX_VALUE}, component.invoke("seek", null, handle, "set", Long.MAX_VALUE));
+    }
+
+    @Test
     void managedFileSystemEnvironmentAcceptsHandleTables() throws Exception {
         OpenComputersApi.initialize();
         FileSystem fileSystem = API.fileSystem.fromMemory(4096);
