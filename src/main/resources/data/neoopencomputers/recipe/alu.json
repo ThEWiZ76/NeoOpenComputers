@@ -8,20 +8,17 @@
     "I": {
       "tag": "c:nuggets/iron"
     },
-    "P": {
-      "item": "minecraft:repeater"
-    },
-    "R": {
-      "item": "minecraft:redstone_torch"
+    "C": {
+      "item": "neoopencomputers:microchip_tier1"
     },
     "T": {
       "item": "neoopencomputers:transistor"
     }
   },
   "pattern": [
-    "PRP",
-    "TTT",
-    "IDI"
+    "IDI",
+    "TCT",
+    "ITI"
   ],
   "result": {
     "count": 1,

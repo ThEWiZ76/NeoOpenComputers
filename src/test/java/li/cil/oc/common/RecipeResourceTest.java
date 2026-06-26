@@ -648,20 +648,18 @@ final class RecipeResourceTest {
         JsonObject aluKeys = alu.getAsJsonObject("key");
         JsonObject controlUnitKeys = controlUnit.getAsJsonObject("key");
 
-        assertPattern(alu, "PRP", "TTT", "IDI");
-        assertItem(aluKeys, "P", "minecraft:repeater");
-        assertItem(aluKeys, "R", "minecraft:redstone_torch");
-        assertItem(aluKeys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertPattern(alu, "IDI", "TCT", "ITI");
         assertTag(aluKeys, "I", "c:nuggets/iron");
         assertItem(aluKeys, "D", "minecraft:redstone");
+        assertItem(aluKeys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
+        assertItem(aluKeys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER1);
         assertResultCount(alu, 1);
 
-        assertPattern(controlUnit, "GRG", "TCT", "GDG");
+        assertPattern(controlUnit, "GDG", "TCT", "GTG");
         assertTag(controlUnitKeys, "G", "c:nuggets/gold");
-        assertItem(controlUnitKeys, "R", "minecraft:redstone_torch");
+        assertItem(controlUnitKeys, "D", "minecraft:redstone");
         assertItem(controlUnitKeys, "T", "neoopencomputers:" + ModContentIds.TRANSISTOR);
         assertItem(controlUnitKeys, "C", "minecraft:clock");
-        assertItem(controlUnitKeys, "D", "minecraft:redstone");
         assertResultCount(controlUnit, 1);
     }
 

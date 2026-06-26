@@ -11,17 +11,14 @@
     "G": {
       "tag": "c:nuggets/gold"
     },
-    "R": {
-      "item": "minecraft:redstone_torch"
-    },
     "T": {
       "item": "neoopencomputers:transistor"
     }
   },
   "pattern": [
-    "GRG",
+    "GDG",
     "TCT",
-    "GDG"
+    "GTG"
   ],
   "result": {
     "count": 1,

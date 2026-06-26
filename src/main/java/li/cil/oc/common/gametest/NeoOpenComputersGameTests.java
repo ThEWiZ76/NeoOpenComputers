@@ -4186,6 +4186,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void logicComponentRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.ALU.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(Items.REDSTONE), new ItemStack(Items.IRON_NUGGET),
+            new ItemStack(ModItems.TRANSISTOR.get()), new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(ModItems.TRANSISTOR.get()),
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.TRANSISTOR.get()), new ItemStack(Items.IRON_NUGGET)
+        )));
+        assertCraftsItem(helper, ModItems.CONTROL_UNIT.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(Items.REDSTONE), new ItemStack(Items.GOLD_NUGGET),
+            new ItemStack(ModItems.TRANSISTOR.get()), new ItemStack(Items.CLOCK), new ItemStack(ModItems.TRANSISTOR.get()),
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(ModItems.TRANSISTOR.get()), new ItemStack(Items.GOLD_NUGGET)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void screenRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
         assertCraftsItem(helper, ModItems.SCREEN_TIER1.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_INGOT), new ItemStack(Items.REDSTONE), new ItemStack(Items.IRON_INGOT),
