@@ -583,6 +583,19 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void tcpFinishConnectReturnsFalseOnFailedConnectionLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        InternetCardEnvironment card = new InternetCardEnvironment();
+
+        InternetCardEnvironment.TcpSocket socket = assertInstanceOf(
+            InternetCardEnvironment.TcpSocket.class,
+            card.connect(null, new TestArguments("127.0.0.1", 1))[0]);
+
+        awaitTcpConnectionDone(socket);
+        assertArrayEquals(new Object[]{false}, socket.finishConnect(null, new TestArguments()));
+    }
+
+    @Test
     void tcpSocketSignalsInternetReadyWhenDataIsReadableLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         InternetCardEnvironment card = new InternetCardEnvironment();
@@ -676,6 +689,24 @@ final class InternetCardEnvironmentTest {
             Thread.sleep(10);
         }
         throw new AssertionError("socket did not connect");
+    }
+
+    private static void awaitTcpConnectionDone(final InternetCardEnvironment.TcpSocket socket) throws Exception {
+        CompletableFuture<Socket> connection = tcpConnection(socket);
+        for (int attempt = 0; attempt < 100; attempt++) {
+            if (connection.isDone()) {
+                return;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("TCP socket did not fail");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static CompletableFuture<Socket> tcpConnection(final InternetCardEnvironment.TcpSocket socket) throws Exception {
+        Field field = InternetCardEnvironment.TcpSocket.class.getDeclaredField("connection");
+        field.setAccessible(true);
+        return (CompletableFuture<Socket>) field.get(socket);
     }
 
     private static void awaitHttpConnected(final InternetCardEnvironment.HttpRequest request) throws Exception {

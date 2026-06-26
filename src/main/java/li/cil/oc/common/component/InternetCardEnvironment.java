@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
@@ -469,8 +470,13 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
             if (!connection.isDone()) {
                 return new Object[]{false};
             }
-            socket();
-            return new Object[]{true};
+            try {
+                socket();
+                return new Object[]{true};
+            } catch (CompletionException | CancellationException e) {
+                close();
+                return new Object[]{false};
+            }
         }
 
         @Callback(doc = "function([n:number]):string -- Tries to read data from the socket stream.")
