@@ -569,6 +569,17 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void interwebRecipeUsesUpstreamDefaultInputs() throws IOException {
+        JsonObject recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.INTERWEB + ".json"));
+        JsonObject keys = recipe.getAsJsonObject("key");
+
+        assertPattern(recipe, "SSS", "SES", "SSS");
+        assertItem(keys, "S", "minecraft:string");
+        assertItem(keys, "E", "minecraft:ender_pearl");
+        assertResultCount(recipe, 1);
+    }
+
+    @Test
     void circuitBoardRecipesUseUpstreamProcessing() throws IOException {
         JsonObject circuitBoard = readJson(RECIPE_ROOT.resolve(ModContentIds.CIRCUIT_BOARD + ".json"));
         JsonObject printedCircuitBoard = readJson(RECIPE_ROOT.resolve(ModContentIds.PRINTED_CIRCUIT_BOARD + ".json"));

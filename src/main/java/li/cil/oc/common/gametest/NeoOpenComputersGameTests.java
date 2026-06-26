@@ -4068,6 +4068,11 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty")
     public static void communicationCardRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.INTERWEB.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.STRING), new ItemStack(Items.STRING), new ItemStack(Items.STRING),
+            new ItemStack(Items.STRING), new ItemStack(Items.ENDER_PEARL), new ItemStack(Items.STRING),
+            new ItemStack(Items.STRING), new ItemStack(Items.STRING), new ItemStack(Items.STRING)
+        )));
         assertCraftsItem(helper, ModItems.INTERNET_CARD.get(), CraftingInput.of(3, 2, List.of(
             new ItemStack(ModItems.INTERWEB.get()), new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(Items.REDSTONE_TORCH),
             ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), new ItemStack(Items.OBSIDIAN)

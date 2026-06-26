@@ -10,9 +10,9 @@
     }
   },
   "pattern": [
+    "SSS",
     "SES",
-    "ESE",
-    "SES"
+    "SSS"
   ],
   "result": {
     "count": 1,
