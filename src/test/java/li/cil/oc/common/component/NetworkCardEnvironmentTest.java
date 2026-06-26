@@ -621,6 +621,24 @@ final class NetworkCardEnvironmentTest {
     }
 
     @Test
+    void tierOneWirelessWakeMessageCanWakeBeyondReceiveRangeLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        TestMachineHost senderHost = new TestMachineHost(0, 0, 0);
+        TestMachineHost receiverHost = new TestMachineHost(32, 0, 0);
+        WirelessNetworkCardEnvironment sender = new WirelessNetworkCardEnvironment(senderHost, 1);
+        WirelessNetworkCardEnvironment receiver = new WirelessNetworkCardEnvironment(receiverHost, 0);
+        Network.joinNewNetwork(sender.node());
+        Network.joinNewNetwork(receiver.node());
+        receiver.setWakeMessage(null, new TestArguments("boot", false));
+
+        Packet packet = Network.newPacket(sender.node().address(), receiver.node().address(), 123, new Object[]{"boot"});
+        Network.sendWirelessPacket(sender, 32D, packet);
+
+        assertEquals(1, receiverHost.machine.starts);
+        assertEquals(List.of(), receiverHost.signals);
+    }
+
+    @Test
     void tierOneWirelessBroadcastIgnoresZeroDistanceLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         TestMachineHost senderHost = new TestMachineHost(0, 0, 0);

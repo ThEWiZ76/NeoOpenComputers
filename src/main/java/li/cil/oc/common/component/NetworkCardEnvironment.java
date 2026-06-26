@@ -261,13 +261,17 @@ public class NetworkCardEnvironment extends AbstractManagedEnvironment implement
         }
 
         final Object[] packetData = packet.data();
-        if (openPorts.contains(packet.port())) {
+        if (isPacketAccepted(packet, distance)) {
             networkActivity();
             emitModemMessage(packet, distance, packetData);
         }
         if (isWakePacket(packetData)) {
             emitWakeMessage();
         }
+    }
+
+    protected boolean isPacketAccepted(final Packet packet, final double distance) {
+        return openPorts.contains(packet.port());
     }
 
     @Override

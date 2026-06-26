@@ -72,9 +72,7 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
     @Override
     public void receivePacket(final Packet packet, final WirelessEndpoint sender) {
         final double distance = distanceTo(sender);
-        if (distance <= maxWirelessRange() && (distance > 0D || isWiredTier())) {
-            receivePacket(packet, distance);
-        }
+        receivePacket(packet, distance);
     }
 
     @Override
@@ -115,6 +113,11 @@ public class WirelessNetworkCardEnvironment extends NetworkCardEnvironment imple
     @Override
     protected int maxOpenPorts() {
         return ModSettings.maxOpenPorts(tier + 1);
+    }
+
+    @Override
+    protected boolean isPacketAccepted(final Packet packet, final double distance) {
+        return distance <= maxWirelessRange() && (distance > 0D || isWiredTier()) && super.isPacketAccepted(packet, distance);
     }
 
     @Override
