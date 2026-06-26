@@ -95,6 +95,7 @@ import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.recipe.LootDiskCyclingRecipe;
 import li.cil.oc.common.component.DatabaseEnvironment;
 import li.cil.oc.common.component.DebugCardEnvironment;
+import li.cil.oc.common.component.ExperienceUpgradeEnvironment;
 import li.cil.oc.common.component.InventoryControllerEnvironment;
 import li.cil.oc.common.component.LinkedCardEnvironment;
 import li.cil.oc.common.component.MfuEnvironment;
@@ -5072,6 +5073,20 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(host.mainInventory().getItem(0).isEmpty(), "Experience upgrade did not remove enchanted item");
         final Object[] level = component.invoke("level", null);
         helper.assertTrue(level.length == 1 && level[0] instanceof Number value && value.doubleValue() > 0D, "Experience upgrade did not gain enchantment experience");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void experienceUpgradeAwardsHostPlayerExperienceLikeUpstream(final GameTestHelper helper) {
+        final net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        final AgentTestHost host = new AgentTestHost(helper, player);
+        final ExperienceUpgradeEnvironment environment = new ExperienceUpgradeEnvironment(host);
+        final int before = player.totalExperience;
+
+        environment.addExperience(10D);
+
+        helper.assertTrue(player.totalExperience > before, "Experience upgrade did not award host player experience");
+        helper.assertTrue(player.takeXpDelay == 2, "Experience upgrade did not route pickup through XP orb");
         helper.succeed();
     }
 

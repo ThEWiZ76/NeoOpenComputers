@@ -13,6 +13,8 @@ import li.cil.oc.common.ModSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -58,7 +60,10 @@ public class ExperienceUpgradeEnvironment extends AbstractManagedEnvironment imp
         }
         experience = Math.max(0D, experience + value);
         updateXpInfo();
-        host.markChanged();
+        awardPlayerExperience(value);
+        if (host != null) {
+            host.markChanged();
+        }
     }
 
     @Callback(direct = true, doc = "function():number -- The current level of experience stored in this experience upgrade.")
@@ -148,6 +153,25 @@ public class ExperienceUpgradeEnvironment extends AbstractManagedEnvironment imp
             experience += entry.getKey().value().getMinCost(entry.getIntValue());
         }
         return experience;
+    }
+
+    private void awardPlayerExperience(final double value) {
+        if (host == null || value <= 0D) {
+            return;
+        }
+        final Level level = host.world();
+        final Player player = host.player();
+        if (level == null || player == null) {
+            return;
+        }
+        final ExperienceOrb orb = new ExperienceOrb(
+            level,
+            Math.floor(player.getX()) + 0.5D,
+            Math.floor(player.getY()) + 0.5D,
+            Math.floor(player.getZ()) + 0.5D,
+            (int) value);
+        player.takeXpDelay = 0;
+        orb.playerTouch(player);
     }
 
     private static double calculateExperienceLevel(final int level, final double experience) {
