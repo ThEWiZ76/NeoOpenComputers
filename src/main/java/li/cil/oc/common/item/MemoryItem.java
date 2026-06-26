@@ -1,10 +1,12 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.driver.item.CallBudget;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.PassiveDeviceInfoEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
@@ -12,7 +14,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
 
-public class MemoryItem extends Item implements Memory {
+public class MemoryItem extends Item implements Memory, CallBudget {
     private final int tier;
 
     public MemoryItem(final Properties properties) {
@@ -56,6 +58,11 @@ public class MemoryItem extends Item implements Memory {
             case 1 -> 384;
             default -> 768;
         };
+    }
+
+    @Override
+    public double getCallBudget(final ItemStack stack) {
+        return ModSettings.callBudget(tier(stack));
     }
 
     static ManagedEnvironment createDeviceInfoEnvironment(final int tier) {

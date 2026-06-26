@@ -105,7 +105,17 @@ final class ComponentItemShapeTest {
 
         assertTrue(Item.class.isAssignableFrom(MemoryItem.class));
         assertTrue(Memory.class.isAssignableFrom(MemoryItem.class));
+        assertTrue(CallBudget.class.isAssignableFrom(MemoryItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void memoryItemUsesConfiguredCallBudgets() throws Exception {
+        withCachedConfig(ModSettings.CALL_BUDGETS, List.of(0.25D, 0.75D, 2.0D), () -> {
+            assertEquals(0.25D, memory(0).getCallBudget(null));
+            assertEquals(0.75D, memory(1).getCallBudget(null));
+            assertEquals(2.0D, memory(2).getCallBudget(null));
+        });
     }
 
     @Test
@@ -562,6 +572,12 @@ final class ComponentItemShapeTest {
 
     private static CpuItem cpu(final int tier) throws Exception {
         final CpuItem item = allocate(CpuItem.class);
+        setField(item, "tier", tier);
+        return item;
+    }
+
+    private static MemoryItem memory(final int tier) throws Exception {
+        final MemoryItem item = allocate(MemoryItem.class);
         setField(item, "tier", tier);
         return item;
     }
