@@ -11,11 +11,13 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
@@ -209,9 +211,11 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
         }
         final Tag encoded = ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack).result().orElseGet(CompoundTag::new);
         try {
+            final ByteArrayOutputStream output = new ByteArrayOutputStream();
+            NbtIo.writeCompressed((CompoundTag) encoded, output);
             final MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(digest.digest(encoded.toString().getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
+            return HexFormat.of().formatHex(digest.digest(output.toByteArray()));
+        } catch (IOException | NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
     }

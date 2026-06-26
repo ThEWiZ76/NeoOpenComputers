@@ -201,6 +201,7 @@ import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -3893,7 +3894,12 @@ public final class NeoOpenComputersGameTests {
 
             database.setStackInSlot(1, new ItemStack(Items.DIAMOND, 2));
             final String hash = (String) component.invoke("computeHash", null, 2)[0];
+            final ByteArrayOutputStream output = new ByteArrayOutputStream();
+            final Tag encoded = ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, database.getStackInSlot(1)).result().orElseThrow();
+            NbtIo.writeCompressed((CompoundTag) encoded, output);
+            final String expected = java.util.HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(output.toByteArray()));
             helper.assertTrue(hash != null && !hash.isEmpty(), "Non-empty database slot did not produce a hash");
+            helper.assertTrue(expected.equals(hash), "Database hash did not use upstream-style compressed NBT bytes");
             helper.assertTrue(database.findStackWithHash(hash) == 1, "Non-empty database hash did not find zero-based slot");
             helper.assertTrue(Integer.valueOf(2).equals(component.invoke("indexOf", null, hash)[0]), "Non-empty database hash did not find Lua slot");
         } catch (Exception e) {
