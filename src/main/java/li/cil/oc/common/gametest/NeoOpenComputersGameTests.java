@@ -8522,6 +8522,36 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterClosedSideHidesBlockDriverLikeUpstream(final GameTestHelper helper) throws Exception {
+        final Object previous = setCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, true);
+        final BlockPos computerPos = new BlockPos(0, 1, 1);
+        final BlockPos adapterPos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(adapterPos, ModBlocks.ADAPTER.get());
+        helper.setBlock(targetPos, Blocks.CHEST);
+
+        helper.runAtTickTime(40, () -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            final AdapterBlockEntity adapter = helper.getBlockEntity(adapterPos);
+            helper.assertTrue(componentAddress(computer, "inventory") != null, "Adapter did not expose inventory before side close: " + computer.machine().components());
+            helper.assertTrue(adapter.isSideOpen(Direction.EAST), "Adapter east side was not open by default");
+            adapter.setSideOpen(Direction.EAST, false);
+        });
+        helper.runAtTickTime(70, () -> {
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            helper.assertTrue(componentAddress(computer, "inventory") == null, "Adapter exposed closed-side inventory component: " + computer.machine().components());
+            try {
+                restoreCachedConfig(ModSettings.ENABLE_INVENTORY_DRIVER, previous);
+            } catch (Exception e) {
+                helper.fail("Failed to restore inventory-driver config: " + e.getMessage());
+            }
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
     public static void adapterExposesComparatorBlockDriverLikeUpstream(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(0, 1, 1);
         final BlockPos adapterPos = new BlockPos(1, 1, 1);

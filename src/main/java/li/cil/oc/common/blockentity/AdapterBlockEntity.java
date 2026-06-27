@@ -37,6 +37,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     private static final String TAG_BLOCKS = "oc:adapter.blocks";
     private static final String TAG_ITEMS = "oc:items";
     private static final String TAG_ITEM_COMPONENT = "oc:itemComponent";
+    private static final String TAG_OPEN_SIDES = "oc:openSides";
     private static final String TAG_NAME = "name";
     private static final String TAG_DATA = "data";
     private static final int SIDE_COUNT = 6;
@@ -55,6 +56,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     private final DriverBlock[] blockDrivers = new DriverBlock[SIDE_COUNT];
     private final String[] blockEnvironmentNames = new String[SIDE_COUNT];
     private final CompoundTag[] blockEnvironmentData = new CompoundTag[SIDE_COUNT];
+    private final boolean[] openSides = new boolean[SIDE_COUNT];
     private ManagedEnvironment itemEnvironment;
     private DriverItem itemDriver;
     private CompoundTag itemEnvironmentData;
@@ -62,6 +64,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     public AdapterBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.ADAPTER.get(), pos, blockState);
         OpenComputersApi.initialize();
+        Arrays.fill(openSides, true);
         node = createNode(this);
     }
 
@@ -222,6 +225,9 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         if (nbt.contains(TAG_ITEM_COMPONENT)) {
             itemEnvironmentData = nbt.getCompound(TAG_ITEM_COMPONENT);
         }
+        if (nbt.contains(TAG_OPEN_SIDES)) {
+            uncompressSides(nbt.getByte(TAG_OPEN_SIDES));
+        }
         if (nbt.contains(TAG_BLOCKS)) {
             final ListTag blocks = nbt.getList(TAG_BLOCKS, CompoundTag.TAG_COMPOUND);
             for (int index = 0; index < Math.min(blocks.size(), SIDE_COUNT); index++) {
@@ -242,6 +248,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         saveItems(nbt, registries);
         saveItemEnvironment(nbt);
         saveBlockEnvironments(nbt);
+        nbt.putByte(TAG_OPEN_SIDES, compressSides());
     }
 
     @Override
@@ -278,6 +285,22 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     public void refreshNeighbors() {
         for (Direction direction : Direction.values()) {
             refreshSide(direction);
+        }
+    }
+
+    public boolean isSideOpen(final Direction side) {
+        return side != null && openSides[side.ordinal()];
+    }
+
+    public void setSideOpen(final Direction side, final boolean value) {
+        if (side == null || openSides[side.ordinal()] == value) {
+            return;
+        }
+        openSides[side.ordinal()] = value;
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            refreshSide(side);
+            level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
         }
     }
 
@@ -341,6 +364,11 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         }
 
         final int index = direction.get3DDataValue();
+        if (!isSideOpen(direction)) {
+            removeBlockEnvironment(index);
+            return;
+        }
+
         final BlockPos targetPos = worldPosition.relative(direction);
         if (level.getBlockEntity(targetPos) instanceof li.cil.oc.api.network.Environment) {
             removeBlockEnvironment(index);
@@ -450,6 +478,22 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         Arrays.fill(blockEnvironmentNames, null);
         Arrays.fill(blockEnvironmentData, null);
         removeNode();
+    }
+
+    private byte compressSides() {
+        int result = 0;
+        for (final Direction side : Direction.values()) {
+            if (openSides[side.ordinal()]) {
+                result |= 1 << side.ordinal();
+            }
+        }
+        return (byte) result;
+    }
+
+    private void uncompressSides(final byte value) {
+        for (final Direction side : Direction.values()) {
+            openSides[side.ordinal()] = ((1 << side.ordinal()) & value) != 0;
+        }
     }
 
     private static Node createNode(final Adapter adapter) {
