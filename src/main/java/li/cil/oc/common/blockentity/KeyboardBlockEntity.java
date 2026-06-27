@@ -14,11 +14,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
 
 public class KeyboardBlockEntity extends BlockEntity implements Keyboard, DeviceInfo {
     private static final String TAG_NODE = "node";
+    private static final double DEFAULT_USABLE_DISTANCE_SQUARED = 64D;
 
     private UsabilityChecker usabilityOverride;
     private final KeyboardInputState inputState = new KeyboardInputState();
@@ -35,7 +37,10 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard, Device
     }
 
     public boolean isUsableByPlayer(final Player player) {
-        return usabilityOverride == null || usabilityOverride.isUsableByPlayer(this, player);
+        if (usabilityOverride != null) {
+            return usabilityOverride.isUsableByPlayer(this, player);
+        }
+        return player == null || player.distanceToSqr(Vec3.atCenterOf(worldPosition)) <= DEFAULT_USABLE_DISTANCE_SQUARED;
     }
 
     @Override

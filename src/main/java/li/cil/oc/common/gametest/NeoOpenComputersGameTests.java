@@ -10138,6 +10138,22 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty")
+    public static void keyboardDefaultUsabilityMatchesUpstreamRange(final GameTestHelper helper) {
+        final BlockPos keyboardPos = new BlockPos(1, 1, 1);
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
+
+        final KeyboardBlockEntity keyboard = helper.getBlockEntity(keyboardPos);
+        final net.minecraft.server.level.ServerPlayer nearPlayer = helper.makeMockServerPlayerInLevel();
+        nearPlayer.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(keyboardPos.relative(Direction.EAST))));
+        final net.minecraft.server.level.ServerPlayer farPlayer = helper.makeMockServerPlayerInLevel();
+        farPlayer.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(keyboardPos.relative(Direction.EAST, 9))));
+
+        helper.assertTrue(keyboard.isUsableByPlayer(nearPlayer), "Nearby player could not use keyboard");
+        helper.assertTrue(!keyboard.isUsableByPlayer(farPlayer), "Far player could use keyboard beyond upstream 8-block range");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void screenAndKeyboardStateSurvivesNbtReloadForFirstSmoke(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
