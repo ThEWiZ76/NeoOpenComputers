@@ -12,19 +12,28 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.WaypointBlock;
+import li.cil.oc.common.menu.WaypointMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.client.extensions.IMenuProviderExtension;
 
-public class WaypointBlockEntity extends BlockEntity implements Environment, EnvironmentHost {
+public class WaypointBlockEntity extends BlockEntity implements Environment, EnvironmentHost, MenuProvider, IMenuProviderExtension {
     private static final String TAG_NODE = "node";
     private static final String TAG_LABEL = "oc:label";
-    private static final int MAX_LABEL_LENGTH = 32;
     private static final String COMPONENT_NAME = "waypoint";
+    public static final int MAX_LABEL_LENGTH = 32;
 
     private Node node;
     String label = "";
@@ -89,6 +98,19 @@ public class WaypointBlockEntity extends BlockEntity implements Environment, Env
         return label;
     }
 
+    public void setLabelValue(final String value) {
+        label = truncateLabel(value);
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+        }
+    }
+
+    public static String truncateLabel(final String value) {
+        final String safeValue = value == null ? "" : value;
+        return safeValue.length() > MAX_LABEL_LENGTH ? safeValue.substring(0, MAX_LABEL_LENGTH) : safeValue;
+    }
+
     public int redstoneInput() {
         return level == null ? 0 : level.getBestNeighborSignal(worldPosition);
     }
@@ -116,13 +138,27 @@ public class WaypointBlockEntity extends BlockEntity implements Environment, Env
 
     @Callback(doc = "function(value:string) -- Set the waypoint label.")
     public Object[] setLabel(final Context context, final Arguments args) {
-        final String value = args.checkString(0);
-        label = value.length() > MAX_LABEL_LENGTH ? value.substring(0, MAX_LABEL_LENGTH) : value;
+        setLabelValue(args.checkString(0));
         if (context != null) {
             context.pause(0.5D);
         }
-        setChanged();
         return null;
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("gui.neoopencomputers.waypoint.title");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new WaypointMenu(containerId, playerInventory, this);
+    }
+
+    @Override
+    public void writeClientSideData(final AbstractContainerMenu menu, final RegistryFriendlyByteBuf buffer) {
+        buffer.writeBlockPos(worldPosition);
+        buffer.writeUtf(label, 32767);
     }
 
     @Override

@@ -80,6 +80,7 @@ public final class NeoOpenComputersClient {
         event.register(ModMenus.SERVER_RACK.get(), ServerRackScreen::new);
         event.register(ModMenus.RELAY.get(), RelayScreen::new);
         event.register(ModMenus.TERMINAL.get(), TerminalScreen::new);
+        event.register(ModMenus.WAYPOINT.get(), WaypointScreen::new);
     }
 
     @SubscribeEvent

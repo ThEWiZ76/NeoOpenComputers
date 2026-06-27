@@ -12,6 +12,7 @@ import li.cil.oc.common.menu.RaidMenu;
 import li.cil.oc.common.menu.RelayMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
 import li.cil.oc.common.menu.TerminalMenu;
+import li.cil.oc.common.menu.WaypointMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
@@ -66,6 +67,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<TerminalMenu>> TERMINAL = MENUS.register(
         ModContentIds.TERMINAL_MENU,
         () -> new MenuType<>(TerminalMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<WaypointMenu>> WAYPOINT = MENUS.register(
+        ModContentIds.WAYPOINT_MENU,
+        () -> IMenuTypeExtension.create(WaypointMenu::new));
 
     public static void register(final IEventBus modEventBus) {
         MENUS.register(modEventBus);

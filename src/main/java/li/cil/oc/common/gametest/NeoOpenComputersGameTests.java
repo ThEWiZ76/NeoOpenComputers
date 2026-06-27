@@ -78,6 +78,7 @@ import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.block.PrintBlock;
 import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.block.ScreenBlock;
+import li.cil.oc.common.block.WaypointBlock;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.NanomachineItemData;
@@ -9168,6 +9169,68 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Double.valueOf(0D).equals(position[1]), "Navigation waypoint Y target mismatch: " + java.util.Arrays.toString(position));
         helper.assertTrue(Double.valueOf(-1D).equals(position[2]), "Navigation waypoint Z target mismatch: " + java.util.Arrays.toString(position));
         helper.assertTrue(Integer.valueOf(15).equals(waypoint.get("redstone")), "Navigation waypoint redstone mismatch: " + waypoint);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void navigationFindWaypointsReportsBlockInFrontForAllWaypointFacings(final GameTestHelper helper) {
+        final BlockPos hostPos = new BlockPos(6, 3, 6);
+        final Map<String, Object[]> expectedPositions = new LinkedHashMap<>();
+        final BlockPos[] waypointPositions = {
+            new BlockPos(4, 3, 6),
+            new BlockPos(8, 3, 6),
+            new BlockPos(6, 3, 4),
+            new BlockPos(6, 3, 8),
+            new BlockPos(6, 1, 6),
+            new BlockPos(6, 5, 6)
+        };
+        final Direction[] facings = {
+            Direction.WEST,
+            Direction.EAST,
+            Direction.NORTH,
+            Direction.SOUTH,
+            Direction.DOWN,
+            Direction.UP
+        };
+
+        helper.setBlock(hostPos, Blocks.STONE);
+        for (int i = 0; i < facings.length; i++) {
+            final Direction facing = facings[i];
+            final BlockPos waypointPos = waypointPositions[i];
+            final String label = facing.getSerializedName();
+            helper.setBlock(waypointPos, ModBlocks.WAYPOINT.get().defaultBlockState().setValue(WaypointBlock.FACING, facing));
+            final WaypointBlockEntity waypoint = helper.getBlockEntity(waypointPos);
+            waypoint.setLabelValue(label);
+            final BlockPos target = waypointPos.relative(facing);
+            expectedPositions.put(label, new Object[]{
+                Double.valueOf(target.getX() - hostPos.getX()),
+                Double.valueOf(target.getY() - hostPos.getY()),
+                Double.valueOf(target.getZ() - hostPos.getZ())
+            });
+        }
+
+        final ItemStack stack = new ItemStack(ModItems.NAVIGATION_UPGRADE.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "No driver for navigation upgrade");
+        final ManagedEnvironment environment = driver.createEnvironment(stack, new StaticPositionEnvironmentHost(helper, hostPos));
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Navigation upgrade has no component node");
+        final ComponentConnector connector = (ComponentConnector) environment.node();
+        connector.setLocalBufferSize(4D);
+        connector.changeBuffer(4D);
+
+        final Object[] result = invokeComponent(helper, (li.cil.oc.api.network.Component) environment.node(), "findWaypoints", 16D);
+        helper.assertTrue(result.length == 1 && result[0] instanceof Object[], "Navigation upgrade did not return waypoint list");
+        final Object[] waypoints = (Object[]) result[0];
+        helper.assertTrue(waypoints.length == expectedPositions.size(), "Navigation upgrade did not find all waypoint facings");
+        for (final Object value : waypoints) {
+            final Map<?, ?> waypoint = (Map<?, ?>) value;
+            final String label = (String) waypoint.get("label");
+            final Object[] expected = expectedPositions.remove(label);
+            helper.assertTrue(expected != null, "Unexpected waypoint label: " + label);
+            final Object[] position = (Object[]) waypoint.get("position");
+            helper.assertTrue(java.util.Arrays.equals(expected, position), "Waypoint target mismatch for " + label + ": " + java.util.Arrays.toString(position));
+        }
+        helper.assertTrue(expectedPositions.isEmpty(), "Missing waypoint facings: " + expectedPositions.keySet());
         helper.succeed();
     }
 

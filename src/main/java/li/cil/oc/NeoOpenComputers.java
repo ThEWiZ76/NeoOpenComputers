@@ -43,6 +43,7 @@ import li.cil.oc.common.network.ComputerCaseNetworking;
 import li.cil.oc.common.network.NanomachinesNetworking;
 import li.cil.oc.common.network.RackNetworking;
 import li.cil.oc.common.network.TerminalNetworking;
+import li.cil.oc.common.network.WaypointNetworking;
 import li.cil.oc.common.template.AssemblerFilterImc;
 import li.cil.oc.common.template.AssemblerTemplateImc;
 import li.cil.oc.common.template.DisassemblerTemplateImc;
@@ -89,6 +90,7 @@ public final class NeoOpenComputers {
         modEventBus.addListener(NanomachinesNetworking::register);
         modEventBus.addListener(RackNetworking::register);
         modEventBus.addListener(TerminalNetworking::register);
+        modEventBus.addListener(WaypointNetworking::register);
         modEventBus.addListener(this::onCommonSetup);
         modEventBus.addListener(this::onInterModProcess);
         LOGGER.info("Loading NeoOpenComputers {}", modContainer.getModInfo().getVersion());

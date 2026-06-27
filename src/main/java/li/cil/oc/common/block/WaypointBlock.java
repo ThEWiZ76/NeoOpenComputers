@@ -4,6 +4,8 @@ import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.blockentity.WaypointBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -16,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -62,6 +65,26 @@ public class WaypointBlock extends DirectionalBlock implements EntityBlock {
             waypoint.removeNode();
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final BlockHitResult hitResult) {
+        if (player.isShiftKeyDown()) {
+            return super.useWithoutItem(state, level, pos, player, hitResult);
+        }
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        if (level.getBlockEntity(pos) instanceof WaypointBlockEntity waypoint) {
+            player.openMenu(waypoint);
+            return InteractionResult.CONSUME;
+        }
+        return InteractionResult.PASS;
     }
 
     @Override
