@@ -96,6 +96,35 @@ final class BlockModelResourceTest {
                 assertTrue("neoopencomputers:block/screen/f".equals(textures.get("particle").getAsString()), modelName);
             }
         }
+
+        final List<String> horizontalModelNames = List.of("screen_tier1_horizontal.json", "screen_tier2_horizontal.json", "screen_tier3_horizontal.json");
+        for (final String modelName : horizontalModelNames) {
+            try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve(modelName))) {
+                final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
+                assertTrue("neoopencomputers:block/screen_panel".equals(model.get("parent").getAsString()), modelName);
+                final JsonObject textures = model.getAsJsonObject("textures");
+                assertTrue("neoopencomputers:block/screen/f2".equals(textures.get("front").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen/b2".equals(textures.get("back").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen/b2".equals(textures.get("side").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen/b".equals(textures.get("top").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen/f2".equals(textures.get("particle").getAsString()), modelName);
+            }
+        }
+    }
+
+    @Test
+    void horizontalScreenBlockstatesUseUpstreamPitchFrontTextureVariant() throws IOException {
+        for (final String tier : List.of("screen_tier1", "screen_tier2", "screen_tier3")) {
+            final Path blockstatePath = Path.of("src/main/resources/assets/neoopencomputers/blockstates/" + tier + ".json");
+            try (Reader reader = Files.newBufferedReader(blockstatePath)) {
+                final JsonObject variants = JsonParser.parseReader(reader).getAsJsonObject().getAsJsonObject("variants");
+                for (final String yaw : List.of("north", "south", "east", "west")) {
+                    assertTrue(variants.getAsJsonObject("pitch=north,yaw=" + yaw).get("model").getAsString().equals("neoopencomputers:block/" + tier), tier + " wall " + yaw);
+                    assertTrue(variants.getAsJsonObject("pitch=up,yaw=" + yaw).get("model").getAsString().equals("neoopencomputers:block/" + tier + "_horizontal"), tier + " up " + yaw);
+                    assertTrue(variants.getAsJsonObject("pitch=down,yaw=" + yaw).get("model").getAsString().equals("neoopencomputers:block/" + tier + "_horizontal"), tier + " down " + yaw);
+                }
+            }
+        }
     }
 
     @Test

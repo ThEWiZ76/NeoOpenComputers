@@ -4,13 +4,13 @@
     "pitch=north,yaw=south": { "model": "neoopencomputers:block/screen_tier1", "y": 180 },
     "pitch=north,yaw=east": { "model": "neoopencomputers:block/screen_tier1", "y": 270 },
     "pitch=north,yaw=west": { "model": "neoopencomputers:block/screen_tier1", "y": 90 },
-    "pitch=up,yaw=north": { "model": "neoopencomputers:block/screen_tier1", "x": 90 },
-    "pitch=up,yaw=south": { "model": "neoopencomputers:block/screen_tier1", "x": 90, "y": 180 },
-    "pitch=up,yaw=east": { "model": "neoopencomputers:block/screen_tier1", "x": 90, "y": 270 },
-    "pitch=up,yaw=west": { "model": "neoopencomputers:block/screen_tier1", "x": 90, "y": 90 },
-    "pitch=down,yaw=north": { "model": "neoopencomputers:block/screen_tier1", "x": -90 },
-    "pitch=down,yaw=south": { "model": "neoopencomputers:block/screen_tier1", "x": -90, "y": 180 },
-    "pitch=down,yaw=east": { "model": "neoopencomputers:block/screen_tier1", "x": -90, "y": 270 },
-    "pitch=down,yaw=west": { "model": "neoopencomputers:block/screen_tier1", "x": -90, "y": 90 }
+    "pitch=up,yaw=north": { "model": "neoopencomputers:block/screen_tier1_horizontal", "x": 90 },
+    "pitch=up,yaw=south": { "model": "neoopencomputers:block/screen_tier1_horizontal", "x": 90, "y": 180 },
+    "pitch=up,yaw=east": { "model": "neoopencomputers:block/screen_tier1_horizontal", "x": 90, "y": 270 },
+    "pitch=up,yaw=west": { "model": "neoopencomputers:block/screen_tier1_horizontal", "x": 90, "y": 90 },
+    "pitch=down,yaw=north": { "model": "neoopencomputers:block/screen_tier1_horizontal", "x": -90 },
+    "pitch=down,yaw=south": { "model": "neoopencomputers:block/screen_tier1_horizontal", "x": -90, "y": 180 },
+    "pitch=down,yaw=east": { "model": "neoopencomputers:block/screen_tier1_horizontal", "x": -90, "y": 270 },
+    "pitch=down,yaw=west": { "model": "neoopencomputers:block/screen_tier1_horizontal", "x": -90, "y": 90 }
   }
 }
