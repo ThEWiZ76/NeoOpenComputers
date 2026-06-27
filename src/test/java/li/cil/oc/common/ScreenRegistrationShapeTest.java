@@ -64,14 +64,15 @@ final class ScreenRegistrationShapeTest {
     }
 
     @Test
-    void screenPlacementFacesVisibleFrontTowardPlayer() throws Exception {
+    void screenPlacementInvertsPlayerLookLikeUpstreamItemBlock() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
         final String method = source.substring(
             source.indexOf("public BlockState getStateForPlacement"),
             source.indexOf("protected BlockState rotate"));
 
-        assertTrue(method.contains("final Direction yaw = context.getHorizontalDirection();"));
-        assertTrue(!method.contains("final Direction yaw = context.getHorizontalDirection().getOpposite();"));
+        assertTrue(method.contains("lookDirection.getOpposite()"));
+        assertTrue(method.contains("final Direction yaw = context.getHorizontalDirection().getOpposite();"));
+        assertTrue(!method.contains("final Direction yaw = context.getHorizontalDirection();"));
     }
 
     @Test
