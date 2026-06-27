@@ -130,7 +130,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         renderScreenFaces(screen, poseStack, bufferSource, packedLight, packedOverlay);
         poseStack.popPose();
 
-        if (!screen.isRenderOrigin() || !screen.renderText() || !screen.getPowerState()) {
+        if (!screen.isRenderOrigin() || !screen.renderText() || !screen.getPowerState() || !shouldRenderTextForPlayer(screen)) {
             return;
         }
 
@@ -410,6 +410,29 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     static float screenTextZ() {
         return SCREEN_TEXT_Z;
+    }
+
+    private static boolean shouldRenderTextForPlayer(final ScreenBlockEntity screen) {
+        final var player = Minecraft.getInstance().player;
+        if (player == null) {
+            return false;
+        }
+        final BlockState state = screen.getBlockState();
+        return playerIsInFrontOfScreen(
+            ScreenBlock.facing(state),
+            renderBounds(screen.getBlockPos(), localRight(state), ScreenBlock.up(state), screen.renderBlockWidth(), screen.renderBlockHeight()),
+            player.getX(),
+            player.getEyeY(),
+            player.getZ());
+    }
+
+    static boolean playerIsInFrontOfScreen(final Direction front, final AABB bounds, final double playerX, final double playerY, final double playerZ) {
+        final double centerX = (bounds.minX + bounds.maxX) * 0.5D;
+        final double centerY = (bounds.minY + bounds.maxY) * 0.5D;
+        final double centerZ = (bounds.minZ + bounds.maxZ) * 0.5D;
+        return (playerX - centerX) * front.getStepX()
+            + (playerY - centerY) * front.getStepY()
+            + (playerZ - centerZ) * front.getStepZ() >= 0D;
     }
 
     static int centeredCellOffset(final int glyphWidth) {

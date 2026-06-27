@@ -100,6 +100,18 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererOnlyDrawsTerminalTextForPlayersInFrontLikeUpstream() throws IOException {
+        final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
+
+        assertTrue(renderer.contains("shouldRenderTextForPlayer"), "Renderer should gate text visibility by player position");
+        assertTrue(renderer.contains("playerIsInFrontOfScreen"), "Renderer should keep front-side visibility math testable");
+        assertTrue(ScreenBlockEntityRenderer.playerIsInFrontOfScreen(Direction.EAST, new AABB(0, 0, 0, 1, 1, 1), 2, 0.5D, 0.5D));
+        assertTrue(!ScreenBlockEntityRenderer.playerIsInFrontOfScreen(Direction.EAST, new AABB(0, 0, 0, 1, 1, 1), -2, 0.5D, 0.5D));
+        assertTrue(ScreenBlockEntityRenderer.playerIsInFrontOfScreen(Direction.UP, new AABB(0, 0, 0, 1, 1, 1), 0.5D, 2, 0.5D));
+        assertTrue(!ScreenBlockEntityRenderer.playerIsInFrontOfScreen(Direction.UP, new AABB(0, 0, 0, 1, 1, 1), 0.5D, -2, 0.5D));
+    }
+
+    @Test
     void screenRendererScalesTerminalTextToInnerScreenArea() {
         final float singleScale = ScreenBlockEntityRenderer.textScale(1, 1, 50, 16);
         assertTrue(50 * 6 * singleScale < 0.75F, "Single-screen text should fit inside the screen border");
