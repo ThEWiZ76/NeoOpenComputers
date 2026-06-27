@@ -24,6 +24,10 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
     private static final int SLOT_SIZE = 16;
     private static final int SLOT_TEXTURE_SIZE = 18;
     private static final int POWER_BUTTON_TEXTURE_SIZE = 36;
+    private static final int TITLE_TEXT_X = 8;
+    private static final int TITLE_TEXT_Y = 6;
+    private static final int INVENTORY_TEXT_X = 8;
+    private static final int INVENTORY_TEXT_Y = 72;
     private static final int STATUS_CONTROL_X = 70;
     private static final int STATUS_CONTROL_Y = 33;
     private static final int STATUS_CONTROL_SIZE = 18;
@@ -32,7 +36,10 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
     public ComputerCaseScreen(final ComputerCaseMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
         imageHeight = 166;
-        inventoryLabelY = imageHeight - 94;
+        titleLabelX = TITLE_TEXT_X;
+        titleLabelY = TITLE_TEXT_Y;
+        inventoryLabelX = INVENTORY_TEXT_X;
+        inventoryLabelY = INVENTORY_TEXT_Y;
     }
 
     @Override
@@ -177,6 +184,30 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         return POWER_BUTTON_TEXTURE_SIZE;
     }
 
+    public static int powerButtonDrawnWidth() {
+        return STATUS_CONTROL_SIZE;
+    }
+
+    public static int powerButtonDrawnHeight() {
+        return STATUS_CONTROL_SIZE;
+    }
+
+    public static int titleTextX() {
+        return TITLE_TEXT_X;
+    }
+
+    public static int titleTextY() {
+        return TITLE_TEXT_Y;
+    }
+
+    public static int inventoryTextX() {
+        return INVENTORY_TEXT_X;
+    }
+
+    public static int inventoryTextY() {
+        return INVENTORY_TEXT_Y;
+    }
+
     public static int slotTextureWidth() {
         return SLOT_TEXTURE_SIZE;
     }
@@ -222,10 +253,12 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
             POWER_BUTTON_TEXTURE,
             left,
             top,
-            powerButtonTextureX(state),
-            powerButtonTextureY(hovered),
-            STATUS_CONTROL_SIZE,
-            STATUS_CONTROL_SIZE,
+            powerButtonDrawnWidth(),
+            powerButtonDrawnHeight(),
+            (float) powerButtonTextureX(state),
+            (float) powerButtonTextureY(hovered),
+            powerButtonDrawnWidth(),
+            powerButtonDrawnHeight(),
             powerButtonTextureWidth(),
             powerButtonTextureHeight());
     }
