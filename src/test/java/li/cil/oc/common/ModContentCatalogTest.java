@@ -125,6 +125,20 @@ final class ModContentCatalogTest {
     }
 
     @Test
+    void registersUpstreamEndstoneApiNames() {
+        final ItemRegistry registry = new ItemRegistry();
+
+        ModContentCatalog.registerEndstoneBlock(registry, null, null);
+
+        assertNotNull(registry.get(ModContentIds.ENDSTONE));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_STONE_ENDSTONE));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_STONE_ENDSTONE_UPSTREAM));
+        assertEquals(ModContentIds.ENDSTONE, registry.get(ModContentIds.ENDSTONE).name());
+        assertEquals(ModContentCatalog.COMPAT_STONE_ENDSTONE, registry.get(ModContentCatalog.COMPAT_STONE_ENDSTONE).name());
+        assertEquals(ModContentCatalog.COMPAT_STONE_ENDSTONE_UPSTREAM, registry.get(ModContentCatalog.COMPAT_STONE_ENDSTONE_UPSTREAM).name());
+    }
+
+    @Test
     void registersInitialApiItemNames() throws ReflectiveOperationException {
         final ItemRegistry registry = new ItemRegistry();
 

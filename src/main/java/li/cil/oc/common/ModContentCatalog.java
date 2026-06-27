@@ -176,6 +176,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_CHAMELIUM = "chamelium";
     public static final String COMPAT_CHAMELIUM_BLOCK = "chameliumBlock";
     public static final String COMPAT_CHAMELIUM_BLOCK_UPSTREAM = "chameliumblock";
+    public static final String COMPAT_STONE_ENDSTONE = "stoneEndstone";
+    public static final String COMPAT_STONE_ENDSTONE_UPSTREAM = "stoneendstone";
 
     public static void registerDefaults() {
         if (API.items instanceof ItemRegistry registry) {
@@ -344,6 +346,7 @@ public final class ModContentCatalog {
                 ModItems.BUTTON_GROUP.get(),
                 ModItems.ARROW_KEYS.get(),
                 ModItems.NUM_PAD.get());
+            registerEndstoneBlock(registry, ModBlocks.ENDSTONE.get(), ModItems.ENDSTONE.get());
         }
     }
 
@@ -447,6 +450,12 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.CHAMELIUM_BLOCK, chameliumBlock, chameliumBlockItem);
         registry.register(COMPAT_CHAMELIUM_BLOCK, chameliumBlock, chameliumBlockItem);
         registry.register(COMPAT_CHAMELIUM_BLOCK_UPSTREAM, chameliumBlock, chameliumBlockItem);
+    }
+
+    static void registerEndstoneBlock(final ItemRegistry registry, final Block endstoneBlock, final Item endstoneItem) {
+        registry.register(ModContentIds.ENDSTONE, endstoneBlock, endstoneItem);
+        registry.register(COMPAT_STONE_ENDSTONE, endstoneBlock, endstoneItem);
+        registry.register(COMPAT_STONE_ENDSTONE_UPSTREAM, endstoneBlock, endstoneItem);
     }
 
     static void register(

@@ -4030,6 +4030,22 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void fakeEndstoneRecipeUsesUpstreamStoneEndstoneInput(final GameTestHelper helper) {
+        helper.assertTrue(API.items.get("endstone") != null, "Endstone missing upstream API name");
+        helper.assertTrue(API.items.get("stoneEndstone") != null, "Endstone missing stoneEndstone API alias");
+        helper.assertTrue(API.items.get("stoneendstone") != null, "Endstone missing lowercase stoneEndstone API alias");
+
+        assertCraftsItem(helper, ModItems.ENDSTONE.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.ENDER_PEARL), new ItemStack(ModItems.CHAMELIUM_BLOCK.get()), new ItemStack(Items.ENDER_PEARL),
+            new ItemStack(ModItems.CHAMELIUM_BLOCK.get()), new ItemStack(Items.ENDER_PEARL), new ItemStack(ModItems.CHAMELIUM_BLOCK.get()),
+            new ItemStack(Items.ENDER_PEARL), new ItemStack(ModItems.CHAMELIUM_BLOCK.get()), new ItemStack(Items.ENDER_PEARL)
+        )), 4);
+        assertCraftsHoverUpgradeTier2(helper, Items.END_STONE.asItem());
+        assertCraftsHoverUpgradeTier2(helper, ModItems.ENDSTONE.get());
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void memoryItemsUseUpstreamRamHalfTiers(final GameTestHelper helper) {
         assertMemoryApiItem(helper, "ram1", 0, 192D);
         assertMemoryApiItem(helper, "ram2", 0, 256D);
@@ -10311,6 +10327,14 @@ public final class NeoOpenComputersGameTests {
 
     private static void assertCraftsMicrocontrollerCase(final GameTestHelper helper, final Item expectedItem, final CraftingInput input) {
         assertCraftsItem(helper, expectedItem, input);
+    }
+
+    private static void assertCraftsHoverUpgradeTier2(final GameTestHelper helper, final Item endstoneItem) {
+        assertCraftsItem(helper, ModItems.HOVER_UPGRADE_TIER2.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(endstoneItem), new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(endstoneItem),
+            new ItemStack(Items.GOLD_NUGGET), new ItemStack(Items.IRON_INGOT), new ItemStack(Items.GOLD_NUGGET),
+            new ItemStack(endstoneItem), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(endstoneItem)
+        )));
     }
 
     private static CraftingInput hardDiskRecipeInput(final ItemStack chip, final ItemStack shell) {

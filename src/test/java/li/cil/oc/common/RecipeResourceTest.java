@@ -89,6 +89,7 @@ final class RecipeResourceTest {
             ModContentIds.DISASSEMBLER,
             ModContentIds.DISK_DRIVE,
             ModContentIds.DISK_DRIVE_MOUNTABLE,
+            ModContentIds.ENDSTONE,
             ModContentIds.EEPROM,
             ModContentIds.FLOPPY,
             ModContentIds.GEOLYZER,
@@ -755,6 +756,23 @@ final class RecipeResourceTest {
     }
 
     @Test
+    void fakeEndstoneRecipesUseUpstreamStoneEndstoneKey() throws IOException {
+        JsonObject endstone = readJson(RECIPE_ROOT.resolve("endstone.json"));
+        JsonObject hover2 = readJson(RECIPE_ROOT.resolve(ModContentIds.HOVER_UPGRADE_TIER2 + ".json"));
+        JsonObject tag = readJson(Path.of("src/main/resources/data/neoopencomputers/tags/item/stone_endstone.json"));
+
+        assertPattern(endstone, "ECE", "CEC", "ECE");
+        assertItem(endstone.getAsJsonObject("key"), "E", "minecraft:ender_pearl");
+        assertItem(endstone.getAsJsonObject("key"), "C", "neoopencomputers:" + ModContentIds.CHAMELIUM_BLOCK);
+        assertEquals("neoopencomputers:endstone", endstone.getAsJsonObject("result").get("id").getAsString());
+        assertResultCount(endstone, 4);
+
+        assertTag(hover2.getAsJsonObject("key"), "E", "neoopencomputers:stone_endstone");
+        assertTrue(tag.getAsJsonArray("values").contains(JsonParser.parseString("\"minecraft:end_stone\"")));
+        assertTrue(tag.getAsJsonArray("values").contains(JsonParser.parseString("\"neoopencomputers:endstone\"")));
+    }
+
+    @Test
     void capacitorRecipeUsesMaterialProgression() throws IOException {
         JsonObject keys = recipeKeys(ModContentIds.CAPACITOR);
 
@@ -1031,7 +1049,7 @@ final class RecipeResourceTest {
         assertItem(hover1, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
 
         assertPattern(hover2Recipe, "ECE", "GIG", "EBE");
-        assertItem(hover2, "E", "minecraft:end_stone");
+        assertTag(hover2, "E", "neoopencomputers:stone_endstone");
         assertItem(hover2, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
         assertTag(hover2, "G", "c:nuggets/gold");
         assertTag(hover2, "I", "c:ingots/iron");

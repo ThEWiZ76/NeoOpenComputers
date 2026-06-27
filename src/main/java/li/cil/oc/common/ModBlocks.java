@@ -70,6 +70,10 @@ public final class ModBlocks {
         ModContentIds.DISK_DRIVE,
         () -> new DiskDriveBlock(diskDriveProperties()));
 
+    public static final DeferredBlock<Block> ENDSTONE = BLOCKS.register(
+        ModContentIds.ENDSTONE,
+        () -> new Block(endstoneProperties()));
+
     public static final DeferredBlock<Block> GEOLYZER = BLOCKS.register(
         ModContentIds.GEOLYZER,
         () -> new GeolyzerBlock(geolyzerProperties()));
@@ -194,6 +198,12 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties endstoneProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.SAND)
+            .strength(3.0F, 9.0F);
     }
 
     private static BlockBehaviour.Properties disassemblerProperties() {

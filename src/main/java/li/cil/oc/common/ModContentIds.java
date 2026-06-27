@@ -66,6 +66,7 @@ public final class ModContentIds {
     public static final String DISK_DRIVE_MOUNTABLE = "disk_drive_mountable";
     public static final String DISK_DRIVE_BLOCK_ENTITY = "disk_drive";
     public static final String DISK_DRIVE_MENU = "disk_drive";
+    public static final String ENDSTONE = "endstone";
     public static final String EEPROM = "eeprom";
     public static final String EXPERIENCE_UPGRADE = "experience_upgrade";
     public static final String FLOPPY = "floppy";

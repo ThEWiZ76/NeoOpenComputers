@@ -80,6 +80,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void endstoneBlockIdIsStable() {
+        assertEquals("endstone", ModContentIds.ENDSTONE);
+    }
+
+    @Test
     void analyzerItemIdIsStable() {
         assertEquals("analyzer", ModContentIds.ANALYZER);
     }

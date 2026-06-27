@@ -148,6 +148,10 @@ public final class ModItems {
         ModContentIds.DISK_DRIVE_MOUNTABLE,
         () -> new DiskDriveMountableItem(new Item.Properties()));
 
+    public static final DeferredItem<BlockItem> ENDSTONE = ITEMS.registerSimpleBlockItem(
+        ModContentIds.ENDSTONE,
+        ModBlocks.ENDSTONE);
+
     public static final DeferredItem<BlockItem> GEOLYZER = ITEMS.registerSimpleBlockItem(
         ModContentIds.GEOLYZER,
         ModBlocks.GEOLYZER);

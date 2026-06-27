@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "E": {
-      "item": "minecraft:end_stone"
+      "tag": "neoopencomputers:stone_endstone"
     },
     "C": {
       "item": "neoopencomputers:microchip_tier2"

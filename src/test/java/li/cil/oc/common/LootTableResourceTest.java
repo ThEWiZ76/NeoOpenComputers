@@ -29,6 +29,7 @@ final class LootTableResourceTest {
             ModContentIds.COMPUTER_CASE_TIER3,
             ModContentIds.DISASSEMBLER,
             ModContentIds.DISK_DRIVE,
+            ModContentIds.ENDSTONE,
             ModContentIds.GEOLYZER,
             ModContentIds.HOLOGRAM_TIER1,
             ModContentIds.HOLOGRAM_TIER2,
