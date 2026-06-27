@@ -10489,6 +10489,34 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void yawEastScreensFormThreeByTwoMultiblock(final GameTestHelper helper) {
+        final BlockState screenState = ModBlocks.SCREEN_TIER1.get().defaultBlockState()
+            .setValue(ScreenBlock.PITCH, Direction.NORTH)
+            .setValue(ScreenBlock.YAW, Direction.EAST);
+        final BlockPos lowerLeftPos = new BlockPos(1, 1, 3);
+        final BlockPos lowerMiddlePos = new BlockPos(1, 1, 2);
+        final BlockPos lowerRightPos = new BlockPos(1, 1, 1);
+        final BlockPos upperLeftPos = new BlockPos(1, 2, 3);
+        final BlockPos upperMiddlePos = new BlockPos(1, 2, 2);
+        final BlockPos upperRightPos = new BlockPos(1, 2, 1);
+
+        helper.setBlock(lowerLeftPos, screenState);
+        helper.setBlock(lowerMiddlePos, screenState);
+        helper.setBlock(lowerRightPos, screenState);
+        helper.setBlock(upperLeftPos, screenState);
+        helper.setBlock(upperMiddlePos, screenState);
+        helper.setBlock(upperRightPos, screenState);
+
+        assertScreenLayout(helper, helper.getBlockEntity(lowerLeftPos), 3, 2, 0, 0);
+        assertScreenLayout(helper, helper.getBlockEntity(lowerMiddlePos), 3, 2, 1, 0);
+        assertScreenLayout(helper, helper.getBlockEntity(lowerRightPos), 3, 2, 2, 0);
+        assertScreenLayout(helper, helper.getBlockEntity(upperLeftPos), 3, 2, 0, 1);
+        assertScreenLayout(helper, helper.getBlockEntity(upperMiddlePos), 3, 2, 1, 1);
+        assertScreenLayout(helper, helper.getBlockEntity(upperRightPos), 3, 2, 2, 1);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void adjacentDifferentTierScreensDoNotMerge(final GameTestHelper helper) {
         final BlockPos tier1Pos = new BlockPos(0, 1, 1);
         final BlockPos tier2Pos = new BlockPos(1, 1, 1);
