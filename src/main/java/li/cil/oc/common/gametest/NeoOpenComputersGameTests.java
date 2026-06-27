@@ -9653,6 +9653,40 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void computerBootWritesToConnectedScreenOrigin(final GameTestHelper helper) {
+        final BlockPos originScreenPos = new BlockPos(0, 1, 1);
+        final BlockPos secondaryScreenPos = new BlockPos(1, 1, 1);
+        final BlockPos computerPos = new BlockPos(0, 1, 2);
+        final BlockPos diskDrivePos = new BlockPos(1, 1, 2);
+
+        helper.setBlock(originScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(secondaryScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ScreenBlockEntity secondaryScreen = helper.getBlockEntity(secondaryScreenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        originScreen.update();
+        secondaryScreen.update();
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.machine().components().containsValue("screen"), "Connected screen component is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.toggleMachine(), "Computer case did not start with connected screen setup");
+        helper.runAtTickTime(80, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Computer stopped while booting with connected screen: " + computer.machine().lastError());
+            helper.assertTrue(screenHasNonBlankText(originScreen), "OpenOS did not write visible text to connected screen origin:\n" + screenText(originScreen));
+            helper.assertTrue(!screenHasNonBlankText(secondaryScreen), "Secondary screen buffer should not receive independent text:\n" + screenText(secondaryScreen));
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 360)
     public static void openOsTerminalEchoesKeyboardInput(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
