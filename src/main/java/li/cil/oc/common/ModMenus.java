@@ -16,6 +16,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -24,7 +25,7 @@ public final class ModMenus {
 
     public static final DeferredHolder<MenuType<?>, MenuType<ComputerCaseMenu>> COMPUTER_CASE = MENUS.register(
         ModContentIds.COMPUTER_CASE_MENU,
-        () -> new MenuType<>(ComputerCaseMenu::new, FeatureFlags.DEFAULT_FLAGS));
+        () -> IMenuTypeExtension.create(ComputerCaseMenu::new));
 
     public static final DeferredHolder<MenuType<?>, MenuType<AssemblerMenu>> ASSEMBLER = MENUS.register(
         ModContentIds.ASSEMBLER_MENU,

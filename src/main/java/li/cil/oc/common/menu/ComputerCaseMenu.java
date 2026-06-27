@@ -13,6 +13,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 
 public class ComputerCaseMenu extends AbstractContainerMenu {
     public static final int MIN_COMPUTER_SLOT_COUNT = ComputerCaseBlockEntity.CONTAINER_SIZE;
@@ -25,7 +26,8 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
     public static final int COMPUTER_MISSING_REQUIREMENTS_INDEX = 1;
     public static final int COMPUTER_COMPONENT_COUNT_INDEX = 2;
     public static final int COMPUTER_MAX_COMPONENTS_INDEX = 3;
-    public static final int COMPUTER_DATA_COUNT = 4;
+    public static final int COMPUTER_TIER_INDEX = 4;
+    public static final int COMPUTER_DATA_COUNT = 5;
 
     public static final int STATE_EMPTY = 0;
     public static final int STATE_READY = 1;
@@ -39,17 +41,38 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
     private static final int PLAYER_INVENTORY_Y = 84;
     private static final int PLAYER_HOTBAR_Y = 142;
     private static final String SLOT_TYPE_EEPROM = "eeprom";
-    private static final int[][] COMPUTER_SLOT_POSITIONS = {
-        {35, 17},
-        {53, 17},
-        {80, 17},
-        {107, 17},
-        {62, 44},
-        {89, 44},
-        {116, 44},
-        {35, 44},
-        {143, 17},
-        {143, 44}
+    private static final int[][][] COMPUTER_SLOT_POSITIONS = {
+        {
+            {98, 16},
+            {98, 34},
+            {120, 34},
+            {142, 16},
+            {120, 16},
+            {120, 52},
+            {48, 34}
+        },
+        {
+            {98, 16},
+            {98, 34},
+            {120, 34},
+            {120, 52},
+            {142, 16},
+            {142, 34},
+            {120, 16},
+            {48, 34}
+        },
+        {
+            {98, 16},
+            {98, 34},
+            {98, 52},
+            {120, 34},
+            {120, 52},
+            {142, 16},
+            {142, 34},
+            {142, 52},
+            {120, 16},
+            {48, 34}
+        }
     };
 
     private final Container computerInventory;
@@ -58,6 +81,10 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
 
     public ComputerCaseMenu(final int containerId, final Inventory playerInventory) {
         this(containerId, playerInventory, new SimpleContainer(MAX_COMPUTER_SLOT_COUNT), new SimpleContainerData(COMPUTER_DATA_COUNT));
+    }
+
+    public ComputerCaseMenu(final int containerId, final Inventory playerInventory, final RegistryFriendlyByteBuf extraData) {
+        this(containerId, playerInventory, new SimpleContainer(MAX_COMPUTER_SLOT_COUNT), clientComputerData(extraData));
     }
 
     public ComputerCaseMenu(final int containerId, final Inventory playerInventory, final Container computerInventory) {
@@ -75,7 +102,7 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
 
         for (int slot = 0; slot < computerSlotCount; slot++) {
             final int computerSlot = slot;
-            final int[] position = COMPUTER_SLOT_POSITIONS[slot];
+            final int[] position = slotPosition(computerTier(), slot);
             addSlot(new Slot(computerInventory, computerSlot, position[0], position[1]) {
                 @Override
                 public boolean mayPlace(final ItemStack stack) {
@@ -87,11 +114,31 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
     }
 
     public static int computerSlotX(final int slot) {
-        return COMPUTER_SLOT_POSITIONS[slot][0];
+        return computerSlotX(2, slot);
     }
 
     public static int computerSlotY(final int slot) {
-        return COMPUTER_SLOT_POSITIONS[slot][1];
+        return computerSlotY(2, slot);
+    }
+
+    public static int computerSlotX(final int tier, final int slot) {
+        return slotPosition(tier, slot)[0];
+    }
+
+    public static int computerSlotY(final int tier, final int slot) {
+        return slotPosition(tier, slot)[1];
+    }
+
+    public static int computerSlotCountForTier(final int tier) {
+        return slotPositions(tier).length;
+    }
+
+    public static String computerSlotKind(final int tier, final int slot) {
+        return ComputerCaseBlockEntity.slotType(tier, slot);
+    }
+
+    public static int computerSlotTierLimit(final int tier, final int slot) {
+        return ComputerCaseBlockEntity.slotTier(tier, slot);
     }
 
     public int computerState() {
@@ -108,6 +155,14 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
 
     public int maxComponents() {
         return computerData.get(COMPUTER_MAX_COMPONENTS_INDEX);
+    }
+
+    public int computerTier() {
+        return computerData.get(COMPUTER_TIER_INDEX);
+    }
+
+    public Container computerInventory() {
+        return computerInventory;
     }
 
     @Override
@@ -201,6 +256,10 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
         return computerInventory instanceof ComputerCaseBlockEntity computer ? computer.machine().maxComponents() : 0;
     }
 
+    public static int computerTierFor(final Container computerInventory) {
+        return computerInventory instanceof ComputerCaseBlockEntity computer ? computer.tier() : 0;
+    }
+
     private static ContainerData computerData(final Container computerInventory) {
         return new ContainerData() {
             @Override
@@ -210,6 +269,7 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
                     case COMPUTER_MISSING_REQUIREMENTS_INDEX -> missingRequirementsFor(computerInventory);
                     case COMPUTER_COMPONENT_COUNT_INDEX -> componentCountFor(computerInventory);
                     case COMPUTER_MAX_COMPONENTS_INDEX -> maxComponentsFor(computerInventory);
+                    case COMPUTER_TIER_INDEX -> computerTierFor(computerInventory);
                     default -> 0;
                 };
             }
@@ -223,6 +283,23 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
                 return COMPUTER_DATA_COUNT;
             }
         };
+    }
+
+    private static ContainerData clientComputerData(final RegistryFriendlyByteBuf extraData) {
+        final SimpleContainerData data = new SimpleContainerData(COMPUTER_DATA_COUNT);
+        if (extraData != null) {
+            data.set(COMPUTER_TIER_INDEX, extraData.readVarInt());
+        }
+        return data;
+    }
+
+    private static int[] slotPosition(final int tier, final int slot) {
+        final int[][] positions = slotPositions(tier);
+        return slot >= 0 && slot < positions.length ? positions[slot] : new int[]{-1, -1};
+    }
+
+    private static int[][] slotPositions(final int tier) {
+        return COMPUTER_SLOT_POSITIONS[Math.clamp(tier, 0, COMPUTER_SLOT_POSITIONS.length - 1)];
     }
 
     private void addPlayerInventory(final Inventory playerInventory) {

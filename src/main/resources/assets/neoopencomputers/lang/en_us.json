@@ -164,6 +164,8 @@
   "gui.neoopencomputers.computer_case.status": "Computer status",
   "gui.neoopencomputers.computer_case.state.empty": "No computer data",
   "gui.neoopencomputers.computer_case.state.incomplete": "Incomplete computer",
+  "gui.neoopencomputers.computer_case.power.turn_off": "Turn off",
+  "gui.neoopencomputers.computer_case.power.turn_on": "Turn on",
   "gui.neoopencomputers.computer_case.state.ready": "Ready",
   "gui.neoopencomputers.computer_case.state.running": "Running",
   "gui.neoopencomputers.disassembler.status": "Disassembler status",

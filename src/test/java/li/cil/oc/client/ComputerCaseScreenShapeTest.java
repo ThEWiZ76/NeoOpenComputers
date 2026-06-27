@@ -1,14 +1,22 @@
 package li.cil.oc.client;
 
 import li.cil.oc.common.menu.ComputerCaseMenu;
+import li.cil.oc.common.network.ComputerCaseControlPayload;
+import li.cil.oc.common.network.RackControlPayload;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.inventory.ContainerData;
 import org.junit.jupiter.api.Test;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -28,12 +36,36 @@ final class ComputerCaseScreenShapeTest {
     }
 
     @Test
+    void computerCaseScreenUsesUpstreamTextureAsset() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/computer.png"), ComputerCaseScreen.COMPUTER_TEXTURE);
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/gui/computer.png")));
+    }
+
+    @Test
+    void computerCasePowerControlUsesUpstreamTextureAtlas() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/button_power.png"), ComputerCaseScreen.POWER_BUTTON_TEXTURE);
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/gui/button_power.png")));
+        assertEquals(0, ComputerCaseScreen.powerButtonTextureX(ComputerCaseMenu.STATE_READY));
+        assertEquals(18, ComputerCaseScreen.powerButtonTextureX(ComputerCaseMenu.STATE_RUNNING));
+        assertEquals(0, ComputerCaseScreen.powerButtonTextureY(false));
+        assertEquals(18, ComputerCaseScreen.powerButtonTextureY(true));
+    }
+
+    @Test
     void computerCaseScreenExposesStatusLabels() throws NoSuchMethodException {
         final Method statusLabel = ComputerCaseScreen.class.getMethod("statusLabel", int.class);
         final Method statusTooltip = ComputerCaseScreen.class.getMethod("statusTooltip", int.class, int.class, int.class, int.class);
+        final Method statusControlTooltip = ComputerCaseScreen.class.getMethod("statusControlTooltip", int.class);
+        final Method slotAt = ComputerCaseScreen.class.getMethod("computerSlotAt", int.class, int.class, int.class, int.class, int.class);
+        final Method controlAt = ComputerCaseScreen.class.getDeclaredMethod("statusControlAt", int.class, int.class, int.class, int.class);
+        final Method controlPayload = ComputerCaseScreen.class.getDeclaredMethod("controlPayload", ComputerCaseMenu.class, int.class);
 
         assertEquals(Component.class, statusLabel.getReturnType());
         assertEquals(List.class, statusTooltip.getReturnType());
+        assertEquals(List.class, statusControlTooltip.getReturnType());
+        assertEquals(int.class, slotAt.getReturnType());
+        assertEquals(boolean.class, controlAt.getReturnType());
+        assertEquals(ComputerCaseControlPayload.class, controlPayload.getReturnType());
     }
 
     @Test
@@ -73,8 +105,77 @@ final class ComputerCaseScreenShapeTest {
         assertEquals(8, ((TranslatableContents) tooltip.get(2).getContents()).getArgs()[1]);
     }
 
+    @Test
+    void computerCasePowerControlTooltipMatchesUpstreamTurnAction() {
+        final List<Component> readyTooltip = ComputerCaseScreen.statusControlTooltip(ComputerCaseMenu.STATE_READY);
+        final List<Component> runningTooltip = ComputerCaseScreen.statusControlTooltip(ComputerCaseMenu.STATE_RUNNING);
+
+        assertEquals(1, readyTooltip.size());
+        assertEquals(1, runningTooltip.size());
+        assertTranslationKey("gui.neoopencomputers.computer_case.power.turn_on", readyTooltip.getFirst());
+        assertTranslationKey("gui.neoopencomputers.computer_case.power.turn_off", runningTooltip.getFirst());
+    }
+
+    @Test
+    void computerCasePowerControlPayloadUsesDesiredStateLikeUpstream() throws ReflectiveOperationException {
+        final ComputerCaseMenu menu = allocateMenu(13, 0);
+
+        final ComputerCaseControlPayload startPayload = ComputerCaseScreen.controlPayload(menu, ComputerCaseScreen.statusControlAction(ComputerCaseMenu.STATE_READY));
+        final ComputerCaseControlPayload stopPayload = ComputerCaseScreen.controlPayload(menu, ComputerCaseScreen.statusControlAction(ComputerCaseMenu.STATE_RUNNING));
+
+        assertEquals(13, startPayload.containerId());
+        assertEquals(RackControlPayload.START, startPayload.action());
+        assertEquals(13, stopPayload.containerId());
+        assertEquals(RackControlPayload.STOP, stopPayload.action());
+    }
+
+    @Test
+    void computerCaseScreenMapsMouseToUpstreamTieredSlots() {
+        assertEquals(0, ComputerCaseScreen.computerSlotAt(98, 16, 0, 0, 0));
+        assertEquals(6, ComputerCaseScreen.computerSlotAt(48, 34, 0, 0, 0));
+        assertEquals(-1, ComputerCaseScreen.computerSlotAt(142, 52, 0, 0, 0));
+        assertEquals(9, ComputerCaseScreen.computerSlotAt(48, 34, 0, 0, 2));
+        assertEquals(-1, ComputerCaseScreen.computerSlotAt(35, 17, 0, 0, 0));
+    }
+
+    @Test
+    void computerCaseScreenMapsMouseToStatusControl() {
+        assertTrue(ComputerCaseScreen.statusControlAt(70, 33, 0, 0));
+        assertTrue(ComputerCaseScreen.statusControlAt(87, 50, 0, 0));
+        assertEquals(false, ComputerCaseScreen.statusControlAt(69, 33, 0, 0));
+        assertEquals(false, ComputerCaseScreen.statusControlAt(88, 33, 0, 0));
+        assertEquals(false, ComputerCaseScreen.statusControlAt(70, 51, 0, 0));
+    }
+
     private static void assertTranslationKey(final String expected, final Component component) {
         assertTrue(component.getContents() instanceof TranslatableContents);
         assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());
+    }
+
+    private static ComputerCaseMenu allocateMenu(final int containerId, final int tier) throws ReflectiveOperationException {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final ComputerCaseMenu menu = (ComputerCaseMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(ComputerCaseMenu.class);
+        final Field containerIdField = net.minecraft.world.inventory.AbstractContainerMenu.class.getDeclaredField("containerId");
+        containerIdField.setAccessible(true);
+        containerIdField.setInt(menu, containerId);
+        final Field computerDataField = ComputerCaseMenu.class.getDeclaredField("computerData");
+        computerDataField.setAccessible(true);
+        computerDataField.set(menu, new ContainerData() {
+            @Override
+            public int get(final int index) {
+                return index == ComputerCaseMenu.COMPUTER_TIER_INDEX ? tier : 0;
+            }
+
+            @Override
+            public void set(final int index, final int value) {
+            }
+
+            @Override
+            public int getCount() {
+                return ComputerCaseMenu.COMPUTER_DATA_COUNT;
+            }
+        });
+        return menu;
     }
 }

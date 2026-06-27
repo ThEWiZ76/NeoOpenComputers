@@ -20,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
@@ -33,6 +34,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.client.extensions.IMenuProviderExtension;
 
 import java.util.HashMap;
 import java.util.EnumSet;
@@ -41,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider, DeviceInfo, RedstoneControllerHost, StateAware {
+public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider, IMenuProviderExtension, DeviceInfo, RedstoneControllerHost, StateAware {
     public static final int SLOT_CARD_0 = 0;
     public static final int SLOT_CARD_1 = 1;
     public static final int SLOT_MEMORY_0 = 2;
@@ -134,6 +136,11 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
         return new ComputerCaseMenu(containerId, playerInventory, this);
+    }
+
+    @Override
+    public void writeClientSideData(final AbstractContainerMenu menu, final RegistryFriendlyByteBuf buffer) {
+        buffer.writeVarInt(tier);
     }
 
     @Override
@@ -342,20 +349,20 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         return rotateHorizontal(value, (4 - horizontalSteps(facing)) % 4);
     }
 
-    static String slotType(final int slot) {
+    public static String slotType(final int slot) {
         return slotType(0, slot);
     }
 
-    static int slotCount(final int tier) {
+    public static int slotCount(final int tier) {
         return slotLayout(tier).length;
     }
 
-    static String slotType(final int tier, final int slot) {
+    public static String slotType(final int tier, final int slot) {
         final CaseSlot[] layout = slotLayout(tier);
         return slot >= 0 && slot < layout.length ? layout[slot].type() : Slot.None;
     }
 
-    static int slotTier(final int tier, final int slot) {
+    public static int slotTier(final int tier, final int slot) {
         final CaseSlot[] layout = slotLayout(tier);
         return slot >= 0 && slot < layout.length ? layout[slot].tier() : -1;
     }

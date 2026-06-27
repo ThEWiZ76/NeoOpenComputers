@@ -34,7 +34,7 @@ final class ComputerCaseMenuShapeTest {
         assertEquals(36, ComputerCaseMenu.PLAYER_SLOT_COUNT);
         assertEquals(46, ComputerCaseMenu.TOTAL_SLOT_COUNT);
         assertEquals(46, ComputerCaseMenu.MAX_TOTAL_SLOT_COUNT);
-        assertEquals(4, ComputerCaseMenu.COMPUTER_DATA_COUNT);
+        assertEquals(5, ComputerCaseMenu.COMPUTER_DATA_COUNT);
         assertEquals(0, ComputerCaseMenu.STATE_EMPTY);
         assertEquals(1, ComputerCaseMenu.STATE_READY);
         assertEquals(2, ComputerCaseMenu.STATE_RUNNING);
@@ -42,11 +42,22 @@ final class ComputerCaseMenuShapeTest {
     }
 
     @Test
-    void computerCaseMenuSlotPositionsCoverAllComputerSlots() {
-        assertEquals(35, ComputerCaseMenu.computerSlotX(0));
-        assertEquals(17, ComputerCaseMenu.computerSlotY(0));
-        assertEquals(143, ComputerCaseMenu.computerSlotX(9));
-        assertEquals(44, ComputerCaseMenu.computerSlotY(9));
+    void computerCaseMenuUsesUpstreamTieredSlotPositions() {
+        assertEquals(7, ComputerCaseMenu.computerSlotCountForTier(0));
+        assertEquals(8, ComputerCaseMenu.computerSlotCountForTier(1));
+        assertEquals(10, ComputerCaseMenu.computerSlotCountForTier(2));
+
+        assertEquals(98, ComputerCaseMenu.computerSlotX(0, 0));
+        assertEquals(16, ComputerCaseMenu.computerSlotY(0, 0));
+        assertEquals(48, ComputerCaseMenu.computerSlotX(0, 6));
+        assertEquals(34, ComputerCaseMenu.computerSlotY(0, 6));
+        assertEquals(-1, ComputerCaseMenu.computerSlotX(0, 7));
+        assertEquals(-1, ComputerCaseMenu.computerSlotY(0, 7));
+
+        assertEquals(142, ComputerCaseMenu.computerSlotX(2, 7));
+        assertEquals(52, ComputerCaseMenu.computerSlotY(2, 7));
+        assertEquals(48, ComputerCaseMenu.computerSlotX(2, 9));
+        assertEquals(34, ComputerCaseMenu.computerSlotY(2, 9));
     }
 
     @Test
@@ -55,19 +66,23 @@ final class ComputerCaseMenuShapeTest {
         final Method missing = ComputerCaseMenu.class.getMethod("missingRequirements");
         final Method componentCount = ComputerCaseMenu.class.getMethod("componentCount");
         final Method maxComponents = ComputerCaseMenu.class.getMethod("maxComponents");
+        final Method tier = ComputerCaseMenu.class.getMethod("computerTier");
         final Method stateFor = ComputerCaseMenu.class.getMethod("computerStateFor", Container.class);
         final Method missingFor = ComputerCaseMenu.class.getMethod("missingRequirementsFor", Container.class);
         final Method componentCountFor = ComputerCaseMenu.class.getMethod("componentCountFor", Container.class);
         final Method maxComponentsFor = ComputerCaseMenu.class.getMethod("maxComponentsFor", Container.class);
+        final Method tierFor = ComputerCaseMenu.class.getMethod("computerTierFor", Container.class);
 
         assertEquals(int.class, state.getReturnType());
         assertEquals(int.class, missing.getReturnType());
         assertEquals(int.class, componentCount.getReturnType());
         assertEquals(int.class, maxComponents.getReturnType());
+        assertEquals(int.class, tier.getReturnType());
         assertEquals(int.class, stateFor.getReturnType());
         assertEquals(int.class, missingFor.getReturnType());
         assertEquals(int.class, componentCountFor.getReturnType());
         assertEquals(int.class, maxComponentsFor.getReturnType());
+        assertEquals(int.class, tierFor.getReturnType());
     }
 
     @Test
@@ -76,5 +91,6 @@ final class ComputerCaseMenuShapeTest {
         assertEquals(0, ComputerCaseMenu.missingRequirementsFor(null));
         assertEquals(0, ComputerCaseMenu.componentCountFor(null));
         assertEquals(0, ComputerCaseMenu.maxComponentsFor(null));
+        assertEquals(0, ComputerCaseMenu.computerTierFor(null));
     }
 }

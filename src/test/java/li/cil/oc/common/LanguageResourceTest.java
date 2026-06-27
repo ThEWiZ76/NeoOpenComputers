@@ -83,6 +83,8 @@ final class LanguageResourceTest {
             "gui.neoopencomputers.server_rack.state.incomplete",
             "gui.neoopencomputers.server_rack.state.ready",
             "gui.neoopencomputers.server_rack.state.running",
+            "gui.neoopencomputers.computer_case.power.turn_off",
+            "gui.neoopencomputers.computer_case.power.turn_on",
             "gui.neoopencomputers.rack.bus",
             "gui.neoopencomputers.rack.bus.clear",
             "gui.neoopencomputers.rack.bus.map",
