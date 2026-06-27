@@ -62,11 +62,19 @@ final class BlockModelResourceTest {
     }
 
     @Test
-    void screenBlockModelsUseExplicitPanelGeometryLikeUpstreamScreenModel() throws IOException {
+    void screenBlockModelsUseFullBlockFaceQuadsLikeUpstreamScreenModel() throws IOException {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_panel.json"))) {
             final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
             assertTrue("minecraft:block/block".equals(panel.get("parent").getAsString()));
-            assertTrue(panel.getAsJsonArray("elements").size() >= 2);
+            assertTrue(panel.getAsJsonArray("elements").size() == 1);
+            final JsonObject element = panel.getAsJsonArray("elements").get(0).getAsJsonObject();
+            assertTrue("[0,0,0]".equals(element.getAsJsonArray("from").toString().replace(" ", "")));
+            assertTrue("[16,16,16]".equals(element.getAsJsonArray("to").toString().replace(" ", "")));
+            final JsonObject faces = element.getAsJsonObject("faces");
+            for (final String face : List.of("north", "south", "east", "west", "up", "down")) {
+                assertTrue(faces.has(face), face);
+                assertTrue(faces.getAsJsonObject(face).has("tintindex"), face);
+            }
         }
 
         final List<String> modelNames = List.of("screen_tier1.json", "screen_tier2.json", "screen_tier3.json");

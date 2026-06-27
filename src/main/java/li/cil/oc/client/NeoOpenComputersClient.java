@@ -4,17 +4,20 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.API;
 import li.cil.oc.common.ManualRegistry;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.network.DebugClipboardState;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -28,6 +31,9 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 @EventBusSubscriber(modid = NeoOpenComputers.MODID, value = Dist.CLIENT)
 public final class NeoOpenComputersClient {
     private static final ResourceLocation NANOMACHINE_HUD = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "nanomachine_hud");
+    private static final int SCREEN_TIER1_COLOR = 0xABABAB;
+    private static final int SCREEN_TIER2_COLOR = 0xFFFF66;
+    private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
 
     public NeoOpenComputersClient() {
         NeoForge.EVENT_BUS.addListener(NeoOpenComputersClient::onClientTick);
@@ -77,6 +83,45 @@ public final class NeoOpenComputersClient {
                 return renderer;
             }
         }, ModItems.PRINT.get());
+    }
+
+    @SubscribeEvent
+    static void registerBlockColors(final RegisterColorHandlersEvent.Block event) {
+        event.register(
+            (state, tintGetter, pos, tintIndex) -> tintIndex == 0 ? screenTierColor(state.getBlock()) : 0xFFFFFF,
+            ModBlocks.SCREEN_TIER1.get(),
+            ModBlocks.SCREEN_TIER2.get(),
+            ModBlocks.SCREEN_TIER3.get());
+    }
+
+    @SubscribeEvent
+    static void registerItemColors(final RegisterColorHandlersEvent.Item event) {
+        event.register(
+            (stack, tintIndex) -> {
+                if (tintIndex != 0) {
+                    return 0xFFFFFF;
+                }
+                if (stack.is(ModBlocks.SCREEN_TIER3.get().asItem())) {
+                    return SCREEN_TIER3_COLOR;
+                }
+                if (stack.is(ModBlocks.SCREEN_TIER2.get().asItem())) {
+                    return SCREEN_TIER2_COLOR;
+                }
+                return SCREEN_TIER1_COLOR;
+            },
+            ModBlocks.SCREEN_TIER1.get(),
+            ModBlocks.SCREEN_TIER2.get(),
+            ModBlocks.SCREEN_TIER3.get());
+    }
+
+    private static int screenTierColor(final Block block) {
+        if (block == ModBlocks.SCREEN_TIER3.get()) {
+            return SCREEN_TIER3_COLOR;
+        }
+        if (block == ModBlocks.SCREEN_TIER2.get()) {
+            return SCREEN_TIER2_COLOR;
+        }
+        return SCREEN_TIER1_COLOR;
     }
 
     static void onClientTick(final ClientTickEvent.Post event) {
