@@ -137,7 +137,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("block.neoopencomputers.computer_case_tier" + (tier + 1));
+        return Component.translatable("gui.neoopencomputers.computer_case.title");
     }
 
     @Override

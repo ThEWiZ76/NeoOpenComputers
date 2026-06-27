@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -70,5 +72,13 @@ final class ComputerCaseRegistrationShapeTest {
         assertEquals(4, ComputerCaseBlockEntity.SLOT_CPU);
         assertEquals(5, ComputerCaseBlockEntity.SLOT_MEMORY_1);
         assertEquals(6, ComputerCaseBlockEntity.SLOT_EEPROM);
+    }
+
+    @Test
+    void computerCaseMenuProviderUsesShortUpstreamContainerTitle() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/ComputerCaseBlockEntity.java"));
+
+        assertTrue(source.contains("gui.neoopencomputers.computer_case.title"));
+        assertTrue(!source.contains("return Component.translatable(\"block.neoopencomputers.computer_case_tier\""));
     }
 }
