@@ -60,7 +60,6 @@ final class ScreenRegistrationShapeTest {
             source.indexOf("protected BlockState rotate"));
 
         assertTrue(method.contains("context.getNearestLookingDirection()"));
-        assertTrue(!method.contains("context.getClickedFace()"));
     }
 
     @Test
@@ -73,6 +72,24 @@ final class ScreenRegistrationShapeTest {
         assertTrue(method.contains("lookDirection.getOpposite()"));
         assertTrue(method.contains("final Direction yaw = context.getHorizontalDirection().getOpposite();"));
         assertTrue(!method.contains("final Direction yaw = context.getHorizontalDirection();"));
+    }
+
+    @Test
+    void screenPlacementInheritsAdjacentScreenOrientationForMultiblockBuilding() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+        final String method = source.substring(
+            source.indexOf("public BlockState getStateForPlacement"),
+            source.indexOf("protected BlockState rotate"));
+        final String helper = source.substring(
+            source.indexOf("public static BlockState inheritConnectedScreenState"),
+            source.indexOf("private static Direction localRight"));
+
+        assertTrue(method.contains("inheritConnectedScreenState(context, fallback)"));
+        assertTrue(source.contains("context.getClickedFace().getOpposite()"));
+        assertTrue(helper.contains("screenBlock.tier() != neighborScreenBlock.tier()"));
+        assertTrue(helper.contains("direction == right || direction == right.getOpposite() || direction == up || direction == up.getOpposite()"));
+        assertTrue(helper.contains(".setValue(PITCH, pitch(neighborState))"));
+        assertTrue(helper.contains(".setValue(YAW, yaw(neighborState))"));
     }
 
     @Test

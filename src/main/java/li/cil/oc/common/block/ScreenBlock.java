@@ -136,9 +136,10 @@ public class ScreenBlock extends Block implements EntityBlock {
         final Direction lookDirection = context.getNearestLookingDirection();
         final Direction pitch = lookDirection.getAxis().isVertical() ? lookDirection.getOpposite() : Direction.NORTH;
         final Direction yaw = context.getHorizontalDirection().getOpposite();
-        return defaultBlockState()
+        final BlockState fallback = defaultBlockState()
             .setValue(PITCH, pitch)
             .setValue(YAW, yaw);
+        return inheritConnectedScreenState(context, fallback);
     }
 
     @Override
@@ -172,5 +173,65 @@ public class ScreenBlock extends Block implements EntityBlock {
 
     public static Direction yaw(final BlockState state) {
         return state != null && state.hasProperty(YAW) ? state.getValue(YAW) : Direction.NORTH;
+    }
+
+    private static BlockState inheritConnectedScreenState(final BlockPlaceContext context, final BlockState fallback) {
+        final BlockPos pos = context.getClickedPos();
+        if (!context.replacingClickedOnBlock()) {
+            final BlockPos clickedPos = pos.relative(context.getClickedFace().getOpposite());
+            final BlockState clickedState = context.getLevel().getBlockState(clickedPos);
+            final BlockState inherited = inheritConnectedScreenState(fallback, clickedState, pos, clickedPos);
+            if (inherited != fallback) {
+                return inherited;
+            }
+        }
+        for (final Direction direction : Direction.values()) {
+            final BlockPos neighborPos = pos.relative(direction);
+            final BlockState neighborState = context.getLevel().getBlockState(neighborPos);
+            final BlockState inherited = inheritConnectedScreenState(fallback, neighborState, pos, neighborPos);
+            if (inherited != fallback) {
+                return inherited;
+            }
+        }
+        return fallback;
+    }
+
+    public static BlockState inheritConnectedScreenState(
+        final BlockState fallback,
+        final BlockState neighborState,
+        final BlockPos placedPos,
+        final BlockPos neighborPos) {
+        if (!(fallback.getBlock() instanceof ScreenBlock screenBlock)
+            || !(neighborState.getBlock() instanceof ScreenBlock neighborScreenBlock)
+            || screenBlock.tier() != neighborScreenBlock.tier()) {
+            return fallback;
+        }
+
+        final Direction direction = Direction.fromDelta(
+            Integer.compare(placedPos.getX(), neighborPos.getX()),
+            Integer.compare(placedPos.getY(), neighborPos.getY()),
+            Integer.compare(placedPos.getZ(), neighborPos.getZ()));
+        if (direction == null || placedPos.distManhattan(neighborPos) != 1) {
+            return fallback;
+        }
+
+        final Direction right = localRight(neighborState);
+        final Direction up = up(neighborState);
+        if (direction == right || direction == right.getOpposite() || direction == up || direction == up.getOpposite()) {
+            return fallback
+                .setValue(PITCH, pitch(neighborState))
+                .setValue(YAW, yaw(neighborState));
+        }
+        return fallback;
+    }
+
+    private static Direction localRight(final BlockState state) {
+        final Direction facing = facing(state);
+        final Direction up = up(state);
+        final int x = facing.getStepY() * up.getStepZ() - facing.getStepZ() * up.getStepY();
+        final int y = facing.getStepZ() * up.getStepX() - facing.getStepX() * up.getStepZ();
+        final int z = facing.getStepX() * up.getStepY() - facing.getStepY() * up.getStepX();
+        final Direction right = Direction.fromDelta(x, y, z);
+        return right == null ? Direction.EAST : right;
     }
 }
