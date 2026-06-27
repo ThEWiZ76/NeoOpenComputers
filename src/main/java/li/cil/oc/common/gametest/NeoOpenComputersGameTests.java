@@ -9066,6 +9066,32 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void barcodeReaderIgnoresSpoofedTabletUseMessage(final GameTestHelper helper) {
+        final BlockPos geolyzerPos = new BlockPos(1, 1, 1);
+        helper.setBlock(geolyzerPos, ModBlocks.GEOLYZER.get());
+
+        final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.BARCODE_READER_UPGRADE.get()));
+        helper.assertTrue(driver != null, "No driver for barcode reader upgrade");
+        final ManagedEnvironment environment = driver.createEnvironment(new ItemStack(ModItems.BARCODE_READER_UPGRADE.get()), new StaticPositionEnvironmentHost(helper, geolyzerPos));
+        helper.assertTrue(environment != null, "No barcode reader environment");
+
+        final CompoundTag tabletData = new CompoundTag();
+        environment.onMessage(new TestMessage(null, "tablet.use", new Object[]{
+            tabletData,
+            new ItemStack(ModItems.TABLET.get()),
+            null,
+            helper.absolutePos(geolyzerPos),
+            Direction.NORTH,
+            Float.valueOf(0.5F),
+            Float.valueOf(0.5F),
+            Float.valueOf(0.5F)
+        }));
+
+        helper.assertTrue(!tabletData.contains("analyzed"), "Barcode Reader accepted spoofed tablet.use message");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void navigationFindWaypointsReportsWaypointRedstone(final GameTestHelper helper) {
         final BlockPos hostPos = new BlockPos(1, 1, 1);
         final BlockPos waypointPos = new BlockPos(3, 1, 1);

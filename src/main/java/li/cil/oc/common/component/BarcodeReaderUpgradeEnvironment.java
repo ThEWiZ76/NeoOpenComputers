@@ -2,6 +2,8 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.internal.Tablet;
+import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Environment;
@@ -48,7 +50,7 @@ public final class BarcodeReaderUpgradeEnvironment extends AbstractManagedEnviro
     @Override
     public void onMessage(final Message message) {
         super.onMessage(message);
-        if (message == null || !"tablet.use".equals(message.name())) {
+        if (!isTabletUseMessage(message)) {
             return;
         }
         final Object[] data = message.data();
@@ -93,5 +95,16 @@ public final class BarcodeReaderUpgradeEnvironment extends AbstractManagedEnviro
             analyzed.add(nodeData);
         }
         nbt.put("analyzed", analyzed);
+    }
+
+    private static boolean isTabletUseMessage(final Message message) {
+        if (message == null || !"tablet.use".equals(message.name())) {
+            return false;
+        }
+        final Node source = message.source();
+        if (source == null || !(source.host() instanceof Machine machine)) {
+            return false;
+        }
+        return machine.host() instanceof Tablet;
     }
 }
