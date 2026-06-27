@@ -7,8 +7,6 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -16,40 +14,25 @@ public class DiskDriveMenu extends AbstractContainerMenu {
     public static final int DRIVE_SLOT_COUNT = DiskDriveBlockEntity.CONTAINER_SIZE;
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int TOTAL_SLOT_COUNT = DRIVE_SLOT_COUNT + PLAYER_SLOT_COUNT;
-    public static final int DRIVE_MEDIA_STATE_INDEX = 0;
-    public static final int DRIVE_DATA_COUNT = 1;
-    public static final int STATE_EMPTY = 0;
-    public static final int STATE_LOADED = 1;
 
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 84;
     private static final int PLAYER_HOTBAR_Y = 142;
 
     private final Container diskInventory;
-    private final ContainerData driveData;
 
     public DiskDriveMenu(final int containerId, final Inventory playerInventory) {
-        this(containerId, playerInventory, new SimpleContainer(DRIVE_SLOT_COUNT), new SimpleContainerData(DRIVE_DATA_COUNT));
+        this(containerId, playerInventory, new SimpleContainer(DRIVE_SLOT_COUNT));
     }
 
     public DiskDriveMenu(final int containerId, final Inventory playerInventory, final Container diskInventory) {
-        this(containerId, playerInventory, diskInventory, driveData(diskInventory));
-    }
-
-    public DiskDriveMenu(final int containerId, final Inventory playerInventory, final Container diskInventory, final ContainerData driveData) {
         super(ModMenus.DISK_DRIVE.get(), containerId);
         checkContainerSize(diskInventory, DRIVE_SLOT_COUNT);
         this.diskInventory = diskInventory;
-        this.driveData = driveData;
         diskInventory.startOpen(playerInventory.player);
-        addDataSlots(driveData);
 
         addSlot(new Slot(diskInventory, DiskDriveBlockEntity.SLOT_FLOPPY, 80, 35));
         addPlayerInventory(playerInventory);
-    }
-
-    public int mediaState() {
-        return driveData.get(DRIVE_MEDIA_STATE_INDEX);
     }
 
     @Override
@@ -85,28 +68,6 @@ public class DiskDriveMenu extends AbstractContainerMenu {
     public void removed(final Player player) {
         super.removed(player);
         diskInventory.stopOpen(player);
-    }
-
-    public static int mediaStateFor(final Container diskInventory) {
-        return diskInventory != null && !diskInventory.isEmpty() ? STATE_LOADED : STATE_EMPTY;
-    }
-
-    private static ContainerData driveData(final Container diskInventory) {
-        return new ContainerData() {
-            @Override
-            public int get(final int index) {
-                return index == DRIVE_MEDIA_STATE_INDEX ? mediaStateFor(diskInventory) : 0;
-            }
-
-            @Override
-            public void set(final int index, final int value) {
-            }
-
-            @Override
-            public int getCount() {
-                return DRIVE_DATA_COUNT;
-            }
-        };
     }
 
     private void addPlayerInventory(final Inventory playerInventory) {

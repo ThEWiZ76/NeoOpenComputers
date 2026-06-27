@@ -90,7 +90,6 @@ import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.menu.ChargerMenu;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
-import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
 import li.cil.oc.common.network.RackNetworking;
@@ -9555,20 +9554,16 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void diskDriveMenuReportsMediaState(final GameTestHelper helper) {
+    public static void diskDriveKeepsFacingOnlyStateWhenMediaChanges(final GameTestHelper helper) {
         final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
         helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
         final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
         final BlockState emptyState = helper.getBlockState(diskDrivePos);
 
-        helper.assertTrue(DiskDriveMenu.mediaStateFor(diskDrive) == DiskDriveMenu.STATE_EMPTY, "Empty disk drive did not report empty media state");
-
         diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
-        helper.assertTrue(DiskDriveMenu.mediaStateFor(diskDrive) == DiskDriveMenu.STATE_LOADED, "Loaded disk drive did not report loaded media state");
         helper.assertTrue(helper.getBlockState(diskDrivePos).equals(emptyState), "Loaded disk drive should keep upstream facing-only blockstate");
 
         diskDrive.removeItem(DiskDriveBlockEntity.SLOT_FLOPPY, 1);
-        helper.assertTrue(DiskDriveMenu.mediaStateFor(diskDrive) == DiskDriveMenu.STATE_EMPTY, "Ejected disk drive did not report empty media state");
         helper.assertTrue(helper.getBlockState(diskDrivePos).equals(emptyState), "Ejected disk drive should keep upstream facing-only blockstate");
         helper.succeed();
     }
@@ -9599,7 +9594,6 @@ public final class NeoOpenComputersGameTests {
         final DiskDriveBlockEntity loaded = helper.getBlockEntity(loadedDiskDrivePos);
         loaded.loadWithComponents(saved, helper.getLevel().registryAccess());
 
-        helper.assertTrue(DiskDriveMenu.mediaStateFor(loaded) == DiskDriveMenu.STATE_LOADED, "Reloaded disk drive did not report loaded media");
         helper.assertTrue(loaded.getItem(DiskDriveBlockEntity.SLOT_FLOPPY).is(ModItems.FLOPPY.get()), "Reloaded disk drive lost floppy");
         assertStorageStackContainsFile(helper, loaded.getItem(DiskDriveBlockEntity.SLOT_FLOPPY), "drive.txt", "Reloaded writable floppy");
         helper.succeed();
