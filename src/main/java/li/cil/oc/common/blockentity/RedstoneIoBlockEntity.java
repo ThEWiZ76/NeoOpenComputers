@@ -27,7 +27,9 @@ import java.util.Map;
 public class RedstoneIoBlockEntity extends BlockEntity implements Environment, RedstoneControllerHost, DeviceInfo {
     private static final String TAG_NODE = "node";
     private static final String TAG_OUTPUTS = "oc:redstoneOutputs";
+    private static final String TAG_BUNDLED_OUTPUTS = "oc:bundledRedstoneOutputs";
     private static final String TAG_WAKE_THRESHOLD = "oc:wakeThreshold";
+    private static final int COLOR_COUNT = 16;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Communication,
         DeviceInfo.DeviceAttribute.Description, "Redstone controller",
@@ -39,6 +41,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
 
     private final int[] outputs = new int[6];
     private final int[] inputs = new int[6];
+    private final int[][] bundledOutputs = new int[6][COLOR_COUNT];
     private Node node;
     private int wakeThreshold;
 
@@ -206,6 +209,61 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         return new Object[]{oldValue};
     }
 
+    @Callback(direct = true, doc = "function([side:number[, color:number]]):number or table -- Get bundled redstone input.")
+    public Object[] getBundledInput(final Context context, final Arguments args) {
+        final BundleKey key = bundleKey(args);
+        if (key.hasColor()) {
+            return new Object[]{0};
+        }
+        if (key.hasSide()) {
+            return new Object[]{colorsToMap(new int[COLOR_COUNT])};
+        }
+        final Map<Integer, Map<Integer, Integer>> result = new HashMap<>();
+        for (Direction direction : Direction.values()) {
+            result.put(direction.get3DDataValue(), colorsToMap(new int[COLOR_COUNT]));
+        }
+        return new Object[]{result};
+    }
+
+    @Callback(direct = true, doc = "function([side:number[, color:number]]):number or table -- Get bundled redstone output.")
+    public Object[] getBundledOutput(final Context context, final Arguments args) {
+        final BundleKey key = bundleKey(args);
+        if (key.hasColor()) {
+            return new Object[]{bundledOutput(key.side(), key.color())};
+        }
+        if (key.hasSide()) {
+            return new Object[]{colorsToMap(bundledOutputs[key.side().get3DDataValue()])};
+        }
+        return new Object[]{sidesToMap(bundledOutputs)};
+    }
+
+    @Callback(doc = "function([side:number[, color:number,]] value:number or table):number or table -- Set bundled redstone output and return previous value.")
+    public Object[] setBundledOutput(final Context context, final Arguments args) {
+        final Object result;
+        final boolean changed;
+        if (args.count() == 3) {
+            final Direction direction = side(args.checkInteger(0));
+            final int color = color(args.checkInteger(1));
+            final int oldValue = bundledOutput(direction, color);
+            result = oldValue;
+            changed = oldValue != setBundledOutput(direction, color, args.checkInteger(2));
+        } else if (args.count() == 2) {
+            final Direction direction = side(args.checkInteger(0));
+            result = colorsToMap(bundledOutputs[direction.get3DDataValue()]);
+            changed = setBundledOutputs(direction, args.checkTable(1));
+        } else if (args.count() == 1 && args.isTable(0)) {
+            result = sidesToMap(bundledOutputs);
+            changed = setBundledOutputs(args.checkTable(0));
+        } else {
+            throw new IllegalArgumentException("invalid number of arguments, expected 1, 2, or 3");
+        }
+        final double redstoneDelay = ModSettings.redstoneDelay();
+        if (changed && context != null && redstoneDelay > 0D) {
+            context.pause(redstoneDelay);
+        }
+        return new Object[]{result};
+    }
+
     public void updateRedstoneInputs() {
         if (level == null) {
             return;
@@ -237,6 +295,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         for (int index = 0; index < outputs.length; index++) {
             outputs[index] = index < saved.length ? Math.clamp(saved[index], 0, 15) : 0;
         }
+        loadBundledOutputs(tag.getIntArray(TAG_BUNDLED_OUTPUTS));
     }
 
     @Override
@@ -245,6 +304,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         saveNode(tag);
         tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_OUTPUTS, outputs);
+        tag.putIntArray(TAG_BUNDLED_OUTPUTS, saveBundledOutputs());
     }
 
     @Override
@@ -279,6 +339,63 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         return changed;
     }
 
+    private int bundledOutput(final Direction direction, final int color) {
+        return bundledOutputs[direction.get3DDataValue()][color];
+    }
+
+    private int setBundledOutput(final Direction direction, final int color, final int value) {
+        final int side = direction.get3DDataValue();
+        final int oldValue = bundledOutputs[side][color];
+        final int newValue = Math.clamp(value, 0, 255);
+        if (oldValue != newValue) {
+            bundledOutputs[side][color] = newValue;
+            setChanged();
+        }
+        return newValue;
+    }
+
+    private boolean setBundledOutputs(final Direction direction, final Map<?, ?> values) {
+        boolean changed = false;
+        for (Map.Entry<?, ?> entry : values.entrySet()) {
+            if (entry.getKey() instanceof Number color && entry.getValue() instanceof Number value) {
+                final int checkedColor = color(color.intValue());
+                final int oldValue = bundledOutput(direction, checkedColor);
+                final int newValue = setBundledOutput(direction, checkedColor, value.intValue());
+                changed |= oldValue != newValue;
+            }
+        }
+        return changed;
+    }
+
+    private boolean setBundledOutputs(final Map<?, ?> values) {
+        boolean changed = false;
+        for (Map.Entry<?, ?> entry : values.entrySet()) {
+            if (entry.getKey() instanceof Number side && entry.getValue() instanceof Map<?, ?> colors) {
+                changed |= setBundledOutputs(side(side.intValue()), colors);
+            }
+        }
+        return changed;
+    }
+
+    private int[] saveBundledOutputs() {
+        final int[] saved = new int[outputs.length * COLOR_COUNT];
+        for (Direction direction : Direction.values()) {
+            final int side = direction.get3DDataValue();
+            System.arraycopy(bundledOutputs[side], 0, saved, side * COLOR_COUNT, COLOR_COUNT);
+        }
+        return saved;
+    }
+
+    private void loadBundledOutputs(final int[] saved) {
+        for (Direction direction : Direction.values()) {
+            final int side = direction.get3DDataValue();
+            for (int color = 0; color < COLOR_COUNT; color++) {
+                final int index = side * COLOR_COUNT + color;
+                bundledOutputs[side][color] = index < saved.length ? Math.clamp(saved[index], 0, 255) : 0;
+            }
+        }
+    }
+
     private void saveNode(final CompoundTag tag) {
         if (node() == null) {
             return;
@@ -308,11 +425,53 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         return Direction.from3DDataValue(value);
     }
 
+    private static int color(final int value) {
+        if (value < 0 || value >= COLOR_COUNT) {
+            throw new IllegalArgumentException("invalid color");
+        }
+        return value;
+    }
+
+    private static BundleKey bundleKey(final Arguments args) {
+        return switch (args.count()) {
+            case 0 -> new BundleKey(null, -1);
+            case 1 -> new BundleKey(side(args.checkInteger(0)), -1);
+            case 2 -> new BundleKey(side(args.checkInteger(0)), color(args.checkInteger(1)));
+            default -> throw new IllegalArgumentException("too many arguments, expected 0, 1, or 2");
+        };
+    }
+
     private static Map<Integer, Integer> valuesToMap(final int[] values) {
         final Map<Integer, Integer> result = new HashMap<>();
         for (Direction direction : Direction.values()) {
             result.put(direction.get3DDataValue(), values[direction.get3DDataValue()]);
         }
         return result;
+    }
+
+    private static Map<Integer, Integer> colorsToMap(final int[] values) {
+        final Map<Integer, Integer> result = new HashMap<>();
+        for (int color = 0; color < COLOR_COUNT; color++) {
+            result.put(color, color < values.length ? values[color] : 0);
+        }
+        return result;
+    }
+
+    private static Map<Integer, Map<Integer, Integer>> sidesToMap(final int[][] values) {
+        final Map<Integer, Map<Integer, Integer>> result = new HashMap<>();
+        for (Direction direction : Direction.values()) {
+            result.put(direction.get3DDataValue(), colorsToMap(values[direction.get3DDataValue()]));
+        }
+        return result;
+    }
+
+    private record BundleKey(Direction side, int color) {
+        private boolean hasSide() {
+            return side != null;
+        }
+
+        private boolean hasColor() {
+            return side != null && color >= 0;
+        }
     }
 }

@@ -58,6 +58,9 @@ final class RedstoneIoRegistrationShapeTest {
         assertCallback("getOutput");
         assertCallback("setOutput");
         assertCallback("getComparatorInput");
+        assertCallback("getBundledInput");
+        assertCallback("getBundledOutput");
+        assertCallback("setBundledOutput");
     }
 
     @Test
@@ -103,6 +106,37 @@ final class RedstoneIoRegistrationShapeTest {
             redstone.getOutput(null, new TestArguments(2, "ignored"))[0]);
     }
 
+    @Test
+    void bundledRedstoneCallbacksUseUpstreamShapes() throws Exception {
+        final RedstoneIoBlockEntity redstone = allocateRedstoneIo();
+        initializeArrays(redstone);
+
+        assertEquals(Map.ofEntries(
+                Map.entry(0, 0), Map.entry(1, 0), Map.entry(2, 0), Map.entry(3, 0),
+                Map.entry(4, 0), Map.entry(5, 0), Map.entry(6, 0), Map.entry(7, 0),
+                Map.entry(8, 0), Map.entry(9, 0), Map.entry(10, 0), Map.entry(11, 0),
+                Map.entry(12, 0), Map.entry(13, 0), Map.entry(14, 0), Map.entry(15, 0)),
+            redstone.getBundledInput(null, new TestArguments(2))[0]);
+        assertEquals(0, redstone.getBundledOutput(null, new TestArguments(2, 5))[0]);
+
+        assertArrayEquals(new Object[]{0}, redstone.setBundledOutput(null, new TestArguments(2, 5, 200)));
+        assertEquals(200, redstone.getBundledOutput(null, new TestArguments(2, 5))[0]);
+
+        final Map<Integer, Integer> colors = new java.util.HashMap<>();
+        colors.put(0, 10);
+        colors.put(15, 300);
+        final Object previousColors = redstone.setBundledOutput(null, new TestArguments(2, colors))[0];
+        assertTrue(previousColors instanceof Map<?, ?>);
+        assertEquals(10, redstone.getBundledOutput(null, new TestArguments(2, 0))[0]);
+        assertEquals(255, redstone.getBundledOutput(null, new TestArguments(2, 15))[0]);
+
+        final Map<Integer, Map<Integer, Integer>> sides = new java.util.HashMap<>();
+        sides.put(5, Map.of(3, 7));
+        final Object previousSides = redstone.setBundledOutput(null, new TestArguments(sides))[0];
+        assertTrue(previousSides instanceof Map<?, ?>);
+        assertEquals(7, redstone.getBundledOutput(null, new TestArguments(5, 3))[0]);
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = RedstoneIoBlockEntity.class.getMethod(methodName, li.cil.oc.api.machine.Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
@@ -117,6 +151,7 @@ final class RedstoneIoRegistrationShapeTest {
     private static void initializeArrays(final RedstoneIoBlockEntity redstone) throws Exception {
         setField(redstone, "outputs", new int[6]);
         setField(redstone, "inputs", new int[6]);
+        setField(redstone, "bundledOutputs", new int[6][16]);
     }
 
     private static void setField(final RedstoneIoBlockEntity redstone, final String name, final Object value) throws Exception {
