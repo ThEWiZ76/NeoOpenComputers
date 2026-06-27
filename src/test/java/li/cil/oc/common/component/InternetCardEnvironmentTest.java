@@ -25,6 +25,8 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -76,6 +78,16 @@ final class InternetCardEnvironmentTest {
         for (final String className : nestedClasses) {
             assertEquals(className, Class.forName(className, false, InternetCardEnvironment.class.getClassLoader()).getName());
         }
+    }
+
+    @Test
+    void nestedInternetPreloadListDoesNotLoadNestedTypesBeforePreloadRuns() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/component/InternetCardEnvironment.java"));
+        final int listStart = source.indexOf("PRELOADED_NESTED_CLASS_NAMES = List.of(");
+        final int listEnd = source.indexOf(");", listStart);
+        final String listSource = source.substring(listStart, listEnd);
+
+        assertFalse(listSource.contains(".class.getName()"));
     }
 
     @Test

@@ -57,14 +57,14 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         DeviceInfo.DeviceAttribute.Product, "SuperLink X-D4NK"
     );
     private static final List<String> PRELOADED_NESTED_CLASS_NAMES = List.of(
-        InternetCardEnvironment.HttpTransport.class.getName(),
-        InternetCardEnvironment.HttpResponse.class.getName(),
-        InternetCardEnvironment.HttpRequest.class.getName(),
-        InternetCardEnvironment.TcpAddress.class.getName(),
-        InternetCardEnvironment.TcpSocket.class.getName(),
-        InternetCardEnvironment.InternetFilteringRule.class.getName(),
-        InternetCardEnvironment.RulePredicate.class.getName(),
-        InternetCardEnvironment.InetAddressRange.class.getName()
+        "li.cil.oc.common.component.InternetCardEnvironment$HttpTransport",
+        "li.cil.oc.common.component.InternetCardEnvironment$HttpResponse",
+        "li.cil.oc.common.component.InternetCardEnvironment$HttpRequest",
+        "li.cil.oc.common.component.InternetCardEnvironment$TcpAddress",
+        "li.cil.oc.common.component.InternetCardEnvironment$TcpSocket",
+        "li.cil.oc.common.component.InternetCardEnvironment$InternetFilteringRule",
+        "li.cil.oc.common.component.InternetCardEnvironment$RulePredicate",
+        "li.cil.oc.common.component.InternetCardEnvironment$InetAddressRange"
     );
 
     static {
