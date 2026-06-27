@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ComputerCaseNetworkingTest {
@@ -54,6 +55,13 @@ final class ComputerCaseNetworkingTest {
         assertEquals(0, toggles.get());
     }
 
+    @Test
+    void computerCaseStartErrorMessageShowsLastErrorLikeUpstreamAnalyzerFeedback() {
+        assertEquals("Last error: no bios found", ComputerCaseNetworking.startErrorMessage(machine(new AtomicBoolean(false), "no bios found")).getString());
+        assertNull(ComputerCaseNetworking.startErrorMessage(machine(new AtomicBoolean(false), null)));
+        assertNull(ComputerCaseNetworking.startErrorMessage(machine(new AtomicBoolean(false), "")));
+    }
+
     private static ComputerCaseMenu allocateMenu(final int containerId, final ComputerCaseBlockEntity computer) throws Exception {
         final ComputerCaseMenu menu = (ComputerCaseMenu) unsafe().allocateInstance(ComputerCaseMenu.class);
         setField(menu, AbstractContainerMenu.class, "containerId", containerId);
@@ -70,6 +78,10 @@ final class ComputerCaseNetworkingTest {
     }
 
     private static Machine machine(final AtomicBoolean running) {
+        return machine(running, null);
+    }
+
+    private static Machine machine(final AtomicBoolean running, final String lastError) {
         return (Machine) Proxy.newProxyInstance(ComputerCaseNetworkingTest.class.getClassLoader(), new Class<?>[]{Machine.class}, (proxy, method, args) -> switch (method.getName()) {
             case "isRunning" -> running.get();
             case "isPaused" -> false;
@@ -80,7 +92,8 @@ final class ComputerCaseNetworkingTest {
             case "getCostPerTick", "upTime", "cpuTime", "worldTime" -> 0;
             case "components", "methods" -> Map.of();
             case "users" -> new String[0];
-            case "tmpAddress", "lastError", "node" -> null;
+            case "lastError" -> lastError;
+            case "tmpAddress", "node" -> null;
             default -> defaultValue(method.getReturnType());
         });
     }
