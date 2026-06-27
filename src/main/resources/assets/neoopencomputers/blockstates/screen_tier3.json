@@ -1,9 +1,9 @@
 {
   "variants": {
-    "pitch=north,yaw=north": { "model": "neoopencomputers:block/screen_tier3" },
-    "pitch=north,yaw=south": { "model": "neoopencomputers:block/screen_tier3", "y": 180 },
-    "pitch=north,yaw=east": { "model": "neoopencomputers:block/screen_tier3", "y": 90 },
-    "pitch=north,yaw=west": { "model": "neoopencomputers:block/screen_tier3", "y": 270 },
+    "pitch=north,yaw=north": { "model": "neoopencomputers:block/screen_tier3", "y": 180 },
+    "pitch=north,yaw=south": { "model": "neoopencomputers:block/screen_tier3" },
+    "pitch=north,yaw=east": { "model": "neoopencomputers:block/screen_tier3", "y": 270 },
+    "pitch=north,yaw=west": { "model": "neoopencomputers:block/screen_tier3", "y": 90 },
     "pitch=up,yaw=north": { "model": "neoopencomputers:block/screen_tier3_horizontal", "x": 90 },
     "pitch=up,yaw=south": { "model": "neoopencomputers:block/screen_tier3_horizontal", "x": 90, "y": 180 },
     "pitch=up,yaw=east": { "model": "neoopencomputers:block/screen_tier3_horizontal", "x": 90, "y": 270 },
