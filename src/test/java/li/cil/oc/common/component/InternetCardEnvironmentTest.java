@@ -66,6 +66,19 @@ final class InternetCardEnvironmentTest {
     }
 
     @Test
+    void preloadsNestedInternetClassesBeforeLazyCardUse() throws Exception {
+        final List<String> nestedClasses = InternetCardEnvironment.preloadedNestedClassNames();
+
+        assertTrue(nestedClasses.contains(InternetCardEnvironment.HttpTransport.class.getName()));
+        assertTrue(nestedClasses.contains(InternetCardEnvironment.HttpResponse.class.getName()));
+        assertTrue(nestedClasses.contains(InternetCardEnvironment.HttpRequest.class.getName()));
+        assertTrue(nestedClasses.contains(InternetCardEnvironment.TcpSocket.class.getName()));
+        for (final String className : nestedClasses) {
+            assertEquals(className, Class.forName(className, false, InternetCardEnvironment.class.getClassLoader()).getName());
+        }
+    }
+
+    @Test
     void internetExecutorUsesConfiguredThreadLimit() throws Exception {
         Field executorField = InternetCardEnvironment.class.getDeclaredField("HTTP_EXECUTOR");
         executorField.setAccessible(true);

@@ -56,6 +56,20 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         DeviceInfo.DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG",
         DeviceInfo.DeviceAttribute.Product, "SuperLink X-D4NK"
     );
+    private static final List<String> PRELOADED_NESTED_CLASS_NAMES = List.of(
+        InternetCardEnvironment.HttpTransport.class.getName(),
+        InternetCardEnvironment.HttpResponse.class.getName(),
+        InternetCardEnvironment.HttpRequest.class.getName(),
+        InternetCardEnvironment.TcpAddress.class.getName(),
+        InternetCardEnvironment.TcpSocket.class.getName(),
+        InternetCardEnvironment.InternetFilteringRule.class.getName(),
+        InternetCardEnvironment.RulePredicate.class.getName(),
+        InternetCardEnvironment.InetAddressRange.class.getName()
+    );
+
+    static {
+        preloadNestedClasses();
+    }
 
     private final HttpTransport transport;
     private final Set<Object> connections = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -70,6 +84,21 @@ public class InternetCardEnvironment extends AbstractManagedEnvironment implemen
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create());
+        }
+    }
+
+    static List<String> preloadedNestedClassNames() {
+        return PRELOADED_NESTED_CLASS_NAMES;
+    }
+
+    private static void preloadNestedClasses() {
+        final ClassLoader loader = InternetCardEnvironment.class.getClassLoader();
+        for (final String className : PRELOADED_NESTED_CLASS_NAMES) {
+            try {
+                Class.forName(className, true, loader);
+            } catch (final ClassNotFoundException e) {
+                throw new ExceptionInInitializerError(e);
+            }
         }
     }
 
