@@ -4,6 +4,7 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.world.Container;
+import net.minecraft.world.MenuProvider;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +40,7 @@ final class ChargerBlockEntityTest {
     @Test
     void exposesOneChargeableInventorySlotLikeUpstream() {
         assertTrue(Container.class.isAssignableFrom(ChargerBlockEntity.class));
+        assertTrue(MenuProvider.class.isAssignableFrom(ChargerBlockEntity.class));
         assertEquals(1, ChargerBlockEntity.CONTAINER_SIZE);
     }
 

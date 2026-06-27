@@ -87,6 +87,7 @@ import li.cil.oc.common.item.TexturePickerItem;
 import li.cil.oc.common.item.WrenchItem;
 import li.cil.oc.common.item.data.PrintData;
 import li.cil.oc.common.menu.AssemblerMenu;
+import li.cil.oc.common.menu.ChargerMenu;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
@@ -7251,6 +7252,22 @@ public final class NeoOpenComputersGameTests {
         final String analysis = lines.stream().map(Component::getString).collect(java.util.stream.Collectors.joining("\n"));
 
         helper.assertTrue(analysis.contains("Charge speed: 66%"), "Analyzer did not report charger speed:\n" + analysis);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void chargerRightClickOpensChargingMenu(final GameTestHelper helper) {
+        final BlockPos chargerPos = new BlockPos(1, 1, 1);
+        helper.setBlock(chargerPos, ModBlocks.CHARGER.get());
+
+        final Player player = helper.makeMockServerPlayerInLevel();
+        final BlockPos absolutePos = helper.absolutePos(chargerPos);
+        final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absolutePos), Direction.UP, absolutePos, false);
+
+        final InteractionResult result = invokeUseWithoutItem(helper.getBlockState(chargerPos), helper, chargerPos, player, hit);
+
+        helper.assertTrue(result == InteractionResult.CONSUME, "Charger right-click did not consume interaction");
+        helper.assertTrue(player.containerMenu instanceof ChargerMenu, "Charger right-click did not open ChargerMenu");
         helper.succeed();
     }
 

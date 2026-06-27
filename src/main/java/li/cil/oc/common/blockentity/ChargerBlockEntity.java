@@ -14,15 +14,20 @@ import li.cil.oc.common.ItemCharges;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.menu.ChargerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -32,7 +37,7 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
 import java.util.EnumSet;
 import java.util.Map;
 
-public class ChargerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, DeviceInfo, StateAware, Container {
+public class ChargerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, DeviceInfo, StateAware, Container, MenuProvider {
     public static final int SLOT_CHARGEABLE = 0;
     public static final int CONTAINER_SIZE = 1;
 
@@ -87,6 +92,16 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     @Override
     public Map<String, String> getDeviceInfo() {
         return deviceInfo();
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.charger");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new ChargerMenu(containerId, playerInventory, this);
     }
 
     @Override

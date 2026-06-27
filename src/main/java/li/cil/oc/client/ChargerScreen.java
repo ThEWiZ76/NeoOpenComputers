@@ -1,0 +1,50 @@
+package li.cil.oc.client;
+
+import li.cil.oc.common.menu.ChargerMenu;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+
+import java.util.List;
+
+public class ChargerScreen extends AbstractContainerScreen<ChargerMenu> {
+    public ChargerScreen(final ChargerMenu menu, final Inventory playerInventory, final Component title) {
+        super(menu, playerInventory, title);
+        imageHeight = 166;
+        inventoryLabelY = imageHeight - 94;
+    }
+
+    @Override
+    protected void renderBg(final GuiGraphics guiGraphics, final float partialTick, final int mouseX, final int mouseY) {
+        final int left = leftPos;
+        final int top = topPos;
+        guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
+        guiGraphics.fill(left + 7, top + 16, left + 169, top + 76, 0xFF3B4252);
+        drawSlot(guiGraphics, left + 79, top + 34);
+        guiGraphics.drawString(font, statusLabel(), left + 8, top + 62, 0xFFD8DEE9, false);
+    }
+
+    @Override
+    public void render(final GuiGraphics guiGraphics, final int mouseX, final int mouseY, final float partialTick) {
+        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        renderTooltip(guiGraphics, mouseX, mouseY);
+        if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
+            guiGraphics.renderComponentTooltip(font, statusTooltip(), mouseX, mouseY);
+        }
+    }
+
+    public static Component statusLabel() {
+        return Component.translatable("gui.neoopencomputers.charger.status");
+    }
+
+    public static List<Component> statusTooltip() {
+        return List.of(statusLabel(), Component.translatable("gui.neoopencomputers.charger.slot"));
+    }
+
+    private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
+        guiGraphics.fill(left - 1, top - 1, left + 17, top + 17, 0xFF1F232B);
+        guiGraphics.fill(left, top, left + 16, top + 16, 0xFF4C566A);
+    }
+}

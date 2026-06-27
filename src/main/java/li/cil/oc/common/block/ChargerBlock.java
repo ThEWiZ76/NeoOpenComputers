@@ -6,6 +6,7 @@ import li.cil.oc.common.WrenchTools;
 import li.cil.oc.common.blockentity.ChargerBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
@@ -59,6 +60,23 @@ public class ChargerBlock extends Block implements EntityBlock {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         updateChargeSpeed(level, pos);
         BlockNetworkConnector.joinIfServer(level, pos);
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final BlockHitResult hitResult) {
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        if (level.getBlockEntity(pos) instanceof ChargerBlockEntity charger) {
+            player.openMenu(charger);
+            return InteractionResult.CONSUME;
+        }
+        return InteractionResult.PASS;
     }
 
     @Override

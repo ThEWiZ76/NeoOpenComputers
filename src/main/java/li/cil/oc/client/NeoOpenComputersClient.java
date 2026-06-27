@@ -46,6 +46,7 @@ public final class NeoOpenComputersClient {
     @SubscribeEvent
     static void registerMenuScreens(final RegisterMenuScreensEvent event) {
         event.register(ModMenus.ASSEMBLER.get(), AssemblerScreen::new);
+        event.register(ModMenus.CHARGER.get(), ChargerScreen::new);
         event.register(ModMenus.COMPUTER_CASE.get(), ComputerCaseScreen::new);
         event.register(ModMenus.DISASSEMBLER.get(), DisassemblerScreen::new);
         event.register(ModMenus.DISK_DRIVE.get(), DiskDriveScreen::new);

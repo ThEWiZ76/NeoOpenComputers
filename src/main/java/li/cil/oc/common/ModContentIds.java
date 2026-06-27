@@ -24,6 +24,7 @@ public final class ModContentIds {
     public static final String CAPACITOR = "capacitor";
     public static final String CHARGER = "charger";
     public static final String CHARGER_BLOCK_ENTITY = "charger";
+    public static final String CHARGER_MENU = "charger";
     public static final String CHAMELIUM = "chamelium";
     public static final String CHAMELIUM_BLOCK = "chamelium_block";
     public static final String CHUNKLOADER_UPGRADE = "chunkloader_upgrade";
