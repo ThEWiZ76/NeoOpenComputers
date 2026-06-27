@@ -23,6 +23,7 @@ public final class ModContentIds {
     public static final String CARD = "card";
     public static final String CAPACITOR = "capacitor";
     public static final String CHAMELIUM = "chamelium";
+    public static final String CHAMELIUM_BLOCK = "chamelium_block";
     public static final String CHUNKLOADER_UPGRADE = "chunkloader_upgrade";
     public static final String COMPONENT_BUS_TIER1 = "component_bus_tier1";
     public static final String COMPONENT_BUS_TIER2 = "component_bus_tier2";

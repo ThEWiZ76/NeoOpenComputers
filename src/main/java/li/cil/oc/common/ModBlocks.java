@@ -4,6 +4,7 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.block.AdapterBlock;
 import li.cil.oc.common.block.AssemblerBlock;
 import li.cil.oc.common.block.CableBlock;
+import li.cil.oc.common.block.ChameliumBlock;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DisassemblerBlock;
 import li.cil.oc.common.block.DiskDriveBlock;
@@ -44,6 +45,10 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> CABLE = BLOCKS.register(
         ModContentIds.CABLE,
         () -> new CableBlock(cableProperties()));
+
+    public static final DeferredBlock<Block> CHAMELIUM_BLOCK = BLOCKS.register(
+        ModContentIds.CHAMELIUM_BLOCK,
+        () -> new ChameliumBlock(chameliumBlockProperties()));
 
     public static final DeferredBlock<Block> COMPUTER_CASE_TIER1 = BLOCKS.register(
         ModContentIds.COMPUTER_CASE_TIER1,
@@ -158,6 +163,12 @@ public final class ModBlocks {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_GRAY)
             .strength(0.5F, 1.0F);
+    }
+
+    private static BlockBehaviour.Properties chameliumBlockProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_BLACK)
+            .strength(1.5F, 6.0F);
     }
 
     private static BlockBehaviour.Properties adapterProperties() {

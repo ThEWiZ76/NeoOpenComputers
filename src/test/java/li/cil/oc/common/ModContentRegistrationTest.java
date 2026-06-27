@@ -75,6 +75,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void chameliumBlockIdIsStable() {
+        assertEquals("chamelium_block", ModContentIds.CHAMELIUM_BLOCK);
+    }
+
+    @Test
     void analyzerItemIdIsStable() {
         assertEquals("analyzer", ModContentIds.ANALYZER);
     }

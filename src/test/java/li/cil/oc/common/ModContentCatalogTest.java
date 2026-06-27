@@ -111,6 +111,20 @@ final class ModContentCatalogTest {
     }
 
     @Test
+    void registersUpstreamChameliumBlockApiNames() {
+        final ItemRegistry registry = new ItemRegistry();
+
+        ModContentCatalog.registerChameliumBlock(registry, null, null);
+
+        assertNotNull(registry.get(ModContentIds.CHAMELIUM_BLOCK));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CHAMELIUM_BLOCK));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_CHAMELIUM_BLOCK_UPSTREAM));
+        assertEquals(ModContentIds.CHAMELIUM_BLOCK, registry.get(ModContentIds.CHAMELIUM_BLOCK).name());
+        assertEquals(ModContentCatalog.COMPAT_CHAMELIUM_BLOCK, registry.get(ModContentCatalog.COMPAT_CHAMELIUM_BLOCK).name());
+        assertEquals(ModContentCatalog.COMPAT_CHAMELIUM_BLOCK_UPSTREAM, registry.get(ModContentCatalog.COMPAT_CHAMELIUM_BLOCK_UPSTREAM).name());
+    }
+
+    @Test
     void registersInitialApiItemNames() throws ReflectiveOperationException {
         final ItemRegistry registry = new ItemRegistry();
 

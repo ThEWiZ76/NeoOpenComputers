@@ -51,6 +51,7 @@ final class RecipeResourceTest {
             ModContentIds.INK_CARTRIDGE,
             ModContentIds.BUTTON_GROUP,
             ModContentIds.CHAMELIUM,
+            ModContentIds.CHAMELIUM_BLOCK,
             ModContentIds.ARROW_KEYS,
             ModContentIds.NUM_PAD,
             ModContentIds.ANALYZER,
@@ -720,6 +721,19 @@ final class RecipeResourceTest {
         assertItem(keys, "C", "minecraft:charcoal");
         assertItem(keys, "W", "minecraft:water_bucket");
         assertResultCount(chamelium, 16);
+    }
+
+    @Test
+    void chameliumBlockRecipesUseUpstreamRecrafting() throws IOException {
+        JsonObject block = readJson(RECIPE_ROOT.resolve(ModContentIds.CHAMELIUM_BLOCK + ".json"));
+        JsonObject split = readJson(RECIPE_ROOT.resolve(ModContentIds.CHAMELIUM + "_from_block.json"));
+
+        assertPattern(block, "CCC", "CCC", "CCC");
+        assertItem(block.getAsJsonObject("key"), "C", "neoopencomputers:" + ModContentIds.CHAMELIUM);
+        assertResultCount(block, 1);
+        assertEquals("minecraft:crafting_shapeless", split.get("type").getAsString());
+        assertIngredientItem(split, "neoopencomputers:" + ModContentIds.CHAMELIUM_BLOCK);
+        assertResultCount(split, 9);
     }
 
     @Test

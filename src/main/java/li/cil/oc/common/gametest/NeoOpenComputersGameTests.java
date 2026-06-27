@@ -4005,6 +4005,24 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chameliumBlockRecipesUseUpstreamRecrafting(final GameTestHelper helper) {
+        helper.assertTrue(API.items.get("chameliumBlock") != null, "Chamelium Block missing camelCase API name");
+        helper.assertTrue(API.items.get("chameliumblock") != null, "Chamelium Block missing lowercase upstream API name");
+        helper.setBlock(BlockPos.ZERO, ModBlocks.CHAMELIUM_BLOCK.get());
+        helper.assertTrue(helper.getBlockState(BlockPos.ZERO).getValue(li.cil.oc.common.block.ChameliumBlock.COLOR) == DyeColor.BLACK, "Chamelium Block should default to upstream black color");
+
+        assertCraftsItem(helper, ModItems.CHAMELIUM_BLOCK.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(ModItems.CHAMELIUM.get()), new ItemStack(ModItems.CHAMELIUM.get()), new ItemStack(ModItems.CHAMELIUM.get()),
+            new ItemStack(ModItems.CHAMELIUM.get()), new ItemStack(ModItems.CHAMELIUM.get()), new ItemStack(ModItems.CHAMELIUM.get()),
+            new ItemStack(ModItems.CHAMELIUM.get()), new ItemStack(ModItems.CHAMELIUM.get()), new ItemStack(ModItems.CHAMELIUM.get())
+        )));
+        assertCraftsItem(helper, ModItems.CHAMELIUM.get(), CraftingInput.of(1, 1, List.of(
+            new ItemStack(ModItems.CHAMELIUM_BLOCK.get())
+        )), 9);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void memoryItemsUseUpstreamRamHalfTiers(final GameTestHelper helper) {
         assertMemoryApiItem(helper, "ram1", 0, 192D);
         assertMemoryApiItem(helper, "ram2", 0, 256D);

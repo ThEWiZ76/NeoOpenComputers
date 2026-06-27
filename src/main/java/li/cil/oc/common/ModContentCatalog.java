@@ -174,6 +174,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_MATERIAL_TRANSISTOR = "materialTransistor";
     public static final String COMPAT_CAPACITOR = "capacitor";
     public static final String COMPAT_CHAMELIUM = "chamelium";
+    public static final String COMPAT_CHAMELIUM_BLOCK = "chameliumBlock";
+    public static final String COMPAT_CHAMELIUM_BLOCK_UPSTREAM = "chameliumblock";
 
     public static void registerDefaults() {
         if (API.items instanceof ItemRegistry registry) {
@@ -185,6 +187,8 @@ public final class ModContentCatalog {
                 ModItems.ASSEMBLER.get(),
                 ModBlocks.CABLE.get(),
                 ModItems.CABLE.get(),
+                ModBlocks.CHAMELIUM_BLOCK.get(),
+                ModItems.CHAMELIUM_BLOCK.get(),
                 ModBlocks.COMPUTER_CASE_TIER1.get(),
                 ModItems.COMPUTER_CASE_TIER1.get(),
                 ModBlocks.COMPUTER_CASE_TIER2.get(),
@@ -439,6 +443,12 @@ public final class ModContentCatalog {
         registry.register(COMPAT_NUM_PAD, null, numPadItem);
     }
 
+    static void registerChameliumBlock(final ItemRegistry registry, final Block chameliumBlock, final Item chameliumBlockItem) {
+        registry.register(ModContentIds.CHAMELIUM_BLOCK, chameliumBlock, chameliumBlockItem);
+        registry.register(COMPAT_CHAMELIUM_BLOCK, chameliumBlock, chameliumBlockItem);
+        registry.register(COMPAT_CHAMELIUM_BLOCK_UPSTREAM, chameliumBlock, chameliumBlockItem);
+    }
+
     static void register(
         final ItemRegistry registry,
         final Block adapter,
@@ -447,6 +457,8 @@ public final class ModContentCatalog {
         final Item assemblerItem,
         final Block cable,
         final Item cableItem,
+        final Block chameliumBlock,
+        final Item chameliumBlockItem,
         final Block computerCaseTier1,
         final Item computerCaseTier1Item,
         final Block computerCaseTier2,
@@ -602,6 +614,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.ASSEMBLER, assembler, assemblerItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);
+        registerChameliumBlock(registry, chameliumBlock, chameliumBlockItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(ModContentIds.COMPUTER_CASE_TIER2, computerCaseTier2, computerCaseTier2Item);
         registry.register(ModContentIds.COMPUTER_CASE_TIER3, computerCaseTier3, computerCaseTier3Item);
