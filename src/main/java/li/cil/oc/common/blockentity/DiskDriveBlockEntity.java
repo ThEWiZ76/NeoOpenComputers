@@ -137,7 +137,6 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
             final Direction facing = getBlockState().getValue(DiskDriveBlock.FACING);
             entity.setDeltaMovement(facing.getStepX() * velocity, facing.getStepY() * velocity, facing.getStepZ() * velocity);
             level.addFreshEntity(entity);
-            ModSounds.playDiskEject(this);
         }
         return new Object[]{true};
     }
@@ -214,6 +213,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         if (!removed.isEmpty()) {
             setChanged();
             refreshDiskEnvironment();
+            ModSounds.playDiskEject(this);
             syncClientData();
         }
         return removed;
@@ -224,6 +224,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             refreshDiskEnvironment();
+            ModSounds.playDiskEject(this);
             syncClientData();
         }
         return removed;
@@ -234,12 +235,14 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         if (slot != SLOT_FLOPPY) {
             return;
         }
+        final ItemStack previous = items.get(SLOT_FLOPPY).copy();
         items.set(SLOT_FLOPPY, stack);
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
             stack.setCount(getMaxStackSize());
         }
         setChanged();
         refreshDiskEnvironment();
+        playDiskChangeSound(previous, items.get(SLOT_FLOPPY));
         syncClientData();
     }
 
@@ -264,9 +267,13 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     @Override
     public void clearContent() {
+        final boolean hadDisk = !items.get(SLOT_FLOPPY).isEmpty();
         items.set(SLOT_FLOPPY, ItemStack.EMPTY);
         setChanged();
         refreshDiskEnvironment();
+        if (hadDisk) {
+            ModSounds.playDiskEject(this);
+        }
         syncClientData();
     }
 
@@ -370,6 +377,18 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         }
         final BlockState state = level.getBlockState(worldPosition);
         level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_CLIENTS);
+    }
+
+    private void playDiskChangeSound(final ItemStack previous, final ItemStack current) {
+        if (ItemStack.matches(previous, current)) {
+            return;
+        }
+        if (!previous.isEmpty()) {
+            ModSounds.playDiskEject(this);
+        }
+        if (!current.isEmpty()) {
+            ModSounds.playDiskInsert(this);
+        }
     }
 
     private void saveClientData(final CompoundTag tag, final HolderLookup.Provider registries) {

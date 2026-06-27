@@ -1,7 +1,6 @@
 package li.cil.oc.common.block;
 
 import com.mojang.serialization.MapCodec;
-import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -102,7 +101,6 @@ public class DiskDriveBlock extends HorizontalDirectionalBlock implements Entity
                 return ItemInteractionResult.SUCCESS;
             }
             diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, stack.split(1));
-            ModSounds.playDiskInsert(diskDrive);
             return ItemInteractionResult.CONSUME;
         }
         return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
@@ -116,7 +114,6 @@ public class DiskDriveBlock extends HorizontalDirectionalBlock implements Entity
         if (!player.addItem(removed)) {
             player.drop(removed, false);
         }
-        ModSounds.playDiskEject(diskDrive);
         return InteractionResult.CONSUME;
     }
 
