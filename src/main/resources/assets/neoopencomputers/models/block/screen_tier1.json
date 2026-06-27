@@ -1,8 +1,8 @@
 {
-    "parent": "minecraft:block/cube_bottom_top",
-    "textures": {
-        "bottom": "neoopencomputers:block/generic_top",
-        "top": "neoopencomputers:block/generic_top",
-        "side": "neoopencomputers:block/generic_side"
-    }
+  "parent": "neoopencomputers:block/screen_panel",
+  "textures": {
+    "front": "neoopencomputers:block/screen/f",
+    "back": "neoopencomputers:block/screen/b",
+    "side": "neoopencomputers:block/generic_side"
+  }
 }

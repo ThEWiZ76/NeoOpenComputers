@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 final class BlockModelResourceTest {
     private static final Path BLOCK_MODEL_ROOT = Path.of("src/main/resources/assets/neoopencomputers/models/block");
@@ -59,5 +60,18 @@ final class BlockModelResourceTest {
         assertTrue(placeholders.isEmpty(), "Block models still use vanilla placeholder textures: " + placeholders);
         assertTrue(missingTextures.isEmpty(), "Block models reference missing mod textures: " + missingTextures);
         assertTrue(unexpectedNamespaces.isEmpty(), "Block models reference unexpected texture namespaces: " + unexpectedNamespaces);
+    }
+
+    @Test
+    void screenBlockModelsUseScreenPanelTexturesInsteadOfGenericCube() throws IOException {
+        for (final String modelName : List.of("screen_tier1.json", "screen_tier2.json", "screen_tier3.json")) {
+            try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve(modelName))) {
+                final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
+                assertFalse("minecraft:block/cube_bottom_top".equals(model.get("parent").getAsString()), modelName);
+                final JsonObject textures = model.getAsJsonObject("textures");
+                assertTrue(textures.get("front").getAsString().startsWith("neoopencomputers:block/screen/"), modelName);
+                assertTrue(textures.get("back").getAsString().startsWith("neoopencomputers:block/screen/"), modelName);
+            }
+        }
     }
 }

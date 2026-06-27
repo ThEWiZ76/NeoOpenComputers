@@ -13,9 +13,11 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -32,6 +34,13 @@ final class KeyboardRegistrationShapeTest {
         assertTrue(HorizontalDirectionalBlock.class.isAssignableFrom(KeyboardBlock.class));
         assertTrue(EntityBlock.class.isAssignableFrom(KeyboardBlock.class));
         assertArrayEquals(new Class<?>[]{BlockBehaviour.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void keyboardBlockTracksAttachmentSideLikeUpstream() throws ReflectiveOperationException {
+        final Field attachFace = KeyboardBlock.class.getDeclaredField("ATTACH_FACE");
+
+        assertEquals(DirectionProperty.class, attachFace.getType());
     }
 
     @Test
@@ -59,5 +68,14 @@ final class KeyboardRegistrationShapeTest {
         assertTrue(methodStart >= 0);
         assertTrue(methodEnd > methodStart);
         assertTrue(source.substring(methodStart, methodEnd).contains(".noOcclusion()"));
+    }
+
+    @Test
+    void keyboardBlockstateIncludesWallFloorAndCeilingAttachments() throws Exception {
+        final String blockstate = Files.readString(Path.of("src/main/resources/assets/neoopencomputers/blockstates/keyboard.json"));
+
+        assertTrue(blockstate.contains("attach_face=north,facing=north"));
+        assertTrue(blockstate.contains("attach_face=up,facing=north"));
+        assertTrue(blockstate.contains("attach_face=down,facing=north"));
     }
 }

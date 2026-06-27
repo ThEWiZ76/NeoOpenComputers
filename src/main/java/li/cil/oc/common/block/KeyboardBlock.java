@@ -5,7 +5,9 @@ import li.cil.oc.common.blockentity.KeyboardBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -15,13 +17,26 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class KeyboardBlock extends HorizontalDirectionalBlock implements EntityBlock {
     public static final MapCodec<KeyboardBlock> CODEC = simpleCodec(KeyboardBlock::new);
+    public static final DirectionProperty ATTACH_FACE = DirectionProperty.create("attach_face");
+
+    private static final VoxelShape FLOOR_SHAPE = Block.box(1, 0, 1, 15, 1, 15);
+    private static final VoxelShape CEILING_SHAPE = Block.box(1, 15, 1, 15, 16, 15);
+    private static final VoxelShape NORTH_WALL_SHAPE = Block.box(1, 4, 0, 15, 12, 1);
+    private static final VoxelShape SOUTH_WALL_SHAPE = Block.box(1, 4, 15, 15, 12, 16);
+    private static final VoxelShape WEST_WALL_SHAPE = Block.box(0, 4, 1, 1, 12, 15);
+    private static final VoxelShape EAST_WALL_SHAPE = Block.box(15, 4, 1, 16, 12, 15);
 
     public KeyboardBlock(final BlockBehaviour.Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        registerDefaultState(stateDefinition.any()
+            .setValue(ATTACH_FACE, Direction.UP)
+            .setValue(FACING, Direction.NORTH));
     }
 
     @Override
@@ -43,17 +58,45 @@ public class KeyboardBlock extends HorizontalDirectionalBlock implements EntityB
     @Override
     protected void neighborChanged(final BlockState state, final Level level, final BlockPos pos, final Block block, final BlockPos fromPos, final boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        if (!level.isClientSide && !canSurvive(state, level, pos)) {
+            level.destroyBlock(pos, true);
+            return;
+        }
         BlockNetworkConnector.joinIfServer(level, pos);
     }
 
     @Override
+    protected boolean canSurvive(final BlockState state, final LevelReader level, final BlockPos pos) {
+        final Direction attachFace = state.getValue(ATTACH_FACE);
+        final BlockPos supportPos = pos.relative(attachFace.getOpposite());
+        return level.getBlockState(supportPos).isFaceSturdy(level, supportPos, attachFace);
+    }
+
+    @Override
+    protected VoxelShape getShape(final BlockState state, final BlockGetter level, final BlockPos pos, final CollisionContext context) {
+        return switch (state.getValue(ATTACH_FACE)) {
+            case DOWN -> CEILING_SHAPE;
+            case NORTH -> SOUTH_WALL_SHAPE;
+            case SOUTH -> NORTH_WALL_SHAPE;
+            case WEST -> EAST_WALL_SHAPE;
+            case EAST -> WEST_WALL_SHAPE;
+            case UP -> FLOOR_SHAPE;
+        };
+    }
+
+    @Override
     public BlockState getStateForPlacement(final BlockPlaceContext context) {
-        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        final BlockState state = defaultBlockState()
+            .setValue(ATTACH_FACE, context.getClickedFace())
+            .setValue(FACING, context.getHorizontalDirection().getOpposite());
+        return state.canSurvive(context.getLevel(), context.getClickedPos()) ? state : null;
     }
 
     @Override
     protected BlockState rotate(final BlockState state, final Rotation rotation) {
-        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+        return state
+            .setValue(ATTACH_FACE, rotation.rotate(state.getValue(ATTACH_FACE)))
+            .setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
     @Override
@@ -63,6 +106,6 @@ public class KeyboardBlock extends HorizontalDirectionalBlock implements EntityB
 
     @Override
     protected void createBlockStateDefinition(final StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(ATTACH_FACE, FACING);
     }
 }

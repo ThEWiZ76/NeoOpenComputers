@@ -1,8 +1,33 @@
 {
   "variants": {
-    "facing=north": { "model": "neoopencomputers:block/keyboard" },
-    "facing=east": { "model": "neoopencomputers:block/keyboard", "y": 90 },
-    "facing=south": { "model": "neoopencomputers:block/keyboard", "y": 180 },
-    "facing=west": { "model": "neoopencomputers:block/keyboard", "y": 270 }
+    "attach_face=north,facing=north": { "model": "neoopencomputers:block/keyboard" },
+    "attach_face=north,facing=east": { "model": "neoopencomputers:block/keyboard", "y": 90 },
+    "attach_face=north,facing=south": { "model": "neoopencomputers:block/keyboard", "y": 180 },
+    "attach_face=north,facing=west": { "model": "neoopencomputers:block/keyboard", "y": 270 },
+
+    "attach_face=east,facing=north": { "model": "neoopencomputers:block/keyboard", "y": 90 },
+    "attach_face=east,facing=east": { "model": "neoopencomputers:block/keyboard", "y": 90 },
+    "attach_face=east,facing=south": { "model": "neoopencomputers:block/keyboard", "y": 90 },
+    "attach_face=east,facing=west": { "model": "neoopencomputers:block/keyboard", "y": 90 },
+
+    "attach_face=south,facing=north": { "model": "neoopencomputers:block/keyboard", "y": 180 },
+    "attach_face=south,facing=east": { "model": "neoopencomputers:block/keyboard", "y": 180 },
+    "attach_face=south,facing=south": { "model": "neoopencomputers:block/keyboard", "y": 180 },
+    "attach_face=south,facing=west": { "model": "neoopencomputers:block/keyboard", "y": 180 },
+
+    "attach_face=west,facing=north": { "model": "neoopencomputers:block/keyboard", "y": 270 },
+    "attach_face=west,facing=east": { "model": "neoopencomputers:block/keyboard", "y": 270 },
+    "attach_face=west,facing=south": { "model": "neoopencomputers:block/keyboard", "y": 270 },
+    "attach_face=west,facing=west": { "model": "neoopencomputers:block/keyboard", "y": 270 },
+
+    "attach_face=up,facing=north": { "model": "neoopencomputers:block/keyboard", "x": -90, "y": 180 },
+    "attach_face=up,facing=east": { "model": "neoopencomputers:block/keyboard", "x": -90, "y": 270 },
+    "attach_face=up,facing=south": { "model": "neoopencomputers:block/keyboard", "x": -90 },
+    "attach_face=up,facing=west": { "model": "neoopencomputers:block/keyboard", "x": -90, "y": 90 },
+
+    "attach_face=down,facing=north": { "model": "neoopencomputers:block/keyboard", "x": 90, "y": 180 },
+    "attach_face=down,facing=east": { "model": "neoopencomputers:block/keyboard", "x": 90, "y": 270 },
+    "attach_face=down,facing=south": { "model": "neoopencomputers:block/keyboard", "x": 90 },
+    "attach_face=down,facing=west": { "model": "neoopencomputers:block/keyboard", "x": 90, "y": 90 }
   }
 }

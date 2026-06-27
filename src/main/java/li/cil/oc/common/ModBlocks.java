@@ -196,7 +196,8 @@ public final class ModBlocks {
     private static BlockBehaviour.Properties screenProperties() {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_BLACK)
-            .strength(1.5F, 4.0F);
+            .strength(1.5F, 4.0F)
+            .noOcclusion();
     }
 
     private static BlockBehaviour.Properties diskDriveProperties() {
