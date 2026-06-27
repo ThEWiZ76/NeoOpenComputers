@@ -95,6 +95,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private long pauseUntilNanos = -1L;
     private long pauseUntilWorldTime = -1L;
     private long cpuTimeNanos;
+    private int powerTicks;
     private short lastBeepFrequency;
     private short lastBeepDuration;
     private String lastBeepPattern;
@@ -683,10 +684,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     }
 
     private boolean consumeRunningEnergy() {
-        if (costPerTick <= 0D || ModSettings.ignorePower()) {
+        final int tickFrequency = Math.max(1, ModSettings.mfuTickFrequency());
+        powerTicks++;
+        if (powerTicks % tickFrequency != 0 || costPerTick <= 0D || ModSettings.ignorePower()) {
             return true;
         }
-        if (node() instanceof Connector connector && connector.tryChangeBuffer(-costPerTick)) {
+        if (node() instanceof Connector connector && connector.tryChangeBuffer(-costPerTick * tickFrequency)) {
             return true;
         }
         crash("gui.Error.NoEnergy");

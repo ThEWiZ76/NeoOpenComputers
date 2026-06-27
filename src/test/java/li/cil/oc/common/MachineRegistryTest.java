@@ -121,7 +121,8 @@ final class MachineRegistryTest {
 
     @Test
     void runningMachineConsumesEnergyCostPerUpdate() throws Exception {
-        withCachedConfig(ModSettings.COMPUTER_COST, 2D, () -> {
+        withCachedConfig(ModSettings.COMPUTER_COST, 2D, () ->
+        withCachedConfig(ModSettings.MFU_TICK_FREQUENCY, 4, () -> {
             OpenComputersApi.initialize();
             DriverRegistry driverRegistry = new DriverRegistry();
             driverRegistry.add(new TestProcessorDriver());
@@ -133,15 +134,20 @@ final class MachineRegistryTest {
 
             assertTrue(machine.start());
             machine.update();
+            machine.update();
+            machine.update();
+            assertEquals(before, connector.localBuffer(), 0.000_001D);
+            machine.update();
 
-            assertEquals(before - 2D, connector.localBuffer(), 0.000_001D);
+            assertEquals(before - 8D, connector.localBuffer(), 0.000_001D);
             assertTrue(machine.isRunning());
-        });
+        }));
     }
 
     @Test
     void runningMachineCrashesWhenEnergyBufferIsEmpty() throws Exception {
-        withCachedConfig(ModSettings.COMPUTER_COST, 2D, () -> {
+        withCachedConfig(ModSettings.COMPUTER_COST, 2D, () ->
+        withCachedConfig(ModSettings.MFU_TICK_FREQUENCY, 4, () -> {
             OpenComputersApi.initialize();
             DriverRegistry driverRegistry = new DriverRegistry();
             driverRegistry.add(new TestProcessorDriver());
@@ -153,10 +159,14 @@ final class MachineRegistryTest {
 
             assertTrue(machine.start());
             machine.update();
+            machine.update();
+            machine.update();
+            assertTrue(machine.isRunning());
+            machine.update();
 
             assertFalse(machine.isRunning());
             assertEquals("gui.Error.NoEnergy", machine.lastError());
-        });
+        }));
     }
 
     @Test

@@ -9443,6 +9443,39 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void externallyPoweredComputerCaseStaysRunningAfterStartup(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
+            final BlockPos computerPos = new BlockPos(1, 1, 1);
+            helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+            final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+            computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+            computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+            computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, new ItemStack(ModItems.EEPROM.get()));
+            final Connector connector = (Connector) computer.node();
+            connector.changeBuffer(-connector.localBuffer());
+
+            final net.neoforged.neoforge.energy.IEnergyStorage storage = helper.getLevel().getCapability(
+                net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
+                helper.absolutePos(computerPos),
+                helper.getBlockState(computerPos),
+                computer,
+                Direction.NORTH);
+            helper.assertTrue(storage != null, "Computer case did not expose external Forge Energy input");
+
+            helper.assertTrue(computer.toggleMachine(), "Computer case did not start with external power available");
+            for (int tick = 1; tick <= 80; tick++) {
+                helper.runAtTickTime(tick, () -> storage.receiveEnergy(50, false));
+            }
+            helper.runAtTickTime(80, () -> {
+                helper.assertTrue(computer.machine().isRunning(), "Externally powered computer stopped after startup: " + computer.machine().lastError());
+                helper.assertTrue(connector.localBuffer() > 0D, "Externally powered computer did not keep local energy buffered");
+                helper.succeed();
+            });
+        });
+    }
+
     @GameTest(template = "empty")
     public static void analyzerReportsDiskDriveFilesystemNode(final GameTestHelper helper) {
         final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
