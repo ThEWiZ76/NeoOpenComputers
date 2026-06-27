@@ -505,7 +505,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     }
 
     static int centeredCellOffset(final int glyphWidth) {
-        return Math.max(0, (CELL_WIDTH - Math.max(0, glyphWidth)) / 2);
+        return 0;
     }
 
     static float textScale(final int blockWidth, final int blockHeight, final int renderWidth, final int renderHeight) {

@@ -190,8 +190,8 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
-    void terminalScreenCentersNarrowGlyphsInsideFixedCells() {
-        assertEquals(2, TerminalScreen.centeredCellOffset(1));
+    void terminalScreenDrawsGlyphsAtFixedCellOriginForMonospaceAlignment() {
+        assertEquals(0, TerminalScreen.centeredCellOffset(1));
         assertEquals(0, TerminalScreen.centeredCellOffset(6));
         assertEquals(0, TerminalScreen.centeredCellOffset(8));
     }

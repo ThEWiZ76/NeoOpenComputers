@@ -170,8 +170,8 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
-    void screenRendererCentersNarrowGlyphsInsideFixedCells() {
-        assertEquals(2, ScreenBlockEntityRenderer.centeredCellOffset(1));
+    void screenRendererDrawsGlyphsAtFixedCellOriginForMonospaceAlignment() {
+        assertEquals(0, ScreenBlockEntityRenderer.centeredCellOffset(1));
         assertEquals(0, ScreenBlockEntityRenderer.centeredCellOffset(6));
     }
 

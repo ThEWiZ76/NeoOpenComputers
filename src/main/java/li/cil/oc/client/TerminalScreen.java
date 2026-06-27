@@ -340,7 +340,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static int centeredCellOffset(final int glyphWidth) {
-        return Math.max(0, (CELL_WIDTH - Math.max(0, glyphWidth)) / 2);
+        return 0;
     }
 
     static TerminalKeyPayload keyPayload(final TerminalMenu menu, final boolean pressed, final char character, final int keyCode) {
