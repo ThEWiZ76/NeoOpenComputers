@@ -86,6 +86,7 @@ public final class NeoOpenComputersClient {
             minecraft.keyboardHandler.setClipboard(clipboard);
         }
         NanomachineParticles.spawnAmbient(minecraft);
+        ComputerCaseSounds.tick();
     }
 
     @SubscribeEvent

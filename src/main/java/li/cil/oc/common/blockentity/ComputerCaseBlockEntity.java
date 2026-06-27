@@ -20,8 +20,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.Connection;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -55,6 +59,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     private static final String TAG_COLOR = "oc:color";
     private static final String TAG_MACHINE = "oc:machine";
+    private static final String TAG_RUNNING = "oc:isRunning";
     private static final String TAG_REDSTONE_OUTPUTS = "oc:redstoneOutputs";
     private static final String TAG_WAKE_THRESHOLD = "oc:wakeThreshold";
     private static final String SLOT_TYPE_EEPROM = "eeprom";
@@ -102,6 +107,8 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private int tier;
     private int color;
     private int wakeThreshold;
+    private boolean clientRunning;
+    private boolean lastSyncedRunning;
     private final int[] redstoneOutputs = new int[6];
     private final int[] redstoneInputs = new int[6];
 
@@ -155,6 +162,13 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     public IEnergyStorage energyStorage(final Direction side) {
         return energyStorage;
+    }
+
+    public boolean isClientRunning() {
+        if (level != null && level.isClientSide) {
+            return clientRunning;
+        }
+        return isMachineRunningForClient();
     }
 
     @Override
@@ -514,12 +528,14 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
+        stopClientRunningSound();
         removeMachineNode();
     }
 
     @Override
     public void setRemoved() {
         super.setRemoved();
+        stopClientRunningSound();
         removeMachineNode();
     }
 
@@ -532,6 +548,8 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         ContainerHelper.loadAllItems(tag, items, registries);
         notifyHardwareChanged(machine);
         machine.load(tag.getCompound(TAG_MACHINE));
+        lastSyncedRunning = isMachineRunningForClient();
+        loadClientData(tag);
     }
 
     @Override
@@ -546,9 +564,32 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         ContainerHelper.saveAllItems(tag, items, registries);
     }
 
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        saveClientData(tag);
+        return tag;
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        loadClientData(packet.getTag());
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        loadClientData(tag);
+    }
+
     private void tickServer() {
         updateRedstoneInputs();
         tickHostedMachine(machine);
+        syncRunningStateIfChanged();
     }
 
     private boolean canStartMachine() {
@@ -580,6 +621,46 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private void markChangedOnServerThread() {
         pendingServerThreadChangeMark = false;
         super.setChanged();
+    }
+
+    private boolean isMachineRunningForClient() {
+        return machine != null && (machine.isRunning() || machine.isPaused());
+    }
+
+    private void syncRunningStateIfChanged() {
+        final boolean running = isMachineRunningForClient();
+        if (running == lastSyncedRunning || level == null || level.isClientSide) {
+            return;
+        }
+        lastSyncedRunning = running;
+        setChanged();
+        final BlockState state = getBlockState();
+        level.sendBlockUpdated(worldPosition, state, state, 3);
+    }
+
+    private void saveClientData(final CompoundTag tag) {
+        tag.putBoolean(TAG_RUNNING, isMachineRunningForClient());
+    }
+
+    private void loadClientData(final CompoundTag tag) {
+        if (!tag.contains(TAG_RUNNING)) {
+            return;
+        }
+        clientRunning = tag.getBoolean(TAG_RUNNING);
+        updateClientRunningSound();
+    }
+
+    private void updateClientRunningSound() {
+        if (level != null && level.isClientSide) {
+            li.cil.oc.client.ComputerCaseSounds.update(this);
+        }
+    }
+
+    private void stopClientRunningSound() {
+        if (level != null && level.isClientSide) {
+            clientRunning = false;
+            li.cil.oc.client.ComputerCaseSounds.update(this);
+        }
     }
 
     private void loadRedstoneOutputs(final CompoundTag tag) {
