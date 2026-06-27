@@ -105,6 +105,16 @@ final class ScreenRegistrationShapeTest {
     }
 
     @Test
+    void screenPropertiesUseOcclusionSoStaticCaseCullsInternalMultiblockFaces() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/ModBlocks.java"));
+        final String method = source.substring(
+            source.indexOf("private static BlockBehaviour.Properties screenProperties()"),
+            source.indexOf("private static BlockBehaviour.Properties diskDriveProperties()"));
+
+        assertTrue(!method.contains(".noOcclusion()"), "Screen full-cube static body must occlude so cullface hides internal multiblock parts");
+    }
+
+    @Test
     void screenLocalEastMatchesUpstreamRotationHelper() {
         assertEquals(Direction.WEST, ScreenBlock.localRight(Direction.NORTH));
         assertEquals(Direction.NORTH, ScreenBlock.localRight(Direction.EAST));

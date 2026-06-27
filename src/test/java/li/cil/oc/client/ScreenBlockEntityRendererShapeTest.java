@@ -136,6 +136,17 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererUsesPerCellTextBufferColorsLikeUpstream() throws IOException {
+        final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
+
+        assertTrue(renderer.contains("getForegroundColor(column, row)"), "World screen text should use each cell foreground color");
+        assertTrue(renderer.contains("getBackgroundColor(column, row)"), "World screen text should render each cell background color");
+        assertTrue(renderer.contains("renderCellBackground"), "Renderer should draw colored background cells before glyphs");
+        assertEquals(0x80112233, ScreenBlockEntityRenderer.textColorWithAlpha(0x112233, 0.5F));
+        assertEquals(0x00000000, ScreenBlockEntityRenderer.textColorWithAlpha(0x112233, 0F));
+    }
+
+    @Test
     void screenRendererScalesTerminalTextToInnerScreenArea() {
         final float singleScale = ScreenBlockEntityRenderer.textScale(1, 1, 50, 16);
         assertTrue(50 * 6 * singleScale < 0.75F, "Single-screen text should fit inside the screen border");

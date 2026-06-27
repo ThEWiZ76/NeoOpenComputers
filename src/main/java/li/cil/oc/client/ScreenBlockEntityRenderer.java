@@ -28,7 +28,6 @@ import java.util.List;
 public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<ScreenBlockEntity> {
     private static final int LINE_HEIGHT = 9;
     private static final int CELL_WIDTH = 6;
-    private static final int DEFAULT_COLOR = 0xFFFFFF;
     private static final float SCREEN_BORDER = 2.25F / 16F;
     private static final int SCREEN_TIER1_COLOR = 0xABABAB;
     private static final int SCREEN_TIER2_COLOR = 0xFFFF66;
@@ -138,7 +137,6 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         if (textAlpha <= 0F) {
             return;
         }
-        final int textColor = textColorWithAlpha(DEFAULT_COLOR, textAlpha);
 
         poseStack.pushPose();
         orientToScreenText(screen, poseStack);
@@ -149,7 +147,10 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             final List<String> cells = lineCells(line(screen, row), screen.renderWidth());
             for (int column = 0; column < cells.size(); column++) {
                 final String cell = cells.get(column);
+                final int backgroundColor = textColorWithAlpha(screen.getBackgroundColor(column, row), textAlpha);
+                renderCellBackground(poseStack, bufferSource, column, row, backgroundColor);
                 if (!cell.isBlank()) {
+                    final int textColor = textColorWithAlpha(screen.getForegroundColor(column, row), textAlpha);
                     font.drawInBatch(cell, column * CELL_WIDTH + centeredCellOffset(font.width(cell)), row * LINE_HEIGHT, textColor, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
                 }
             }
@@ -468,7 +469,30 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     static int textColorWithAlpha(final int color, final float alpha) {
         final int clampedAlpha = Math.max(0, Math.min(255, Math.round(alpha * 255F)));
+        if (clampedAlpha == 0) {
+            return 0;
+        }
         return (clampedAlpha << 24) | (color & 0x00FFFFFF);
+    }
+
+    private static void renderCellBackground(
+        final PoseStack poseStack,
+        final MultiBufferSource bufferSource,
+        final int column,
+        final int row,
+        final int color) {
+        if ((color & 0xFF000000) == 0 || (color & 0x00FFFFFF) == 0) {
+            return;
+        }
+        final float x = column * CELL_WIDTH;
+        final float y = row * LINE_HEIGHT;
+        final float z = SCREEN_TEXT_Z - 0.001F;
+        final VertexConsumer consumer = bufferSource.getBuffer(RenderType.gui());
+        final PoseStack.Pose pose = poseStack.last();
+        consumer.addVertex(pose, x, y + LINE_HEIGHT, z).setColor(color);
+        consumer.addVertex(pose, x + CELL_WIDTH, y + LINE_HEIGHT, z).setColor(color);
+        consumer.addVertex(pose, x + CELL_WIDTH, y, z).setColor(color);
+        consumer.addVertex(pose, x, y, z).setColor(color);
     }
 
     static boolean playerIsInFrontOfScreen(final Direction front, final AABB bounds, final double playerX, final double playerY, final double playerZ) {
