@@ -21,6 +21,16 @@ final class ScreenColorHandlerShapeTest {
     }
 
     @Test
+    void screenBlockColorUsesBlockEntityRenderColorLikeUpstream() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java"));
+
+        assertTrue(source.contains("screenBlockColor"));
+        assertTrue(source.contains("tintGetter.getBlockEntity(pos) instanceof ScreenBlockEntity"));
+        assertTrue(source.contains("screen.getRenderColor()"));
+        assertTrue(source.contains("screenTierColor(state.getBlock())"));
+    }
+
+    @Test
     void clientRegistersFloppyColorModelProperty() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java"));
 

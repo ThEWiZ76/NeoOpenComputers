@@ -7,6 +7,7 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.network.DebugClipboardState;
@@ -14,8 +15,11 @@ import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -102,7 +106,7 @@ public final class NeoOpenComputersClient {
     @SubscribeEvent
     static void registerBlockColors(final RegisterColorHandlersEvent.Block event) {
         event.register(
-            (state, tintGetter, pos, tintIndex) -> tintIndex == 0 ? screenTierColor(state.getBlock()) : 0xFFFFFF,
+            NeoOpenComputersClient::screenBlockColor,
             ModBlocks.SCREEN_TIER1.get(),
             ModBlocks.SCREEN_TIER2.get(),
             ModBlocks.SCREEN_TIER3.get());
@@ -136,6 +140,16 @@ public final class NeoOpenComputersClient {
             return SCREEN_TIER2_COLOR;
         }
         return SCREEN_TIER1_COLOR;
+    }
+
+    static int screenBlockColor(final BlockState state, final BlockAndTintGetter tintGetter, final BlockPos pos, final int tintIndex) {
+        if (tintIndex != 0) {
+            return 0xFFFFFF;
+        }
+        if (tintGetter != null && pos != null && tintGetter.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
+            return screen.getRenderColor();
+        }
+        return screenTierColor(state.getBlock());
     }
 
     static float tabletRunningModelProperty(final ItemStack stack) {
