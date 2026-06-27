@@ -7241,6 +7241,20 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chargerAnalyzerReportsChargeSpeedLikeUpstream(final GameTestHelper helper) {
+        final BlockPos chargerPos = new BlockPos(1, 1, 1);
+        helper.setBlock(chargerPos, ModBlocks.CHARGER.get());
+        final ChargerBlockEntity charger = helper.getBlockEntity(chargerPos);
+        charger.setChargeSpeed(2D / 3D);
+
+        final List<Component> lines = AnalyzerItem.describe(charger, Direction.NORTH);
+        final String analysis = lines.stream().map(Component::getString).collect(java.util.stream.Collectors.joining("\n"));
+
+        helper.assertTrue(analysis.contains("Charge speed: 66%"), "Analyzer did not report charger speed:\n" + analysis);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void energyStorageBlockDriverExposesEnergyDeviceLikeUpstream(final GameTestHelper helper) throws Exception {
         withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
             withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {

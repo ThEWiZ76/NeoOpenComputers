@@ -8,6 +8,7 @@ import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
+import li.cil.oc.common.blockentity.ChargerBlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.InteractionResult;
@@ -42,6 +43,9 @@ public class AnalyzerItem extends Item {
             if (node != null) {
                 describeNode(node, lines);
             }
+        }
+        if (target instanceof ChargerBlockEntity charger) {
+            lines.add(line("Charge speed: " + (int) (charger.chargeSpeed() * 100D) + "%"));
         }
         return lines;
     }
