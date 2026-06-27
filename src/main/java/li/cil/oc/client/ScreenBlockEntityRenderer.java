@@ -183,6 +183,9 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final int packedLight,
         final int packedOverlay,
         final Direction face) {
+        if (!shouldRenderScreenFace(screen, face)) {
+            return;
+        }
         final Direction pitch = ScreenBlock.pitch(screen.getBlockState());
         final TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(screenTexture(
             pitch != Direction.NORTH,
@@ -232,6 +235,43 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
                 vertex(consumer, pose, SCREEN_SIDE_OFFSET, -0.5F, -0.5F, 1F, 1F, color, packedLight, packedOverlay, face);
             }
         }
+    }
+
+    private static boolean shouldRenderScreenFace(final ScreenBlockEntity screen, final Direction localFace) {
+        if (!canCullInternalMultiblockFace(localFace) || screen.getLevel() == null) {
+            return true;
+        }
+        final BlockState state = screen.getBlockState();
+        final Direction worldFace = localFaceDirection(ScreenBlock.pitch(state), ScreenBlock.yaw(state), localFace);
+        if (worldFace == null) {
+            return true;
+        }
+        final BlockState neighborState = screen.getLevel().getBlockState(screen.getBlockPos().relative(worldFace));
+        return !(neighborState.getBlock() instanceof ScreenBlock neighborBlock)
+            || !(state.getBlock() instanceof ScreenBlock screenBlock)
+            || neighborBlock.tier() != screenBlock.tier()
+            || ScreenBlock.pitch(neighborState) != ScreenBlock.pitch(state)
+            || ScreenBlock.yaw(neighborState) != ScreenBlock.yaw(state)
+            || !(screen.getLevel().getBlockEntity(screen.getBlockPos().relative(worldFace)) instanceof ScreenBlockEntity neighbor)
+            || neighbor.getRenderColor() != screen.getRenderColor();
+    }
+
+    static boolean canCullInternalMultiblockFace(final Direction localFace) {
+        return localFace == Direction.EAST
+            || localFace == Direction.WEST
+            || localFace == Direction.UP
+            || localFace == Direction.DOWN;
+    }
+
+    static Direction localFaceDirection(final Direction pitch, final Direction yaw, final Direction localFace) {
+        return switch (localFace) {
+            case EAST -> ScreenBlock.localRight(yaw);
+            case WEST -> ScreenBlock.localRight(yaw).getOpposite();
+            case UP -> pitch != null && pitch.getAxis().isVertical() ? yaw : Direction.UP;
+            case DOWN -> (pitch != null && pitch.getAxis().isVertical() ? yaw : Direction.UP).getOpposite();
+            case SOUTH -> pitch != null && pitch.getAxis().isVertical() ? pitch : yaw;
+            case NORTH -> (pitch != null && pitch.getAxis().isVertical() ? pitch : yaw).getOpposite();
+        };
     }
 
     static ResourceLocation screenFrontTexture(final boolean horizontalPitch, final int width, final int height, final int localX, final int localY) {

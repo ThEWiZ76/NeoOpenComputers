@@ -66,6 +66,26 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererMapsLocalSideFacesToWorldDirectionsForCulling() {
+        assertEquals(Direction.NORTH, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.EAST));
+        assertEquals(Direction.SOUTH, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.WEST));
+        assertEquals(Direction.UP, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.UP));
+        assertEquals(Direction.DOWN, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.DOWN));
+        assertEquals(Direction.EAST, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.SOUTH));
+        assertEquals(Direction.WEST, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.NORTH));
+    }
+
+    @Test
+    void screenRendererCullsOnlyInternalMultiblockSideFaces() {
+        assertEquals(true, ScreenBlockEntityRenderer.canCullInternalMultiblockFace(Direction.EAST));
+        assertEquals(true, ScreenBlockEntityRenderer.canCullInternalMultiblockFace(Direction.WEST));
+        assertEquals(true, ScreenBlockEntityRenderer.canCullInternalMultiblockFace(Direction.UP));
+        assertEquals(true, ScreenBlockEntityRenderer.canCullInternalMultiblockFace(Direction.DOWN));
+        assertEquals(false, ScreenBlockEntityRenderer.canCullInternalMultiblockFace(Direction.SOUTH));
+        assertEquals(false, ScreenBlockEntityRenderer.canCullInternalMultiblockFace(Direction.NORTH));
+    }
+
+    @Test
     void screenRendererDrawsConnectedFrontOverlayClearlyInFrontOfStaticModel() throws IOException {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
 

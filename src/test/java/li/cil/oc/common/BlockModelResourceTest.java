@@ -67,7 +67,7 @@ final class BlockModelResourceTest {
             final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
             assertTrue("minecraft:block/block".equals(panel.get("parent").getAsString()));
             assertTrue(panel.has("elements"));
-            assertTrue(panel.getAsJsonArray("elements").isEmpty(), "World screen faces must be owned by ScreenBlockEntityRenderer so connected textures can replace per-block seams");
+            assertTrue(panel.getAsJsonArray("elements").size() == 1, "World screen needs an opaque static body behind transparent connected screen textures");
             final JsonObject textures = panel.getAsJsonObject("textures");
             assertTrue("neoopencomputers:block/generic_top".equals(textures.get("top_bottom").getAsString()));
             assertTrue("neoopencomputers:block/generic_side".equals(textures.get("side").getAsString()));
@@ -97,7 +97,12 @@ final class BlockModelResourceTest {
     void screenBlockModelCullsInternalSideFacesForMultiblockSeams() throws IOException {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_panel.json"))) {
             final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
-            assertTrue(panel.getAsJsonArray("elements").isEmpty(), "Static screen faces should be empty; dynamic renderer handles seams and culling");
+            final JsonObject faces = panel.getAsJsonArray("elements").get(0).getAsJsonObject().getAsJsonObject("faces");
+            for (final String side : List.of("down", "up", "north", "south", "west", "east")) {
+                final JsonObject face = faces.getAsJsonObject(side);
+                assertTrue(face.has("cullface"), side + " face should cull against adjacent blocks");
+                assertTrue(side.equals(face.get("cullface").getAsString()), side + " face should cull on its own side");
+            }
         }
     }
 
