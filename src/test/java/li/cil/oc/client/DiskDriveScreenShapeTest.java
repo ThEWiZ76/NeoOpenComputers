@@ -49,8 +49,9 @@ final class DiskDriveScreenShapeTest {
         assertTrue(!source.contains("statusTooltip"));
         assertTrue(!source.contains("mediaState"));
         assertTrue(!source.contains("renderComponentTooltip(font, status"));
-        assertTrue(source.contains("guiGraphics.blit(SLOT_TEXTURE, left, top, 0, 0, SLOT_TEXTURE_SIZE, SLOT_TEXTURE_SIZE);"));
-        assertTrue(!source.contains("guiGraphics.blit(SLOT_TEXTURE, left, top, slotDrawnWidth(), slotDrawnHeight()"));
+        assertTrue(source.contains("slotTextureWidth(),"));
+        assertTrue(source.contains("slotTextureHeight()"));
+        assertTrue(!source.contains("guiGraphics.blit(SLOT_TEXTURE, left, top, 0, 0, SLOT_TEXTURE_SIZE, SLOT_TEXTURE_SIZE);"));
     }
 
     @Test
