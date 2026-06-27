@@ -60,6 +60,21 @@ final class ComputerCaseScreenShapeTest {
     }
 
     @Test
+    void computerCasePowerControlUsesSameAtlasBlitShapeAsServerRack() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/ComputerCaseScreen.java"));
+        final String method = source.substring(
+            source.indexOf("private static void drawStatusControl"),
+            source.indexOf("private static ResourceLocation slotIconTexture"));
+
+        assertTrue(method.contains("powerButtonTextureX(state),"));
+        assertTrue(method.contains("powerButtonTextureY(hovered),"));
+        assertTrue(!method.contains("(float) powerButtonTextureX(state)"));
+        assertTrue(!method.contains("(float) powerButtonTextureY(hovered)"));
+        assertTrue(!method.contains("powerButtonTextureWidth(),"));
+        assertTrue(!method.contains("powerButtonTextureHeight()"));
+    }
+
+    @Test
     void computerCaseScreenUsesUpstreamTextLayout() {
         assertEquals(8, ComputerCaseScreen.titleTextX());
         assertEquals(6, ComputerCaseScreen.titleTextY());
