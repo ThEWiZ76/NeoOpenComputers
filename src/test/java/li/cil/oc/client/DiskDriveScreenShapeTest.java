@@ -90,4 +90,13 @@ final class DiskDriveScreenShapeTest {
         assertTrue(rendererSource.contains("setNormal(pose, 0F, 0F, 1F)"));
     }
 
+    @Test
+    void diskDriveRendererLightsInsertedMediaFromDriveFrontLikeUpstream() throws Exception {
+        final String rendererSource = Files.readString(Path.of("src/main/java/li/cil/oc/client/DiskDriveBlockEntityRenderer.java"));
+
+        assertTrue(rendererSource.contains("LevelRenderer.getLightColor"));
+        assertTrue(rendererSource.contains("getBlockPos().relative(facing)"));
+        assertTrue(rendererSource.contains("insertedMediaLight(diskDrive, packedLight)"));
+    }
+
 }

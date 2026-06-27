@@ -7,6 +7,7 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -19,6 +20,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class DiskDriveBlockEntityRenderer implements BlockEntityRenderer<DiskDriveBlockEntity> {
@@ -44,7 +46,7 @@ public final class DiskDriveBlockEntityRenderer implements BlockEntityRenderer<D
         poseStack.pushPose();
         orientToDriveFront(diskDrive.getBlockState(), poseStack);
         if (!stack.isEmpty()) {
-            renderInsertedMedia(diskDrive, stack, poseStack, bufferSource, packedLight);
+            renderInsertedMedia(diskDrive, stack, poseStack, bufferSource, insertedMediaLight(diskDrive, packedLight));
         }
         if (System.currentTimeMillis() - diskDrive.getLastAccess() < ACTIVITY_VISIBLE_MILLIS) {
             renderActivityOverlay(poseStack, bufferSource, packedLight, packedOverlay);
@@ -108,5 +110,15 @@ public final class DiskDriveBlockEntityRenderer implements BlockEntityRenderer<D
             default -> {
             }
         }
+    }
+
+    private static int insertedMediaLight(final DiskDriveBlockEntity diskDrive, final int fallbackLight) {
+        final Level level = diskDrive.getLevel();
+        if (level == null) {
+            return fallbackLight;
+        }
+        final BlockState state = diskDrive.getBlockState();
+        final Direction facing = state.hasProperty(DiskDriveBlock.FACING) ? state.getValue(DiskDriveBlock.FACING) : Direction.NORTH;
+        return LevelRenderer.getLightColor(level, diskDrive.getBlockPos().relative(facing));
     }
 }
