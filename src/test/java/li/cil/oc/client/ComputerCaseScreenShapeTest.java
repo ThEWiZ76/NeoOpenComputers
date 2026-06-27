@@ -51,6 +51,10 @@ final class ComputerCaseScreenShapeTest {
         assertEquals(18, ComputerCaseScreen.powerButtonTextureX(ComputerCaseMenu.STATE_RUNNING));
         assertEquals(0, ComputerCaseScreen.powerButtonTextureY(false));
         assertEquals(18, ComputerCaseScreen.powerButtonTextureY(true));
+        assertEquals(36, ComputerCaseScreen.powerButtonTextureWidth());
+        assertEquals(36, ComputerCaseScreen.powerButtonTextureHeight());
+        assertEquals(18, ComputerCaseScreen.slotTextureWidth());
+        assertEquals(18, ComputerCaseScreen.slotTextureHeight());
     }
 
     @Test

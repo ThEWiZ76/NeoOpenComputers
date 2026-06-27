@@ -22,6 +22,8 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
     public static final ResourceLocation SLOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/slot.png");
 
     private static final int SLOT_SIZE = 16;
+    private static final int SLOT_TEXTURE_SIZE = 18;
+    private static final int POWER_BUTTON_TEXTURE_SIZE = 36;
     private static final int STATUS_CONTROL_X = 70;
     private static final int STATUS_CONTROL_Y = 33;
     private static final int STATUS_CONTROL_SIZE = 18;
@@ -157,6 +159,22 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         return hovered ? STATUS_CONTROL_SIZE : 0;
     }
 
+    public static int powerButtonTextureWidth() {
+        return POWER_BUTTON_TEXTURE_SIZE;
+    }
+
+    public static int powerButtonTextureHeight() {
+        return POWER_BUTTON_TEXTURE_SIZE;
+    }
+
+    public static int slotTextureWidth() {
+        return SLOT_TEXTURE_SIZE;
+    }
+
+    public static int slotTextureHeight() {
+        return SLOT_TEXTURE_SIZE;
+    }
+
     private static void drawSlot(
         final GuiGraphics guiGraphics,
         final int left,
@@ -166,7 +184,16 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         final String kind,
         final int tier,
         final boolean occupied) {
-        guiGraphics.blit(SLOT_TEXTURE, left, top, 0, 0, STATUS_CONTROL_SIZE, STATUS_CONTROL_SIZE);
+        guiGraphics.blit(
+            SLOT_TEXTURE,
+            left,
+            top,
+            0,
+            0,
+            STATUS_CONTROL_SIZE,
+            STATUS_CONTROL_SIZE,
+            slotTextureWidth(),
+            slotTextureHeight());
         if (occupied) {
             return;
         }
@@ -188,7 +215,9 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
             powerButtonTextureX(state),
             powerButtonTextureY(hovered),
             STATUS_CONTROL_SIZE,
-            STATUS_CONTROL_SIZE);
+            STATUS_CONTROL_SIZE,
+            powerButtonTextureWidth(),
+            powerButtonTextureHeight());
     }
 
     private static ResourceLocation slotIconTexture(final String kind) {
