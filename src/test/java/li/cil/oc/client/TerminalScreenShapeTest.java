@@ -233,6 +233,15 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenMapsPrintableCharactersToOpenComputersKeyCode() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+
+        assertEquals(0x1E, TerminalScreen.keyPayload(menu, true, 'a', 0).keyCode());
+        assertEquals(0x02, TerminalScreen.keyPayload(menu, true, '!', 0).keyCode());
+        assertEquals(0x39, TerminalScreen.keyPayload(menu, true, ' ', 0).keyCode());
+    }
+
+    @Test
     void terminalScreenMapsPrintableGlfwKeysToOpenComputersLegacyCodes() {
         assertEquals(0x01, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_ESCAPE));
         assertEquals(0x02, TerminalScreen.openComputersKeyCode(GLFW.GLFW_KEY_1));

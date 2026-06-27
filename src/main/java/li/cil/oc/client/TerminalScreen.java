@@ -344,7 +344,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static TerminalKeyPayload keyPayload(final TerminalMenu menu, final boolean pressed, final char character, final int keyCode) {
-        return new TerminalKeyPayload(menu.containerId, pressed, character, openComputersKeyCode(keyCode));
+        return new TerminalKeyPayload(menu.containerId, pressed, character, openComputersKeyCode(keyCodeForCharacter(character, keyCode)));
     }
 
     static TerminalClipboardPayload clipboardPayload(final TerminalMenu menu, final String value) {
@@ -531,6 +531,46 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             case GLFW.GLFW_KEY_KP_MULTIPLY -> 0x37;
             case GLFW.GLFW_KEY_KP_DIVIDE -> 0xB5;
             default -> keyCode;
+        };
+    }
+
+    static int keyCodeForCharacter(final char character, final int fallbackKeyCode) {
+        if (fallbackKeyCode != 0 || character == 0) {
+            return fallbackKeyCode;
+        }
+        if (character >= 'a' && character <= 'z') {
+            return GLFW.GLFW_KEY_A + (character - 'a');
+        }
+        if (character >= 'A' && character <= 'Z') {
+            return GLFW.GLFW_KEY_A + (character - 'A');
+        }
+        if (character >= '1' && character <= '9') {
+            return GLFW.GLFW_KEY_1 + (character - '1');
+        }
+        return switch (character) {
+            case '0', ')' -> GLFW.GLFW_KEY_0;
+            case '!' -> GLFW.GLFW_KEY_1;
+            case '@' -> GLFW.GLFW_KEY_2;
+            case '#' -> GLFW.GLFW_KEY_3;
+            case '$' -> GLFW.GLFW_KEY_4;
+            case '%' -> GLFW.GLFW_KEY_5;
+            case '^' -> GLFW.GLFW_KEY_6;
+            case '&' -> GLFW.GLFW_KEY_7;
+            case '*' -> GLFW.GLFW_KEY_8;
+            case '(' -> GLFW.GLFW_KEY_9;
+            case '-', '_' -> GLFW.GLFW_KEY_MINUS;
+            case '=', '+' -> GLFW.GLFW_KEY_EQUAL;
+            case '[', '{' -> GLFW.GLFW_KEY_LEFT_BRACKET;
+            case ']', '}' -> GLFW.GLFW_KEY_RIGHT_BRACKET;
+            case ';', ':' -> GLFW.GLFW_KEY_SEMICOLON;
+            case '\'', '"' -> GLFW.GLFW_KEY_APOSTROPHE;
+            case '`', '~' -> GLFW.GLFW_KEY_GRAVE_ACCENT;
+            case '\\', '|' -> GLFW.GLFW_KEY_BACKSLASH;
+            case ',', '<' -> GLFW.GLFW_KEY_COMMA;
+            case '.', '>' -> GLFW.GLFW_KEY_PERIOD;
+            case '/', '?' -> GLFW.GLFW_KEY_SLASH;
+            case ' ' -> GLFW.GLFW_KEY_SPACE;
+            default -> fallbackKeyCode;
         };
     }
 
