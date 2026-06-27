@@ -45,7 +45,7 @@ final class KeyboardInputStateTest {
     }
 
     @Test
-    void ignoresKeyUpWhenPlayerCanNoLongerInteract() throws Exception {
+    void forwardsMatchingKeyUpWhenPlayerCanNoLongerInteractLikeUpstream() throws Exception {
         CapturingNode node = new CapturingNode();
         KeyboardInputState state = new KeyboardInputState();
 
@@ -54,8 +54,9 @@ final class KeyboardInputStateTest {
             state.onMessage(node, new TestMessage("keyboard.keyUp", null, 'a', 30), player -> false);
         });
 
-        assertEquals(1, node.signals.size());
-        assertEquals(Arrays.asList("computer.checked_signal", null, "key_down", (int) 'a', 30), node.signals.getFirst());
+        assertEquals(2, node.signals.size());
+        assertEquals(Arrays.asList("computer.checked_signal", null, "key_down", (int) 'a', 30), node.signals.get(0));
+        assertEquals(Arrays.asList("computer.checked_signal", null, "key_up", (int) 'a', 30), node.signals.get(1));
     }
 
     @Test
