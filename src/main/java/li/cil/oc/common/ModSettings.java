@@ -125,6 +125,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue DATA_CARD_COMPLEX_BYTE;
     public static final ModConfigSpec.DoubleValue DATA_CARD_ASYMMETRIC;
     public static final ModConfigSpec.DoubleValue SCREEN_COST;
+    public static final ModConfigSpec.DoubleValue COMPUTER_COST;
     public static final ModConfigSpec.DoubleValue HOLOGRAM_COST;
     public static final ModConfigSpec.DoubleValue GPU_SET_COST;
     public static final ModConfigSpec.DoubleValue GPU_FILL_COST;
@@ -588,6 +589,9 @@ public final class ModSettings {
         SCREEN_COST = builder
             .comment("Energy consumed per tick by a basic screen when fully lit. OpenComputers upstream default is 0.05.")
             .defineInRange("screen", 0.05D, 0D, Double.MAX_VALUE);
+        COMPUTER_COST = builder
+            .comment("Energy consumed per tick by a running computer. OpenComputers upstream default is 0.5.")
+            .defineInRange("computer", 0.5D, 0D, Double.MAX_VALUE);
         HOLOGRAM_COST = builder
             .comment("Energy consumed per tick by a Hologram projector when every column is lit. OpenComputers upstream default is 0.2.")
             .defineInRange("hologram", 0.2D, 0D, Double.MAX_VALUE);
@@ -732,6 +736,10 @@ public final class ModSettings {
 
     public static double generatorEfficiency() {
         return doubleValue(GENERATOR_EFFICIENCY);
+    }
+
+    public static double computerCost() {
+        return Math.max(0D, doubleValue(COMPUTER_COST));
     }
 
     public static double assemblerTickAmount() {

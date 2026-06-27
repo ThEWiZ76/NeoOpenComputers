@@ -109,6 +109,57 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void createdMachineUsesConfiguredComputerCostLikeUpstream() throws Exception {
+        withCachedConfig(ModSettings.COMPUTER_COST, 2D, () -> {
+            OpenComputersApi.initialize();
+
+            Machine machine = API.machine.create(null);
+
+            assertEquals(2D, machine.getCostPerTick(), 0.000_001D);
+        });
+    }
+
+    @Test
+    void runningMachineConsumesEnergyCostPerUpdate() throws Exception {
+        withCachedConfig(ModSettings.COMPUTER_COST, 2D, () -> {
+            OpenComputersApi.initialize();
+            DriverRegistry driverRegistry = new DriverRegistry();
+            driverRegistry.add(new TestProcessorDriver());
+            API.driver = driverRegistry;
+            SimpleMachine machine = new SimpleMachine(new TestHost(), new MutableClock());
+            machine.onHostChanged();
+            Connector connector = assertInstanceOf(Connector.class, machine.node());
+            final double before = connector.localBuffer();
+
+            assertTrue(machine.start());
+            machine.update();
+
+            assertEquals(before - 2D, connector.localBuffer(), 0.000_001D);
+            assertTrue(machine.isRunning());
+        });
+    }
+
+    @Test
+    void runningMachineCrashesWhenEnergyBufferIsEmpty() throws Exception {
+        withCachedConfig(ModSettings.COMPUTER_COST, 2D, () -> {
+            OpenComputersApi.initialize();
+            DriverRegistry driverRegistry = new DriverRegistry();
+            driverRegistry.add(new TestProcessorDriver());
+            API.driver = driverRegistry;
+            SimpleMachine machine = new SimpleMachine(new TestHost(), new MutableClock());
+            machine.onHostChanged();
+            Connector connector = assertInstanceOf(Connector.class, machine.node());
+            connector.changeBuffer(-connector.localBuffer());
+
+            assertTrue(machine.start());
+            machine.update();
+
+            assertFalse(machine.isRunning());
+            assertEquals("gui.Error.NoEnergy", machine.lastError());
+        });
+    }
+
+    @Test
     void computerComponentIsNeighborVisibleLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);

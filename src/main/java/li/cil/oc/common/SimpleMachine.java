@@ -106,6 +106,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     SimpleMachine(final MachineHost host, final LongSupplier nanoTime) {
         this.host = host;
         this.nanoTime = nanoTime;
+        costPerTick = ModSettings.computerCost();
         if (API.network == null) {
             API.network = new NetworkRegistry();
         }
@@ -619,6 +620,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (!running || architecture == null) {
             return;
         }
+        if (!consumeRunningEnergy()) {
+            return;
+        }
         callBudget = maxCallBudget;
         final long updateStartedAt = nanoTime.getAsLong();
         if (paused) {
@@ -676,6 +680,17 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     private boolean hasPendingSynchronizedCall(final SynchronizedCallAware synchronizedCallAware) {
         return synchronizedCallAware != null && synchronizedCallAware.hasPendingSynchronizedCall();
+    }
+
+    private boolean consumeRunningEnergy() {
+        if (costPerTick <= 0D || ModSettings.ignorePower()) {
+            return true;
+        }
+        if (node() instanceof Connector connector && connector.tryChangeBuffer(-costPerTick)) {
+            return true;
+        }
+        crash("gui.Error.NoEnergy");
+        return false;
     }
 
     private void runArchitectureSynchronized() {

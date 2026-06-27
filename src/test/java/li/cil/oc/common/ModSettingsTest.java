@@ -25,6 +25,7 @@ final class ModSettingsTest {
         assertEquals(10, ModSettings.mfuTickFrequency());
         assertEquals(0.2D, ModSettings.solarGeneratorEfficiency());
         assertEquals(0.8D, ModSettings.generatorEfficiency());
+        assertEquals(0.5D, ModSettings.computerCost());
         assertEquals(List.of(10000D, 15000D, 20000D), ModSettings.batteryUpgradeBuffers());
         assertEquals(10000D, ModSettings.batteryUpgradeBuffer(0));
         assertEquals(15000D, ModSettings.batteryUpgradeBuffer(1));
@@ -235,6 +236,7 @@ final class ModSettingsTest {
         assertEquals(List.of("misc", "tradingRange"), ModSettings.TRADING_RANGE.getPath());
         assertEquals(List.of("power", "cost", "mfuRelay"), ModSettings.MFU_RELAY_COST.getPath());
         assertEquals(List.of("power", "ignorePower"), ModSettings.IGNORE_POWER.getPath());
+        assertEquals(List.of("power", "cost", "computer"), ModSettings.COMPUTER_COST.getPath());
         assertEquals(List.of("power", "tickFrequency"), ModSettings.MFU_TICK_FREQUENCY.getPath());
         assertEquals(List.of("power", "cost", "chunkloaderCost"), ModSettings.CHUNKLOADER_COST.getPath());
         assertEquals(List.of("power", "solarGeneratorEfficiency"), ModSettings.SOLAR_GENERATOR_EFFICIENCY.getPath());
