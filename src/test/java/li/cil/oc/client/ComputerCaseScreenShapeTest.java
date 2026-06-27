@@ -59,6 +59,7 @@ final class ComputerCaseScreenShapeTest {
 
     @Test
     void computerCaseScreenExposesStatusLabels() throws NoSuchMethodException {
+        final Method screenTitle = ComputerCaseScreen.class.getMethod("screenTitle");
         final Method statusLabel = ComputerCaseScreen.class.getMethod("statusLabel", int.class);
         final Method statusTooltip = ComputerCaseScreen.class.getMethod("statusTooltip", int.class, int.class, int.class, int.class);
         final Method statusControlTooltip = ComputerCaseScreen.class.getMethod("statusControlTooltip", int.class);
@@ -66,12 +67,27 @@ final class ComputerCaseScreenShapeTest {
         final Method controlAt = ComputerCaseScreen.class.getDeclaredMethod("statusControlAt", int.class, int.class, int.class, int.class);
         final Method controlPayload = ComputerCaseScreen.class.getDeclaredMethod("controlPayload", ComputerCaseMenu.class, int.class);
 
+        assertEquals(Component.class, screenTitle.getReturnType());
         assertEquals(Component.class, statusLabel.getReturnType());
         assertEquals(List.class, statusTooltip.getReturnType());
         assertEquals(List.class, statusControlTooltip.getReturnType());
         assertEquals(int.class, slotAt.getReturnType());
         assertEquals(boolean.class, controlAt.getReturnType());
         assertEquals(ComputerCaseControlPayload.class, controlPayload.getReturnType());
+    }
+
+    @Test
+    void computerCaseScreenUsesShortTitleAndNoInlineStatusText() throws Exception {
+        final Method renderLabels = ComputerCaseScreen.class.getDeclaredMethod(
+            "renderLabels",
+            net.minecraft.client.gui.GuiGraphics.class,
+            int.class,
+            int.class);
+        assertEquals(void.class, renderLabels.getReturnType());
+        assertTranslationKey("gui.neoopencomputers.computer_case.title", ComputerCaseScreen.screenTitle());
+
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/ComputerCaseScreen.java"));
+        assertTrue(!source.contains("drawString(font, statusLabel(menu.computerState())"));
     }
 
     @Test

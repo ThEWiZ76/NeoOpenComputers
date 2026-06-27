@@ -27,6 +27,7 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
     private static final int STATUS_CONTROL_X = 70;
     private static final int STATUS_CONTROL_Y = 33;
     private static final int STATUS_CONTROL_SIZE = 18;
+    private static final Component SCREEN_TITLE = Component.translatable("gui.neoopencomputers.computer_case.title");
 
     public ComputerCaseScreen(final ComputerCaseMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
@@ -53,7 +54,12 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
                 menu.getSlot(slot).hasItem());
         }
         drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, top + STATUS_CONTROL_Y, menu.computerState(), statusControlAt(mouseX, mouseY, left, top));
-        guiGraphics.drawString(font, statusLabel(menu.computerState()), left + 8, top + 62, 0xFF404040, false);
+    }
+
+    @Override
+    protected void renderLabels(final GuiGraphics guiGraphics, final int mouseX, final int mouseY) {
+        guiGraphics.drawString(font, screenTitle(), titleLabelX, titleLabelY, 0xFF404040, false);
+        guiGraphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, 0xFF404040, false);
     }
 
     @Override
@@ -90,6 +96,10 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
             case ComputerCaseMenu.STATE_INCOMPLETE -> "gui.neoopencomputers.computer_case.state.incomplete";
             default -> "gui.neoopencomputers.computer_case.state.empty";
         });
+    }
+
+    public static Component screenTitle() {
+        return SCREEN_TITLE;
     }
 
     public static List<Component> statusTooltip(final int state, final int missingRequirements, final int componentCount, final int maxComponents) {

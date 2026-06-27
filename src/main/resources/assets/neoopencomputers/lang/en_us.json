@@ -160,6 +160,7 @@
   "gui.neoopencomputers.assembler.state.ready": "Ready",
   "gui.neoopencomputers.charger.slot": "Chargeable device slot",
   "gui.neoopencomputers.charger.status": "Charger status",
+  "gui.neoopencomputers.computer_case.title": "Computer",
   "gui.neoopencomputers.computer_case.components": "Components %s/%s",
   "gui.neoopencomputers.computer_case.status": "Computer status",
   "gui.neoopencomputers.computer_case.state.empty": "No computer data",
