@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.common.blockentity.AssemblerBlockEntity;
+import li.cil.oc.common.blockentity.ChargerBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
@@ -24,6 +25,10 @@ public final class ModCapabilities {
             Capabilities.EnergyStorage.BLOCK,
             ModBlockEntities.POWER_CONVERTER.get(),
             PowerConverterBlockEntity::energyStorage);
+        event.registerBlockEntity(
+            Capabilities.EnergyStorage.BLOCK,
+            ModBlockEntities.CHARGER.get(),
+            ChargerBlockEntity::energyStorage);
         event.registerBlockEntity(
             Capabilities.EnergyStorage.BLOCK,
             ModBlockEntities.COMPUTER_CASE.get(),

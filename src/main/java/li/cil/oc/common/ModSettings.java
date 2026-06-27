@@ -138,6 +138,9 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue SOLAR_GENERATOR_EFFICIENCY;
     public static final ModConfigSpec.DoubleValue ACCESS_POINT_RATE;
     public static final ModConfigSpec.DoubleValue ASSEMBLER_RATE;
+    public static final ModConfigSpec.DoubleValue CHARGER_RATE;
+    public static final ModConfigSpec.DoubleValue CHARGER_CHARGE_RATE;
+    public static final ModConfigSpec.DoubleValue CHARGER_CHARGE_RATE_TABLET;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> CASE_RATES;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_RATE;
     public static final ModConfigSpec.DoubleValue POWER_CONVERTER_RATE;
@@ -466,6 +469,9 @@ public final class ModSettings {
         ASSEMBLER_RATE = builder
             .comment("Energy throughput per tick accepted by assemblers from external power. OpenComputers upstream default is 100.")
             .defineInRange("assembler", 100D, 0D, Double.MAX_VALUE);
+        CHARGER_RATE = builder
+            .comment("Energy throughput per tick accepted by chargers from external power. OpenComputers upstream default is 200.")
+            .defineInRange("charger", 200D, 0D, Double.MAX_VALUE);
         CASE_RATES = builder
             .comment("Energy throughput per tick accepted by computer case tiers one, two, and three. OpenComputers upstream default is [5, 10, 20].")
             .defineList("case", DEFAULT_CASE_RATES, value -> value instanceof Double && (Double) value >= 0D);
@@ -493,6 +499,12 @@ public final class ModSettings {
         PRINTER_TICK_AMOUNT = builder
             .comment("Energy the 3D printer can apply per tick. OpenComputers upstream default is 1.")
             .defineInRange("printerTickAmount", 1D, 1D, Double.MAX_VALUE);
+        CHARGER_CHARGE_RATE = builder
+            .comment("Energy a charger transfers to each adjacent robot/drone/nanomachine controller per tick at full redstone signal. OpenComputers upstream default is 100.")
+            .defineInRange("chargerChargeRate", 100D, 0D, Double.MAX_VALUE);
+        CHARGER_CHARGE_RATE_TABLET = builder
+            .comment("Energy a charger transfers into tablets and chargeable equipment per tick at full redstone signal. OpenComputers upstream default is 10.")
+            .defineInRange("chargerChargeRateTablet", 10D, 0D, Double.MAX_VALUE);
         builder.push("printer");
         PRINTER_MAX_SHAPES = builder
             .comment("Maximum number of shapes per 3D printer state. OpenComputers upstream default is 24.")
@@ -805,6 +817,18 @@ public final class ModSettings {
 
     public static double powerConverterRate() {
         return Math.max(0D, doubleValue(POWER_CONVERTER_RATE));
+    }
+
+    public static double chargerRate() {
+        return Math.max(0D, doubleValue(CHARGER_RATE));
+    }
+
+    public static double chargerChargeRate() {
+        return Math.max(0D, doubleValue(CHARGER_CHARGE_RATE));
+    }
+
+    public static double chargerChargeRateTablet() {
+        return Math.max(0D, doubleValue(CHARGER_CHARGE_RATE_TABLET));
     }
 
     public static double accessPointRate() {

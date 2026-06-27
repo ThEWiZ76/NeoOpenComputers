@@ -51,6 +51,7 @@ import li.cil.oc.common.WrenchToolImc;
 import li.cil.oc.common.WrenchTools;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.AdapterBlockEntity;
+import li.cil.oc.common.blockentity.ChargerBlockEntity;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
@@ -7147,6 +7148,42 @@ public final class NeoOpenComputersGameTests {
                     helper.assertTrue(received == 500, "Power converter receive did not cap by throughput");
                     helper.assertTrue(Double.compare(50D, connector.localBuffer()) == 0, "Power converter did not fill OC buffer from Forge Energy");
                     helper.assertTrue(storage.getEnergyStored() == 500, "Power converter Forge Energy stored amount mismatch");
+                })));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void chargerAcceptsForgeEnergyCapabilityLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
+            withCachedConfig(ModSettings.CHARGER_RATE, 50D, () ->
+                withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
+                    final BlockPos chargerPos = new BlockPos(1, 1, 1);
+                    helper.setBlock(chargerPos, ModBlocks.CHARGER.get());
+                    Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(chargerPos));
+
+                    final ChargerBlockEntity charger = helper.getBlockEntity(chargerPos);
+                    final Connector connector = (Connector) charger.node();
+                    final IEnergyStorage storage = helper.getLevel().getCapability(
+                        Capabilities.EnergyStorage.BLOCK,
+                        helper.absolutePos(chargerPos),
+                        helper.getBlockState(chargerPos),
+                        charger,
+                        Direction.NORTH);
+
+                    helper.assertTrue(storage != null, "Charger did not expose Forge Energy capability");
+                    helper.assertTrue(storage.canReceive(), "Charger Forge Energy storage did not accept input");
+                    helper.assertTrue(!storage.canExtract(), "Charger Forge Energy storage allowed extraction");
+                    helper.assertTrue(storage.getEnergyStored() == 0, "Charger Forge Energy storage started filled");
+                    helper.assertTrue(storage.getMaxEnergyStored() == 1000, "Charger Forge Energy capacity did not use converter buffer");
+
+                    final int simulated = storage.receiveEnergy(700, true);
+                    helper.assertTrue(simulated == 500, "Charger simulated receive did not cap by charger throughput");
+                    helper.assertTrue(Double.compare(0D, connector.localBuffer()) == 0, "Charger simulation changed buffer");
+
+                    final int received = storage.receiveEnergy(700, false);
+                    helper.assertTrue(received == 500, "Charger receive did not cap by charger throughput");
+                    helper.assertTrue(Double.compare(50D, connector.localBuffer()) == 0, "Charger did not fill OC buffer from Forge Energy");
+                    helper.assertTrue(storage.getEnergyStored() == 500, "Charger Forge Energy stored amount mismatch");
                 })));
         helper.succeed();
     }

@@ -4,6 +4,7 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.block.AdapterBlock;
 import li.cil.oc.common.block.AssemblerBlock;
 import li.cil.oc.common.block.CableBlock;
+import li.cil.oc.common.block.ChargerBlock;
 import li.cil.oc.common.block.ChameliumBlock;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.block.DisassemblerBlock;
@@ -48,7 +49,7 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> CHARGER = BLOCKS.register(
         ModContentIds.CHARGER,
-        () -> new Block(networkInfrastructureProperties()));
+        () -> new ChargerBlock(networkInfrastructureProperties()));
 
     public static final DeferredBlock<Block> CHAMELIUM_BLOCK = BLOCKS.register(
         ModContentIds.CHAMELIUM_BLOCK,
