@@ -213,6 +213,14 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         };
     }
 
+    static Direction renderFrontDirection(final Direction yaw) {
+        return yaw == null ? Direction.SOUTH : yaw;
+    }
+
+    static Direction renderRightDirection(final Direction yaw) {
+        return ScreenBlock.localRight(yaw);
+    }
+
     static float screenFrontZ() {
         return SCREEN_FRONT_Z;
     }

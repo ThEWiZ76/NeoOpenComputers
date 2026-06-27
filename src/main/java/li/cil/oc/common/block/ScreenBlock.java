@@ -28,6 +28,10 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Set;
+
 @SuppressWarnings("deprecation")
 public class ScreenBlock extends Block implements EntityBlock {
     public static final MapCodec<ScreenBlock> CODEC = simpleCodec(ScreenBlock::new);
@@ -74,12 +78,14 @@ public class ScreenBlock extends Block implements EntityBlock {
     protected void onPlace(final BlockState state, final Level level, final BlockPos pos, final BlockState oldState, final boolean movedByPiston) {
         super.onPlace(state, level, pos, oldState, movedByPiston);
         BlockNetworkConnector.joinIfServer(level, pos);
+        notifyConnectedScreensForClientUpdate(level, pos, state);
     }
 
     @Override
     protected void neighborChanged(final BlockState state, final Level level, final BlockPos pos, final Block block, final BlockPos fromPos, final boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         BlockNetworkConnector.joinIfServer(level, pos);
+        notifyConnectedScreensForClientUpdate(level, pos, state);
     }
 
     @Override
@@ -231,5 +237,37 @@ public class ScreenBlock extends Block implements EntityBlock {
 
     public static Direction localRight(final Direction yaw) {
         return yaw == null ? Direction.WEST : yaw.getCounterClockWise();
+    }
+
+    private static void notifyConnectedScreensForClientUpdate(final Level level, final BlockPos pos, final BlockState state) {
+        if (level == null || level.isClientSide || !(state.getBlock() instanceof ScreenBlock screenBlock)) {
+            return;
+        }
+
+        final Direction pitch = pitch(state);
+        final Direction yaw = yaw(state);
+        final Direction right = localRight(state);
+        final Direction up = up(state);
+        final ArrayDeque<BlockPos> pending = new ArrayDeque<>();
+        final Set<BlockPos> visited = new HashSet<>();
+        pending.add(pos);
+        while (!pending.isEmpty()) {
+            final BlockPos current = pending.removeFirst();
+            if (!visited.add(current)) {
+                continue;
+            }
+            final BlockState currentState = level.getBlockState(current);
+            if (!(currentState.getBlock() instanceof ScreenBlock currentScreen)
+                || currentScreen.tier() != screenBlock.tier()
+                || pitch(currentState) != pitch
+                || yaw(currentState) != yaw) {
+                continue;
+            }
+            level.sendBlockUpdated(current, currentState, currentState, Block.UPDATE_CLIENTS);
+            pending.add(current.relative(right));
+            pending.add(current.relative(right.getOpposite()));
+            pending.add(current.relative(up));
+            pending.add(current.relative(up.getOpposite()));
+        }
     }
 }

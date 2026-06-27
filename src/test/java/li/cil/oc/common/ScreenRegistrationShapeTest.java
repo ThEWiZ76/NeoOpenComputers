@@ -94,6 +94,17 @@ final class ScreenRegistrationShapeTest {
     }
 
     @Test
+    void screenPlacementAndNeighborChangesNotifyConnectedScreensForClientRerender() throws Exception {
+        final String blockSource = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+        final String entitySource = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/ScreenBlockEntity.java"));
+
+        assertTrue(blockSource.contains("notifyConnectedScreensForClientUpdate"));
+        assertTrue(blockSource.contains("Block.UPDATE_CLIENTS"));
+        assertTrue(entitySource.contains("lastLayoutOrigin"));
+        assertTrue(entitySource.contains("markChanged()"));
+    }
+
+    @Test
     void screenLocalEastMatchesUpstreamRotationHelper() {
         assertEquals(Direction.WEST, ScreenBlock.localRight(Direction.NORTH));
         assertEquals(Direction.NORTH, ScreenBlock.localRight(Direction.EAST));

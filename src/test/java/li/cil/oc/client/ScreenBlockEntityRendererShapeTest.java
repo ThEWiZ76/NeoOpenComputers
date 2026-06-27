@@ -108,6 +108,19 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererExposesFacingAndRightAxesForConnectedWall() {
+        assertEquals(Direction.NORTH, ScreenBlockEntityRenderer.renderFrontDirection(Direction.NORTH));
+        assertEquals(Direction.EAST, ScreenBlockEntityRenderer.renderFrontDirection(Direction.EAST));
+        assertEquals(Direction.SOUTH, ScreenBlockEntityRenderer.renderFrontDirection(Direction.SOUTH));
+        assertEquals(Direction.WEST, ScreenBlockEntityRenderer.renderFrontDirection(Direction.WEST));
+
+        assertEquals(Direction.WEST, ScreenBlockEntityRenderer.renderRightDirection(Direction.NORTH));
+        assertEquals(Direction.NORTH, ScreenBlockEntityRenderer.renderRightDirection(Direction.EAST));
+        assertEquals(Direction.EAST, ScreenBlockEntityRenderer.renderRightDirection(Direction.SOUTH));
+        assertEquals(Direction.SOUTH, ScreenBlockEntityRenderer.renderRightDirection(Direction.WEST));
+    }
+
+    @Test
     void screenRendererSplitsTextIntoFixedCellsForWorldAlignment() {
         assertEquals(List.of("W", "i", "."), ScreenBlockEntityRenderer.lineCells("Wi.", 3));
         assertEquals(List.of("W", " ", " "), ScreenBlockEntityRenderer.lineCells("W", 3));

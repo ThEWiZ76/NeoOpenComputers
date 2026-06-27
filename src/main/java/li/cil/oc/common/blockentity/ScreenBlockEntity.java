@@ -71,6 +71,11 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private final int[] palette = new int[16];
     private final TextBufferState buffer = new TextBufferState(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     private final ScreenInputDispatcher inputDispatcher = new ScreenInputDispatcher();
+    private BlockPos lastLayoutOrigin = BlockPos.ZERO;
+    private int lastLayoutWidth = -1;
+    private int lastLayoutHeight = -1;
+    private int lastLayoutLocalX = -1;
+    private int lastLayoutLocalY = -1;
     private volatile boolean pendingServerThreadChangeMark;
     private Node node;
 
@@ -738,6 +743,19 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             return;
         }
         final ScreenLayout layout = screenLayout();
+        final boolean layoutChanged = !layout.origin().equals(lastLayoutOrigin)
+            || layout.width() != lastLayoutWidth
+            || layout.height() != lastLayoutHeight
+            || layout.localX() != lastLayoutLocalX
+            || layout.localY() != lastLayoutLocalY;
+        if (layoutChanged) {
+            lastLayoutOrigin = layout.origin();
+            lastLayoutWidth = layout.width();
+            lastLayoutHeight = layout.height();
+            lastLayoutLocalX = layout.localX();
+            lastLayoutLocalY = layout.localY();
+            markChanged();
+        }
         final boolean origin = layout.origin().equals(worldPosition);
         if (node() instanceof Component component) {
             component.setVisibility(origin ? Visibility.Network : Visibility.None);
