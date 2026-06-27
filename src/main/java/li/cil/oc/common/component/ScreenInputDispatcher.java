@@ -66,7 +66,7 @@ public final class ScreenInputDispatcher {
 
     private static void sendToKeyboard(final Node node, final String name, final Object... data) {
         if (node != null) {
-            node.sendToNeighbors(name, data);
+            node.sendToReachable(name, data);
         }
     }
 

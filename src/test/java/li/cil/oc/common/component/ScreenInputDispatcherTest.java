@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class ScreenInputDispatcherTest {
     @Test
-    void sendsKeyboardEventsToNeighborKeyboards() {
+    void sendsKeyboardEventsToReachableKeyboards() {
         CapturingNode node = new CapturingNode();
         ScreenInputDispatcher dispatcher = new ScreenInputDispatcher();
 
@@ -26,9 +26,10 @@ final class ScreenInputDispatcherTest {
         dispatcher.keyUp(node, 'a', 30, null);
         dispatcher.clipboard(node, "text", null);
 
-        assertEquals(Arrays.asList("keyboard.keyDown", null, 'a', 30), node.neighborMessages.get(0));
-        assertEquals(Arrays.asList("keyboard.keyUp", null, 'a', 30), node.neighborMessages.get(1));
-        assertEquals(Arrays.asList("keyboard.clipboard", null, "text"), node.neighborMessages.get(2));
+        assertEquals(List.of(), node.neighborMessages);
+        assertEquals(Arrays.asList("keyboard.keyDown", null, 'a', 30), node.reachableMessages.get(0));
+        assertEquals(Arrays.asList("keyboard.keyUp", null, 'a', 30), node.reachableMessages.get(1));
+        assertEquals(Arrays.asList("keyboard.clipboard", null, "text"), node.reachableMessages.get(2));
     }
 
     @Test
