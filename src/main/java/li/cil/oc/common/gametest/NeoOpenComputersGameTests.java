@@ -9423,6 +9423,26 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void poweredComputerCaseStaysRunningAfterStartup(final GameTestHelper helper) {
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, new ItemStack(ModItems.EEPROM.get()));
+        final Connector connector = (Connector) computer.node();
+        connector.changeBuffer(connector.localBufferSize());
+
+        helper.assertTrue(computer.toggleMachine(), "Computer case did not start with CPU, memory, EEPROM, and full power buffer");
+        helper.runAtTickTime(60, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Powered computer stopped after startup: " + computer.machine().lastError());
+            helper.assertTrue(connector.localBuffer() > 0D, "Powered computer drained all local energy while staying connected");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty")
     public static void analyzerReportsDiskDriveFilesystemNode(final GameTestHelper helper) {
         final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
