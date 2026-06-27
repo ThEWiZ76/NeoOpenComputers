@@ -53,6 +53,19 @@ final class ModPackagingTest {
     }
 
     @Test
+    void builtModJarDoesNotDependOnAnonymousComputerCaseMenuClasses() throws IOException {
+        try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.modJar"))) {
+            assertContains(jar, "li/cil/oc/common/menu/ComputerCaseMenu.class");
+            assertContains(jar, "li/cil/oc/common/menu/ComputerCaseMenu$ComputerSlot.class");
+            assertContains(jar, "li/cil/oc/common/menu/ComputerCaseMenu$ServerComputerData.class");
+            assertTrue(jar.getEntry("li/cil/oc/common/menu/ComputerCaseMenu$1.class") == null,
+                "Computer case menu must not rely on anonymous slot class");
+            assertTrue(jar.getEntry("li/cil/oc/common/menu/ComputerCaseMenu$2.class") == null,
+                "Computer case menu must not rely on anonymous server data class");
+        }
+    }
+
+    @Test
     void builtAllJarContainsJarJarLibrariesForRuntime() throws IOException {
         try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.allJar"))) {
             assertContains(jar, "META-INF/jarjar/metadata.json");

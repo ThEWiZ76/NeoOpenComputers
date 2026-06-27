@@ -101,14 +101,8 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
         addDataSlots(computerData);
 
         for (int slot = 0; slot < computerSlotCount; slot++) {
-            final int computerSlot = slot;
             final int[] position = slotPosition(computerTier(), slot);
-            addSlot(new Slot(computerInventory, computerSlot, position[0], position[1]) {
-                @Override
-                public boolean mayPlace(final ItemStack stack) {
-                    return computerInventory.canPlaceItem(computerSlot, stack);
-                }
-            });
+            addSlot(new ComputerSlot(computerInventory, slot, position[0], position[1]));
         }
         addPlayerInventory(playerInventory);
     }
@@ -261,28 +255,7 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
     }
 
     private static ContainerData computerData(final Container computerInventory) {
-        return new ContainerData() {
-            @Override
-            public int get(final int index) {
-                return switch (index) {
-                    case COMPUTER_STATUS_INDEX -> computerStateFor(computerInventory);
-                    case COMPUTER_MISSING_REQUIREMENTS_INDEX -> missingRequirementsFor(computerInventory);
-                    case COMPUTER_COMPONENT_COUNT_INDEX -> componentCountFor(computerInventory);
-                    case COMPUTER_MAX_COMPONENTS_INDEX -> maxComponentsFor(computerInventory);
-                    case COMPUTER_TIER_INDEX -> computerTierFor(computerInventory);
-                    default -> 0;
-                };
-            }
-
-            @Override
-            public void set(final int index, final int value) {
-            }
-
-            @Override
-            public int getCount() {
-                return COMPUTER_DATA_COUNT;
-            }
-        };
+        return new ServerComputerData(computerInventory);
     }
 
     private static ContainerData clientComputerData(final RegistryFriendlyByteBuf extraData) {
@@ -311,6 +284,46 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
 
         for (int column = 0; column < 9; column++) {
             addSlot(new Slot(playerInventory, column, PLAYER_INVENTORY_X + column * 18, PLAYER_HOTBAR_Y));
+        }
+    }
+
+    static final class ComputerSlot extends Slot {
+        ComputerSlot(final Container container, final int slot, final int x, final int y) {
+            super(container, slot, x, y);
+        }
+
+        @Override
+        public boolean mayPlace(final ItemStack stack) {
+            return container.canPlaceItem(getSlotIndex(), stack);
+        }
+    }
+
+    static final class ServerComputerData implements ContainerData {
+        private final Container computerInventory;
+
+        ServerComputerData(final Container computerInventory) {
+            this.computerInventory = computerInventory;
+        }
+
+        @Override
+        public int get(final int index) {
+            return switch (index) {
+                case COMPUTER_STATUS_INDEX -> computerStateFor(computerInventory);
+                case COMPUTER_MISSING_REQUIREMENTS_INDEX -> missingRequirementsFor(computerInventory);
+                case COMPUTER_COMPONENT_COUNT_INDEX -> componentCountFor(computerInventory);
+                case COMPUTER_MAX_COMPONENTS_INDEX -> maxComponentsFor(computerInventory);
+                case COMPUTER_TIER_INDEX -> computerTierFor(computerInventory);
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(final int index, final int value) {
+        }
+
+        @Override
+        public int getCount() {
+            return COMPUTER_DATA_COUNT;
         }
     }
 }
