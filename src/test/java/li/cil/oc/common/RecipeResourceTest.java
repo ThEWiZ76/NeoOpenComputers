@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.minecraft.world.item.DyeColor;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -734,6 +735,23 @@ final class RecipeResourceTest {
         assertEquals("minecraft:crafting_shapeless", split.get("type").getAsString());
         assertIngredientItem(split, "neoopencomputers:" + ModContentIds.CHAMELIUM_BLOCK);
         assertResultCount(split, 9);
+    }
+
+    @Test
+    void chameliumBlockDyeRecipesUseUpstreamColors() throws IOException {
+        for (DyeColor color : DyeColor.values()) {
+            JsonObject recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.CHAMELIUM_BLOCK + "_" + color.getName() + ".json"));
+
+            assertEquals("minecraft:crafting_shapeless", recipe.get("type").getAsString());
+            assertIngredientItem(recipe, "neoopencomputers:" + ModContentIds.CHAMELIUM_BLOCK);
+            assertIngredientItem(recipe, "minecraft:" + color.getName() + "_dye");
+            JsonObject result = recipe.getAsJsonObject("result");
+            assertEquals("neoopencomputers:" + ModContentIds.CHAMELIUM_BLOCK, result.get("id").getAsString());
+            assertResultCount(recipe, 1);
+            assertEquals(color.getName(), result.getAsJsonObject("components")
+                .getAsJsonObject("minecraft:block_state")
+                .get("color").getAsString());
+        }
     }
 
     @Test

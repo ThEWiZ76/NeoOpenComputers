@@ -165,6 +165,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -4019,6 +4020,12 @@ public final class NeoOpenComputersGameTests {
         assertCraftsItem(helper, ModItems.CHAMELIUM.get(), CraftingInput.of(1, 1, List.of(
             new ItemStack(ModItems.CHAMELIUM_BLOCK.get())
         )), 9);
+        final ItemStack redBlock = craftItem(helper, ModItems.CHAMELIUM_BLOCK.get(), CraftingInput.of(2, 1, List.of(
+            new ItemStack(ModItems.CHAMELIUM_BLOCK.get()), new ItemStack(Items.RED_DYE)
+        )), 1);
+        final BlockItemStateProperties redState = redBlock.get(DataComponents.BLOCK_STATE);
+        helper.assertTrue(redState != null && redState.get(li.cil.oc.common.block.ChameliumBlock.COLOR) == DyeColor.RED,
+            "Dyed Chamelium Block recipe did not store red block-state component");
         helper.succeed();
     }
 
@@ -10319,11 +10326,16 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static void assertCraftsItem(final GameTestHelper helper, final Item expectedItem, final CraftingInput input, final int expectedCount) {
+        craftItem(helper, expectedItem, input, expectedCount);
+    }
+
+    private static ItemStack craftItem(final GameTestHelper helper, final Item expectedItem, final CraftingInput input, final int expectedCount) {
         final Optional<RecipeHolder<CraftingRecipe>> recipe = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel());
         helper.assertTrue(recipe.isPresent(), "No recipe matched upstream inputs for " + expectedItem);
         final ItemStack result = recipe.get().value().assemble(input, helper.getLevel().registryAccess());
         helper.assertTrue(result.is(expectedItem), "Recipe returned wrong item");
         helper.assertTrue(result.getCount() == expectedCount, "Recipe should craft expected item count");
+        return result;
     }
 
     private static Object[] invokeComponent(final GameTestHelper helper, final li.cil.oc.api.network.Component component, final String method, final Object... args) {
