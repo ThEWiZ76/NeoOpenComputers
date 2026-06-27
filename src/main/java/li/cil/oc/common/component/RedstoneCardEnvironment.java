@@ -19,6 +19,7 @@ import java.util.Map;
 
 public class RedstoneCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "redstone";
+    private static final int COLOR_COUNT = 16;
 
     private final EnvironmentHost host;
 
@@ -112,6 +113,60 @@ public class RedstoneCardEnvironment extends AbstractManagedEnvironment implemen
         return new Object[]{oldValue};
     }
 
+    @Callback(direct = true, doc = "function([side:number[, color:number]]):number or table -- Gets bundled redstone input.")
+    public Object[] getBundledInput(final Context context, final Arguments args) {
+        final RedstoneControllerHost redstone = redstoneHost();
+        final BundleKey key = bundleKey(redstone, args);
+        if (key.hasColor()) {
+            return new Object[]{redstone.bundledRedstoneInput(key.side(), key.color())};
+        }
+        if (key.hasSide()) {
+            return new Object[]{colorsToMap(redstone, key.side(), true)};
+        }
+        return new Object[]{sidesToMap(redstone, true)};
+    }
+
+    @Callback(direct = true, doc = "function([side:number[, color:number]]):number or table -- Gets bundled redstone output.")
+    public Object[] getBundledOutput(final Context context, final Arguments args) {
+        final RedstoneControllerHost redstone = redstoneHost();
+        final BundleKey key = bundleKey(redstone, args);
+        if (key.hasColor()) {
+            return new Object[]{redstone.bundledRedstoneOutput(key.side(), key.color())};
+        }
+        if (key.hasSide()) {
+            return new Object[]{colorsToMap(redstone, key.side(), false)};
+        }
+        return new Object[]{sidesToMap(redstone, false)};
+    }
+
+    @Callback(doc = "function([side:number[, color:number,]] value:number or table):number or table -- Sets bundled redstone output and returns previous value.")
+    public Object[] setBundledOutput(final Context context, final Arguments args) {
+        final RedstoneControllerHost redstone = redstoneHost();
+        final Object result;
+        final boolean changed;
+        if (args.count() == 3) {
+            final Direction direction = side(redstone, args.checkInteger(0));
+            final int color = color(args.checkInteger(1));
+            final int oldValue = redstone.bundledRedstoneOutput(direction, color);
+            result = oldValue;
+            changed = oldValue != setBundledOutput(redstone, direction, color, args.checkInteger(2));
+        } else if (args.count() == 2) {
+            final Direction direction = side(redstone, args.checkInteger(0));
+            result = colorsToMap(redstone, direction, false);
+            changed = setBundledOutputs(redstone, direction, args.checkTable(1));
+        } else if (args.count() == 1 && args.isTable(0)) {
+            result = sidesToMap(redstone, false);
+            changed = setBundledOutputs(redstone, args.checkTable(0));
+        } else {
+            throw new IllegalArgumentException("invalid number of arguments, expected 1, 2, or 3");
+        }
+        final double redstoneDelay = ModSettings.redstoneDelay();
+        if (changed && context != null && redstoneDelay > 0D) {
+            context.pause(redstoneDelay);
+        }
+        return new Object[]{result};
+    }
+
     private RedstoneControllerHost redstoneHost() {
         if (host instanceof RedstoneControllerHost redstone) {
             return redstone;
@@ -148,5 +203,78 @@ public class RedstoneCardEnvironment extends AbstractManagedEnvironment implemen
             result.put(side, input ? redstone.redstoneInput(global) : redstone.redstoneOutput(global));
         }
         return result;
+    }
+
+    private static int color(final int value) {
+        if (value < 0 || value >= COLOR_COUNT) {
+            throw new IllegalArgumentException("invalid color");
+        }
+        return value;
+    }
+
+    private static BundleKey bundleKey(final RedstoneControllerHost redstone, final Arguments args) {
+        return switch (args.count()) {
+            case 0 -> new BundleKey(null, -1);
+            case 1 -> new BundleKey(side(redstone, args.checkInteger(0)), -1);
+            case 2 -> new BundleKey(side(redstone, args.checkInteger(0)), color(args.checkInteger(1)));
+            default -> throw new IllegalArgumentException("too many arguments, expected 0, 1, or 2");
+        };
+    }
+
+    private static Map<Integer, Integer> colorsToMap(final RedstoneControllerHost redstone, final Direction direction, final boolean input) {
+        final Map<Integer, Integer> result = new HashMap<>();
+        for (int color = 0; color < COLOR_COUNT; color++) {
+            result.put(color, input
+                ? redstone.bundledRedstoneInput(direction, color)
+                : redstone.bundledRedstoneOutput(direction, color));
+        }
+        return result;
+    }
+
+    private static Map<Integer, Map<Integer, Integer>> sidesToMap(final RedstoneControllerHost redstone, final boolean input) {
+        final Map<Integer, Map<Integer, Integer>> result = new HashMap<>();
+        for (Direction direction : Direction.values()) {
+            result.put(direction.get3DDataValue(), colorsToMap(redstone, redstone.toGlobal(direction), input));
+        }
+        return result;
+    }
+
+    private static int setBundledOutput(final RedstoneControllerHost redstone, final Direction direction, final int color, final int value) {
+        final int newValue = Math.clamp(value, 0, 255);
+        redstone.setBundledRedstoneOutput(direction, color, newValue);
+        return newValue;
+    }
+
+    private static boolean setBundledOutputs(final RedstoneControllerHost redstone, final Direction direction, final Map<?, ?> values) {
+        boolean changed = false;
+        for (Map.Entry<?, ?> entry : values.entrySet()) {
+            if (entry.getKey() instanceof Number color && entry.getValue() instanceof Number value) {
+                final int checkedColor = color(color.intValue());
+                final int oldValue = redstone.bundledRedstoneOutput(direction, checkedColor);
+                final int newValue = setBundledOutput(redstone, direction, checkedColor, value.intValue());
+                changed |= oldValue != newValue;
+            }
+        }
+        return changed;
+    }
+
+    private static boolean setBundledOutputs(final RedstoneControllerHost redstone, final Map<?, ?> values) {
+        boolean changed = false;
+        for (Map.Entry<?, ?> entry : values.entrySet()) {
+            if (entry.getKey() instanceof Number side && entry.getValue() instanceof Map<?, ?> colors) {
+                changed |= setBundledOutputs(redstone, side(redstone, side.intValue()), colors);
+            }
+        }
+        return changed;
+    }
+
+    private record BundleKey(Direction side, int color) {
+        private boolean hasSide() {
+            return side != null;
+        }
+
+        private boolean hasColor() {
+            return side != null && color >= 0;
+        }
     }
 }

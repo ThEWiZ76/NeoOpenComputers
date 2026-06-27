@@ -63,9 +63,11 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private static final String TAG_RUNNING = "oc:isRunning";
     private static final String TAG_HAS_ERRORED = "oc:hasErrored";
     private static final String TAG_REDSTONE_OUTPUTS = "oc:redstoneOutputs";
+    private static final String TAG_BUNDLED_REDSTONE_OUTPUTS = "oc:bundledRedstoneOutputs";
     private static final String TAG_WAKE_THRESHOLD = "oc:wakeThreshold";
     private static final String SLOT_TYPE_EEPROM = "eeprom";
     private static final int TIER_ANY = Integer.MAX_VALUE;
+    private static final int BUNDLED_COLOR_COUNT = 16;
     private static final CaseSlot[][] SLOT_LAYOUTS = {
         {
             new CaseSlot(Slot.Card, 0),
@@ -115,6 +117,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private boolean lastSyncedErrored;
     private final int[] redstoneOutputs = new int[6];
     private final int[] redstoneInputs = new int[6];
+    private final int[][] bundledRedstoneOutputs = new int[6][BUNDLED_COLOR_COUNT];
 
     public ComputerCaseBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.COMPUTER_CASE.get(), pos, blockState);
@@ -315,6 +318,27 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
                 return;
             }
             redstoneOutputs[index] = clampedValue;
+        }
+
+        scheduleRedstoneUpdate(direction);
+    }
+
+    @Override
+    public int bundledRedstoneOutput(final Direction direction, final int color) {
+        synchronized (bundledRedstoneOutputs) {
+            return bundledRedstoneOutputs[direction.get3DDataValue()][color];
+        }
+    }
+
+    @Override
+    public void setBundledRedstoneOutput(final Direction direction, final int color, final int value) {
+        final int clampedValue = Math.clamp(value, 0, 255);
+        final int side = direction.get3DDataValue();
+        synchronized (bundledRedstoneOutputs) {
+            if (bundledRedstoneOutputs[side][color] == clampedValue) {
+                return;
+            }
+            bundledRedstoneOutputs[side][color] = clampedValue;
         }
 
         scheduleRedstoneUpdate(direction);
@@ -575,6 +599,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         tag.putInt(TAG_COLOR, color);
         tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_REDSTONE_OUTPUTS, redstoneOutputs);
+        tag.putIntArray(TAG_BUNDLED_REDSTONE_OUTPUTS, saveBundledRedstoneOutputs());
         final CompoundTag machineTag = new CompoundTag();
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
@@ -693,6 +718,30 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         final int[] savedOutputs = tag.getIntArray(TAG_REDSTONE_OUTPUTS);
         for (int index = 0; index < redstoneOutputs.length; index++) {
             redstoneOutputs[index] = index < savedOutputs.length ? Math.clamp(savedOutputs[index], 0, 15) : 0;
+        }
+        loadBundledRedstoneOutputs(tag.getIntArray(TAG_BUNDLED_REDSTONE_OUTPUTS));
+    }
+
+    private int[] saveBundledRedstoneOutputs() {
+        final int[] saved = new int[bundledRedstoneOutputs.length * BUNDLED_COLOR_COUNT];
+        synchronized (bundledRedstoneOutputs) {
+            for (Direction direction : Direction.values()) {
+                final int side = direction.get3DDataValue();
+                System.arraycopy(bundledRedstoneOutputs[side], 0, saved, side * BUNDLED_COLOR_COUNT, BUNDLED_COLOR_COUNT);
+            }
+        }
+        return saved;
+    }
+
+    private void loadBundledRedstoneOutputs(final int[] saved) {
+        synchronized (bundledRedstoneOutputs) {
+            for (Direction direction : Direction.values()) {
+                final int side = direction.get3DDataValue();
+                for (int color = 0; color < BUNDLED_COLOR_COUNT; color++) {
+                    final int index = side * BUNDLED_COLOR_COUNT + color;
+                    bundledRedstoneOutputs[side][color] = index < saved.length ? Math.clamp(saved[index], 0, 255) : 0;
+                }
+            }
         }
     }
 

@@ -30,6 +30,9 @@ final class RedstoneCardEnvironmentTest {
         assertCallback("getOutput");
         assertCallback("setOutput");
         assertCallback("getComparatorInput");
+        assertCallback("getBundledInput");
+        assertCallback("getBundledOutput");
+        assertCallback("setBundledOutput");
     }
 
     @Test
@@ -93,6 +96,38 @@ final class RedstoneCardEnvironmentTest {
         });
     }
 
+    @Test
+    void bundledRedstoneCallbacksUseUpstreamShapes() {
+        OpenComputersApi.initialize();
+        TestRedstoneHost host = new TestRedstoneHost();
+        RedstoneCardEnvironment card = new RedstoneCardEnvironment(host);
+
+        assertEquals(Map.ofEntries(
+                Map.entry(0, 0), Map.entry(1, 0), Map.entry(2, 0), Map.entry(3, 0),
+                Map.entry(4, 0), Map.entry(5, 0), Map.entry(6, 0), Map.entry(7, 0),
+                Map.entry(8, 0), Map.entry(9, 0), Map.entry(10, 0), Map.entry(11, 0),
+                Map.entry(12, 0), Map.entry(13, 0), Map.entry(14, 0), Map.entry(15, 0)),
+            card.getBundledInput(null, new TestArguments(2))[0]);
+        assertEquals(0, card.getBundledOutput(null, new TestArguments(2, 5))[0]);
+
+        assertArrayEquals(new Object[]{0}, card.setBundledOutput(null, new TestArguments(2, 5, 200)));
+        assertEquals(200, card.getBundledOutput(null, new TestArguments(2, 5))[0]);
+
+        final Map<Integer, Integer> colors = new HashMap<>();
+        colors.put(0, 10);
+        colors.put(15, 300);
+        final Object previousColors = card.setBundledOutput(null, new TestArguments(2, colors))[0];
+        assertTrue(previousColors instanceof Map<?, ?>);
+        assertEquals(10, card.getBundledOutput(null, new TestArguments(2, 0))[0]);
+        assertEquals(255, card.getBundledOutput(null, new TestArguments(2, 15))[0]);
+
+        final Map<Integer, Map<Integer, Integer>> sides = new HashMap<>();
+        sides.put(5, Map.of(3, 7));
+        final Object previousSides = card.setBundledOutput(null, new TestArguments(sides))[0];
+        assertTrue(previousSides instanceof Map<?, ?>);
+        assertEquals(7, card.getBundledOutput(null, new TestArguments(5, 3))[0]);
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         Method method = RedstoneCardEnvironment.class.getMethod(methodName, Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class));
@@ -118,10 +153,13 @@ final class RedstoneCardEnvironmentTest {
     private static final class TestRedstoneHost implements RedstoneControllerHost {
         private final int[] inputs = new int[6];
         private final int[] outputs = new int[6];
+        private final int[][] bundledOutputs = new int[6][16];
 
         @Override public int redstoneOutput(final Direction direction) { return outputs[direction.get3DDataValue()]; }
         @Override public int redstoneInput(final Direction direction) { return inputs[direction.get3DDataValue()]; }
         @Override public void setRedstoneOutput(final Direction direction, final int value) { outputs[direction.get3DDataValue()] = Math.clamp(value, 0, 15); }
+        @Override public int bundledRedstoneOutput(final Direction direction, final int color) { return bundledOutputs[direction.get3DDataValue()][color]; }
+        @Override public void setBundledRedstoneOutput(final Direction direction, final int color, final int value) { bundledOutputs[direction.get3DDataValue()][color] = Math.clamp(value, 0, 255); }
         @Override public Direction toGlobal(final Direction direction) { return direction; }
         @Override public Level world() { return null; }
         @Override public double xPosition() { return 0.5D; }
