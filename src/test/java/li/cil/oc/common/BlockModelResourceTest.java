@@ -71,7 +71,9 @@ final class BlockModelResourceTest {
             final JsonObject textures = panel.getAsJsonObject("textures");
             assertTrue("neoopencomputers:block/generic_top".equals(textures.get("top_bottom").getAsString()));
             assertTrue("neoopencomputers:block/generic_side".equals(textures.get("side").getAsString()));
-            assertTrue(!textures.toString().contains("block/screen/f"), "Static block model must not bake one screen front per block");
+            assertTrue("neoopencomputers:block/screen/f".equals(textures.get("front").getAsString()), "Static block model needs an opaque screen-front fallback");
+            final JsonObject faces = panel.getAsJsonArray("elements").get(0).getAsJsonObject().getAsJsonObject("faces");
+            assertTrue("#front".equals(faces.getAsJsonObject("south").get("texture").getAsString()), "Static south/front face should not be generic side");
         }
 
         final List<String> modelNames = List.of("screen_tier1.json", "screen_tier2.json", "screen_tier3.json");
@@ -87,9 +89,15 @@ final class BlockModelResourceTest {
         for (final String modelName : horizontalModelNames) {
             try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve(modelName))) {
                 final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
-                assertTrue("neoopencomputers:block/screen_panel".equals(model.get("parent").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen_horizontal_panel".equals(model.get("parent").getAsString()), modelName);
                 assertTrue(!model.has("textures"), modelName);
             }
+        }
+
+        try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_horizontal_panel.json"))) {
+            final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
+            assertTrue("neoopencomputers:block/screen_panel".equals(model.get("parent").getAsString()));
+            assertTrue("neoopencomputers:block/screen/f2".equals(model.getAsJsonObject("textures").get("front").getAsString()));
         }
     }
 
