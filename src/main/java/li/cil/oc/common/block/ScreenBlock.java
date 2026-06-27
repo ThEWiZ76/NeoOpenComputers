@@ -99,11 +99,9 @@ public class ScreenBlock extends Block implements EntityBlock {
 
     @Override
     public BlockState getStateForPlacement(final BlockPlaceContext context) {
-        final Direction clickedFace = context.getClickedFace();
-        final Direction yaw = clickedFace.getAxis().isHorizontal()
-            ? clickedFace
-            : context.getHorizontalDirection().getOpposite();
-        final Direction pitch = clickedFace.getAxis().isVertical() ? clickedFace : Direction.NORTH;
+        final Direction lookDirection = context.getNearestLookingDirection();
+        final Direction pitch = lookDirection.getAxis().isVertical() ? lookDirection : Direction.NORTH;
+        final Direction yaw = context.getHorizontalDirection().getOpposite();
         return defaultBlockState()
             .setValue(PITCH, pitch)
             .setValue(YAW, yaw);

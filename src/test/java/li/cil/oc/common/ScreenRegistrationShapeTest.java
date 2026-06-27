@@ -53,6 +53,17 @@ final class ScreenRegistrationShapeTest {
     }
 
     @Test
+    void screenPlacementUsesPlayerLookDirectionLikeUpstreamRotatableScreens() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+        final String method = source.substring(
+            source.indexOf("public BlockState getStateForPlacement"),
+            source.indexOf("protected BlockState rotate"));
+
+        assertTrue(method.contains("context.getNearestLookingDirection()"));
+        assertTrue(!method.contains("context.getClickedFace()"));
+    }
+
+    @Test
     void screenBlockEntityIsTextBuffer() throws NoSuchMethodException {
         final Constructor<ScreenBlockEntity> constructor = ScreenBlockEntity.class.getConstructor(BlockPos.class, BlockState.class);
 
