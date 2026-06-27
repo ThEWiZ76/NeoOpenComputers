@@ -8,9 +8,11 @@ import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.block.ScreenBlock;
@@ -30,12 +32,13 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayList;
 import java.util.ArrayDeque;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo, Tiered {
+    private static final int MAX_MULTIBLOCK_WIDTH = 8;
+    private static final int MAX_MULTIBLOCK_HEIGHT = 6;
     private static final int DEFAULT_WIDTH = 50;
     private static final int DEFAULT_HEIGHT = 16;
     private static final int DEFAULT_FOREGROUND = 0xFFFFFF;
@@ -509,30 +512,28 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         final Direction pitch = ScreenBlock.pitch(state);
         final Direction yaw = ScreenBlock.yaw(state);
         final Set<BlockPos> connected = connectedScreens(pitch, yaw, right, up);
-        final BlockPos origin = connected.stream()
-            .min(Comparator
-                .comparingInt((BlockPos pos) -> localX(worldPosition, pos, right))
-                .thenComparingInt(pos -> localY(worldPosition, pos, up)))
-            .orElse(worldPosition);
-
-        int minX = 0;
-        int minY = 0;
-        int maxX = 0;
-        int maxY = 0;
+        final Set<ScreenCell> cells = new HashSet<>();
+        int observedMinX = 0;
+        int observedMinY = 0;
+        int observedMaxX = 0;
+        int observedMaxY = 0;
         for (final BlockPos pos : connected) {
-            final int x = localX(origin, pos, right);
-            final int y = localY(origin, pos, up);
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
+            final int x = localX(worldPosition, pos, right);
+            final int y = localY(worldPosition, pos, up);
+            cells.add(new ScreenCell(x, y));
+            observedMinX = Math.min(observedMinX, x);
+            observedMinY = Math.min(observedMinY, y);
+            observedMaxX = Math.max(observedMaxX, x);
+            observedMaxY = Math.max(observedMaxY, y);
         }
+        final ScreenRectangle rectangle = largestCompleteRectangle(cells, observedMinX, observedMinY, observedMaxX, observedMaxY);
+        final BlockPos origin = worldPosition.relative(right, rectangle.minX()).relative(up, rectangle.minY());
         return new ScreenLayout(
             origin,
-            Math.max(1, maxX - minX + 1),
-            Math.max(1, maxY - minY + 1),
-            localX(origin, worldPosition, right),
-            localY(origin, worldPosition, up));
+            rectangle.width(),
+            rectangle.height(),
+            -rectangle.minX(),
+            -rectangle.minY());
     }
 
     private Set<BlockPos> connectedScreens(final Direction pitch, final Direction yaw, final Direction right, final Direction up) {
@@ -544,22 +545,59 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             if (!visited.add(current)) {
                 continue;
             }
-            queueMatchingScreen(pending, visited, current.relative(right), pitch, yaw);
-            queueMatchingScreen(pending, visited, current.relative(right.getOpposite()), pitch, yaw);
-            queueMatchingScreen(pending, visited, current.relative(up), pitch, yaw);
-            queueMatchingScreen(pending, visited, current.relative(up.getOpposite()), pitch, yaw);
+            queueMatchingScreen(pending, visited, current.relative(right), pitch, yaw, tier);
+            queueMatchingScreen(pending, visited, current.relative(right.getOpposite()), pitch, yaw, tier);
+            queueMatchingScreen(pending, visited, current.relative(up), pitch, yaw, tier);
+            queueMatchingScreen(pending, visited, current.relative(up.getOpposite()), pitch, yaw, tier);
         }
         return visited;
     }
 
-    private void queueMatchingScreen(final ArrayDeque<BlockPos> pending, final Set<BlockPos> visited, final BlockPos pos, final Direction pitch, final Direction yaw) {
+    private void queueMatchingScreen(final ArrayDeque<BlockPos> pending, final Set<BlockPos> visited, final BlockPos pos, final Direction pitch, final Direction yaw, final int tier) {
         if (visited.contains(pos) || level == null) {
             return;
         }
         final BlockState state = level.getBlockState(pos);
-        if (state.getBlock() instanceof ScreenBlock && ScreenBlock.pitch(state) == pitch && ScreenBlock.yaw(state) == yaw) {
+        if (state.getBlock() instanceof ScreenBlock screenBlock && screenBlock.tier() == tier && ScreenBlock.pitch(state) == pitch && ScreenBlock.yaw(state) == yaw) {
             pending.add(pos);
         }
+    }
+
+    private static ScreenRectangle largestCompleteRectangle(final Set<ScreenCell> cells, final int observedMinX, final int observedMinY, final int observedMaxX, final int observedMaxY) {
+        ScreenRectangle best = new ScreenRectangle(0, 0, 1, 1);
+        final int minXLimit = Math.max(observedMinX, -MAX_MULTIBLOCK_WIDTH + 1);
+        final int minYLimit = Math.max(observedMinY, -MAX_MULTIBLOCK_HEIGHT + 1);
+        final int maxXLimit = Math.min(observedMaxX, MAX_MULTIBLOCK_WIDTH - 1);
+        final int maxYLimit = Math.min(observedMaxY, MAX_MULTIBLOCK_HEIGHT - 1);
+        for (int minX = minXLimit; minX <= 0; minX++) {
+            for (int minY = minYLimit; minY <= 0; minY++) {
+                for (int maxX = 0; maxX <= maxXLimit; maxX++) {
+                    for (int maxY = 0; maxY <= maxYLimit; maxY++) {
+                        final int width = maxX - minX + 1;
+                        final int height = maxY - minY + 1;
+                        if (width > MAX_MULTIBLOCK_WIDTH || height > MAX_MULTIBLOCK_HEIGHT) {
+                            continue;
+                        }
+                        final ScreenRectangle candidate = new ScreenRectangle(minX, minY, width, height);
+                        if (candidate.area() > best.area() && containsAll(cells, candidate)) {
+                            best = candidate;
+                        }
+                    }
+                }
+            }
+        }
+        return best;
+    }
+
+    private static boolean containsAll(final Set<ScreenCell> cells, final ScreenRectangle rectangle) {
+        for (int x = rectangle.minX(); x < rectangle.minX() + rectangle.width(); x++) {
+            for (int y = rectangle.minY(); y < rectangle.minY() + rectangle.height(); y++) {
+                if (!cells.contains(new ScreenCell(x, y))) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private static Direction localRight(final BlockState state) {
@@ -585,6 +623,15 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     }
 
     private record ScreenLayout(BlockPos origin, int width, int height, int localX, int localY) {
+    }
+
+    private record ScreenCell(int x, int y) {
+    }
+
+    private record ScreenRectangle(int minX, int minY, int width, int height) {
+        private int area() {
+            return width * height;
+        }
     }
 
     @Override
@@ -664,6 +711,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Override
     public void update() {
+        updateMultiblockState();
         if (!powered) {
             return;
         }
@@ -677,6 +725,24 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (hasPower != newHasPower) {
             hasPower = newHasPower;
             markChanged();
+        }
+    }
+
+    private void updateMultiblockState() {
+        if (level == null) {
+            return;
+        }
+        final ScreenLayout layout = screenLayout();
+        final boolean origin = layout.origin().equals(worldPosition);
+        if (node() instanceof Component component) {
+            component.setVisibility(origin ? Visibility.Neighbors : Visibility.None);
+        }
+        if (origin) {
+            setEnergyCostPerTick(ModSettings.screenCost() * layout.width() * layout.height());
+            setAspectRatio(layout.width(), layout.height());
+        } else {
+            setEnergyCostPerTick(ModSettings.screenCost());
+            setAspectRatio(1.0D, 1.0D);
         }
     }
 

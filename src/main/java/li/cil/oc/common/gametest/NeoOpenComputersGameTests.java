@@ -10266,6 +10266,76 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty")
+    public static void adjacentSameTierScreensFormHorizontalMultiblock(final GameTestHelper helper) {
+        final BlockPos leftPos = new BlockPos(0, 1, 1);
+        final BlockPos middlePos = new BlockPos(1, 1, 1);
+        final BlockPos rightPos = new BlockPos(2, 1, 1);
+
+        helper.setBlock(leftPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(middlePos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(rightPos, ModBlocks.SCREEN_TIER1.get());
+
+        final ScreenBlockEntity left = helper.getBlockEntity(leftPos);
+        final ScreenBlockEntity middle = helper.getBlockEntity(middlePos);
+        final ScreenBlockEntity right = helper.getBlockEntity(rightPos);
+        assertScreenLayout(helper, left, 3, 1, 0, 0);
+        assertScreenLayout(helper, middle, 3, 1, 1, 0);
+        assertScreenLayout(helper, right, 3, 1, 2, 0);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void adjacentDifferentTierScreensDoNotMerge(final GameTestHelper helper) {
+        final BlockPos tier1Pos = new BlockPos(0, 1, 1);
+        final BlockPos tier2Pos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(tier1Pos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(tier2Pos, ModBlocks.SCREEN_TIER2.get());
+
+        assertScreenLayout(helper, helper.getBlockEntity(tier1Pos), 1, 1, 0, 0);
+        assertScreenLayout(helper, helper.getBlockEntity(tier2Pos), 1, 1, 0, 0);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void screenMultiblockExposesOnlyOriginComponent(final GameTestHelper helper) {
+        final BlockPos originPos = new BlockPos(0, 1, 1);
+        final BlockPos secondaryPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(originPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(secondaryPos, ModBlocks.SCREEN_TIER1.get());
+
+        final ScreenBlockEntity origin = helper.getBlockEntity(originPos);
+        final ScreenBlockEntity secondary = helper.getBlockEntity(secondaryPos);
+        origin.update();
+        secondary.update();
+
+        helper.assertTrue(origin.node() instanceof li.cil.oc.api.network.Component, "Origin screen did not expose a component node");
+        helper.assertTrue(secondary.node() instanceof li.cil.oc.api.network.Component, "Secondary screen did not expose a component node");
+        final li.cil.oc.api.network.Component originComponent = (li.cil.oc.api.network.Component) origin.node();
+        final li.cil.oc.api.network.Component secondaryComponent = (li.cil.oc.api.network.Component) secondary.node();
+        helper.assertTrue(originComponent.visibility() == Visibility.Neighbors, "Origin screen component should remain neighbor-visible");
+        helper.assertTrue(secondaryComponent.visibility() == Visibility.None, "Secondary screen component should be hidden in multiblock");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void lShapedScreensDoNotCreatePhantomRectangle(final GameTestHelper helper) {
+        final BlockPos lowerLeftPos = new BlockPos(0, 1, 1);
+        final BlockPos lowerRightPos = new BlockPos(1, 1, 1);
+        final BlockPos upperLeftPos = new BlockPos(0, 2, 1);
+
+        helper.setBlock(lowerLeftPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(lowerRightPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(upperLeftPos, ModBlocks.SCREEN_TIER1.get());
+
+        assertScreenLayoutArea(helper, helper.getBlockEntity(lowerLeftPos), 2);
+        assertScreenLayoutArea(helper, helper.getBlockEntity(lowerRightPos), 2);
+        assertScreenLayoutArea(helper, helper.getBlockEntity(upperLeftPos), 2);
+        helper.succeed();
+    }
+
     private static ItemStack luaBiosEepromStack() {
         final ItemStack stack = new ItemStack(ModItems.EEPROM.get());
         final CompoundTag data = new CompoundTag();
@@ -10686,6 +10756,18 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(screen.getWidth() == width, "Expected screen width " + width + " but got " + screen.getWidth());
         helper.assertTrue(screen.getHeight() == height, "Expected screen height " + height + " but got " + screen.getHeight());
         helper.assertTrue(screen.getMaximumColorDepth() == depth, "Expected screen depth " + depth + " but got " + screen.getMaximumColorDepth());
+    }
+
+    private static void assertScreenLayout(final GameTestHelper helper, final ScreenBlockEntity screen, final int width, final int height, final int localX, final int localY) {
+        helper.assertTrue(screen.renderBlockWidth() == width, "Expected screen layout width " + width + " but got " + screen.renderBlockWidth());
+        helper.assertTrue(screen.renderBlockHeight() == height, "Expected screen layout height " + height + " but got " + screen.renderBlockHeight());
+        helper.assertTrue(screen.localBlockX() == localX, "Expected screen local X " + localX + " but got " + screen.localBlockX());
+        helper.assertTrue(screen.localBlockY() == localY, "Expected screen local Y " + localY + " but got " + screen.localBlockY());
+    }
+
+    private static void assertScreenLayoutArea(final GameTestHelper helper, final ScreenBlockEntity screen, final int maximumArea) {
+        final int area = screen.renderBlockWidth() * screen.renderBlockHeight();
+        helper.assertTrue(area <= maximumArea, "Screen layout created phantom area " + area + " for connected area " + maximumArea);
     }
 
     private static void assertComputerCaseTier(final GameTestHelper helper, final ComputerCaseBlockEntity computerCase, final int tier) {
