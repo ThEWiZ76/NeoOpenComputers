@@ -74,6 +74,7 @@ final class BlockModelResourceTest {
             for (final String face : List.of("north", "south", "east", "west", "up", "down")) {
                 assertTrue(faces.has(face), face);
                 assertTrue(faces.getAsJsonObject(face).has("tintindex"), face);
+                assertTrue(!faces.getAsJsonObject(face).has("cullface"), face);
             }
             assertTrue("#front".equals(faces.getAsJsonObject("north").get("texture").getAsString()));
             assertTrue("#back".equals(faces.getAsJsonObject("south").get("texture").getAsString()));
