@@ -66,6 +66,11 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererDrawsTerminalTextInFrontOfScreenFace() {
+        assertTrue(ScreenBlockEntityRenderer.screenTextZ() < ScreenBlockEntityRenderer.screenFrontZ());
+    }
+
+    @Test
     void screenRendererKeepsNorthFrontOnNorthFace() {
         assertEquals(0, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.NORTH));
         assertEquals(180, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.SOUTH));

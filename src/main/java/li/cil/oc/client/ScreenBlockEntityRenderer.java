@@ -33,6 +33,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     private static final int SCREEN_TIER2_COLOR = 0xFFFF66;
     private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
     private static final float SCREEN_FRONT_Z = -0.53F;
+    private static final float SCREEN_TEXT_Z = -0.535F;
     private static final String[][] HORIZONTAL_FRONT = {
         {"fhb2", "fhm2", "fht2"},
         {"fhb", "fhm", "fht"}
@@ -182,7 +183,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     private static void orientToScreenText(final ScreenBlockEntity screen, final PoseStack poseStack) {
         orientToScreenBlockFace(screen, poseStack);
-        poseStack.translate(-0.42D, -0.28D + screen.renderBlockHeight(), -0.505D);
+        poseStack.translate(-0.42D, -0.28D + screen.renderBlockHeight(), SCREEN_TEXT_Z);
     }
 
     private static void orientToScreenBlockFace(final ScreenBlockEntity screen, final PoseStack poseStack) {
@@ -209,6 +210,14 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             case WEST -> -90;
             default -> 0;
         };
+    }
+
+    static float screenFrontZ() {
+        return SCREEN_FRONT_Z;
+    }
+
+    static float screenTextZ() {
+        return SCREEN_TEXT_Z;
     }
 
     static AABB renderBounds(final net.minecraft.core.BlockPos origin, final Direction right, final Direction up, final int width, final int height) {
