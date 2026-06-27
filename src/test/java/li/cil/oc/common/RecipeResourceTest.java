@@ -433,7 +433,7 @@ final class RecipeResourceTest {
         assertItem(tier3, "B", "neoopencomputers:" + ModContentIds.CARD);
         assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.CPU_TIER2);
         assertItem(tier3, "M", "neoopencomputers:" + ModContentIds.MEMORY_TIER5);
-        assertItem(tier3, "X", "minecraft:diamond");
+        assertTag(tier3, "X", "neoopencomputers:chip_diamond");
     }
 
     @Test
@@ -504,7 +504,7 @@ final class RecipeResourceTest {
         assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
         assertItem(tier3, "R", "minecraft:redstone");
         assertItem(tier3, "U", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
-        assertItem(tier3, "X", "minecraft:diamond");
+        assertTag(tier3, "X", "neoopencomputers:chip_diamond");
         assertPattern(readJson(RECIPE_ROOT.resolve(ModContentIds.CPU_TIER3 + ".json")), "XRX", "CUC", "XAX");
     }
 
@@ -658,7 +658,7 @@ final class RecipeResourceTest {
         assertItem(tier3Keys, "R", "minecraft:glowstone_dust");
         assertItem(tier3Keys, "P", "minecraft:comparator");
         assertItem(tier3Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
-        assertItem(tier3Keys, "D", "minecraft:diamond");
+        assertTag(tier3Keys, "D", "neoopencomputers:chip_diamond");
         assertResultCount(tier3, 2);
     }
 
@@ -819,7 +819,7 @@ final class RecipeResourceTest {
         assertItem(tier2Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
 
         assertPattern(tier3, "IRI", "CU ", "IBI");
-        assertItem(tier3Keys, "I", "minecraft:diamond");
+        assertTag(tier3Keys, "I", "neoopencomputers:chip_diamond");
         assertItem(tier3Keys, "R", "minecraft:redstone");
         assertItem(tier3Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER3);
         assertItem(tier3Keys, "U", "neoopencomputers:" + ModContentIds.CONTROL_UNIT);
@@ -849,7 +849,7 @@ final class RecipeResourceTest {
 
         assertPattern(tier3Recipe, "ICI", "CDC", "ICI");
         assertTag(tier3, "I", "c:nuggets/iron");
-        assertItem(tier3, "D", "minecraft:diamond");
+        assertTag(tier3, "D", "neoopencomputers:chip_diamond");
         assertItem(tier3, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
     }
 
@@ -1092,7 +1092,7 @@ final class RecipeResourceTest {
         assertItem(tier1Keys, "C", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
         assertItem(tier1Keys, "G", "minecraft:glass_pane");
         assertItem(tier1Keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
-        assertItem(tier1Keys, "D", "minecraft:diamond");
+        assertTag(tier1Keys, "D", "neoopencomputers:chip_diamond");
         assertItem(tier1Keys, "O", "minecraft:obsidian");
         assertItem(tier1Keys, "Y", "minecraft:glowstone_dust");
 
@@ -1349,7 +1349,7 @@ final class RecipeResourceTest {
         if (goldCorners) {
             assertTag(keys, "G", "c:nuggets/gold");
         } else {
-            assertItem(keys, "G", "minecraft:diamond");
+            assertTag(keys, "G", "neoopencomputers:chip_diamond");
         }
         assertItem(keys, "C", "neoopencomputers:" + chip);
         assertItem(keys, "P", "neoopencomputers:" + cpu);

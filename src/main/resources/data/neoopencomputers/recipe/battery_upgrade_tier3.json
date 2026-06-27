@@ -6,7 +6,7 @@
       "item": "neoopencomputers:capacitor"
     },
     "D": {
-      "item": "minecraft:diamond"
+      "tag": "neoopencomputers:chip_diamond"
     },
     "I": {
       "tag": "c:nuggets/iron"

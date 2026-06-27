@@ -12,7 +12,7 @@
       "item": "neoopencomputers:memory_tier5"
     },
     "X": {
-      "item": "minecraft:diamond"
+      "tag": "neoopencomputers:chip_diamond"
     }
   },
   "pattern": [

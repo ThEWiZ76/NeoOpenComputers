@@ -9,7 +9,7 @@
       "item": "neoopencomputers:microchip_tier2"
     },
     "D": {
-      "item": "minecraft:diamond"
+      "tag": "neoopencomputers:chip_diamond"
     },
     "G": {
       "item": "minecraft:glass_pane"

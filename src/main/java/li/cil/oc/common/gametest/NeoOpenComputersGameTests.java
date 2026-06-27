@@ -4084,16 +4084,16 @@ public final class NeoOpenComputersGameTests {
             new ItemStack(Items.GOLD_NUGGET), new ItemStack(ModItems.ALU.get()), new ItemStack(Items.GOLD_NUGGET)
         )));
         assertCraftsItem(helper, ModItems.CPU_TIER3.get(), CraftingInput.of(3, 3, List.of(
-            new ItemStack(Items.DIAMOND), new ItemStack(Items.REDSTONE), new ItemStack(Items.DIAMOND),
+            new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(Items.REDSTONE), new ItemStack(ModItems.DIAMOND_CHIP.get()),
             new ItemStack(ModItems.MICROCHIP_TIER3.get()), new ItemStack(ModItems.CONTROL_UNIT.get()), new ItemStack(ModItems.MICROCHIP_TIER3.get()),
-            new ItemStack(Items.DIAMOND), new ItemStack(ModItems.ALU.get()), new ItemStack(Items.DIAMOND)
+            new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(ModItems.ALU.get()), new ItemStack(ModItems.DIAMOND_CHIP.get())
         )));
         assertCraftsItem(helper, ModItems.DATA_CARD_TIER2.get(), CraftingInput.of(3, 2, List.of(
             new ItemStack(Items.GOLD_NUGGET), new ItemStack(ModItems.CPU_TIER1.get()), new ItemStack(ModItems.MICROCHIP_TIER3.get()),
             ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), ItemStack.EMPTY
         )));
         assertCraftsItem(helper, ModItems.DATA_CARD_TIER3.get(), CraftingInput.of(3, 2, List.of(
-            new ItemStack(Items.DIAMOND), new ItemStack(ModItems.CPU_TIER2.get()), apiItemStack(helper, "ram5"),
+            new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(ModItems.CPU_TIER2.get()), apiItemStack(helper, "ram5"),
             ItemStack.EMPTY, new ItemStack(ModItems.CARD.get()), ItemStack.EMPTY
         )));
         assertCraftsItem(helper, ModItems.GRAPHICS_CARD_TIER2.get(), CraftingInput.of(3, 2, List.of(
@@ -4120,6 +4120,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chipDiamondTaggedRecipesUseDiamondChip(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.APU_TIER2.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(ModItems.DIAMOND_CHIP.get()),
+            new ItemStack(ModItems.CPU_TIER3.get()), new ItemStack(ModItems.COMPONENT_BUS_TIER2.get()), new ItemStack(ModItems.GRAPHICS_CARD_TIER2.get()),
+            new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(ModItems.DIAMOND_CHIP.get())
+        )));
+        assertCraftsItem(helper, ModItems.COMPONENT_BUS_TIER3.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(Items.REDSTONE), new ItemStack(ModItems.DIAMOND_CHIP.get()),
+            new ItemStack(ModItems.MICROCHIP_TIER3.get()), new ItemStack(ModItems.CONTROL_UNIT.get()), ItemStack.EMPTY,
+            new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(ModItems.DIAMOND_CHIP.get())
+        )));
+        assertCraftsItem(helper, ModItems.HOLOGRAM_TIER1.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(Items.GLASS_PANE), new ItemStack(ModItems.MICROCHIP_TIER2.get()),
+            new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()),
+            new ItemStack(Items.OBSIDIAN), new ItemStack(Items.GLOWSTONE_DUST), new ItemStack(Items.OBSIDIAN)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void communicationCardRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
         assertCraftsItem(helper, ModItems.TRANSISTOR.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_NUGGET), new ItemStack(Items.IRON_NUGGET), new ItemStack(Items.IRON_NUGGET),
@@ -4138,7 +4158,7 @@ public final class NeoOpenComputersGameTests {
         )), 4);
         assertCraftsItem(helper, ModItems.MICROCHIP_TIER3.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.GLOWSTONE_DUST), new ItemStack(Items.COMPARATOR), new ItemStack(Items.GLOWSTONE_DUST),
-            new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(Items.DIAMOND), new ItemStack(ModItems.MICROCHIP_TIER2.get()),
+            new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(ModItems.MICROCHIP_TIER2.get()),
             new ItemStack(Items.GLOWSTONE_DUST), new ItemStack(Items.COMPARATOR), new ItemStack(Items.GLOWSTONE_DUST)
         )), 2);
         assertCraftsItem(helper, ModItems.CARD.get(), CraftingInput.of(3, 3, List.of(
@@ -4191,7 +4211,7 @@ public final class NeoOpenComputersGameTests {
         )));
         assertCraftsItem(helper, ModItems.BATTERY_UPGRADE_TIER3.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(Items.IRON_NUGGET),
-            new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(Items.DIAMOND), new ItemStack(ModItems.CAPACITOR.get()),
+            new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(ModItems.DIAMOND_CHIP.get()), new ItemStack(ModItems.CAPACITOR.get()),
             new ItemStack(Items.IRON_NUGGET), new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(Items.IRON_NUGGET)
         )));
         helper.succeed();

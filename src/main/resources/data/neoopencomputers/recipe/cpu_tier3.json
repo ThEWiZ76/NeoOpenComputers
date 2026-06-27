@@ -15,7 +15,7 @@
       "item": "neoopencomputers:control_unit"
     },
     "X": {
-      "item": "minecraft:diamond"
+      "tag": "neoopencomputers:chip_diamond"
     }
   },
   "pattern": [

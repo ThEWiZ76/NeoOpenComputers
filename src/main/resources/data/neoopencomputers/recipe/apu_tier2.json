@@ -7,7 +7,7 @@
   ],
   "key": {
     "G": {
-      "item": "minecraft:diamond"
+      "tag": "neoopencomputers:chip_diamond"
     },
     "C": {
       "item": "neoopencomputers:microchip_tier2"

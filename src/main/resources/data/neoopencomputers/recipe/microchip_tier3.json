@@ -6,7 +6,7 @@
       "item": "neoopencomputers:microchip_tier2"
     },
     "D": {
-      "item": "minecraft:diamond"
+      "tag": "neoopencomputers:chip_diamond"
     },
     "P": {
       "item": "minecraft:comparator"
