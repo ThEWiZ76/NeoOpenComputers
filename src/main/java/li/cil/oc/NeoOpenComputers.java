@@ -19,6 +19,7 @@ import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.ModRecipeSerializers;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.ModWrenches;
 import li.cil.oc.common.NanomachinesRegistry;
 import li.cil.oc.common.OpenComputersApi;
@@ -68,6 +69,7 @@ public final class NeoOpenComputers {
         ModMenus.register(modEventBus);
         ModRecipeSerializers.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
+        ModSounds.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
         modEventBus.addListener(ModCapabilities::register);
         AngelUpgradeHandler.register();

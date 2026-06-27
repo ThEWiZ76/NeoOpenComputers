@@ -1,0 +1,43 @@
+{
+  "computer_running": {
+    "category": "block",
+    "sounds": [
+      {"name": "neoopencomputers:computer_running", "stream": true}
+    ]
+  },
+  "floppy_access": {
+    "category": "block",
+    "sounds": [
+      "neoopencomputers:floppy_access1",
+      "neoopencomputers:floppy_access2",
+      "neoopencomputers:floppy_access3",
+      "neoopencomputers:floppy_access4",
+      "neoopencomputers:floppy_access5",
+      "neoopencomputers:floppy_access6"
+    ]
+  },
+  "floppy_eject": {
+    "category": "block",
+    "sounds": [
+      "neoopencomputers:floppy_eject"
+    ]
+  },
+  "floppy_insert": {
+    "category": "block",
+    "sounds": [
+      "neoopencomputers:floppy_insert"
+    ]
+  },
+  "hdd_access": {
+    "category": "block",
+    "sounds": [
+      "neoopencomputers:hdd_access1",
+      "neoopencomputers:hdd_access2",
+      "neoopencomputers:hdd_access3",
+      "neoopencomputers:hdd_access4",
+      "neoopencomputers:hdd_access5",
+      "neoopencomputers:hdd_access6",
+      "neoopencomputers:hdd_access7"
+    ]
+  }
+}

@@ -2,6 +2,7 @@ package li.cil.oc.common.component;
 
 import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.event.FileSystemAccessEvent;
+import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -16,6 +17,7 @@ public final class FileSystemAccessHandler {
     }
 
     private static void onFileSystemAccess(final FileSystemAccessEvent.Server event) {
+        ModSounds.play(event.getWorld(), event.getX(), event.getY(), event.getZ(), ModSounds.soundEvent(event.getSound()));
         final RackBlockEntity rack = rackFor(event);
         if (rack == null) {
             return;

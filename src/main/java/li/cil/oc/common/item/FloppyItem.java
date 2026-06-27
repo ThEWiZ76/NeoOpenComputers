@@ -13,6 +13,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -65,7 +66,7 @@ public class FloppyItem extends Item implements DriverItem {
         if (rootData.contains(LEGACY_LOOT_PATH_TAG)) {
             final li.cil.oc.api.fs.FileSystem fileSystem = ModLootDisks.bundledFileSystem(rootData.getString(LEGACY_LOOT_PATH_TAG));
             final String label = rootData.getString(LEGACY_LABEL_TAG);
-            return FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
+            return FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, ModSounds.FLOPPY_ACCESS_ID);
         }
         if (rootData.contains(LEGACY_LOOT_FACTORY_TAG)) {
             if (!(API.items instanceof ItemRegistry registry)) {
@@ -93,7 +94,7 @@ public class FloppyItem extends Item implements DriverItem {
                 return null;
             }
             final String label = readLabel(rootData);
-            final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, null);
+            final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, ModSounds.FLOPPY_ACCESS_ID);
             if (environment != null && environment.node() instanceof li.cil.oc.api.network.Component component) {
                 component.setVisibility(Visibility.Network);
             }
@@ -116,7 +117,7 @@ public class FloppyItem extends Item implements DriverItem {
             return null;
         }
         final String label = itemData == null ? "" : itemData.getString(ItemRegistry.FLOPPY_LABEL_TAG);
-        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(label.isEmpty() ? null : label), host, null);
+        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(label.isEmpty() ? null : label), host, ModSounds.FLOPPY_ACCESS_ID);
         if (environment == null) {
             return null;
         }

@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.DriveEnvironment;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.menu.DriveMenu;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -98,7 +99,7 @@ public class HardDiskDriveItem extends Item implements DriverItem {
                 ModSettings.hddPlatterCount(clampedTier),
                 new ItemDiskLabel(null),
                 host,
-                null,
+                ModSounds.HDD_ACCESS_ID,
                 clampedTier + 2,
                 lockInfo(data));
             if (data != null && !data.isEmpty()) {
@@ -110,7 +111,7 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         if (fileSystem == null) {
             return null;
         }
-        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(null), host, null, clampedTier + 2);
+        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(null), host, ModSounds.HDD_ACCESS_ID, clampedTier + 2);
         if (environment == null) {
             return null;
         }
