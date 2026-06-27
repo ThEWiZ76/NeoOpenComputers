@@ -1,9 +1,14 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
@@ -37,7 +42,7 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
 import java.util.EnumSet;
 import java.util.Map;
 
-public class ChargerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, DeviceInfo, StateAware, Container, MenuProvider {
+public class ChargerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, EnvironmentHost, DeviceInfo, StateAware, Container, MenuProvider {
     public static final int SLOT_CHARGEABLE = 0;
     public static final int CONTAINER_SIZE = 1;
 
@@ -49,6 +54,7 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final Connector node;
     private final IEnergyStorage energyStorage;
+    private ManagedEnvironment tabletFilesystem;
     private double chargeSpeed;
     private boolean hasPower;
     private boolean invertSignal;
@@ -79,6 +85,9 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
 
     @Override
     public void onConnect(final Node node) {
+        if (node == this.node) {
+            connectTabletFilesystem();
+        }
     }
 
     @Override
@@ -92,6 +101,31 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     @Override
     public Map<String, String> getDeviceInfo() {
         return deviceInfo();
+    }
+
+    @Override
+    public Level world() {
+        return getLevel();
+    }
+
+    @Override
+    public double xPosition() {
+        return worldPosition.getX() + 0.5D;
+    }
+
+    @Override
+    public double yPosition() {
+        return worldPosition.getY() + 0.5D;
+    }
+
+    @Override
+    public double zPosition() {
+        return worldPosition.getZ() + 0.5D;
+    }
+
+    @Override
+    public void markChanged() {
+        setChanged();
     }
 
     @Override
@@ -133,16 +167,27 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
 
     @Override
     public ItemStack removeItem(final int slot, final int amount) {
+        if (slot == SLOT_CHARGEABLE) {
+            saveTabletFilesystem();
+        }
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             setChanged();
+            refreshTabletFilesystem();
         }
         return removed;
     }
 
     @Override
     public ItemStack removeItemNoUpdate(final int slot) {
-        return ContainerHelper.takeItem(items, slot);
+        if (slot == SLOT_CHARGEABLE) {
+            saveTabletFilesystem();
+        }
+        final ItemStack removed = ContainerHelper.takeItem(items, slot);
+        if (!removed.isEmpty()) {
+            refreshTabletFilesystem();
+        }
+        return removed;
     }
 
     @Override
@@ -150,11 +195,13 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
         if (slot != SLOT_CHARGEABLE) {
             return;
         }
+        saveTabletFilesystem();
         items.set(SLOT_CHARGEABLE, stack);
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
             stack.setCount(getMaxStackSize());
         }
         setChanged();
+        refreshTabletFilesystem();
     }
 
     @Override
@@ -174,8 +221,10 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
 
     @Override
     public void clearContent() {
+        saveTabletFilesystem();
         items.set(SLOT_CHARGEABLE, ItemStack.EMPTY);
         setChanged();
+        refreshTabletFilesystem();
     }
 
     public void setChargeSpeed(final double value) {
@@ -244,6 +293,7 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
         chargeSpeed = Mth.clamp(tag.getDouble(TAG_CHARGE_SPEED), 0D, 1D);
         hasPower = tag.getBoolean(TAG_HAS_POWER);
         invertSignal = tag.getBoolean(TAG_INVERT_SIGNAL);
+        refreshTabletFilesystem();
     }
 
     @Override
@@ -255,6 +305,7 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
         final CompoundTag nodeTag = new CompoundTag();
         node.save(nodeTag);
         tag.put(TAG_NODE, nodeTag);
+        saveTabletFilesystem();
         ContainerHelper.saveAllItems(tag, items, registries);
         tag.putDouble(TAG_CHARGE_SPEED, chargeSpeed);
         tag.putBoolean(TAG_HAS_POWER, hasPower);
@@ -274,7 +325,51 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     }
 
     public void removeNode() {
+        removeTabletFilesystem();
         node.remove();
+    }
+
+    private void refreshTabletFilesystem() {
+        removeTabletFilesystem();
+        final ItemStack stack = items.get(SLOT_CHARGEABLE);
+        final DriverItem driver = Driver.driverFor(stack, getClass());
+        if (driver == null || !Slot.Tablet.equals(driver.slot(stack))) {
+            return;
+        }
+        tabletFilesystem = driver.createEnvironment(stack, this);
+        connectTabletFilesystem();
+    }
+
+    private void connectTabletFilesystem() {
+        if (node() == null || tabletFilesystem == null || tabletFilesystem.node() == null) {
+            return;
+        }
+        if (node().network() == null) {
+            Network.joinNewNetwork(node());
+        }
+        if (tabletFilesystem.node() instanceof li.cil.oc.api.network.Component component) {
+            component.setVisibility(Visibility.Network);
+        }
+        node().connect(tabletFilesystem.node());
+    }
+
+    private void saveTabletFilesystem() {
+        if (tabletFilesystem == null) {
+            return;
+        }
+        final ItemStack stack = items.get(SLOT_CHARGEABLE);
+        final DriverItem driver = Driver.driverFor(stack, getClass());
+        if (driver == null || !Slot.Tablet.equals(driver.slot(stack))) {
+            return;
+        }
+        tabletFilesystem.save(driver.dataTag(stack));
+    }
+
+    private void removeTabletFilesystem() {
+        if (tabletFilesystem != null && tabletFilesystem.node() != null) {
+            tabletFilesystem.node().remove();
+        }
+        tabletFilesystem = null;
     }
 
     public static double connectorBufferSize() {

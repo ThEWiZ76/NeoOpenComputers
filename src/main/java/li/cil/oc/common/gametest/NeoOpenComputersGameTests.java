@@ -7272,6 +7272,29 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chargerExposesTabletFilesystemLikeDiskDrive(final GameTestHelper helper) {
+        final BlockPos chargerPos = new BlockPos(1, 1, 1);
+        helper.setBlock(chargerPos, ModBlocks.CHARGER.get());
+        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(chargerPos));
+
+        final ChargerBlockEntity charger = helper.getBlockEntity(chargerPos);
+        final TabletItem tablet = ModItems.TABLET.get();
+        final ItemStack stack = tablet.assembleFromCase(
+            new ItemStack(ModItems.TABLET_CASE_TIER1.get()),
+            ItemStack.EMPTY,
+            new ItemStack(ModItems.HDD_TIER1.get()));
+
+        charger.setItem(ChargerBlockEntity.SLOT_CHARGEABLE, stack);
+
+        helper.assertTrue(reachableComponent(charger.node(), "filesystem"), "Charger did not expose inserted tablet filesystem");
+
+        charger.removeItem(ChargerBlockEntity.SLOT_CHARGEABLE, 1);
+
+        helper.assertFalse(reachableComponent(charger.node(), "filesystem"), "Charger kept tablet filesystem after tablet removal");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void energyStorageBlockDriverExposesEnergyDeviceLikeUpstream(final GameTestHelper helper) throws Exception {
         withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
             withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
