@@ -227,7 +227,8 @@ public final class ModBlocks {
     private static BlockBehaviour.Properties keyboardProperties() {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_GRAY)
-            .strength(1.0F, 3.0F);
+            .strength(1.0F, 3.0F)
+            .noOcclusion();
     }
 
     private static BlockBehaviour.Properties hologramProperties() {

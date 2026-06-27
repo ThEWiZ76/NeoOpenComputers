@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu> {
+    public static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/background.png");
     public static final ResourceLocation COMPUTER_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/computer.png");
     public static final ResourceLocation POWER_BUTTON_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/button_power.png");
     public static final ResourceLocation SLOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/slot.png");
@@ -35,6 +36,7 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
     protected void renderBg(final GuiGraphics guiGraphics, final float partialTick, final int mouseX, final int mouseY) {
         final int left = leftPos;
         final int top = topPos;
+        guiGraphics.blit(BACKGROUND_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
         guiGraphics.blit(COMPUTER_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
         final int tier = menu.computerTier();
         for (int slot = 0; slot < ComputerCaseMenu.computerSlotCountForTier(tier); slot++) {

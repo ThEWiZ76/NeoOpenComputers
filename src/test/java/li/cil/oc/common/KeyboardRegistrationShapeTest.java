@@ -16,6 +16,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,5 +48,16 @@ final class KeyboardRegistrationShapeTest {
     void keyboardBlockEntityUsesModernNbtHooks() throws NoSuchMethodException {
         assertEquals(KeyboardBlockEntity.class, KeyboardBlockEntity.class.getDeclaredMethod("loadAdditional", CompoundTag.class, HolderLookup.Provider.class).getDeclaringClass());
         assertEquals(KeyboardBlockEntity.class, KeyboardBlockEntity.class.getDeclaredMethod("saveAdditional", CompoundTag.class, HolderLookup.Provider.class).getDeclaringClass());
+    }
+
+    @Test
+    void keyboardBlockDoesNotOccludeNeighborFaces() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/ModBlocks.java"));
+        final int methodStart = source.indexOf("private static BlockBehaviour.Properties keyboardProperties()");
+        final int methodEnd = source.indexOf("private static BlockBehaviour.Properties hologramProperties()", methodStart);
+
+        assertTrue(methodStart >= 0);
+        assertTrue(methodEnd > methodStart);
+        assertTrue(source.substring(methodStart, methodEnd).contains(".noOcclusion()"));
     }
 }

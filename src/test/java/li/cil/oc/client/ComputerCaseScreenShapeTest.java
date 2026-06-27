@@ -37,7 +37,9 @@ final class ComputerCaseScreenShapeTest {
 
     @Test
     void computerCaseScreenUsesUpstreamTextureAsset() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/background.png"), ComputerCaseScreen.BACKGROUND_TEXTURE);
         assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/computer.png"), ComputerCaseScreen.COMPUTER_TEXTURE);
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/gui/background.png")));
         assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/gui/computer.png")));
     }
 
