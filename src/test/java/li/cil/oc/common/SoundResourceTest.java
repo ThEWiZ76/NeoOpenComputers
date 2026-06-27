@@ -49,6 +49,17 @@ final class SoundResourceTest {
     }
 
     @Test
+    void upstreamSoundPreloadListIsRestoredUnderNeoNamespace() throws IOException {
+        final Path preload = ASSET_ROOT.resolve("sounds").resolve("preload.cfg");
+
+        assertTrue(Files.exists(preload), "Missing upstream sound preload list");
+        for (final String line : Files.readAllLines(preload)) {
+            assertTrue(line.startsWith("assets/neoopencomputers/sounds/"), "Wrong preload namespace: " + line);
+            assertTrue(Files.exists(Path.of("src/main/resources").resolve(line)), "Missing preload sound asset: " + line);
+        }
+    }
+
+    @Test
     void storageDriversUseUpstreamAccessSoundIds() throws IOException {
         final String floppy = Files.readString(Path.of("src/main/java/li/cil/oc/common/item/FloppyItem.java"));
         final String hdd = Files.readString(Path.of("src/main/java/li/cil/oc/common/item/HardDiskDriveItem.java"));
