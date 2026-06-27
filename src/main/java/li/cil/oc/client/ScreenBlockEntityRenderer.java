@@ -25,10 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<ScreenBlockEntity> {
-    private static final float TEXT_SCALE = 0.0105F;
     private static final int LINE_HEIGHT = 9;
     private static final int CELL_WIDTH = 6;
     private static final int DEFAULT_COLOR = 0xFFFFFF;
+    private static final float SCREEN_BORDER = 2.25F / 16F;
     private static final int SCREEN_TIER1_COLOR = 0xABABAB;
     private static final int SCREEN_TIER2_COLOR = 0xFFFF66;
     private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
@@ -74,7 +74,9 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
         poseStack.pushPose();
         orientToScreenText(screen, poseStack);
-        poseStack.scale(TEXT_SCALE * screen.renderBlockWidth(), -TEXT_SCALE * screen.renderBlockHeight(), TEXT_SCALE);
+        final TextLayout layout = textLayout(screen.renderBlockWidth(), screen.renderBlockHeight(), screen.renderWidth(), screen.renderHeight());
+        poseStack.translate(layout.x(), layout.y(), SCREEN_TEXT_Z);
+        poseStack.scale(layout.scale(), -layout.scale(), layout.scale());
         for (int row = 0; row < screen.renderHeight(); row++) {
             final List<String> cells = lineCells(line(screen, row), screen.renderWidth());
             for (int column = 0; column < cells.size(); column++) {
@@ -183,7 +185,6 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     private static void orientToScreenText(final ScreenBlockEntity screen, final PoseStack poseStack) {
         orientToScreenBlockFace(screen, poseStack);
-        poseStack.translate(-0.42D, -0.28D + screen.renderBlockHeight(), SCREEN_TEXT_Z);
     }
 
     private static void orientToScreenBlockFace(final ScreenBlockEntity screen, final PoseStack poseStack) {
@@ -205,7 +206,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     static int yawRotationDegrees(final Direction yaw) {
         return switch (yaw) {
-            case SOUTH -> 180;
+            case NORTH -> 180;
             case EAST -> 90;
             case WEST -> -90;
             default -> 0;
@@ -222,6 +223,36 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     static int centeredCellOffset(final int glyphWidth) {
         return Math.max(0, (CELL_WIDTH - Math.max(0, glyphWidth)) / 2);
+    }
+
+    static float textScale(final int blockWidth, final int blockHeight, final int renderWidth, final int renderHeight) {
+        final int safeBlockWidth = Math.max(1, blockWidth);
+        final int safeBlockHeight = Math.max(1, blockHeight);
+        final int safeRenderWidth = Math.max(1, renderWidth);
+        final int safeRenderHeight = Math.max(1, renderHeight);
+        final float innerWidth = Math.max(0.01F, safeBlockWidth - SCREEN_BORDER * 2F);
+        final float innerHeight = Math.max(0.01F, safeBlockHeight - SCREEN_BORDER * 2F);
+        final float pixelWidth = safeRenderWidth * CELL_WIDTH;
+        final float pixelHeight = safeRenderHeight * LINE_HEIGHT;
+        return Math.min(innerWidth / pixelWidth, innerHeight / pixelHeight);
+    }
+
+    static TextLayout textLayout(final int blockWidth, final int blockHeight, final int renderWidth, final int renderHeight) {
+        final int safeBlockWidth = Math.max(1, blockWidth);
+        final int safeBlockHeight = Math.max(1, blockHeight);
+        final int safeRenderWidth = Math.max(1, renderWidth);
+        final int safeRenderHeight = Math.max(1, renderHeight);
+        final float scale = textScale(safeBlockWidth, safeBlockHeight, safeRenderWidth, safeRenderHeight);
+        final float innerWidth = Math.max(0.01F, safeBlockWidth - SCREEN_BORDER * 2F);
+        final float innerHeight = Math.max(0.01F, safeBlockHeight - SCREEN_BORDER * 2F);
+        final float usedWidth = safeRenderWidth * CELL_WIDTH * scale;
+        final float usedHeight = safeRenderHeight * LINE_HEIGHT * scale;
+        final float x = -0.5F + SCREEN_BORDER + (innerWidth - usedWidth) * 0.5F;
+        final float y = -0.5F + SCREEN_BORDER + innerHeight - (innerHeight - usedHeight) * 0.5F;
+        return new TextLayout(x, y, scale);
+    }
+
+    record TextLayout(float x, float y, float scale) {
     }
 
     static AABB renderBounds(final net.minecraft.core.BlockPos origin, final Direction right, final Direction up, final int width, final int height) {

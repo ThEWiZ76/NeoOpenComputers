@@ -71,15 +71,38 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererScalesTerminalTextToInnerScreenArea() {
+        final float singleScale = ScreenBlockEntityRenderer.textScale(1, 1, 50, 16);
+        assertTrue(50 * 6 * singleScale < 0.75F, "Single-screen text should fit inside the screen border");
+
+        final float wallScale = ScreenBlockEntityRenderer.textScale(3, 2, 80, 25);
+        assertTrue(80 * 6 * wallScale < 2.75F, "Multiblock text should fit inside the wall border");
+        assertTrue(25 * 9 * wallScale < 1.75F, "Multiblock text should fit vertically inside the wall border");
+    }
+
+    @Test
+    void screenRendererPlacesTerminalTextInsideScreenFace() {
+        final ScreenBlockEntityRenderer.TextLayout single = ScreenBlockEntityRenderer.textLayout(1, 1, 50, 16);
+        assertTrue(single.x() > -0.5F && single.x() < 0.5F);
+        assertTrue(single.y() > -0.5F && single.y() < 0.5F);
+        assertTrue(single.y() - 16 * 9 * single.scale() > -0.5F);
+
+        final ScreenBlockEntityRenderer.TextLayout wall = ScreenBlockEntityRenderer.textLayout(3, 2, 80, 25);
+        assertTrue(wall.x() > -0.5F && wall.x() < 2.5F);
+        assertTrue(wall.y() > -0.5F && wall.y() < 1.5F);
+        assertTrue(wall.y() - 25 * 9 * wall.scale() > -0.5F);
+    }
+
+    @Test
     void screenRendererCentersNarrowGlyphsInsideFixedCells() {
         assertEquals(2, ScreenBlockEntityRenderer.centeredCellOffset(1));
         assertEquals(0, ScreenBlockEntityRenderer.centeredCellOffset(6));
     }
 
     @Test
-    void screenRendererKeepsNorthFrontOnNorthFace() {
-        assertEquals(0, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.NORTH));
-        assertEquals(180, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.SOUTH));
+    void screenRendererUsesUpstreamTextPlaneYawConvention() {
+        assertEquals(180, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.NORTH));
+        assertEquals(0, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.SOUTH));
         assertEquals(90, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.EAST));
         assertEquals(-90, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.WEST));
     }
