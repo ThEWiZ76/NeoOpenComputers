@@ -86,6 +86,15 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererOnlyDrawsDynamicFrontOverlayAndLeavesOpaqueBodyToBlockModel() throws IOException {
+        final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
+
+        assertTrue(!renderer.contains("Direction.values()"), "Block entity renderer must not bypass block-model culling for side/back screen faces");
+        assertTrue(renderer.contains("renderScreenFace(screen, poseStack, bufferSource, packedLight, packedOverlay, Direction.SOUTH)"),
+            "Only the visible front overlay should be drawn dynamically");
+    }
+
+    @Test
     void screenRendererDrawsConnectedFrontOverlayClearlyInFrontOfStaticModel() throws IOException {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
 
