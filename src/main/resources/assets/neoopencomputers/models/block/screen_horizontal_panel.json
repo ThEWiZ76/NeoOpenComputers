@@ -1,0 +1,6 @@
+{
+  "parent": "neoopencomputers:block/screen_panel",
+  "textures": {
+    "front": "neoopencomputers:block/screen/f2"
+  }
+}

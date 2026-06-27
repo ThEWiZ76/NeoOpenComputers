@@ -62,15 +62,15 @@ final class BlockModelResourceTest {
     }
 
     @Test
-    void screenBlockModelsUseGenericCaseModelLikeUpstreamScreenModel() throws IOException {
+    void screenBlockModelsUseSingleScreenTexturesLikeUpstreamScreenModel() throws IOException {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_panel.json"))) {
             final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
-            assertTrue("minecraft:block/cube_bottom_top".equals(panel.get("parent").getAsString()));
-            assertTrue(!panel.has("elements"));
+            assertTrue("minecraft:block/block".equals(panel.get("parent").getAsString()));
+            assertTrue(panel.has("elements"));
             final JsonObject textures = panel.getAsJsonObject("textures");
-            assertTrue("neoopencomputers:block/generic_top".equals(textures.get("bottom").getAsString()));
-            assertTrue("neoopencomputers:block/generic_top".equals(textures.get("top").getAsString()));
-            assertTrue("neoopencomputers:block/generic_side".equals(textures.get("side").getAsString()));
+            assertTrue("neoopencomputers:block/screen/f".equals(textures.get("front").getAsString()));
+            assertTrue("neoopencomputers:block/screen/b".equals(textures.get("top_bottom").getAsString()));
+            assertTrue("neoopencomputers:block/screen/b2".equals(textures.get("side_back").getAsString()));
         }
 
         final List<String> modelNames = List.of("screen_tier1.json", "screen_tier2.json", "screen_tier3.json");
@@ -82,11 +82,18 @@ final class BlockModelResourceTest {
             }
         }
 
+        try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_horizontal_panel.json"))) {
+            final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
+            assertTrue("neoopencomputers:block/screen_panel".equals(panel.get("parent").getAsString()));
+            final JsonObject textures = panel.getAsJsonObject("textures");
+            assertTrue("neoopencomputers:block/screen/f2".equals(textures.get("front").getAsString()));
+        }
+
         final List<String> horizontalModelNames = List.of("screen_tier1_horizontal.json", "screen_tier2_horizontal.json", "screen_tier3_horizontal.json");
         for (final String modelName : horizontalModelNames) {
             try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve(modelName))) {
                 final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
-                assertTrue("neoopencomputers:block/screen_panel".equals(model.get("parent").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen_horizontal_panel".equals(model.get("parent").getAsString()), modelName);
                 assertTrue(!model.has("textures"), modelName);
             }
         }

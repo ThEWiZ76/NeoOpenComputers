@@ -1,8 +1,23 @@
 {
-  "parent": "minecraft:block/cube_bottom_top",
+  "parent": "minecraft:block/block",
   "textures": {
-    "bottom": "neoopencomputers:block/generic_top",
-    "top": "neoopencomputers:block/generic_top",
-    "side": "neoopencomputers:block/generic_side"
-  }
+    "front": "neoopencomputers:block/screen/f",
+    "top_bottom": "neoopencomputers:block/screen/b",
+    "side_back": "neoopencomputers:block/screen/b2",
+    "particle": "neoopencomputers:block/screen/b2"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "down": { "texture": "#top_bottom", "tintindex": 0 },
+        "up": { "texture": "#top_bottom", "tintindex": 0 },
+        "north": { "texture": "#front", "tintindex": 0 },
+        "south": { "texture": "#side_back", "tintindex": 0 },
+        "west": { "texture": "#side_back", "tintindex": 0 },
+        "east": { "texture": "#side_back", "tintindex": 0 }
+      }
+    }
+  ]
 }
