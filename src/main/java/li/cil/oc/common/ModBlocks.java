@@ -46,6 +46,10 @@ public final class ModBlocks {
         ModContentIds.CABLE,
         () -> new CableBlock(cableProperties()));
 
+    public static final DeferredBlock<Block> CHARGER = BLOCKS.register(
+        ModContentIds.CHARGER,
+        () -> new Block(networkInfrastructureProperties()));
+
     public static final DeferredBlock<Block> CHAMELIUM_BLOCK = BLOCKS.register(
         ModContentIds.CHAMELIUM_BLOCK,
         () -> new ChameliumBlock(chameliumBlockProperties()));

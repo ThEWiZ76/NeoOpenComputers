@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IGI",
+    "CMC",
+    "IBI"
+  ],
+  "key": {
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "C": {
+      "item": "neoopencomputers:capacitor"
+    },
+    "M": {
+      "item": "neoopencomputers:microchip_tier2"
+    },
+    "B": {
+      "item": "neoopencomputers:printed_circuit_board"
+    }
+  },
+  "result": {
+    "id": "neoopencomputers:charger"
+  }
+}

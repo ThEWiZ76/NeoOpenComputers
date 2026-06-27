@@ -186,6 +186,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_APU_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_APU_TIER2));
         assertNotNull(registry.get(ModContentIds.CABLE));
+        assertNotNull(registry.get(ModContentIds.CHARGER));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER1));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER2));
         assertNotNull(registry.get(ModContentIds.COMPUTER_CASE_TIER3));
@@ -399,6 +400,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_APU_TIER1, registry.get(ModContentCatalog.COMPAT_APU_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_APU_TIER2, registry.get(ModContentCatalog.COMPAT_APU_TIER2).name());
         assertEquals(ModContentIds.CABLE, registry.get(ModContentIds.CABLE).name());
+        assertEquals(ModContentIds.CHARGER, registry.get(ModContentIds.CHARGER).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER1, registry.get(ModContentIds.COMPUTER_CASE_TIER1).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER2, registry.get(ModContentIds.COMPUTER_CASE_TIER2).name());
         assertEquals(ModContentIds.COMPUTER_CASE_TIER3, registry.get(ModContentIds.COMPUTER_CASE_TIER3).name());

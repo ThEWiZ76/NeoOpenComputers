@@ -239,6 +239,7 @@ public final class NeoOpenComputersGameTests {
         ModBlocks.ADAPTER.get();
         ModBlocks.ASSEMBLER.get();
         ModBlocks.CABLE.get();
+        ModBlocks.CHARGER.get();
         ModBlocks.COMPUTER_CASE_TIER1.get();
         ModBlocks.COMPUTER_CASE_TIER2.get();
         ModBlocks.COMPUTER_CASE_TIER3.get();
@@ -306,6 +307,7 @@ public final class NeoOpenComputersGameTests {
         ModItems.RACK.get();
         ModItems.RAID.get();
         ModItems.CABLE.get();
+        ModItems.CHARGER.get();
         ModItems.RELAY.get();
         ModItems.CARD_CONTAINER_TIER1.get();
         ModItems.CARD_CONTAINER_TIER2.get();
@@ -4292,6 +4294,16 @@ public final class NeoOpenComputersGameTests {
         assertCraftsItem(helper, ModItems.POWER_CONVERTER.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_INGOT), new ItemStack(ModItems.CABLE.get()), new ItemStack(Items.IRON_INGOT),
             new ItemStack(Items.GOLD_INGOT), new ItemStack(ModItems.MICROCHIP_TIER1.get()), new ItemStack(Items.GOLD_INGOT),
+            new ItemStack(Items.IRON_INGOT), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.IRON_INGOT)
+        )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void chargerRecipeUsesUpstreamDefaultInputs(final GameTestHelper helper) {
+        assertCraftsItem(helper, ModItems.CHARGER.get(), CraftingInput.of(3, 3, List.of(
+            new ItemStack(Items.IRON_INGOT), new ItemStack(Items.GOLD_INGOT), new ItemStack(Items.IRON_INGOT),
+            new ItemStack(ModItems.CAPACITOR.get()), new ItemStack(ModItems.MICROCHIP_TIER2.get()), new ItemStack(ModItems.CAPACITOR.get()),
             new ItemStack(Items.IRON_INGOT), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.IRON_INGOT)
         )));
         helper.succeed();

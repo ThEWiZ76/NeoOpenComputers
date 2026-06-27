@@ -23,6 +23,7 @@ final class LootTableResourceTest {
             ModContentIds.ADAPTER,
             ModContentIds.ASSEMBLER,
             ModContentIds.CABLE,
+            ModContentIds.CHARGER,
             ModContentIds.CHAMELIUM_BLOCK,
             ModContentIds.COMPUTER_CASE_TIER1,
             ModContentIds.COMPUTER_CASE_TIER2,

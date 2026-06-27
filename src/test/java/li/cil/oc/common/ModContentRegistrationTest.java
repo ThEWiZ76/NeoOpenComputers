@@ -184,6 +184,11 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void chargerBlockIdIsStable() {
+        assertEquals("charger", ModContentIds.CHARGER);
+    }
+
+    @Test
     void powerConverterBlockEntityIdIsStable() {
         assertEquals("power_converter", ModContentIds.POWER_CONVERTER_BLOCK_ENTITY);
     }

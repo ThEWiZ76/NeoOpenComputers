@@ -22,6 +22,7 @@ public final class ModContentIds {
     public static final String CABLE_BLOCK_ENTITY = "cable";
     public static final String CARD = "card";
     public static final String CAPACITOR = "capacitor";
+    public static final String CHARGER = "charger";
     public static final String CHAMELIUM = "chamelium";
     public static final String CHAMELIUM_BLOCK = "chamelium_block";
     public static final String CHUNKLOADER_UPGRADE = "chunkloader_upgrade";

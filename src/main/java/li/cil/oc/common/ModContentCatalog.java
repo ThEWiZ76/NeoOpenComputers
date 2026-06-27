@@ -214,6 +214,8 @@ public final class ModContentCatalog {
                 ModItems.ASSEMBLER.get(),
                 ModBlocks.CABLE.get(),
                 ModItems.CABLE.get(),
+                ModBlocks.CHARGER.get(),
+                ModItems.CHARGER.get(),
                 ModBlocks.CHAMELIUM_BLOCK.get(),
                 ModItems.CHAMELIUM_BLOCK.get(),
                 ModBlocks.COMPUTER_CASE_TIER1.get(),
@@ -498,6 +500,8 @@ public final class ModContentCatalog {
         final Item assemblerItem,
         final Block cable,
         final Item cableItem,
+        final Block charger,
+        final Item chargerItem,
         final Block chameliumBlock,
         final Item chameliumBlockItem,
         final Block computerCaseTier1,
@@ -655,6 +659,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.ADAPTER, adapter, adapterItem);
         registry.register(ModContentIds.ASSEMBLER, assembler, assemblerItem);
         registry.register(ModContentIds.CABLE, cable, cableItem);
+        registry.register(ModContentIds.CHARGER, charger, chargerItem);
         registerChameliumBlock(registry, chameliumBlock, chameliumBlockItem);
         registry.register(ModContentIds.COMPUTER_CASE_TIER1, computerCaseTier1, computerCaseTier1Item);
         registry.register(ModContentIds.COMPUTER_CASE_TIER2, computerCaseTier2, computerCaseTier2Item);

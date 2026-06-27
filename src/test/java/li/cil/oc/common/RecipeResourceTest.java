@@ -71,6 +71,7 @@ final class RecipeResourceTest {
             ModContentIds.BATTERY_UPGRADE_TIER2,
             ModContentIds.BATTERY_UPGRADE_TIER3,
             ModContentIds.CABLE,
+            ModContentIds.CHARGER,
             ModContentIds.CARD_CONTAINER_TIER1,
             ModContentIds.CARD_CONTAINER_TIER2,
             ModContentIds.CARD_CONTAINER_TIER3,
@@ -333,6 +334,19 @@ final class RecipeResourceTest {
         assertItem(splitterKeys, "C", "neoopencomputers:" + ModContentIds.CABLE);
         assertItem(splitterKeys, "P", "minecraft:piston");
         assertItem(splitterKeys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
+    }
+
+    @Test
+    void chargerRecipeUsesUpstreamDefaultInputs() throws IOException {
+        JsonObject charger = readJson(RECIPE_ROOT.resolve(ModContentIds.CHARGER + ".json"));
+
+        assertPattern(charger, "IGI", "CMC", "IBI");
+        JsonObject keys = charger.getAsJsonObject("key");
+        assertTag(keys, "I", "c:ingots/iron");
+        assertTag(keys, "G", "c:ingots/gold");
+        assertItem(keys, "C", "neoopencomputers:" + ModContentIds.CAPACITOR);
+        assertItem(keys, "M", "neoopencomputers:" + ModContentIds.MICROCHIP_TIER2);
+        assertItem(keys, "B", "neoopencomputers:" + ModContentIds.PRINTED_CIRCUIT_BOARD);
     }
 
     @Test

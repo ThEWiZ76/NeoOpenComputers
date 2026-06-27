@@ -120,6 +120,10 @@ public final class ModItems {
         ModContentIds.CABLE,
         ModBlocks.CABLE);
 
+    public static final DeferredItem<BlockItem> CHARGER = ITEMS.registerSimpleBlockItem(
+        ModContentIds.CHARGER,
+        ModBlocks.CHARGER);
+
     public static final DeferredItem<BlockItem> CHAMELIUM_BLOCK = ITEMS.registerSimpleBlockItem(
         ModContentIds.CHAMELIUM_BLOCK,
         ModBlocks.CHAMELIUM_BLOCK);
