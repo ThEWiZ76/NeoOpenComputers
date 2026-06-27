@@ -15,6 +15,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.menu.AdapterMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -22,7 +23,11 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -32,7 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
-public class AdapterBlockEntity extends BlockEntity implements Adapter, EnvironmentHost, Analyzable, DeviceInfo {
+public class AdapterBlockEntity extends BlockEntity implements Adapter, EnvironmentHost, Analyzable, DeviceInfo, MenuProvider {
     private static final String TAG_NODE = "node";
     private static final String TAG_BLOCKS = "oc:adapter.blocks";
     private static final String TAG_ITEMS = "oc:items";
@@ -41,8 +46,8 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     private static final String TAG_NAME = "name";
     private static final String TAG_DATA = "data";
     private static final int SIDE_COUNT = 6;
-    private static final int UPGRADE_SLOT = 0;
-    private static final int CONTAINER_SIZE = 1;
+    public static final int UPGRADE_SLOT = 0;
+    public static final int CONTAINER_SIZE = 1;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Bus,
         DeviceInfo.DeviceAttribute.Description, "Adapter",
@@ -66,6 +71,16 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         OpenComputersApi.initialize();
         Arrays.fill(openSides, true);
         node = createNode(this);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.adapter");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new AdapterMenu(containerId, playerInventory, this);
     }
 
     @Override

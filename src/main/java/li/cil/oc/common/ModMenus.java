@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
+import li.cil.oc.common.menu.AdapterMenu;
 import li.cil.oc.common.menu.AssemblerMenu;
 import li.cil.oc.common.menu.ChargerMenu;
 import li.cil.oc.common.menu.ComputerCaseMenu;
@@ -24,6 +25,10 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class ModMenus {
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, NeoOpenComputers.MODID);
+
+    public static final DeferredHolder<MenuType<?>, MenuType<AdapterMenu>> ADAPTER = MENUS.register(
+        ModContentIds.ADAPTER_MENU,
+        () -> new MenuType<>(AdapterMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static final DeferredHolder<MenuType<?>, MenuType<ComputerCaseMenu>> COMPUTER_CASE = MENUS.register(
         ModContentIds.COMPUTER_CASE_MENU,
