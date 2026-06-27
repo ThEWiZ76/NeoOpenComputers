@@ -170,6 +170,24 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void successfulRestartClearsLastErrorLikeUpstreamInit() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        SimpleMachine machine = new SimpleMachine(new TestHost(), new MutableClock());
+        machine.onHostChanged();
+
+        assertTrue(machine.crash("old failure"));
+        assertEquals("old failure", machine.lastError());
+
+        assertTrue(machine.start());
+
+        assertNull(machine.lastError());
+        assertTrue(machine.isRunning());
+    }
+
+    @Test
     void computerComponentIsNeighborVisibleLikeUpstream() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);

@@ -726,6 +726,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (architecture != null && !architecture.isInitialized() && !architecture.initialize()) {
             return false;
         }
+        lastError = null;
         if (!wasRunning) {
             signals.clear();
         }

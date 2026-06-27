@@ -61,6 +61,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private static final String TAG_COLOR = "oc:color";
     private static final String TAG_MACHINE = "oc:machine";
     private static final String TAG_RUNNING = "oc:isRunning";
+    private static final String TAG_HAS_ERRORED = "oc:hasErrored";
     private static final String TAG_REDSTONE_OUTPUTS = "oc:redstoneOutputs";
     private static final String TAG_WAKE_THRESHOLD = "oc:wakeThreshold";
     private static final String SLOT_TYPE_EEPROM = "eeprom";
@@ -109,7 +110,9 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private int color;
     private int wakeThreshold;
     private boolean clientRunning;
+    private boolean clientErrored;
     private boolean lastSyncedRunning;
+    private boolean lastSyncedErrored;
     private final int[] redstoneOutputs = new int[6];
     private final int[] redstoneInputs = new int[6];
 
@@ -170,6 +173,13 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
             return clientRunning;
         }
         return isMachineRunningForClient();
+    }
+
+    public boolean isClientErrored() {
+        if (level != null && level.isClientSide) {
+            return clientErrored;
+        }
+        return isMachineErroredForClient();
     }
 
     @Override
@@ -555,6 +565,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         notifyHardwareChanged(machine);
         machine.load(tag.getCompound(TAG_MACHINE));
         lastSyncedRunning = isMachineRunningForClient();
+        lastSyncedErrored = isMachineErroredForClient();
         loadClientData(tag);
     }
 
@@ -595,7 +606,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private void tickServer() {
         updateRedstoneInputs();
         tickHostedMachine(machine);
-        syncRunningStateIfChanged();
+        syncMachineStateIfChanged();
     }
 
     private boolean canStartMachine() {
@@ -633,12 +644,18 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         return machine != null && (machine.isRunning() || machine.isPaused());
     }
 
-    private void syncRunningStateIfChanged() {
+    private boolean isMachineErroredForClient() {
+        return machine != null && machine.lastError() != null;
+    }
+
+    private void syncMachineStateIfChanged() {
         final boolean running = isMachineRunningForClient();
-        if (running == lastSyncedRunning || level == null || level.isClientSide) {
+        final boolean errored = isMachineErroredForClient();
+        if ((running == lastSyncedRunning && errored == lastSyncedErrored) || level == null || level.isClientSide) {
             return;
         }
         lastSyncedRunning = running;
+        lastSyncedErrored = errored;
         setChanged();
         final BlockState state = getBlockState();
         level.sendBlockUpdated(worldPosition, state, state, 3);
@@ -646,6 +663,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     private void saveClientData(final CompoundTag tag) {
         tag.putBoolean(TAG_RUNNING, isMachineRunningForClient());
+        tag.putBoolean(TAG_HAS_ERRORED, isMachineErroredForClient());
     }
 
     private void loadClientData(final CompoundTag tag) {
@@ -653,6 +671,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
             return;
         }
         clientRunning = tag.getBoolean(TAG_RUNNING);
+        clientErrored = tag.getBoolean(TAG_HAS_ERRORED);
         updateClientRunningSound();
     }
 
@@ -665,6 +684,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private void stopClientRunningSound() {
         if (level != null && level.isClientSide) {
             clientRunning = false;
+            clientErrored = false;
             li.cil.oc.client.ComputerCaseSounds.update(this);
         }
     }

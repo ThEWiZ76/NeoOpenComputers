@@ -18,6 +18,7 @@ final class ComputerRunningSoundShapeTest {
         assertEquals(ComputerCaseBlockEntity.class, ComputerCaseBlockEntity.class.getDeclaredMethod("getUpdateTag", HolderLookup.Provider.class).getDeclaringClass());
         assertEquals(ComputerCaseBlockEntity.class, ComputerCaseBlockEntity.class.getDeclaredMethod("handleUpdateTag", CompoundTag.class, HolderLookup.Provider.class).getDeclaringClass());
         assertEquals(boolean.class, ComputerCaseBlockEntity.class.getDeclaredMethod("isClientRunning").getReturnType());
+        assertEquals(boolean.class, ComputerCaseBlockEntity.class.getDeclaredMethod("isClientErrored").getReturnType());
     }
 
     @Test
@@ -39,5 +40,19 @@ final class ComputerRunningSoundShapeTest {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java"));
 
         assertTrue(source.contains("ComputerCaseSounds"));
+    }
+
+    @Test
+    void computerCaseSyncsUpstreamErrorStateForClientRendering() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/ComputerCaseBlockEntity.java"));
+
+        assertTrue(source.contains("TAG_HAS_ERRORED"));
+        assertTrue(source.contains("\"oc:hasErrored\""));
+        assertTrue(source.contains("clientErrored"));
+        assertTrue(source.contains("lastSyncedErrored"));
+        assertTrue(source.contains("machine.lastError() != null"));
+        assertTrue(source.contains("tag.putBoolean(TAG_HAS_ERRORED"));
+        assertTrue(source.contains("clientErrored = tag.getBoolean(TAG_HAS_ERRORED)"));
+        assertTrue(source.contains("errored == lastSyncedErrored"));
     }
 }
