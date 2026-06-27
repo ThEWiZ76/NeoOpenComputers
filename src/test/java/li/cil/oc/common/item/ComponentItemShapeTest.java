@@ -10,10 +10,13 @@ import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.internal.Tiered;
+import li.cil.oc.api.internal.Tablet;
+import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.common.driver.ScreenItemDriver;
@@ -21,6 +24,7 @@ import li.cil.oc.common.DriveEnvironment;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.ModSettings;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -406,6 +410,27 @@ final class ComponentItemShapeTest {
         assertTrue(Item.class.isAssignableFrom(TabletItem.class));
         assertTrue(Chargeable.class.isAssignableFrom(TabletItem.class));
         assertArrayEquals(new Class<?>[]{Item.Properties.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void tabletEnvironmentExposesBuiltInTabletCallbacks() throws Exception {
+        OpenComputersApi.initialize();
+
+        final ManagedEnvironment environment = new li.cil.oc.common.component.TabletEnvironment(new TestTabletHost());
+
+        assertNotNull(environment);
+        final Component component = assertInstanceOf(Component.class, environment.node());
+        final DeviceInfo deviceInfo = assertInstanceOf(DeviceInfo.class, environment);
+        final Map<String, String> metadata = deviceInfo.getDeviceInfo();
+        assertEquals("tablet", component.name());
+        assertEquals(Visibility.Network, component.visibility());
+        assertTrue(component.methods().contains("getPitch"));
+        assertTrue(component.methods().contains("getYaw"));
+        assertArrayEquals(new Object[]{0F}, component.invoke("getPitch", null));
+        assertArrayEquals(new Object[]{0F}, component.invoke("getYaw", null));
+        assertEquals(DeviceInfo.DeviceClass.System, metadata.get(DeviceInfo.DeviceAttribute.Class));
+        assertEquals("Tablet", metadata.get(DeviceInfo.DeviceAttribute.Description));
+        assertEquals("Jogger", metadata.get(DeviceInfo.DeviceAttribute.Product));
     }
 
     @Test
@@ -843,7 +868,7 @@ final class ComponentItemShapeTest {
         return connector;
     }
 
-    private static final class TestEnvironmentHost implements EnvironmentHost {
+    private static class TestEnvironmentHost implements EnvironmentHost {
         @Override
         public Level world() {
             return null;
@@ -866,6 +891,51 @@ final class ComponentItemShapeTest {
 
         @Override
         public void markChanged() {
+        }
+    }
+
+    private static final class TestTabletHost extends TestEnvironmentHost implements Tablet {
+        @Override
+        public Player player() {
+            return null;
+        }
+
+        @Override
+        public Direction facing() {
+            return Direction.NORTH;
+        }
+
+        @Override
+        public Direction toGlobal(final Direction value) {
+            return value;
+        }
+
+        @Override
+        public Direction toLocal(final Direction value) {
+            return value;
+        }
+
+        @Override
+        public Machine machine() {
+            return null;
+        }
+
+        @Override
+        public Iterable<ItemStack> internalComponents() {
+            return List.of();
+        }
+
+        @Override
+        public int componentSlot(final String address) {
+            return -1;
+        }
+
+        @Override
+        public void onMachineConnect(final Node node) {
+        }
+
+        @Override
+        public void onMachineDisconnect(final Node node) {
         }
     }
 

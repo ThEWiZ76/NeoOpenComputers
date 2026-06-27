@@ -3634,6 +3634,26 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void tabletDriverCreatesBuiltInTabletComponentForTabletHost(final GameTestHelper helper) {
+        final TabletItem tablet = ModItems.TABLET.get();
+        final ItemStack stack = tablet.assembleFromCase(
+            new ItemStack(ModItems.TABLET_CASE_TIER1.get()),
+            ItemStack.EMPTY);
+        final DriverItem tabletDriver = Driver.driverFor(stack);
+        helper.assertTrue(tabletDriver != null, "No driver registered for tablet item");
+
+        final ManagedEnvironment environment = tabletDriver.createEnvironment(stack, new TabletTestHost(helper, null));
+
+        helper.assertTrue(environment != null, "Tablet host did not create built-in tablet environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "Tablet environment did not expose a component node");
+        final li.cil.oc.api.network.Component component = (li.cil.oc.api.network.Component) environment.node();
+        helper.assertTrue("tablet".equals(component.name()), "Tablet did not expose built-in tablet component");
+        helper.assertTrue(component.methods().contains("getPitch"), "Tablet component missing getPitch callback");
+        helper.assertTrue(component.methods().contains("getYaw"), "Tablet component missing getYaw callback");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void tabletItemAssemblesFromCaseAndComponents(final GameTestHelper helper) throws Exception {
         final TabletItem tablet = ModItems.TABLET.get();
         final ItemStack container = new ItemStack(ModItems.CARD_CONTAINER_TIER1.get());

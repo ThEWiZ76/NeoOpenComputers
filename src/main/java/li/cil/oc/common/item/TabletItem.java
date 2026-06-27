@@ -12,6 +12,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.component.TabletEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -67,6 +68,9 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
         if (ItemDriverData.isClientSide(host)) {
             return null;
+        }
+        if (host instanceof Tablet tablet) {
+            return new TabletEnvironment(tablet);
         }
         final ItemStack filesystem = firstFilesystemComponent(stack);
         if (filesystem.isEmpty()) {
@@ -470,6 +474,9 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
         @Override
         public Iterable<ItemStack> internalComponents() {
             final List<ItemStack> components = new ArrayList<>();
+            if (stack != null && !stack.isEmpty()) {
+                components.add(stack);
+            }
             for (int slot = 0; slot < COMPONENT_SLOTS; slot++) {
                 final ItemStack component = getComponent(stack, slot);
                 if (!component.isEmpty()) {
