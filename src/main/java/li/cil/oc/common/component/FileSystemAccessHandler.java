@@ -3,6 +3,7 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.event.FileSystemAccessEvent;
 import li.cil.oc.common.ModSounds;
+import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -18,11 +19,12 @@ public final class FileSystemAccessHandler {
 
     private static void onFileSystemAccess(final FileSystemAccessEvent.Server event) {
         ModSounds.play(event.getWorld(), event.getX(), event.getY(), event.getZ(), ModSounds.soundEvent(event.getSound()));
+        final long timestamp = System.currentTimeMillis();
+        recordDiskDriveAccess(event, timestamp);
         final RackBlockEntity rack = rackFor(event);
         if (rack == null) {
             return;
         }
-        final long timestamp = System.currentTimeMillis();
         for (int slot = 0; slot < RackBlockEntity.CONTAINER_SIZE; slot++) {
             final RackMountable mountable = rack.getMountable(slot);
             if (recordsFileSystemAccess(mountable, event, timestamp)) {
@@ -36,6 +38,19 @@ public final class FileSystemAccessHandler {
             return server.recordFileSystemAccess(event.getNode(), timestamp);
         }
         return mountable instanceof DiskDriveMountableEnvironment diskDrive
+            && diskDrive.recordFileSystemAccess(event.getNode(), timestamp);
+    }
+
+    private static boolean recordDiskDriveAccess(final FileSystemAccessEvent.Server event, final long timestamp) {
+        final BlockEntity eventBlockEntity = event.getTileEntity();
+        if (eventBlockEntity instanceof DiskDriveBlockEntity diskDrive) {
+            return diskDrive.recordFileSystemAccess(event.getNode(), timestamp);
+        }
+        if (event.getWorld() == null) {
+            return false;
+        }
+        final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
+        return event.getWorld().getBlockEntity(pos) instanceof DiskDriveBlockEntity diskDrive
             && diskDrive.recordFileSystemAccess(event.getNode(), timestamp);
     }
 

@@ -60,9 +60,14 @@ final class SoundResourceTest {
     @Test
     void filesystemAccessHandlerPlaysAccessSoundLikeUpstream() throws IOException {
         final String handler = Files.readString(Path.of("src/main/java/li/cil/oc/common/component/FileSystemAccessHandler.java"));
+        final String diskDrive = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java"));
 
         assertTrue(handler.contains("ModSounds.soundEvent"), "Handler should resolve custom sound events");
         assertTrue(handler.contains("ModSounds.play(event.getWorld()"), "Handler should play filesystem access sounds on server");
+        assertTrue(handler.contains("DiskDriveBlockEntity"), "Handler should update disk-drive activity timestamps");
+        assertTrue(handler.contains("recordDiskDriveAccess"), "Handler should resolve block disk drives for access activity");
+        assertTrue(diskDrive.contains("recordFileSystemAccess"), "Disk drive should expose upstream last-access tracking");
+        assertTrue(diskDrive.contains("TAG_LAST_ACCESS"), "Disk drive should sync last access to the client renderer");
     }
 
     @Test

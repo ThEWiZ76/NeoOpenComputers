@@ -74,6 +74,15 @@ final class DiskDriveScreenShapeTest {
     }
 
     @Test
+    void diskDriveRendererUsesUpstreamActivityOverlay() throws Exception {
+        final String rendererSource = Files.readString(Path.of("src/main/java/li/cil/oc/client/DiskDriveBlockEntityRenderer.java"));
+
+        assertTrue(rendererSource.contains("diskdrive_front_activity"));
+        assertTrue(rendererSource.contains("getLastAccess"));
+        assertTrue(rendererSource.contains("400L"));
+    }
+
+    @Test
     void diskDriveStatusTooltipShowsMediaState() {
         assertTranslationKey("gui.neoopencomputers.disk_drive.state.empty", DiskDriveScreen.statusLabel(DiskDriveMenu.STATE_EMPTY));
         assertTranslationKey("gui.neoopencomputers.disk_drive.state.loaded", DiskDriveScreen.statusLabel(DiskDriveMenu.STATE_LOADED));

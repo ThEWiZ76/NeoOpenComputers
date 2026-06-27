@@ -50,6 +50,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     private static final String TAG_NODE = "node";
     private static final String TAG_DISK = "disk";
+    private static final String TAG_LAST_ACCESS = "lastAccess";
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Disk,
         DeviceInfo.DeviceAttribute.Description, "Floppy disk drive",
@@ -60,6 +61,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private Node node;
     private ManagedEnvironment diskEnvironment;
+    private long lastAccess;
 
     public DiskDriveBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.DISK_DRIVE.get(), pos, blockState);
@@ -146,6 +148,19 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
             return new Object[]{null, "drive is empty"};
         }
         return new Object[]{diskEnvironment.node().address()};
+    }
+
+    public long getLastAccess() {
+        return lastAccess;
+    }
+
+    public boolean recordFileSystemAccess(final Node accessedNode, final long timestamp) {
+        if (!filesystemNodeMatches(accessedNode)) {
+            return false;
+        }
+        lastAccess = timestamp;
+        syncClientData();
+        return true;
     }
 
     @Override
@@ -374,10 +389,12 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     private void saveClientData(final CompoundTag tag, final HolderLookup.Provider registries) {
         ContainerHelper.saveAllItems(tag, items, registries);
+        tag.putLong(TAG_LAST_ACCESS, lastAccess);
     }
 
     private void loadClientData(final CompoundTag tag, final HolderLookup.Provider registries) {
         ContainerHelper.loadAllItems(tag, items, registries);
+        lastAccess = tag.getLong(TAG_LAST_ACCESS);
     }
 
     private void connectDiskEnvironment() {
@@ -396,6 +413,17 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     private static Node createNode(final ManagedEnvironment host) {
         final var builder = Network.newNode(host, Visibility.Network);
         return builder == null ? null : builder.withComponent("disk_drive", Visibility.Network).create();
+    }
+
+    private boolean filesystemNodeMatches(final Node accessedNode) {
+        if (accessedNode == null || diskEnvironment == null || diskEnvironment.node() == null) {
+            return false;
+        }
+        final Node diskNode = diskEnvironment.node();
+        if (diskNode == accessedNode) {
+            return true;
+        }
+        return diskNode.address() != null && diskNode.address().equals(accessedNode.address());
     }
 
     private void removeNodes() {
