@@ -8,6 +8,7 @@ import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.menu.TerminalMenu;
+import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -24,7 +25,6 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.OptionalInt;
 
@@ -66,7 +66,7 @@ public class TerminalItem extends Item {
             if (openedContainerId.isPresent() && player instanceof ServerPlayer serverPlayer) {
                 final TerminalScreenSnapshotPayload payload = createScreenSnapshotPayloadForBoundTerminal(openedContainerId.getAsInt(), terminal, player);
                 if (payload != null) {
-                    PacketDistributor.sendToPlayer(serverPlayer, payload);
+                    TerminalNetworking.sendToPlayerIfSupported(serverPlayer, payload);
                 }
             }
         }

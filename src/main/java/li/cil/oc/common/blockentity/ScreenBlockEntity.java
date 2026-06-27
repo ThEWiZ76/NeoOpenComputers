@@ -485,6 +485,17 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         return screenLayout().origin.equals(worldPosition);
     }
 
+    public ScreenBlockEntity originScreen() {
+        if (level == null) {
+            return this;
+        }
+        final BlockPos origin = screenLayout().origin();
+        if (origin.equals(worldPosition)) {
+            return this;
+        }
+        return level.getBlockEntity(origin) instanceof ScreenBlockEntity screen ? screen : this;
+    }
+
     public int renderBlockWidth() {
         return screenLayout().width;
     }

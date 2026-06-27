@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.menu.TerminalMenu;
+import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,7 +27,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 @SuppressWarnings("deprecation")
 public class ScreenBlock extends Block implements EntityBlock {
@@ -93,14 +93,26 @@ public class ScreenBlock extends Block implements EntityBlock {
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
-            if (screen.hasKeyboard(player) && !player.isShiftKeyDown()) {
-                return openPhysicalTerminal(screen, player);
+            final ScreenBlockEntity origin = screen.originScreen();
+            if (origin.hasKeyboard(player) && !player.isShiftKeyDown()) {
+                return openPhysicalTerminal(origin, player);
             }
-            final ScreenHitMapper.ScreenClick click = ScreenHitMapper.screenCoordinates(state, pos, hitResult, screen.renderWidth(), screen.renderHeight());
+            final ScreenHitMapper.ScreenClick click = screen.renderBlockWidth() > 1 || screen.renderBlockHeight() > 1
+                ? ScreenHitMapper.screenCoordinates(
+                    state,
+                    pos,
+                    hitResult,
+                    origin.renderWidth(),
+                    origin.renderHeight(),
+                    screen.renderBlockWidth(),
+                    screen.renderBlockHeight(),
+                    screen.localBlockX(),
+                    screen.localBlockY())
+                : ScreenHitMapper.screenCoordinates(state, pos, hitResult, origin.renderWidth(), origin.renderHeight());
             if (click == null) {
                 return InteractionResult.PASS;
             }
-            ScreenClickHandler.clickScreen(screen, click, player);
+            ScreenClickHandler.clickScreen(origin, click, player);
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
@@ -113,7 +125,7 @@ public class ScreenBlock extends Block implements EntityBlock {
         final var openedContainerId = serverPlayer.openMenu(new SimpleMenuProvider(
             (containerId, playerInventory, menuPlayer) -> new TerminalMenu(containerId, playerInventory, screen.terminalSnapshot(), screen),
             Component.translatable(screen.getBlockState().getBlock().getDescriptionId())));
-        openedContainerId.ifPresent(containerId -> PacketDistributor.sendToPlayer(
+        openedContainerId.ifPresent(containerId -> TerminalNetworking.sendToPlayerIfSupported(
             serverPlayer,
             new TerminalScreenSnapshotPayload(containerId, screen.terminalSnapshot())));
         return InteractionResult.CONSUME;

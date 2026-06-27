@@ -7,6 +7,7 @@ import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRegistry;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
 import li.cil.oc.common.network.TerminalScreenDeltaPayload;
+import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,7 +15,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class TerminalMenu extends AbstractContainerMenu {
     public static final int TERMINAL_SLOT_COUNT = 0;
@@ -82,7 +82,7 @@ public class TerminalMenu extends AbstractContainerMenu {
         super.broadcastChanges();
         final CustomPacketPayload payload = changedScreenPayload();
         if (payload != null && player instanceof ServerPlayer serverPlayer) {
-            PacketDistributor.sendToPlayer(serverPlayer, payload);
+            TerminalNetworking.sendToPlayerIfSupported(serverPlayer, payload);
         }
     }
 

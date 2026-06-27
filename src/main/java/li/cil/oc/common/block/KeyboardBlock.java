@@ -83,7 +83,7 @@ public class KeyboardBlock extends HorizontalDirectionalBlock implements EntityB
         if (level.isClientSide) {
             return InteractionResult.SUCCESS;
         }
-        return ScreenBlock.openPhysicalTerminal(screen, player);
+        return ScreenBlock.openPhysicalTerminal(screen.originScreen(), player);
     }
 
     @Override

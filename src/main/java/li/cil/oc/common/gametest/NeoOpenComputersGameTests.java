@@ -10266,6 +10266,63 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void screenMultiblockSecondaryClickSignalsOrigin(final GameTestHelper helper) {
+        final BlockPos originScreenPos = new BlockPos(0, 1, 1);
+        final BlockPos secondaryScreenPos = new BlockPos(1, 1, 1);
+        final BlockPos computerPos = new BlockPos(0, 1, 2);
+
+        helper.setBlock(originScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(secondaryScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ScreenBlockEntity secondaryScreen = helper.getBlockEntity(secondaryScreenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        originScreen.update();
+        secondaryScreen.update();
+        helper.assertTrue(originScreen.node().network() == computer.node().network(), "Origin screen and computer are not on the same network");
+        startSignalComputer(helper, computer);
+
+        final BlockState state = helper.getBlockState(secondaryScreenPos);
+        final BlockPos absoluteScreenPos = helper.absolutePos(secondaryScreenPos);
+        final Vec3 hitLocation = new Vec3(absoluteScreenPos.getX() + 0.5D, absoluteScreenPos.getY() + 0.5D, absoluteScreenPos.getZ());
+        final BlockHitResult hit = new BlockHitResult(hitLocation, Direction.NORTH, absoluteScreenPos, false);
+        helper.assertTrue(invokeUseWithoutItem(state, helper, secondaryScreenPos, hit) == InteractionResult.CONSUME, "Secondary screen click was not consumed");
+
+        helper.runAtTickTime(5, () -> {
+            assertNextTouchSignalFrom(helper, computer, originScreen.node().address(), 35, 45);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty")
+    public static void screenMultiblockSecondaryTerminalOpensOrigin(final GameTestHelper helper) {
+        final BlockPos originScreenPos = new BlockPos(0, 1, 1);
+        final BlockPos secondaryScreenPos = new BlockPos(1, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+
+        helper.setBlock(originScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(secondaryScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ScreenBlockEntity secondaryScreen = helper.getBlockEntity(secondaryScreenPos);
+        originScreen.update();
+        secondaryScreen.update();
+        final Player player = helper.makeMockServerPlayerInLevel();
+        final BlockPos absoluteScreenPos = helper.absolutePos(secondaryScreenPos);
+        final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absoluteScreenPos), Direction.NORTH, absoluteScreenPos, false);
+
+        final InteractionResult result = invokeUseWithoutItem(helper.getBlockState(secondaryScreenPos), helper, secondaryScreenPos, player, hit);
+
+        helper.assertTrue(result == InteractionResult.CONSUME, "Secondary screen terminal interaction did not consume activation");
+        helper.assertTrue(player.containerMenu instanceof li.cil.oc.common.menu.TerminalMenu, "Secondary screen did not open TerminalMenu");
+        final li.cil.oc.common.menu.TerminalMenu menu = (li.cil.oc.common.menu.TerminalMenu) player.containerMenu;
+        helper.assertTrue(menu.physicalScreen() == originScreen, "Secondary screen terminal should bind origin screen");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void adjacentSameTierScreensFormHorizontalMultiblock(final GameTestHelper helper) {
         final BlockPos leftPos = new BlockPos(0, 1, 1);
@@ -11683,6 +11740,23 @@ public final class NeoOpenComputersGameTests {
             }
         }
         helper.fail("Expected signal " + name + " but it was not in the next 16 queued signals");
+    }
+
+    private static void assertNextTouchSignalFrom(final GameTestHelper helper, final ComputerCaseBlockEntity computer, final String sourceAddress, final int minX, final int maxX) {
+        for (int attempt = 0; attempt < 16; attempt++) {
+            final Signal signal = computer.machine().popSignal();
+            helper.assertTrue(signal != null, "Expected touch signal but queue was empty");
+            if (!"touch".equals(signal.name())) {
+                continue;
+            }
+            helper.assertTrue(signal.args().length >= 4, "Expected touch signal to include source, x, y, button");
+            helper.assertTrue(sourceAddress.equals(signal.args()[0]), "Expected touch source " + sourceAddress + " but got " + signalArgumentText(signal.args()[0]));
+            helper.assertTrue(signal.args()[1] instanceof Number, "Expected touch X to be numeric but got " + signalArgumentText(signal.args()[1]));
+            final int x = ((Number) signal.args()[1]).intValue();
+            helper.assertTrue(x >= minX && x <= maxX, "Expected touch X in [" + minX + ", " + maxX + "] but got " + x);
+            return;
+        }
+        helper.fail("Expected touch signal from " + sourceAddress + " but it was not in the next 16 queued signals");
     }
 
     private static void tickRelayThroughDelay(final GameTestHelper helper, final BlockPos pos, final RelayBlockEntity relay) {

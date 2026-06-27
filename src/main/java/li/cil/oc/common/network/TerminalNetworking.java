@@ -3,10 +3,15 @@ package li.cil.oc.common.network;
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.menu.TerminalMenu;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.neoforged.neoforge.common.extensions.ICommonPacketListener;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 public final class TerminalNetworking {
     public static final String NETWORK_VERSION = "1";
@@ -48,6 +53,15 @@ public final class TerminalNetworking {
     static void applyScreenDelta(final AbstractContainerMenu containerMenu, final TerminalScreenDeltaPayload payload) {
         if (containerMenu instanceof TerminalMenu menu && menu.containerId == payload.containerId()) {
             menu.updateSnapshot(payload.delta().applyTo(menu.snapshot()));
+        }
+    }
+
+    public static void sendToPlayerIfSupported(final ServerPlayer player, final CustomPacketPayload payload) {
+        if (player == null || payload == null) {
+            return;
+        }
+        if (player.connection instanceof ICommonPacketListener listener && NetworkRegistry.hasChannel(listener, payload.type().id())) {
+            PacketDistributor.sendToPlayer(player, payload);
         }
     }
 
