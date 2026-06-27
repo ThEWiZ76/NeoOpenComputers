@@ -158,6 +158,14 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
         writeData(stack, data);
     }
 
+    public boolean hasData(final ItemStack stack) {
+        if (stack == null) {
+            return false;
+        }
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        return customData != null && customData.getUnsafe().contains(DATA_TAG, Tag.TAG_COMPOUND);
+    }
+
     public ItemStack assembleFromCase(final ItemStack caseStack, final ItemStack container, final ItemStack... components) {
         final ItemStack stack = new ItemStack(this);
         setTier(stack, caseTier(caseStack));

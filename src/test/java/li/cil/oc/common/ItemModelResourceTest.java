@@ -77,6 +77,19 @@ final class ItemModelResourceTest {
         }
     }
 
+    @Test
+    void tabletItemModelUsesUpstreamRunningStateOverrides() throws IOException {
+        final String tabletModel = Files.readString(ITEM_MODEL_ROOT.resolve("tablet.json"));
+
+        assertTrue(tabletModel.contains("neoopencomputers:tablet_running"));
+        assertTrue(tabletModel.contains("neoopencomputers:item/tablet_off"));
+        assertTrue(tabletModel.contains("neoopencomputers:item/tablet_on"));
+        assertTrue(Files.exists(ITEM_MODEL_ROOT.resolve("tablet_off.json")));
+        assertTrue(Files.exists(ITEM_MODEL_ROOT.resolve("tablet_on.json")));
+        assertTrue(Files.exists(ITEM_TEXTURE_ROOT.resolve("tablet_off.png")));
+        assertTrue(Files.exists(ITEM_TEXTURE_ROOT.resolve("tablet_on.png")));
+    }
+
     private static boolean isVanillaPlaceholder(final String texture) {
         return texture.startsWith("minecraft:item/") || texture.startsWith("minecraft:block/");
     }

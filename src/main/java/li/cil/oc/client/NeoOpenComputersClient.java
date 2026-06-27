@@ -8,11 +8,13 @@ import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.item.FloppyItem;
+import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.network.DebugClipboardState;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -34,6 +36,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 public final class NeoOpenComputersClient {
     private static final ResourceLocation NANOMACHINE_HUD = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "nanomachine_hud");
     private static final ResourceLocation FLOPPY_COLOR_PROPERTY = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "floppy_color");
+    private static final ResourceLocation TABLET_RUNNING_PROPERTY = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "tablet_running");
     private static final int SCREEN_TIER1_COLOR = 0xABABAB;
     private static final int SCREEN_TIER2_COLOR = 0xFFFF66;
     private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
@@ -53,6 +56,10 @@ public final class NeoOpenComputersClient {
             ModItems.FLOPPY.get(),
             FLOPPY_COLOR_PROPERTY,
             (stack, level, entity, seed) -> FloppyItem.floppyColorIndex(stack)));
+        event.enqueueWork(() -> ItemProperties.register(
+            ModItems.TABLET.get(),
+            TABLET_RUNNING_PROPERTY,
+            (stack, level, entity, seed) -> tabletRunningModelProperty(stack)));
         NeoOpenComputers.LOGGER.debug("NeoOpenComputers client setup complete.");
     }
 
@@ -129,6 +136,13 @@ public final class NeoOpenComputersClient {
             return SCREEN_TIER2_COLOR;
         }
         return SCREEN_TIER1_COLOR;
+    }
+
+    static float tabletRunningModelProperty(final ItemStack stack) {
+        if (stack == null || !(stack.getItem() instanceof TabletItem tablet) || !tablet.hasData(stack)) {
+            return -1F;
+        }
+        return tablet.isRunning(stack) ? 1F : 0F;
     }
 
     static void onClientTick(final ClientTickEvent.Post event) {

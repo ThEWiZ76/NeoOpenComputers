@@ -2,5 +2,19 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "neoopencomputers:item/tablet"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "neoopencomputers:tablet_running": 0
+      },
+      "model": "neoopencomputers:item/tablet_off"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:tablet_running": 1
+      },
+      "model": "neoopencomputers:item/tablet_on"
+    }
+  ]
 }

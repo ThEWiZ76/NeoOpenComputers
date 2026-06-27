@@ -28,4 +28,15 @@ final class ScreenColorHandlerShapeTest {
         assertTrue(source.contains("floppy_color"));
         assertTrue(source.contains("FloppyItem.floppyColorIndex"));
     }
+
+    @Test
+    void clientRegistersTabletRunningModelProperty() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java"));
+
+        assertTrue(source.contains("tablet_running"));
+        assertTrue(source.contains("ModItems.TABLET.get()"));
+        assertTrue(source.contains("tabletRunningModelProperty"));
+        assertTrue(source.contains("tablet.hasData(stack)"));
+        assertTrue(source.contains("tablet.isRunning(stack) ? 1F : 0F"));
+    }
 }
