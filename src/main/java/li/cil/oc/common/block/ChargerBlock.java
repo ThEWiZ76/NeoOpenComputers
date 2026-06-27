@@ -2,9 +2,14 @@ package li.cil.oc.common.block;
 
 import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.WrenchTools;
 import li.cil.oc.common.blockentity.ChargerBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.Containers;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -13,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 
 @SuppressWarnings("deprecation")
 public class ChargerBlock extends Block implements EntityBlock {
@@ -53,6 +59,28 @@ public class ChargerBlock extends Block implements EntityBlock {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         updateChargeSpeed(level, pos);
         BlockNetworkConnector.joinIfServer(level, pos);
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(
+        final ItemStack stack,
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final InteractionHand hand,
+        final BlockHitResult hitResult) {
+        if (!WrenchTools.isWrench(stack) || !(level.getBlockEntity(pos) instanceof ChargerBlockEntity charger)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+        if (!level.isClientSide) {
+            charger.toggleInvertSignal();
+            WrenchTools.wrenchUsed(player, pos);
+            if (player != null) {
+                player.swing(hand);
+            }
+        }
+        return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override

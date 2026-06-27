@@ -181,6 +181,11 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
         return invertSignal;
     }
 
+    public void toggleInvertSignal() {
+        invertSignal = !invertSignal;
+        setChargeSpeed(1D - chargeSpeed);
+    }
+
     public void updateChargeSpeedFromRedstone(final int signal) {
         setChargeSpeed(chargeSpeedForSignal(signal, invertSignal));
     }

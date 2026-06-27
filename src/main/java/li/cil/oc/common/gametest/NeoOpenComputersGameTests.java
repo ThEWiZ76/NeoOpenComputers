@@ -7219,6 +7219,28 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chargerWrenchInvertsRedstoneChargeSpeedLikeUpstream(final GameTestHelper helper) {
+        ModWrenches.registerDefaults();
+        final BlockPos chargerPos = new BlockPos(1, 1, 1);
+        helper.setBlock(chargerPos, ModBlocks.CHARGER.get());
+        final ChargerBlockEntity charger = helper.getBlockEntity(chargerPos);
+        charger.updateChargeSpeedFromRedstone(5);
+
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final ItemStack wrench = new ItemStack(ModItems.WRENCH.get());
+        player.setItemInHand(InteractionHand.MAIN_HAND, wrench);
+        final BlockPos absolutePos = helper.absolutePos(chargerPos);
+        final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absolutePos), Direction.UP, absolutePos, false);
+
+        final ItemInteractionResult result = helper.getBlockState(chargerPos).useItemOn(wrench, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit);
+
+        helper.assertTrue(result.consumesAction(), "Charger wrench inversion did not consume interaction");
+        helper.assertTrue(charger.invertSignal(), "Charger wrench did not toggle inverted redstone mode");
+        assertClose(helper, charger.chargeSpeed(), 10D / 15D, "Charger wrench inverted charge speed");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void energyStorageBlockDriverExposesEnergyDeviceLikeUpstream(final GameTestHelper helper) throws Exception {
         withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
             withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
