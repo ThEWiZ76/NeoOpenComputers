@@ -10,13 +10,21 @@ import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ForgeEnergyStorageView;
+import li.cil.oc.common.ItemCharges;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.IEnergyStorage;
@@ -24,11 +32,21 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
 import java.util.EnumSet;
 import java.util.Map;
 
-public class ChargerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, DeviceInfo, StateAware {
-    private static final String TAG_NODE = "oc:node";
+public class ChargerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, DeviceInfo, StateAware, Container {
+    public static final int SLOT_CHARGEABLE = 0;
+    public static final int CONTAINER_SIZE = 1;
 
+    private static final String TAG_NODE = "oc:node";
+    private static final String TAG_CHARGE_SPEED = "oc:chargeSpeed";
+    private static final String TAG_HAS_POWER = "oc:hasPower";
+    private static final String TAG_INVERT_SIGNAL = "oc:invertSignal";
+
+    private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final Connector node;
     private final IEnergyStorage energyStorage;
+    private double chargeSpeed;
+    private boolean hasPower;
+    private boolean invertSignal;
 
     public ChargerBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.CHARGER.get(), pos, blockState);
@@ -73,7 +91,10 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
 
     @Override
     public EnumSet<State> getCurrentState() {
-        return EnumSet.noneOf(State.class);
+        if (!ItemCharges.canCharge(items.get(SLOT_CHARGEABLE))) {
+            return EnumSet.noneOf(State.class);
+        }
+        return EnumSet.of(hasPower ? State.IsWorking : State.CanWork);
     }
 
     public IEnergyStorage energyStorage(final Direction side) {
@@ -81,9 +102,128 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     }
 
     @Override
+    public int getContainerSize() {
+        return CONTAINER_SIZE;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return items.get(SLOT_CHARGEABLE).isEmpty();
+    }
+
+    @Override
+    public ItemStack getItem(final int slot) {
+        return slot == SLOT_CHARGEABLE ? items.get(SLOT_CHARGEABLE) : ItemStack.EMPTY;
+    }
+
+    @Override
+    public ItemStack removeItem(final int slot, final int amount) {
+        final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
+        if (!removed.isEmpty()) {
+            setChanged();
+        }
+        return removed;
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(final int slot) {
+        return ContainerHelper.takeItem(items, slot);
+    }
+
+    @Override
+    public void setItem(final int slot, final ItemStack stack) {
+        if (slot != SLOT_CHARGEABLE) {
+            return;
+        }
+        items.set(SLOT_CHARGEABLE, stack);
+        if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
+            stack.setCount(getMaxStackSize());
+        }
+        setChanged();
+    }
+
+    @Override
+    public boolean canPlaceItem(final int slot, final ItemStack stack) {
+        return slot == SLOT_CHARGEABLE && ItemCharges.canCharge(stack);
+    }
+
+    @Override
+    public int getMaxStackSize() {
+        return 1;
+    }
+
+    @Override
+    public boolean stillValid(final Player player) {
+        return !isRemoved();
+    }
+
+    @Override
+    public void clearContent() {
+        items.set(SLOT_CHARGEABLE, ItemStack.EMPTY);
+        setChanged();
+    }
+
+    public void setChargeSpeed(final double value) {
+        chargeSpeed = Mth.clamp(value, 0D, 1D);
+        setChanged();
+    }
+
+    public double chargeSpeed() {
+        return chargeSpeed;
+    }
+
+    public void setInvertSignal(final boolean value) {
+        invertSignal = value;
+        setChanged();
+    }
+
+    public boolean invertSignal() {
+        return invertSignal;
+    }
+
+    public void updateChargeSpeedFromRedstone(final int signal) {
+        setChargeSpeed(chargeSpeedForSignal(signal, invertSignal));
+    }
+
+    public boolean runChargeCycle() {
+        final ItemStack stack = items.get(SLOT_CHARGEABLE);
+        if (!ItemCharges.canCharge(stack) || chargeSpeed <= 0D) {
+            hasPower = false;
+            return false;
+        }
+
+        final double want = ModSettings.chargerChargeRateTablet() * chargeSpeed * Math.max(1, ModSettings.mfuTickFrequency());
+        if (want <= 0D) {
+            hasPower = false;
+            return false;
+        }
+
+        final double available = ModSettings.ignorePower() ? want : want + node.changeBuffer(-want);
+        if (available <= 0D) {
+            hasPower = false;
+            return false;
+        }
+
+        final double surplus = ItemCharges.charge(stack, available);
+        final double accepted = Math.max(0D, available - surplus);
+        if (!ModSettings.ignorePower() && surplus > 0D) {
+            node.changeBuffer(surplus);
+        }
+        hasPower = accepted > 0D;
+        if (accepted > 0D) {
+            setChanged();
+        }
+        return hasPower;
+    }
+
+    @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        ContainerHelper.loadAllItems(tag, items, registries);
         node.load(tag.getCompound(TAG_NODE));
+        chargeSpeed = Mth.clamp(tag.getDouble(TAG_CHARGE_SPEED), 0D, 1D);
+        hasPower = tag.getBoolean(TAG_HAS_POWER);
+        invertSignal = tag.getBoolean(TAG_INVERT_SIGNAL);
     }
 
     @Override
@@ -95,6 +235,10 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
         final CompoundTag nodeTag = new CompoundTag();
         node.save(nodeTag);
         tag.put(TAG_NODE, nodeTag);
+        ContainerHelper.saveAllItems(tag, items, registries);
+        tag.putDouble(TAG_CHARGE_SPEED, chargeSpeed);
+        tag.putBoolean(TAG_HAS_POWER, hasPower);
+        tag.putBoolean(TAG_INVERT_SIGNAL, invertSignal);
     }
 
     @Override
@@ -119,6 +263,17 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
 
     public static double energyThroughput() {
         return ModSettings.chargerRate();
+    }
+
+    public static double chargeSpeedForSignal(final int signal, final boolean inverted) {
+        final int clamped = Mth.clamp(signal, 0, 15);
+        return (inverted ? 15 - clamped : clamped) / 15D;
+    }
+
+    public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final ChargerBlockEntity charger) {
+        if (level.getGameTime() % Math.max(1, ModSettings.mfuTickFrequency()) == 0) {
+            charger.runChargeCycle();
+        }
     }
 
     public static Map<String, String> deviceInfo() {

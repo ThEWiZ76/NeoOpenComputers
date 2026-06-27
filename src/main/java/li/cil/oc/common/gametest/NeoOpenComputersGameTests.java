@@ -7189,6 +7189,36 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chargerChargesInternalTabletFromStoredEnergyAndRedstoneSpeed(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
+            withCachedConfig(ModSettings.CHARGER_CHARGE_RATE_TABLET, 10D, () ->
+                withCachedConfig(ModSettings.MFU_TICK_FREQUENCY, 10, () -> {
+                    ModItemCharges.registerDefaults();
+                    final BlockPos chargerPos = new BlockPos(1, 1, 1);
+                    helper.setBlock(chargerPos, ModBlocks.CHARGER.get());
+                    Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(chargerPos));
+
+                    final ChargerBlockEntity charger = helper.getBlockEntity(chargerPos);
+                    final Connector connector = (Connector) charger.node();
+                    final TabletItem tablet = ModItems.TABLET.get();
+                    final ItemStack stack = new ItemStack(ModItems.TABLET.get());
+                    tablet.setMaxCharge(stack, 1000D);
+                    tablet.setCharge(stack, 0D);
+
+                    helper.assertTrue(charger.canPlaceItem(0, stack), "Charger did not accept tablet in internal slot");
+                    helper.assertTrue(!charger.canPlaceItem(0, new ItemStack(Items.DIAMOND)), "Charger accepted unrelated item in internal slot");
+                    charger.setItem(0, stack);
+                    charger.setChargeSpeed(0.5D);
+                    connector.changeBuffer(100D);
+
+                    helper.assertTrue(charger.runChargeCycle(), "Charger did not report a successful charge cycle");
+                    helper.assertTrue(Double.compare(50D, tablet.getCharge(charger.getItem(0))) == 0, "Charger did not charge internal tablet using configured speed");
+                    helper.assertTrue(Double.compare(50D, connector.localBuffer()) == 0, "Charger did not consume matching OC power");
+                })));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void energyStorageBlockDriverExposesEnergyDeviceLikeUpstream(final GameTestHelper helper) throws Exception {
         withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
             withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {

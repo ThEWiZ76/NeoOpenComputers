@@ -3,6 +3,7 @@ package li.cil.oc.common.blockentity;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ModSettings;
+import net.minecraft.world.Container;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +34,22 @@ final class ChargerBlockEntityTest {
                 assertEquals(123D, ChargerBlockEntity.energyThroughput(), 0.000_001D);
                 assertEquals(456D, ChargerBlockEntity.connectorBufferSize(), 0.000_001D);
             }));
+    }
+
+    @Test
+    void exposesOneChargeableInventorySlotLikeUpstream() {
+        assertTrue(Container.class.isAssignableFrom(ChargerBlockEntity.class));
+        assertEquals(1, ChargerBlockEntity.CONTAINER_SIZE);
+    }
+
+    @Test
+    void redstoneSignalControlsChargeSpeedLikeUpstream() {
+        assertEquals(0D, ChargerBlockEntity.chargeSpeedForSignal(0, false), 0.000_001D);
+        assertEquals(7D / 15D, ChargerBlockEntity.chargeSpeedForSignal(7, false), 0.000_001D);
+        assertEquals(1D, ChargerBlockEntity.chargeSpeedForSignal(15, false), 0.000_001D);
+        assertEquals(1D, ChargerBlockEntity.chargeSpeedForSignal(0, true), 0.000_001D);
+        assertEquals(8D / 15D, ChargerBlockEntity.chargeSpeedForSignal(7, true), 0.000_001D);
+        assertEquals(0D, ChargerBlockEntity.chargeSpeedForSignal(15, true), 0.000_001D);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
