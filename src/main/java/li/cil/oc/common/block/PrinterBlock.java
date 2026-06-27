@@ -4,6 +4,8 @@ import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.blockentity.PrinterBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -16,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.phys.BlockHitResult;
 
 @SuppressWarnings("deprecation")
 public class PrinterBlock extends HorizontalDirectionalBlock implements EntityBlock {
@@ -60,6 +63,23 @@ public class PrinterBlock extends HorizontalDirectionalBlock implements EntityBl
     protected void neighborChanged(final BlockState state, final Level level, final BlockPos pos, final Block block, final BlockPos fromPos, final boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         BlockNetworkConnector.joinIfServer(level, pos);
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final BlockHitResult hitResult) {
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        if (level.getBlockEntity(pos) instanceof PrinterBlockEntity printer) {
+            player.openMenu(printer);
+            return InteractionResult.CONSUME;
+        }
+        return InteractionResult.PASS;
     }
 
     @Override

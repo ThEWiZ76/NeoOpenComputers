@@ -127,6 +127,7 @@ public final class ModContentIds {
     public static final String PRINT_BLOCK_ENTITY = "print";
     public static final String PRINTER = "printer";
     public static final String PRINTER_BLOCK_ENTITY = "printer";
+    public static final String PRINTER_MENU = "printer";
     public static final String RACK = "rack";
     public static final String RACK_BLOCK_ENTITY = "rack";
     public static final String RACK_MENU = "rack";

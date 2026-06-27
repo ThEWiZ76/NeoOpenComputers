@@ -17,6 +17,7 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.item.data.PrintData;
+import li.cil.oc.common.menu.PrinterMenu;
 import li.cil.oc.common.util.AssemblerWork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,7 +27,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -36,7 +41,7 @@ import net.minecraft.world.phys.AABB;
 import java.util.EnumSet;
 import java.util.Map;
 
-public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo, StateAware {
+public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo, StateAware, MenuProvider {
     public static final int SLOT_MATERIAL = 0;
     public static final int SLOT_INK = 1;
     public static final int SLOT_OUTPUT = 2;
@@ -53,8 +58,8 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
     private static final String TAG_OUTPUT = "output";
     private static final String TAG_TOTAL_ENERGY = "total";
     private static final String TAG_REMAINING_ENERGY = "remaining";
-    private static final int MAX_MATERIAL = 256_000;
-    private static final int MAX_INK = 100_000;
+    public static final int MAX_MATERIAL = 256_000;
+    public static final int MAX_INK = 100_000;
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Printer,
         DeviceInfo.DeviceAttribute.Description, "3D Printer",
@@ -77,6 +82,16 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
         super(ModBlockEntities.PRINTER.get(), pos, blockState);
         OpenComputersApi.initialize();
         node = createNode(this);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.neoopencomputers.printer");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(final int containerId, final Inventory playerInventory, final Player player) {
+        return new PrinterMenu(containerId, playerInventory, this);
     }
 
     @Override
@@ -344,6 +359,14 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
             return 100D;
         }
         return (1D - requiredEnergy / totalRequiredEnergy) * 100D;
+    }
+
+    public int amountMaterial() {
+        return amountMaterial;
+    }
+
+    public int amountInk() {
+        return amountInk;
     }
 
     public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final PrinterBlockEntity printer) {

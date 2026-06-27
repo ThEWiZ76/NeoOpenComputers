@@ -7,6 +7,7 @@ import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.DriveMenu;
+import li.cil.oc.common.menu.PrinterMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.RaidMenu;
 import li.cil.oc.common.menu.RelayMenu;
@@ -47,6 +48,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<DisassemblerMenu>> DISASSEMBLER = MENUS.register(
         ModContentIds.DISASSEMBLER_MENU,
         () -> new MenuType<>(DisassemblerMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<PrinterMenu>> PRINTER = MENUS.register(
+        ModContentIds.PRINTER_MENU,
+        () -> new MenuType<>(PrinterMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static final DeferredHolder<MenuType<?>, MenuType<RackMenu>> RACK = MENUS.register(
         ModContentIds.RACK_MENU,
