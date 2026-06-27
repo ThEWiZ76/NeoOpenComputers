@@ -397,6 +397,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     private void loadClientData(final CompoundTag tag, final HolderLookup.Provider registries) {
+        items.replaceAll(ignored -> ItemStack.EMPTY);
         ContainerHelper.loadAllItems(tag, items, registries);
         lastAccess = tag.getLong(TAG_LAST_ACCESS);
     }
