@@ -112,7 +112,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(screenFrontTexture(screen));
         final VertexConsumer consumer = sprite.wrap(bufferSource.getBuffer(RenderType.cutout()));
         final PoseStack.Pose pose = poseStack.last();
-        final int color = 0xFF000000 | screenTierColor(screen.getBlockState().getBlock());
+        final int color = 0xFF000000 | screen.getRenderColor();
         vertex(consumer, pose, -0.5F, -0.5F, SCREEN_FRONT_Z, 0F, 1F, color, packedLight, packedOverlay);
         vertex(consumer, pose, -0.5F, 0.5F, SCREEN_FRONT_Z, 0F, 0F, color, packedLight, packedOverlay);
         vertex(consumer, pose, 0.5F, 0.5F, SCREEN_FRONT_Z, 1F, 0F, color, packedLight, packedOverlay);

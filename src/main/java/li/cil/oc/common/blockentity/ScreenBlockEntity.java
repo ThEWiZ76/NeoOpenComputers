@@ -27,6 +27,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -45,9 +46,11 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private static final int DEFAULT_BACKGROUND = 0x000000;
     private static final String TAG_BUFFER = "buffer";
     private static final String TAG_NODE = "node";
+    private static final String TAG_RENDER_COLOR = "renderColorRGB";
 
     private double energyCostPerTick;
     private int tier;
+    private int renderColor;
     private boolean powered = true;
     private boolean hasPower = true;
     private int updateTicks;
@@ -119,6 +122,24 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Override
     public boolean getPowerState() {
         return powered;
+    }
+
+    public int getRenderColor() {
+        ensureTierConfigured();
+        return renderColor;
+    }
+
+    public void setRenderColor(final DyeColor color) {
+        setRenderColor(rgbValue(color));
+    }
+
+    public void setRenderColor(final int color) {
+        final int rgb = color & 0xFFFFFF;
+        if (renderColor == rgb) {
+            return;
+        }
+        renderColor = rgb;
+        markChanged();
     }
 
     @Callback(direct = true, doc = "function():boolean -- Returns whether the screen is currently on.")
@@ -561,20 +582,25 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             if (!visited.add(current)) {
                 continue;
             }
-            queueMatchingScreen(pending, visited, current.relative(right), pitch, yaw, tier);
-            queueMatchingScreen(pending, visited, current.relative(right.getOpposite()), pitch, yaw, tier);
-            queueMatchingScreen(pending, visited, current.relative(up), pitch, yaw, tier);
-            queueMatchingScreen(pending, visited, current.relative(up.getOpposite()), pitch, yaw, tier);
+            queueMatchingScreen(pending, visited, current.relative(right), pitch, yaw, tier, renderColor);
+            queueMatchingScreen(pending, visited, current.relative(right.getOpposite()), pitch, yaw, tier, renderColor);
+            queueMatchingScreen(pending, visited, current.relative(up), pitch, yaw, tier, renderColor);
+            queueMatchingScreen(pending, visited, current.relative(up.getOpposite()), pitch, yaw, tier, renderColor);
         }
         return visited;
     }
 
-    private void queueMatchingScreen(final ArrayDeque<BlockPos> pending, final Set<BlockPos> visited, final BlockPos pos, final Direction pitch, final Direction yaw, final int tier) {
+    private void queueMatchingScreen(final ArrayDeque<BlockPos> pending, final Set<BlockPos> visited, final BlockPos pos, final Direction pitch, final Direction yaw, final int tier, final int renderColor) {
         if (visited.contains(pos) || level == null) {
             return;
         }
         final BlockState state = level.getBlockState(pos);
-        if (state.getBlock() instanceof ScreenBlock screenBlock && screenBlock.tier() == tier && ScreenBlock.pitch(state) == pitch && ScreenBlock.yaw(state) == yaw) {
+        if (state.getBlock() instanceof ScreenBlock screenBlock &&
+            screenBlock.tier() == tier &&
+            ScreenBlock.pitch(state) == pitch &&
+            ScreenBlock.yaw(state) == yaw &&
+            level.getBlockEntity(pos) instanceof ScreenBlockEntity screen &&
+            screen.getRenderColor() == renderColor) {
             pending.add(pos);
         }
     }
@@ -777,6 +803,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         }
         powered = !nbt.contains("powered") || nbt.getBoolean("powered");
         hasPower = !nbt.contains("hasPower") || nbt.getBoolean("hasPower");
+        renderColor = nbt.contains(TAG_RENDER_COLOR) ? nbt.getInt(TAG_RENDER_COLOR) & 0xFFFFFF : defaultRenderColor(tier);
         width = Math.clamp(nbt.getInt("width"), 1, maximumWidth);
         height = Math.clamp(nbt.getInt("height"), 1, maximumHeight);
         viewportWidth = Math.clamp(nbt.getInt("viewportWidth"), 1, width);
@@ -802,6 +829,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     public void save(final CompoundTag nbt) {
         ensureTierConfigured();
         saveNode(nbt);
+        nbt.putInt(TAG_RENDER_COLOR, renderColor);
         nbt.putBoolean("powered", powered);
         nbt.putBoolean("hasPower", hasPower);
         nbt.putInt("width", width);
@@ -876,6 +904,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         maximumHeight = ModSettings.screenHeightByTier(this.tier);
         maximumColorDepth = ModSettings.screenDepthByTier(this.tier);
         energyCostPerTick = ModSettings.screenCost();
+        if (renderColor == 0) {
+            renderColor = defaultRenderColor(this.tier);
+        }
         colorDepth = maximumColorDepth;
         width = maximumWidth;
         height = maximumHeight;
@@ -895,6 +926,35 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             return screenBlock.tier();
         }
         return 0;
+    }
+
+    private static int defaultRenderColor(final int tier) {
+        return switch (Math.clamp(tier, 0, 2)) {
+            case 1 -> rgbValue(DyeColor.YELLOW);
+            case 2 -> rgbValue(DyeColor.CYAN);
+            default -> rgbValue(DyeColor.LIGHT_GRAY);
+        };
+    }
+
+    public static int rgbValue(final DyeColor color) {
+        return switch (color) {
+            case BLACK -> 0x444444;
+            case RED -> 0xB3312C;
+            case GREEN -> 0x339911;
+            case BROWN -> 0x51301A;
+            case BLUE -> 0x6666FF;
+            case PURPLE -> 0x7B2FBE;
+            case CYAN -> 0x66FFFF;
+            case LIGHT_GRAY -> 0xABABAB;
+            case GRAY -> 0x666666;
+            case PINK -> 0xD88198;
+            case LIME -> 0x66FF66;
+            case YELLOW -> 0xFFFF66;
+            case LIGHT_BLUE -> 0xAAAAFF;
+            case MAGENTA -> 0xC354CD;
+            case ORANGE -> 0xEB8844;
+            case WHITE -> 0xF0F0F0;
+        };
     }
 
     private void markChanged() {

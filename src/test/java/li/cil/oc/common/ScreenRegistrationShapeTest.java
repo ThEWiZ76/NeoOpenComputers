@@ -129,4 +129,15 @@ final class ScreenRegistrationShapeTest {
         assertTrue(source.contains("openPhysicalTerminal"));
         assertTrue(source.contains("new TerminalMenu(containerId, playerInventory, screen.terminalSnapshot(), screen)"));
     }
+
+    @Test
+    void screenBlockHandlesDyeUseLikeUpstreamColoredBlocks() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+
+        assertTrue(source.contains("useItemOn"));
+        assertTrue(source.contains("DyeItem"));
+        assertTrue(source.contains("setRenderColor"));
+        assertTrue(source.contains("ItemInteractionResult.sidedSuccess"));
+        assertTrue(!source.contains("stack.shrink(1)"), "Screen dye use should not consume dye, matching upstream Colored.consumesDye=false");
+    }
 }

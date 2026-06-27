@@ -15,6 +15,7 @@ import li.cil.oc.common.component.KeyboardEnvironment;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.HolderLookup;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -190,6 +191,29 @@ final class ScreenBlockEntityTest {
     }
 
     @Test
+    void screenRenderColorDefaultsToUpstreamTierColor() throws Exception {
+        assertEquals(0xABABAB, configuredScreenRenderColor(0));
+        assertEquals(0xFFFF66, configuredScreenRenderColor(1));
+        assertEquals(0x66FFFF, configuredScreenRenderColor(2));
+    }
+
+    @Test
+    void screenRenderColorCanBeChangedAndPersistedLikeUpstream() throws Exception {
+        OpenComputersApi.initialize();
+        ScreenBlockEntity saved = allocateScreen();
+        initializeBuffer(saved);
+        saved.setRenderColor(DyeColor.RED);
+        CompoundTag tag = new CompoundTag();
+
+        saved.save(tag);
+        ScreenBlockEntity loaded = allocateScreen();
+        initializeBuffer(loaded);
+        loaded.load(tag);
+
+        assertEquals(0xB3312C, loaded.getRenderColor());
+    }
+
+    @Test
     void litScreenConsumesConfiguredPowerOnUpdateLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         ScreenBlockEntity screen = allocateScreen();
@@ -227,6 +251,15 @@ final class ScreenBlockEntityTest {
 
     private static void initializeBuffer(final ScreenBlockEntity screen) throws Exception {
         setField(screen, "buffer", new TextBufferState(1, 1));
+    }
+
+    private static int configuredScreenRenderColor(final int tier) throws Exception {
+        ScreenBlockEntity screen = allocateScreen();
+        initializeBuffer(screen);
+        Method configureTier = ScreenBlockEntity.class.getDeclaredMethod("configureTier", int.class);
+        configureTier.setAccessible(true);
+        configureTier.invoke(screen, tier);
+        return screen.getRenderColor();
     }
 
     private static void setField(final Object target, final String name, final Object value) throws Exception {

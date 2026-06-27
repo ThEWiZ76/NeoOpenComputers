@@ -11,7 +11,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.DyeItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.level.Level;
@@ -122,6 +126,27 @@ public class ScreenBlock extends Block implements EntityBlock {
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(
+        final ItemStack stack,
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final InteractionHand hand,
+        final BlockHitResult hitResult) {
+        if (!(stack.getItem() instanceof DyeItem dyeItem) || !(level.getBlockEntity(pos) instanceof ScreenBlockEntity screen)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+        if (!level.isClientSide) {
+            screen.setRenderColor(dyeItem.getDyeColor());
+            if (player != null) {
+                player.swing(hand);
+            }
+        }
+        return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 
     public static InteractionResult openPhysicalTerminal(final ScreenBlockEntity screen, final Player player) {
