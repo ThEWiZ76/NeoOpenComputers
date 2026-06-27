@@ -13,11 +13,11 @@ public final class ScreenEnvironment {
     public static final String COMPONENT_NAME = "screen";
 
     public static Node createNode(final Environment host) {
-        final var builder = Network.newNode(host, Visibility.Neighbors);
+        final var builder = Network.newNode(host, Visibility.Network);
         if (builder == null) {
             return null;
         }
-        return builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create();
+        return builder.withComponent(COMPONENT_NAME, Visibility.Network).withConnector().create();
     }
 
     public static Map<String, String> deviceInfo(final int maxWidth, final int maxHeight, final TextBuffer.ColorDepth maxDepth) {

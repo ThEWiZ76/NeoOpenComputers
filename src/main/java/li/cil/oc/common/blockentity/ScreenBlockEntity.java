@@ -746,7 +746,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         final ScreenLayout layout = screenLayout();
         final boolean origin = layout.origin().equals(worldPosition);
         if (node() instanceof Component component) {
-            component.setVisibility(origin ? Visibility.Neighbors : Visibility.None);
+            component.setVisibility(origin ? Visibility.Network : Visibility.None);
         }
         if (origin) {
             setEnergyCostPerTick(ModSettings.screenCost() * layout.width() * layout.height());

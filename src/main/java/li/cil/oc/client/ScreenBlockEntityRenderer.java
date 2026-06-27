@@ -32,8 +32,8 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     private static final int SCREEN_TIER1_COLOR = 0xABABAB;
     private static final int SCREEN_TIER2_COLOR = 0xFFFF66;
     private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
-    private static final float SCREEN_FRONT_Z = -0.53F;
-    private static final float SCREEN_TEXT_Z = -0.535F;
+    private static final float SCREEN_FRONT_Z = 0.53F;
+    private static final float SCREEN_TEXT_Z = 0.535F;
     private static final String[][] HORIZONTAL_FRONT = {
         {"fhb2", "fhm2", "fht2"},
         {"fhb", "fhm", "fht"}
@@ -80,7 +80,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             for (int column = 0; column < cells.size(); column++) {
                 final String cell = cells.get(column);
                 if (!cell.isBlank()) {
-                    font.drawInBatch(cell, column * CELL_WIDTH, row * LINE_HEIGHT, DEFAULT_COLOR, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
+                    font.drawInBatch(cell, column * CELL_WIDTH + centeredCellOffset(font.width(cell)), row * LINE_HEIGHT, DEFAULT_COLOR, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
                 }
             }
         }
@@ -178,7 +178,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             .setUv(u, v)
             .setOverlay(packedOverlay)
             .setLight(packedLight)
-            .setNormal(pose, 0F, 0F, -1F);
+            .setNormal(pose, 0F, 0F, 1F);
     }
 
     private static void orientToScreenText(final ScreenBlockEntity screen, final PoseStack poseStack) {
@@ -218,6 +218,10 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     static float screenTextZ() {
         return SCREEN_TEXT_Z;
+    }
+
+    static int centeredCellOffset(final int glyphWidth) {
+        return Math.max(0, (CELL_WIDTH - Math.max(0, glyphWidth)) / 2);
     }
 
     static AABB renderBounds(final net.minecraft.core.BlockPos origin, final Direction right, final Direction up, final int width, final int height) {

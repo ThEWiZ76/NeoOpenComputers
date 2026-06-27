@@ -67,7 +67,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
                         guiGraphics.drawString(
                             font,
                             cell.text(),
-                            left + TEXT_LEFT + cell.column() * CELL_WIDTH,
+                            left + TEXT_LEFT + cell.column() * CELL_WIDTH + centeredCellOffset(font.width(cell.text())),
                             top + TEXT_TOP + row * LINE_HEIGHT,
                             cell.color(),
                             false);
@@ -337,6 +337,10 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             offset += Character.charCount(codePoint);
         }
         return cells;
+    }
+
+    static int centeredCellOffset(final int glyphWidth) {
+        return Math.max(0, (CELL_WIDTH - Math.max(0, glyphWidth)) / 2);
     }
 
     static TerminalKeyPayload keyPayload(final TerminalMenu menu, final boolean pressed, final char character, final int keyCode) {

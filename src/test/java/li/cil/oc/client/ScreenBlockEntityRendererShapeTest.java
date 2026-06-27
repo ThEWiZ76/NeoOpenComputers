@@ -61,13 +61,19 @@ final class ScreenBlockEntityRendererShapeTest {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
 
         assertTrue(renderer.contains("SCREEN_FRONT_Z"));
-        assertTrue(renderer.contains("-0.53F"));
+        assertTrue(renderer.contains("0.53F"));
         assertTrue(!renderer.contains("-0.506F"));
     }
 
     @Test
     void screenRendererDrawsTerminalTextInFrontOfScreenFace() {
-        assertTrue(ScreenBlockEntityRenderer.screenTextZ() < ScreenBlockEntityRenderer.screenFrontZ());
+        assertTrue(ScreenBlockEntityRenderer.screenTextZ() > ScreenBlockEntityRenderer.screenFrontZ());
+    }
+
+    @Test
+    void screenRendererCentersNarrowGlyphsInsideFixedCells() {
+        assertEquals(2, ScreenBlockEntityRenderer.centeredCellOffset(1));
+        assertEquals(0, ScreenBlockEntityRenderer.centeredCellOffset(6));
     }
 
     @Test

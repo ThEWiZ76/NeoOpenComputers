@@ -190,6 +190,13 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenCentersNarrowGlyphsInsideFixedCells() {
+        assertEquals(2, TerminalScreen.centeredCellOffset(1));
+        assertEquals(0, TerminalScreen.centeredCellOffset(6));
+        assertEquals(0, TerminalScreen.centeredCellOffset(8));
+    }
+
+    @Test
     void terminalScreenTextRunsPreserveSupplementaryCodePoints() {
         final String supplementary = new String(Character.toChars(0x10400));
         final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(

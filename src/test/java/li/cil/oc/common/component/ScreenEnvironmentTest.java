@@ -28,8 +28,8 @@ final class ScreenEnvironmentTest {
         Component component = assertInstanceOf(Component.class, node);
         assertSame(host, component.host());
         assertEquals("screen", component.name());
-        assertEquals(Visibility.Neighbors, component.reachability());
-        assertEquals(Visibility.Neighbors, component.visibility());
+        assertEquals(Visibility.Network, component.reachability());
+        assertEquals(Visibility.Network, component.visibility());
     }
 
     @Test
