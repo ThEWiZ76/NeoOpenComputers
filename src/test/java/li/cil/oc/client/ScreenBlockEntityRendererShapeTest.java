@@ -57,6 +57,15 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererSelectsSourceSideTexturesForConnectedScreens() {
+        assertEquals("neoopencomputers:block/screen/b2", ScreenBlockEntityRenderer.screenTexture(true, 1, 1, 0, 0, Direction.EAST).toString());
+        assertEquals("neoopencomputers:block/screen/bhm", ScreenBlockEntityRenderer.screenTexture(false, 3, 1, 1, 0, Direction.DOWN).toString());
+        assertEquals("neoopencomputers:block/screen/bvm", ScreenBlockEntityRenderer.screenTexture(false, 1, 3, 0, 1, Direction.WEST).toString());
+        assertEquals("neoopencomputers:block/screen/bmm", ScreenBlockEntityRenderer.screenTexture(false, 3, 3, 1, 1, Direction.NORTH).toString());
+        assertEquals("neoopencomputers:block/screen/bmr", ScreenBlockEntityRenderer.screenTexture(false, 3, 3, 0, 1, Direction.NORTH).toString());
+    }
+
+    @Test
     void screenRendererDrawsConnectedFrontOverlayClearlyInFrontOfStaticModel() throws IOException {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
 

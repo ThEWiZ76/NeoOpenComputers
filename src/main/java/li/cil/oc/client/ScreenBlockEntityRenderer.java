@@ -34,13 +34,39 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
     private static final float SCREEN_FRONT_Z = 0.53F;
     private static final float SCREEN_TEXT_Z = 0.535F;
+    private static final float SCREEN_SIDE_OFFSET = 0.531F;
+    private static final String[] SINGLE_SIDE = {"b", "b", "b2", "b2", "b2", "b2"};
     private static final String[][] HORIZONTAL_FRONT = {
         {"fhb2", "fhm2", "fht2"},
         {"fhb", "fhm", "fht"}
     };
+    private static final String[][][] HORIZONTAL_SIDE = {
+        {
+            {"bht", "bhb", "bht2", "bht2", "b2", "b2"},
+            {"bhm", "bhm", "bhm2", "bhm2", "b", "b"},
+            {"bhb", "bht", "bhb2", "bhb2", "b2", "b2"}
+        },
+        {
+            {"bhb2", "bht2", "bht", "bhb", "b2", "b2"},
+            {"bhm2", "bhm2", "bhm", "bhm", "b", "b"},
+            {"bht2", "bhb2", "bhb", "bht", "b2", "b2"}
+        }
+    };
     private static final String[][] VERTICAL_FRONT = {
         {"fvt", "fvm", "fvb2"},
         {"fvt", "fvm", "fvb"}
+    };
+    private static final String[][][] VERTICAL_SIDE = {
+        {
+            {"b", "b", "bvt", "bvt", "bvt", "bvt"},
+            {"b", "b", "bvm", "bvm", "bvm", "bvm"},
+            {"b", "b", "bvb2", "bvb2", "bvb2", "bvb2"}
+        },
+        {
+            {"b2", "b2", "bvt", "bvt", "bht2", "bhb2"},
+            {"b", "b", "bvm", "bvm", "bhm2", "bhm2"},
+            {"b2", "b2", "bvb", "bvb", "bhb2", "bht2"}
+        }
     };
     private static final String[][][] MULTI_FRONT = {
         {
@@ -54,6 +80,42 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             {"fbr", "fbm", "fbl"}
         }
     };
+    private static final String[][][][] MULTI_SIDE = {
+        {
+            {
+                {"bht", "bhb", "btl", "btr", "bvb", "bvt"},
+                {"bhm", "bhm", "btm", "btm", "b", "b"},
+                {"bhb", "bht", "btr", "btl", "bvt", "bvb"}
+            },
+            {
+                {"b", "b", "bml", "bmr", "bvm", "bvm"},
+                {"b", "b", "bmm", "bmm", "b", "b"},
+                {"b", "b", "bmr", "bml", "bvm", "bvt"}
+            },
+            {
+                {"bht", "bhb", "bbl2", "bbr2", "bvt", "bvb2"},
+                {"bhm", "bhm", "bbm2", "bbm2", "b", "b"},
+                {"bhb", "bht", "bbr2", "bbl2", "bvb2", "bvt"}
+            }
+        },
+        {
+            {
+                {"bhb2", "bht2", "btl", "btr", "bht2", "bhb2"},
+                {"bhm2", "bhm2", "btm", "btm", "b", "b"},
+                {"bht2", "bhb2", "btr", "btl", "bht2", "bhb2"}
+            },
+            {
+                {"b", "b", "bml", "bml", "bhm2", "bhm2"},
+                {"b", "b", "bmm", "bmm", "b", "b"},
+                {"b", "b", "bmr", "bmr", "bhm2", "bhm2"}
+            },
+            {
+                {"bhb2", "bht2", "bbl", "bbr", "bhb2", "bht2"},
+                {"bhm2", "bhm2", "bbm", "bbm", "b", "b"},
+                {"bht2", "bhb2", "bbr", "bbl", "bhb2", "bht2"}
+            }
+        }
+    };
 
     private final Font font;
 
@@ -65,7 +127,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     public void render(final ScreenBlockEntity screen, final float partialTick, final PoseStack poseStack, final MultiBufferSource bufferSource, final int packedLight, final int packedOverlay) {
         poseStack.pushPose();
         orientToScreenBlockFace(screen, poseStack);
-        renderScreenFront(screen, poseStack, bufferSource, packedLight, packedOverlay);
+        renderScreenFaces(screen, poseStack, bufferSource, packedLight, packedOverlay);
         poseStack.popPose();
 
         if (!screen.isRenderOrigin() || !screen.renderText() || !screen.getPowerState()) {
@@ -103,33 +165,99 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             screen.renderBlockHeight());
     }
 
-    private static void renderScreenFront(
+    private static void renderScreenFaces(
         final ScreenBlockEntity screen,
         final PoseStack poseStack,
         final MultiBufferSource bufferSource,
         final int packedLight,
         final int packedOverlay) {
-        final TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(screenFrontTexture(screen));
+        for (final Direction face : Direction.values()) {
+            renderScreenFace(screen, poseStack, bufferSource, packedLight, packedOverlay, face);
+        }
+    }
+
+    private static void renderScreenFace(
+        final ScreenBlockEntity screen,
+        final PoseStack poseStack,
+        final MultiBufferSource bufferSource,
+        final int packedLight,
+        final int packedOverlay,
+        final Direction face) {
+        final Direction pitch = ScreenBlock.pitch(screen.getBlockState());
+        final TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(screenTexture(
+            pitch != Direction.NORTH,
+            screen.renderBlockWidth(),
+            screen.renderBlockHeight(),
+            screen.localBlockX(),
+            screen.localBlockY(),
+            face));
         final VertexConsumer consumer = sprite.wrap(bufferSource.getBuffer(RenderType.cutout()));
         final PoseStack.Pose pose = poseStack.last();
         final int color = 0xFF000000 | screen.getRenderColor();
-        vertex(consumer, pose, -0.5F, -0.5F, SCREEN_FRONT_Z, 0F, 1F, color, packedLight, packedOverlay);
-        vertex(consumer, pose, -0.5F, 0.5F, SCREEN_FRONT_Z, 0F, 0F, color, packedLight, packedOverlay);
-        vertex(consumer, pose, 0.5F, 0.5F, SCREEN_FRONT_Z, 1F, 0F, color, packedLight, packedOverlay);
-        vertex(consumer, pose, 0.5F, -0.5F, SCREEN_FRONT_Z, 1F, 1F, color, packedLight, packedOverlay);
+        switch (face) {
+            case DOWN -> {
+                vertex(consumer, pose, -0.5F, -SCREEN_SIDE_OFFSET, 0.5F, 0F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, 0.5F, -SCREEN_SIDE_OFFSET, 0.5F, 1F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, 0.5F, -SCREEN_SIDE_OFFSET, -0.5F, 1F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -0.5F, -SCREEN_SIDE_OFFSET, -0.5F, 0F, 1F, color, packedLight, packedOverlay, face);
+            }
+            case UP -> {
+                vertex(consumer, pose, -0.5F, SCREEN_SIDE_OFFSET, -0.5F, 0F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, 0.5F, SCREEN_SIDE_OFFSET, -0.5F, 1F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, 0.5F, SCREEN_SIDE_OFFSET, 0.5F, 1F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -0.5F, SCREEN_SIDE_OFFSET, 0.5F, 0F, 1F, color, packedLight, packedOverlay, face);
+            }
+            case NORTH -> {
+                vertex(consumer, pose, 0.5F, -0.5F, -SCREEN_SIDE_OFFSET, 0F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, 0.5F, 0.5F, -SCREEN_SIDE_OFFSET, 0F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -0.5F, 0.5F, -SCREEN_SIDE_OFFSET, 1F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -0.5F, -0.5F, -SCREEN_SIDE_OFFSET, 1F, 1F, color, packedLight, packedOverlay, face);
+            }
+            case SOUTH -> {
+                vertex(consumer, pose, -0.5F, -0.5F, SCREEN_FRONT_Z, 0F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -0.5F, 0.5F, SCREEN_FRONT_Z, 0F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, 0.5F, 0.5F, SCREEN_FRONT_Z, 1F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, 0.5F, -0.5F, SCREEN_FRONT_Z, 1F, 1F, color, packedLight, packedOverlay, face);
+            }
+            case WEST -> {
+                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, -0.5F, -0.5F, 0F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, 0.5F, -0.5F, 0F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, 0.5F, 0.5F, 1F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, -0.5F, 0.5F, 1F, 1F, color, packedLight, packedOverlay, face);
+            }
+            case EAST -> {
+                vertex(consumer, pose, SCREEN_SIDE_OFFSET, -0.5F, 0.5F, 0F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, SCREEN_SIDE_OFFSET, 0.5F, 0.5F, 0F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, SCREEN_SIDE_OFFSET, 0.5F, -0.5F, 1F, 0F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, SCREEN_SIDE_OFFSET, -0.5F, -0.5F, 1F, 1F, color, packedLight, packedOverlay, face);
+            }
+        }
     }
 
     static ResourceLocation screenFrontTexture(final boolean horizontalPitch, final int width, final int height, final int localX, final int localY) {
+        return screenTexture(horizontalPitch, width, height, localX, localY, Direction.SOUTH);
+    }
+
+    static ResourceLocation screenTexture(final boolean horizontalPitch, final int width, final int height, final int localX, final int localY, final Direction localFace) {
         final String texture;
         final int pitch = horizontalPitch ? 1 : 0;
-        if (width <= 1 && height <= 1) {
+        final Direction face = localFace == null ? Direction.SOUTH : localFace;
+        if (face == Direction.SOUTH && width <= 1 && height <= 1) {
             texture = horizontalPitch ? "f2" : "f";
-        } else if (width <= 1) {
+        } else if (face == Direction.SOUTH && width <= 1) {
             texture = VERTICAL_FRONT[pitch][xy2part(localY, height - 1)];
-        } else if (height <= 1) {
+        } else if (face == Direction.SOUTH && height <= 1) {
             texture = HORIZONTAL_FRONT[pitch][xy2part(localX, width - 1)];
-        } else {
+        } else if (face == Direction.SOUTH) {
             texture = MULTI_FRONT[pitch][xy2part(localY, height - 1)][xy2part(localX, width - 1)];
+        } else if (width <= 1 && height <= 1) {
+            texture = SINGLE_SIDE[face.get3DDataValue()];
+        } else if (width <= 1) {
+            texture = VERTICAL_SIDE[pitch][xy2part(localY, height - 1)][face.get3DDataValue()];
+        } else if (height <= 1) {
+            texture = HORIZONTAL_SIDE[pitch][xy2part(localX, width - 1)][face.get3DDataValue()];
+        } else {
+            texture = MULTI_SIDE[pitch][xy2part(localY, height - 1)][xy2part(localX, width - 1)][face.get3DDataValue()];
         }
         return ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "block/screen/" + texture);
     }
@@ -175,12 +303,27 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final int color,
         final int packedLight,
         final int packedOverlay) {
+        vertex(consumer, pose, x, y, z, u, v, color, packedLight, packedOverlay, Direction.SOUTH);
+    }
+
+    private static void vertex(
+        final VertexConsumer consumer,
+        final PoseStack.Pose pose,
+        final float x,
+        final float y,
+        final float z,
+        final float u,
+        final float v,
+        final int color,
+        final int packedLight,
+        final int packedOverlay,
+        final Direction normal) {
         consumer.addVertex(pose, x, y, z)
             .setColor(color)
             .setUv(u, v)
             .setOverlay(packedOverlay)
             .setLight(packedLight)
-            .setNormal(pose, 0F, 0F, 1F);
+            .setNormal(pose, normal.getStepX(), normal.getStepY(), normal.getStepZ());
     }
 
     private static void orientToScreenText(final ScreenBlockEntity screen, final PoseStack poseStack) {
