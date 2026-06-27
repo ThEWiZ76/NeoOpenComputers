@@ -70,8 +70,8 @@ final class ComputerCaseScreenShapeTest {
         assertTrue(method.contains("powerButtonTextureY(hovered),"));
         assertTrue(!method.contains("(float) powerButtonTextureX(state)"));
         assertTrue(!method.contains("(float) powerButtonTextureY(hovered)"));
-        assertTrue(!method.contains("powerButtonTextureWidth(),"));
-        assertTrue(!method.contains("powerButtonTextureHeight()"));
+        assertTrue(method.contains("powerButtonTextureWidth(),"));
+        assertTrue(method.contains("powerButtonTextureHeight()"));
     }
 
     @Test

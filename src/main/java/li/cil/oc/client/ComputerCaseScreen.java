@@ -256,7 +256,9 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
             powerButtonTextureX(state),
             powerButtonTextureY(hovered),
             STATUS_CONTROL_SIZE,
-            STATUS_CONTROL_SIZE);
+            STATUS_CONTROL_SIZE,
+            powerButtonTextureWidth(),
+            powerButtonTextureHeight());
     }
 
     private static ResourceLocation slotIconTexture(final String kind) {
