@@ -74,4 +74,17 @@ final class DiskDriveScreenShapeTest {
         assertTrue(rendererSource.contains("400L"));
     }
 
+    @Test
+    void diskDriveRendererUsesUpstreamFrontCoordinateSystem() throws Exception {
+        final String rendererSource = Files.readString(Path.of("src/main/java/li/cil/oc/client/DiskDriveBlockEntityRenderer.java"));
+
+        assertTrue(rendererSource.contains("poseStack.translate(0D, 3.5D / 16D, 6D / 16D);"));
+        assertTrue(rendererSource.contains("case WEST -> poseStack.mulPose(Axis.YP.rotationDegrees(-90F));"));
+        assertTrue(rendererSource.contains("case NORTH -> poseStack.mulPose(Axis.YP.rotationDegrees(180F));"));
+        assertTrue(rendererSource.contains("case EAST -> poseStack.mulPose(Axis.YP.rotationDegrees(90F));"));
+        assertTrue(!rendererSource.contains("case SOUTH -> poseStack.mulPose(Axis.YP.rotationDegrees(180F));"));
+        assertTrue(rendererSource.contains("0.505F"));
+        assertTrue(rendererSource.contains("setNormal(pose, 0F, 0F, 1F)"));
+    }
+
 }

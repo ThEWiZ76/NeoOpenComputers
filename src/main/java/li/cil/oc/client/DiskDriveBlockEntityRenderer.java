@@ -59,7 +59,7 @@ public final class DiskDriveBlockEntityRenderer implements BlockEntityRenderer<D
         final MultiBufferSource bufferSource,
         final int packedLight) {
         poseStack.pushPose();
-        poseStack.translate(0D, 3.5D / 16D, -0.505D);
+        poseStack.translate(0D, 3.5D / 16D, 6D / 16D);
         poseStack.mulPose(Axis.XP.rotationDegrees(90F));
         poseStack.scale(0.5F, 0.5F, 0.5F);
         itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, packedLight, OverlayTexture.NO_OVERLAY, poseStack, bufferSource, diskDrive.getLevel(), 0);
@@ -74,10 +74,10 @@ public final class DiskDriveBlockEntityRenderer implements BlockEntityRenderer<D
         final TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ACTIVITY_TEXTURE);
         final VertexConsumer consumer = sprite.wrap(bufferSource.getBuffer(RenderType.cutout()));
         final PoseStack.Pose pose = poseStack.last();
-        vertex(consumer, pose, -0.5F, -0.5F, -0.506F, 1F, 1F, packedLight, packedOverlay);
-        vertex(consumer, pose, 0.5F, -0.5F, -0.506F, 0F, 1F, packedLight, packedOverlay);
-        vertex(consumer, pose, 0.5F, 0.5F, -0.506F, 0F, 0F, packedLight, packedOverlay);
-        vertex(consumer, pose, -0.5F, 0.5F, -0.506F, 1F, 0F, packedLight, packedOverlay);
+        vertex(consumer, pose, -0.5F, -0.5F, 0.505F, 0F, 1F, packedLight, packedOverlay);
+        vertex(consumer, pose, 0.5F, -0.5F, 0.505F, 1F, 1F, packedLight, packedOverlay);
+        vertex(consumer, pose, 0.5F, 0.5F, 0.505F, 1F, 0F, packedLight, packedOverlay);
+        vertex(consumer, pose, -0.5F, 0.5F, 0.505F, 0F, 0F, packedLight, packedOverlay);
     }
 
     private static void vertex(
@@ -95,16 +95,16 @@ public final class DiskDriveBlockEntityRenderer implements BlockEntityRenderer<D
             .setUv(u, v)
             .setOverlay(packedOverlay)
             .setLight(packedLight)
-            .setNormal(pose, 0F, 0F, -1F);
+            .setNormal(pose, 0F, 0F, 1F);
     }
 
     private static void orientToDriveFront(final BlockState state, final PoseStack poseStack) {
         final Direction facing = state.hasProperty(DiskDriveBlock.FACING) ? state.getValue(DiskDriveBlock.FACING) : Direction.NORTH;
         poseStack.translate(0.5D, 0.5D, 0.5D);
         switch (facing) {
-            case SOUTH -> poseStack.mulPose(Axis.YP.rotationDegrees(180F));
-            case WEST -> poseStack.mulPose(Axis.YP.rotationDegrees(90F));
-            case EAST -> poseStack.mulPose(Axis.YP.rotationDegrees(-90F));
+            case WEST -> poseStack.mulPose(Axis.YP.rotationDegrees(-90F));
+            case NORTH -> poseStack.mulPose(Axis.YP.rotationDegrees(180F));
+            case EAST -> poseStack.mulPose(Axis.YP.rotationDegrees(90F));
             default -> {
             }
         }
