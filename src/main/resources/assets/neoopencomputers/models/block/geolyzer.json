@@ -1,6 +1,8 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "minecraft:block/deepslate"
-  }
+    "parent": "minecraft:block/cube_bottom_top",
+    "textures": {
+        "top": "neoopencomputers:block/geolyzer_top",
+        "bottom": "neoopencomputers:block/generic_top",
+        "side": "neoopencomputers:block/geolyzer_side"
+    }
 }

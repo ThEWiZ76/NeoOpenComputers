@@ -1,6 +1,9 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "minecraft:block/iron_block"
-  }
+    "parent": "minecraft:block/orientable",
+    "textures": {
+        "bottom": "neoopencomputers:block/generic_top",
+        "top": "neoopencomputers:block/generic_top",
+        "side": "neoopencomputers:block/charger_side",
+        "front": "neoopencomputers:block/charger_front"
+    }
 }

@@ -1,6 +1,9 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "minecraft:block/deepslate_tiles"
-  }
+    "parent": "minecraft:block/orientable",
+    "textures": {
+        "bottom": "neoopencomputers:block/generic_top",
+        "top": "neoopencomputers:block/generic_top",
+        "side": "neoopencomputers:block/rack_side",
+        "front": "neoopencomputers:block/rack_front"
+    }
 }

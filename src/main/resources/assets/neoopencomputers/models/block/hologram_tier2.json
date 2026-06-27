@@ -1,8 +1,6 @@
 {
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "bottom": "minecraft:block/iron_block",
-    "side": "minecraft:block/blue_stained_glass",
-    "top": "minecraft:block/red_stained_glass"
-  }
+    "parent": "neoopencomputers:block/hologram",
+    "textures": {
+        "top": "neoopencomputers:block/hologram2_top"
+    }
 }

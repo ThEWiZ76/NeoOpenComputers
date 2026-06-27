@@ -1,6 +1,7 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "minecraft:block/observer_front"
-  }
+    "parent": "minecraft:block/cube_column",
+    "textures": {
+        "end": "neoopencomputers:block/motionsensor_top",
+        "side": "neoopencomputers:block/motionsensor_side"
+    }
 }

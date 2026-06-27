@@ -1,6 +1,9 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "minecraft:block/amethyst_block"
-  }
+    "parent": "minecraft:block/orientable",
+    "textures": {
+        "bottom": "neoopencomputers:block/generic_top",
+        "top": "neoopencomputers:block/waypoint_top",
+        "side": "neoopencomputers:block/waypoint_side",
+        "front": "neoopencomputers:block/waypoint_front"
+    }
 }
