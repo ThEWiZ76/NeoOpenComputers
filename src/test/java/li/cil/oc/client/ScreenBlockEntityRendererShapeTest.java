@@ -41,6 +41,18 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererSelectsSourceFrontTextureForConnectedScreens() {
+        assertEquals("neoopencomputers:block/screen/f", ScreenBlockEntityRenderer.screenFrontTexture(false, 1, 1, 0, 0).toString());
+        assertEquals("neoopencomputers:block/screen/f2", ScreenBlockEntityRenderer.screenFrontTexture(true, 1, 1, 0, 0).toString());
+        assertEquals("neoopencomputers:block/screen/ftr", ScreenBlockEntityRenderer.screenFrontTexture(false, 3, 3, 2, 2).toString());
+        assertEquals("neoopencomputers:block/screen/fmm", ScreenBlockEntityRenderer.screenFrontTexture(false, 3, 3, 1, 1).toString());
+        assertEquals("neoopencomputers:block/screen/fbl2", ScreenBlockEntityRenderer.screenFrontTexture(false, 3, 3, 0, 0).toString());
+        assertEquals("neoopencomputers:block/screen/fbl", ScreenBlockEntityRenderer.screenFrontTexture(true, 3, 3, 0, 0).toString());
+        assertEquals("neoopencomputers:block/screen/fvm", ScreenBlockEntityRenderer.screenFrontTexture(false, 1, 3, 0, 1).toString());
+        assertEquals("neoopencomputers:block/screen/fhm", ScreenBlockEntityRenderer.screenFrontTexture(true, 3, 1, 1, 0).toString());
+    }
+
+    @Test
     void printItemRendererClassExists() throws ClassNotFoundException {
         Class<?> renderer = Class.forName("li.cil.oc.client.PrintItemRenderer", false, getClass().getClassLoader());
 
