@@ -36,6 +36,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_CARD_CONTAINER_TIER1 = "cardcontainer1";
     public static final String COMPAT_CARD_CONTAINER_TIER2 = "cardcontainer2";
     public static final String COMPAT_CARD_CONTAINER_TIER3 = "cardcontainer3";
+    public static final String COMPAT_CARD_CONTAINER_TIER1_CAMEL = "cardContainer1";
+    public static final String COMPAT_CARD_CONTAINER_TIER2_CAMEL = "cardContainer2";
+    public static final String COMPAT_CARD_CONTAINER_TIER3_CAMEL = "cardContainer3";
     public static final String COMPAT_MICROCONTROLLER_CASE_TIER1 = "microcontrollerCase1";
     public static final String COMPAT_MICROCONTROLLER_CASE_TIER2 = "microcontrollerCase2";
     public static final String COMPAT_MICROCONTROLLER_CASE_TIER1_UPSTREAM = "microcontrollercase1";
@@ -44,6 +47,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_TABLET_CASE_TIER1 = "tabletcase1";
     public static final String COMPAT_TABLET_CASE_TIER2 = "tabletcase2";
     public static final String COMPAT_TABLET_CASE_CREATIVE = "tabletcasecreative";
+    public static final String COMPAT_TABLET_CASE_TIER1_CAMEL = "tabletCase1";
+    public static final String COMPAT_TABLET_CASE_TIER2_CAMEL = "tabletCase2";
     public static final String COMPAT_COMPUTER_CASE_TIER1 = "case1";
     public static final String COMPAT_COMPUTER_CASE_TIER2 = "case2";
     public static final String COMPAT_COMPUTER_CASE_TIER3 = "case3";
@@ -54,9 +59,13 @@ public final class ModContentCatalog {
     public static final String COMPAT_DATA_CARD_TIER2 = "datacard2";
     public static final String COMPAT_DATA_CARD_TIER3 = "datacard3";
     public static final String COMPAT_DATA_CARD = "datacard";
+    public static final String COMPAT_DATA_CARD_TIER1_CAMEL = "dataCard1";
+    public static final String COMPAT_DATA_CARD_TIER2_CAMEL = "dataCard2";
+    public static final String COMPAT_DATA_CARD_TIER3_CAMEL = "dataCard3";
     public static final String COMPAT_DEBUG_CARD = "debugCard";
     public static final String COMPAT_DEBUG_CARD_UPSTREAM = "debugcard";
     public static final String COMPAT_DISK_DRIVE_MOUNTABLE = "diskDriveMountable";
+    public static final String COMPAT_DISK_DRIVE = "diskDrive";
     public static final String COMPAT_DISK_DRIVE_MOUNTABLE_UPSTREAM = "diskdrivemountable";
     public static final String COMPAT_DISK_DRIVE_UPSTREAM = "diskdrive";
     public static final String COMPAT_DATABASE_UPGRADE_TIER1 = "databaseUpgrade1";
@@ -68,6 +77,9 @@ public final class ModContentCatalog {
     public static final String COMPAT_GRAPHICS_CARD_TIER1 = "graphicscard1";
     public static final String COMPAT_GRAPHICS_CARD_TIER2 = "graphicscard2";
     public static final String COMPAT_GRAPHICS_CARD_TIER3 = "graphicscard3";
+    public static final String COMPAT_GRAPHICS_CARD_TIER1_CAMEL = "graphicsCard1";
+    public static final String COMPAT_GRAPHICS_CARD_TIER2_CAMEL = "graphicsCard2";
+    public static final String COMPAT_GRAPHICS_CARD_TIER3_CAMEL = "graphicsCard3";
     public static final String COMPAT_GENERATOR_UPGRADE = "generatorUpgrade";
     public static final String COMPAT_GENERATOR_UPGRADE_UPSTREAM = "generatorupgrade";
     public static final String COMPAT_HOVER_UPGRADE_TIER1 = "hoverUpgrade1";
@@ -82,14 +94,17 @@ public final class ModContentCatalog {
     public static final String COMPAT_CRAFTING_UPGRADE = "craftingUpgrade";
     public static final String COMPAT_EXPERIENCE_UPGRADE = "experienceUpgrade";
     public static final String COMPAT_INVENTORY_UPGRADE = "inventoryUpgrade";
+    public static final String COMPAT_INVENTORY_CONTROLLER_UPGRADE = "inventoryControllerUpgrade";
     public static final String COMPAT_INVENTORY_CONTROLLER_UPGRADE_UPSTREAM = "inventorycontrollerupgrade";
     public static final String COMPAT_CRAFTING_UPGRADE_UPSTREAM = "craftingupgrade";
     public static final String COMPAT_EXPERIENCE_UPGRADE_UPSTREAM = "experienceupgrade";
     public static final String COMPAT_INVENTORY_UPGRADE_UPSTREAM = "inventoryupgrade";
     public static final String COMPAT_INTERNET_CARD = "internetcard";
+    public static final String COMPAT_INTERNET_CARD_CAMEL = "internetCard";
     public static final String COMPAT_LEASH_UPGRADE = "leashUpgrade";
     public static final String COMPAT_LEASH_UPGRADE_UPSTREAM = "leashupgrade";
     public static final String COMPAT_LINKED_CARD = "linkedcard";
+    public static final String COMPAT_LINKED_CARD_CAMEL = "linkedCard";
     public static final String COMPAT_MEMORY_TIER1 = "ram1";
     public static final String COMPAT_MEMORY_TIER2 = "ram2";
     public static final String COMPAT_MEMORY_TIER3 = "ram3";
@@ -101,6 +116,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_NAVIGATION_UPGRADE = "navigationUpgrade";
     public static final String COMPAT_NAVIGATION_UPGRADE_UPSTREAM = "navigationupgrade";
     public static final String COMPAT_NETWORK_CARD = "lancard";
+    public static final String COMPAT_NETWORK_CARD_CAMEL = "lanCard";
+    public static final String COMPAT_MOTION_SENSOR = "motionSensor";
     public static final String COMPAT_MOTION_SENSOR_UPSTREAM = "motionsensor";
     public static final String COMPAT_PISTON_UPGRADE = "pistonUpgrade";
     public static final String COMPAT_POWER_CONVERTER = "powerConverter";
@@ -110,6 +127,7 @@ public final class ModContentCatalog {
     public static final String COMPAT_RACK = "rack";
     public static final String COMPAT_RAID = "raid";
     public static final String COMPAT_REDSTONE_CARD = "redstone";
+    public static final String COMPAT_REDSTONE_CARD_TIER1 = "redstoneCard1";
     public static final String COMPAT_REDSTONE_CARD_TIER1_UPSTREAM = "redstonecard1";
     public static final String COMPAT_RELAY = "relay";
     public static final String COMPAT_NET_SPLITTER = "netSplitter";
@@ -140,9 +158,14 @@ public final class ModContentCatalog {
     public static final String COMPAT_UPGRADE_CONTAINER_TIER1 = "upgradecontainer1";
     public static final String COMPAT_UPGRADE_CONTAINER_TIER2 = "upgradecontainer2";
     public static final String COMPAT_UPGRADE_CONTAINER_TIER3 = "upgradecontainer3";
+    public static final String COMPAT_UPGRADE_CONTAINER_TIER1_CAMEL = "upgradeContainer1";
+    public static final String COMPAT_UPGRADE_CONTAINER_TIER2_CAMEL = "upgradeContainer2";
+    public static final String COMPAT_UPGRADE_CONTAINER_TIER3_CAMEL = "upgradeContainer3";
     public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER1 = "wlancard1";
     public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER2 = "wlancard2";
     public static final String COMPAT_WIRELESS_NETWORK_CARD = "wlancard";
+    public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER1_CAMEL = "wlanCard1";
+    public static final String COMPAT_WIRELESS_NETWORK_CARD_TIER2_CAMEL = "wlanCard2";
     public static final String COMPAT_WRENCH = "wrench";
     public static final String COMPAT_SCREEN_TIER1 = "screen1";
     public static final String COMPAT_SCREEN_TIER2 = "screen2";
@@ -641,6 +664,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_COMPUTER_CASE_TIER3, computerCaseTier3, computerCaseTier3Item);
         registry.register(ModContentIds.DISASSEMBLER, disassembler, disassemblerItem);
         registry.register(ModContentIds.DISK_DRIVE, diskDrive, diskDriveItem);
+        registry.register(COMPAT_DISK_DRIVE, diskDrive, diskDriveItem);
         registry.register(COMPAT_DISK_DRIVE_UPSTREAM, diskDrive, diskDriveItem);
         registry.register(ModContentIds.DISK_DRIVE_MOUNTABLE, null, diskDriveMountableItem);
         registry.register(COMPAT_DISK_DRIVE_MOUNTABLE, null, diskDriveMountableItem);
@@ -654,6 +678,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_SCREEN_TIER3, screenTier3, screenTier3Item);
         registry.register(ModContentIds.KEYBOARD, keyboard, keyboardItem);
         registry.register(ModContentIds.MOTION_SENSOR, motionSensor, motionSensorItem);
+        registry.register(COMPAT_MOTION_SENSOR, motionSensor, motionSensorItem);
         registry.register(COMPAT_MOTION_SENSOR_UPSTREAM, motionSensor, motionSensorItem);
         registry.register(ModContentIds.POWER_DISTRIBUTOR, powerDistributor, powerDistributorItem);
         registry.register(COMPAT_POWER_DISTRIBUTOR, powerDistributor, powerDistributorItem);
@@ -750,6 +775,9 @@ public final class ModContentCatalog {
         registry.register(COMPAT_CARD_CONTAINER_TIER1, null, cardContainerTier1Item);
         registry.register(COMPAT_CARD_CONTAINER_TIER2, null, cardContainerTier2Item);
         registry.register(COMPAT_CARD_CONTAINER_TIER3, null, cardContainerTier3Item);
+        registry.register(COMPAT_CARD_CONTAINER_TIER1_CAMEL, null, cardContainerTier1Item);
+        registry.register(COMPAT_CARD_CONTAINER_TIER2_CAMEL, null, cardContainerTier2Item);
+        registry.register(COMPAT_CARD_CONTAINER_TIER3_CAMEL, null, cardContainerTier3Item);
         registry.register(COMPAT_MICROCONTROLLER_CASE_TIER1, null, microcontrollerCaseTier1Item);
         registry.register(COMPAT_MICROCONTROLLER_CASE_TIER2, null, microcontrollerCaseTier2Item);
         registry.register(COMPAT_MICROCONTROLLER_CASE_TIER1_UPSTREAM, null, microcontrollerCaseTier1Item);
@@ -758,10 +786,15 @@ public final class ModContentCatalog {
         registry.register(COMPAT_TABLET_CASE_TIER1, null, tabletCaseTier1Item);
         registry.register(COMPAT_TABLET_CASE_TIER2, null, tabletCaseTier2Item);
         registry.register(COMPAT_TABLET_CASE_CREATIVE, null, tabletCaseCreativeItem);
+        registry.register(COMPAT_TABLET_CASE_TIER1_CAMEL, null, tabletCaseTier1Item);
+        registry.register(COMPAT_TABLET_CASE_TIER2_CAMEL, null, tabletCaseTier2Item);
         registry.register(COMPAT_DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(COMPAT_DATA_CARD_TIER2, null, dataCardTier2Item);
         registry.register(COMPAT_DATA_CARD_TIER3, null, dataCardTier3Item);
         registry.register(COMPAT_DATA_CARD, null, dataCardTier1Item);
+        registry.register(COMPAT_DATA_CARD_TIER1_CAMEL, null, dataCardTier1Item);
+        registry.register(COMPAT_DATA_CARD_TIER2_CAMEL, null, dataCardTier2Item);
+        registry.register(COMPAT_DATA_CARD_TIER3_CAMEL, null, dataCardTier3Item);
         registry.register(COMPAT_DEBUG_CARD, null, debugCardItem);
         registry.register(COMPAT_DEBUG_CARD_UPSTREAM, null, debugCardItem);
         registry.register(COMPAT_DATABASE_UPGRADE_TIER1, null, databaseUpgradeTier1Item);
@@ -787,12 +820,15 @@ public final class ModContentCatalog {
         registry.register(COMPAT_HDD_TIER2, null, hddTier2Item);
         registry.register(COMPAT_HDD_TIER3, null, hddTier3Item);
         registry.register(COMPAT_INVENTORY_CONTROLLER_UPGRADE_UPSTREAM, null, inventoryControllerUpgradeItem);
+        registry.register(COMPAT_INVENTORY_CONTROLLER_UPGRADE, null, inventoryControllerUpgradeItem);
         registry.register(COMPAT_INVENTORY_UPGRADE, null, inventoryUpgradeItem);
         registry.register(COMPAT_CRAFTING_UPGRADE, null, craftingUpgradeItem);
         registry.register(COMPAT_INVENTORY_UPGRADE_UPSTREAM, null, inventoryUpgradeItem);
         registry.register(COMPAT_CRAFTING_UPGRADE_UPSTREAM, null, craftingUpgradeItem);
         registry.register(COMPAT_INTERNET_CARD, null, internetCardItem);
+        registry.register(COMPAT_INTERNET_CARD_CAMEL, null, internetCardItem);
         registry.register(COMPAT_LINKED_CARD, null, linkedCardItem);
+        registry.register(COMPAT_LINKED_CARD_CAMEL, null, linkedCardItem);
         registry.register(COMPAT_NAVIGATION_UPGRADE, null, navigationUpgradeItem);
         registry.register(COMPAT_NAVIGATION_UPGRADE_UPSTREAM, null, navigationUpgradeItem);
         registry.register(COMPAT_EXPERIENCE_UPGRADE, null, experienceUpgradeItem);
@@ -800,6 +836,9 @@ public final class ModContentCatalog {
         registry.register(COMPAT_GRAPHICS_CARD_TIER1, null, graphicsCardTier1Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER2, null, graphicsCardTier2Item);
         registry.register(COMPAT_GRAPHICS_CARD_TIER3, null, graphicsCardTier3Item);
+        registry.register(COMPAT_GRAPHICS_CARD_TIER1_CAMEL, null, graphicsCardTier1Item);
+        registry.register(COMPAT_GRAPHICS_CARD_TIER2_CAMEL, null, graphicsCardTier2Item);
+        registry.register(COMPAT_GRAPHICS_CARD_TIER3_CAMEL, null, graphicsCardTier3Item);
         registry.register(COMPAT_HOVER_UPGRADE_TIER1, null, hoverUpgradeTier1Item);
         registry.register(COMPAT_HOVER_UPGRADE_TIER2, null, hoverUpgradeTier2Item);
         registry.register(COMPAT_HOVER_UPGRADE_TIER1_UPSTREAM, null, hoverUpgradeTier1Item);
@@ -807,6 +846,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_HOLOGRAM_TIER1, hologramTier1, hologramTier1Item);
         registry.register(COMPAT_HOLOGRAM_TIER2, hologramTier2, hologramTier2Item);
         registry.register(COMPAT_NETWORK_CARD, null, networkCardItem);
+        registry.register(COMPAT_NETWORK_CARD_CAMEL, null, networkCardItem);
         registry.register(COMPAT_PISTON_UPGRADE, null, pistonUpgradeItem);
         registry.register(COMPAT_STICKY_PISTON_UPGRADE, null, stickyPistonUpgradeItem);
         registry.register(COMPAT_SIGN_UPGRADE, null, signUpgradeItem);
@@ -827,7 +867,10 @@ public final class ModContentCatalog {
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER1, null, wirelessNetworkCardTier1Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_WIRELESS_NETWORK_CARD, null, wirelessNetworkCardTier2Item);
+        registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER1_CAMEL, null, wirelessNetworkCardTier1Item);
+        registry.register(COMPAT_WIRELESS_NETWORK_CARD_TIER2_CAMEL, null, wirelessNetworkCardTier2Item);
         registry.register(COMPAT_REDSTONE_CARD, null, redstoneCardItem);
+        registry.register(COMPAT_REDSTONE_CARD_TIER1, null, redstoneCardItem);
         registry.register(COMPAT_REDSTONE_CARD_TIER1_UPSTREAM, null, redstoneCardItem);
         registry.register(COMPAT_GENERATOR_UPGRADE, null, generatorUpgradeItem);
         registry.register(COMPAT_SOLAR_GENERATOR_UPGRADE, null, solarGeneratorUpgradeItem);
@@ -840,6 +883,9 @@ public final class ModContentCatalog {
         registry.register(COMPAT_UPGRADE_CONTAINER_TIER1, null, upgradeContainerTier1Item);
         registry.register(COMPAT_UPGRADE_CONTAINER_TIER2, null, upgradeContainerTier2Item);
         registry.register(COMPAT_UPGRADE_CONTAINER_TIER3, null, upgradeContainerTier3Item);
+        registry.register(COMPAT_UPGRADE_CONTAINER_TIER1_CAMEL, null, upgradeContainerTier1Item);
+        registry.register(COMPAT_UPGRADE_CONTAINER_TIER2_CAMEL, null, upgradeContainerTier2Item);
+        registry.register(COMPAT_UPGRADE_CONTAINER_TIER3_CAMEL, null, upgradeContainerTier3Item);
     }
 
     private ModContentCatalog() {

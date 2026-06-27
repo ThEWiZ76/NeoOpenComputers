@@ -594,6 +594,37 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_TANK_CONTROLLER_UPGRADE_UPSTREAM, registry.get(ModContentCatalog.COMPAT_TANK_CONTROLLER_UPGRADE_UPSTREAM).name());
     }
 
+    @Test
+    void registersUpstreamCamelCaseApiNamesForPortedContent() throws ReflectiveOperationException {
+        final ItemRegistry registry = new ItemRegistry();
+
+        invokeRegister(registry);
+
+        assertAlias(registry, "cardContainer1");
+        assertAlias(registry, "cardContainer2");
+        assertAlias(registry, "cardContainer3");
+        assertAlias(registry, "dataCard1");
+        assertAlias(registry, "dataCard2");
+        assertAlias(registry, "dataCard3");
+        assertAlias(registry, "diskDrive");
+        assertAlias(registry, "graphicsCard1");
+        assertAlias(registry, "graphicsCard2");
+        assertAlias(registry, "graphicsCard3");
+        assertAlias(registry, "internetCard");
+        assertAlias(registry, "inventoryControllerUpgrade");
+        assertAlias(registry, "lanCard");
+        assertAlias(registry, "linkedCard");
+        assertAlias(registry, "motionSensor");
+        assertAlias(registry, "redstoneCard1");
+        assertAlias(registry, "tabletCase1");
+        assertAlias(registry, "tabletCase2");
+        assertAlias(registry, "upgradeContainer1");
+        assertAlias(registry, "upgradeContainer2");
+        assertAlias(registry, "upgradeContainer3");
+        assertAlias(registry, "wlanCard1");
+        assertAlias(registry, "wlanCard2");
+    }
+
     private static void invokeRegister(final ItemRegistry registry) throws ReflectiveOperationException {
         Method register = null;
         for (Method method : ModContentCatalog.class.getDeclaredMethods()) {
@@ -606,5 +637,10 @@ final class ModContentCatalogTest {
         Object[] arguments = new Object[register.getParameterCount()];
         arguments[0] = registry;
         register.invoke(null, arguments);
+    }
+
+    private static void assertAlias(final ItemRegistry registry, final String name) {
+        assertNotNull(registry.get(name), "Missing upstream API alias " + name);
+        assertEquals(name, registry.get(name).name());
     }
 }
