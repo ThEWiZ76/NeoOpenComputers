@@ -100,6 +100,19 @@ final class BlockModelResourceTest {
     }
 
     @Test
+    void screenBlockModelCullsInternalSideFacesForMultiblockSeams() throws IOException {
+        try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_panel.json"))) {
+            final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
+            final JsonObject faces = panel.getAsJsonArray("elements").get(0).getAsJsonObject().getAsJsonObject("faces");
+            for (final String side : List.of("down", "up", "south", "west", "east")) {
+                final JsonObject face = faces.getAsJsonObject(side);
+                assertTrue(face.has("cullface"), side + " face should cull against adjacent blocks");
+                assertTrue(side.equals(face.get("cullface").getAsString()), side + " face should cull on its own side");
+            }
+        }
+    }
+
+    @Test
     void horizontalScreenBlockstatesUseUpstreamPitchFrontTextureVariant() throws IOException {
         for (final String tier : List.of("screen_tier1", "screen_tier2", "screen_tier3")) {
             final Path blockstatePath = Path.of("src/main/resources/assets/neoopencomputers/blockstates/" + tier + ".json");

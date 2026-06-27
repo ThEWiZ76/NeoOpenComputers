@@ -1,6 +1,8 @@
 package li.cil.oc.client;
 
 import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -75,6 +77,16 @@ final class ScreenBlockEntityRendererShapeTest {
     void screenRendererSplitsTextIntoFixedCellsForWorldAlignment() {
         assertEquals(List.of("W", "i", "."), ScreenBlockEntityRenderer.lineCells("Wi.", 3));
         assertEquals(List.of("W", " ", " "), ScreenBlockEntityRenderer.lineCells("W", 3));
+    }
+
+    @Test
+    void screenRendererExpandsBoundsForMultiblockText() {
+        assertEquals(
+            new AABB(10, 20, 30, 13, 21, 31),
+            ScreenBlockEntityRenderer.renderBounds(new BlockPos(10, 20, 30), Direction.EAST, Direction.UP, 3, 1));
+        assertEquals(
+            new AABB(8, 17, 30, 11, 21, 31),
+            ScreenBlockEntityRenderer.renderBounds(new BlockPos(10, 20, 30), Direction.WEST, Direction.DOWN, 3, 4));
     }
 
     @Test

@@ -19,6 +19,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,6 +84,20 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             }
         }
         poseStack.popPose();
+    }
+
+    @Override
+    public AABB getRenderBoundingBox(final ScreenBlockEntity screen) {
+        if (!screen.isRenderOrigin()) {
+            return BlockEntityRenderer.super.getRenderBoundingBox(screen);
+        }
+        final BlockState state = screen.getBlockState();
+        return renderBounds(
+            screen.getBlockPos(),
+            localRight(state),
+            ScreenBlock.up(state),
+            screen.renderBlockWidth(),
+            screen.renderBlockHeight());
     }
 
     private static void renderScreenFront(
@@ -194,6 +209,31 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             case WEST -> -90;
             default -> 0;
         };
+    }
+
+    static AABB renderBounds(final net.minecraft.core.BlockPos origin, final Direction right, final Direction up, final int width, final int height) {
+        final int clampedWidth = Math.max(1, width);
+        final int clampedHeight = Math.max(1, height);
+        final net.minecraft.core.BlockPos oppositeCorner = origin
+            .relative(right, clampedWidth - 1)
+            .relative(up, clampedHeight - 1);
+        final int minX = Math.min(origin.getX(), oppositeCorner.getX());
+        final int minY = Math.min(origin.getY(), oppositeCorner.getY());
+        final int minZ = Math.min(origin.getZ(), oppositeCorner.getZ());
+        final int maxX = Math.max(origin.getX(), oppositeCorner.getX()) + 1;
+        final int maxY = Math.max(origin.getY(), oppositeCorner.getY()) + 1;
+        final int maxZ = Math.max(origin.getZ(), oppositeCorner.getZ()) + 1;
+        return new AABB(minX, minY, minZ, maxX, maxY, maxZ);
+    }
+
+    private static Direction localRight(final BlockState state) {
+        final Direction facing = ScreenBlock.facing(state);
+        final Direction up = ScreenBlock.up(state);
+        final int x = facing.getStepY() * up.getStepZ() - facing.getStepZ() * up.getStepY();
+        final int y = facing.getStepZ() * up.getStepX() - facing.getStepX() * up.getStepZ();
+        final int z = facing.getStepX() * up.getStepY() - facing.getStepY() * up.getStepX();
+        final Direction right = Direction.fromDelta(x, y, z);
+        return right == null ? Direction.EAST : right;
     }
 
     private static String line(final ScreenBlockEntity screen, final int row) {
