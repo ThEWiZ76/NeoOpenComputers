@@ -1,0 +1,33 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "neoopencomputers:block/screen/f",
+    "front": "neoopencomputers:block/screen/f",
+    "back": "neoopencomputers:block/screen/b",
+    "side": "neoopencomputers:block/screen/b"
+  },
+  "elements": [
+    {
+      "from": [ 1, 1, 2 ],
+      "to": [ 15, 15, 5 ],
+      "faces": {
+        "south": { "uv": [ 1, 1, 15, 15 ], "texture": "#back" },
+        "east": { "uv": [ 11, 1, 14, 15 ], "texture": "#side" },
+        "west": { "uv": [ 2, 1, 5, 15 ], "texture": "#side" },
+        "up": { "uv": [ 1, 2, 15, 5 ], "texture": "#side" },
+        "down": { "uv": [ 1, 11, 15, 14 ], "texture": "#side" }
+      }
+    },
+    {
+      "from": [ 0, 0, 0 ],
+      "to": [ 16, 16, 2 ],
+      "faces": {
+        "north": { "uv": [ 0, 0, 16, 16 ], "texture": "#front" },
+        "east": { "uv": [ 14, 0, 16, 16 ], "texture": "#side" },
+        "west": { "uv": [ 0, 0, 2, 16 ], "texture": "#side" },
+        "up": { "uv": [ 0, 0, 16, 2 ], "texture": "#side" },
+        "down": { "uv": [ 0, 14, 16, 16 ], "texture": "#side" }
+      }
+    }
+  ]
+}

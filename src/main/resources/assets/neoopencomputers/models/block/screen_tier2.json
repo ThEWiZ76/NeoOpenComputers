@@ -1,12 +1,9 @@
 {
-  "parent": "minecraft:block/cube",
+  "parent": "neoopencomputers:block/screen_panel",
   "textures": {
     "particle": "neoopencomputers:block/screen/f2",
-    "north": "neoopencomputers:block/screen/f2",
-    "south": "neoopencomputers:block/screen/b2",
-    "east": "neoopencomputers:block/screen/b2",
-    "west": "neoopencomputers:block/screen/b2",
-    "up": "neoopencomputers:block/screen/b2",
-    "down": "neoopencomputers:block/screen/b2"
+    "front": "neoopencomputers:block/screen/f2",
+    "back": "neoopencomputers:block/screen/b2",
+    "side": "neoopencomputers:block/screen/b2"
   }
 }
