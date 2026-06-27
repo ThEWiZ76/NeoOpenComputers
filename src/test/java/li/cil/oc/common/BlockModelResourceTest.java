@@ -99,21 +99,18 @@ final class BlockModelResourceTest {
     }
 
     @Test
-    void diskDriveBlockstateHasLoadedMediaVariants() throws IOException {
+    void diskDriveBlockstateDoesNotChangeModelWhenMediaIsInserted() throws IOException {
         final Path blockstatePath = Path.of("src/main/resources/assets/neoopencomputers/blockstates/disk_drive.json");
         try (Reader reader = Files.newBufferedReader(blockstatePath)) {
             final JsonObject variants = JsonParser.parseReader(reader).getAsJsonObject().getAsJsonObject("variants");
             for (final String facing : List.of("north", "east", "south", "west")) {
-                assertTrue(variants.has("facing=" + facing + ",has_media=false"), facing);
-                assertTrue(variants.has("facing=" + facing + ",has_media=true"), facing);
-                assertTrue(variants.getAsJsonObject("facing=" + facing + ",has_media=false").get("model").getAsString().equals("neoopencomputers:block/disk_drive"), facing);
-                assertTrue(variants.getAsJsonObject("facing=" + facing + ",has_media=true").get("model").getAsString().equals("neoopencomputers:block/disk_drive_loaded"), facing);
+                assertTrue(variants.has("facing=" + facing), facing);
+                assertTrue(variants.getAsJsonObject("facing=" + facing).get("model").getAsString().equals("neoopencomputers:block/disk_drive"), facing);
+                assertTrue(!variants.has("facing=" + facing + ",has_media=false"), facing);
+                assertTrue(!variants.has("facing=" + facing + ",has_media=true"), facing);
             }
         }
 
-        assertTrue(Files.exists(BLOCK_MODEL_ROOT.resolve("disk_drive_loaded.json")));
-
-        final String loadedModel = Files.readString(BLOCK_MODEL_ROOT.resolve("disk_drive_loaded.json"));
-        assertTrue(!loadedModel.contains("diskdrive_front_activity"));
+        assertTrue(!Files.exists(BLOCK_MODEL_ROOT.resolve("disk_drive_loaded.json")));
     }
 }

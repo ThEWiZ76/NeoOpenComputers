@@ -47,12 +47,12 @@ final class DiskDriveBlockEntityTest {
     }
 
     @Test
-    void diskDriveBlockTracksInsertedMediaForVisualState() throws Exception {
+    void diskDriveBlockKeepsUpstreamFacingOnlyVisualState() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/DiskDriveBlock.java"));
 
-        assertTrue(source.contains("BooleanProperty.create(\"has_media\")"));
-        assertTrue(source.contains("setValue(HAS_MEDIA, false)"));
-        assertTrue(source.contains("builder.add(FACING, HAS_MEDIA)"));
+        assertTrue(!source.contains("BooleanProperty.create(\"has_media\")"));
+        assertTrue(!source.contains("HAS_MEDIA"));
+        assertTrue(source.contains("builder.add(FACING)"));
     }
 
     @Test
