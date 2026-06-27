@@ -20,9 +20,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<ScreenBlockEntity> {
     private static final float TEXT_SCALE = 0.0105F;
     private static final int LINE_HEIGHT = 9;
+    private static final int CELL_WIDTH = 6;
     private static final int DEFAULT_COLOR = 0xFFFFFF;
     private static final int SCREEN_TIER1_COLOR = 0xABABAB;
     private static final int SCREEN_TIER2_COLOR = 0xFFFF66;
@@ -70,9 +74,12 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         orientToScreenText(screen, poseStack);
         poseStack.scale(TEXT_SCALE * screen.renderBlockWidth(), -TEXT_SCALE * screen.renderBlockHeight(), TEXT_SCALE);
         for (int row = 0; row < screen.renderHeight(); row++) {
-            final String line = line(screen, row);
-            if (!line.isBlank()) {
-                font.drawInBatch(line, 0, row * LINE_HEIGHT, DEFAULT_COLOR, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
+            final List<String> cells = lineCells(line(screen, row), screen.renderWidth());
+            for (int column = 0; column < cells.size(); column++) {
+                final String cell = cells.get(column);
+                if (!cell.isBlank()) {
+                    font.drawInBatch(cell, column * CELL_WIDTH, row * LINE_HEIGHT, DEFAULT_COLOR, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
+                }
             }
         }
         poseStack.popPose();
@@ -195,5 +202,24 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             builder.appendCodePoint(screen.getCodePoint(column, row));
         }
         return builder.toString().stripTrailing();
+    }
+
+    static List<String> lineCells(final String line, final int width) {
+        if (width <= 0) {
+            return List.of();
+        }
+        final List<String> cells = new ArrayList<>(width);
+        final String value = line == null ? "" : line;
+        int offset = 0;
+        for (int column = 0; column < width; column++) {
+            if (offset < value.length()) {
+                final int codePoint = value.codePointAt(offset);
+                cells.add(new String(Character.toChars(codePoint)));
+                offset += Character.charCount(codePoint);
+            } else {
+                cells.add(" ");
+            }
+        }
+        return cells;
     }
 }

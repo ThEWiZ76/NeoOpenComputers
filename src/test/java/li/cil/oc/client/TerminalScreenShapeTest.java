@@ -173,6 +173,23 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenExposesFixedWidthTextCellsForTerminalAlignment() {
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(
+            3,
+            1,
+            new String[]{"Wi."},
+            new int[][]{{0x111111, 0x222222, 0x222222}},
+            new int[][]{{0, 0, 0}});
+
+        final List<TerminalScreen.TextCell> cells = TerminalScreen.textCells(snapshot, 0, 3);
+
+        assertEquals(List.of(
+            new TerminalScreen.TextCell(0, "W", 0xFF111111),
+            new TerminalScreen.TextCell(1, "i", 0xFF222222),
+            new TerminalScreen.TextCell(2, ".", 0xFF222222)), cells);
+    }
+
+    @Test
     void terminalScreenTextRunsPreserveSupplementaryCodePoints() {
         final String supplementary = new String(Character.toChars(0x10400));
         final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(

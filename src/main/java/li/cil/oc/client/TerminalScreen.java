@@ -33,6 +33,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     record TextRun(int column, String text, int color) {
     }
 
+    record TextCell(int column, String text, int color) {
+    }
+
     public TerminalScreen(final TerminalMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
         imageWidth = imageWidth(menu.snapshot());
@@ -59,14 +62,14 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         guiGraphics.enableScissor(left + TEXT_LEFT, top + TEXT_TOP, left + imageWidth - TEXT_RIGHT_MARGIN, top + imageHeight - TEXT_BOTTOM_MARGIN);
         try {
             for (int row = 0; row < visibleRows(snapshot, imageHeight); row++) {
-                for (final TextRun run : textRuns(snapshot, row, visibleColumns(snapshot, imageWidth))) {
-                    if (!run.text().isBlank()) {
+                for (final TextCell cell : textCells(snapshot, row, visibleColumns(snapshot, imageWidth))) {
+                    if (!cell.text().isBlank()) {
                         guiGraphics.drawString(
                             font,
-                            run.text(),
-                            left + TEXT_LEFT + run.column() * CELL_WIDTH,
+                            cell.text(),
+                            left + TEXT_LEFT + cell.column() * CELL_WIDTH,
                             top + TEXT_TOP + row * LINE_HEIGHT,
-                            run.color(),
+                            cell.color(),
                             false);
                     }
                 }
@@ -315,6 +318,25 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             runs.add(new TextRun(runColumn, runText.toString(), runColor));
         }
         return runs;
+    }
+
+    static List<TextCell> textCells(final TerminalScreenSnapshot snapshot, final int row, final int visibleColumns) {
+        if (!acceptsInput(snapshot) || row < 0 || row >= snapshot.height()) {
+            return List.of();
+        }
+        final String line = snapshotLine(snapshot, row);
+        final int width = Math.min(Math.min(snapshot.width(), visibleColumns), line.codePointCount(0, line.length()));
+        if (width <= 0) {
+            return List.of();
+        }
+        final List<TextCell> cells = new ArrayList<>(width);
+        int offset = 0;
+        for (int column = 0; column < width && offset < line.length(); column++) {
+            final int codePoint = line.codePointAt(offset);
+            cells.add(new TextCell(column, new String(Character.toChars(codePoint)), textColor(snapshot, column, row)));
+            offset += Character.charCount(codePoint);
+        }
+        return cells;
     }
 
     static TerminalKeyPayload keyPayload(final TerminalMenu menu, final boolean pressed, final char character, final int keyCode) {

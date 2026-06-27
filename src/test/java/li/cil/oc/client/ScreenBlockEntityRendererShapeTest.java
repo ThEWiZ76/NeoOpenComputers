@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -68,6 +69,12 @@ final class ScreenBlockEntityRendererShapeTest {
         assertEquals(180, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.SOUTH));
         assertEquals(90, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.EAST));
         assertEquals(-90, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.WEST));
+    }
+
+    @Test
+    void screenRendererSplitsTextIntoFixedCellsForWorldAlignment() {
+        assertEquals(List.of("W", "i", "."), ScreenBlockEntityRenderer.lineCells("Wi.", 3));
+        assertEquals(List.of("W", " ", " "), ScreenBlockEntityRenderer.lineCells("W", 3));
     }
 
     @Test
