@@ -25,8 +25,6 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
     private static final String UNMANAGED_TAG = "oc:unmanaged";
     private static final String LOCK_TAG = "oc:lock";
     private static final int SECTOR_SIZE = 512;
-    private static final int SECTOR_SEEK_THRESHOLD = 8;
-    private static final double SECTOR_SEEK_TIME = 0.1D;
     private static final double[] READ_SECTOR_COSTS = {1.0D / 10.0D, 1.0D / 20.0D, 1.0D / 30.0D, 1.0D / 40.0D, 1.0D / 50.0D, 1.0D / 60.0D};
     private static final double[] WRITE_SECTOR_COSTS = {1.0D / 5.0D, 1.0D / 10.0D, 1.0D / 15.0D, 1.0D / 20.0D, 1.0D / 25.0D, 1.0D / 30.0D};
     private static final double[] READ_BYTE_COSTS = {1.0D / 48.0D, 1.0D / 64.0D, 1.0D / 80.0D, 1.0D / 96.0D, 1.0D / 112.0D, 1.0D / 128.0D};
@@ -186,8 +184,8 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
         final int newHeadPos = sectorToHeadPos(sector);
         if (headPos != newHeadPos) {
             final int delta = Math.abs(headPos - newHeadPos);
-            if (delta > SECTOR_SEEK_THRESHOLD && context != null) {
-                context.pause(SECTOR_SEEK_TIME);
+            if (delta > ModSettings.sectorSeekThreshold() && context != null) {
+                context.pause(ModSettings.sectorSeekTime());
             }
             headPos = newHeadPos;
         }

@@ -198,6 +198,8 @@ final class ModSettingsTest {
         assertEquals(8, ModSettings.hddPlatterCount(2));
         assertEquals(2, ModSettings.hddPlatterCount(-1));
         assertEquals(8, ModSettings.hddPlatterCount(99));
+        assertEquals(128, ModSettings.sectorSeekThreshold());
+        assertEquals(0.1D, ModSettings.sectorSeekTime(), 0.000_001D);
         assertEquals(100_000D, ModSettings.nanomachinesBuffer());
         assertEquals(0.4D, ModSettings.nanomachineTriggerQuota());
         assertEquals(0.2D, ModSettings.nanomachineConnectorQuota());
@@ -319,6 +321,8 @@ final class ModSettingsTest {
         assertEquals(List.of("filesystem", "maxReadBuffer"), ModSettings.MAX_READ_BUFFER.getPath());
         assertEquals(List.of("filesystem", "hddSizes"), ModSettings.HDD_SIZES.getPath());
         assertEquals(List.of("filesystem", "hddPlatterCounts"), ModSettings.HDD_PLATTER_COUNTS.getPath());
+        assertEquals(List.of("filesystem", "sectorSeekThreshold"), ModSettings.SECTOR_SEEK_THRESHOLD.getPath());
+        assertEquals(List.of("filesystem", "sectorSeekTime"), ModSettings.SECTOR_SEEK_TIME.getPath());
         assertEquals(List.of("internet", "enableHttp"), ModSettings.ENABLE_HTTP.getPath());
         assertEquals(List.of("internet", "enableHttpHeaders"), ModSettings.ENABLE_HTTP_HEADERS.getPath());
         assertEquals(List.of("internet", "enableTcp"), ModSettings.ENABLE_TCP.getPath());

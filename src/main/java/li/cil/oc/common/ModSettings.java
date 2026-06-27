@@ -93,6 +93,8 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue HDD_WRITE;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> HDD_SIZES;
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> HDD_PLATTER_COUNTS;
+    public static final ModConfigSpec.IntValue SECTOR_SEEK_THRESHOLD;
+    public static final ModConfigSpec.DoubleValue SECTOR_SEEK_TIME;
     public static final ModConfigSpec.IntValue MAX_HANDLES;
     public static final ModConfigSpec.IntValue MAX_READ_BUFFER;
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP;
@@ -397,6 +399,12 @@ public final class ModSettings {
         HDD_PLATTER_COUNTS = builder
             .comment("Physical platter counts for the three hard drive tiers in unmanaged mode. OpenComputers upstream default is [2, 4, 8].")
             .defineList("hddPlatterCounts", DEFAULT_HDD_PLATTER_COUNTS, value -> value instanceof Integer && (Integer) value >= 1);
+        SECTOR_SEEK_THRESHOLD = builder
+            .comment("Hard-drive head movement in sectors before raw-drive operations pause. OpenComputers upstream default is 128.")
+            .defineInRange("sectorSeekThreshold", 128, 0, Integer.MAX_VALUE);
+        SECTOR_SEEK_TIME = builder
+            .comment("Pause in seconds for raw-drive seek operations beyond sectorSeekThreshold. OpenComputers upstream default is 0.1.")
+            .defineInRange("sectorSeekTime", 0.1D, 0D, Double.MAX_VALUE);
         MAX_HANDLES = builder
             .comment("Maximum number of file handles any single computer may have open per filesystem. OpenComputers upstream default is 16.")
             .defineInRange("maxHandles", 16, 0, Integer.MAX_VALUE);
@@ -1348,6 +1356,14 @@ public final class ModSettings {
     public static int hddPlatterCount(final int tier) {
         final List<Integer> counts = hddPlatterCounts();
         return counts.get(clampIndex(tier, counts.size()));
+    }
+
+    public static int sectorSeekThreshold() {
+        return Math.max(0, intValue(SECTOR_SEEK_THRESHOLD));
+    }
+
+    public static double sectorSeekTime() {
+        return Math.max(0D, doubleValue(SECTOR_SEEK_TIME));
     }
 
     public static int maxHandles() {
