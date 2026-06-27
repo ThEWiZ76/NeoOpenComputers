@@ -26,6 +26,21 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererUsesUpstreamConnectedScreenOriginAndDimensions() throws IOException {
+        final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
+        final String screen = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/ScreenBlockEntity.java"));
+
+        assertTrue(renderer.contains("isRenderOrigin()"), "Only the connected screen origin should render text");
+        assertTrue(renderer.contains("renderBlockWidth()"), "Renderer should scale text to connected screen width");
+        assertTrue(renderer.contains("renderBlockHeight()"), "Renderer should scale text to connected screen height");
+        assertTrue(screen.contains("isRenderOrigin()"), "Screen block entity should expose connected origin state");
+        assertTrue(screen.contains("renderBlockWidth()"), "Screen block entity should expose connected block width");
+        assertTrue(screen.contains("renderBlockHeight()"), "Screen block entity should expose connected block height");
+        assertTrue(screen.contains("localBlockX()"), "Screen block entity should expose connected local x");
+        assertTrue(screen.contains("localBlockY()"), "Screen block entity should expose connected local y");
+    }
+
+    @Test
     void printItemRendererClassExists() throws ClassNotFoundException {
         Class<?> renderer = Class.forName("li.cil.oc.client.PrintItemRenderer", false, getClass().getClassLoader());
 

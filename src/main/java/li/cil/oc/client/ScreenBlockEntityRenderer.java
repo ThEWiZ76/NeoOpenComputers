@@ -24,13 +24,13 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     @Override
     public void render(final ScreenBlockEntity screen, final float partialTick, final PoseStack poseStack, final MultiBufferSource bufferSource, final int packedLight, final int packedOverlay) {
-        if (!screen.renderText() || !screen.getPowerState()) {
+        if (!screen.isRenderOrigin() || !screen.renderText() || !screen.getPowerState()) {
             return;
         }
 
         poseStack.pushPose();
         orientToScreenFace(screen, poseStack);
-        poseStack.scale(TEXT_SCALE, -TEXT_SCALE, TEXT_SCALE);
+        poseStack.scale(TEXT_SCALE * screen.renderBlockWidth(), -TEXT_SCALE * screen.renderBlockHeight(), TEXT_SCALE);
         for (int row = 0; row < screen.renderHeight(); row++) {
             final String line = line(screen, row);
             if (!line.isBlank()) {
@@ -58,7 +58,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             default -> {
             }
         }
-        poseStack.translate(-0.42D, 0.22D, -0.505D);
+        poseStack.translate(-0.42D, -0.28D + screen.renderBlockHeight(), -0.505D);
     }
 
     private static String line(final ScreenBlockEntity screen, final int row) {

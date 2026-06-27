@@ -17,6 +17,7 @@ import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.component.ScreenEnvironment;
 import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -27,7 +28,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo, Tiered {
     private static final int DEFAULT_WIDTH = 50;
@@ -422,6 +427,115 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Override
     public int renderHeight() {
         return viewportHeight;
+    }
+
+    public boolean isRenderOrigin() {
+        return screenLayout().origin.equals(worldPosition);
+    }
+
+    public int renderBlockWidth() {
+        return screenLayout().width;
+    }
+
+    public int renderBlockHeight() {
+        return screenLayout().height;
+    }
+
+    public int localBlockX() {
+        return screenLayout().localX;
+    }
+
+    public int localBlockY() {
+        return screenLayout().localY;
+    }
+
+    private ScreenLayout screenLayout() {
+        if (level == null) {
+            return new ScreenLayout(worldPosition, 1, 1, 0, 0);
+        }
+
+        final BlockState state = getBlockState();
+        final Direction right = localRight(state);
+        final Direction up = ScreenBlock.up(state);
+        final Direction pitch = ScreenBlock.pitch(state);
+        final Direction yaw = ScreenBlock.yaw(state);
+        final Set<BlockPos> connected = connectedScreens(pitch, yaw, right, up);
+        final BlockPos origin = connected.stream()
+            .min(Comparator
+                .comparingInt((BlockPos pos) -> localX(worldPosition, pos, right))
+                .thenComparingInt(pos -> localY(worldPosition, pos, up)))
+            .orElse(worldPosition);
+
+        int minX = 0;
+        int minY = 0;
+        int maxX = 0;
+        int maxY = 0;
+        for (final BlockPos pos : connected) {
+            final int x = localX(origin, pos, right);
+            final int y = localY(origin, pos, up);
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
+        return new ScreenLayout(
+            origin,
+            Math.max(1, maxX - minX + 1),
+            Math.max(1, maxY - minY + 1),
+            localX(origin, worldPosition, right),
+            localY(origin, worldPosition, up));
+    }
+
+    private Set<BlockPos> connectedScreens(final Direction pitch, final Direction yaw, final Direction right, final Direction up) {
+        final Set<BlockPos> visited = new HashSet<>();
+        final ArrayDeque<BlockPos> pending = new ArrayDeque<>();
+        pending.add(worldPosition);
+        while (!pending.isEmpty()) {
+            final BlockPos current = pending.removeFirst();
+            if (!visited.add(current)) {
+                continue;
+            }
+            queueMatchingScreen(pending, visited, current.relative(right), pitch, yaw);
+            queueMatchingScreen(pending, visited, current.relative(right.getOpposite()), pitch, yaw);
+            queueMatchingScreen(pending, visited, current.relative(up), pitch, yaw);
+            queueMatchingScreen(pending, visited, current.relative(up.getOpposite()), pitch, yaw);
+        }
+        return visited;
+    }
+
+    private void queueMatchingScreen(final ArrayDeque<BlockPos> pending, final Set<BlockPos> visited, final BlockPos pos, final Direction pitch, final Direction yaw) {
+        if (visited.contains(pos) || level == null) {
+            return;
+        }
+        final BlockState state = level.getBlockState(pos);
+        if (state.getBlock() instanceof ScreenBlock && ScreenBlock.pitch(state) == pitch && ScreenBlock.yaw(state) == yaw) {
+            pending.add(pos);
+        }
+    }
+
+    private static Direction localRight(final BlockState state) {
+        final Direction facing = ScreenBlock.facing(state);
+        final Direction up = ScreenBlock.up(state);
+        final int x = facing.getStepY() * up.getStepZ() - facing.getStepZ() * up.getStepY();
+        final int y = facing.getStepZ() * up.getStepX() - facing.getStepX() * up.getStepZ();
+        final int z = facing.getStepX() * up.getStepY() - facing.getStepY() * up.getStepX();
+        final Direction right = Direction.fromDelta(x, y, z);
+        return right == null ? Direction.EAST : right;
+    }
+
+    private static int localX(final BlockPos origin, final BlockPos pos, final Direction right) {
+        return dot(pos.subtract(origin), right);
+    }
+
+    private static int localY(final BlockPos origin, final BlockPos pos, final Direction up) {
+        return dot(pos.subtract(origin), up);
+    }
+
+    private static int dot(final BlockPos delta, final Direction direction) {
+        return delta.getX() * direction.getStepX() + delta.getY() * direction.getStepY() + delta.getZ() * direction.getStepZ();
+    }
+
+    private record ScreenLayout(BlockPos origin, int width, int height, int localX, int localY) {
     }
 
     @Override
