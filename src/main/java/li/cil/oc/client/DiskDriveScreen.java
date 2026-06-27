@@ -75,6 +75,6 @@ public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
     }
 
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
-        guiGraphics.blit(SLOT_TEXTURE, left, top, slotDrawnWidth(), slotDrawnHeight(), 0, 0, SLOT_TEXTURE_SIZE, SLOT_TEXTURE_SIZE, slotTextureWidth(), slotTextureHeight());
+        guiGraphics.blit(SLOT_TEXTURE, left, top, 0, 0, SLOT_TEXTURE_SIZE, SLOT_TEXTURE_SIZE);
     }
 }
