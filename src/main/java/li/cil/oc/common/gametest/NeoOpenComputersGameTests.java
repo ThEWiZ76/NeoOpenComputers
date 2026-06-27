@@ -4596,7 +4596,7 @@ public final class NeoOpenComputersGameTests {
         component.changeBuffer(10D);
 
         final CompoundTag tabletData = new CompoundTag();
-        geolyzer.onMessage(new TestMessage(null, "tablet.use", new Object[]{
+        geolyzer.onMessage(new TestMessage(trustedTabletMessageSource(helper), "tablet.use", new Object[]{
             tabletData,
             new ItemStack(ModItems.TABLET.get()),
             null,
@@ -4610,6 +4610,34 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue("minecraft:stone".equals(tabletData.getString("name")), "Geolyzer tablet analysis did not collect block name");
         helper.assertTrue(tabletData.contains("hardness"), "Geolyzer tablet analysis did not collect block hardness");
         helper.assertTrue(Double.compare(0D, component.localBuffer()) == 0, "Geolyzer tablet analysis did not consume energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void geolyzerIgnoresSpoofedTabletUseMessage(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        final BlockPos targetPos = pos.relative(Direction.WEST);
+        helper.setBlock(pos, ModBlocks.GEOLYZER.get());
+        helper.setBlock(targetPos, Blocks.STONE);
+        final GeolyzerBlockEntity geolyzer = helper.getBlockEntity(pos);
+        final ComponentConnector component = (ComponentConnector) geolyzer.node();
+        component.setLocalBufferSize(10D);
+        component.changeBuffer(10D);
+
+        final CompoundTag tabletData = new CompoundTag();
+        geolyzer.onMessage(new TestMessage(null, "tablet.use", new Object[]{
+            tabletData,
+            new ItemStack(ModItems.TABLET.get()),
+            null,
+            helper.absolutePos(targetPos),
+            Direction.WEST,
+            Float.valueOf(0.5F),
+            Float.valueOf(0.5F),
+            Float.valueOf(0.5F)
+        }));
+
+        helper.assertTrue(!tabletData.contains("name"), "Geolyzer accepted spoofed tablet.use message");
+        helper.assertTrue(Double.compare(10D, component.localBuffer()) == 0, "Spoofed geolyzer tablet analysis consumed energy");
         helper.succeed();
     }
 
@@ -11010,6 +11038,52 @@ public final class NeoOpenComputersGameTests {
         @Override
         public void cancel() {
         }
+    }
+
+    private static Node trustedTabletMessageSource(final GameTestHelper helper) {
+        final TabletTestHost tablet = new TabletTestHost(helper, null);
+        final li.cil.oc.api.machine.Machine machine = (li.cil.oc.api.machine.Machine) java.lang.reflect.Proxy.newProxyInstance(
+            NeoOpenComputersGameTests.class.getClassLoader(),
+            new Class<?>[]{li.cil.oc.api.machine.Machine.class},
+            (proxy, method, args) -> "host".equals(method.getName()) ? tablet : defaultProxyValue(method.getReturnType()));
+        return (Node) java.lang.reflect.Proxy.newProxyInstance(
+            NeoOpenComputersGameTests.class.getClassLoader(),
+            new Class<?>[]{Node.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "host" -> machine;
+                case "reachability" -> Visibility.Network;
+                case "address" -> "trusted-tablet";
+                case "neighbors", "reachableNodes" -> List.of();
+                default -> defaultProxyValue(method.getReturnType());
+            });
+    }
+
+    private static Object defaultProxyValue(final Class<?> type) {
+        if (type == boolean.class) {
+            return false;
+        }
+        if (type == byte.class) {
+            return (byte) 0;
+        }
+        if (type == short.class) {
+            return (short) 0;
+        }
+        if (type == int.class) {
+            return 0;
+        }
+        if (type == long.class) {
+            return 0L;
+        }
+        if (type == float.class) {
+            return 0F;
+        }
+        if (type == double.class) {
+            return 0D;
+        }
+        if (type == char.class) {
+            return '\0';
+        }
+        return null;
     }
 
     @FunctionalInterface

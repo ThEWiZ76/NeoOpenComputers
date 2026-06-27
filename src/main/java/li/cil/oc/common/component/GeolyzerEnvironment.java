@@ -5,13 +5,16 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.event.GeolyzerEvent;
 import li.cil.oc.api.internal.Database;
 import li.cil.oc.api.internal.Rotatable;
+import li.cil.oc.api.internal.Tablet;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ModSettings;
@@ -55,7 +58,7 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
 
     @Override
     public void onMessage(final Message message) {
-        if (message == null || !"tablet.use".equals(message.name())) {
+        if (!isTabletUseMessage(message)) {
             return;
         }
         final Object[] data = message.data();
@@ -282,6 +285,17 @@ public final class GeolyzerEnvironment extends AbstractManagedEnvironment implem
     private static boolean includeReplaceable(final Map<?, ?> options) {
         final Object value = options.get("includeReplaceable");
         return !(value instanceof Boolean include) || include;
+    }
+
+    private static boolean isTabletUseMessage(final Message message) {
+        if (message == null || !"tablet.use".equals(message.name())) {
+            return false;
+        }
+        final Node source = message.source();
+        if (source == null || !(source.host() instanceof Machine machine)) {
+            return false;
+        }
+        return machine.host() instanceof Tablet;
     }
 
     private static ScanBounds scanBounds(final Arguments args) {
