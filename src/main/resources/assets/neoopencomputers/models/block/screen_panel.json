@@ -3,7 +3,7 @@
   "textures": {
     "top_bottom": "neoopencomputers:block/generic_top",
     "side": "neoopencomputers:block/generic_side",
-    "front": "neoopencomputers:block/generic_side",
+    "front": "neoopencomputers:block/screen/fmm",
     "particle": "neoopencomputers:block/generic_side"
   },
   "elements": [

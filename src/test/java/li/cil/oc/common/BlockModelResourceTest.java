@@ -9,9 +9,13 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -62,7 +66,7 @@ final class BlockModelResourceTest {
     }
 
     @Test
-    void screenBlockModelsUseGenericStaticCaseLikeUpstreamScreenModel() throws IOException {
+    void screenBlockModelsUseOpaqueNeutralStaticFrontFillLikeUpstreamScreenModel() throws IOException {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_panel.json"))) {
             final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
             assertTrue("minecraft:block/block".equals(panel.get("parent").getAsString()));
@@ -71,7 +75,7 @@ final class BlockModelResourceTest {
             final JsonObject textures = panel.getAsJsonObject("textures");
             assertTrue("neoopencomputers:block/generic_top".equals(textures.get("top_bottom").getAsString()));
             assertTrue("neoopencomputers:block/generic_side".equals(textures.get("side").getAsString()));
-            assertTrue("neoopencomputers:block/generic_side".equals(textures.get("front").getAsString()), "Static block model must be opaque fill only; connected screen fronts are rendered dynamically");
+            assertTrue("neoopencomputers:block/screen/fmm".equals(textures.get("front").getAsString()), "Static front fill must be neutral and opaque; connected borders are rendered dynamically");
             final JsonObject faces = panel.getAsJsonArray("elements").get(0).getAsJsonObject().getAsJsonObject("faces");
             assertTrue("#front".equals(faces.getAsJsonObject("south").get("texture").getAsString()), "Static south/front face should use the opaque fill alias");
         }
@@ -99,6 +103,20 @@ final class BlockModelResourceTest {
             assertTrue("neoopencomputers:block/screen_panel".equals(model.get("parent").getAsString()));
             assertTrue(!model.has("textures"), "Horizontal screen static model should not override the generic opaque fill; f2 is drawn dynamically");
         }
+    }
+
+    @Test
+    void screenStaticFrontFillTextureIsPlainAndOpaque() throws IOException {
+        final BufferedImage image = ImageIO.read(BLOCK_TEXTURE_ROOT.resolve("screen/fmm.png").toFile());
+        final Set<Integer> colors = new HashSet<>();
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                final int argb = image.getRGB(x, y);
+                assertTrue(((argb >>> 24) & 0xFF) == 0xFF, "Screen static front fill must not be transparent");
+                colors.add(argb);
+            }
+        }
+        assertTrue(colors.size() == 1, "Screen static front fill must not add per-block frame detail");
     }
 
     @Test
