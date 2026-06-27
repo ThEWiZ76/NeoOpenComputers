@@ -32,6 +32,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.DiskDriveMenu;
@@ -192,6 +193,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         if (!removed.isEmpty()) {
             setChanged();
             refreshDiskEnvironment();
+            updateMediaBlockState();
         }
         return removed;
     }
@@ -201,6 +203,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             refreshDiskEnvironment();
+            updateMediaBlockState();
         }
         return removed;
     }
@@ -216,6 +219,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         }
         setChanged();
         refreshDiskEnvironment();
+        updateMediaBlockState();
     }
 
     @Override
@@ -242,6 +246,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         items.set(SLOT_FLOPPY, ItemStack.EMPTY);
         setChanged();
         refreshDiskEnvironment();
+        updateMediaBlockState();
     }
 
     @Override
@@ -281,6 +286,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         ContainerHelper.loadAllItems(tag, items, registries);
         load(tag);
         refreshDiskEnvironment();
+        updateMediaBlockState();
     }
 
     @Override
@@ -314,6 +320,16 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         }
         diskEnvironment = driver.createEnvironment(stack, this);
         connectDiskEnvironment();
+    }
+
+    private void updateMediaBlockState() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        final BlockState state = getBlockState();
+        if (state.hasProperty(DiskDriveBlock.HAS_MEDIA) && state.getValue(DiskDriveBlock.HAS_MEDIA) != !isEmpty()) {
+            level.setBlock(worldPosition, state.setValue(DiskDriveBlock.HAS_MEDIA, !isEmpty()), Block.UPDATE_ALL);
+        }
     }
 
     private void connectDiskEnvironment() {

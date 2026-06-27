@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "neoopencomputers:block/diskdrive_front",
+    "top": "neoopencomputers:block/generic_top",
+    "bottom": "neoopencomputers:block/generic_top",
+    "side": "neoopencomputers:block/diskdrive_side",
+    "front": "neoopencomputers:block/diskdrive_front",
+    "activity": "neoopencomputers:block/overlay/diskdrive_front_activity"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "down": { "texture": "#bottom", "cullface": "down" },
+        "up": { "texture": "#top", "cullface": "up" },
+        "north": { "texture": "#front", "cullface": "north" },
+        "south": { "texture": "#side", "cullface": "south" },
+        "west": { "texture": "#side", "cullface": "west" },
+        "east": { "texture": "#side", "cullface": "east" }
+      }
+    },
+    {
+      "from": [0, 0, -0.01],
+      "to": [16, 16, -0.01],
+      "faces": {
+        "north": { "texture": "#activity" }
+      }
+    }
+  ]
+}

@@ -22,15 +22,19 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 @SuppressWarnings("deprecation")
 public class DiskDriveBlock extends HorizontalDirectionalBlock implements EntityBlock {
     public static final MapCodec<DiskDriveBlock> CODEC = simpleCodec(DiskDriveBlock::new);
+    public static final BooleanProperty HAS_MEDIA = BooleanProperty.create("has_media");
 
     public DiskDriveBlock(final BlockBehaviour.Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        registerDefaultState(stateDefinition.any()
+            .setValue(FACING, Direction.NORTH)
+            .setValue(HAS_MEDIA, false));
     }
 
     @Override
@@ -133,6 +137,6 @@ public class DiskDriveBlock extends HorizontalDirectionalBlock implements Entity
 
     @Override
     protected void createBlockStateDefinition(final StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(FACING, HAS_MEDIA);
     }
 }

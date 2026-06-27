@@ -9508,12 +9508,15 @@ public final class NeoOpenComputersGameTests {
         final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
 
         helper.assertTrue(DiskDriveMenu.mediaStateFor(diskDrive) == DiskDriveMenu.STATE_EMPTY, "Empty disk drive did not report empty media state");
+        helper.assertTrue(!helper.getBlockState(diskDrivePos).getValue(DiskDriveBlock.HAS_MEDIA), "Empty disk drive blockstate reported inserted media");
 
         diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
         helper.assertTrue(DiskDriveMenu.mediaStateFor(diskDrive) == DiskDriveMenu.STATE_LOADED, "Loaded disk drive did not report loaded media state");
+        helper.assertTrue(helper.getBlockState(diskDrivePos).getValue(DiskDriveBlock.HAS_MEDIA), "Loaded disk drive blockstate did not report inserted media");
 
         diskDrive.removeItem(DiskDriveBlockEntity.SLOT_FLOPPY, 1);
         helper.assertTrue(DiskDriveMenu.mediaStateFor(diskDrive) == DiskDriveMenu.STATE_EMPTY, "Ejected disk drive did not report empty media state");
+        helper.assertTrue(!helper.getBlockState(diskDrivePos).getValue(DiskDriveBlock.HAS_MEDIA), "Ejected disk drive blockstate still reported inserted media");
         helper.succeed();
     }
 

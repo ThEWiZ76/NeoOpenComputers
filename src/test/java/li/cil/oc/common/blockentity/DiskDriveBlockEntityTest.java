@@ -19,6 +19,8 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -42,6 +44,15 @@ final class DiskDriveBlockEntityTest {
         final DiskDriveBlockEntity diskDrive = allocateDiskDrive();
 
         assertEquals(1, diskDrive.getMaxStackSize());
+    }
+
+    @Test
+    void diskDriveBlockTracksInsertedMediaForVisualState() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/DiskDriveBlock.java"));
+
+        assertTrue(source.contains("BooleanProperty.create(\"has_media\")"));
+        assertTrue(source.contains("setValue(HAS_MEDIA, false)"));
+        assertTrue(source.contains("builder.add(FACING, HAS_MEDIA)"));
     }
 
     @Test
