@@ -1,14 +1,21 @@
 package li.cil.oc.client;
 
+import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 import java.util.List;
 
 public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
+    public static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/background.png");
+    public static final ResourceLocation SLOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/slot.png");
+
+    private static final int SLOT_TEXTURE_SIZE = 18;
+
     public DiskDriveScreen(final DiskDriveMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
         imageHeight = 166;
@@ -19,10 +26,8 @@ public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
     protected void renderBg(final GuiGraphics guiGraphics, final float partialTick, final int mouseX, final int mouseY) {
         final int left = leftPos;
         final int top = topPos;
-        guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF2E3440);
-        guiGraphics.fill(left + 7, top + 16, left + 169, top + 76, 0xFF3B4252);
+        guiGraphics.blit(BACKGROUND_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
         drawSlot(guiGraphics, left + 79, top + 34);
-        guiGraphics.drawString(font, statusLabel(menu.mediaState()), left + 8, top + 62, 0xFFD8DEE9, false);
     }
 
     @Override
@@ -45,8 +50,15 @@ public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
         return List.of(Component.translatable("gui.neoopencomputers.disk_drive.status"), statusLabel(state));
     }
 
+    public static int slotTextureWidth() {
+        return SLOT_TEXTURE_SIZE;
+    }
+
+    public static int slotTextureHeight() {
+        return SLOT_TEXTURE_SIZE;
+    }
+
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
-        guiGraphics.fill(left - 1, top - 1, left + 17, top + 17, 0xFF1F232B);
-        guiGraphics.fill(left, top, left + 16, top + 16, 0xFF4C566A);
+        guiGraphics.blit(SLOT_TEXTURE, left, top, 0, 0, SLOT_TEXTURE_SIZE, SLOT_TEXTURE_SIZE, slotTextureWidth(), slotTextureHeight());
     }
 }
