@@ -94,10 +94,10 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
-    void terminalScreenDoesNotForwardKeyboardInputWhenItemSearchInputFocused() {
+    void terminalScreenCapturesKeyboardInputEvenWhenItemSearchInputFocused() {
         assertEquals(true, TerminalScreen.shouldForwardKeyboardInput(true, false));
         assertEquals(false, TerminalScreen.shouldForwardKeyboardInput(false, false));
-        assertEquals(false, TerminalScreen.shouldForwardKeyboardInput(true, true));
+        assertEquals(true, TerminalScreen.shouldForwardKeyboardInput(true, true));
     }
 
     @Test
@@ -106,7 +106,7 @@ final class TerminalScreenShapeTest {
         assertEquals(true, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, false, GLFW.GLFW_KEY_W));
         assertEquals(false, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, false, GLFW.GLFW_KEY_ESCAPE));
         assertEquals(false, TerminalScreen.shouldHandleBeforeScreenShortcuts(false, false, GLFW.GLFW_KEY_E));
-        assertEquals(false, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, true, GLFW.GLFW_KEY_E));
+        assertEquals(true, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, true, GLFW.GLFW_KEY_E));
     }
 
     @Test

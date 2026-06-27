@@ -197,7 +197,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static boolean shouldForwardKeyboardInput(final boolean acceptsInput, final boolean searchInputFocused) {
-        return acceptsInput && !searchInputFocused;
+        return acceptsInput;
     }
 
     static boolean shouldForwardKeyboardInput(final TerminalScreenSnapshot snapshot) {
