@@ -121,6 +121,21 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererFadesWorldTextUsingUpstreamDistances() throws IOException {
+        final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
+
+        assertTrue(renderer.contains("screenTextAlpha"), "Renderer should compute alpha from upstream screen text fade settings");
+        assertTrue(renderer.contains("screenTextDistanceSq"), "Renderer should use player distance to the connected screen bounds");
+        assertTrue(renderer.contains("ModSettings.screenTextFadeStartDistance()"), "Renderer should use configured fade start distance");
+        assertTrue(renderer.contains("ModSettings.maxScreenTextRenderDistance()"), "Renderer should use configured max render distance");
+        assertEquals(1F, ScreenBlockEntityRenderer.screenTextAlpha(10D * 10D, 15D, 20D));
+        assertEquals(0F, ScreenBlockEntityRenderer.screenTextAlpha(21D * 21D, 15D, 20D));
+        final float faded = ScreenBlockEntityRenderer.screenTextAlpha(17D * 17D, 15D, 20D);
+        assertTrue(faded > 0F && faded < 1F);
+        assertEquals(4D, ScreenBlockEntityRenderer.screenTextDistanceSq(new AABB(0, 0, 0, 1, 1, 1), 3D, 0.5D, 0.5D), 0.000_001D);
+    }
+
+    @Test
     void screenRendererScalesTerminalTextToInnerScreenArea() {
         final float singleScale = ScreenBlockEntityRenderer.textScale(1, 1, 50, 16);
         assertTrue(50 * 6 * singleScale < 0.75F, "Single-screen text should fit inside the screen border");

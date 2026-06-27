@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.ModBlocks;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.client.Minecraft;
@@ -130,9 +131,14 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         renderScreenFaces(screen, poseStack, bufferSource, packedLight, packedOverlay);
         poseStack.popPose();
 
-        if (!screen.isRenderOrigin() || !screen.renderText() || !screen.getPowerState() || !shouldRenderTextForPlayer(screen)) {
+        if (!screen.isRenderOrigin() || !screen.renderText() || !screen.getPowerState()) {
             return;
         }
+        final float textAlpha = screenTextAlphaForPlayer(screen);
+        if (textAlpha <= 0F) {
+            return;
+        }
+        final int textColor = textColorWithAlpha(DEFAULT_COLOR, textAlpha);
 
         poseStack.pushPose();
         orientToScreenText(screen, poseStack);
@@ -144,7 +150,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             for (int column = 0; column < cells.size(); column++) {
                 final String cell = cells.get(column);
                 if (!cell.isBlank()) {
-                    font.drawInBatch(cell, column * CELL_WIDTH + centeredCellOffset(font.width(cell)), row * LINE_HEIGHT, DEFAULT_COLOR, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
+                    font.drawInBatch(cell, column * CELL_WIDTH + centeredCellOffset(font.width(cell)), row * LINE_HEIGHT, textColor, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
                 }
             }
         }
@@ -410,18 +416,59 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         return SCREEN_TEXT_Z;
     }
 
-    private static boolean shouldRenderTextForPlayer(final ScreenBlockEntity screen) {
+    private static float screenTextAlphaForPlayer(final ScreenBlockEntity screen) {
         final var player = Minecraft.getInstance().player;
         if (player == null) {
-            return false;
+            return 0F;
         }
         final BlockState state = screen.getBlockState();
-        return playerIsInFrontOfScreen(
-            ScreenBlock.facing(state),
-            renderBounds(screen.getBlockPos(), localRight(state), ScreenBlock.up(state), screen.renderBlockWidth(), screen.renderBlockHeight()),
-            player.getX(),
-            player.getEyeY(),
-            player.getZ());
+        final AABB bounds = renderBounds(screen.getBlockPos(), localRight(state), ScreenBlock.up(state), screen.renderBlockWidth(), screen.renderBlockHeight());
+        if (!playerIsInFrontOfScreen(ScreenBlock.facing(state), bounds, player.getX(), player.getEyeY(), player.getZ())) {
+            return 0F;
+        }
+        final double distance = screenTextDistanceSq(bounds, player.getX(), player.getEyeY(), player.getZ())
+            / Math.max(1D, Math.min(screen.renderBlockWidth(), screen.renderBlockHeight()));
+        return screenTextAlpha(distance, ModSettings.screenTextFadeStartDistance(), ModSettings.maxScreenTextRenderDistance());
+    }
+
+    private static boolean shouldRenderTextForPlayer(final ScreenBlockEntity screen) {
+        return screenTextAlphaForPlayer(screen) > 0F;
+    }
+
+    static float screenTextAlpha(final double distanceSq, final double fadeStartDistance, final double maxRenderDistance) {
+        final double safeFadeStartDistance = Math.max(0D, fadeStartDistance);
+        final double safeMaxRenderDistance = Math.max(0D, maxRenderDistance);
+        final double fadeDistanceSq = safeFadeStartDistance * safeFadeStartDistance;
+        final double maxRenderDistanceSq = safeMaxRenderDistance * safeMaxRenderDistance;
+        if (distanceSq > maxRenderDistanceSq) {
+            return 0F;
+        }
+        if (distanceSq <= fadeDistanceSq || maxRenderDistanceSq <= fadeDistanceSq) {
+            return 1F;
+        }
+        return (float) Math.max(0D, 1D - ((distanceSq - fadeDistanceSq) / (maxRenderDistanceSq - fadeDistanceSq)));
+    }
+
+    static double screenTextDistanceSq(final AABB bounds, final double playerX, final double playerY, final double playerZ) {
+        final double dx = outsideDistance(playerX, bounds.minX, bounds.maxX);
+        final double dy = outsideDistance(playerY, bounds.minY, bounds.maxY);
+        final double dz = outsideDistance(playerZ, bounds.minZ, bounds.maxZ);
+        return dx * dx + dy * dy + dz * dz;
+    }
+
+    private static double outsideDistance(final double value, final double min, final double max) {
+        if (value < min) {
+            return min - value;
+        }
+        if (value > max) {
+            return value - max;
+        }
+        return 0D;
+    }
+
+    static int textColorWithAlpha(final int color, final float alpha) {
+        final int clampedAlpha = Math.max(0, Math.min(255, Math.round(alpha * 255F)));
+        return (clampedAlpha << 24) | (color & 0x00FFFFFF);
     }
 
     static boolean playerIsInFrontOfScreen(final Direction front, final AABB bounds, final double playerX, final double playerY, final double playerZ) {

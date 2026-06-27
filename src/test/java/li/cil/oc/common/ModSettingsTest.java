@@ -93,6 +93,8 @@ final class ModSettingsTest {
         assertEquals(TextBuffer.ColorDepth.EightBit, ModSettings.screenDepthByTier(2));
         assertEquals(TextBuffer.ColorDepth.OneBit, ModSettings.screenDepthByTier(-1));
         assertEquals(TextBuffer.ColorDepth.EightBit, ModSettings.screenDepthByTier(99));
+        assertEquals(15D, ModSettings.screenTextFadeStartDistance());
+        assertEquals(20D, ModSettings.maxScreenTextRenderDistance());
         assertEquals(0.05D, ModSettings.screenCost());
         assertEquals(true, ModSettings.inputUsername());
         assertEquals(25D, ModSettings.disassemblerTickAmount());
@@ -332,6 +334,8 @@ final class ModSettingsTest {
         assertEquals(List.of("debug", "insertIdsInConverters"), ModSettings.INSERT_IDS_IN_CONVERTERS.getPath());
         assertEquals(List.of("client", "enableNanomachinePfx"), ModSettings.ENABLE_NANOMACHINE_PFX.getPath());
         assertEquals(List.of("client", "nanomachineHudPos"), ModSettings.NANOMACHINE_HUD_POS.getPath());
+        assertEquals(List.of("client", "screenTextFadeStartDistance"), ModSettings.SCREEN_TEXT_FADE_START_DISTANCE.getPath());
+        assertEquals(List.of("client", "maxScreenTextRenderDistance"), ModSettings.MAX_SCREEN_TEXT_RENDER_DISTANCE.getPath());
         assertEquals(List.of("hologram", "maxScale"), ModSettings.HOLOGRAM_MAX_SCALE.getPath());
         assertEquals(List.of("hologram", "maxTranslation"), ModSettings.HOLOGRAM_MAX_TRANSLATION.getPath());
         assertEquals(List.of("hologram", "setRawDelay"), ModSettings.HOLOGRAM_SET_RAW_DELAY.getPath());
@@ -390,6 +394,15 @@ final class ModSettingsTest {
             withCachedConfig(ModSettings.NANOMACHINE_HUD_POS, List.of(0.5D, 16D), () -> {
                 assertFalse(ModSettings.enableNanomachinePfx());
                 assertEquals(List.of(0.5D, 16D), ModSettings.nanomachineHudPos());
+            }));
+    }
+
+    @Test
+    void screenTextVisualSettingsReadClientConfiguration() throws Exception {
+        withCachedConfig(ModSettings.SCREEN_TEXT_FADE_START_DISTANCE, 12D, () ->
+            withCachedConfig(ModSettings.MAX_SCREEN_TEXT_RENDER_DISTANCE, 24D, () -> {
+                assertEquals(12D, ModSettings.screenTextFadeStartDistance());
+                assertEquals(24D, ModSettings.maxScreenTextRenderDistance());
             }));
     }
 

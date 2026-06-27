@@ -109,6 +109,8 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<String> HTTP_USER_AGENT;
     public static final ModConfigSpec.BooleanValue ENABLE_NANOMACHINE_PFX;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> NANOMACHINE_HUD_POS;
+    public static final ModConfigSpec.DoubleValue SCREEN_TEXT_FADE_START_DISTANCE;
+    public static final ModConfigSpec.DoubleValue MAX_SCREEN_TEXT_RENDER_DISTANCE;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_SCALE;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_TRANSLATION;
     public static final ModConfigSpec.DoubleValue HOLOGRAM_SET_RAW_DELAY;
@@ -280,6 +282,12 @@ public final class ModSettings {
         NANOMACHINE_HUD_POS = builder
             .comment("Position of the nanomachines power HUD indicator. OpenComputers upstream default is [-1, -1].")
             .defineList("nanomachineHudPos", DEFAULT_NANOMACHINE_HUD_POS, value -> value instanceof Double);
+        SCREEN_TEXT_FADE_START_DISTANCE = builder
+            .comment("Distance in blocks where in-world screen text starts fading. OpenComputers upstream default is 15.0.")
+            .defineInRange("screenTextFadeStartDistance", 15D, 0D, Double.MAX_VALUE);
+        MAX_SCREEN_TEXT_RENDER_DISTANCE = builder
+            .comment("Maximum distance in blocks for in-world screen text rendering. OpenComputers upstream default is 20.0.")
+            .defineInRange("maxScreenTextRenderDistance", 20D, 0D, Double.MAX_VALUE);
         builder.pop();
 
         builder.push("debug");
@@ -953,6 +961,14 @@ public final class ModSettings {
     public static TextBuffer.ColorDepth screenDepthByTier(final int tier) {
         final List<TextBuffer.ColorDepth> depths = screenDepthsByTier();
         return depths.get(clampIndex(tier, depths.size()));
+    }
+
+    public static double screenTextFadeStartDistance() {
+        return Math.max(0D, doubleValue(SCREEN_TEXT_FADE_START_DISTANCE));
+    }
+
+    public static double maxScreenTextRenderDistance() {
+        return Math.max(0D, doubleValue(MAX_SCREEN_TEXT_RENDER_DISTANCE));
     }
 
     public static double nanomachinesBuffer() {
