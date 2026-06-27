@@ -35,6 +35,7 @@ base {
 }
 
 tasks.named('jar', Jar).configure {
+    archiveClassifier = 'thin'
     from(rootProject.file('LICENSE')) {
         into 'META-INF'
         rename { 'LICENSE-neoopencomputers.txt' }
@@ -47,6 +48,10 @@ tasks.named('jar', Jar).configure {
         into 'META-INF'
         rename { 'LICENSE-typesafe-config.txt' }
     }
+}
+
+tasks.named('jarJar').configure {
+    archiveClassifier = ''
 }
 
 tasks.register('apiJar', Jar) {
@@ -69,6 +74,7 @@ tasks.register('javadocJar', Jar) {
 }
 
 tasks.named('assemble').configure {
+    dependsOn tasks.named('jarJar')
     dependsOn tasks.named('apiJar')
     dependsOn tasks.named('javadocJar')
 }
@@ -237,7 +243,7 @@ tasks.withType(Test).configureEach {
     dependsOn tasks.named('javadocJar')
     dependsOn tasks.named('generatePomFileForMavenJavaPublication')
     systemProperty 'neoopencomputers.apiJar', tasks.named('apiJar').flatMap { it.archiveFile }.get().asFile.absolutePath
-    systemProperty 'neoopencomputers.modJar', tasks.named('jar').flatMap { it.archiveFile }.get().asFile.absolutePath
+    systemProperty 'neoopencomputers.modJar', tasks.named('jarJar').flatMap { it.archiveFile }.get().asFile.absolutePath
     systemProperty 'neoopencomputers.allJar', tasks.named('jarJar').flatMap { it.archiveFile }.get().asFile.absolutePath
     systemProperty 'neoopencomputers.javadocJar', tasks.named('javadocJar').flatMap { it.archiveFile }.get().asFile.absolutePath
     systemProperty 'neoopencomputers.mavenPom', layout.buildDirectory.file('publications/mavenJava/pom-default.xml').get().asFile.absolutePath
