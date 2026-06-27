@@ -56,18 +56,23 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         }
         final TerminalScreenSnapshot snapshot = menu.snapshot();
         renderCellBackgrounds(guiGraphics, snapshot, left, top);
-        for (int row = 0; row < visibleRows(snapshot); row++) {
-            for (final TextRun run : textRuns(snapshot, row)) {
-                if (!run.text().isBlank()) {
-                    guiGraphics.drawString(
-                        font,
-                        run.text(),
-                        left + TEXT_LEFT + run.column() * CELL_WIDTH,
-                        top + TEXT_TOP + row * LINE_HEIGHT,
-                        run.color(),
-                        false);
+        guiGraphics.enableScissor(left + TEXT_LEFT, top + TEXT_TOP, left + imageWidth - TEXT_RIGHT_MARGIN, top + imageHeight - TEXT_BOTTOM_MARGIN);
+        try {
+            for (int row = 0; row < visibleRows(snapshot, imageHeight); row++) {
+                for (final TextRun run : textRuns(snapshot, row, visibleColumns(snapshot, imageWidth))) {
+                    if (!run.text().isBlank()) {
+                        guiGraphics.drawString(
+                            font,
+                            run.text(),
+                            left + TEXT_LEFT + run.column() * CELL_WIDTH,
+                            top + TEXT_TOP + row * LINE_HEIGHT,
+                            run.color(),
+                            false);
+                    }
                 }
             }
+        } finally {
+            guiGraphics.disableScissor();
         }
     }
 
@@ -80,21 +85,29 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     @Override
     public boolean keyPressed(final int keyCode, final int scanCode, final int modifiers) {
+        if (shouldHandleBeforeScreenShortcuts(acceptsInput(menu.snapshot()), ItemSearch.isInputFocused(), keyCode)) {
+            handleTerminalKeyPressed(keyCode);
+            return true;
+        }
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         if (!shouldForwardKeyboardInput(menu.snapshot())) {
             return false;
         }
+        handleTerminalKeyPressed(keyCode);
+        return true;
+    }
+
+    private void handleTerminalKeyPressed(final int keyCode) {
         if (hasControlDown() && keyCode == GLFW.GLFW_KEY_V && minecraft != null) {
             sendClipboardInput(minecraft.keyboardHandler.getClipboard());
-            return true;
+            return;
         }
         if (shouldForwardKeyPress(pressedKeys.contains(keyCode), keyCode)) {
             sendKeyInput(true, (char) 0, keyCode);
         }
         pressedKeys.add(keyCode);
-        return true;
     }
 
     @Override
@@ -191,6 +204,10 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         return shouldForwardKeyboardInput(acceptsInput(snapshot), ItemSearch.isInputFocused());
     }
 
+    static boolean shouldHandleBeforeScreenShortcuts(final boolean acceptsInput, final boolean searchInputFocused, final int keyCode) {
+        return shouldForwardKeyboardInput(acceptsInput, searchInputFocused) && keyCode != GLFW.GLFW_KEY_ESCAPE;
+    }
+
     static boolean shouldForwardKeyPress(final boolean alreadyPressed, final int keyCode) {
         return !alreadyPressed || !ignoreRepeat(keyCode);
     }
@@ -220,6 +237,10 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         return Math.max(DEFAULT_IMAGE_WIDTH, TEXT_LEFT + snapshot.width() * CELL_WIDTH + TEXT_RIGHT_MARGIN);
     }
 
+    static int imageWidth(final TerminalScreenSnapshot snapshot, final int availableWidth) {
+        return Math.min(imageWidth(snapshot), Math.max(DEFAULT_IMAGE_WIDTH, availableWidth - 18));
+    }
+
     static int imageHeight(final TerminalScreenSnapshot snapshot) {
         if (!acceptsInput(snapshot)) {
             return DEFAULT_IMAGE_HEIGHT;
@@ -227,11 +248,29 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         return Math.max(DEFAULT_IMAGE_HEIGHT, TEXT_TOP + snapshot.height() * LINE_HEIGHT + TEXT_BOTTOM_MARGIN);
     }
 
+    static int imageHeight(final TerminalScreenSnapshot snapshot, final int availableHeight) {
+        return Math.min(imageHeight(snapshot), Math.max(DEFAULT_IMAGE_HEIGHT, availableHeight - 18));
+    }
+
     static int visibleRows(final TerminalScreenSnapshot snapshot) {
         if (!acceptsInput(snapshot)) {
             return 0;
         }
-        return Math.min(snapshot.height(), Math.max(0, (imageHeight(snapshot) - TEXT_TOP - TEXT_BOTTOM_MARGIN) / LINE_HEIGHT));
+        return visibleRows(snapshot, imageHeight(snapshot));
+    }
+
+    static int visibleRows(final TerminalScreenSnapshot snapshot, final int imageHeight) {
+        if (!acceptsInput(snapshot)) {
+            return 0;
+        }
+        return Math.min(snapshot.height(), Math.max(0, (imageHeight - TEXT_TOP - TEXT_BOTTOM_MARGIN) / LINE_HEIGHT));
+    }
+
+    static int visibleColumns(final TerminalScreenSnapshot snapshot, final int imageWidth) {
+        if (!acceptsInput(snapshot)) {
+            return 0;
+        }
+        return Math.min(snapshot.width(), Math.max(0, (imageWidth - TEXT_LEFT - TEXT_RIGHT_MARGIN) / CELL_WIDTH));
     }
 
     static int textColor(final TerminalScreenSnapshot snapshot, final int column, final int row) {
@@ -243,11 +282,15 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static List<TextRun> textRuns(final TerminalScreenSnapshot snapshot, final int row) {
+        return textRuns(snapshot, row, snapshot == null ? 0 : snapshot.width());
+    }
+
+    static List<TextRun> textRuns(final TerminalScreenSnapshot snapshot, final int row, final int visibleColumns) {
         if (!acceptsInput(snapshot) || row < 0 || row >= snapshot.height()) {
             return List.of();
         }
         final String line = snapshotLine(snapshot, row);
-        final int width = Math.min(snapshot.width(), line.codePointCount(0, line.length()));
+        final int width = Math.min(Math.min(snapshot.width(), visibleColumns), line.codePointCount(0, line.length()));
         if (width <= 0) {
             return List.of();
         }
@@ -335,9 +378,11 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     private void renderCellBackgrounds(final GuiGraphics guiGraphics, final TerminalScreenSnapshot snapshot, final int left, final int top) {
-        for (int row = 0; row < visibleRows(snapshot); row++) {
+        final int rows = visibleRows(snapshot, imageHeight);
+        final int columns = visibleColumns(snapshot, imageWidth);
+        for (int row = 0; row < rows; row++) {
             final int y = top + TEXT_TOP + row * LINE_HEIGHT;
-            for (int column = 0; column < snapshot.width(); column++) {
+            for (int column = 0; column < columns; column++) {
                 final int color = backgroundColor(snapshot, column, row);
                 if ((color & 0x00FFFFFF) != 0) {
                     final int x = left + TEXT_LEFT + column * CELL_WIDTH;
@@ -348,8 +393,8 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     private void updateLayoutForSnapshot() {
-        final int nextImageWidth = imageWidth(menu.snapshot());
-        final int nextImageHeight = imageHeight(menu.snapshot());
+        final int nextImageWidth = imageWidth(menu.snapshot(), width);
+        final int nextImageHeight = imageHeight(menu.snapshot(), height);
         if (imageWidth != nextImageWidth || imageHeight != nextImageHeight) {
             imageWidth = nextImageWidth;
             imageHeight = nextImageHeight;

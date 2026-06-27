@@ -75,7 +75,7 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
         final int slot = computerSlotAt(mouseX, mouseY, leftPos, topPos, menu.computerTier());
-        if (slot >= 0) {
+        if (shouldRenderSlotOverlayTooltip(slot >= 0, slot >= 0 && menu.getSlot(slot).hasItem())) {
             guiGraphics.renderComponentTooltip(font, slotTooltip(
                 ComputerCaseMenu.computerSlotKind(menu.computerTier(), slot),
                 ComputerCaseMenu.computerSlotTierLimit(menu.computerTier(), slot),
@@ -166,6 +166,10 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
             }
         }
         return -1;
+    }
+
+    public static boolean shouldRenderSlotOverlayTooltip(final boolean hoveredSlot, final boolean occupiedSlot) {
+        return hoveredSlot && !occupiedSlot;
     }
 
     public static int powerButtonTextureX(final int state) {

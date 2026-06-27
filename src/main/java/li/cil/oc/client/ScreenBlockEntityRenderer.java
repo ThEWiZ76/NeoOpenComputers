@@ -168,12 +168,9 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final Direction pitch = ScreenBlock.pitch(state);
         final Direction yaw = ScreenBlock.yaw(state);
         poseStack.translate(0.5D, 0.5D, 0.5D);
-        switch (yaw) {
-            case WEST -> poseStack.mulPose(Axis.YP.rotationDegrees(-90));
-            case NORTH -> poseStack.mulPose(Axis.YP.rotationDegrees(180));
-            case EAST -> poseStack.mulPose(Axis.YP.rotationDegrees(90));
-            default -> {
-            }
+        final int yawRotation = yawRotationDegrees(yaw);
+        if (yawRotation != 0) {
+            poseStack.mulPose(Axis.YP.rotationDegrees(yawRotation));
         }
         switch (pitch) {
             case DOWN -> poseStack.mulPose(Axis.XP.rotationDegrees(90));
@@ -181,6 +178,15 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             default -> {
             }
         }
+    }
+
+    static int yawRotationDegrees(final Direction yaw) {
+        return switch (yaw) {
+            case SOUTH -> 180;
+            case EAST -> 90;
+            case WEST -> -90;
+            default -> 0;
+        };
     }
 
     private static String line(final ScreenBlockEntity screen, final int row) {

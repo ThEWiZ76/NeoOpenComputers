@@ -101,6 +101,15 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenHandlesTypingBeforeMinecraftGuiShortcuts() {
+        assertEquals(true, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, false, GLFW.GLFW_KEY_E));
+        assertEquals(true, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, false, GLFW.GLFW_KEY_W));
+        assertEquals(false, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, false, GLFW.GLFW_KEY_ESCAPE));
+        assertEquals(false, TerminalScreen.shouldHandleBeforeScreenShortcuts(false, false, GLFW.GLFW_KEY_E));
+        assertEquals(false, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, true, GLFW.GLFW_KEY_E));
+    }
+
+    @Test
     void terminalScreenSizesPanelForSnapshotDimensions() {
         final TerminalScreenSnapshot missing = new TerminalScreenSnapshot(0, 0, new String[0]);
         final TerminalScreenSnapshot terminalServerDefault = new TerminalScreenSnapshot(80, 25, new String[25]);
@@ -112,9 +121,25 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenFitsPanelInsideAvailableGuiArea() {
+        final TerminalScreenSnapshot terminalServerDefault = new TerminalScreenSnapshot(80, 25, new String[25]);
+
+        assertEquals(409, TerminalScreen.imageWidth(terminalServerDefault, 427));
+        assertEquals(222, TerminalScreen.imageHeight(terminalServerDefault, 240));
+    }
+
+    @Test
     void terminalScreenRendersAllSnapshotRowsThatFitAdaptivePanel() {
         assertEquals(0, TerminalScreen.visibleRows(new TerminalScreenSnapshot(0, 0, new String[0])));
         assertEquals(25, TerminalScreen.visibleRows(new TerminalScreenSnapshot(80, 25, new String[25])));
+    }
+
+    @Test
+    void terminalScreenLimitsVisibleColumnsAndRowsToClampedPanel() {
+        final TerminalScreenSnapshot terminalServerDefault = new TerminalScreenSnapshot(80, 25, new String[25]);
+
+        assertEquals(64, TerminalScreen.visibleColumns(terminalServerDefault, 409));
+        assertEquals(20, TerminalScreen.visibleRows(terminalServerDefault, 222));
     }
 
     @Test

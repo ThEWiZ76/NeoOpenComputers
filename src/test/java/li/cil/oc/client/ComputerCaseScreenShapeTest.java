@@ -89,6 +89,7 @@ final class ComputerCaseScreenShapeTest {
         final Method statusTooltip = ComputerCaseScreen.class.getMethod("statusTooltip", int.class, int.class, int.class, int.class);
         final Method statusControlTooltip = ComputerCaseScreen.class.getMethod("statusControlTooltip", int.class);
         final Method slotAt = ComputerCaseScreen.class.getMethod("computerSlotAt", int.class, int.class, int.class, int.class, int.class);
+        final Method slotOverlayTooltip = ComputerCaseScreen.class.getMethod("shouldRenderSlotOverlayTooltip", boolean.class, boolean.class);
         final Method controlAt = ComputerCaseScreen.class.getDeclaredMethod("statusControlAt", int.class, int.class, int.class, int.class);
         final Method controlPayload = ComputerCaseScreen.class.getDeclaredMethod("controlPayload", ComputerCaseMenu.class, int.class);
 
@@ -97,6 +98,7 @@ final class ComputerCaseScreenShapeTest {
         assertEquals(List.class, statusTooltip.getReturnType());
         assertEquals(List.class, statusControlTooltip.getReturnType());
         assertEquals(int.class, slotAt.getReturnType());
+        assertEquals(boolean.class, slotOverlayTooltip.getReturnType());
         assertEquals(boolean.class, controlAt.getReturnType());
         assertEquals(ComputerCaseControlPayload.class, controlPayload.getReturnType());
     }
@@ -192,6 +194,13 @@ final class ComputerCaseScreenShapeTest {
         assertEquals(false, ComputerCaseScreen.statusControlAt(69, 33, 0, 0));
         assertEquals(false, ComputerCaseScreen.statusControlAt(88, 33, 0, 0));
         assertEquals(false, ComputerCaseScreen.statusControlAt(70, 51, 0, 0));
+    }
+
+    @Test
+    void computerCaseScreenDoesNotOverlayCustomSlotTooltipOverInstalledItemTooltip() {
+        assertEquals(true, ComputerCaseScreen.shouldRenderSlotOverlayTooltip(true, false));
+        assertEquals(false, ComputerCaseScreen.shouldRenderSlotOverlayTooltip(true, true));
+        assertEquals(false, ComputerCaseScreen.shouldRenderSlotOverlayTooltip(false, false));
     }
 
     private static void assertTranslationKey(final String expected, final Component component) {

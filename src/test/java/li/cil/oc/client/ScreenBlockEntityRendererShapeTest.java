@@ -1,5 +1,6 @@
 package li.cil.oc.client;
 
+import net.minecraft.core.Direction;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -59,6 +60,14 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(renderer.contains("SCREEN_FRONT_Z"));
         assertTrue(renderer.contains("-0.53F"));
         assertTrue(!renderer.contains("-0.506F"));
+    }
+
+    @Test
+    void screenRendererKeepsNorthFrontOnNorthFace() {
+        assertEquals(0, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.NORTH));
+        assertEquals(180, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.SOUTH));
+        assertEquals(90, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.EAST));
+        assertEquals(-90, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.WEST));
     }
 
     @Test
