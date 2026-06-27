@@ -1,10 +1,9 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "front": "neoopencomputers:block/screen/f",
-    "top_bottom": "neoopencomputers:block/screen/b",
-    "side_back": "neoopencomputers:block/screen/b2",
-    "particle": "neoopencomputers:block/screen/b2"
+    "top_bottom": "neoopencomputers:block/generic_top",
+    "side": "neoopencomputers:block/generic_side",
+    "particle": "neoopencomputers:block/generic_side"
   },
   "elements": [
     {
@@ -13,10 +12,10 @@
       "faces": {
         "down": { "texture": "#top_bottom", "cullface": "down", "tintindex": 0 },
         "up": { "texture": "#top_bottom", "cullface": "up", "tintindex": 0 },
-        "north": { "texture": "#front", "tintindex": 0 },
-        "south": { "texture": "#side_back", "cullface": "south", "tintindex": 0 },
-        "west": { "texture": "#side_back", "cullface": "west", "tintindex": 0 },
-        "east": { "texture": "#side_back", "cullface": "east", "tintindex": 0 }
+        "north": { "texture": "#side", "cullface": "north", "tintindex": 0 },
+        "south": { "texture": "#side", "cullface": "south", "tintindex": 0 },
+        "west": { "texture": "#side", "cullface": "west", "tintindex": 0 },
+        "east": { "texture": "#side", "cullface": "east", "tintindex": 0 }
       }
     }
   ]

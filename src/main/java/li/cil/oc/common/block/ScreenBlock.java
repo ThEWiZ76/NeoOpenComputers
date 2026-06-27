@@ -225,13 +225,11 @@ public class ScreenBlock extends Block implements EntityBlock {
         return fallback;
     }
 
-    private static Direction localRight(final BlockState state) {
-        final Direction facing = facing(state);
-        final Direction up = up(state);
-        final int x = facing.getStepY() * up.getStepZ() - facing.getStepZ() * up.getStepY();
-        final int y = facing.getStepZ() * up.getStepX() - facing.getStepX() * up.getStepZ();
-        final int z = facing.getStepX() * up.getStepY() - facing.getStepY() * up.getStepX();
-        final Direction right = Direction.fromDelta(x, y, z);
-        return right == null ? Direction.EAST : right;
+    public static Direction localRight(final BlockState state) {
+        return localRight(yaw(state));
+    }
+
+    public static Direction localRight(final Direction yaw) {
+        return yaw == null ? Direction.WEST : yaw.getCounterClockWise();
     }
 }

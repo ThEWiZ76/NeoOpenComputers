@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.api.driver.DeviceInfo;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -82,7 +83,7 @@ final class ScreenRegistrationShapeTest {
             source.indexOf("protected BlockState rotate"));
         final String helper = source.substring(
             source.indexOf("public static BlockState inheritConnectedScreenState"),
-            source.indexOf("private static Direction localRight"));
+            source.indexOf("public static Direction localRight"));
 
         assertTrue(method.contains("inheritConnectedScreenState(context, fallback)"));
         assertTrue(source.contains("context.getClickedFace().getOpposite()"));
@@ -90,6 +91,14 @@ final class ScreenRegistrationShapeTest {
         assertTrue(helper.contains("direction == right || direction == right.getOpposite() || direction == up || direction == up.getOpposite()"));
         assertTrue(helper.contains(".setValue(PITCH, pitch(neighborState))"));
         assertTrue(helper.contains(".setValue(YAW, yaw(neighborState))"));
+    }
+
+    @Test
+    void screenLocalEastMatchesUpstreamRotationHelper() {
+        assertEquals(Direction.WEST, ScreenBlock.localRight(Direction.NORTH));
+        assertEquals(Direction.NORTH, ScreenBlock.localRight(Direction.EAST));
+        assertEquals(Direction.EAST, ScreenBlock.localRight(Direction.SOUTH));
+        assertEquals(Direction.SOUTH, ScreenBlock.localRight(Direction.WEST));
     }
 
     @Test

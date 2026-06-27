@@ -8,7 +8,7 @@ import net.minecraft.world.phys.Vec3;
 
 final class ScreenHitMapper {
     static ScreenClick screenCoordinates(final BlockState state, final BlockPos pos, final BlockHitResult hitResult, final int width, final int height) {
-        return screenCoordinates(ScreenBlock.facing(state), ScreenBlock.up(state), pos, hitResult, width, height);
+        return screenCoordinates(ScreenBlock.facing(state), ScreenBlock.up(state), ScreenBlock.localRight(state), pos, hitResult, width, height);
     }
 
     static ScreenClick screenCoordinates(
@@ -24,6 +24,7 @@ final class ScreenHitMapper {
         return screenCoordinates(
             ScreenBlock.facing(state),
             ScreenBlock.up(state),
+            ScreenBlock.localRight(state),
             pos,
             hitResult,
             width,
@@ -43,8 +44,22 @@ final class ScreenHitMapper {
             return null;
         }
 
+        return screenCoordinates(facing, up, cross(facing, up), pos, hitResult, width, height);
+    }
+
+    private static ScreenClick screenCoordinates(
+        final Direction facing,
+        final Direction up,
+        final Direction right,
+        final BlockPos pos,
+        final BlockHitResult hitResult,
+        final int width,
+        final int height) {
+        if (width <= 0 || height <= 0 || hitResult.getDirection() != facing) {
+            return null;
+        }
+
         final Vec3 relative = hitResult.getLocation().subtract(pos.getX(), pos.getY(), pos.getZ());
-        final Direction right = cross(facing, up);
         final double horizontal = localCoordinate(relative, right);
         final double vertical = 1.0D - localCoordinate(relative, up);
         if (horizontal < 0.0D || horizontal >= 1.0D || vertical < 0.0D || vertical >= 1.0D) {
@@ -72,8 +87,26 @@ final class ScreenHitMapper {
             return null;
         }
 
+        return screenCoordinates(facing, up, cross(facing, up), pos, hitResult, width, height, blockWidth, blockHeight, localBlockX, localBlockY);
+    }
+
+    private static ScreenClick screenCoordinates(
+        final Direction facing,
+        final Direction up,
+        final Direction right,
+        final BlockPos pos,
+        final BlockHitResult hitResult,
+        final int width,
+        final int height,
+        final int blockWidth,
+        final int blockHeight,
+        final int localBlockX,
+        final int localBlockY) {
+        if (width <= 0 || height <= 0 || blockWidth <= 0 || blockHeight <= 0 || hitResult.getDirection() != facing) {
+            return null;
+        }
+
         final Vec3 relative = hitResult.getLocation().subtract(pos.getX(), pos.getY(), pos.getZ());
-        final Direction right = cross(facing, up);
         final double horizontal = localCoordinate(relative, right);
         final double vertical = 1.0D - localCoordinate(relative, up);
         if (horizontal < 0.0D || horizontal >= 1.0D || vertical < 0.0D || vertical >= 1.0D) {

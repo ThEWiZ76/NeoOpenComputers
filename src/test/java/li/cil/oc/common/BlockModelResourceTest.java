@@ -62,15 +62,15 @@ final class BlockModelResourceTest {
     }
 
     @Test
-    void screenBlockModelsUseSingleScreenTexturesLikeUpstreamScreenModel() throws IOException {
+    void screenBlockModelsUseGenericStaticCaseLikeUpstreamScreenModel() throws IOException {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_panel.json"))) {
             final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
             assertTrue("minecraft:block/block".equals(panel.get("parent").getAsString()));
             assertTrue(panel.has("elements"));
             final JsonObject textures = panel.getAsJsonObject("textures");
-            assertTrue("neoopencomputers:block/screen/f".equals(textures.get("front").getAsString()));
-            assertTrue("neoopencomputers:block/screen/b".equals(textures.get("top_bottom").getAsString()));
-            assertTrue("neoopencomputers:block/screen/b2".equals(textures.get("side_back").getAsString()));
+            assertTrue("neoopencomputers:block/generic_top".equals(textures.get("top_bottom").getAsString()));
+            assertTrue("neoopencomputers:block/generic_side".equals(textures.get("side").getAsString()));
+            assertTrue(!textures.toString().contains("block/screen/f"), "Static block model must not bake one screen front per block");
         }
 
         final List<String> modelNames = List.of("screen_tier1.json", "screen_tier2.json", "screen_tier3.json");
@@ -82,18 +82,11 @@ final class BlockModelResourceTest {
             }
         }
 
-        try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_horizontal_panel.json"))) {
-            final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
-            assertTrue("neoopencomputers:block/screen_panel".equals(panel.get("parent").getAsString()));
-            final JsonObject textures = panel.getAsJsonObject("textures");
-            assertTrue("neoopencomputers:block/screen/f2".equals(textures.get("front").getAsString()));
-        }
-
         final List<String> horizontalModelNames = List.of("screen_tier1_horizontal.json", "screen_tier2_horizontal.json", "screen_tier3_horizontal.json");
         for (final String modelName : horizontalModelNames) {
             try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve(modelName))) {
                 final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
-                assertTrue("neoopencomputers:block/screen_horizontal_panel".equals(model.get("parent").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen_panel".equals(model.get("parent").getAsString()), modelName);
                 assertTrue(!model.has("textures"), modelName);
             }
         }
@@ -104,7 +97,7 @@ final class BlockModelResourceTest {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_panel.json"))) {
             final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
             final JsonObject faces = panel.getAsJsonArray("elements").get(0).getAsJsonObject().getAsJsonObject("faces");
-            for (final String side : List.of("down", "up", "south", "west", "east")) {
+            for (final String side : List.of("down", "up", "north", "south", "west", "east")) {
                 final JsonObject face = faces.getAsJsonObject(side);
                 assertTrue(face.has("cullface"), side + " face should cull against adjacent blocks");
                 assertTrue(side.equals(face.get("cullface").getAsString()), side + " face should cull on its own side");

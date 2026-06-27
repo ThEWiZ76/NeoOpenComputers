@@ -9677,8 +9677,8 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void computerBootWritesToConnectedScreenOrigin(final GameTestHelper helper) {
-        final BlockPos originScreenPos = new BlockPos(0, 1, 1);
-        final BlockPos secondaryScreenPos = new BlockPos(1, 1, 1);
+        final BlockPos originScreenPos = new BlockPos(1, 1, 1);
+        final BlockPos secondaryScreenPos = new BlockPos(0, 1, 1);
         final BlockPos computerPos = new BlockPos(0, 1, 2);
         final BlockPos diskDrivePos = new BlockPos(1, 1, 2);
 
@@ -9714,11 +9714,11 @@ public final class NeoOpenComputersGameTests {
         final BlockState screenState = ModBlocks.SCREEN_TIER1.get().defaultBlockState()
             .setValue(ScreenBlock.PITCH, Direction.NORTH)
             .setValue(ScreenBlock.YAW, Direction.EAST);
-        final BlockPos originScreenPos = new BlockPos(1, 2, 1);
-        final BlockPos attachedScreenPos = new BlockPos(1, 2, 3);
-        final BlockPos computerPos = new BlockPos(1, 1, 3);
-        final BlockPos diskDrivePos = new BlockPos(1, 1, 4);
-        final BlockPos keyboardPos = new BlockPos(1, 2, 4);
+        final BlockPos originScreenPos = new BlockPos(1, 2, 3);
+        final BlockPos attachedScreenPos = new BlockPos(1, 2, 1);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+        final BlockPos diskDrivePos = new BlockPos(1, 1, 0);
+        final BlockPos keyboardPos = new BlockPos(1, 2, 0);
 
         for (int y = 2; y <= 3; y++) {
             for (int z = 1; z <= 3; z++) {
@@ -10360,7 +10360,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(invokeUseWithoutItem(state, helper, screenPos, hit) == InteractionResult.CONSUME, "Screen click was not consumed");
 
         helper.runAtTickTime(5, () -> {
-            assertNextSignal(helper, computer, "touch", screen.node().address(), 13, 5, 0);
+            assertNextSignal(helper, computer, "touch", screen.node().address(), 38, 5, 0);
             helper.succeed();
         });
     }
@@ -10389,8 +10389,8 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void screenMultiblockSecondaryClickSignalsOrigin(final GameTestHelper helper) {
-        final BlockPos originScreenPos = new BlockPos(0, 1, 1);
-        final BlockPos secondaryScreenPos = new BlockPos(1, 1, 1);
+        final BlockPos originScreenPos = new BlockPos(1, 1, 1);
+        final BlockPos secondaryScreenPos = new BlockPos(0, 1, 1);
         final BlockPos computerPos = new BlockPos(0, 1, 2);
 
         helper.setBlock(originScreenPos, ModBlocks.SCREEN_TIER1.get());
@@ -10419,9 +10419,9 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty")
     public static void screenMultiblockSecondaryTerminalOpensOrigin(final GameTestHelper helper) {
-        final BlockPos originScreenPos = new BlockPos(0, 1, 1);
-        final BlockPos secondaryScreenPos = new BlockPos(1, 1, 1);
-        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+        final BlockPos originScreenPos = new BlockPos(1, 1, 1);
+        final BlockPos secondaryScreenPos = new BlockPos(0, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(1, 1, 2);
 
         helper.setBlock(originScreenPos, ModBlocks.SCREEN_TIER1.get());
         helper.setBlock(secondaryScreenPos, ModBlocks.SCREEN_TIER1.get());
@@ -10457,9 +10457,9 @@ public final class NeoOpenComputersGameTests {
         final ScreenBlockEntity left = helper.getBlockEntity(leftPos);
         final ScreenBlockEntity middle = helper.getBlockEntity(middlePos);
         final ScreenBlockEntity right = helper.getBlockEntity(rightPos);
-        assertScreenLayout(helper, left, 3, 1, 0, 0);
+        assertScreenLayout(helper, left, 3, 1, 2, 0);
         assertScreenLayout(helper, middle, 3, 1, 1, 0);
-        assertScreenLayout(helper, right, 3, 1, 2, 0);
+        assertScreenLayout(helper, right, 3, 1, 0, 0);
         helper.succeed();
     }
 
@@ -10478,8 +10478,8 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty")
     public static void screenMultiblockExposesOnlyOriginComponent(final GameTestHelper helper) {
-        final BlockPos originPos = new BlockPos(0, 1, 1);
-        final BlockPos secondaryPos = new BlockPos(1, 1, 1);
+        final BlockPos originPos = new BlockPos(1, 1, 1);
+        final BlockPos secondaryPos = new BlockPos(0, 1, 1);
 
         helper.setBlock(originPos, ModBlocks.SCREEN_TIER1.get());
         helper.setBlock(secondaryPos, ModBlocks.SCREEN_TIER1.get());

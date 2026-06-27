@@ -271,13 +271,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     }
 
     private static Direction localRight(final BlockState state) {
-        final Direction facing = ScreenBlock.facing(state);
-        final Direction up = ScreenBlock.up(state);
-        final int x = facing.getStepY() * up.getStepZ() - facing.getStepZ() * up.getStepY();
-        final int y = facing.getStepZ() * up.getStepX() - facing.getStepX() * up.getStepZ();
-        final int z = facing.getStepX() * up.getStepY() - facing.getStepY() * up.getStepX();
-        final Direction right = Direction.fromDelta(x, y, z);
-        return right == null ? Direction.EAST : right;
+        return ScreenBlock.localRight(state);
     }
 
     private static String line(final ScreenBlockEntity screen, final int row) {
