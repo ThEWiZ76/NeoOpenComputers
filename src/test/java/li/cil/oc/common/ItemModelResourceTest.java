@@ -47,6 +47,36 @@ final class ItemModelResourceTest {
         assertTrue(missingTextures.isEmpty(), "Item models reference missing mod textures: " + missingTextures);
     }
 
+    @Test
+    void floppyItemModelUsesUpstreamPerDyeOverrides() throws IOException {
+        final List<String> dyeNames = List.of(
+            "dyeblack",
+            "dyered",
+            "dyegreen",
+            "dyebrown",
+            "dyeblue",
+            "dyepurple",
+            "dyecyan",
+            "dyelightgray",
+            "dyegray",
+            "dyepink",
+            "dyelime",
+            "dyeyellow",
+            "dyelightblue",
+            "dyemagenta",
+            "dyeorange",
+            "dyewhite");
+
+        final String floppyModel = Files.readString(ITEM_MODEL_ROOT.resolve("floppy.json"));
+        assertTrue(floppyModel.contains("neoopencomputers:floppy_color"));
+        for (final String dyeName : dyeNames) {
+            final String name = "floppy_" + dyeName;
+            assertTrue(Files.exists(ITEM_MODEL_ROOT.resolve(name + ".json")), name);
+            assertTrue(Files.exists(ITEM_TEXTURE_ROOT.resolve(name + ".png")), name);
+            assertTrue(floppyModel.contains("neoopencomputers:item/" + name), name);
+        }
+    }
+
     private static boolean isVanillaPlaceholder(final String texture) {
         return texture.startsWith("minecraft:item/") || texture.startsWith("minecraft:block/");
     }

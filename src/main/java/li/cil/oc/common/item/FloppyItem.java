@@ -17,6 +17,7 @@ import li.cil.oc.common.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -34,9 +35,27 @@ public class FloppyItem extends Item implements DriverItem {
     private static final String LEGACY_LOOT_PATH_TAG = "oc:lootPath";
     private static final String LEGACY_LOOT_FACTORY_TAG = "oc:lootFactory";
     private static final String LEGACY_LABEL_TAG = "oc:fs.label";
+    private static final int DEFAULT_FLOPPY_COLOR_INDEX = 8;
 
     public FloppyItem(final Properties properties) {
         super(properties);
+    }
+
+    public static int floppyColorIndex(final ItemStack stack) {
+        return floppyColorIndex(rootData(stack));
+    }
+
+    public static int floppyColorIndex(final CompoundTag rootData) {
+        if (rootData == null) {
+            return DEFAULT_FLOPPY_COLOR_INDEX;
+        }
+        if (rootData.contains(ItemRegistry.FLOPPY_COLOR_TAG, Tag.TAG_INT)) {
+            return Math.clamp(rootData.getInt(ItemRegistry.FLOPPY_COLOR_TAG), 0, 15);
+        }
+        if (rootData.contains(ItemRegistry.FLOPPY_COLOR_TAG, Tag.TAG_STRING)) {
+            return dyeIndex(rootData.getString(ItemRegistry.FLOPPY_COLOR_TAG));
+        }
+        return DEFAULT_FLOPPY_COLOR_INDEX;
     }
 
     @Override
@@ -166,6 +185,28 @@ public class FloppyItem extends Item implements DriverItem {
         }
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         return customData == null ? new CompoundTag() : customData.copyTag();
+    }
+
+    private static int dyeIndex(final String colorName) {
+        return switch (colorName) {
+            case "black" -> 0;
+            case "red" -> 1;
+            case "green" -> 2;
+            case "brown" -> 3;
+            case "blue" -> 4;
+            case "purple" -> 5;
+            case "cyan" -> 6;
+            case "light_gray", "silver" -> 7;
+            case "gray" -> 8;
+            case "pink" -> 9;
+            case "lime" -> 10;
+            case "yellow" -> 11;
+            case "light_blue" -> 12;
+            case "magenta" -> 13;
+            case "orange" -> 14;
+            case "white" -> 15;
+            default -> DEFAULT_FLOPPY_COLOR_INDEX;
+        };
     }
 
     private static void writeDataTag(final ItemStack stack, final CompoundTag data) {

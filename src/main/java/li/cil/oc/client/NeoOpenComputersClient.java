@@ -7,9 +7,11 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
+import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.network.DebugClipboardState;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.api.distmarker.Dist;
@@ -31,6 +33,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 @EventBusSubscriber(modid = NeoOpenComputers.MODID, value = Dist.CLIENT)
 public final class NeoOpenComputersClient {
     private static final ResourceLocation NANOMACHINE_HUD = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "nanomachine_hud");
+    private static final ResourceLocation FLOPPY_COLOR_PROPERTY = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "floppy_color");
     private static final int SCREEN_TIER1_COLOR = 0xABABAB;
     private static final int SCREEN_TIER2_COLOR = 0xFFFF66;
     private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
@@ -46,6 +49,10 @@ public final class NeoOpenComputersClient {
             manualRegistry.setOpenHandler(player -> ManualScreen.open(manualRegistry));
             event.enqueueWork(() -> ManualContent.registerDefaults(manualRegistry));
         }
+        event.enqueueWork(() -> ItemProperties.register(
+            ModItems.FLOPPY.get(),
+            FLOPPY_COLOR_PROPERTY,
+            (stack, level, entity, seed) -> FloppyItem.floppyColorIndex(stack)));
         NeoOpenComputers.LOGGER.debug("NeoOpenComputers client setup complete.");
     }
 

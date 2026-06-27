@@ -1,6 +1,104 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "neoopencomputers:item/floppy"
-  }
+    "layer0": "neoopencomputers:item/floppy_dyegray"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 0.0
+      },
+      "model": "neoopencomputers:item/floppy_dyeblack"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 1.0
+      },
+      "model": "neoopencomputers:item/floppy_dyered"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 2.0
+      },
+      "model": "neoopencomputers:item/floppy_dyegreen"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 3.0
+      },
+      "model": "neoopencomputers:item/floppy_dyebrown"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 4.0
+      },
+      "model": "neoopencomputers:item/floppy_dyeblue"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 5.0
+      },
+      "model": "neoopencomputers:item/floppy_dyepurple"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 6.0
+      },
+      "model": "neoopencomputers:item/floppy_dyecyan"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 7.0
+      },
+      "model": "neoopencomputers:item/floppy_dyelightgray"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 8.0
+      },
+      "model": "neoopencomputers:item/floppy_dyegray"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 9.0
+      },
+      "model": "neoopencomputers:item/floppy_dyepink"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 10.0
+      },
+      "model": "neoopencomputers:item/floppy_dyelime"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 11.0
+      },
+      "model": "neoopencomputers:item/floppy_dyeyellow"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 12.0
+      },
+      "model": "neoopencomputers:item/floppy_dyelightblue"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 13.0
+      },
+      "model": "neoopencomputers:item/floppy_dyemagenta"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 14.0
+      },
+      "model": "neoopencomputers:item/floppy_dyeorange"
+    },
+    {
+      "predicate": {
+        "neoopencomputers:floppy_color": 15.0
+      },
+      "model": "neoopencomputers:item/floppy_dyewhite"
+    }
+  ]
 }
