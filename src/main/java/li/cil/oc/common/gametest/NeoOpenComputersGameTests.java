@@ -7247,6 +7247,36 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chargerChargesNearbyNanomachineControllerLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 1000D, () ->
+            withCachedConfig(ModSettings.CHARGER_CHARGE_RATE, 100D, () ->
+                withCachedConfig(ModSettings.NANOMACHINES_BUFFER, 1000D, () ->
+                    withCachedConfig(ModSettings.MFU_TICK_FREQUENCY, 10, () -> {
+                        final BlockPos chargerPos = new BlockPos(1, 1, 1);
+                        helper.setBlock(chargerPos, ModBlocks.CHARGER.get());
+                        Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(chargerPos));
+
+                        final ChargerBlockEntity charger = helper.getBlockEntity(chargerPos);
+                        final Connector connector = (Connector) charger.node();
+                        final net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+                        player.setGameMode(GameType.SURVIVAL);
+                        player.getAbilities().instabuild = false;
+                        player.onUpdateAbilities();
+                        final BlockPos absoluteChargerPos = helper.absolutePos(chargerPos);
+                        player.moveTo(absoluteChargerPos.getX() + 0.5D, absoluteChargerPos.getY() + 1D, absoluteChargerPos.getZ() + 0.5D);
+                        final li.cil.oc.api.nanomachines.Controller controller = li.cil.oc.api.Nanomachines.installController(player);
+                        final double initialBuffer = controller.getLocalBuffer();
+                        charger.setChargeSpeed(0.5D);
+                        connector.changeBuffer(1000D);
+
+                        helper.assertTrue(charger.runChargeCycle(), "Charger did not report charging nearby nanomachine controller");
+                        assertClose(helper, controller.getLocalBuffer(), initialBuffer + 500D, "Charger nanomachine controller buffer");
+                        assertClose(helper, connector.localBuffer(), 500D, "Charger source buffer after nanomachine charging");
+                    }))));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void chargerWrenchInvertsRedstoneChargeSpeedLikeUpstream(final GameTestHelper helper) {
         ModWrenches.registerDefaults();
         final BlockPos chargerPos = new BlockPos(1, 1, 1);

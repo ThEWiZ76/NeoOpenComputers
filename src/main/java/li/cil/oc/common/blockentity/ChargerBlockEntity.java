@@ -261,13 +261,17 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
             return false;
         }
 
-        final double want = ModSettings.chargerChargeRateTablet() * chargeSpeed * Math.max(1, ModSettings.mfuTickFrequency());
-        if (want <= 0D) {
+        final double internalCharge = ModSettings.chargerChargeRateTablet() * chargeSpeed * Math.max(1, ModSettings.mfuTickFrequency());
+        final double externalCharge = ModSettings.chargerChargeRate() * chargeSpeed * Math.max(1, ModSettings.mfuTickFrequency());
+        if (internalCharge <= 0D && externalCharge <= 0D) {
             hasPower = false;
             return false;
         }
 
-        final boolean charged = chargeStack(items.get(SLOT_CHARGEABLE), want) | chargeNearbyPlayerEquipment(want);
+        final boolean charged =
+            chargeNearbyNanomachineControllers(externalCharge) |
+            chargeStack(items.get(SLOT_CHARGEABLE), internalCharge) |
+            chargeNearbyPlayerEquipment(internalCharge);
         hasPower = charged;
         if (charged) {
             setChanged();
@@ -291,6 +295,39 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
             node.changeBuffer(surplus);
         }
         return accepted > 0D;
+    }
+
+    private boolean chargeController(final li.cil.oc.api.nanomachines.Controller controller, final double charge) {
+        if (controller == null || charge <= 0D) {
+            return false;
+        }
+
+        final double available = ModSettings.ignorePower() ? charge : charge + node.changeBuffer(-charge);
+        if (available <= 0D) {
+            return false;
+        }
+
+        final double surplus = controller.changeBuffer(available);
+        final double accepted = Math.max(0D, available - surplus);
+        if (!ModSettings.ignorePower() && surplus > 0D) {
+            node.changeBuffer(surplus);
+        }
+        return accepted > 0D;
+    }
+
+    private boolean chargeNearbyNanomachineControllers(final double charge) {
+        if (level == null || level.isClientSide) {
+            return false;
+        }
+
+        boolean charged = false;
+        final AABB bounds = new AABB(worldPosition).inflate(1D);
+        for (final Player player : level.getEntitiesOfClass(Player.class, bounds, Player::isAlive)) {
+            if (li.cil.oc.api.Nanomachines.hasController(player)) {
+                charged |= chargeController(li.cil.oc.api.Nanomachines.getController(player), charge);
+            }
+        }
+        return charged;
     }
 
     private boolean chargeNearbyPlayerEquipment(final double charge) {
