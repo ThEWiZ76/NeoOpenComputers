@@ -10300,6 +10300,28 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty")
+    public static void screenWithKeyboardOpensPhysicalTerminal(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
+
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final Player player = helper.makeMockServerPlayerInLevel();
+        final BlockPos absoluteScreenPos = helper.absolutePos(screenPos);
+        final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absoluteScreenPos), Direction.NORTH, absoluteScreenPos, false);
+
+        final InteractionResult result = invokeUseWithoutItem(helper.getBlockState(screenPos), helper, screenPos, player, hit);
+
+        helper.assertTrue(result == InteractionResult.CONSUME, "Screen terminal interaction did not consume activation");
+        helper.assertTrue(player.containerMenu instanceof li.cil.oc.common.menu.TerminalMenu, "Screen did not open TerminalMenu");
+        final li.cil.oc.common.menu.TerminalMenu menu = (li.cil.oc.common.menu.TerminalMenu) player.containerMenu;
+        helper.assertTrue(menu.physicalScreen() == screen, "Screen terminal should bind the clicked screen");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void screenMultiblockSecondaryClickSignalsOrigin(final GameTestHelper helper) {
         final BlockPos originScreenPos = new BlockPos(0, 1, 1);
