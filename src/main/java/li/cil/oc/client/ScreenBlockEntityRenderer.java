@@ -42,16 +42,23 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     private static void orientToScreenFace(final ScreenBlockEntity screen, final PoseStack poseStack) {
         final BlockState state = screen.getBlockState();
-        final Direction facing = state.hasProperty(ScreenBlock.FACING) ? state.getValue(ScreenBlock.FACING) : Direction.NORTH;
-        poseStack.translate(0.5D, 0.72D, 0.5D);
-        switch (facing) {
-            case SOUTH -> poseStack.mulPose(Axis.YP.rotationDegrees(180));
-            case WEST -> poseStack.mulPose(Axis.YP.rotationDegrees(90));
-            case EAST -> poseStack.mulPose(Axis.YP.rotationDegrees(-90));
+        final Direction pitch = ScreenBlock.pitch(state);
+        final Direction yaw = ScreenBlock.yaw(state);
+        poseStack.translate(0.5D, 0.5D, 0.5D);
+        switch (yaw) {
+            case WEST -> poseStack.mulPose(Axis.YP.rotationDegrees(-90));
+            case NORTH -> poseStack.mulPose(Axis.YP.rotationDegrees(180));
+            case EAST -> poseStack.mulPose(Axis.YP.rotationDegrees(90));
             default -> {
             }
         }
-        poseStack.translate(-0.42D, 0.0D, -0.505D);
+        switch (pitch) {
+            case DOWN -> poseStack.mulPose(Axis.XP.rotationDegrees(90));
+            case UP -> poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+            default -> {
+            }
+        }
+        poseStack.translate(-0.42D, 0.22D, -0.505D);
     }
 
     private static String line(final ScreenBlockEntity screen, final int row) {

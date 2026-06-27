@@ -11,7 +11,6 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -20,11 +19,14 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 @SuppressWarnings("deprecation")
-public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlock {
+public class ScreenBlock extends Block implements EntityBlock {
     public static final MapCodec<ScreenBlock> CODEC = simpleCodec(ScreenBlock::new);
+    public static final DirectionProperty PITCH = DirectionProperty.create("pitch", Direction.NORTH, Direction.UP, Direction.DOWN);
+    public static final DirectionProperty YAW = DirectionProperty.create("yaw", Direction.Plane.HORIZONTAL);
 
     private final int tier;
 
@@ -35,7 +37,9 @@ public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlo
     public ScreenBlock(final BlockBehaviour.Properties properties, final int tier) {
         super(properties);
         this.tier = Math.clamp(tier, 0, 2);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        registerDefaultState(stateDefinition.any()
+            .setValue(PITCH, Direction.NORTH)
+            .setValue(YAW, Direction.NORTH));
     }
 
     public int tier() {
@@ -43,7 +47,7 @@ public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlo
     }
 
     @Override
-    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+    protected MapCodec<? extends Block> codec() {
         return CODEC;
     }
 
@@ -83,7 +87,7 @@ public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlo
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
-            final ScreenHitMapper.ScreenClick click = ScreenHitMapper.screenCoordinates(state.getValue(FACING), pos, hitResult, screen.renderWidth(), screen.renderHeight());
+            final ScreenHitMapper.ScreenClick click = ScreenHitMapper.screenCoordinates(state, pos, hitResult, screen.renderWidth(), screen.renderHeight());
             if (click == null) {
                 return InteractionResult.PASS;
             }
@@ -95,21 +99,46 @@ public class ScreenBlock extends HorizontalDirectionalBlock implements EntityBlo
 
     @Override
     public BlockState getStateForPlacement(final BlockPlaceContext context) {
-        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        final Direction clickedFace = context.getClickedFace();
+        final Direction yaw = clickedFace.getAxis().isHorizontal()
+            ? clickedFace
+            : context.getHorizontalDirection().getOpposite();
+        final Direction pitch = clickedFace.getAxis().isVertical() ? clickedFace : Direction.NORTH;
+        return defaultBlockState()
+            .setValue(PITCH, pitch)
+            .setValue(YAW, yaw);
     }
 
     @Override
     protected BlockState rotate(final BlockState state, final Rotation rotation) {
-        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+        return state.setValue(YAW, rotation.rotate(state.getValue(YAW)));
     }
 
     @Override
     protected BlockState mirror(final BlockState state, final Mirror mirror) {
-        return state.rotate(mirror.getRotation(state.getValue(FACING)));
+        return state.rotate(mirror.getRotation(state.getValue(YAW)));
     }
 
     @Override
     protected void createBlockStateDefinition(final StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(PITCH, YAW);
+    }
+
+    public static Direction facing(final BlockState state) {
+        final Direction pitch = pitch(state);
+        return pitch.getAxis().isVertical() ? pitch : yaw(state);
+    }
+
+    public static Direction up(final BlockState state) {
+        final Direction pitch = pitch(state);
+        return pitch.getAxis().isVertical() ? yaw(state) : Direction.UP;
+    }
+
+    public static Direction pitch(final BlockState state) {
+        return state != null && state.hasProperty(PITCH) ? state.getValue(PITCH) : Direction.NORTH;
+    }
+
+    public static Direction yaw(final BlockState state) {
+        return state != null && state.hasProperty(YAW) ? state.getValue(YAW) : Direction.NORTH;
     }
 }
