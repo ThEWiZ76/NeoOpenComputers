@@ -47,6 +47,13 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private static final String TAG_BUFFER = "buffer";
     private static final String TAG_NODE = "node";
     private static final String TAG_RENDER_COLOR = "renderColorRGB";
+    private static final String TAG_LAYOUT_ORIGIN_X = "layoutOriginX";
+    private static final String TAG_LAYOUT_ORIGIN_Y = "layoutOriginY";
+    private static final String TAG_LAYOUT_ORIGIN_Z = "layoutOriginZ";
+    private static final String TAG_LAYOUT_WIDTH = "layoutWidth";
+    private static final String TAG_LAYOUT_HEIGHT = "layoutHeight";
+    private static final String TAG_LAYOUT_LOCAL_X = "layoutLocalX";
+    private static final String TAG_LAYOUT_LOCAL_Y = "layoutLocalY";
 
     private double energyCostPerTick;
     private int tier;
@@ -508,7 +515,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     }
 
     public boolean isRenderOrigin() {
-        return screenLayout().origin.equals(worldPosition);
+        return renderLayout().origin.equals(worldPosition);
     }
 
     public ScreenBlockEntity originScreen() {
@@ -523,19 +530,26 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     }
 
     public int renderBlockWidth() {
-        return screenLayout().width;
+        return renderLayout().width;
     }
 
     public int renderBlockHeight() {
-        return screenLayout().height;
+        return renderLayout().height;
     }
 
     public int localBlockX() {
-        return screenLayout().localX;
+        return renderLayout().localX;
     }
 
     public int localBlockY() {
-        return screenLayout().localY;
+        return renderLayout().localY;
+    }
+
+    private ScreenLayout renderLayout() {
+        if (lastLayoutWidth > 0 && lastLayoutHeight > 0 && (level == null || level.isClientSide)) {
+            return new ScreenLayout(lastLayoutOrigin == null ? BlockPos.ZERO : lastLayoutOrigin, lastLayoutWidth, lastLayoutHeight, lastLayoutLocalX, lastLayoutLocalY);
+        }
+        return screenLayout();
     }
 
     private ScreenLayout screenLayout() {
@@ -813,6 +827,16 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         precisionMode = nbt.getBoolean("precisionMode");
         touchModeInverted = nbt.getBoolean("touchModeInverted");
         renderingEnabled = !nbt.contains("renderingEnabled") || nbt.getBoolean("renderingEnabled");
+        if (nbt.contains(TAG_LAYOUT_WIDTH) && nbt.contains(TAG_LAYOUT_HEIGHT)) {
+            lastLayoutOrigin = new BlockPos(
+                nbt.getInt(TAG_LAYOUT_ORIGIN_X),
+                nbt.getInt(TAG_LAYOUT_ORIGIN_Y),
+                nbt.getInt(TAG_LAYOUT_ORIGIN_Z));
+            lastLayoutWidth = nbt.getInt(TAG_LAYOUT_WIDTH);
+            lastLayoutHeight = nbt.getInt(TAG_LAYOUT_HEIGHT);
+            lastLayoutLocalX = nbt.getInt(TAG_LAYOUT_LOCAL_X);
+            lastLayoutLocalY = nbt.getInt(TAG_LAYOUT_LOCAL_Y);
+        }
         if (nbt.contains(TAG_BUFFER)) {
             buffer.load(nbt.getCompound(TAG_BUFFER));
         }
@@ -841,6 +865,16 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         nbt.putBoolean("precisionMode", precisionMode);
         nbt.putBoolean("touchModeInverted", touchModeInverted);
         nbt.putBoolean("renderingEnabled", renderingEnabled);
+        if (lastLayoutWidth > 0 && lastLayoutHeight > 0) {
+            final BlockPos layoutOrigin = lastLayoutOrigin == null ? BlockPos.ZERO : lastLayoutOrigin;
+            nbt.putInt(TAG_LAYOUT_ORIGIN_X, layoutOrigin.getX());
+            nbt.putInt(TAG_LAYOUT_ORIGIN_Y, layoutOrigin.getY());
+            nbt.putInt(TAG_LAYOUT_ORIGIN_Z, layoutOrigin.getZ());
+            nbt.putInt(TAG_LAYOUT_WIDTH, lastLayoutWidth);
+            nbt.putInt(TAG_LAYOUT_HEIGHT, lastLayoutHeight);
+            nbt.putInt(TAG_LAYOUT_LOCAL_X, lastLayoutLocalX);
+            nbt.putInt(TAG_LAYOUT_LOCAL_Y, lastLayoutLocalY);
+        }
         final CompoundTag bufferTag = new CompoundTag();
         buffer.save(bufferTag);
         nbt.put(TAG_BUFFER, bufferTag);

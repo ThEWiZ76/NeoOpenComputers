@@ -141,6 +141,28 @@ final class ScreenBlockEntityTest {
     }
 
     @Test
+    void syncsConnectedLayoutForClientRenderer() throws Exception {
+        OpenComputersApi.initialize();
+        ScreenBlockEntity saved = allocateScreen();
+        initializeBuffer(saved);
+        setField(saved, "lastLayoutWidth", 3);
+        setField(saved, "lastLayoutHeight", 2);
+        setField(saved, "lastLayoutLocalX", 1);
+        setField(saved, "lastLayoutLocalY", 0);
+        CompoundTag tag = new CompoundTag();
+
+        saved.save(tag);
+        ScreenBlockEntity loaded = allocateScreen();
+        initializeBuffer(loaded);
+        loaded.load(tag);
+
+        assertEquals(3, loaded.renderBlockWidth());
+        assertEquals(2, loaded.renderBlockHeight());
+        assertEquals(1, loaded.localBlockX());
+        assertEquals(0, loaded.localBlockY());
+    }
+
+    @Test
     void usesConfiguredScreenResolutionTiers() throws Exception {
         withCachedConfig(ModSettings.SCREEN_WIDTHS_BY_TIER, List.of(7, 9, 11), () ->
             withCachedConfig(ModSettings.SCREEN_HEIGHTS_BY_TIER, List.of(3, 5, 13), () -> {
