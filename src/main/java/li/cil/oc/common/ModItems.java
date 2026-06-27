@@ -220,6 +220,7 @@ public final class ModItems {
     public static final DeferredItem<Item> MICROCHIP_TIER1 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER1, new Item.Properties());
     public static final DeferredItem<Item> MICROCHIP_TIER2 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER2, new Item.Properties());
     public static final DeferredItem<Item> MICROCHIP_TIER3 = ITEMS.registerSimpleItem(ModContentIds.MICROCHIP_TIER3, new Item.Properties());
+    public static final DeferredItem<Item> DIAMOND_CHIP = ITEMS.registerSimpleItem(ModContentIds.DIAMOND_CHIP, new Item.Properties());
     public static final DeferredItem<Item> ALU = ITEMS.registerSimpleItem(ModContentIds.ALU, new Item.Properties());
     public static final DeferredItem<Item> CONTROL_UNIT = ITEMS.registerSimpleItem(ModContentIds.CONTROL_UNIT, new Item.Properties());
     public static final DeferredItem<Item> DISK_PLATTER = ITEMS.registerSimpleItem(ModContentIds.DISK_PLATTER, new Item.Properties());

@@ -57,6 +57,7 @@ public final class ModContentIds {
     public static final String DATABASE_UPGRADE_TIER2 = "database_upgrade_tier2";
     public static final String DATABASE_UPGRADE_TIER3 = "database_upgrade_tier3";
     public static final String DEBUG_CARD = "debug_card";
+    public static final String DIAMOND_CHIP = "diamond_chip";
     public static final String DISASSEMBLER = "disassembler";
     public static final String DISASSEMBLER_BLOCK_ENTITY = "disassembler";
     public static final String DISASSEMBLER_MENU = "disassembler";

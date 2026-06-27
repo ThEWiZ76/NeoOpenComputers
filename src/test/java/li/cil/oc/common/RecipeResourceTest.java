@@ -86,6 +86,7 @@ final class RecipeResourceTest {
             ModContentIds.DATABASE_UPGRADE_TIER1,
             ModContentIds.DATABASE_UPGRADE_TIER2,
             ModContentIds.DATABASE_UPGRADE_TIER3,
+            ModContentIds.DIAMOND_CHIP,
             ModContentIds.DISASSEMBLER,
             ModContentIds.DISK_DRIVE,
             ModContentIds.DISK_DRIVE_MOUNTABLE,
@@ -753,6 +754,17 @@ final class RecipeResourceTest {
                 .getAsJsonObject("minecraft:block_state")
                 .get("color").getAsString());
         }
+    }
+
+    @Test
+    void diamondChipRecipeUsesUpstreamCuttingWireSplit() throws IOException {
+        JsonObject recipe = readJson(RECIPE_ROOT.resolve(ModContentIds.DIAMOND_CHIP + ".json"));
+
+        assertEquals("minecraft:crafting_shapeless", recipe.get("type").getAsString());
+        assertIngredientItem(recipe, "neoopencomputers:" + ModContentIds.CUTTING_WIRE);
+        assertIngredientItem(recipe, "minecraft:diamond");
+        assertEquals("neoopencomputers:" + ModContentIds.DIAMOND_CHIP, recipe.getAsJsonObject("result").get("id").getAsString());
+        assertResultCount(recipe, 6);
     }
 
     @Test

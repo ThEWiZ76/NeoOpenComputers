@@ -64,6 +64,7 @@ final class ModContentRegistrationTest {
             Map.entry("alu", ModContentIds.ALU),
             Map.entry("control_unit", ModContentIds.CONTROL_UNIT),
             Map.entry("disk_platter", ModContentIds.DISK_PLATTER),
+            Map.entry("diamond_chip", ModContentIds.DIAMOND_CHIP),
             Map.entry("interweb", ModContentIds.INTERWEB),
             Map.entry("ink_cartridge_empty", ModContentIds.INK_CARTRIDGE_EMPTY),
             Map.entry("ink_cartridge", ModContentIds.INK_CARTRIDGE),

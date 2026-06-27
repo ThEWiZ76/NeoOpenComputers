@@ -139,6 +139,21 @@ final class ModContentCatalogTest {
     }
 
     @Test
+    void registersUpstreamDiamondChipApiNames() throws ReflectiveOperationException {
+        final ItemRegistry registry = new ItemRegistry();
+
+        Method register = ModContentCatalog.class.getDeclaredMethod("registerDiamondChip", ItemRegistry.class, net.minecraft.world.item.Item.class);
+        register.invoke(null, registry, null);
+
+        assertNotNull(registry.get(ModContentIds.DIAMOND_CHIP));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_DIAMOND_CHIP));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_DIAMOND_CHIP_UPSTREAM));
+        assertEquals(ModContentIds.DIAMOND_CHIP, registry.get(ModContentIds.DIAMOND_CHIP).name());
+        assertEquals(ModContentCatalog.COMPAT_DIAMOND_CHIP, registry.get(ModContentCatalog.COMPAT_DIAMOND_CHIP).name());
+        assertEquals(ModContentCatalog.COMPAT_DIAMOND_CHIP_UPSTREAM, registry.get(ModContentCatalog.COMPAT_DIAMOND_CHIP_UPSTREAM).name());
+    }
+
+    @Test
     void registersInitialApiItemNames() throws ReflectiveOperationException {
         final ItemRegistry registry = new ItemRegistry();
 

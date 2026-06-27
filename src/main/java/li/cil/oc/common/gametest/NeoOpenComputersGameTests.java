@@ -4108,6 +4108,18 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void diamondChipRecipeUsesUpstreamCuttingWireSplit(final GameTestHelper helper) {
+        helper.assertTrue(API.items.get("diamond_chip") != null, "Diamond Chip missing local API name");
+        helper.assertTrue(API.items.get("chipDiamond") != null, "Diamond Chip missing upstream chipDiamond API name");
+        helper.assertTrue(API.items.get("chipdiamond") != null, "Diamond Chip missing lowercase upstream API name");
+
+        assertCraftsItem(helper, ModItems.DIAMOND_CHIP.get(), CraftingInput.of(2, 1, List.of(
+            new ItemStack(ModItems.CUTTING_WIRE.get()), new ItemStack(Items.DIAMOND)
+        )), 6);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void communicationCardRecipesUseUpstreamDefaultInputs(final GameTestHelper helper) {
         assertCraftsItem(helper, ModItems.TRANSISTOR.get(), CraftingInput.of(3, 3, List.of(
             new ItemStack(Items.IRON_NUGGET), new ItemStack(Items.IRON_NUGGET), new ItemStack(Items.IRON_NUGGET),

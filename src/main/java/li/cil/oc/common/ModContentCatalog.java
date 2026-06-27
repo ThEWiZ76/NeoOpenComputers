@@ -24,6 +24,8 @@ public final class ModContentCatalog {
     public static final String COMPAT_CIRCUIT_CHIP_TIER1_UPSTREAM = "chip1";
     public static final String COMPAT_CIRCUIT_CHIP_TIER2_UPSTREAM = "chip2";
     public static final String COMPAT_CIRCUIT_CHIP_TIER3_UPSTREAM = "chip3";
+    public static final String COMPAT_DIAMOND_CHIP = "chipDiamond";
+    public static final String COMPAT_DIAMOND_CHIP_UPSTREAM = "chipdiamond";
     public static final String COMPAT_COMPONENT_BUS_TIER1 = "componentBus1";
     public static final String COMPAT_COMPONENT_BUS_TIER2 = "componentBus2";
     public static final String COMPAT_COMPONENT_BUS_TIER3 = "componentBus3";
@@ -346,6 +348,7 @@ public final class ModContentCatalog {
                 ModItems.BUTTON_GROUP.get(),
                 ModItems.ARROW_KEYS.get(),
                 ModItems.NUM_PAD.get());
+            registerDiamondChip(registry, ModItems.DIAMOND_CHIP.get());
             registerEndstoneBlock(registry, ModBlocks.ENDSTONE.get(), ModItems.ENDSTONE.get());
         }
     }
@@ -456,6 +459,12 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.ENDSTONE, endstoneBlock, endstoneItem);
         registry.register(COMPAT_STONE_ENDSTONE, endstoneBlock, endstoneItem);
         registry.register(COMPAT_STONE_ENDSTONE_UPSTREAM, endstoneBlock, endstoneItem);
+    }
+
+    static void registerDiamondChip(final ItemRegistry registry, final Item diamondChipItem) {
+        registry.register(ModContentIds.DIAMOND_CHIP, null, diamondChipItem);
+        registry.register(COMPAT_DIAMOND_CHIP, null, diamondChipItem);
+        registry.register(COMPAT_DIAMOND_CHIP_UPSTREAM, null, diamondChipItem);
     }
 
     static void register(
