@@ -15,11 +15,18 @@ public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
     public static final ResourceLocation SLOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/slot.png");
 
     private static final int SLOT_TEXTURE_SIZE = 18;
+    private static final int TITLE_TEXT_X = 8;
+    private static final int TITLE_TEXT_Y = 6;
+    private static final int INVENTORY_TEXT_X = 8;
+    private static final int INVENTORY_TEXT_Y = 72;
 
     public DiskDriveScreen(final DiskDriveMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
         imageHeight = 166;
-        inventoryLabelY = imageHeight - 94;
+        titleLabelX = TITLE_TEXT_X;
+        titleLabelY = TITLE_TEXT_Y;
+        inventoryLabelX = INVENTORY_TEXT_X;
+        inventoryLabelY = INVENTORY_TEXT_Y;
     }
 
     @Override
@@ -58,7 +65,31 @@ public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
         return SLOT_TEXTURE_SIZE;
     }
 
+    public static int slotDrawnWidth() {
+        return SLOT_TEXTURE_SIZE;
+    }
+
+    public static int slotDrawnHeight() {
+        return SLOT_TEXTURE_SIZE;
+    }
+
+    public static int titleTextX() {
+        return TITLE_TEXT_X;
+    }
+
+    public static int titleTextY() {
+        return TITLE_TEXT_Y;
+    }
+
+    public static int inventoryTextX() {
+        return INVENTORY_TEXT_X;
+    }
+
+    public static int inventoryTextY() {
+        return INVENTORY_TEXT_Y;
+    }
+
     private static void drawSlot(final GuiGraphics guiGraphics, final int left, final int top) {
-        guiGraphics.blit(SLOT_TEXTURE, left, top, 0, 0, SLOT_TEXTURE_SIZE, SLOT_TEXTURE_SIZE, slotTextureWidth(), slotTextureHeight());
+        guiGraphics.blit(SLOT_TEXTURE, left, top, slotDrawnWidth(), slotDrawnHeight(), 0, 0, SLOT_TEXTURE_SIZE, SLOT_TEXTURE_SIZE, slotTextureWidth(), slotTextureHeight());
     }
 }

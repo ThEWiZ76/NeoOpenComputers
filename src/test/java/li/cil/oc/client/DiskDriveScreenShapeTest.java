@@ -47,10 +47,30 @@ final class DiskDriveScreenShapeTest {
         assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/gui/slot.png")));
         assertEquals(18, DiskDriveScreen.slotTextureWidth());
         assertEquals(18, DiskDriveScreen.slotTextureHeight());
+        assertEquals(18, DiskDriveScreen.slotDrawnWidth());
+        assertEquals(18, DiskDriveScreen.slotDrawnHeight());
+        assertEquals(8, DiskDriveScreen.titleTextX());
+        assertEquals(6, DiskDriveScreen.titleTextY());
+        assertEquals(8, DiskDriveScreen.inventoryTextX());
+        assertEquals(72, DiskDriveScreen.inventoryTextY());
 
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/DiskDriveScreen.java"));
         assertTrue(!source.contains("0xFF2E3440"));
         assertTrue(!source.contains("0xFF3B4252"));
+    }
+
+    @Test
+    void diskDriveRegistersInsertedMediaRenderer() throws Exception {
+        assertTrue(Files.exists(Path.of("src/main/java/li/cil/oc/client/DiskDriveBlockEntityRenderer.java")));
+
+        final String rendererSource = Files.readString(Path.of("src/main/java/li/cil/oc/client/DiskDriveBlockEntityRenderer.java"));
+        assertTrue(rendererSource.contains("BlockEntityRenderer<DiskDriveBlockEntity>"));
+        assertTrue(rendererSource.contains("getItem(DiskDriveBlockEntity.SLOT_FLOPPY)"));
+        assertTrue(rendererSource.contains("ItemDisplayContext.FIXED"));
+        assertTrue(rendererSource.contains("renderStatic"));
+
+        final String clientSource = Files.readString(Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java"));
+        assertTrue(clientSource.contains("DiskDriveBlockEntityRenderer::new"));
     }
 
     @Test

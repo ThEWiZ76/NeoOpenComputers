@@ -96,5 +96,8 @@ final class BlockModelResourceTest {
         }
 
         assertTrue(Files.exists(BLOCK_MODEL_ROOT.resolve("disk_drive_loaded.json")));
+
+        final String loadedModel = Files.readString(BLOCK_MODEL_ROOT.resolve("disk_drive_loaded.json"));
+        assertTrue(!loadedModel.contains("diskdrive_front_activity"));
     }
 }

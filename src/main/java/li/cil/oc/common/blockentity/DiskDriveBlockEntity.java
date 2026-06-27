@@ -22,7 +22,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.Connection;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
@@ -196,6 +200,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
             setChanged();
             refreshDiskEnvironment();
             updateMediaBlockState();
+            syncClientData();
         }
         return removed;
     }
@@ -206,6 +211,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         if (!removed.isEmpty()) {
             refreshDiskEnvironment();
             updateMediaBlockState();
+            syncClientData();
         }
         return removed;
     }
@@ -222,6 +228,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         setChanged();
         refreshDiskEnvironment();
         updateMediaBlockState();
+        syncClientData();
     }
 
     @Override
@@ -249,6 +256,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         setChanged();
         refreshDiskEnvironment();
         updateMediaBlockState();
+        syncClientData();
     }
 
     @Override
@@ -299,6 +307,28 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        saveClientData(tag, registries);
+        return tag;
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        loadClientData(packet.getTag(), registries);
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        loadClientData(tag, registries);
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNodes();
@@ -332,6 +362,22 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         if (state.hasProperty(DiskDriveBlock.HAS_MEDIA) && state.getValue(DiskDriveBlock.HAS_MEDIA) != !isEmpty()) {
             level.setBlock(worldPosition, state.setValue(DiskDriveBlock.HAS_MEDIA, !isEmpty()), Block.UPDATE_ALL);
         }
+    }
+
+    private void syncClientData() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        final BlockState state = level.getBlockState(worldPosition);
+        level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_CLIENTS);
+    }
+
+    private void saveClientData(final CompoundTag tag, final HolderLookup.Provider registries) {
+        ContainerHelper.saveAllItems(tag, items, registries);
+    }
+
+    private void loadClientData(final CompoundTag tag, final HolderLookup.Provider registries) {
+        ContainerHelper.loadAllItems(tag, items, registries);
     }
 
     private void connectDiskEnvironment() {
