@@ -75,6 +75,12 @@ final class BlockModelResourceTest {
                 assertTrue(faces.has(face), face);
                 assertTrue(faces.getAsJsonObject(face).has("tintindex"), face);
             }
+            assertTrue("#front".equals(faces.getAsJsonObject("north").get("texture").getAsString()));
+            assertTrue("#back".equals(faces.getAsJsonObject("south").get("texture").getAsString()));
+            assertTrue("#side".equals(faces.getAsJsonObject("east").get("texture").getAsString()));
+            assertTrue("#side".equals(faces.getAsJsonObject("west").get("texture").getAsString()));
+            assertTrue("#top".equals(faces.getAsJsonObject("up").get("texture").getAsString()));
+            assertTrue("#top".equals(faces.getAsJsonObject("down").get("texture").getAsString()));
         }
 
         final List<String> modelNames = List.of("screen_tier1.json", "screen_tier2.json", "screen_tier3.json");
@@ -83,9 +89,11 @@ final class BlockModelResourceTest {
                 final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
                 assertTrue("neoopencomputers:block/screen_panel".equals(model.get("parent").getAsString()), modelName);
                 final JsonObject textures = model.getAsJsonObject("textures");
-                assertTrue(textures.get("front").getAsString().startsWith("neoopencomputers:block/screen/f"), modelName);
-                assertTrue(textures.get("back").getAsString().startsWith("neoopencomputers:block/screen/b"), modelName);
-                assertTrue(textures.get("particle").getAsString().startsWith("neoopencomputers:block/screen/f"), modelName);
+                assertTrue("neoopencomputers:block/screen/f".equals(textures.get("front").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen/b2".equals(textures.get("back").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen/b2".equals(textures.get("side").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen/b".equals(textures.get("top").getAsString()), modelName);
+                assertTrue("neoopencomputers:block/screen/f".equals(textures.get("particle").getAsString()), modelName);
             }
         }
     }

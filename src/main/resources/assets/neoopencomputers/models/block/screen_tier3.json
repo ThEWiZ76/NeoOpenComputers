@@ -1,9 +1,10 @@
 {
   "parent": "neoopencomputers:block/screen_panel",
   "textures": {
-    "particle": "neoopencomputers:block/screen/f2",
-    "front": "neoopencomputers:block/screen/f2",
+    "particle": "neoopencomputers:block/screen/f",
+    "front": "neoopencomputers:block/screen/f",
     "back": "neoopencomputers:block/screen/b2",
-    "side": "neoopencomputers:block/screen/b2"
+    "side": "neoopencomputers:block/screen/b2",
+    "top": "neoopencomputers:block/screen/b"
   }
 }

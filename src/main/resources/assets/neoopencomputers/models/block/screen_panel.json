@@ -4,7 +4,8 @@
     "particle": "neoopencomputers:block/screen/f",
     "front": "neoopencomputers:block/screen/f",
     "back": "neoopencomputers:block/screen/b",
-    "side": "neoopencomputers:block/screen/b"
+    "side": "neoopencomputers:block/screen/b",
+    "top": "neoopencomputers:block/screen/b"
   },
   "elements": [
     {
@@ -15,8 +16,8 @@
         "south": { "uv": [ 0, 0, 16, 16 ], "texture": "#back", "cullface": "south", "tintindex": 0 },
         "east": { "uv": [ 0, 0, 16, 16 ], "texture": "#side", "cullface": "east", "tintindex": 0 },
         "west": { "uv": [ 0, 0, 16, 16 ], "texture": "#side", "cullface": "west", "tintindex": 0 },
-        "up": { "uv": [ 0, 0, 16, 16 ], "texture": "#side", "cullface": "up", "tintindex": 0 },
-        "down": { "uv": [ 0, 0, 16, 16 ], "texture": "#side", "cullface": "down", "tintindex": 0 }
+        "up": { "uv": [ 0, 0, 16, 16 ], "texture": "#top", "cullface": "up", "tintindex": 0 },
+        "down": { "uv": [ 0, 0, 16, 16 ], "texture": "#top", "cullface": "down", "tintindex": 0 }
       }
     }
   ]
