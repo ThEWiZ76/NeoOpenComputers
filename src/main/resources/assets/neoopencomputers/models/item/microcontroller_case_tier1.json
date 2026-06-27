@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:item/iron_ingot"
+    "layer0": "neoopencomputers:item/microcontroller_case_tier1"
   }
 }
