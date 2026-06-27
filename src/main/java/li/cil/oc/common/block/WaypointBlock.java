@@ -8,8 +8,8 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -20,7 +20,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 @SuppressWarnings("deprecation")
-public class WaypointBlock extends HorizontalDirectionalBlock implements EntityBlock {
+public class WaypointBlock extends DirectionalBlock implements EntityBlock {
     public static final MapCodec<WaypointBlock> CODEC = simpleCodec(WaypointBlock::new);
     private static final VoxelShape SHAPE = Block.box(3, 0, 3, 13, 13, 13);
 
@@ -30,7 +30,7 @@ public class WaypointBlock extends HorizontalDirectionalBlock implements EntityB
     }
 
     @Override
-    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+    protected MapCodec<? extends DirectionalBlock> codec() {
         return CODEC;
     }
 
@@ -66,7 +66,7 @@ public class WaypointBlock extends HorizontalDirectionalBlock implements EntityB
 
     @Override
     public BlockState getStateForPlacement(final BlockPlaceContext context) {
-        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        return defaultBlockState().setValue(FACING, context.getNearestLookingDirection().getOpposite());
     }
 
     @Override

@@ -3,6 +3,8 @@
     "facing=north": { "model": "neoopencomputers:block/waypoint" },
     "facing=east": { "model": "neoopencomputers:block/waypoint", "y": 90 },
     "facing=south": { "model": "neoopencomputers:block/waypoint", "y": 180 },
-    "facing=west": { "model": "neoopencomputers:block/waypoint", "y": 270 }
+    "facing=west": { "model": "neoopencomputers:block/waypoint", "y": 270 },
+    "facing=up": { "model": "neoopencomputers:block/waypoint", "x": 90 },
+    "facing=down": { "model": "neoopencomputers:block/waypoint", "x": -90 }
   }
 }
