@@ -85,6 +85,22 @@ final class OpenOsResourceTest {
     }
 
     @Test
+    void bundledOppmInstallFileOpensForCatCommand() throws IOException {
+        FileSystem fileSystem = new FileSystemRegistry().fromClass(getClass(), "neoopencomputers", "loot/oppm");
+
+        assertNotNull(fileSystem);
+        int handle = fileSystem.open(".install", Mode.Read);
+        byte[] buffer = new byte[1024];
+        int read = fileSystem.getHandle(handle).read(buffer);
+        fileSystem.getHandle(handle).close();
+
+        assertTrue(read > 0);
+        String install = new String(buffer, 0, read, StandardCharsets.UTF_8);
+        assertTrue(install.contains("install.root"));
+        assertTrue(install.contains("oppm install"));
+    }
+
+    @Test
     void bundledLootDescriptorsIncludeUpstreamCatalog() {
         List<ModLootDisks.Descriptor> descriptors = ModLootDisks.bundledDescriptors();
         Map<String, ModLootDisks.Descriptor> byPath = descriptors.stream()

@@ -261,6 +261,14 @@ final class FileSystemRegistry implements FileSystemAPI {
         private final Map<Integer, ResourceHandle> handles = new LinkedHashMap<>();
         private int nextHandle = 1;
 
+        private ResourceFileSystem() {
+            preloadHandleClass();
+        }
+
+        private static void preloadHandleClass() {
+            Class<?> ignored = ResourceHandle.class;
+        }
+
         private static ResourceFileSystem fromDirectory(final Path rootPath) throws IOException {
             if (!Files.isDirectory(rootPath)) {
                 return null;

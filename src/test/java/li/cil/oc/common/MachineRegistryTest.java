@@ -802,6 +802,33 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void failedStartBeepsNoCpuLikeUpstream() {
+        OpenComputersApi.initialize();
+        API.driver = new DriverRegistry();
+        SimpleMachine machine = assertInstanceOf(SimpleMachine.class, API.machine.create(new TestHost()));
+        machine.onHostChanged();
+
+        assertFalse(machine.start());
+
+        assertEquals("-", machine.lastBeepPattern());
+        assertEquals("gui.Error.NoCPU", machine.lastError());
+    }
+
+    @Test
+    void failedStartBeepsInitFailureLikeUpstream() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new InitFailProcessorDriver());
+        API.driver = driverRegistry;
+        SimpleMachine machine = assertInstanceOf(SimpleMachine.class, API.machine.create(new TestHost()));
+        machine.onHostChanged();
+
+        assertFalse(machine.start());
+
+        assertEquals("--", machine.lastBeepPattern());
+    }
+
+    @Test
     void hostChangedBindsMachineAwareArchitecture() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();
@@ -1602,6 +1629,30 @@ final class MachineRegistryTest {
         @Override
         public Class<? extends Architecture> architecture(final ItemStack stack) {
             return TestArchitecture.class;
+        }
+    }
+
+    private static final class InitFailProcessorDriver extends TestDriver implements Processor {
+        @Override
+        public String slot(final ItemStack stack) {
+            return Slot.CPU;
+        }
+
+        @Override
+        public int supportedComponents(final ItemStack stack) {
+            return 4;
+        }
+
+        @Override
+        public Class<? extends Architecture> architecture(final ItemStack stack) {
+            return InitFailArchitecture.class;
+        }
+    }
+
+    private static final class InitFailArchitecture extends TrackingArchitecture {
+        @Override
+        public boolean initialize() {
+            return false;
         }
     }
 

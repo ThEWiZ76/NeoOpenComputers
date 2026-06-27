@@ -721,9 +721,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     public boolean start() {
         final boolean wasRunning = running;
         if (architecture == null && host != null) {
+            beep("-");
+            crash("gui.Error.NoCPU");
             return false;
         }
         if (architecture != null && !architecture.isInitialized() && !architecture.initialize()) {
+            beep("--");
             return false;
         }
         lastError = null;
