@@ -37,6 +37,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
 import java.util.EnumSet;
@@ -255,8 +256,7 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     }
 
     public boolean runChargeCycle() {
-        final ItemStack stack = items.get(SLOT_CHARGEABLE);
-        if (!ItemCharges.canCharge(stack) || chargeSpeed <= 0D) {
+        if (chargeSpeed <= 0D) {
             hasPower = false;
             return false;
         }
@@ -267,9 +267,21 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
             return false;
         }
 
-        final double available = ModSettings.ignorePower() ? want : want + node.changeBuffer(-want);
+        final boolean charged = chargeStack(items.get(SLOT_CHARGEABLE), want) | chargeNearbyPlayerEquipment(want);
+        hasPower = charged;
+        if (charged) {
+            setChanged();
+        }
+        return charged;
+    }
+
+    private boolean chargeStack(final ItemStack stack, final double charge) {
+        if (!ItemCharges.canCharge(stack) || charge <= 0D) {
+            return false;
+        }
+
+        final double available = ModSettings.ignorePower() ? charge : charge + node.changeBuffer(-charge);
         if (available <= 0D) {
-            hasPower = false;
             return false;
         }
 
@@ -278,11 +290,22 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
         if (!ModSettings.ignorePower() && surplus > 0D) {
             node.changeBuffer(surplus);
         }
-        hasPower = accepted > 0D;
-        if (accepted > 0D) {
-            setChanged();
+        return accepted > 0D;
+    }
+
+    private boolean chargeNearbyPlayerEquipment(final double charge) {
+        if (level == null || level.isClientSide) {
+            return false;
         }
-        return hasPower;
+
+        boolean charged = false;
+        final AABB bounds = new AABB(worldPosition).inflate(1D);
+        for (final Player player : level.getEntitiesOfClass(Player.class, bounds, Player::isAlive)) {
+            for (final ItemStack stack : player.getInventory().items) {
+                charged |= chargeStack(stack, charge);
+            }
+        }
+        return charged;
     }
 
     @Override

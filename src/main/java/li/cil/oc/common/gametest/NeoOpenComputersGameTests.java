@@ -7220,6 +7220,33 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void chargerChargesNearbyPlayerEquipmentLikeUpstream(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.CONVERTER_BUFFER, 100D, () ->
+            withCachedConfig(ModSettings.CHARGER_CHARGE_RATE_TABLET, 10D, () ->
+                withCachedConfig(ModSettings.MFU_TICK_FREQUENCY, 10, () -> {
+                    ModItemCharges.registerDefaults();
+                    final BlockPos chargerPos = new BlockPos(1, 1, 1);
+                    helper.setBlock(chargerPos, ModBlocks.CHARGER.get());
+                    Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(chargerPos));
+
+                    final ChargerBlockEntity charger = helper.getBlockEntity(chargerPos);
+                    final Connector connector = (Connector) charger.node();
+                    final Player player = helper.makeMockServerPlayerInLevel();
+                    final BlockPos absoluteChargerPos = helper.absolutePos(chargerPos);
+                    player.moveTo(absoluteChargerPos.getX() + 0.5D, absoluteChargerPos.getY() + 1D, absoluteChargerPos.getZ() + 0.5D);
+                    final ItemStack battery = new ItemStack(ModItems.BATTERY_UPGRADE_TIER1.get());
+                    player.getInventory().setItem(0, battery);
+                    charger.setChargeSpeed(0.5D);
+                    connector.changeBuffer(100D);
+
+                    helper.assertTrue(charger.runChargeCycle(), "Charger did not report charging nearby player equipment");
+                    helper.assertTrue(Double.compare(50D, ModItems.BATTERY_UPGRADE_TIER1.get().chargeStored(battery)) == 0, "Charger did not charge nearby player equipment using configured speed");
+                    helper.assertTrue(Double.compare(50D, connector.localBuffer()) == 0, "Charger did not consume matching OC power for nearby player equipment");
+                })));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void chargerWrenchInvertsRedstoneChargeSpeedLikeUpstream(final GameTestHelper helper) {
         ModWrenches.registerDefaults();
         final BlockPos chargerPos = new BlockPos(1, 1, 1);
