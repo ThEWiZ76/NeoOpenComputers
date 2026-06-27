@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:block/piston_top_sticky"
+    "layer0": "neoopencomputers:item/sticky_piston_upgrade"
   }
 }

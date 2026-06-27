@@ -30,7 +30,7 @@ final class ItemModelResourceTest {
                         continue;
                     }
                     final JsonObject textures = root.getAsJsonObject("textures");
-                    if (textures.has("layer0") && textures.get("layer0").getAsString().startsWith("minecraft:item/")) {
+                    if (textures.has("layer0") && isVanillaPlaceholder(textures.get("layer0").getAsString())) {
                         placeholders.add(model.getFileName() + " -> " + textures.get("layer0").getAsString());
                     }
                     if (textures.has("layer0") && textures.get("layer0").getAsString().startsWith("neoopencomputers:item/")) {
@@ -45,5 +45,9 @@ final class ItemModelResourceTest {
 
         assertTrue(placeholders.isEmpty(), "Item models still use vanilla placeholder textures: " + placeholders);
         assertTrue(missingTextures.isEmpty(), "Item models reference missing mod textures: " + missingTextures);
+    }
+
+    private static boolean isVanillaPlaceholder(final String texture) {
+        return texture.startsWith("minecraft:item/") || texture.startsWith("minecraft:block/");
     }
 }

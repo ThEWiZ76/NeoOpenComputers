@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:block/furnace_front"
+    "layer0": "neoopencomputers:item/generator_upgrade"
   }
 }
