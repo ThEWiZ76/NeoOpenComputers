@@ -64,6 +64,17 @@ final class ScreenRegistrationShapeTest {
     }
 
     @Test
+    void screenPlacementFacesVisibleFrontTowardPlayer() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+        final String method = source.substring(
+            source.indexOf("public BlockState getStateForPlacement"),
+            source.indexOf("protected BlockState rotate"));
+
+        assertTrue(method.contains("final Direction yaw = context.getHorizontalDirection();"));
+        assertTrue(!method.contains("final Direction yaw = context.getHorizontalDirection().getOpposite();"));
+    }
+
+    @Test
     void screenBlockEntityIsTextBuffer() throws NoSuchMethodException {
         final Constructor<ScreenBlockEntity> constructor = ScreenBlockEntity.class.getConstructor(BlockPos.class, BlockState.class);
 
@@ -71,5 +82,13 @@ final class ScreenRegistrationShapeTest {
         assertTrue(TextBuffer.class.isAssignableFrom(ScreenBlockEntity.class));
         assertTrue(DeviceInfo.class.isAssignableFrom(ScreenBlockEntity.class));
         assertArrayEquals(new Class<?>[]{BlockPos.class, BlockState.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void screenBlockOpensPhysicalTerminalGuiWhenKeyboardIsAttached() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+
+        assertTrue(source.contains("openPhysicalTerminal"));
+        assertTrue(source.contains("new TerminalMenu(containerId, playerInventory, screen.terminalSnapshot(), screen)"));
     }
 }

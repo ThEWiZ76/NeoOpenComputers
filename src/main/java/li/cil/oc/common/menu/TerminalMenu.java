@@ -1,6 +1,7 @@
 package li.cil.oc.common.menu;
 
 import li.cil.oc.common.ModMenus;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.component.TerminalScreenDelta;
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRegistry;
@@ -21,6 +22,7 @@ public class TerminalMenu extends AbstractContainerMenu {
 
     private TerminalScreenSnapshot snapshot;
     private final TerminalServerRackMountableEnvironment terminalServer;
+    private final ScreenBlockEntity physicalScreen;
     private final String terminalKey;
     private final Player player;
 
@@ -29,7 +31,7 @@ public class TerminalMenu extends AbstractContainerMenu {
     }
 
     public TerminalMenu(final int containerId, final Inventory playerInventory, final TerminalScreenSnapshot snapshot) {
-        this(containerId, playerInventory, snapshot, null);
+        this(containerId, playerInventory, snapshot, (TerminalServerRackMountableEnvironment) null);
     }
 
     public TerminalMenu(final int containerId, final Inventory playerInventory, final TerminalScreenSnapshot snapshot, final TerminalServerRackMountableEnvironment terminalServer) {
@@ -37,9 +39,24 @@ public class TerminalMenu extends AbstractContainerMenu {
     }
 
     public TerminalMenu(final int containerId, final Inventory playerInventory, final TerminalScreenSnapshot snapshot, final TerminalServerRackMountableEnvironment terminalServer, final String terminalKey) {
+        this(containerId, playerInventory, snapshot, terminalServer, null, terminalKey);
+    }
+
+    public TerminalMenu(final int containerId, final Inventory playerInventory, final TerminalScreenSnapshot snapshot, final ScreenBlockEntity physicalScreen) {
+        this(containerId, playerInventory, snapshot, null, physicalScreen, null);
+    }
+
+    private TerminalMenu(
+        final int containerId,
+        final Inventory playerInventory,
+        final TerminalScreenSnapshot snapshot,
+        final TerminalServerRackMountableEnvironment terminalServer,
+        final ScreenBlockEntity physicalScreen,
+        final String terminalKey) {
         super(ModMenus.TERMINAL.get(), containerId);
         this.snapshot = snapshot == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : snapshot;
         this.terminalServer = terminalServer;
+        this.physicalScreen = physicalScreen;
         this.terminalKey = terminalKey == null || terminalKey.isBlank() ? null : terminalKey;
         this.player = playerInventory == null ? null : playerInventory.player;
     }
@@ -50,6 +67,10 @@ public class TerminalMenu extends AbstractContainerMenu {
 
     public TerminalServerRackMountableEnvironment terminalServer() {
         return terminalServer;
+    }
+
+    public ScreenBlockEntity physicalScreen() {
+        return physicalScreen;
     }
 
     public void updateSnapshot(final TerminalScreenSnapshot snapshot) {
@@ -66,10 +87,13 @@ public class TerminalMenu extends AbstractContainerMenu {
     }
 
     TerminalScreenSnapshotPayload changedSnapshotPayload() {
-        if (terminalServer == null || !stillValid(player)) {
+        if (!stillValid(player)) {
             return null;
         }
-        final TerminalScreenSnapshot currentSnapshot = terminalServer.screenSnapshot();
+        final TerminalScreenSnapshot currentSnapshot = currentScreenSnapshot();
+        if (currentSnapshot == null) {
+            return null;
+        }
         if (snapshot.contentEquals(currentSnapshot)) {
             return null;
         }
@@ -78,10 +102,13 @@ public class TerminalMenu extends AbstractContainerMenu {
     }
 
     CustomPacketPayload changedScreenPayload() {
-        if (terminalServer == null || !stillValid(player)) {
+        if (!stillValid(player)) {
             return null;
         }
-        final TerminalScreenSnapshot currentSnapshot = terminalServer.screenSnapshot();
+        final TerminalScreenSnapshot currentSnapshot = currentScreenSnapshot();
+        if (currentSnapshot == null) {
+            return null;
+        }
         if (snapshot.contentEquals(currentSnapshot)) {
             return null;
         }
@@ -101,12 +128,25 @@ public class TerminalMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(final Player player) {
-        if (terminalServer == null) {
+        if (terminalServer == null && physicalScreen == null) {
             return true;
         }
-        return terminalServer.node() != null
+        if (terminalServer != null) {
+            return terminalServer.node() != null
             && TerminalServerRegistry.find(terminalServer.node().address()) == terminalServer
             && (terminalKey == null || terminalServer.allowsTerminalKey(terminalKey))
             && terminalServer.isUsableBy(player);
+        }
+        return !physicalScreen.isRemoved() && physicalScreen.hasKeyboard(player);
+    }
+
+    private TerminalScreenSnapshot currentScreenSnapshot() {
+        if (terminalServer != null) {
+            return terminalServer.screenSnapshot();
+        }
+        if (physicalScreen != null) {
+            return physicalScreen.terminalSnapshot();
+        }
+        return null;
     }
 }

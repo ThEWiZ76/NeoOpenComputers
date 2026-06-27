@@ -78,4 +78,13 @@ final class KeyboardRegistrationShapeTest {
         assertTrue(blockstate.contains("attach_face=up,facing=north"));
         assertTrue(blockstate.contains("attach_face=down,facing=north"));
     }
+
+    @Test
+    void keyboardBlockForwardsActivationToAttachedScreenTerminal() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/KeyboardBlock.java"));
+
+        assertTrue(source.contains("useWithoutItem"));
+        assertTrue(source.contains("findAdjacentScreen"));
+        assertTrue(source.contains("ScreenBlock.openPhysicalTerminal"));
+    }
 }

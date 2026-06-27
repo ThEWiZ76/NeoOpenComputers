@@ -53,6 +53,15 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererDrawsConnectedFrontOverlayClearlyInFrontOfStaticModel() throws IOException {
+        final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
+
+        assertTrue(renderer.contains("SCREEN_FRONT_Z"));
+        assertTrue(renderer.contains("-0.53F"));
+        assertTrue(!renderer.contains("-0.506F"));
+    }
+
+    @Test
     void printItemRendererClassExists() throws ClassNotFoundException {
         Class<?> renderer = Class.forName("li.cil.oc.client.PrintItemRenderer", false, getClass().getClassLoader());
 

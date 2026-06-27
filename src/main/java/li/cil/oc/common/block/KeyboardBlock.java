@@ -2,8 +2,11 @@ package li.cil.oc.common.block;
 
 import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -18,6 +21,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -66,6 +70,23 @@ public class KeyboardBlock extends HorizontalDirectionalBlock implements EntityB
     }
 
     @Override
+    protected InteractionResult useWithoutItem(
+        final BlockState state,
+        final Level level,
+        final BlockPos pos,
+        final Player player,
+        final BlockHitResult hitResult) {
+        final ScreenBlockEntity screen = findAdjacentScreen(state, level, pos);
+        if (screen == null) {
+            return InteractionResult.PASS;
+        }
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        return ScreenBlock.openPhysicalTerminal(screen, player);
+    }
+
+    @Override
     protected boolean canSurvive(final BlockState state, final LevelReader level, final BlockPos pos) {
         final Direction attachFace = state.getValue(ATTACH_FACE);
         final BlockPos supportPos = pos.relative(attachFace.getOpposite());
@@ -90,6 +111,29 @@ public class KeyboardBlock extends HorizontalDirectionalBlock implements EntityB
             .setValue(ATTACH_FACE, context.getClickedFace())
             .setValue(FACING, context.getHorizontalDirection().getOpposite());
         return state.canSurvive(context.getLevel(), context.getClickedPos()) ? state : null;
+    }
+
+    private static ScreenBlockEntity findAdjacentScreen(final BlockState state, final Level level, final BlockPos pos) {
+        final Direction attachFace = state.getValue(ATTACH_FACE);
+        final ScreenBlockEntity attached = screenAt(level, pos.relative(attachFace.getOpposite()));
+        if (attached != null) {
+            return attached;
+        }
+
+        final Direction forward = attachFace.getAxis().isVertical() ? state.getValue(FACING) : Direction.UP;
+        final ScreenBlockEntity inFront = screenAt(level, pos.relative(forward));
+        if (inFront != null) {
+            return inFront;
+        }
+
+        if (!attachFace.getAxis().isVertical()) {
+            return screenAt(level, pos.relative(forward.getOpposite()));
+        }
+        return null;
+    }
+
+    private static ScreenBlockEntity screenAt(final Level level, final BlockPos pos) {
+        return level.getBlockEntity(pos) instanceof ScreenBlockEntity screen ? screen : null;
     }
 
     @Override

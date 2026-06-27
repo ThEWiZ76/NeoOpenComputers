@@ -2,6 +2,7 @@ package li.cil.oc.common.menu;
 
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -33,6 +34,11 @@ final class TerminalMenuShapeTest {
             TerminalScreenSnapshot.class,
             TerminalServerRackMountableEnvironment.class,
             String.class);
+        final Constructor<TerminalMenu> physicalScreenConstructor = TerminalMenu.class.getConstructor(
+            int.class,
+            Inventory.class,
+            TerminalScreenSnapshot.class,
+            ScreenBlockEntity.class);
 
         assertTrue(AbstractContainerMenu.class.isAssignableFrom(TerminalMenu.class));
         assertArrayEquals(new Class<?>[]{int.class, Inventory.class}, clientConstructor.getParameterTypes());
@@ -43,6 +49,9 @@ final class TerminalMenuShapeTest {
         assertArrayEquals(
             new Class<?>[]{int.class, Inventory.class, TerminalScreenSnapshot.class, TerminalServerRackMountableEnvironment.class, String.class},
             keyedTerminalServerConstructor.getParameterTypes());
+        assertArrayEquals(
+            new Class<?>[]{int.class, Inventory.class, TerminalScreenSnapshot.class, ScreenBlockEntity.class},
+            physicalScreenConstructor.getParameterTypes());
     }
 
     @Test
@@ -77,6 +86,13 @@ final class TerminalMenuShapeTest {
         final Method method = TerminalMenu.class.getMethod("terminalServer");
 
         assertEquals(TerminalServerRackMountableEnvironment.class, method.getReturnType());
+    }
+
+    @Test
+    void terminalMenuExposesPhysicalScreenTarget() throws NoSuchMethodException {
+        final Method method = TerminalMenu.class.getMethod("physicalScreen");
+
+        assertEquals(ScreenBlockEntity.class, method.getReturnType());
     }
 
     @Test

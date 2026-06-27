@@ -2,6 +2,7 @@ package li.cil.oc.common.network;
 
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.menu.TerminalMenu;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -51,53 +52,88 @@ public final class TerminalNetworking {
     }
 
     static void applyTerminalKey(final AbstractContainerMenu containerMenu, final TerminalKeyPayload payload, final Player player) {
-        if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId() || menu.terminalServer() == null) {
+        if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId()) {
             return;
         }
         if (!acceptsTerminalMenu(menu, player)) {
             return;
         }
-        if (!acceptsTerminalInput(menu.terminalServer().screenSnapshot())) {
+        if (!acceptsTerminalInput(liveSnapshot(menu))) {
             return;
         }
+        final ScreenBlockEntity physicalScreen = menu.physicalScreen();
         if (payload.pressed()) {
-            menu.terminalServer().screen().keyDown((char) payload.character(), payload.keyCode(), player);
+            if (menu.terminalServer() != null) {
+                menu.terminalServer().screen().keyDown((char) payload.character(), payload.keyCode(), player);
+            } else if (physicalScreen != null) {
+                physicalScreen.keyDown((char) payload.character(), payload.keyCode(), player);
+            }
         } else {
-            menu.terminalServer().screen().keyUp((char) payload.character(), payload.keyCode(), player);
+            if (menu.terminalServer() != null) {
+                menu.terminalServer().screen().keyUp((char) payload.character(), payload.keyCode(), player);
+            } else if (physicalScreen != null) {
+                physicalScreen.keyUp((char) payload.character(), payload.keyCode(), player);
+            }
         }
     }
 
     static void applyTerminalClipboard(final AbstractContainerMenu containerMenu, final TerminalClipboardPayload payload, final Player player) {
-        if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId() || menu.terminalServer() == null) {
+        if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId()) {
             return;
         }
         if (!acceptsTerminalMenu(menu, player)) {
             return;
         }
-        if (!acceptsTerminalInput(menu.terminalServer().screenSnapshot())) {
+        if (!acceptsTerminalInput(liveSnapshot(menu))) {
             return;
         }
-        menu.terminalServer().screen().clipboard(payload.value(), player);
+        if (menu.terminalServer() != null) {
+            menu.terminalServer().screen().clipboard(payload.value(), player);
+        } else if (menu.physicalScreen() != null) {
+            menu.physicalScreen().clipboard(payload.value(), player);
+        }
     }
 
     static void applyTerminalMouse(final AbstractContainerMenu containerMenu, final TerminalMousePayload payload, final Player player) {
-        if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId() || menu.terminalServer() == null) {
+        if (!(containerMenu instanceof TerminalMenu menu) || menu.containerId != payload.containerId()) {
             return;
         }
         if (!acceptsTerminalMenu(menu, player)) {
             return;
         }
-        if (!acceptsTerminalMouse(menu.terminalServer().screenSnapshot(), payload)) {
+        if (!acceptsTerminalMouse(liveSnapshot(menu), payload)) {
             return;
         }
-        switch (payload.kind()) {
-            case TerminalMousePayload.MOUSE_DOWN -> menu.terminalServer().screen().mouseDown(payload.x(), payload.y(), payload.buttonOrDelta(), player);
-            case TerminalMousePayload.MOUSE_DRAG -> menu.terminalServer().screen().mouseDrag(payload.x(), payload.y(), payload.buttonOrDelta(), player);
-            case TerminalMousePayload.MOUSE_UP -> menu.terminalServer().screen().mouseUp(payload.x(), payload.y(), payload.buttonOrDelta(), player);
-            case TerminalMousePayload.MOUSE_SCROLL -> menu.terminalServer().screen().mouseScroll(payload.x(), payload.y(), payload.buttonOrDelta(), player);
-            default -> {
+        final ScreenBlockEntity physicalScreen = menu.physicalScreen();
+        if (menu.terminalServer() != null) {
+            switch (payload.kind()) {
+                case TerminalMousePayload.MOUSE_DOWN -> menu.terminalServer().screen().mouseDown(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+                case TerminalMousePayload.MOUSE_DRAG -> menu.terminalServer().screen().mouseDrag(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+                case TerminalMousePayload.MOUSE_UP -> menu.terminalServer().screen().mouseUp(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+                case TerminalMousePayload.MOUSE_SCROLL -> menu.terminalServer().screen().mouseScroll(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+                default -> {
+                }
+            }
+        } else if (physicalScreen != null) {
+            switch (payload.kind()) {
+                case TerminalMousePayload.MOUSE_DOWN -> physicalScreen.mouseDown(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+                case TerminalMousePayload.MOUSE_DRAG -> physicalScreen.mouseDrag(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+                case TerminalMousePayload.MOUSE_UP -> physicalScreen.mouseUp(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+                case TerminalMousePayload.MOUSE_SCROLL -> physicalScreen.mouseScroll(payload.x(), payload.y(), payload.buttonOrDelta(), player);
+                default -> {
+                }
             }
         }
+    }
+
+    private static TerminalScreenSnapshot liveSnapshot(final TerminalMenu menu) {
+        if (menu.terminalServer() != null) {
+            return menu.terminalServer().screenSnapshot();
+        }
+        if (menu.physicalScreen() != null) {
+            return menu.physicalScreen().terminalSnapshot();
+        }
+        return menu.snapshot();
     }
 
     static boolean mouseInside(final TerminalScreenSnapshot snapshot, final TerminalMousePayload payload) {

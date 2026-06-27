@@ -27,6 +27,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     private static final int SCREEN_TIER1_COLOR = 0xABABAB;
     private static final int SCREEN_TIER2_COLOR = 0xFFFF66;
     private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
+    private static final float SCREEN_FRONT_Z = -0.53F;
     private static final String[][] HORIZONTAL_FRONT = {
         {"fhb2", "fhm2", "fht2"},
         {"fhb", "fhm", "fht"}
@@ -87,10 +88,10 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final VertexConsumer consumer = sprite.wrap(bufferSource.getBuffer(RenderType.cutout()));
         final PoseStack.Pose pose = poseStack.last();
         final int color = 0xFF000000 | screenTierColor(screen.getBlockState().getBlock());
-        vertex(consumer, pose, -0.5F, -0.5F, -0.506F, 0F, 1F, color, packedLight, packedOverlay);
-        vertex(consumer, pose, -0.5F, 0.5F, -0.506F, 0F, 0F, color, packedLight, packedOverlay);
-        vertex(consumer, pose, 0.5F, 0.5F, -0.506F, 1F, 0F, color, packedLight, packedOverlay);
-        vertex(consumer, pose, 0.5F, -0.5F, -0.506F, 1F, 1F, color, packedLight, packedOverlay);
+        vertex(consumer, pose, -0.5F, -0.5F, SCREEN_FRONT_Z, 0F, 1F, color, packedLight, packedOverlay);
+        vertex(consumer, pose, -0.5F, 0.5F, SCREEN_FRONT_Z, 0F, 0F, color, packedLight, packedOverlay);
+        vertex(consumer, pose, 0.5F, 0.5F, SCREEN_FRONT_Z, 1F, 0F, color, packedLight, packedOverlay);
+        vertex(consumer, pose, 0.5F, -0.5F, SCREEN_FRONT_Z, 1F, 1F, color, packedLight, packedOverlay);
     }
 
     static ResourceLocation screenFrontTexture(final boolean horizontalPitch, final int width, final int height, final int localX, final int localY) {

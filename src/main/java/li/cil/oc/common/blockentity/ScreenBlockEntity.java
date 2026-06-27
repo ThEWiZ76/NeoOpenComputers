@@ -14,6 +14,7 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.block.ScreenBlock;
+import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.ScreenEnvironment;
 import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.core.BlockPos;
@@ -175,6 +176,54 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             }
         }
         return new Object[]{addresses.toArray(String[]::new)};
+    }
+
+    public boolean hasKeyboard(final Player player) {
+        if (node() != null) {
+            for (final Node neighbor : node().neighbors()) {
+                if (neighbor.host() instanceof KeyboardBlockEntity keyboard && keyboard.isUsableByPlayer(player)) {
+                    return true;
+                }
+                if (neighbor.host() instanceof Keyboard) {
+                    return true;
+                }
+            }
+        }
+        if (level == null) {
+            return false;
+        }
+        final BlockState state = getBlockState();
+        final Direction right = localRight(state);
+        final Direction up = ScreenBlock.up(state);
+        final Direction pitch = ScreenBlock.pitch(state);
+        final Direction yaw = ScreenBlock.yaw(state);
+        for (final BlockPos screenPos : connectedScreens(pitch, yaw, right, up)) {
+            for (final Direction side : Direction.values()) {
+                if (level.getBlockEntity(screenPos.relative(side)) instanceof KeyboardBlockEntity keyboard
+                    && keyboard.isUsableByPlayer(player)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public TerminalScreenSnapshot terminalSnapshot() {
+        final int snapshotWidth = renderWidth();
+        final int snapshotHeight = renderHeight();
+        final String[] lines = new String[snapshotHeight];
+        final int[][] foreground = new int[snapshotHeight][snapshotWidth];
+        final int[][] background = new int[snapshotHeight][snapshotWidth];
+        for (int row = 0; row < snapshotHeight; row++) {
+            final StringBuilder line = new StringBuilder(snapshotWidth);
+            for (int column = 0; column < snapshotWidth; column++) {
+                line.appendCodePoint(getCodePoint(column, row));
+                foreground[row][column] = getForegroundColor(column, row);
+                background[row][column] = getBackgroundColor(column, row);
+            }
+            lines[row] = line.toString();
+        }
+        return new TerminalScreenSnapshot(snapshotWidth, snapshotHeight, lines, foreground, background);
     }
 
     @Callback(direct = true, doc = "function():boolean -- Whether touch mode is inverted.")

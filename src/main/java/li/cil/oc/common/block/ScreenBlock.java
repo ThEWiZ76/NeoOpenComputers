@@ -3,11 +3,16 @@ package li.cil.oc.common.block;
 import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
+import li.cil.oc.common.menu.TerminalMenu;
+import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -21,6 +26,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 @SuppressWarnings("deprecation")
 public class ScreenBlock extends Block implements EntityBlock {
@@ -87,6 +93,9 @@ public class ScreenBlock extends Block implements EntityBlock {
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
+            if (screen.hasKeyboard(player) && !player.isShiftKeyDown()) {
+                return openPhysicalTerminal(screen, player);
+            }
             final ScreenHitMapper.ScreenClick click = ScreenHitMapper.screenCoordinates(state, pos, hitResult, screen.renderWidth(), screen.renderHeight());
             if (click == null) {
                 return InteractionResult.PASS;
@@ -97,11 +106,24 @@ public class ScreenBlock extends Block implements EntityBlock {
         return InteractionResult.PASS;
     }
 
+    public static InteractionResult openPhysicalTerminal(final ScreenBlockEntity screen, final Player player) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return InteractionResult.SUCCESS;
+        }
+        final var openedContainerId = serverPlayer.openMenu(new SimpleMenuProvider(
+            (containerId, playerInventory, menuPlayer) -> new TerminalMenu(containerId, playerInventory, screen.terminalSnapshot(), screen),
+            Component.translatable(screen.getBlockState().getBlock().getDescriptionId())));
+        openedContainerId.ifPresent(containerId -> PacketDistributor.sendToPlayer(
+            serverPlayer,
+            new TerminalScreenSnapshotPayload(containerId, screen.terminalSnapshot())));
+        return InteractionResult.CONSUME;
+    }
+
     @Override
     public BlockState getStateForPlacement(final BlockPlaceContext context) {
         final Direction lookDirection = context.getNearestLookingDirection();
         final Direction pitch = lookDirection.getAxis().isVertical() ? lookDirection : Direction.NORTH;
-        final Direction yaw = context.getHorizontalDirection().getOpposite();
+        final Direction yaw = context.getHorizontalDirection();
         return defaultBlockState()
             .setValue(PITCH, pitch)
             .setValue(YAW, yaw);
