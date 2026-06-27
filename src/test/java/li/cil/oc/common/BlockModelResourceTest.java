@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 final class BlockModelResourceTest {
     private static final Path BLOCK_MODEL_ROOT = Path.of("src/main/resources/assets/neoopencomputers/models/block");
@@ -63,15 +62,22 @@ final class BlockModelResourceTest {
     }
 
     @Test
-    void screenBlockModelsUseScreenPanelTexturesInsteadOfGenericCube() throws IOException {
-        for (final String modelName : List.of("screen_tier1.json", "screen_tier2.json", "screen_tier3.json")) {
+    void screenBlockModelsUseFullCubeScreenTexturesLikeUpstreamSingleScreenModel() throws IOException {
+        final List<String> modelNames = List.of("screen_tier1.json", "screen_tier2.json", "screen_tier3.json");
+        for (final String modelName : modelNames) {
             try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve(modelName))) {
                 final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
-                assertFalse("minecraft:block/cube_bottom_top".equals(model.get("parent").getAsString()), modelName);
+                assertTrue("minecraft:block/cube".equals(model.get("parent").getAsString()), modelName);
                 final JsonObject textures = model.getAsJsonObject("textures");
-                assertTrue(textures.get("front").getAsString().startsWith("neoopencomputers:block/screen/"), modelName);
-                assertTrue(textures.get("back").getAsString().startsWith("neoopencomputers:block/screen/"), modelName);
+                assertTrue(textures.get("north").getAsString().startsWith("neoopencomputers:block/screen/f"), modelName);
+                assertTrue(textures.get("south").getAsString().startsWith("neoopencomputers:block/screen/b"), modelName);
+                assertTrue(textures.get("east").getAsString().startsWith("neoopencomputers:block/screen/b"), modelName);
+                assertTrue(textures.get("west").getAsString().startsWith("neoopencomputers:block/screen/b"), modelName);
+                assertTrue(textures.get("up").getAsString().startsWith("neoopencomputers:block/screen/b"), modelName);
+                assertTrue(textures.get("down").getAsString().startsWith("neoopencomputers:block/screen/b"), modelName);
+                assertTrue(textures.get("particle").getAsString().startsWith("neoopencomputers:block/screen/f"), modelName);
             }
         }
+        assertTrue(Files.notExists(BLOCK_MODEL_ROOT.resolve("screen_panel.json")));
     }
 }
