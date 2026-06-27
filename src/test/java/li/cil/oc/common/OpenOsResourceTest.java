@@ -18,6 +18,8 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -83,20 +85,40 @@ final class OpenOsResourceTest {
     }
 
     @Test
-    void bundledLootDescriptorsIncludeOpenOs() {
+    void bundledLootDescriptorsIncludeUpstreamCatalog() {
         List<ModLootDisks.Descriptor> descriptors = ModLootDisks.bundledDescriptors();
+        Map<String, ModLootDisks.Descriptor> byPath = descriptors.stream()
+            .collect(Collectors.toMap(ModLootDisks.Descriptor::path, Function.identity()));
 
-        assertEquals(2, descriptors.size());
-        ModLootDisks.Descriptor openOs = descriptors.getFirst();
-        assertEquals("openos", openOs.path());
-        assertEquals("OpenOS (Operating System)", openOs.label());
-        assertEquals(0, openOs.weight());
-        assertEquals(net.minecraft.world.item.DyeColor.GREEN, openOs.color());
-        ModLootDisks.Descriptor oppm = descriptors.get(1);
-        assertEquals("oppm", oppm.path());
-        assertEquals("OPPM (Package Manager)", oppm.label());
-        assertEquals(0, oppm.weight());
-        assertEquals(net.minecraft.world.item.DyeColor.CYAN, oppm.color());
+        assertEquals(11, descriptors.size());
+        assertDescriptor(byPath, "builder", "Builder", 1, net.minecraft.world.item.DyeColor.YELLOW);
+        assertDescriptor(byPath, "data", "Data Card Software", 0, net.minecraft.world.item.DyeColor.PINK);
+        assertDescriptor(byPath, "dig", "Digger", 2, net.minecraft.world.item.DyeColor.BROWN);
+        assertDescriptor(byPath, "generator", "Generator Upgrade Software", 0, net.minecraft.world.item.DyeColor.PURPLE);
+        assertDescriptor(byPath, "irc", "OpenIRC (IRC Client)", 1, net.minecraft.world.item.DyeColor.LIGHT_BLUE);
+        assertDescriptor(byPath, "maze", "Mazer", 1, net.minecraft.world.item.DyeColor.ORANGE);
+        assertDescriptor(byPath, "network", "Network (Network Stack)", 1, net.minecraft.world.item.DyeColor.LIME);
+        assertDescriptor(byPath, "openloader", "OpenLoader (Boot Loader)", 1, net.minecraft.world.item.DyeColor.MAGENTA);
+        assertDescriptor(byPath, "openos", "OpenOS (Operating System)", 0, net.minecraft.world.item.DyeColor.GREEN);
+        assertDescriptor(byPath, "oppm", "OPPM (Package Manager)", 0, net.minecraft.world.item.DyeColor.CYAN);
+        assertDescriptor(byPath, "plan9k", "Plan9k (Operating System)", 1, net.minecraft.world.item.DyeColor.RED);
+    }
+
+    @Test
+    void bundledLootFilesystemsIncludeUpstreamProgramDisks() throws IOException {
+        assertBundledFile("builder", "usr/bin/build.lua");
+        assertBundledFile("data", "usr/bin/base64.lua");
+        assertBundledFile("data", "usr/lib/data.lua");
+        assertBundledFile("dig", "usr/bin/dig.lua");
+        assertBundledFile("generator", "usr/bin/refuel.lua");
+        assertBundledFile("irc", "usr/bin/irc.lua");
+        assertBundledFile("maze", "usr/bin/maze.lua");
+        assertBundledFile("network", "data/bin/ifconfig.lua");
+        assertBundledFile("network", "data/lib/network.lua");
+        assertBundledFile("openloader", ".install");
+        assertBundledFile("openloader", "bin/opl-flash.lua");
+        assertBundledFile("plan9k", "init.lua");
+        assertBundledFile("plan9k", "usr/bin/mpt.lua");
     }
 
     @Test
@@ -139,6 +161,22 @@ final class OpenOsResourceTest {
 
     private static String ingredientItem(final JsonArray ingredients, final int index) {
         return ingredients.get(index).getAsJsonObject().get("item").getAsString();
+    }
+
+    private static void assertDescriptor(final Map<String, ModLootDisks.Descriptor> descriptors, final String path, final String label, final int weight, final net.minecraft.world.item.DyeColor color) {
+        ModLootDisks.Descriptor descriptor = descriptors.get(path);
+        assertNotNull(descriptor, "Missing bundled loot descriptor " + path);
+        assertEquals(label, descriptor.label());
+        assertEquals(weight, descriptor.weight());
+        assertEquals(color, descriptor.color());
+    }
+
+    private static void assertBundledFile(final String path, final String file) throws IOException {
+        FileSystem fileSystem = new FileSystemRegistry().fromClass(OpenOsResourceTest.class, "neoopencomputers", "loot/" + path);
+
+        assertNotNull(fileSystem, path);
+        assertTrue(fileSystem.isReadOnly(), path);
+        assertTrue(fileSystem.exists(file), path + " missing " + file);
     }
 
     private static String sha256(final Path path) throws IOException, NoSuchAlgorithmException {
