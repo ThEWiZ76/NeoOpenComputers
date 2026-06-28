@@ -207,6 +207,23 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void autoBindsReachableScreenWhenComputerNetworkConnects() {
+        OpenComputersApi.initialize();
+        final CompoundTag[] saved = new CompoundTag[1];
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0, new CompoundTag(), tag -> saved[0] = tag);
+        FakeEnvironment computer = new FakeEnvironment();
+        FakeTextBuffer screen = new FakeTextBuffer();
+        Network.joinNewNetwork(computer.node());
+        computer.node().connect(screen.node());
+        saved[0] = null;
+
+        computer.node().connect(gpu.node());
+
+        assertNotNull(saved[0]);
+        assertEquals(screen.node().address(), saved[0].getString("screen"));
+    }
+
+    @Test
     void setResolutionUsesUpstreamAreaLimitInsteadOfGpuMaxHeight() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);

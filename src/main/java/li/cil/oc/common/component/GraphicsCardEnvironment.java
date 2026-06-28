@@ -435,6 +435,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     @Override
     public void onConnect(final Node connectedNode) {
         if (!(connectedNode.host() instanceof TextBuffer buffer)) {
+            if (screen == null && screenAddress == null && node() != null && node().network() != null) {
+                ensureScreenBinding();
+            }
             return;
         }
         final TextBuffer target = bindingTarget(buffer);
