@@ -27,7 +27,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Player;
@@ -58,6 +60,7 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     private static final String TAG_OUTPUT = "output";
     private static final String TAG_TOTAL_ENERGY = "totalEnergy";
     private static final String TAG_REMAINING_ENERGY = "remainingEnergy";
+    private static final String TAG_VISUAL_ASSEMBLING = "oc:visualAssembling";
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Assembler",
@@ -71,6 +74,7 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     private ItemStack pendingOutput = ItemStack.EMPTY;
     private double totalRequiredEnergy;
     private double requiredEnergy;
+    private boolean clientAssembling;
 
     public AssemblerBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.ASSEMBLER.get(), pos, blockState);
@@ -84,6 +88,10 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
 
     public boolean isAssembling() {
         return requiredEnergy > 0D;
+    }
+
+    public boolean isVisuallyAssembling() {
+        return isAssembling() || clientAssembling;
     }
 
     @Override
@@ -133,6 +141,7 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
             pendingOutput = output;
             totalRequiredEnergy = Math.max(1D, energyRequired);
             requiredEnergy = totalRequiredEnergy;
+            syncVisualState();
         }
         setChanged();
         return true;
@@ -373,6 +382,30 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        tag.putBoolean(TAG_VISUAL_ASSEMBLING, isAssembling());
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        if (tag.contains(TAG_VISUAL_ASSEMBLING)) {
+            clientAssembling = tag.getBoolean(TAG_VISUAL_ASSEMBLING);
+        }
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNode();
@@ -403,8 +436,15 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
             items.set(SLOT_TEMPLATE, pendingOutput);
             pendingOutput = ItemStack.EMPTY;
             totalRequiredEnergy = 0D;
+            syncVisualState();
         }
         setChanged();
+    }
+
+    private void syncVisualState() {
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
     }
 
     private static boolean isValidSlot(final int slot) {

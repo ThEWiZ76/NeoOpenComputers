@@ -175,6 +175,7 @@ public final class NeoOpenComputersClient {
     @SubscribeEvent
     static void registerEntityRenderers(final EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.ADAPTER.get(), AdapterBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.ASSEMBLER.get(), AssemblerBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.DISK_DRIVE.get(), DiskDriveBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.PRINT.get(), PrintBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SCREEN.get(), ScreenBlockEntityRenderer::new);

@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,6 +38,21 @@ final class AssemblerRegistrationShapeTest {
         assertEquals("Assembler", metadata.get(DeviceInfo.DeviceAttribute.Description));
         assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("Factorizer R1D1", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
+    void assemblerSyncsVisualStateToClientRenderer() throws Exception {
+        final Method updateTag = AssemblerBlockEntity.class.getDeclaredMethod("getUpdateTag", net.minecraft.core.HolderLookup.Provider.class);
+        final Method updatePacket = AssemblerBlockEntity.class.getDeclaredMethod("getUpdatePacket");
+        final Method visuallyAssembling = AssemblerBlockEntity.class.getDeclaredMethod("isVisuallyAssembling");
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/AssemblerBlockEntity.java"));
+
+        assertEquals(net.minecraft.nbt.CompoundTag.class, updateTag.getReturnType());
+        assertEquals(net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.class, updatePacket.getReturnType());
+        assertEquals(boolean.class, visuallyAssembling.getReturnType());
+        assertTrue(source.contains("ClientboundBlockEntityDataPacket.create(this)"));
+        assertTrue(source.contains("TAG_VISUAL_ASSEMBLING"));
+        assertTrue(source.contains("sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3)"));
     }
 
     private static AssemblerBlockEntity allocateAssembler() throws Exception {
