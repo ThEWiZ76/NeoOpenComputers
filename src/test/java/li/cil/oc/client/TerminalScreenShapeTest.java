@@ -16,10 +16,13 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -239,6 +242,14 @@ final class TerminalScreenShapeTest {
         assertEquals(0x1E, TerminalScreen.keyPayload(menu, true, 'a', 0).keyCode());
         assertEquals(0x02, TerminalScreen.keyPayload(menu, true, '!', 0).keyCode());
         assertEquals(0x39, TerminalScreen.keyPayload(menu, true, ' ', 0).keyCode());
+    }
+
+    @Test
+    void terminalScreenKeepsTypedCharactersPressedUntilKeyRelease() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalScreen.java"));
+
+        assertFalse(source.contains("sendKeyInput(false, codePoint, 0)"));
+        assertTrue(source.contains("pressedKeys.put(keyCode, codePoint)"));
     }
 
     @Test

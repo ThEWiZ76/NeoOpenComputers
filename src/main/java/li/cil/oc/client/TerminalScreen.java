@@ -13,9 +13,9 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     private static final int DEFAULT_IMAGE_WIDTH = 248;
@@ -28,7 +28,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     private static final int TEXT_BOTTOM_MARGIN = 12;
     private static final int CLIPBOARD_CHUNK_SIZE = 16 * 1024;
     private static final int CLIPBOARD_MAX_LENGTH = 64 * 1024;
-    private final Set<Integer> pressedKeys = new HashSet<>();
+    private final Map<Integer, Character> pressedKeys = new HashMap<>();
 
     record TextRun(int column, String text, int color) {
     }
@@ -107,10 +107,10 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             sendClipboardInput(minecraft.keyboardHandler.getClipboard());
             return;
         }
-        if (shouldForwardKeyPress(pressedKeys.contains(keyCode), keyCode)) {
+        if (shouldForwardKeyPress(pressedKeys.containsKey(keyCode), keyCode)) {
             sendKeyInput(true, (char) 0, keyCode);
         }
-        pressedKeys.add(keyCode);
+        pressedKeys.putIfAbsent(keyCode, (char) 0);
     }
 
     @Override
@@ -118,8 +118,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         if (!shouldForwardKeyboardInput(menu.snapshot())) {
             return false;
         }
-        if (shouldForwardKeyRelease(pressedKeys.remove(keyCode))) {
-            sendKeyInput(false, (char) 0, keyCode);
+        final Character character = pressedKeys.remove(keyCode);
+        if (shouldForwardKeyRelease(character != null)) {
+            sendKeyInput(false, character == null ? (char) 0 : character, keyCode);
         }
         return true;
     }
@@ -129,8 +130,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         if (!shouldForwardKeyboardInput(menu.snapshot())) {
             return false;
         }
-        sendKeyInput(true, codePoint, 0);
-        sendKeyInput(false, codePoint, 0);
+        final int keyCode = keyCodeForCharacter(codePoint, 0);
+        pressedKeys.put(keyCode, codePoint);
+        sendKeyInput(true, codePoint, keyCode);
         return true;
     }
 
