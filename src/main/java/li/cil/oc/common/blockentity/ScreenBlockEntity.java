@@ -33,7 +33,10 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayList;
 import java.util.ArrayDeque;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -567,28 +570,92 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         final Direction pitch = ScreenBlock.pitch(state);
         final Direction yaw = ScreenBlock.yaw(state);
         final Set<BlockPos> connected = connectedScreens(pitch, yaw, right, up);
-        final Set<ScreenCell> cells = new HashSet<>();
-        int observedMinX = 0;
-        int observedMinY = 0;
-        int observedMaxX = 0;
-        int observedMaxY = 0;
-        for (final BlockPos pos : connected) {
-            final int x = localX(worldPosition, pos, right);
-            final int y = localY(worldPosition, pos, up);
-            cells.add(new ScreenCell(x, y));
-            observedMinX = Math.min(observedMinX, x);
-            observedMinY = Math.min(observedMinY, y);
-            observedMaxX = Math.max(observedMaxX, x);
-            observedMaxY = Math.max(observedMaxY, y);
-        }
-        final ScreenRectangle rectangle = largestCompleteRectangle(cells, observedMinX, observedMinY, observedMaxX, observedMaxY);
-        final BlockPos origin = worldPosition.relative(right, rectangle.minX()).relative(up, rectangle.minY());
+        final ScreenGroup group = deterministicMergedGroup(connected, right, up);
+        final ScreenCell originCell = absoluteCell(group.origin(), right, up);
+        final ScreenCell localCell = absoluteCell(worldPosition, right, up);
         return new ScreenLayout(
-            origin,
-            rectangle.width(),
-            rectangle.height(),
-            -rectangle.minX(),
-            -rectangle.minY());
+            group.origin(),
+            group.width(),
+            group.height(),
+            localCell.x() - originCell.x(),
+            localCell.y() - originCell.y());
+    }
+
+    private ScreenGroup deterministicMergedGroup(final Set<BlockPos> connected, final Direction right, final Direction up) {
+        final Map<ScreenCell, BlockPos> positionsByCell = new HashMap<>();
+        final Map<BlockPos, ScreenGroup> groupsByPosition = new HashMap<>();
+        final List<BlockPos> pending = new ArrayList<>(connected);
+        pending.sort(Comparator.<BlockPos>comparingInt(BlockPos::getX)
+            .thenComparingInt(BlockPos::getY)
+            .thenComparingInt(BlockPos::getZ));
+
+        for (final BlockPos pos : connected) {
+            positionsByCell.put(absoluteCell(pos, right, up), pos);
+            groupsByPosition.put(pos, new ScreenGroup(pos));
+        }
+
+        while (!pending.isEmpty()) {
+            final BlockPos first = pending.getFirst();
+            final ScreenGroup group = groupsByPosition.get(first);
+            while (tryMerge(group, positionsByCell, groupsByPosition, right, up)) {
+                // Upstream keeps trying the current origin until no neighboring group can be merged.
+            }
+            pending.removeIf(group.positions()::contains);
+        }
+        return groupsByPosition.getOrDefault(worldPosition, new ScreenGroup(worldPosition));
+    }
+
+    private boolean tryMerge(
+        final ScreenGroup group,
+        final Map<ScreenCell, BlockPos> positionsByCell,
+        final Map<BlockPos, ScreenGroup> groupsByPosition,
+        final Direction right,
+        final Direction up) {
+        return tryMergeTowards(group, 0, group.height(), positionsByCell, groupsByPosition, right, up)
+            || tryMergeTowards(group, 0, -1, positionsByCell, groupsByPosition, right, up)
+            || tryMergeTowards(group, group.width(), 0, positionsByCell, groupsByPosition, right, up)
+            || tryMergeTowards(group, -1, 0, positionsByCell, groupsByPosition, right, up);
+    }
+
+    private boolean tryMergeTowards(
+        final ScreenGroup group,
+        final int dx,
+        final int dy,
+        final Map<ScreenCell, BlockPos> positionsByCell,
+        final Map<BlockPos, ScreenGroup> groupsByPosition,
+        final Direction right,
+        final Direction up) {
+        final ScreenCell originCell = absoluteCell(group.origin(), right, up);
+        final BlockPos otherPos = positionsByCell.get(new ScreenCell(originCell.x() + dx, originCell.y() + dy));
+        if (otherPos == null) {
+            return false;
+        }
+        final ScreenGroup other = groupsByPosition.get(otherPos);
+        if (other == null || other == group) {
+            return false;
+        }
+
+        final ScreenCell otherOriginCell = absoluteCell(other.origin(), right, up);
+        final boolean canMergeAlongX = otherOriginCell.y() == originCell.y()
+            && other.height() == group.height()
+            && other.width() + group.width() <= MAX_MULTIBLOCK_WIDTH;
+        final boolean canMergeAlongY = otherOriginCell.x() == originCell.x()
+            && other.width() == group.width()
+            && other.height() + group.height() <= MAX_MULTIBLOCK_HEIGHT;
+        if (!canMergeAlongX && !canMergeAlongY) {
+            return false;
+        }
+
+        final BlockPos newOrigin = canMergeAlongX
+            ? (otherOriginCell.x() < originCell.x() ? other.origin() : group.origin())
+            : (otherOriginCell.y() < originCell.y() ? other.origin() : group.origin());
+        final int newWidth = canMergeAlongX ? group.width() + other.width() : group.width();
+        final int newHeight = canMergeAlongX ? group.height() : group.height() + other.height();
+        group.merge(other, newOrigin, newWidth, newHeight);
+        for (final BlockPos pos : group.positions()) {
+            groupsByPosition.put(pos, group);
+        }
+        return true;
     }
 
     private Set<BlockPos> connectedScreens(final Direction pitch, final Direction yaw, final Direction right, final Direction up) {
@@ -623,57 +690,14 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         }
     }
 
-    private static ScreenRectangle largestCompleteRectangle(final Set<ScreenCell> cells, final int observedMinX, final int observedMinY, final int observedMaxX, final int observedMaxY) {
-        ScreenRectangle best = new ScreenRectangle(0, 0, 1, 1);
-        final int minXLimit = Math.max(observedMinX, -MAX_MULTIBLOCK_WIDTH + 1);
-        final int minYLimit = Math.max(observedMinY, -MAX_MULTIBLOCK_HEIGHT + 1);
-        final int maxXLimit = Math.min(observedMaxX, MAX_MULTIBLOCK_WIDTH - 1);
-        final int maxYLimit = Math.min(observedMaxY, MAX_MULTIBLOCK_HEIGHT - 1);
-        for (int minX = minXLimit; minX <= 0; minX++) {
-            for (int minY = minYLimit; minY <= 0; minY++) {
-                for (int maxX = 0; maxX <= maxXLimit; maxX++) {
-                    for (int maxY = 0; maxY <= maxYLimit; maxY++) {
-                        final int width = maxX - minX + 1;
-                        final int height = maxY - minY + 1;
-                        if (width > MAX_MULTIBLOCK_WIDTH || height > MAX_MULTIBLOCK_HEIGHT) {
-                            continue;
-                        }
-                        final ScreenRectangle candidate = new ScreenRectangle(minX, minY, width, height);
-                        if (candidate.area() > best.area() && containsAll(cells, candidate)) {
-                            best = candidate;
-                        }
-                    }
-                }
-            }
-        }
-        return best;
-    }
-
-    private static boolean containsAll(final Set<ScreenCell> cells, final ScreenRectangle rectangle) {
-        for (int x = rectangle.minX(); x < rectangle.minX() + rectangle.width(); x++) {
-            for (int y = rectangle.minY(); y < rectangle.minY() + rectangle.height(); y++) {
-                if (!cells.contains(new ScreenCell(x, y))) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
     private static Direction localRight(final BlockState state) {
         return ScreenBlock.localRight(state);
     }
 
-    private static int localX(final BlockPos origin, final BlockPos pos, final Direction right) {
-        return dot(pos.subtract(origin), right);
-    }
-
-    private static int localY(final BlockPos origin, final BlockPos pos, final Direction up) {
-        return dot(pos.subtract(origin), up);
-    }
-
-    private static int dot(final BlockPos delta, final Direction direction) {
-        return delta.getX() * direction.getStepX() + delta.getY() * direction.getStepY() + delta.getZ() * direction.getStepZ();
+    private static ScreenCell absoluteCell(final BlockPos pos, final Direction right, final Direction up) {
+        return new ScreenCell(
+            pos.getX() * right.getStepX() + pos.getY() * right.getStepY() + pos.getZ() * right.getStepZ(),
+            pos.getX() * up.getStepX() + pos.getY() * up.getStepY() + pos.getZ() * up.getStepZ());
     }
 
     private record ScreenLayout(BlockPos origin, int width, int height, int localX, int localY) {
@@ -682,9 +706,38 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private record ScreenCell(int x, int y) {
     }
 
-    private record ScreenRectangle(int minX, int minY, int width, int height) {
-        private int area() {
-            return width * height;
+    private static final class ScreenGroup {
+        private final Set<BlockPos> positions = new HashSet<>();
+        private BlockPos origin;
+        private int width = 1;
+        private int height = 1;
+
+        private ScreenGroup(final BlockPos origin) {
+            this.origin = origin;
+            positions.add(origin);
+        }
+
+        private void merge(final ScreenGroup other, final BlockPos newOrigin, final int newWidth, final int newHeight) {
+            positions.addAll(other.positions);
+            origin = newOrigin;
+            width = newWidth;
+            height = newHeight;
+        }
+
+        private Set<BlockPos> positions() {
+            return positions;
+        }
+
+        private BlockPos origin() {
+            return origin;
+        }
+
+        private int width() {
+            return width;
+        }
+
+        private int height() {
+            return height;
         }
     }
 

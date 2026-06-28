@@ -10661,9 +10661,9 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(lowerRightPos, ModBlocks.SCREEN_TIER1.get());
         helper.setBlock(upperLeftPos, ModBlocks.SCREEN_TIER1.get());
 
-        assertScreenLayoutArea(helper, helper.getBlockEntity(lowerLeftPos), 2);
-        assertScreenLayoutArea(helper, helper.getBlockEntity(lowerRightPos), 2);
-        assertScreenLayoutArea(helper, helper.getBlockEntity(upperLeftPos), 2);
+        assertScreenLayout(helper, helper.getBlockEntity(lowerLeftPos), 1, 2, 0, 0);
+        assertScreenLayout(helper, helper.getBlockEntity(upperLeftPos), 1, 2, 0, 1);
+        assertScreenLayout(helper, helper.getBlockEntity(lowerRightPos), 1, 1, 0, 0);
         helper.succeed();
     }
 
