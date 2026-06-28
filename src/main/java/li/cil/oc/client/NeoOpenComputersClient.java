@@ -47,6 +47,7 @@ public final class NeoOpenComputersClient {
 
     public NeoOpenComputersClient() {
         NeoForge.EVENT_BUS.addListener(NeoOpenComputersClient::onClientTick);
+        NeoForge.EVENT_BUS.register(RackMountableRenderHandler.class);
     }
 
     @SubscribeEvent
@@ -186,6 +187,7 @@ public final class NeoOpenComputersClient {
         event.registerBlockEntityRenderer(ModBlockEntities.POWER_DISTRIBUTOR.get(), PowerDistributorBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.PRINTER.get(), PrinterBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.PRINT.get(), PrintBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.RACK.get(), RackBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.RAID.get(), RaidBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.RELAY.get(), RelayBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SCREEN.get(), ScreenBlockEntityRenderer::new);
