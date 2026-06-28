@@ -3,8 +3,10 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.common.ModSettings;
+import net.minecraft.nbt.CompoundTag;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class ApuEnvironment extends GraphicsCardEnvironment {
     private final int tier;
@@ -13,7 +15,11 @@ public final class ApuEnvironment extends GraphicsCardEnvironment {
     private final TextBuffer.ColorDepth maxDepth;
 
     public ApuEnvironment(final int tier) {
-        super(tier);
+        this(tier, null, null);
+    }
+
+    public ApuEnvironment(final int tier, final CompoundTag data, final Consumer<CompoundTag> saveData) {
+        super(tier, data, saveData);
         final int clampedTier = Math.max(0, Math.min(2, tier));
         this.tier = clampedTier;
         maxWidth = ModSettings.screenWidthByTier(clampedTier);

@@ -80,6 +80,7 @@ import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.WaypointBlock;
 import li.cil.oc.common.item.AnalyzerItem;
+import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.NanomachineItemData;
 import li.cil.oc.common.item.NavigationUpgradeItem;
@@ -9969,6 +9970,36 @@ public final class NeoOpenComputersGameTests {
             helper.assertTrue(!screenHasNonBlankText(attachedScreen), "Attached tier 1 wall screen should not receive independent text:\n" + screenText(attachedScreen));
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void graphicsCardPersistsBoundScreenOnMachineSave(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
+
+        final String gpuAddress = componentAddress(computer, "gpu");
+        final String screenAddress = componentAddress(computer, "screen");
+        helper.assertTrue(gpuAddress != null, "Graphics card component is not visible: " + computer.machine().components());
+        helper.assertTrue(screenAddress != null, "Screen component is not visible: " + computer.machine().components());
+        try {
+            assertSingleResult(helper, computer.machine().invoke(gpuAddress, "bind", new Object[]{screenAddress, true}), Boolean.TRUE, "GPU bind");
+        } catch (Exception e) {
+            helper.fail("GPU bind failed: " + e.getMessage());
+            return;
+        }
+
+        final CompoundTag machineData = new CompoundTag();
+        computer.machine().save(machineData);
+
+        final CompoundTag cardData = ItemDriverData.dataTag(computer.getItem(ComputerCaseBlockEntity.SLOT_CARD_0));
+        helper.assertTrue(screenAddress.equals(cardData.getString("screen")), "Graphics card did not persist bound screen; data=" + cardData);
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 360)

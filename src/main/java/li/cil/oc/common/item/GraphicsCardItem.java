@@ -32,7 +32,7 @@ public class GraphicsCardItem extends Item implements DriverItem, HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new GraphicsCardEnvironment(tier(stack));
+        return new GraphicsCardEnvironment(tier(stack), dataTag(stack), saved -> ItemDriverData.writeDataTag(stack, saved));
     }
 
     @Override

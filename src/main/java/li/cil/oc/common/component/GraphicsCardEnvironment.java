@@ -22,6 +22,7 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class GraphicsCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "gpu";
@@ -44,6 +45,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     private final int maxHeight;
     private final TextBuffer.ColorDepth maxDepth;
     private final double totalVideoMemory;
+    private final Consumer<CompoundTag> saveData;
     private final Map<Integer, VideoBuffer> videoBuffers = new LinkedHashMap<>();
     private String screenAddress;
     private TextBuffer screen;
@@ -51,8 +53,13 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     private boolean bitbltBudgetExhausted;
 
     public GraphicsCardEnvironment(final int tier) {
+        this(tier, null, null);
+    }
+
+    public GraphicsCardEnvironment(final int tier, final CompoundTag data, final Consumer<CompoundTag> saveData) {
         final int clampedTier = Math.max(0, Math.min(2, tier));
         this.tier = clampedTier;
+        this.saveData = saveData;
         maxWidth = ModSettings.screenWidthByTier(clampedTier);
         maxHeight = ModSettings.screenHeightByTier(clampedTier);
         maxDepth = ModSettings.screenDepthByTier(clampedTier);
@@ -61,6 +68,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         final var builder = Network.newNode(this, Visibility.Neighbors);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).withConnector().create());
+        }
+        if (data != null && !data.isEmpty()) {
+            load(data);
         }
     }
 
@@ -486,6 +496,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         }
         videoRam.put(PAGES_TAG, pages);
         nbt.put(VIDEO_RAM_TAG, videoRam);
+        if (saveData != null) {
+            saveData.accept(nbt.copy());
+        }
     }
 
     private void resetScreen(final TextBuffer buffer) {

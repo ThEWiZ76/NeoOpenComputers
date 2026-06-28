@@ -34,6 +34,16 @@ public final class ItemDriverData {
         return root.getCompound(TAG_DATA);
     }
 
+    public static void writeDataTag(final ItemStack stack, final CompoundTag data) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
+        root.put(TAG_DATA, data.copy());
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
     public static boolean isClientSide(final EnvironmentHost host) {
         return host != null && host.world() != null && host.world().isClientSide;
     }

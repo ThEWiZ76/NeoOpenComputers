@@ -19,7 +19,7 @@ public final class ApuItem extends CpuItem implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new ApuEnvironment(gpuTier);
+        return new ApuEnvironment(gpuTier, dataTag(stack), saved -> ItemDriverData.writeDataTag(stack, saved));
     }
 
     @Override
