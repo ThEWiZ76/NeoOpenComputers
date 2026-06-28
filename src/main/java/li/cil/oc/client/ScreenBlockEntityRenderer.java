@@ -139,19 +139,39 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final TextLayout layout = textLayout(screen.renderBlockWidth(), screen.renderBlockHeight(), screen.renderWidth(), screen.renderHeight());
         poseStack.translate(layout.x(), layout.y(), SCREEN_TEXT_Z);
         poseStack.scale(layout.scale(), -layout.scale(), layout.scale());
+        renderTerminalBackgrounds(screen, poseStack, bufferSource, textAlpha);
+        renderTerminalGlyphs(screen, poseStack, bufferSource, textAlpha);
+        poseStack.popPose();
+    }
+
+    private static void renderTerminalBackgrounds(
+        final ScreenBlockEntity screen,
+        final PoseStack poseStack,
+        final MultiBufferSource bufferSource,
+        final float textAlpha) {
+        for (int row = 0; row < screen.renderHeight(); row++) {
+            for (int column = 0; column < screen.renderWidth(); column++) {
+                final int backgroundColor = textColorWithAlpha(screen.getBackgroundColor(column, row), textAlpha);
+                renderCellBackground(poseStack, bufferSource, column, row, backgroundColor);
+            }
+        }
+    }
+
+    private static void renderTerminalGlyphs(
+        final ScreenBlockEntity screen,
+        final PoseStack poseStack,
+        final MultiBufferSource bufferSource,
+        final float textAlpha) {
         for (int row = 0; row < screen.renderHeight(); row++) {
             final List<String> cells = lineCells(line(screen, row), screen.renderWidth());
             for (int column = 0; column < cells.size(); column++) {
                 final String cell = cells.get(column);
-                final int backgroundColor = textColorWithAlpha(screen.getBackgroundColor(column, row), textAlpha);
-                renderCellBackground(poseStack, bufferSource, column, row, backgroundColor);
                 if (!cell.isBlank()) {
                     final int textColor = textColorWithAlpha(screen.getForegroundColor(column, row), textAlpha);
                     TerminalFont.drawWorldCell(poseStack, bufferSource, cell, column, row, textColor, SCREEN_TEXT_Z);
                 }
             }
         }
-        poseStack.popPose();
     }
 
     @Override

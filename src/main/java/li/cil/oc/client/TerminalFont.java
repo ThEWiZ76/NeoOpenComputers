@@ -2,6 +2,7 @@ package li.cil.oc.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import li.cil.oc.common.util.FontWidths;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -19,7 +20,7 @@ final class TerminalFont {
     private static final int SOURCE_HEIGHT = 16;
     private static final int CELL_WIDTH = 6;
     private static final int CELL_HEIGHT = 9;
-    private static final Map<Integer, int[]> GLYPHS = loadGlyphs();
+    private static final Map<Integer, Glyph> GLYPHS = loadGlyphs();
 
     private TerminalFont() {
     }
@@ -36,13 +37,18 @@ final class TerminalFont {
         return GLYPHS.containsKey(codePoint);
     }
 
+    static int glyphCellWidth(final int codePoint) {
+        final Glyph glyph = glyph(codePoint);
+        return Math.max(CELL_WIDTH, (glyph.sourceWidth() / SOURCE_WIDTH) * CELL_WIDTH);
+    }
+
     static void drawGuiCell(final GuiGraphics graphics, final String text, final int x, final int y, final int color) {
         final int codePoint = codePoint(text);
         if (codePoint == ' ') {
             return;
         }
         for (int py = 0; py < CELL_HEIGHT; py++) {
-            for (int px = 0; px < CELL_WIDTH; px++) {
+            for (int px = 0; px < glyphCellWidth(codePoint); px++) {
                 if (pixel(codePoint, px, py)) {
                     graphics.fill(x + px, y + py, x + px + 1, y + py + 1, color);
                 }
@@ -70,7 +76,7 @@ final class TerminalFont {
         final float baseX = column * CELL_WIDTH;
         final float baseY = row * CELL_HEIGHT;
         for (int py = 0; py < CELL_HEIGHT; py++) {
-            for (int px = 0; px < CELL_WIDTH; px++) {
+            for (int px = 0; px < glyphCellWidth(codePoint); px++) {
                 if (pixel(codePoint, px, py)) {
                     quad(consumer, pose, baseX + px, baseY + py, z, color);
                 }
@@ -86,13 +92,14 @@ final class TerminalFont {
     }
 
     private static boolean pixel(final int codePoint, final int x, final int y) {
-        final int[] glyph = GLYPHS.getOrDefault(codePoint, GLYPHS.get((int) '?'));
+        final Glyph glyph = glyph(codePoint);
         if (glyph == null) {
             return false;
         }
-        final int sourceX = Math.min(SOURCE_WIDTH - 1, (x * SOURCE_WIDTH + SOURCE_WIDTH / 2) / CELL_WIDTH);
+        final int targetWidth = Math.max(CELL_WIDTH, (glyph.sourceWidth() / SOURCE_WIDTH) * CELL_WIDTH);
+        final int sourceX = Math.min(glyph.sourceWidth() - 1, (x * glyph.sourceWidth() + glyph.sourceWidth() / 2) / targetWidth);
         final int sourceY = Math.min(SOURCE_HEIGHT - 1, (y * SOURCE_HEIGHT + SOURCE_HEIGHT / 2) / CELL_HEIGHT);
-        return (glyph[sourceY] & (0x80 >> sourceX)) != 0;
+        return (glyph.rows()[sourceY] & (1 << (glyph.sourceWidth() - 1 - sourceX))) != 0;
     }
 
     private static int codePoint(final String text) {
@@ -102,8 +109,12 @@ final class TerminalFont {
         return text.codePointAt(0);
     }
 
-    private static Map<Integer, int[]> loadGlyphs() {
-        final Map<Integer, int[]> glyphs = new HashMap<>();
+    private static Glyph glyph(final int codePoint) {
+        return GLYPHS.getOrDefault(codePoint, GLYPHS.get((int) '?'));
+    }
+
+    private static Map<Integer, Glyph> loadGlyphs() {
+        final Map<Integer, Glyph> glyphs = new HashMap<>();
         try (InputStream stream = TerminalFont.class.getResourceAsStream("/assets/neoopencomputers/font.hex")) {
             if (stream == null) {
                 return glyphs;
@@ -120,16 +131,25 @@ final class TerminalFont {
                         continue;
                     }
                     final int codePoint = Integer.parseInt(line.substring(0, separator), 16);
+                    final int bytesPerRow = (hex.length() / 2) / SOURCE_HEIGHT;
+                    if (bytesPerRow < 1 || bytesPerRow > 2 || bytesPerRow != FontWidths.wcwidth(codePoint)) {
+                        continue;
+                    }
                     final int[] rows = new int[SOURCE_HEIGHT];
                     for (int row = 0; row < SOURCE_HEIGHT; row++) {
-                        rows[row] = Integer.parseInt(hex.substring(row * 2, row * 2 + 2), 16);
+                        final int start = row * bytesPerRow * 2;
+                        final int end = start + bytesPerRow * 2;
+                        rows[row] = Integer.parseInt(hex.substring(start, end), 16);
                     }
-                    glyphs.putIfAbsent(codePoint, rows);
+                    glyphs.putIfAbsent(codePoint, new Glyph(bytesPerRow * SOURCE_WIDTH, rows));
                 }
             }
         } catch (final IOException | NumberFormatException ignored) {
             return Map.of();
         }
         return Map.copyOf(glyphs);
+    }
+
+    private record Glyph(int sourceWidth, int[] rows) {
     }
 }

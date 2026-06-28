@@ -182,9 +182,14 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/font.hex")));
         assertTrue(TerminalFont.hasGlyph('i'));
         assertTrue(TerminalFont.hasGlyph('W'));
+        assertTrue(TerminalFont.hasGlyph(0x754C));
         assertEquals(6, TerminalFont.cellWidth());
         assertEquals(9, TerminalFont.cellHeight());
+        assertEquals(6, TerminalFont.glyphCellWidth('i'));
+        assertEquals(12, TerminalFont.glyphCellWidth(0x754C));
         assertTrue(renderer.contains("TerminalFont.drawWorldCell"), "World screen text should render fixed bitmap cells, not proportional Minecraft glyphs");
+        assertTrue(renderer.contains("renderTerminalBackgrounds"), "World screen text should draw all cell backgrounds before wide glyphs");
+        assertTrue(renderer.contains("renderTerminalGlyphs"), "World screen text should draw all glyphs after cell backgrounds");
     }
 
     @Test

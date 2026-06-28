@@ -207,8 +207,11 @@ final class TerminalScreenShapeTest {
         assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/font.hex")));
         assertTrue(TerminalFont.hasGlyph('i'));
         assertTrue(TerminalFont.hasGlyph('W'));
+        assertTrue(TerminalFont.hasGlyph(0x754C));
         assertEquals(6, TerminalFont.cellWidth());
         assertEquals(9, TerminalFont.cellHeight());
+        assertEquals(6, TerminalFont.glyphCellWidth('i'));
+        assertEquals(12, TerminalFont.glyphCellWidth(0x754C));
         assertTrue(screen.contains("TerminalFont.drawGuiCell"), "Terminal GUI should render fixed bitmap cells, not proportional Minecraft glyphs");
     }
 
