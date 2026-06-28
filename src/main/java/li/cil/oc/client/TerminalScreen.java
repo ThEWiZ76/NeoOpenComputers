@@ -137,6 +137,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     @Override
     public void removed() {
+        releaseKeyPayloads(menu, pressedKeys).forEach(PacketDistributor::sendToServer);
         pressedKeys.clear();
         super.removed();
     }
@@ -218,6 +219,17 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     static boolean shouldForwardKeyRelease(final boolean wasPressed) {
         return wasPressed;
+    }
+
+    static List<TerminalKeyPayload> releaseKeyPayloads(final TerminalMenu menu, final Map<Integer, Character> pressedKeys) {
+        if (menu == null || pressedKeys == null || pressedKeys.isEmpty()) {
+            return List.of();
+        }
+        final List<TerminalKeyPayload> payloads = new ArrayList<>();
+        for (final Map.Entry<Integer, Character> entry : pressedKeys.entrySet()) {
+            payloads.add(keyPayload(menu, false, entry.getValue(), entry.getKey()));
+        }
+        return payloads;
     }
 
     private static boolean ignoreRepeat(final int keyCode) {

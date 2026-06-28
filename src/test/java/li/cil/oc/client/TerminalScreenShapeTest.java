@@ -19,7 +19,9 @@ import java.lang.reflect.Method;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -327,6 +329,20 @@ final class TerminalScreenShapeTest {
     void terminalScreenSendsKeyUpOnlyForTrackedPressedKeysLikeUpstreamInputBuffer() {
         assertEquals(true, TerminalScreen.shouldForwardKeyRelease(true));
         assertEquals(false, TerminalScreen.shouldForwardKeyRelease(false));
+    }
+
+    @Test
+    void terminalScreenReleasesTrackedKeysWhenClosedLikeUpstreamInputBuffer() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+        final Map<Integer, Character> pressedKeys = new LinkedHashMap<>();
+        pressedKeys.put(GLFW.GLFW_KEY_A, 'a');
+        pressedKeys.put(GLFW.GLFW_KEY_LEFT_SHIFT, (char) 0);
+
+        final List<TerminalKeyPayload> payloads = TerminalScreen.releaseKeyPayloads(menu, pressedKeys);
+
+        assertEquals(2, payloads.size());
+        assertEquals(new TerminalKeyPayload(12, false, 'a', 0x1E), payloads.get(0));
+        assertEquals(new TerminalKeyPayload(12, false, 0, 0x2A), payloads.get(1));
     }
 
     @Test
