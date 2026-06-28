@@ -144,6 +144,22 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void explicitBindPersistsScreenImmediately() {
+        OpenComputersApi.initialize();
+        final CompoundTag[] saved = new CompoundTag[1];
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0, new CompoundTag(), tag -> saved[0] = tag);
+        FakeTextBuffer screen = new FakeTextBuffer();
+        Network.joinNewNetwork(gpu.node());
+        gpu.node().connect(screen.node());
+        saved[0] = null;
+
+        assertArrayEquals(new Object[]{true}, gpu.bind(null, new TestArguments(screen.node().address(), true)));
+
+        assertNotNull(saved[0]);
+        assertEquals(screen.node().address(), saved[0].getString("screen"));
+    }
+
+    @Test
     void bindsPhysicalMultiblockScreensThroughOriginBuffer() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java"));
 

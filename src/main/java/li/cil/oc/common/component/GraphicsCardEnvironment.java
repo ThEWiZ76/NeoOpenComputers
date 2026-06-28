@@ -112,6 +112,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         } else if (context != null) {
             context.pause(0);
         }
+        persistData();
         return new Object[]{true};
     }
 
