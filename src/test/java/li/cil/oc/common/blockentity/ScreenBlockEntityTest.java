@@ -77,10 +77,13 @@ final class ScreenBlockEntityTest {
     void togglesTouchModeInversion() throws Exception {
         ScreenBlockEntity screen = allocateScreen();
 
+        assertEquals(false, screen.isTouchModeInverted());
         assertArrayEquals(new Object[]{false}, screen.isTouchModeInverted(null, new TestArguments()));
         assertArrayEquals(new Object[]{false}, screen.setTouchModeInverted(null, new TestArguments(true)));
+        assertEquals(true, screen.isTouchModeInverted());
         assertArrayEquals(new Object[]{true}, screen.isTouchModeInverted(null, new TestArguments()));
         assertArrayEquals(new Object[]{true}, screen.setTouchModeInverted(null, new TestArguments(false)));
+        assertEquals(false, screen.isTouchModeInverted());
         assertArrayEquals(new Object[]{false}, screen.isTouchModeInverted(null, new TestArguments()));
     }
 

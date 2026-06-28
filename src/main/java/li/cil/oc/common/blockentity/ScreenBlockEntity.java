@@ -267,6 +267,10 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         return new Object[]{touchModeInverted};
     }
 
+    public boolean isTouchModeInverted() {
+        return touchModeInverted;
+    }
+
     @Callback(doc = "function(value:boolean):boolean -- Sets whether to invert touch mode.")
     public Object[] setTouchModeInverted(final Context context, final Arguments args) {
         final boolean oldValue = touchModeInverted;

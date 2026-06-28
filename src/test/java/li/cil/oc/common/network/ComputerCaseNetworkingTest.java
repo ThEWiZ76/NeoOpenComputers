@@ -62,6 +62,24 @@ final class ComputerCaseNetworkingTest {
         assertNull(ComputerCaseNetworking.startErrorMessage(machine(new AtomicBoolean(false), "")));
     }
 
+    @Test
+    void failedComputerCaseStartStillReportsLastError() {
+        assertEquals(
+            "Last error: missing required components",
+            ComputerCaseNetworking.startFailureMessage(
+                machine(new AtomicBoolean(false), "missing required components"),
+                false,
+                RackControlPayload.START).getString());
+    }
+
+    @Test
+    void runningComputerCaseStartDoesNotRepeatOldErrorMessage() {
+        assertNull(ComputerCaseNetworking.startFailureMessage(
+            machine(new AtomicBoolean(true), "old error"),
+            true,
+            RackControlPayload.START));
+    }
+
     private static ComputerCaseMenu allocateMenu(final int containerId, final ComputerCaseBlockEntity computer) throws Exception {
         final ComputerCaseMenu menu = (ComputerCaseMenu) unsafe().allocateInstance(ComputerCaseMenu.class);
         setField(menu, AbstractContainerMenu.class, "containerId", containerId);

@@ -10455,12 +10455,12 @@ public final class NeoOpenComputersGameTests {
 
         final BlockState state = helper.getBlockState(screenPos);
         final BlockPos absoluteScreenPos = helper.absolutePos(screenPos);
-        final Vec3 hitLocation = new Vec3(absoluteScreenPos.getX() + 0.25D, absoluteScreenPos.getY() + 0.75D, absoluteScreenPos.getZ());
+        final Vec3 hitLocation = new Vec3(absoluteScreenPos.getX() + 0.25D, absoluteScreenPos.getY() + 0.60D, absoluteScreenPos.getZ());
         final BlockHitResult hit = new BlockHitResult(hitLocation, Direction.NORTH, absoluteScreenPos, false);
         helper.assertTrue(invokeUseWithoutItem(state, helper, screenPos, hit) == InteractionResult.CONSUME, "Screen click was not consumed");
 
         helper.runAtTickTime(5, () -> {
-            assertNextSignal(helper, computer, "touch", screen.node().address(), 38, 5, 0);
+            assertNextSignal(helper, computer, "touch", screen.node().address(), 43, 4, 0);
             helper.succeed();
         });
     }

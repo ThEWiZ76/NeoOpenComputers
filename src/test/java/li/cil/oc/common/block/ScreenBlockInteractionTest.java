@@ -26,11 +26,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 final class ScreenBlockInteractionTest {
     @Test
     void mapsNorthFaceHitToScreenCell() {
-        BlockHitResult hit = new BlockHitResult(new Vec3(0.25D, 0.75D, 0.0D), Direction.NORTH, BlockPos.ZERO, false);
+        BlockHitResult hit = new BlockHitResult(new Vec3(0.25D, 0.60D, 0.0D), Direction.NORTH, BlockPos.ZERO, false);
 
         ScreenHitMapper.ScreenClick click = ScreenHitMapper.screenCoordinates(Direction.NORTH, BlockPos.ZERO, hit, 40, 16);
 
-        assertArrayEquals(new int[]{10, 4}, new int[]{click.x(), click.y()});
+        assertArrayEquals(new int[]{6, 4}, new int[]{click.x(), click.y()});
     }
 
     @Test
@@ -38,6 +38,30 @@ final class ScreenBlockInteractionTest {
         BlockHitResult hit = new BlockHitResult(new Vec3(0.25D, 0.75D, 1.0D), Direction.SOUTH, BlockPos.ZERO, false);
 
         assertNull(ScreenHitMapper.screenCoordinates(Direction.NORTH, BlockPos.ZERO, hit, 40, 16));
+    }
+
+    @Test
+    void ignoresHitsInsideScreenBorderLikeUpstream() {
+        BlockHitResult hit = new BlockHitResult(new Vec3(0.05D, 0.60D, 0.0D), Direction.NORTH, BlockPos.ZERO, false);
+
+        assertNull(ScreenHitMapper.screenCoordinates(Direction.NORTH, BlockPos.ZERO, hit, 40, 16));
+    }
+
+    @Test
+    void mapsMultiblockHitThroughRenderedLetterboxLikeUpstream() {
+        BlockHitResult hit = new BlockHitResult(new Vec3(0.75D, 0.60D, 0.0D), Direction.NORTH, BlockPos.ZERO, false);
+
+        ScreenHitMapper.ScreenClick click = ScreenHitMapper.screenCoordinates(Direction.NORTH, Direction.UP, BlockPos.ZERO, hit, 80, 25, 3, 2, 2, 1);
+
+        assertArrayEquals(new int[]{76, 0}, new int[]{click.x(), click.y()});
+    }
+
+    @Test
+    void screenTerminalOpenFollowsUpstreamTouchModeInversion() {
+        assertEquals(true, ScreenBlock.shouldOpenPhysicalTerminal(true, false, false));
+        assertEquals(false, ScreenBlock.shouldOpenPhysicalTerminal(true, false, true));
+        assertEquals(true, ScreenBlock.shouldOpenPhysicalTerminal(true, true, true));
+        assertEquals(false, ScreenBlock.shouldOpenPhysicalTerminal(false, false, false));
     }
 
     @Test

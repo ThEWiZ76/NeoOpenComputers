@@ -104,7 +104,8 @@ public class ScreenBlock extends Block implements EntityBlock {
         }
         if (level.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
             final ScreenBlockEntity origin = screen.originScreen();
-            if (origin.hasKeyboard(player) && !player.isShiftKeyDown()) {
+            final boolean playerIsSneaking = player != null && player.isShiftKeyDown();
+            if (shouldOpenPhysicalTerminal(origin.hasKeyboard(player), playerIsSneaking, origin.isTouchModeInverted())) {
                 return openPhysicalTerminal(origin, player);
             }
             final ScreenHitMapper.ScreenClick click = screen.renderBlockWidth() > 1 || screen.renderBlockHeight() > 1
@@ -160,6 +161,10 @@ public class ScreenBlock extends Block implements EntityBlock {
             serverPlayer,
             new TerminalScreenSnapshotPayload(containerId, screen.terminalSnapshot())));
         return InteractionResult.CONSUME;
+    }
+
+    public static boolean shouldOpenPhysicalTerminal(final boolean hasKeyboard, final boolean playerIsSneaking, final boolean touchModeInverted) {
+        return hasKeyboard && playerIsSneaking == touchModeInverted;
     }
 
     @Override

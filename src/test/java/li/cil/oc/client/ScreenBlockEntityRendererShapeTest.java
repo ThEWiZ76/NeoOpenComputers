@@ -250,6 +250,13 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void printItemRendererFailsClosedOnLinkageErrors() throws IOException {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/PrintItemRenderer.java"));
+
+        assertTrue(source.contains("catch (final LinkageError"), "Print item renderer should not crash creative tabs if print model linkage fails");
+    }
+
+    @Test
     void clientHandlesClientTickForNanomachineParticles() throws NoSuchMethodException {
         Method method = NeoOpenComputersClient.class.getDeclaredMethod("onClientTick", ClientTickEvent.Post.class);
 

@@ -25,11 +25,15 @@ public final class PrintItemRenderer extends BlockEntityWithoutLevelRenderer {
         final int packedLight,
         final int packedOverlay) {
         final boolean activePreview = Minecraft.getInstance().options.advancedItemTooltips;
-        PrintShapeRenderer.renderShapes(
-            PrintRenderModel.itemShapes(new PrintData(stack), activePreview),
-            poseStack,
-            buffer,
-            packedLight,
-            packedOverlay);
+        try {
+            PrintShapeRenderer.renderShapes(
+                PrintRenderModel.itemShapes(new PrintData(stack), activePreview),
+                poseStack,
+                buffer,
+                packedLight,
+                packedOverlay);
+        } catch (final LinkageError ignored) {
+            // Avoid taking down creative inventory if a stale client has incomplete print model linkage.
+        }
     }
 }

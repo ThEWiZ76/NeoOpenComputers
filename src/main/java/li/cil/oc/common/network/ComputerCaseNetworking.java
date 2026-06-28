@@ -47,13 +47,20 @@ public final class ComputerCaseNetworking {
         final ComputerCaseBlockEntity computer = menu.computerInventory() instanceof ComputerCaseBlockEntity blockEntity ? blockEntity : null;
         final boolean wasRunning = computer != null && (computer.machine().isRunning() || computer.machine().isPaused());
         final boolean accepted = applyComputerCaseControl(containerMenu, payload);
-        if (accepted && payload.action() == RackControlPayload.START && !wasRunning && computer != null) {
-            final Component message = startErrorMessage(computer.machine());
+        if (computer != null) {
+            final Component message = startFailureMessage(computer.machine(), wasRunning, payload.action());
             if (message != null) {
                 player.sendSystemMessage(message);
             }
         }
         return accepted;
+    }
+
+    static Component startFailureMessage(final Machine machine, final boolean wasRunning, final int action) {
+        if (action != RackControlPayload.START || wasRunning) {
+            return null;
+        }
+        return startErrorMessage(machine);
     }
 
     static Component startErrorMessage(final Machine machine) {
