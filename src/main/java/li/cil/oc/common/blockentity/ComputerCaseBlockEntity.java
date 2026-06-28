@@ -454,6 +454,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         machine.onHostChanged();
     }
 
+    static void notifyItemRemoved(final Machine machine, final int tier, final int slot) {
+        if (Slot.CPU.equals(slotType(tier, slot))) {
+            machine.stop();
+        }
+    }
+
     static <T> void fillExistingSlots(final List<T> items, final T value) {
         for (int slot = 0; slot < items.size(); slot++) {
             items.set(slot, value);
@@ -498,6 +504,16 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         return -1;
     }
 
+    private static int cpuSlot(final int tier) {
+        final CaseSlot[] layout = slotLayout(tier);
+        for (int slot = 0; slot < layout.length; slot++) {
+            if (Slot.CPU.equals(layout[slot].type())) {
+                return slot;
+            }
+        }
+        return -1;
+    }
+
     @Override
     public int tier() {
         return tier;
@@ -536,6 +552,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (!removed.isEmpty()) {
             setChanged();
             notifyHardwareChanged(machine);
+            notifyItemRemoved(machine, tier, slot);
             playDiskRemoveSound(slot);
         }
         return removed;
@@ -549,6 +566,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             notifyHardwareChanged(machine);
+            notifyItemRemoved(machine, tier, slot);
             playDiskRemoveSound(slot);
         }
         return removed;
@@ -566,6 +584,9 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         }
         setChanged();
         notifyHardwareChanged(machine);
+        if (!previous.isEmpty() && !ItemStack.matches(previous, items.get(slot))) {
+            notifyItemRemoved(machine, tier, slot);
+        }
         playDiskChangeSound(slot, previous, items.get(slot));
     }
 
@@ -582,9 +603,13 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     public void clearContent() {
         final ItemStack previousFloppy = floppyStack().copy();
+        final boolean hadCpu = hasCpuStack();
         fillExistingSlots(items, ItemStack.EMPTY);
         setChanged();
         notifyHardwareChanged(machine);
+        if (hadCpu) {
+            notifyItemRemoved(machine, tier, cpuSlot(tier));
+        }
         if (!previousFloppy.isEmpty()) {
             ModSounds.playDiskEject(this);
         }
@@ -692,6 +717,11 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
             }
         }
         return ItemStack.EMPTY;
+    }
+
+    private boolean hasCpuStack() {
+        final int slot = cpuSlot(tier);
+        return slot >= 0 && slot < items.size() && !items.get(slot).isEmpty();
     }
 
     private void playDiskRemoveSound(final int slot) {

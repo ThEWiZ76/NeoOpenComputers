@@ -80,6 +80,24 @@ final class ComputerCaseBootValidationTest {
     }
 
     @Test
+    void cpuRemovalStopsHostedMachineLikeUpstream() {
+        final int[] stops = {0};
+
+        ComputerCaseBlockEntity.notifyItemRemoved(machine(true, new int[1], new int[1], stops), 0, ComputerCaseBlockEntity.SLOT_CPU);
+
+        assertEquals(1, stops[0]);
+    }
+
+    @Test
+    void nonCpuRemovalDoesNotStopHostedMachine() {
+        final int[] stops = {0};
+
+        ComputerCaseBlockEntity.notifyItemRemoved(machine(true, new int[1], new int[1], stops), 0, ComputerCaseBlockEntity.SLOT_MEMORY_0);
+
+        assertEquals(0, stops[0]);
+    }
+
+    @Test
     void clearingInventorySlotsKeepsFixedContainerSize() {
         final List<String> items = new ArrayList<>(List.of("cpu", "memory", "disk"));
 
@@ -119,6 +137,10 @@ final class ComputerCaseBootValidationTest {
     }
 
     private static Machine machine(final boolean canUpdate, final int[] updates, final int[] refreshes) {
+        return machine(canUpdate, updates, refreshes, new int[1]);
+    }
+
+    private static Machine machine(final boolean canUpdate, final int[] updates, final int[] refreshes, final int[] stops) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
@@ -131,6 +153,10 @@ final class ComputerCaseBootValidationTest {
                 case "onHostChanged" -> {
                     refreshes[0]++;
                     yield null;
+                }
+                case "stop" -> {
+                    stops[0]++;
+                    yield true;
                 }
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
