@@ -25,7 +25,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
@@ -35,6 +37,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -51,13 +54,17 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     private static final String TAG_CHARGE_SPEED = "oc:chargeSpeed";
     private static final String TAG_HAS_POWER = "oc:hasPower";
     private static final String TAG_INVERT_SIGNAL = "oc:invertSignal";
+    private static final String TAG_VISUAL_CHARGE_SPEED = "oc:visualChargeSpeed";
+    private static final String TAG_VISUAL_HAS_POWER = "oc:visualHasPower";
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final Connector node;
     private final IEnergyStorage energyStorage;
     private ManagedEnvironment tabletFilesystem;
     private double chargeSpeed;
+    private double clientChargeSpeed;
     private boolean hasPower;
+    private boolean clientHasPower;
     private boolean invertSignal;
 
     public ChargerBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -229,12 +236,25 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     }
 
     public void setChargeSpeed(final double value) {
-        chargeSpeed = Mth.clamp(value, 0D, 1D);
+        final double clamped = Mth.clamp(value, 0D, 1D);
+        if (Double.compare(chargeSpeed, clamped) == 0) {
+            return;
+        }
+        chargeSpeed = clamped;
         setChanged();
+        syncVisualState();
     }
 
     public double chargeSpeed() {
         return chargeSpeed;
+    }
+
+    public double visualChargeSpeed() {
+        return level != null && level.isClientSide ? clientChargeSpeed : chargeSpeed;
+    }
+
+    public boolean isVisuallyPowered() {
+        return level != null && level.isClientSide ? clientHasPower : hasPower;
     }
 
     public void setInvertSignal(final boolean value) {
@@ -257,14 +277,14 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
 
     public boolean runChargeCycle() {
         if (chargeSpeed <= 0D) {
-            hasPower = false;
+            setHasPower(false);
             return false;
         }
 
         final double internalCharge = ModSettings.chargerChargeRateTablet() * chargeSpeed * Math.max(1, ModSettings.mfuTickFrequency());
         final double externalCharge = ModSettings.chargerChargeRate() * chargeSpeed * Math.max(1, ModSettings.mfuTickFrequency());
         if (internalCharge <= 0D && externalCharge <= 0D) {
-            hasPower = false;
+            setHasPower(false);
             return false;
         }
 
@@ -272,7 +292,7 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
             chargeNearbyNanomachineControllers(externalCharge) |
             chargeStack(items.get(SLOT_CHARGEABLE), internalCharge) |
             chargeNearbyPlayerEquipment(internalCharge);
-        hasPower = charged;
+        setHasPower(charged);
         if (charged) {
             setChanged();
         }
@@ -373,6 +393,34 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     }
 
     @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        tag.putDouble(TAG_VISUAL_CHARGE_SPEED, chargeSpeed);
+        tag.putBoolean(TAG_VISUAL_HAS_POWER, hasPower);
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        if (tag.contains(TAG_VISUAL_CHARGE_SPEED)) {
+            clientChargeSpeed = tag.getDouble(TAG_VISUAL_CHARGE_SPEED);
+        }
+        if (tag.contains(TAG_VISUAL_HAS_POWER)) {
+            clientHasPower = tag.getBoolean(TAG_VISUAL_HAS_POWER);
+        }
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNode();
@@ -448,6 +496,21 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
     public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final ChargerBlockEntity charger) {
         if (level.getGameTime() % Math.max(1, ModSettings.mfuTickFrequency()) == 0) {
             charger.runChargeCycle();
+        }
+    }
+
+    private void setHasPower(final boolean value) {
+        if (hasPower == value) {
+            return;
+        }
+        hasPower = value;
+        setChanged();
+        syncVisualState();
+    }
+
+    private void syncVisualState() {
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
         }
     }
 
