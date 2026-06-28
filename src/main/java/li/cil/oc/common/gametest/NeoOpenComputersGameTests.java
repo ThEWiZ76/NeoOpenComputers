@@ -10727,7 +10727,7 @@ public final class NeoOpenComputersGameTests {
         final BlockPos loadedScreenPos = new BlockPos(2, 1, 1);
         final BlockPos loadedKeyboardPos = new BlockPos(2, 1, 2);
 
-        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER3.get());
         helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
         final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
         final KeyboardBlockEntity keyboard = helper.getBlockEntity(keyboardPos);
@@ -10741,7 +10741,7 @@ public final class NeoOpenComputersGameTests {
         final CompoundTag screenTag = screen.saveWithFullMetadata(helper.getLevel().registryAccess());
         final CompoundTag keyboardTag = keyboard.saveWithFullMetadata(helper.getLevel().registryAccess());
 
-        helper.setBlock(loadedScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(loadedScreenPos, ModBlocks.SCREEN_TIER3.get());
         helper.setBlock(loadedKeyboardPos, ModBlocks.KEYBOARD.get());
         final ScreenBlockEntity loadedScreen = helper.getBlockEntity(loadedScreenPos);
         final KeyboardBlockEntity loadedKeyboard = helper.getBlockEntity(loadedKeyboardPos);

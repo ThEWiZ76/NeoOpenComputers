@@ -50,7 +50,7 @@ final class ScreenBlockEntityTest {
 
     @Test
     void togglesPreciseMode() throws Exception {
-        ScreenBlockEntity screen = allocateScreen();
+        ScreenBlockEntity screen = screenWithTier(2);
 
         assertArrayEquals(new Object[]{false}, screen.isPrecise(null, new TestArguments()));
         assertArrayEquals(new Object[]{false}, screen.setPrecise(null, new TestArguments(true)));
@@ -60,8 +60,24 @@ final class ScreenBlockEntityTest {
     }
 
     @Test
+    void preciseModeIsSupportedOnlyByTierThreeScreensLikeUpstream() throws Exception {
+        withCachedConfig(ModSettings.SCREEN_DEPTHS_BY_TIER, List.of(1, 4, 8), () -> {
+            ScreenBlockEntity tierOne = screenWithTier(0);
+            ScreenBlockEntity tierTwo = screenWithTier(1);
+            ScreenBlockEntity tierThree = screenWithTier(2);
+
+            assertArrayEquals(new Object[]{null, "unsupported operation"}, tierOne.setPrecise(null, new TestArguments(true)));
+            assertArrayEquals(new Object[]{false}, tierOne.isPrecise(null, new TestArguments()));
+            assertArrayEquals(new Object[]{null, "unsupported operation"}, tierTwo.setPrecise(null, new TestArguments(true)));
+            assertArrayEquals(new Object[]{false}, tierTwo.isPrecise(null, new TestArguments()));
+            assertArrayEquals(new Object[]{false}, tierThree.setPrecise(null, new TestArguments(true)));
+            assertArrayEquals(new Object[]{true}, tierThree.isPrecise(null, new TestArguments()));
+        });
+    }
+
+    @Test
     void preciseModeMouseEventsUseDoubleCoordinatesLikeUpstream() throws Exception {
-        ScreenBlockEntity screen = allocateScreen();
+        ScreenBlockEntity screen = screenWithTier(2);
         CapturingNode node = new CapturingNode();
         setField(screen, "inputDispatcher", new ScreenInputDispatcher());
         setField(screen, "node", node);
@@ -90,14 +106,12 @@ final class ScreenBlockEntityTest {
     @Test
     void persistsPreciseMode() throws Exception {
         OpenComputersApi.initialize();
-        ScreenBlockEntity saved = allocateScreen();
-        initializeBuffer(saved);
+        ScreenBlockEntity saved = screenWithTier(2);
         saved.setPrecise(null, new TestArguments(true));
         CompoundTag tag = new CompoundTag();
 
         saved.save(tag);
-        ScreenBlockEntity loaded = allocateScreen();
-        initializeBuffer(loaded);
+        ScreenBlockEntity loaded = screenWithTier(2);
         loaded.load(tag);
 
         assertArrayEquals(new Object[]{true}, loaded.isPrecise(null, new TestArguments()));
@@ -276,6 +290,15 @@ final class ScreenBlockEntityTest {
 
     private static void initializeBuffer(final ScreenBlockEntity screen) throws Exception {
         setField(screen, "buffer", new TextBufferState(1, 1));
+    }
+
+    private static ScreenBlockEntity screenWithTier(final int tier) throws Exception {
+        ScreenBlockEntity screen = allocateScreen();
+        initializeBuffer(screen);
+        Method configureTier = ScreenBlockEntity.class.getDeclaredMethod("configureTier", int.class);
+        configureTier.setAccessible(true);
+        configureTier.invoke(screen, tier);
+        return screen;
     }
 
     private static int configuredScreenRenderColor(final int tier) throws Exception {

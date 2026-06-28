@@ -190,6 +190,9 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
 
     @Callback(doc = "function(enabled:boolean):boolean -- Set whether to use high precision mode.")
     public Object[] setPrecise(final Context context, final Arguments args) {
+        if (!supportsPrecisionMode()) {
+            return new Object[]{null, "unsupported operation"};
+        }
         final boolean oldValue = precisionMode;
         precisionMode = args.checkBoolean(0);
         if (precisionMode != oldValue) {
@@ -531,5 +534,9 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
         if (host != null) {
             host.markChanged();
         }
+    }
+
+    private boolean supportsPrecisionMode() {
+        return maximumColorDepth == ModSettings.screenDepthByTier(2);
     }
 }

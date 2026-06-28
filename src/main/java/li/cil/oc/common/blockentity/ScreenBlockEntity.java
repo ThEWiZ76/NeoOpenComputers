@@ -291,6 +291,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Callback(doc = "function(enabled:boolean):boolean -- Set whether to use high precision mode.")
     public Object[] setPrecise(final Context context, final Arguments args) {
+        if (!supportsPrecisionMode()) {
+            return new Object[]{null, "unsupported operation"};
+        }
         final boolean oldValue = precisionMode;
         precisionMode = args.checkBoolean(0);
         if (precisionMode != oldValue) {
@@ -1018,6 +1021,11 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (maximumWidth < 1 || maximumHeight < 1 || maximumColorDepth == null) {
             configureTier(tier);
         }
+    }
+
+    private boolean supportsPrecisionMode() {
+        ensureTierConfigured();
+        return maximumColorDepth == ModSettings.screenDepthByTier(2);
     }
 
     private static int tierFromBlockState(final BlockState blockState) {
