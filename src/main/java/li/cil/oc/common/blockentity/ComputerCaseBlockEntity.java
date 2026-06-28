@@ -70,6 +70,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private static final String SLOT_TYPE_EEPROM = "eeprom";
     private static final int TIER_ANY = Integer.MAX_VALUE;
     private static final int BUNDLED_COLOR_COUNT = 16;
+    private static final double MACHINE_ERROR_MESSAGE_RANGE_SQUARED = 64D * 64D;
     private static final CaseSlot[][] SLOT_LAYOUTS = {
         {
             new CaseSlot(Slot.Card, 0),
@@ -460,6 +461,14 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         }
     }
 
+    static boolean shouldReportMachineError(final boolean wasRunning, final boolean running, final String lastError) {
+        return wasRunning && !running && lastError != null && !lastError.isEmpty();
+    }
+
+    static Component machineErrorMessage(final String lastError) {
+        return Component.literal("Computer error: " + firstErrorLine(lastError));
+    }
+
     public static void activateMachineFromBlockUse(final Machine machine) {
         if (machine != null && !machine.isRunning()) {
             machine.start();
@@ -499,6 +508,19 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
             DeviceInfo.DeviceAttribute.Product, "Blocker",
             DeviceInfo.DeviceAttribute.Capacity, Integer.toString(Math.max(0, capacity))
         );
+    }
+
+    private static String firstErrorLine(final String lastError) {
+        int end = lastError.length();
+        final int carriageReturn = lastError.indexOf('\r');
+        final int lineFeed = lastError.indexOf('\n');
+        if (carriageReturn >= 0) {
+            end = Math.min(end, carriageReturn);
+        }
+        if (lineFeed >= 0) {
+            end = Math.min(end, lineFeed);
+        }
+        return lastError.substring(0, end);
     }
 
     private static int nextComponentSlot(final List<ItemStack> items, final int tier, final int start) {
@@ -762,16 +784,30 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     private void syncMachineStateIfChanged() {
+        final boolean wasRunning = lastSyncedRunning;
         final boolean running = isMachineRunningForClient();
-        final boolean errored = isMachineErroredForClient();
+        final String lastError = machine == null ? null : machine.lastError();
+        final boolean errored = lastError != null;
         if ((running == lastSyncedRunning && errored == lastSyncedErrored) || level == null || level.isClientSide) {
             return;
+        }
+        if (shouldReportMachineError(wasRunning, running, lastError)) {
+            reportMachineError(lastError);
         }
         lastSyncedRunning = running;
         lastSyncedErrored = errored;
         setChanged();
         final BlockState state = getBlockState();
         level.sendBlockUpdated(worldPosition, state, state, 3);
+    }
+
+    private void reportMachineError(final String lastError) {
+        final Component message = machineErrorMessage(lastError);
+        for (final Player player : level.players()) {
+            if (player.distanceToSqr(xPosition(), yPosition(), zPosition()) <= MACHINE_ERROR_MESSAGE_RANGE_SQUARED) {
+                player.sendSystemMessage(message);
+            }
+        }
     }
 
     private void syncClientData() {

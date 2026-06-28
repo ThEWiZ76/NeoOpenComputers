@@ -31,7 +31,17 @@ public class DiskDriveMenu extends AbstractContainerMenu {
         this.diskInventory = diskInventory;
         diskInventory.startOpen(playerInventory.player);
 
-        addSlot(new Slot(diskInventory, DiskDriveBlockEntity.SLOT_FLOPPY, 80, 35));
+        addSlot(new Slot(diskInventory, DiskDriveBlockEntity.SLOT_FLOPPY, 80, 35) {
+            @Override
+            public boolean mayPlace(final ItemStack stack) {
+                return diskInventory.canPlaceItem(DiskDriveBlockEntity.SLOT_FLOPPY, stack);
+            }
+
+            @Override
+            public int getMaxStackSize() {
+                return diskInventory.getMaxStackSize();
+            }
+        });
         addPlayerInventory(playerInventory);
     }
 

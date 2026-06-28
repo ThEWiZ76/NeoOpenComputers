@@ -120,6 +120,22 @@ final class ComputerCaseBootValidationTest {
     }
 
     @Test
+    void reportsDelayedBootCrashAfterMachineWasRunning() {
+        assertTrue(ComputerCaseBlockEntity.shouldReportMachineError(true, false, "boot:60 no bootable medium found"));
+        assertEquals(
+            "Computer error: boot:60 no bootable medium found",
+            ComputerCaseBlockEntity.machineErrorMessage("boot:60 no bootable medium found").getString());
+    }
+
+    @Test
+    void doesNotReportMachineErrorWithoutNewStoppedError() {
+        assertFalse(ComputerCaseBlockEntity.shouldReportMachineError(false, false, "boot failed"));
+        assertFalse(ComputerCaseBlockEntity.shouldReportMachineError(true, true, "boot failed"));
+        assertFalse(ComputerCaseBlockEntity.shouldReportMachineError(true, false, null));
+        assertFalse(ComputerCaseBlockEntity.shouldReportMachineError(true, false, ""));
+    }
+
+    @Test
     void clearingInventorySlotsKeepsFixedContainerSize() {
         final List<String> items = new ArrayList<>(List.of("cpu", "memory", "disk"));
 

@@ -39,4 +39,14 @@ final class DiskDriveMenuShapeTest {
         assertTrue(!source.contains("mediaState"));
         assertTrue(!source.contains("STATE_LOADED"));
     }
+
+    @Test
+    void diskDriveMenuSlotUsesDiskInventoryPlacementRules() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/menu/DiskDriveMenu.java"));
+
+        assertTrue(source.contains("boolean mayPlace"), "Drive slot should validate floppy placement server-side");
+        assertTrue(source.contains("diskInventory.canPlaceItem(DiskDriveBlockEntity.SLOT_FLOPPY, stack)"), "Drive slot should delegate to disk drive inventory rules");
+        assertTrue(source.contains("int getMaxStackSize"), "Drive slot should keep media stack size at one");
+        assertTrue(source.contains("diskInventory.getMaxStackSize()"), "Drive slot should use disk drive max stack size");
+    }
 }
