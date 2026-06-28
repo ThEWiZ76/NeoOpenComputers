@@ -8,6 +8,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -164,7 +166,14 @@ public class PrintBlockEntity extends BlockEntity {
 
     private void toggleState() {
         activeState = !activeState;
+        if (level != null && !level.isClientSide) {
+            level.playSound(null, worldPosition, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.3F, toggleStatePitch(activeState));
+        }
         notifyUpdated();
+    }
+
+    static float toggleStatePitch(final boolean activeState) {
+        return activeState ? 0.6F : 0.5F;
     }
 
     private void updateBounds() {
