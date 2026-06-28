@@ -151,7 +151,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
                 renderCellBackground(poseStack, bufferSource, column, row, backgroundColor);
                 if (!cell.isBlank()) {
                     final int textColor = textColorWithAlpha(screen.getForegroundColor(column, row), textAlpha);
-                    font.drawInBatch(cell, column * CELL_WIDTH + centeredCellOffset(font.width(cell)), row * LINE_HEIGHT, textColor, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
+                    font.drawInBatch(TerminalText.cell(cell), column * CELL_WIDTH + centeredCellOffset(font.width(cell)), row * LINE_HEIGHT, textColor, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
                 }
             }
         }

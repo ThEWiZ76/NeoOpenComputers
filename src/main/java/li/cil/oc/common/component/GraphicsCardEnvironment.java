@@ -13,6 +13,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.util.FontWidths;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
@@ -103,10 +104,11 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             return new Object[]{null, "not a screen"};
         }
 
-        screenAddress = address;
-        screen = buffer;
+        final TextBuffer binding = bindingTarget(buffer);
+        screenAddress = binding.node() == null ? address : binding.node().address();
+        screen = binding;
         if (reset) {
-            resetScreen(buffer);
+            resetScreen(binding);
         } else if (context != null) {
             context.pause(0);
         }
@@ -431,12 +433,19 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Override
     public void onConnect(final Node connectedNode) {
-        if (screen == null && screenAddress != null && screenAddress.equals(connectedNode.address()) && connectedNode.host() instanceof TextBuffer buffer) {
-            screen = buffer;
-        } else if (screen == null && screenAddress == null && connectedNode.host() instanceof TextBuffer buffer && node() != null && node().isNeighborOf(connectedNode)) {
-            screenAddress = connectedNode.address();
-            screen = buffer;
-            resetScreen(buffer);
+        if (!(connectedNode.host() instanceof TextBuffer buffer)) {
+            return;
+        }
+        final TextBuffer target = bindingTarget(buffer);
+        final String targetAddress = target.node() == null ? connectedNode.address() : target.node().address();
+        if (screen == null && screenAddress != null && (screenAddress.equals(connectedNode.address()) || screenAddress.equals(targetAddress))) {
+            screenAddress = targetAddress;
+            screen = target;
+            persistData();
+        } else if (screen == null && screenAddress == null && node() != null && node().isNeighborOf(connectedNode)) {
+            screenAddress = targetAddress;
+            screen = target;
+            resetScreen(target);
             persistData();
         }
     }
@@ -517,13 +526,18 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         }
         for (Node candidate : node().network().nodes(node())) {
             if (candidate.host() instanceof TextBuffer buffer) {
-                screenAddress = candidate.address();
-                screen = buffer;
-                resetScreen(buffer);
+                final TextBuffer target = bindingTarget(buffer);
+                screenAddress = target.node() == null ? candidate.address() : target.node().address();
+                screen = target;
+                resetScreen(target);
                 persistData();
                 return;
             }
         }
+    }
+
+    static TextBuffer bindingTarget(final TextBuffer buffer) {
+        return buffer instanceof ScreenBlockEntity screenBlock ? screenBlock.originScreen() : buffer;
     }
 
     private void persistData() {

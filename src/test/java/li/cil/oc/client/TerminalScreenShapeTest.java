@@ -6,6 +6,7 @@ import li.cil.oc.common.network.TerminalClipboardPayload;
 import li.cil.oc.common.network.TerminalKeyPayload;
 import li.cil.oc.common.network.TerminalMousePayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Inventory;
@@ -197,6 +198,13 @@ final class TerminalScreenShapeTest {
         assertEquals(0, TerminalScreen.centeredCellOffset(1));
         assertEquals(0, TerminalScreen.centeredCellOffset(6));
         assertEquals(0, TerminalScreen.centeredCellOffset(8));
+    }
+
+    @Test
+    void terminalScreenUsesUniformMinecraftFontForCellGlyphs() {
+        assertEquals(Minecraft.UNIFORM_FONT, TerminalText.font());
+        assertEquals("i", TerminalText.cell("i").getString());
+        assertEquals(Minecraft.UNIFORM_FONT, TerminalText.cell("i").getStyle().getFont());
     }
 
     @Test

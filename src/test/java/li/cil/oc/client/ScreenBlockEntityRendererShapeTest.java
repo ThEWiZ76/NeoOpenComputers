@@ -2,6 +2,7 @@ package li.cil.oc.client;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -173,6 +174,12 @@ final class ScreenBlockEntityRendererShapeTest {
     void screenRendererDrawsGlyphsAtFixedCellOriginForMonospaceAlignment() {
         assertEquals(0, ScreenBlockEntityRenderer.centeredCellOffset(1));
         assertEquals(0, ScreenBlockEntityRenderer.centeredCellOffset(6));
+    }
+
+    @Test
+    void screenRendererUsesUniformMinecraftFontForWorldText() {
+        assertEquals(Minecraft.UNIFORM_FONT, TerminalText.font());
+        assertEquals(Minecraft.UNIFORM_FONT, TerminalText.cell("i").getStyle().getFont());
     }
 
     @Test

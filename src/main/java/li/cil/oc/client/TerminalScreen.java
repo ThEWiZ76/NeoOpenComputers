@@ -66,7 +66,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
                     if (!cell.text().isBlank()) {
                         guiGraphics.drawString(
                             font,
-                            cell.text(),
+                            TerminalText.cell(cell.text()),
                             left + TEXT_LEFT + cell.column() * CELL_WIDTH + centeredCellOffset(font.width(cell.text())),
                             top + TEXT_TOP + row * LINE_HEIGHT,
                             cell.color(),

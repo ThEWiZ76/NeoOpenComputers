@@ -242,14 +242,25 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         if (occupied) {
             return;
         }
-        final ResourceLocation tierTexture = tierIconTexture(tier);
-        if (tierTexture != null) {
-            guiGraphics.blit(tierTexture, iconLeft, iconTop, 0, 0, SLOT_SIZE, SLOT_SIZE, SLOT_SIZE, SLOT_SIZE);
+        for (final ResourceLocation texture : slotOverlayTextures(kind, tier, occupied)) {
+            guiGraphics.blit(texture, iconLeft, iconTop, 0, 0, SLOT_SIZE, SLOT_SIZE, SLOT_SIZE, SLOT_SIZE);
         }
+    }
+
+    static List<ResourceLocation> slotOverlayTextures(final String kind, final int tier, final boolean occupied) {
+        if (occupied) {
+            return List.of();
+        }
+        final List<ResourceLocation> textures = new ArrayList<>(2);
         final ResourceLocation slotTexture = slotIconTexture(kind);
         if (slotTexture != null) {
-            guiGraphics.blit(slotTexture, iconLeft, iconTop, 0, 0, SLOT_SIZE, SLOT_SIZE, SLOT_SIZE, SLOT_SIZE);
+            textures.add(slotTexture);
         }
+        final ResourceLocation tierTexture = tierIconTexture(tier);
+        if (tierTexture != null) {
+            textures.add(tierTexture);
+        }
+        return textures;
     }
 
     private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state, final boolean hovered) {

@@ -203,6 +203,15 @@ final class ComputerCaseScreenShapeTest {
         assertEquals(false, ComputerCaseScreen.shouldRenderSlotOverlayTooltip(false, false));
     }
 
+    @Test
+    void computerCaseScreenDrawsSlotKindBeforeTierBadgeSoTierRemainsVisible() {
+        assertEquals(List.of(
+                ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/cpu.png"),
+                ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/tier2.png")),
+            ComputerCaseScreen.slotOverlayTextures("cpu", 2, false));
+        assertEquals(List.of(), ComputerCaseScreen.slotOverlayTextures("cpu", 2, true));
+    }
+
     private static void assertTranslationKey(final String expected, final Component component) {
         assertTrue(component.getContents() instanceof TranslatableContents);
         assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());

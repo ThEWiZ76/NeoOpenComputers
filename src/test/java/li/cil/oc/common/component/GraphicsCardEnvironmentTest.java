@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -139,6 +141,21 @@ final class GraphicsCardEnvironmentTest {
         assertArrayEquals(new Object[]{true}, gpu.bind(null, new TestArguments(screen.node().address(), true)));
         assertArrayEquals(new Object[]{screen.node().address()}, gpu.getScreen(null, new TestArguments()));
         assertArrayEquals(new Object[]{50, 16}, gpu.getResolution(null, new TestArguments()));
+    }
+
+    @Test
+    void bindsPhysicalMultiblockScreensThroughOriginBuffer() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java"));
+
+        assertTrue(source.contains("originScreen()"), "Physical screen binding must normalize multiblock child screens to the origin screen");
+        assertTrue(source.contains("bindingTarget"), "GPU binding should share the same origin normalization for explicit and automatic binds");
+    }
+
+    @Test
+    void leavesNonPhysicalScreenBindingsUntouched() {
+        FakeTextBuffer screen = new FakeTextBuffer();
+
+        assertEquals(screen, GraphicsCardEnvironment.bindingTarget(screen));
     }
 
     @Test
