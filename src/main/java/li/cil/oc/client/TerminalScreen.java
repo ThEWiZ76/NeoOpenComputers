@@ -102,7 +102,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     private void handleTerminalKeyPressed(final int keyCode) {
-        if (hasControlDown() && keyCode == GLFW.GLFW_KEY_V && minecraft != null) {
+        if (shouldPasteClipboardForKey(keyCode, hasControlDown()) && minecraft != null) {
             sendClipboardInput(minecraft.keyboardHandler.getClipboard());
             return;
         }
@@ -145,6 +145,10 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     @Override
     public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (shouldPasteClipboardForMouseButton(button) && minecraft != null) {
+            sendClipboardInput(minecraft.keyboardHandler.getClipboard());
             return true;
         }
         sendMouseInput(TerminalMousePayload.MOUSE_DOWN, mouseX, mouseY, button);
@@ -230,6 +234,14 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             payloads.add(keyPayload(menu, false, entry.getValue(), entry.getKey()));
         }
         return payloads;
+    }
+
+    static boolean shouldPasteClipboardForKey(final int keyCode, final boolean controlDown) {
+        return keyCode == GLFW.GLFW_KEY_INSERT || controlDown && keyCode == GLFW.GLFW_KEY_V;
+    }
+
+    static boolean shouldPasteClipboardForMouseButton(final int button) {
+        return button == 2;
     }
 
     private static boolean ignoreRepeat(final int keyCode) {

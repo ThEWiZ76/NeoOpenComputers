@@ -383,6 +383,21 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenTreatsInsertAsDefaultClipboardPasteKeyLikeUpstream() {
+        assertEquals(true, TerminalScreen.shouldPasteClipboardForKey(GLFW.GLFW_KEY_INSERT, false));
+        assertEquals(true, TerminalScreen.shouldPasteClipboardForKey(GLFW.GLFW_KEY_V, true));
+        assertEquals(false, TerminalScreen.shouldPasteClipboardForKey(GLFW.GLFW_KEY_V, false));
+        assertEquals(false, TerminalScreen.shouldPasteClipboardForKey(GLFW.GLFW_KEY_A, false));
+    }
+
+    @Test
+    void terminalScreenTreatsMiddleMouseAsClipboardPasteLikeUpstream() {
+        assertEquals(true, TerminalScreen.shouldPasteClipboardForMouseButton(2));
+        assertEquals(false, TerminalScreen.shouldPasteClipboardForMouseButton(0));
+        assertEquals(false, TerminalScreen.shouldPasteClipboardForMouseButton(1));
+    }
+
+    @Test
     void terminalScreenBuildsMousePayloadForMenuCoordinates() throws ReflectiveOperationException {
         final TerminalMenu menu = allocateMenu(12);
 
