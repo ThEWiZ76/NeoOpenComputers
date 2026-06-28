@@ -7,11 +7,16 @@ import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class PrinterBlockEntityTest {
     @Test
@@ -22,6 +27,22 @@ final class PrinterBlockEntityTest {
         assertThrows(RuntimeException.class, () -> printer.setCollidable(null, new TestArguments(true, "bad")));
 
         assertArrayEquals(new Object[]{false, true}, printer.isCollidable(null, new TestArguments()));
+    }
+
+    @Test
+    void syncsPrintPreviewDataToClientRenderer() throws Exception {
+        final Method updateTag = PrinterBlockEntity.class.getDeclaredMethod("getUpdateTag", net.minecraft.core.HolderLookup.Provider.class);
+        final Method updatePacket = PrinterBlockEntity.class.getDeclaredMethod("getUpdatePacket");
+        final Method previewStack = PrinterBlockEntity.class.getDeclaredMethod("previewStack");
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/PrinterBlockEntity.java"));
+
+        assertEquals(net.minecraft.nbt.CompoundTag.class, updateTag.getReturnType());
+        assertEquals(net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.class, updatePacket.getReturnType());
+        assertEquals(net.minecraft.world.item.ItemStack.class, previewStack.getReturnType());
+        assertTrue(source.contains("ClientboundBlockEntityDataPacket.create(this)"));
+        assertTrue(source.contains("TAG_VISUAL_DATA"));
+        assertTrue(source.contains("data.save"));
+        assertTrue(source.contains("data.load"));
     }
 
     private static PrinterBlockEntity allocatePrinter() throws Exception {

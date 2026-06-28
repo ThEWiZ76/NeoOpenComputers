@@ -25,6 +25,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
@@ -58,6 +60,7 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
     private static final String TAG_OUTPUT = "output";
     private static final String TAG_TOTAL_ENERGY = "total";
     private static final String TAG_REMAINING_ENERGY = "remaining";
+    private static final String TAG_VISUAL_DATA = "visualData";
     public static final int MAX_MATERIAL = 256_000;
     public static final int MAX_INK = 100_000;
     private static final Map<String, String> DEVICE_INFO = Map.of(
@@ -343,6 +346,10 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
         return !pendingOutput.isEmpty();
     }
 
+    public ItemStack previewStack() {
+        return data.stateOff().isEmpty() ? ItemStack.EMPTY : data.createItemStack();
+    }
+
     @Override
     public EnumSet<StateAware.State> getCurrentState() {
         if (isPrinting()) {
@@ -517,6 +524,32 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
                 .ifPresent(outputTag -> tag.put(TAG_OUTPUT, outputTag));
         }
         save(tag);
+    }
+
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        final CompoundTag dataTag = new CompoundTag();
+        data.save(dataTag);
+        tag.put(TAG_VISUAL_DATA, dataTag);
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        if (tag.contains(TAG_VISUAL_DATA)) {
+            data.load(tag.getCompound(TAG_VISUAL_DATA));
+        }
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
     }
 
     @Override
