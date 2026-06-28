@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import li.cil.oc.api.network.EnvironmentHost;
+import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -90,5 +92,38 @@ final class SoundResourceTest {
         assertFalse(block.contains("ModSounds.playDiskEject"), "Block use path should not double-play eject sounds");
         assertTrue(blockEntity.contains("ModSounds.playDiskInsert"), "Disk-drive inventory inserts should play upstream insert sound");
         assertTrue(blockEntity.contains("ModSounds.playDiskEject"), "Disk-drive inventory removals should play upstream eject sound");
+    }
+
+    @Test
+    void diskChangeSoundsUseUpstreamHostSoundCooldown() {
+        final FakeHost host = new FakeHost();
+        final FakeHost otherHost = new FakeHost();
+
+        assertTrue(ModSounds.shouldPlay(host, ModSounds.FLOPPY_INSERT, 1_000L));
+        assertFalse(ModSounds.shouldPlay(host, ModSounds.FLOPPY_INSERT, 1_499L));
+        assertTrue(ModSounds.shouldPlay(host, ModSounds.FLOPPY_EJECT, 1_499L));
+        assertTrue(ModSounds.shouldPlay(otherHost, ModSounds.FLOPPY_INSERT, 1_499L));
+        assertTrue(ModSounds.shouldPlay(host, ModSounds.FLOPPY_INSERT, 1_500L));
+    }
+
+    private static final class FakeHost implements EnvironmentHost {
+        @Override public Level world() {
+            return null;
+        }
+
+        @Override public double xPosition() {
+            return 0;
+        }
+
+        @Override public double yPosition() {
+            return 0;
+        }
+
+        @Override public double zPosition() {
+            return 0;
+        }
+
+        @Override public void markChanged() {
+        }
     }
 }

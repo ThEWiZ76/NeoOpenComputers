@@ -12,6 +12,10 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
+
 public final class ModSounds {
     public static final String COMPUTER_RUNNING = "computer_running";
     public static final String FLOPPY_ACCESS = "floppy_access";
@@ -24,6 +28,8 @@ public final class ModSounds {
     public static final String FLOPPY_EJECT_ID = soundId(FLOPPY_EJECT);
     public static final String FLOPPY_INSERT_ID = soundId(FLOPPY_INSERT);
     public static final String HDD_ACCESS_ID = soundId(HDD_ACCESS);
+    private static final long SOUND_COOLDOWN_MILLIS = 500L;
+    private static final Map<EnvironmentHost, Map<String, Long>> GLOBAL_TIMEOUTS = new WeakHashMap<>();
 
     private ModSounds() {
     }
@@ -48,11 +54,27 @@ public final class ModSounds {
     }
 
     public static void playDiskInsert(final EnvironmentHost host) {
-        play(host, RegistryEvents.FLOPPY_INSERT_EVENT.get());
+        if (shouldPlay(host, FLOPPY_INSERT, System.currentTimeMillis())) {
+            play(host, RegistryEvents.FLOPPY_INSERT_EVENT.get());
+        }
     }
 
     public static void playDiskEject(final EnvironmentHost host) {
-        play(host, RegistryEvents.FLOPPY_EJECT_EVENT.get());
+        if (shouldPlay(host, FLOPPY_EJECT, System.currentTimeMillis())) {
+            play(host, RegistryEvents.FLOPPY_EJECT_EVENT.get());
+        }
+    }
+
+    static synchronized boolean shouldPlay(final EnvironmentHost host, final String name, final long nowMillis) {
+        if (host == null) {
+            return true;
+        }
+        final Map<String, Long> hostTimeouts = GLOBAL_TIMEOUTS.computeIfAbsent(host, ignored -> new HashMap<>());
+        if (hostTimeouts.getOrDefault(name, 0L) > nowMillis) {
+            return false;
+        }
+        hostTimeouts.put(name, nowMillis + SOUND_COOLDOWN_MILLIS);
+        return true;
     }
 
     public static void play(final EnvironmentHost host, final SoundEvent sound) {
