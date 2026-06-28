@@ -87,11 +87,14 @@ final class SoundResourceTest {
     void diskDriveInsertAndEjectUseUpstreamSounds() throws IOException {
         final String block = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/DiskDriveBlock.java"));
         final String blockEntity = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java"));
+        final String mountable = Files.readString(Path.of("src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java"));
 
         assertFalse(block.contains("ModSounds.playDiskInsert"), "Block use path should not double-play insert sounds");
         assertFalse(block.contains("ModSounds.playDiskEject"), "Block use path should not double-play eject sounds");
         assertTrue(blockEntity.contains("ModSounds.playDiskInsert"), "Disk-drive inventory inserts should play upstream insert sound");
         assertTrue(blockEntity.contains("ModSounds.playDiskEject"), "Disk-drive inventory removals should play upstream eject sound");
+        assertTrue(mountable.contains("ModSounds.playDiskInsert"), "Rack disk-drive mountable inserts should play upstream insert sound");
+        assertTrue(mountable.contains("ModSounds.playDiskEject"), "Rack disk-drive mountable removals should play upstream eject sound");
     }
 
     @Test

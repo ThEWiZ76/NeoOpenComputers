@@ -18,6 +18,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.util.StateAware;
+import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.menu.DiskDriveMenu;
@@ -254,6 +255,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         if (!removed.isEmpty()) {
             markChanged();
             refreshDiskEnvironment();
+            ModSounds.playDiskEject(this);
         }
         return removed;
     }
@@ -266,6 +268,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             refreshDiskEnvironment();
+            ModSounds.playDiskEject(this);
         }
         return removed;
     }
@@ -275,6 +278,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         if (slot != DiskDriveBlockEntity.SLOT_FLOPPY || (!stack.isEmpty() && !canPlaceItem(slot, stack))) {
             return;
         }
+        final ItemStack previous = items.get(DiskDriveBlockEntity.SLOT_FLOPPY).copy();
         final ItemStack stored = stack.copy();
         if (!stored.isEmpty() && stored.getCount() > getMaxStackSize()) {
             stored.setCount(getMaxStackSize());
@@ -282,6 +286,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         items.set(DiskDriveBlockEntity.SLOT_FLOPPY, stored);
         markChanged();
         refreshDiskEnvironment();
+        playDiskChangeSound(previous, stored);
     }
 
     @Override
@@ -313,9 +318,13 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
 
     @Override
     public void clearContent() {
+        final boolean hadDisk = !items.get(DiskDriveBlockEntity.SLOT_FLOPPY).isEmpty();
         items.set(DiskDriveBlockEntity.SLOT_FLOPPY, ItemStack.EMPTY);
         markChanged();
         refreshDiskEnvironment();
+        if (hadDisk) {
+            ModSounds.playDiskEject(this);
+        }
     }
 
     private void refreshDiskEnvironment() {
@@ -343,6 +352,18 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
             component.setVisibility(Visibility.Network);
         }
         node().connect(diskEnvironment.node());
+    }
+
+    private void playDiskChangeSound(final ItemStack previous, final ItemStack current) {
+        if (ItemStack.matches(previous, current)) {
+            return;
+        }
+        if (!previous.isEmpty()) {
+            ModSounds.playDiskEject(this);
+        }
+        if (!current.isEmpty()) {
+            ModSounds.playDiskInsert(this);
+        }
     }
 
     private void spawnEjectedDisk(final ItemStack stack, final double velocity) {
