@@ -10002,6 +10002,39 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void graphicsCardRecoversReachableScreenWhenLoadedWithoutSavedBinding(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final ItemStack graphicsCard = new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get());
+        final CompoundTag legacyData = ItemDriverData.dataTag(graphicsCard);
+        legacyData.put("videoRam", new CompoundTag());
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, graphicsCard);
+
+        final String gpuAddress = componentAddress(computer, "gpu");
+        final String screenAddress = componentAddress(computer, "screen");
+        helper.assertTrue(gpuAddress != null, "Graphics card component is not visible: " + computer.machine().components());
+        helper.assertTrue(screenAddress != null, "Screen component is not visible: " + computer.machine().components());
+        try {
+            assertSingleResult(helper, computer.machine().invoke(gpuAddress, "getScreen", new Object[]{}), screenAddress, "Recovered GPU screen");
+        } catch (Exception e) {
+            helper.fail("GPU screen recovery check failed: " + e.getMessage());
+            return;
+        }
+
+        final CompoundTag machineData = new CompoundTag();
+        computer.machine().save(machineData);
+
+        final CompoundTag cardData = ItemDriverData.dataTag(computer.getItem(ComputerCaseBlockEntity.SLOT_CARD_0));
+        helper.assertTrue(screenAddress.equals(cardData.getString("screen")), "Recovered graphics card did not persist screen; data=" + cardData);
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 360)
     public static void tier1ComputerWithNetworkCardBootsOpenOsHardDiskToLiveStyleScreenWall(final GameTestHelper helper) {
         final BlockState screenState = ModBlocks.SCREEN_TIER1.get().defaultBlockState()

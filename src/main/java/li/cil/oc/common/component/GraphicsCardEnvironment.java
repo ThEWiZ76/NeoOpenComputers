@@ -115,6 +115,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
 
     @Callback(direct = true, doc = "function():string -- Returns the bound screen address.")
     public Object[] getScreen(final Context context, final Arguments args) {
+        ensureScreenBinding();
         return screen == null || screen.node() == null ? noScreen() : new Object[]{screen.node().address()};
     }
 
@@ -429,9 +430,14 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     @Override
-    public void onConnect(final Node node) {
-        if (screen == null && screenAddress != null && screenAddress.equals(node.address()) && node.host() instanceof TextBuffer buffer) {
+    public void onConnect(final Node connectedNode) {
+        if (screen == null && screenAddress != null && screenAddress.equals(connectedNode.address()) && connectedNode.host() instanceof TextBuffer buffer) {
             screen = buffer;
+        } else if (screen == null && screenAddress == null && connectedNode.host() instanceof TextBuffer buffer && node() != null && node().isNeighborOf(connectedNode)) {
+            screenAddress = connectedNode.address();
+            screen = buffer;
+            resetScreen(buffer);
+            persistData();
         }
     }
 
@@ -480,6 +486,13 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     @Override
     public void save(final CompoundTag nbt) {
         super.save(nbt);
+        writeData(nbt);
+        if (saveData != null) {
+            saveData.accept(nbt.copy());
+        }
+    }
+
+    private void writeData(final CompoundTag nbt) {
         if (screenAddress != null) {
             nbt.putString(SCREEN_TAG, screenAddress);
         }
@@ -496,7 +509,28 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         }
         videoRam.put(PAGES_TAG, pages);
         nbt.put(VIDEO_RAM_TAG, videoRam);
+    }
+
+    private void ensureScreenBinding() {
+        if (screen != null || screenAddress != null || node() == null || node().network() == null) {
+            return;
+        }
+        for (Node candidate : node().network().nodes(node())) {
+            if (candidate.host() instanceof TextBuffer buffer) {
+                screenAddress = candidate.address();
+                screen = buffer;
+                resetScreen(buffer);
+                persistData();
+                return;
+            }
+        }
+    }
+
+    private void persistData() {
         if (saveData != null) {
+            final CompoundTag nbt = new CompoundTag();
+            super.save(nbt);
+            writeData(nbt);
             saveData.accept(nbt.copy());
         }
     }
@@ -521,6 +555,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     }
 
     private TextBuffer buffer(final int index) {
+        if (index == SCREEN_INDEX) {
+            ensureScreenBinding();
+        }
         return index == SCREEN_INDEX ? screen : videoBuffers.get(index);
     }
 
