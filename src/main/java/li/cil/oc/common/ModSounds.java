@@ -88,7 +88,7 @@ public final class ModSounds {
         if (level == null || level.isClientSide || sound == null) {
             return;
         }
-        level.playSound(null, BlockPos.containing(x, y, z), sound, SoundSource.BLOCKS, 1.0F, 1.0F);
+        level.playSound(null, BlockPos.containing(x, y, z), sound, SoundSource.BLOCKS, (float) ModSettings.soundVolume(), 1.0F);
     }
 
     private static ResourceLocation id(final String name) {

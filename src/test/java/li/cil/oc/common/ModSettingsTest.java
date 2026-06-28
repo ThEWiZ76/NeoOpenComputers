@@ -410,6 +410,18 @@ final class ModSettingsTest {
             }));
     }
 
+    @Test
+    void soundVolumeReadsUpstreamClientConfiguration() throws Exception {
+        final Field field = ModSettings.class.getDeclaredField("SOUND_VOLUME");
+        @SuppressWarnings("unchecked")
+        final ModConfigSpec.DoubleValue value = (ModConfigSpec.DoubleValue) field.get(null);
+
+        assertEquals(List.of("client", "soundVolume"), value.getPath());
+        assertEquals(1D, ModSettings.class.getDeclaredMethod("soundVolume").invoke(null));
+        withCachedConfig(value, 1.75D, () ->
+            assertEquals(1.75D, ModSettings.class.getDeclaredMethod("soundVolume").invoke(null)));
+    }
+
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
         final Field cachedValue = ModConfigSpec.ConfigValue.class.getDeclaredField("cachedValue");
         cachedValue.setAccessible(true);

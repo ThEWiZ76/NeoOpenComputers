@@ -112,6 +112,13 @@ final class SoundResourceTest {
         assertTrue(ModSounds.shouldPlay(host, ModSounds.FLOPPY_INSERT, 1_500L));
     }
 
+    @Test
+    void soundsUseUpstreamClientVolumeSetting() throws IOException {
+        final String sounds = Files.readString(Path.of("src/main/java/li/cil/oc/common/ModSounds.java"));
+
+        assertTrue(sounds.contains("ModSettings.soundVolume()"), "OpenComputers sounds should use client.soundVolume");
+    }
+
     private static final class FakeHost implements EnvironmentHost {
         @Override public Level world() {
             return null;

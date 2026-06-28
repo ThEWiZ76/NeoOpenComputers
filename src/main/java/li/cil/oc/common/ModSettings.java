@@ -111,6 +111,7 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<String> HTTP_USER_AGENT;
     public static final ModConfigSpec.BooleanValue ENABLE_NANOMACHINE_PFX;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> NANOMACHINE_HUD_POS;
+    public static final ModConfigSpec.DoubleValue SOUND_VOLUME;
     public static final ModConfigSpec.DoubleValue SCREEN_TEXT_FADE_START_DISTANCE;
     public static final ModConfigSpec.DoubleValue MAX_SCREEN_TEXT_RENDER_DISTANCE;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_SCALE;
@@ -278,6 +279,9 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("client");
+        SOUND_VOLUME = builder
+            .comment("Volume multiplier for OpenComputers block sounds. OpenComputers upstream default is 1.0 and clamps to [0, 2].")
+            .defineInRange("soundVolume", 1D, 0D, 2D);
         ENABLE_NANOMACHINE_PFX = builder
             .comment("Emit nanomachine particle effects around players. OpenComputers upstream default is true.")
             .define("enableNanomachinePfx", true);
@@ -977,6 +981,10 @@ public final class ModSettings {
 
     public static double maxScreenTextRenderDistance() {
         return Math.max(0D, doubleValue(MAX_SCREEN_TEXT_RENDER_DISTANCE));
+    }
+
+    public static double soundVolume() {
+        return Math.max(0D, Math.min(2D, doubleValue(SOUND_VOLUME)));
     }
 
     public static double nanomachinesBuffer() {
