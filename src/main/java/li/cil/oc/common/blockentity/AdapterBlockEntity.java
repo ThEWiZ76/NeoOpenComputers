@@ -29,6 +29,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -340,10 +343,15 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         openSides[side.ordinal()] = value;
         setChanged();
         if (level != null && !level.isClientSide) {
+            level.playSound(null, worldPosition, SoundEvents.PISTON_EXTEND, SoundSource.BLOCKS, 0.5F, sideTogglePitch(level.random));
             refreshSide(side);
             level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
+    }
+
+    static float sideTogglePitch(final RandomSource random) {
+        return random.nextFloat() * 0.25F + 0.7F;
     }
 
     public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final AdapterBlockEntity adapter) {

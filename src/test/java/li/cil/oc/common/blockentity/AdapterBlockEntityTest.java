@@ -1,6 +1,7 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.driver.DeviceInfo;
+import net.minecraft.util.RandomSource;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
@@ -39,6 +40,19 @@ final class AdapterBlockEntityTest {
         assertTrue(source.contains("ClientboundBlockEntityDataPacket.create(this)"));
         assertTrue(source.contains("sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3)"));
         assertTrue(source.contains("TAG_OPEN_SIDES"));
+    }
+
+    @Test
+    void playsUpstreamPistonSoundWhenTogglingOpenSides() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/AdapterBlockEntity.java"));
+        final float pitch = AdapterBlockEntity.sideTogglePitch(RandomSource.create(0L));
+
+        assertTrue(source.contains("SoundEvents.PISTON_EXTEND"));
+        assertTrue(source.contains("SoundSource.BLOCKS"));
+        assertTrue(source.contains("level.playSound(null, worldPosition"));
+        assertTrue(source.contains("0.5F"));
+        assertTrue(pitch >= 0.7F);
+        assertTrue(pitch <= 0.95F);
     }
 
     private static AdapterBlockEntity allocateAdapter() throws Exception {
