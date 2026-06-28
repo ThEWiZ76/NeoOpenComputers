@@ -5,6 +5,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModSettings;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -42,8 +43,22 @@ final class HologramBlockEntityTest {
         assertArrayEquals(new Object[]{0}, hologram.get(null, new TestArguments(1, 1, 1)));
         hologram.set(null, new TestArguments(1, 1, 1, 3));
         assertArrayEquals(new Object[]{3}, hologram.get(null, new TestArguments(1, 1, 1)));
+        assertEquals(3, hologram.renderColor(0, 0, 0));
         hologram.clear(null, new TestArguments());
         assertArrayEquals(new Object[]{0}, hologram.get(null, new TestArguments(1, 1, 1)));
+    }
+
+    @Test
+    void exposesRendererStateAndClientUpdatePacket() throws Exception {
+        HologramBlockEntity hologram = allocateHologram(1);
+
+        assertEquals(48, hologram.renderWidth());
+        assertEquals(32, hologram.renderHeight());
+        assertEquals(0xFF0000, hologram.renderPaletteColor(0));
+        assertEquals(0x00FF00, hologram.renderPaletteColor(1));
+        assertEquals(0x0000FF, hologram.renderPaletteColor(2));
+        assertEquals(1.0D, hologram.renderScale());
+        assertEquals(Packet.class, HologramBlockEntity.class.getMethod("getUpdatePacket").getReturnType());
     }
 
     @Test

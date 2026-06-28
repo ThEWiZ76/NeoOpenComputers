@@ -21,9 +21,14 @@ import li.cil.oc.common.util.HologramPower;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.network.Connection;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -133,6 +138,76 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
 
     public boolean hasPower() {
         return hasPower;
+    }
+
+    public int renderWidth() {
+        return WIDTH;
+    }
+
+    public int renderHeight() {
+        return HEIGHT;
+    }
+
+    public int renderColor(final int x, final int y, final int z) {
+        if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT || z < 0 || z >= WIDTH) {
+            return 0;
+        }
+        return getColor(x, y, z);
+    }
+
+    public int renderPaletteColor(final int index) {
+        if (index < 0 || index >= colors.length) {
+            return 0;
+        }
+        return convertColor(colors[index]);
+    }
+
+    public double renderScale() {
+        return scale;
+    }
+
+    public double renderTranslationX() {
+        return translationX;
+    }
+
+    public double renderTranslationY() {
+        return translationY;
+    }
+
+    public double renderTranslationZ() {
+        return translationZ;
+    }
+
+    public float renderRotationAngle() {
+        return rotationAngle;
+    }
+
+    public float renderRotationX() {
+        return rotationX;
+    }
+
+    public float renderRotationY() {
+        return rotationY;
+    }
+
+    public float renderRotationZ() {
+        return rotationZ;
+    }
+
+    public float renderRotationSpeed() {
+        return rotationSpeed;
+    }
+
+    public float renderRotationSpeedX() {
+        return rotationSpeedX;
+    }
+
+    public float renderRotationSpeedY() {
+        return rotationSpeedY;
+    }
+
+    public float renderRotationSpeedZ() {
+        return rotationSpeedZ;
     }
 
     @Override
@@ -415,6 +490,31 @@ public class HologramBlockEntity extends BlockEntity implements Environment, Sid
         tag.putFloat(TAG_ROTATION_SPEED_Y, rotationSpeedY);
         tag.putFloat(TAG_ROTATION_SPEED_Z, rotationSpeedZ);
         tag.putBoolean(TAG_HAS_POWER, hasPower);
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = super.getUpdateTag(registries);
+        saveAdditional(tag, registries);
+        return tag;
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        loadAdditional(packet.getTag(), registries);
+    }
+
+    @Override
+    public void setChanged() {
+        super.setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+        }
     }
 
     @Override

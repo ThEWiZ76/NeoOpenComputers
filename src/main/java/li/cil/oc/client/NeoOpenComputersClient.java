@@ -181,6 +181,7 @@ public final class NeoOpenComputersClient {
         event.registerBlockEntityRenderer(ModBlockEntities.DISASSEMBLER.get(), DisassemblerBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.DISK_DRIVE.get(), DiskDriveBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.GEOLYZER.get(), GeolyzerBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.HOLOGRAM.get(), HologramBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.NET_SPLITTER.get(), NetSplitterBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.POWER_DISTRIBUTOR.get(), PowerDistributorBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.PRINTER.get(), PrinterBlockEntityRenderer::new);
