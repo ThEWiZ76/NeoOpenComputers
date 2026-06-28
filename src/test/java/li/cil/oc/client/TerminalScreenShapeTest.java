@@ -407,6 +407,25 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenOnlyForwardsLeftAndRightMouseClicksLikeUpstream() {
+        assertEquals(true, TerminalScreen.shouldForwardTerminalMouseButton(0));
+        assertEquals(true, TerminalScreen.shouldForwardTerminalMouseButton(1));
+        assertEquals(false, TerminalScreen.shouldForwardTerminalMouseButton(2));
+        assertEquals(false, TerminalScreen.shouldForwardTerminalMouseButton(3));
+        assertEquals(false, TerminalScreen.shouldForwardTerminalMouseButton(-1));
+    }
+
+    @Test
+    void terminalScreenIgnoresZeroScrollLikeUpstream() {
+        assertEquals(-1, TerminalScreen.terminalScrollDelta(-4.0D));
+        assertEquals(0, TerminalScreen.terminalScrollDelta(0.0D));
+        assertEquals(1, TerminalScreen.terminalScrollDelta(2.0D));
+        assertEquals(false, TerminalScreen.shouldForwardTerminalScroll(0));
+        assertEquals(true, TerminalScreen.shouldForwardTerminalScroll(1));
+        assertEquals(true, TerminalScreen.shouldForwardTerminalScroll(-1));
+    }
+
+    @Test
     void terminalScreenBuildsMousePayloadForMenuCoordinates() throws ReflectiveOperationException {
         final TerminalMenu menu = allocateMenu(12);
 

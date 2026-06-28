@@ -29,6 +29,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     private static final int CLIPBOARD_CHUNK_SIZE = 16 * 1024;
     private static final int CLIPBOARD_MAX_LENGTH = 64 * 1024;
     private final Map<Integer, Character> pressedKeys = new HashMap<>();
+    private boolean didMouseClick;
 
     record TextRun(int column, String text, int color) {
     }
@@ -151,26 +152,40 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             sendClipboardInput(minecraft.keyboardHandler.getClipboard());
             return true;
         }
-        sendMouseInput(TerminalMousePayload.MOUSE_DOWN, mouseX, mouseY, button);
-        return true;
+        if (!shouldForwardTerminalMouseButton(button)) {
+            return false;
+        }
+        didMouseClick = sendMouseInput(TerminalMousePayload.MOUSE_DOWN, mouseX, mouseY, button);
+        return didMouseClick;
     }
 
     @Override
     public boolean mouseDragged(final double mouseX, final double mouseY, final int button, final double dragX, final double dragY) {
-        sendMouseInput(TerminalMousePayload.MOUSE_DRAG, mouseX, mouseY, button);
-        return true;
+        if (!didMouseClick || !shouldForwardTerminalMouseButton(button)) {
+            return false;
+        }
+        return sendMouseInput(TerminalMousePayload.MOUSE_DRAG, mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseReleased(final double mouseX, final double mouseY, final int button) {
-        sendMouseInput(TerminalMousePayload.MOUSE_UP, mouseX, mouseY, button);
-        return true;
+        try {
+            if (!didMouseClick || !shouldForwardTerminalMouseButton(button)) {
+                return false;
+            }
+            return sendMouseInput(TerminalMousePayload.MOUSE_UP, mouseX, mouseY, button);
+        } finally {
+            didMouseClick = false;
+        }
     }
 
     @Override
     public boolean mouseScrolled(final double mouseX, final double mouseY, final double scrollX, final double scrollY) {
-        sendMouseInput(TerminalMousePayload.MOUSE_SCROLL, mouseX, mouseY, (int) Math.signum(scrollY));
-        return true;
+        final int delta = terminalScrollDelta(scrollY);
+        if (!shouldForwardTerminalScroll(delta)) {
+            return false;
+        }
+        return sendMouseInput(TerminalMousePayload.MOUSE_SCROLL, mouseX, mouseY, delta);
     }
 
     static String snapshotLine(final TerminalScreenSnapshot snapshot, final int row) {
@@ -246,6 +261,18 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     static boolean shouldPasteClipboardForMouseButton(final int button) {
         return button == 2;
+    }
+
+    static boolean shouldForwardTerminalMouseButton(final int button) {
+        return button == 0 || button == 1;
+    }
+
+    static int terminalScrollDelta(final double scrollY) {
+        return (int) Math.signum(scrollY);
+    }
+
+    static boolean shouldForwardTerminalScroll(final int delta) {
+        return delta != 0;
     }
 
     private static boolean ignoreRepeat(final int keyCode) {
@@ -425,11 +452,13 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         }
     }
 
-    private void sendMouseInput(final int kind, final double mouseX, final double mouseY, final int buttonOrDelta) {
+    private boolean sendMouseInput(final int kind, final double mouseX, final double mouseY, final int buttonOrDelta) {
         final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, leftPos, topPos, menu.snapshot());
         if (payload != null) {
             PacketDistributor.sendToServer(payload);
+            return true;
         }
+        return false;
     }
 
     private void renderCellBackgrounds(final GuiGraphics guiGraphics, final TerminalScreenSnapshot snapshot, final int left, final int top) {
