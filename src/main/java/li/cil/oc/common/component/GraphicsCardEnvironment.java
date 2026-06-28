@@ -442,7 +442,7 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             screenAddress = targetAddress;
             screen = target;
             persistData();
-        } else if (screen == null && screenAddress == null && node() != null && node().isNeighborOf(connectedNode)) {
+        } else if (screen == null && screenAddress == null && node() != null && connectedNode.canBeReachedFrom(node())) {
             screenAddress = targetAddress;
             screen = target;
             resetScreen(target);
