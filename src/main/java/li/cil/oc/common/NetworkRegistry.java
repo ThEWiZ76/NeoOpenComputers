@@ -216,8 +216,9 @@ final class NetworkRegistry implements NetworkAPI {
     }
 
     private static Node adjacentNode(final BlockGetter world, final BlockPos pos, final Direction direction) {
-        if (world.getBlockEntity(pos.relative(direction)) instanceof SidedEnvironment sidedEnvironment && sidedEnvironment.canConnect(direction.getOpposite())) {
-            return sidedEnvironment.sidedNode(direction.getOpposite());
+        if (world.getBlockEntity(pos.relative(direction)) instanceof SidedEnvironment sidedEnvironment) {
+            final Direction side = direction.getOpposite();
+            return sidedEnvironment.canConnect(side) ? sidedEnvironment.sidedNode(side) : null;
         }
         if (world.getBlockEntity(pos.relative(direction)) instanceof Environment environment) {
             return environment.node();

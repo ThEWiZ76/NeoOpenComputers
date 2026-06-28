@@ -9910,6 +9910,141 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 220)
+    public static void tier1ComputerWithNetworkCardBootsHardDiskToLiveStyleScreenWall(final GameTestHelper helper) {
+        final BlockState screenState = ModBlocks.SCREEN_TIER1.get().defaultBlockState()
+            .setValue(ScreenBlock.PITCH, Direction.NORTH)
+            .setValue(ScreenBlock.YAW, Direction.EAST);
+        final BlockPos originScreenPos = new BlockPos(1, 2, 3);
+        final BlockPos attachedScreenPos = new BlockPos(1, 2, 1);
+        final BlockPos computerPos = new BlockPos(1, 1, 3);
+        final BlockPos keyboardPos = new BlockPos(1, 2, 4);
+
+        for (int y = 2; y <= 3; y++) {
+            for (int z = 1; z <= 3; z++) {
+                helper.setBlock(new BlockPos(1, y, z), screenState);
+            }
+        }
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get().defaultBlockState().setValue(KeyboardBlock.FACING, Direction.NORTH));
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ScreenBlockEntity attachedScreen = helper.getBlockEntity(attachedScreenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        originScreen.update();
+        attachedScreen.update();
+
+        final ItemStack bootDisk = bootableHardDiskStack(helper, """
+            local gpu = component.list('gpu')()
+            local screen = component.list('screen')()
+            if not gpu then
+              computer.pushSignal('screen_boot_failed', 'missing gpu')
+            elseif not screen then
+              computer.pushSignal('screen_boot_failed', 'missing screen')
+            else
+              local ok, reason = component.invoke(gpu, 'bind', screen)
+              if not ok then
+                computer.pushSignal('screen_boot_failed', tostring(reason))
+              else
+                component.invoke(gpu, 'setForeground', 0xFFFFFF)
+                component.invoke(gpu, 'setBackground', 0x000000)
+                component.invoke(gpu, 'set', 1, 1, 'HDD SCREEN OK')
+                computer.pushSignal('screen_booted', 'ok')
+              end
+            end
+            while true do computer.pullSignal(1) end
+            """);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_1, new ItemStack(ModItems.NETWORK_CARD.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, bootDisk);
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.machine().components().containsValue("screen"), "Tier 1 live hardware screen is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.toggleMachine(), "Tier 1 live hardware computer did not start");
+        helper.runAtTickTime(90, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Tier 1 live hardware computer stopped: " + computer.machine().lastError());
+            helper.assertTrue(screenHasNonBlankText(originScreen), "Hard disk boot did not write visible text to tier 1 wall origin:\n" + screenText(originScreen));
+            helper.assertTrue(!screenHasNonBlankText(attachedScreen), "Attached tier 1 wall screen should not receive independent text:\n" + screenText(attachedScreen));
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 360)
+    public static void tier1ComputerWithNetworkCardBootsOpenOsHardDiskToLiveStyleScreenWall(final GameTestHelper helper) {
+        final BlockState screenState = ModBlocks.SCREEN_TIER1.get().defaultBlockState()
+            .setValue(ScreenBlock.PITCH, Direction.NORTH)
+            .setValue(ScreenBlock.YAW, Direction.EAST);
+        final BlockPos originScreenPos = new BlockPos(1, 2, 3);
+        final BlockPos computerPos = new BlockPos(1, 1, 3);
+        final BlockPos keyboardPos = new BlockPos(1, 2, 4);
+
+        for (int y = 2; y <= 3; y++) {
+            for (int z = 1; z <= 3; z++) {
+                helper.setBlock(new BlockPos(1, y, z), screenState);
+            }
+        }
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get().defaultBlockState().setValue(KeyboardBlock.FACING, Direction.NORTH));
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        originScreen.update();
+
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_1, new ItemStack(ModItems.NETWORK_CARD.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, openOsHardDiskStack(helper));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.machine().components().containsValue("screen"), "Tier 1 OpenOS HDD screen is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.toggleMachine(), "Tier 1 OpenOS HDD computer did not start");
+        helper.runAtTickTime(220, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Tier 1 OpenOS HDD computer stopped: " + computer.machine().lastError());
+            helper.assertTrue(screenText(originScreen).contains("OpenOS"), "OpenOS HDD boot did not write visible startup text to tier 1 wall origin:\n" + screenText(originScreen));
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 360)
+    public static void tier1ComputerBootsOpenOsHardDiskWithZeroStoredDriveEnergy(final GameTestHelper helper) {
+        final BlockState screenState = ModBlocks.SCREEN_TIER1.get().defaultBlockState()
+            .setValue(ScreenBlock.PITCH, Direction.NORTH)
+            .setValue(ScreenBlock.YAW, Direction.EAST);
+        final BlockPos originScreenPos = new BlockPos(1, 2, 3);
+        final BlockPos computerPos = new BlockPos(1, 1, 3);
+        final BlockPos keyboardPos = new BlockPos(1, 2, 4);
+
+        for (int y = 2; y <= 3; y++) {
+            for (int z = 1; z <= 3; z++) {
+                helper.setBlock(new BlockPos(1, y, z), screenState);
+            }
+        }
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get().defaultBlockState().setValue(KeyboardBlock.FACING, Direction.NORTH));
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        originScreen.update();
+
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_1, new ItemStack(ModItems.NETWORK_CARD.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, openOsHardDiskStackWithStoredBuffer(helper, 0D));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(computer.machine().components().containsValue("screen"), "Tier 1 zero-energy HDD screen is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.toggleMachine(), "Tier 1 zero-energy OpenOS HDD computer did not start");
+        helper.runAtTickTime(220, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Tier 1 zero-energy OpenOS HDD computer stopped: " + computer.machine().lastError());
+            helper.assertTrue(screenText(originScreen).contains("OpenOS"), "OpenOS HDD with zero stored drive energy did not write visible startup text:\n" + screenText(originScreen));
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 360)
     public static void openOsTerminalEchoesKeyboardInput(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
@@ -10498,6 +10633,29 @@ public final class NeoOpenComputersGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void keyboardOnlyNetworksToIntendedScreenSide(final GameTestHelper helper) {
+        final BlockPos intendedScreenPos = new BlockPos(0, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+        final BlockPos rearScreenPos = new BlockPos(0, 1, 3);
+
+        helper.setBlock(keyboardPos.below(), Blocks.STONE);
+        helper.setBlock(intendedScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get().defaultBlockState().setValue(KeyboardBlock.FACING, Direction.NORTH));
+        helper.setBlock(rearScreenPos, ModBlocks.SCREEN_TIER1.get());
+
+        final ScreenBlockEntity intendedScreen = helper.getBlockEntity(intendedScreenPos);
+        final KeyboardBlockEntity keyboard = helper.getBlockEntity(keyboardPos);
+        final ScreenBlockEntity rearScreen = helper.getBlockEntity(rearScreenPos);
+        Network.joinOrCreateNetwork(intendedScreen);
+        Network.joinOrCreateNetwork(keyboard);
+        Network.joinOrCreateNetwork(rearScreen);
+
+        helper.assertTrue(keyboard.node().network() == intendedScreen.node().network(), "Keyboard did not connect to intended front screen");
+        helper.assertTrue(rearScreen.node().network() != intendedScreen.node().network(), "Keyboard bridged the rear screen into the same network");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void screenAndKeyboardStateSurvivesNbtReloadForFirstSmoke(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
@@ -10826,6 +10984,68 @@ public final class NeoOpenComputersGameTests {
             helper.fail("Failed to prepare bootable hard disk: " + e.getMessage());
         }
         return stack;
+    }
+
+    private static ItemStack openOsHardDiskStack(final GameTestHelper helper) {
+        final Callable<li.cil.oc.api.fs.FileSystem> openOsFactory = ((ItemRegistry) API.items).floppyFactory(openOsFloppyStack());
+        helper.assertTrue(openOsFactory != null, "OpenOS floppy has no registered filesystem factory");
+        final li.cil.oc.api.fs.FileSystem source = callFactory(openOsFactory);
+        helper.assertTrue(source != null, "OpenOS floppy factory did not create a filesystem");
+
+        final ItemStack stack = new ItemStack(ModItems.HDD_TIER1.get());
+        final DriverItem driver = Driver.driverFor(stack);
+        helper.assertTrue(driver != null, "OpenOS hard disk has no item driver");
+        final ManagedEnvironment environment = driver.createEnvironment(stack, null);
+        helper.assertTrue(environment != null, "OpenOS hard disk driver did not create an environment");
+        helper.assertTrue(environment.node() instanceof li.cil.oc.api.network.Component, "OpenOS hard disk environment has no filesystem component");
+        chargeConnector(helper, environment.node(), 1024D);
+        final li.cil.oc.api.network.Component target = (li.cil.oc.api.network.Component) environment.node();
+        try {
+            copyFileSystem(source, target, "");
+            environment.save(new CompoundTag());
+        } catch (Exception e) {
+            helper.fail("Failed to prepare OpenOS hard disk: " + e.getMessage());
+        } finally {
+            source.close();
+        }
+        return stack;
+    }
+
+    private static ItemStack openOsHardDiskStackWithStoredBuffer(final GameTestHelper helper, final double buffer) {
+        final ItemStack stack = openOsHardDiskStack(helper);
+        li.cil.oc.common.item.HardDiskDriveItem.stackDataTag(stack).getCompound("node").putDouble("buffer", Math.max(0D, buffer));
+        return stack;
+    }
+
+    private static void copyFileSystem(final li.cil.oc.api.fs.FileSystem source, final li.cil.oc.api.network.Component target, final String path) throws Exception {
+        if (source.isDirectory(path)) {
+            if (!path.isEmpty()) {
+                target.invoke("makeDirectory", null, path);
+            }
+            for (String child : source.list(path)) {
+                final String childName = child.endsWith("/") ? child.substring(0, child.length() - 1) : child;
+                final String childPath = path.isEmpty() ? childName : path + "/" + childName;
+                copyFileSystem(source, target, childPath);
+            }
+            return;
+        }
+
+        final int sourceHandleId = source.open(path, li.cil.oc.api.fs.Mode.Read);
+        final li.cil.oc.api.fs.Handle sourceHandle = source.getHandle(sourceHandleId);
+        final ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            final byte[] buffer = new byte[8192];
+            int read;
+            while ((read = sourceHandle.read(buffer)) >= 0) {
+                output.write(buffer, 0, read);
+            }
+        } finally {
+            sourceHandle.close();
+        }
+
+        final Object targetHandle = target.invoke("open", null, path, "w")[0];
+        target.invoke("write", null, targetHandle, output.toByteArray());
+        target.invoke("close", null, targetHandle);
     }
 
     private static String neighborComponents(final Node node) {

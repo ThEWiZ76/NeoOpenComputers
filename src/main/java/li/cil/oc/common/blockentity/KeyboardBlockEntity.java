@@ -5,10 +5,13 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Keyboard;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.block.KeyboardBlock;
 import li.cil.oc.common.component.KeyboardEnvironment;
 import li.cil.oc.common.component.KeyboardInputState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
@@ -18,7 +21,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
 
-public class KeyboardBlockEntity extends BlockEntity implements Keyboard, DeviceInfo {
+public class KeyboardBlockEntity extends BlockEntity implements Keyboard, DeviceInfo, SidedEnvironment {
     private static final String TAG_NODE = "node";
     private static final double DEFAULT_USABLE_DISTANCE_SQUARED = 64D;
 
@@ -49,6 +52,16 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard, Device
             node = KeyboardEnvironment.createNode(this);
         }
         return node;
+    }
+
+    @Override
+    public Node sidedNode(final Direction side) {
+        return canConnect(side) ? node() : null;
+    }
+
+    @Override
+    public boolean canConnect(final Direction side) {
+        return side != null && side == screenConnectionDirection();
     }
 
     @Override
@@ -121,5 +134,33 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard, Device
         if (node != null) {
             node.remove();
         }
+    }
+
+    private Direction screenConnectionDirection() {
+        if (level == null || !(getBlockState().getBlock() instanceof KeyboardBlock)) {
+            return null;
+        }
+
+        final BlockState state = getBlockState();
+        final Direction attachFace = state.getValue(KeyboardBlock.ATTACH_FACE);
+        final Direction attachedSide = attachFace.getOpposite();
+        if (screenAt(attachedSide)) {
+            return attachedSide;
+        }
+
+        final Direction forward = attachFace.getAxis().isVertical() ? state.getValue(KeyboardBlock.FACING) : Direction.UP;
+        if (screenAt(forward)) {
+            return forward;
+        }
+
+        final Direction backward = forward.getOpposite();
+        if (!attachFace.getAxis().isVertical() && screenAt(backward)) {
+            return backward;
+        }
+        return null;
+    }
+
+    private boolean screenAt(final Direction side) {
+        return side != null && level != null && level.getBlockEntity(worldPosition.relative(side)) instanceof ScreenBlockEntity;
     }
 }
