@@ -184,5 +184,6 @@ public final class NeoOpenComputersClient {
         event.registerBlockEntityRenderer(ModBlockEntities.PRINTER.get(), PrinterBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.PRINT.get(), PrintBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SCREEN.get(), ScreenBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.TRANSPOSER.get(), TransposerBlockEntityRenderer::new);
     }
 }

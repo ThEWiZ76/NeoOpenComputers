@@ -25,6 +25,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.Util;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -39,6 +42,7 @@ import java.util.Map;
 
 public class TransposerBlockEntity extends BlockEntity implements Environment, EnvironmentHost, DeviceInfo {
     private static final String TAG_NODE = "node";
+    private static final String TAG_VISUAL_ACTIVITY_SEQUENCE = "oc:visualActivitySequence";
     private static final String COMPONENT_NAME = "transposer";
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
@@ -48,6 +52,9 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
     );
 
     private Node node;
+    private long visualActivitySequence;
+    private long clientVisualActivitySequence;
+    private long clientVisualActivityUntilMillis;
 
     public TransposerBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.TRANSPOSER.get(), pos, blockState);
@@ -103,6 +110,13 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
     @Override
     public void markChanged() {
         setChanged();
+    }
+
+    public double visualActivity() {
+        if (level == null || !level.isClientSide) {
+            return 0D;
+        }
+        return Math.max(0D, (clientVisualActivityUntilMillis - Util.getMillis()) / 1000D);
     }
 
     @Callback(doc = "function(side:number):number -- Get the number of slots in the inventory on the specified side.")
@@ -312,6 +326,34 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
     }
 
     @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        tag.putLong(TAG_VISUAL_ACTIVITY_SEQUENCE, visualActivitySequence);
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        if (tag.contains(TAG_VISUAL_ACTIVITY_SEQUENCE)) {
+            final long sequence = tag.getLong(TAG_VISUAL_ACTIVITY_SEQUENCE);
+            if (sequence != clientVisualActivitySequence) {
+                clientVisualActivitySequence = sequence;
+                clientVisualActivityUntilMillis = Util.getMillis() + 1000L;
+            }
+        }
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNode();
@@ -330,7 +372,18 @@ public class TransposerBlockEntity extends BlockEntity implements Environment, E
     }
 
     private boolean consumeTransferEnergy() {
-        return node() instanceof Connector connector && connector.tryChangeBuffer(-ModSettings.transposerCost());
+        final boolean consumed = node() instanceof Connector connector && connector.tryChangeBuffer(-ModSettings.transposerCost());
+        if (consumed) {
+            markVisualActivity();
+        }
+        return consumed;
+    }
+
+    private void markVisualActivity() {
+        visualActivitySequence++;
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
     }
 
     private static Object[] noEnergy() {

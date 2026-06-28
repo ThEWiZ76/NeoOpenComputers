@@ -19,6 +19,8 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -65,6 +67,21 @@ final class TransposerRegistrationShapeTest {
         assertEquals("Transposer", metadata.get(DeviceInfo.DeviceAttribute.Description));
         assertEquals("MightyPirates GmbH & Co. KG", metadata.get(DeviceInfo.DeviceAttribute.Vendor));
         assertEquals("TP4k-iX", metadata.get(DeviceInfo.DeviceAttribute.Product));
+    }
+
+    @Test
+    void transposerBlockEntitySyncsActivityForRenderer() throws Exception {
+        final Method updateTag = TransposerBlockEntity.class.getDeclaredMethod("getUpdateTag", net.minecraft.core.HolderLookup.Provider.class);
+        final Method updatePacket = TransposerBlockEntity.class.getDeclaredMethod("getUpdatePacket");
+        final Method visualActivity = TransposerBlockEntity.class.getDeclaredMethod("visualActivity");
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/TransposerBlockEntity.java"));
+
+        assertEquals(net.minecraft.nbt.CompoundTag.class, updateTag.getReturnType());
+        assertEquals(net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.class, updatePacket.getReturnType());
+        assertEquals(double.class, visualActivity.getReturnType());
+        assertTrue(source.contains("TAG_VISUAL_ACTIVITY_SEQUENCE"));
+        assertTrue(source.contains("ClientboundBlockEntityDataPacket.create(this)"));
+        assertTrue(source.contains("sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3)"));
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
