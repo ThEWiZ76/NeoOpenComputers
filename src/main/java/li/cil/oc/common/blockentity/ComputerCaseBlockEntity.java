@@ -460,6 +460,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         }
     }
 
+    public static void activateMachineFromBlockUse(final Machine machine) {
+        if (machine != null && !machine.isRunning()) {
+            machine.start();
+        }
+    }
+
     static <T> void fillExistingSlots(final List<T> items, final T value) {
         for (int slot = 0; slot < items.size(); slot++) {
             items.set(slot, value);

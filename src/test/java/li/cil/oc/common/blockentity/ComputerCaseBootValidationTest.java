@@ -98,6 +98,28 @@ final class ComputerCaseBootValidationTest {
     }
 
     @Test
+    void shiftUseStartsStoppedComputerCaseLikeUpstream() {
+        final int[] starts = {0};
+        final int[] stops = {0};
+
+        ComputerCaseBlockEntity.activateMachineFromBlockUse(machine(false, new int[1], new int[1], stops, starts));
+
+        assertEquals(1, starts[0]);
+        assertEquals(0, stops[0]);
+    }
+
+    @Test
+    void shiftUseRunningComputerCaseDoesNotStopLikeUpstream() {
+        final int[] starts = {0};
+        final int[] stops = {0};
+
+        ComputerCaseBlockEntity.activateMachineFromBlockUse(machine(true, new int[1], new int[1], stops, starts));
+
+        assertEquals(0, starts[0]);
+        assertEquals(0, stops[0]);
+    }
+
+    @Test
     void clearingInventorySlotsKeepsFixedContainerSize() {
         final List<String> items = new ArrayList<>(List.of("cpu", "memory", "disk"));
 
@@ -141,11 +163,20 @@ final class ComputerCaseBootValidationTest {
     }
 
     private static Machine machine(final boolean canUpdate, final int[] updates, final int[] refreshes, final int[] stops) {
+        return machine(canUpdate, updates, refreshes, stops, new int[1]);
+    }
+
+    private static Machine machine(final boolean canUpdate, final int[] updates, final int[] refreshes, final int[] stops, final int[] starts) {
         return (Machine) Proxy.newProxyInstance(
             Machine.class.getClassLoader(),
             new Class<?>[]{Machine.class},
             (proxy, method, args) -> switch (method.getName()) {
                 case "canUpdate" -> canUpdate;
+                case "isRunning" -> canUpdate;
+                case "start" -> {
+                    starts[0]++;
+                    yield true;
+                }
                 case "update" -> {
                     updates[0]++;
                     yield null;
