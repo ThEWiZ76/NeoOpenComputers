@@ -64,13 +64,12 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             for (int row = 0; row < visibleRows(snapshot, imageHeight); row++) {
                 for (final TextCell cell : textCells(snapshot, row, visibleColumns(snapshot, imageWidth))) {
                     if (!cell.text().isBlank()) {
-                        guiGraphics.drawString(
-                            font,
-                            TerminalText.cell(cell.text()),
-                            left + TEXT_LEFT + cell.column() * CELL_WIDTH + centeredCellOffset(font.width(cell.text())),
+                        TerminalFont.drawGuiCell(
+                            guiGraphics,
+                            cell.text(),
+                            left + TEXT_LEFT + cell.column() * CELL_WIDTH + centeredCellOffset(TerminalFont.cellWidth()),
                             top + TEXT_TOP + row * LINE_HEIGHT,
-                            cell.color(),
-                            false);
+                            cell.color());
                     }
                 }
             }

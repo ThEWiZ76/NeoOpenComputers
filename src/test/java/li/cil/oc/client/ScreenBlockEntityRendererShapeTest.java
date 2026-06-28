@@ -2,7 +2,6 @@ package li.cil.oc.client;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -177,9 +176,15 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
-    void screenRendererUsesUniformMinecraftFontForWorldText() {
-        assertEquals(Minecraft.UNIFORM_FONT, TerminalText.font());
-        assertEquals(Minecraft.UNIFORM_FONT, TerminalText.cell("i").getStyle().getFont());
+    void screenRendererUsesBundledOpenComputersBitmapFontForWorldText() throws IOException {
+        final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
+
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/font.hex")));
+        assertTrue(TerminalFont.hasGlyph('i'));
+        assertTrue(TerminalFont.hasGlyph('W'));
+        assertEquals(6, TerminalFont.cellWidth());
+        assertEquals(9, TerminalFont.cellHeight());
+        assertTrue(renderer.contains("TerminalFont.drawWorldCell"), "World screen text should render fixed bitmap cells, not proportional Minecraft glyphs");
     }
 
     @Test

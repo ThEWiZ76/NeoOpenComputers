@@ -6,7 +6,6 @@ import li.cil.oc.common.network.TerminalClipboardPayload;
 import li.cil.oc.common.network.TerminalKeyPayload;
 import li.cil.oc.common.network.TerminalMousePayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Inventory;
@@ -17,6 +16,7 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -201,10 +201,15 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
-    void terminalScreenUsesUniformMinecraftFontForCellGlyphs() {
-        assertEquals(Minecraft.UNIFORM_FONT, TerminalText.font());
-        assertEquals("i", TerminalText.cell("i").getString());
-        assertEquals(Minecraft.UNIFORM_FONT, TerminalText.cell("i").getStyle().getFont());
+    void terminalScreenUsesBundledOpenComputersBitmapFontForCellGlyphs() throws IOException {
+        final String screen = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalScreen.java"));
+
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/font.hex")));
+        assertTrue(TerminalFont.hasGlyph('i'));
+        assertTrue(TerminalFont.hasGlyph('W'));
+        assertEquals(6, TerminalFont.cellWidth());
+        assertEquals(9, TerminalFont.cellHeight());
+        assertTrue(screen.contains("TerminalFont.drawGuiCell"), "Terminal GUI should render fixed bitmap cells, not proportional Minecraft glyphs");
     }
 
     @Test

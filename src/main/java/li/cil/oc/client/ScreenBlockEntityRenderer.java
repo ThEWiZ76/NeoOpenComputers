@@ -9,7 +9,6 @@ import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -117,10 +116,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         }
     };
 
-    private final Font font;
-
     public ScreenBlockEntityRenderer(final BlockEntityRendererProvider.Context context) {
-        font = context.getFont();
     }
 
     @Override
@@ -151,7 +147,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
                 renderCellBackground(poseStack, bufferSource, column, row, backgroundColor);
                 if (!cell.isBlank()) {
                     final int textColor = textColorWithAlpha(screen.getForegroundColor(column, row), textAlpha);
-                    font.drawInBatch(TerminalText.cell(cell), column * CELL_WIDTH + centeredCellOffset(font.width(cell)), row * LINE_HEIGHT, textColor, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
+                    TerminalFont.drawWorldCell(poseStack, bufferSource, cell, column, row, textColor, SCREEN_TEXT_Z);
                 }
             }
         }
