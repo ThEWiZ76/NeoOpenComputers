@@ -62,6 +62,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private static final String TAG_MACHINE = "oc:machine";
     private static final String TAG_RUNNING = "oc:isRunning";
     private static final String TAG_HAS_ERRORED = "oc:hasErrored";
+    private static final String TAG_LAST_FILE_SYSTEM_ACCESS = "oc:lastFileSystemAccess";
     private static final String TAG_REDSTONE_OUTPUTS = "oc:redstoneOutputs";
     private static final String TAG_BUNDLED_REDSTONE_OUTPUTS = "oc:bundledRedstoneOutputs";
     private static final String TAG_WAKE_THRESHOLD = "oc:wakeThreshold";
@@ -115,6 +116,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private boolean clientErrored;
     private boolean lastSyncedRunning;
     private boolean lastSyncedErrored;
+    private long lastFileSystemAccess;
     private final int[] redstoneOutputs = new int[6];
     private final int[] redstoneInputs = new int[6];
     private final int[][] bundledRedstoneOutputs = new int[6][BUNDLED_COLOR_COUNT];
@@ -183,6 +185,20 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
             return clientErrored;
         }
         return isMachineErroredForClient();
+    }
+
+    public double visualFileSystemActivity() {
+        final long elapsed = System.currentTimeMillis() - lastFileSystemAccess;
+        if (elapsed < 0L || elapsed >= 400L) {
+            return 0D;
+        }
+        return 1D - elapsed / 400D;
+    }
+
+    public boolean recordFileSystemAccess(final Node accessedNode, final long timestamp) {
+        lastFileSystemAccess = timestamp;
+        syncClientData();
+        return true;
     }
 
     @Override
@@ -686,9 +702,19 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         level.sendBlockUpdated(worldPosition, state, state, 3);
     }
 
+    private void syncClientData() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        setChanged();
+        final BlockState state = getBlockState();
+        level.sendBlockUpdated(worldPosition, state, state, 3);
+    }
+
     private void saveClientData(final CompoundTag tag) {
         tag.putBoolean(TAG_RUNNING, isMachineRunningForClient());
         tag.putBoolean(TAG_HAS_ERRORED, isMachineErroredForClient());
+        tag.putLong(TAG_LAST_FILE_SYSTEM_ACCESS, lastFileSystemAccess);
     }
 
     private void loadClientData(final CompoundTag tag) {
@@ -697,6 +723,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         }
         clientRunning = tag.getBoolean(TAG_RUNNING);
         clientErrored = tag.getBoolean(TAG_HAS_ERRORED);
+        lastFileSystemAccess = tag.getLong(TAG_LAST_FILE_SYSTEM_ACCESS);
         updateClientRunningSound();
     }
 

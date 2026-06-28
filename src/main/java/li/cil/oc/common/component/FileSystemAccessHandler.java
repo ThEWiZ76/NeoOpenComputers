@@ -3,6 +3,7 @@ package li.cil.oc.common.component;
 import li.cil.oc.api.component.RackMountable;
 import li.cil.oc.api.event.FileSystemAccessEvent;
 import li.cil.oc.common.ModSounds;
+import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
@@ -21,6 +22,7 @@ public final class FileSystemAccessHandler {
     private static void onFileSystemAccess(final FileSystemAccessEvent.Server event) {
         ModSounds.play(event.getWorld(), event.getX(), event.getY(), event.getZ(), ModSounds.soundEvent(event.getSound()));
         final long timestamp = System.currentTimeMillis();
+        recordComputerCaseAccess(event, timestamp);
         recordDiskDriveAccess(event, timestamp);
         recordRaidAccess(event, timestamp);
         final RackBlockEntity rack = rackFor(event);
@@ -54,6 +56,19 @@ public final class FileSystemAccessHandler {
         final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
         return event.getWorld().getBlockEntity(pos) instanceof DiskDriveBlockEntity diskDrive
             && diskDrive.recordFileSystemAccess(event.getNode(), timestamp);
+    }
+
+    private static boolean recordComputerCaseAccess(final FileSystemAccessEvent.Server event, final long timestamp) {
+        final BlockEntity eventBlockEntity = event.getTileEntity();
+        if (eventBlockEntity instanceof ComputerCaseBlockEntity computerCase) {
+            return computerCase.recordFileSystemAccess(event.getNode(), timestamp);
+        }
+        if (event.getWorld() == null) {
+            return false;
+        }
+        final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
+        return event.getWorld().getBlockEntity(pos) instanceof ComputerCaseBlockEntity computerCase
+            && computerCase.recordFileSystemAccess(event.getNode(), timestamp);
     }
 
     private static boolean recordRaidAccess(final FileSystemAccessEvent.Server event, final long timestamp) {

@@ -65,6 +65,15 @@ final class ComputerCaseRegistrationShapeTest {
     }
 
     @Test
+    void computerCaseExposesVisualFilesystemAccessStateLikeUpstream() throws NoSuchMethodException {
+        final Method activity = ComputerCaseBlockEntity.class.getMethod("visualFileSystemActivity");
+        final Method access = ComputerCaseBlockEntity.class.getMethod("recordFileSystemAccess", li.cil.oc.api.network.Node.class, long.class);
+
+        assertEquals(double.class, activity.getReturnType());
+        assertEquals(boolean.class, access.getReturnType());
+    }
+
+    @Test
     void tierOneComputerCaseHasInitialComponentSlots() {
         assertEquals(7, ComputerCaseBlockEntity.CONTAINER_SIZE);
         assertEquals(0, ComputerCaseBlockEntity.SLOT_CARD_0);
@@ -82,5 +91,13 @@ final class ComputerCaseRegistrationShapeTest {
 
         assertTrue(source.contains("gui.neoopencomputers.computer_case.title"));
         assertTrue(!source.contains("return Component.translatable(\"block.neoopencomputers.computer_case_tier\""));
+    }
+
+    @Test
+    void filesystemAccessHandlerRecordsComputerCaseAccess() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/component/FileSystemAccessHandler.java"));
+
+        assertTrue(source.contains("ComputerCaseBlockEntity"));
+        assertTrue(source.contains("recordComputerCaseAccess"));
     }
 }
