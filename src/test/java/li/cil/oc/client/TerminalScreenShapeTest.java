@@ -446,8 +446,8 @@ final class TerminalScreenShapeTest {
         final TerminalMousePayload payload = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 45, 47, 0, 10, 20, snapshot);
 
         assertEquals(12, payload.containerId());
-        assertEquals(3.0D, payload.x());
-        assertEquals(0.0D, payload.y());
+        assertEquals(23.0D / 6.0D, payload.x(), 1.0E-6D);
+        assertEquals(5.0D / 9.0D, payload.y(), 1.0E-6D);
     }
 
     @Test

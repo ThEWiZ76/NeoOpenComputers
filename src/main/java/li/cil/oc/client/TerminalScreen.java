@@ -419,8 +419,8 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static TerminalMousePayload mousePayload(final TerminalMenu menu, final int kind, final double mouseX, final double mouseY, final int buttonOrDelta, final int left, final int top) {
-        final double column = Math.floor((mouseX - left - TEXT_LEFT) / CELL_WIDTH);
-        final double row = Math.floor((mouseY - top - TEXT_TOP) / LINE_HEIGHT);
+        final double column = (mouseX - left - TEXT_LEFT) / CELL_WIDTH;
+        final double row = (mouseY - top - TEXT_TOP) / LINE_HEIGHT;
         return new TerminalMousePayload(menu.containerId, kind, column, row, buttonOrDelta);
     }
 
