@@ -22,7 +22,9 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
@@ -49,6 +51,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     private static final String TAG_NODE = "oc:node";
     private static final String TAG_QUEUE = "oc:queue";
     private static final String TAG_BUFFER = "oc:buffer";
+    private static final String TAG_VISUAL_ACTIVE = "oc:visualActive";
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
         DeviceInfo.DeviceAttribute.Description, "Disassembler",
@@ -61,6 +64,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, DisassemblerBlockEntity::energyThroughput);
     private Node node;
     private boolean active;
+    private boolean clientActive;
     private double disassemblyBuffer;
 
     public DisassemblerBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -99,7 +103,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         if (queuedOutputs.isEmpty()) {
             return false;
         }
-        active = false;
+        setActive(false);
         items.set(SLOT_INPUT, ItemStack.EMPTY);
         disassemblyBuffer = 0D;
         setChanged();
@@ -112,11 +116,15 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         if (!outputsFit(outputs) && outputs.length > 0 && !hasAdjacentInventory()) {
             return false;
         }
-        active = false;
+        setActive(false);
         items.set(SLOT_INPUT, ItemStack.EMPTY);
         routeOutputs(outputs);
         setChanged();
         return true;
+    }
+
+    public boolean isVisuallyActive() {
+        return level != null && level.isClientSide ? clientActive : active;
     }
 
     public static void serverTick(final net.minecraft.world.level.Level level, final BlockPos pos, final BlockState state, final DisassemblerBlockEntity disassembler) {
@@ -286,7 +294,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
                 .filter(stack -> !stack.isEmpty())
                 .ifPresent(queuedOutputs::add);
         }
-        active = false;
+        setActive(false);
         disassemblyBuffer = tag.getDouble(TAG_BUFFER);
     }
 
@@ -313,6 +321,30 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     }
 
     @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        tag.putBoolean(TAG_VISUAL_ACTIVE, active);
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        if (tag.contains(TAG_VISUAL_ACTIVE)) {
+            clientActive = tag.getBoolean(TAG_VISUAL_ACTIVE);
+        }
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNode();
@@ -326,7 +358,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     private void tickDisassembly() {
         if (queuedOutputs.isEmpty() || !(node() instanceof li.cil.oc.api.network.Connector connector)) {
-            active = false;
+            setActive(false);
             return;
         }
 
@@ -335,11 +367,11 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
             final double remainingDelta = connector.changeBuffer(-want);
             final double consumed = Math.clamp(want + remainingDelta, 0D, want);
             if (consumed <= 0D) {
-                active = false;
+                setActive(false);
                 return;
             }
             disassemblyBuffer += consumed;
-            active = true;
+            setActive(true);
         }
 
         final RandomSource random = level == null ? RandomSource.create() : level.random;
@@ -351,10 +383,20 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
             }
         }
         if (queuedOutputs.isEmpty()) {
-            active = false;
+            setActive(false);
             disassemblyBuffer = 0D;
         }
         setChanged();
+    }
+
+    private void setActive(final boolean active) {
+        if (this.active == active) {
+            return;
+        }
+        this.active = active;
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
     }
 
     private static ItemStack[] survivingOutputs(final ItemStack[] outputs, final RandomSource random, final double breakChance) {
