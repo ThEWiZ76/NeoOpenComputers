@@ -20,6 +20,7 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -234,7 +235,11 @@ public class NetSplitterBlockEntity extends BlockEntity implements Environment, 
         Network.joinOrCreateNetwork(level, worldPosition);
         level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
         level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-        level.playSound(null, worldPosition, sound, SoundSource.BLOCKS, 0.5F, 0.8F);
+        level.playSound(null, worldPosition, sound, SoundSource.BLOCKS, 0.5F, pistonSoundPitch(level.random));
+    }
+
+    static float pistonSoundPitch(final RandomSource random) {
+        return random.nextFloat() * 0.25F + 0.7F;
     }
 
     private void saveNode(final CompoundTag tag) {

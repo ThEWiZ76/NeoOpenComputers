@@ -3,6 +3,7 @@ package li.cil.oc.common.blockentity;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.util.RandomSource;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -34,5 +35,16 @@ final class NetSplitterBlockEntityTest {
         assertTrue(source.contains("TAG_OPEN_SIDES"));
         assertTrue(source.contains("TAG_INVERTED"));
         assertTrue(source.contains("level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3)"));
+    }
+
+    @Test
+    void netSplitterUsesUpstreamRandomPistonSoundPitch() throws IOException {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/NetSplitterBlockEntity.java"));
+        final float pitch = NetSplitterBlockEntity.pistonSoundPitch(RandomSource.create(0L));
+
+        assertTrue(source.contains("pistonSoundPitch(level.random)"));
+        assertTrue(source.contains("0.5F"));
+        assertTrue(pitch >= 0.7F);
+        assertTrue(pitch <= 0.95F);
     }
 }
