@@ -31,12 +31,15 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.Connection;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.Util;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -64,6 +67,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private static final String TAG_STRENGTH = "oc:strength";
     private static final String TAG_REPEATER = "oc:isRepeater";
     private static final String TAG_RELAY_COOLDOWN = "oc:relayCooldown";
+    private static final String TAG_VISUAL_ACTIVITY_SEQUENCE = "oc:visualActivitySequence";
     private static final String TAG_DRIVER_DATA = "oc:data";
     private static final String TAG_SIDE = "side";
     private static final String TAG_PACKET = "packet";
@@ -84,6 +88,9 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private boolean linkedEnabled;
     private String linkedChannel = LinkedNetwork.DEFAULT_CHANNEL;
     private boolean isRepeater = true;
+    private long visualActivitySequence;
+    private long clientVisualActivitySequence;
+    private long clientVisualActivityUntilMillis;
 
     public RelayBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.RELAY.get(), pos, blockState);
@@ -190,6 +197,34 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     }
 
     @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        tag.putLong(TAG_VISUAL_ACTIVITY_SEQUENCE, visualActivitySequence);
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        if (tag.contains(TAG_VISUAL_ACTIVITY_SEQUENCE)) {
+            final long sequence = tag.getLong(TAG_VISUAL_ACTIVITY_SEQUENCE);
+            if (sequence != clientVisualActivitySequence) {
+                clientVisualActivitySequence = sequence;
+                clientVisualActivityUntilMillis = Util.getMillis() + 1000L;
+            }
+        }
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNodes();
@@ -239,6 +274,13 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
 
     public boolean isRepeaterEnabled() {
         return isRepeater;
+    }
+
+    public double visualActivity() {
+        if (level == null || !level.isClientSide) {
+            return 0D;
+        }
+        return Math.max(0D, (clientVisualActivityUntilMillis - Util.getMillis()) / 1000D);
     }
 
     @Override
@@ -407,10 +449,18 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
             }
             relayWirelessPacket(queued);
             relayLinkedPacket(queued);
+            markVisualActivity();
             setChanged();
         }
         if (!queue.isEmpty()) {
             relayCooldown = relayDelay - 1;
+        }
+    }
+
+    private void markVisualActivity() {
+        visualActivitySequence++;
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
     }
 
