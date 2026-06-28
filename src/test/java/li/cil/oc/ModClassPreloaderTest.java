@@ -21,6 +21,13 @@ final class ModClassPreloaderTest {
         assertTrue(classNames.contains("li.cil.oc.common.block.ScreenHitMapper$ScreenClick"));
         assertTrue(classNames.contains("li.cil.oc.common.block.ScreenClickHandler"));
         assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$HttpTransport"));
+        assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$HttpResponse"));
+        assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$HttpRequest"));
+        assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$TcpAddress"));
+        assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$TcpSocket"));
+        assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$InternetFilteringRule"));
+        assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$RulePredicate"));
+        assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$InetAddressRange"));
 
         for (final String className : classNames) {
             assertEquals(className, Class.forName(className, false, ModClassPreloader.class.getClassLoader()).getName());
