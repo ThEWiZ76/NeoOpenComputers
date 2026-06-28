@@ -346,6 +346,14 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) {
+            Network.joinOrCreateNetwork(this);
+        }
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNodes();

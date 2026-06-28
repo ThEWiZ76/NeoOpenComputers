@@ -10,12 +10,23 @@ import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class BlockEntityNetworkCleanupTest {
+    @Test
+    void currentSmokeRigBlockEntitiesRejoinNetworksWhenLoaded() throws Exception {
+        assertRejoinsNetworkOnLoad("ComputerCaseBlockEntity");
+        assertRejoinsNetworkOnLoad("ScreenBlockEntity");
+        assertRejoinsNetworkOnLoad("KeyboardBlockEntity");
+        assertRejoinsNetworkOnLoad("DiskDriveBlockEntity");
+    }
+
     @Test
     void keyboardRemovesNodeWhenUnloadedOrRemoved() throws Exception {
         KeyboardBlockEntity keyboard = allocate(KeyboardBlockEntity.class);
@@ -65,6 +76,12 @@ final class BlockEntityNetworkCleanupTest {
         Field field = target.getClass().getDeclaredField(name);
         field.setAccessible(true);
         field.set(target, value);
+    }
+
+    private static void assertRejoinsNetworkOnLoad(final String className) throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/" + className + ".java"));
+        assertTrue(source.contains("void onLoad()"), className + " must rebuild external network on world/chunk load");
+        assertTrue(source.contains("Network.joinOrCreateNetwork(this)"), className + " must call network join on load");
     }
 
     private static final class TestManagedEnvironment implements ManagedEnvironment {

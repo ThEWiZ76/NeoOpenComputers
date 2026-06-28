@@ -1,6 +1,7 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Driver;
+import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
@@ -640,6 +641,14 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         }
         if (!previousFloppy.isEmpty()) {
             ModSounds.playDiskEject(this);
+        }
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) {
+            Network.joinOrCreateNetwork(this);
         }
     }
 

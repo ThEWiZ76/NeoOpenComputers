@@ -119,6 +119,14 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard, Device
     }
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) {
+            Network.joinOrCreateNetwork(this);
+        }
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNode();
