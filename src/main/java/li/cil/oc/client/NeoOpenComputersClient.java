@@ -47,6 +47,7 @@ public final class NeoOpenComputersClient {
 
     public NeoOpenComputersClient() {
         NeoForge.EVENT_BUS.addListener(NeoOpenComputersClient::onClientTick);
+        NeoForge.EVENT_BUS.register(MfuTargetRenderer.class);
         NeoForge.EVENT_BUS.register(RackMountableRenderHandler.class);
     }
 
