@@ -94,7 +94,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (!shouldForwardKeyboardInput(menu.snapshot())) {
+        if (!shouldForwardKeyboardInput(menu.snapshot()) || !shouldForwardTerminalKey(keyCode)) {
             return false;
         }
         handleTerminalKeyPressed(keyCode);
@@ -214,7 +214,11 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static boolean shouldHandleBeforeScreenShortcuts(final boolean acceptsInput, final boolean searchInputFocused, final int keyCode) {
-        return shouldForwardKeyboardInput(acceptsInput, searchInputFocused) && keyCode != GLFW.GLFW_KEY_ESCAPE;
+        return shouldForwardKeyboardInput(acceptsInput, searchInputFocused) && shouldForwardTerminalKey(keyCode);
+    }
+
+    static boolean shouldForwardTerminalKey(final int keyCode) {
+        return keyCode != GLFW.GLFW_KEY_ESCAPE && keyCode != GLFW.GLFW_KEY_F11;
     }
 
     static boolean shouldForwardKeyPress(final boolean alreadyPressed, final int keyCode) {

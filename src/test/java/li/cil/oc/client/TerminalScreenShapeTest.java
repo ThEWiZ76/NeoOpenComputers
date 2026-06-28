@@ -111,8 +111,17 @@ final class TerminalScreenShapeTest {
         assertEquals(true, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, false, GLFW.GLFW_KEY_E));
         assertEquals(true, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, false, GLFW.GLFW_KEY_W));
         assertEquals(false, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, false, GLFW.GLFW_KEY_ESCAPE));
+        assertEquals(false, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, false, GLFW.GLFW_KEY_F11));
         assertEquals(false, TerminalScreen.shouldHandleBeforeScreenShortcuts(false, false, GLFW.GLFW_KEY_E));
         assertEquals(true, TerminalScreen.shouldHandleBeforeScreenShortcuts(true, true, GLFW.GLFW_KEY_E));
+    }
+
+    @Test
+    void terminalScreenDoesNotForwardF11LikeUpstreamInputBuffer() {
+        assertEquals(false, TerminalScreen.shouldForwardTerminalKey(GLFW.GLFW_KEY_ESCAPE));
+        assertEquals(false, TerminalScreen.shouldForwardTerminalKey(GLFW.GLFW_KEY_F11));
+        assertEquals(true, TerminalScreen.shouldForwardTerminalKey(GLFW.GLFW_KEY_F12));
+        assertEquals(true, TerminalScreen.shouldForwardTerminalKey(GLFW.GLFW_KEY_E));
     }
 
     @Test
