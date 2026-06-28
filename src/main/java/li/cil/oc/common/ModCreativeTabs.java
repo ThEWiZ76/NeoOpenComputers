@@ -18,15 +18,8 @@ public final class ModCreativeTabs {
             .title(Component.translatable("itemGroup.neoopencomputers"))
             .icon(() -> new ItemStack(ModItems.MANUAL.get()))
             .displayItems((parameters, output) -> {
-                ModItems.ITEMS.getEntries().forEach(item -> output.accept(item.get()));
-                if (API.items instanceof ItemRegistry registry) {
-                    registry.creativeStackSuppliers().forEach(stackSupplier -> {
-                        final ItemStack stack = stackSupplier.get();
-                        if (stack != null) {
-                            output.accept(stack);
-                        }
-                    });
-                }
+                addRegisteredStacks(output);
+                addRegisteredItems(output);
             })
             .build());
 
@@ -36,6 +29,21 @@ public final class ModCreativeTabs {
 
     public static void assignApiCreativeTab() {
         li.cil.oc.api.CreativeTab.instance = MAIN.get();
+    }
+
+    static void addRegisteredStacks(final CreativeModeTab.Output output) {
+        if (API.items instanceof ItemRegistry registry) {
+            registry.creativeStackSuppliers().forEach(stackSupplier -> {
+                final ItemStack stack = stackSupplier.get();
+                if (stack != null) {
+                    output.accept(stack);
+                }
+            });
+        }
+    }
+
+    static void addRegisteredItems(final CreativeModeTab.Output output) {
+        ModItems.ITEMS.getEntries().forEach(item -> output.accept(item.get()));
     }
 
     private ModCreativeTabs() {

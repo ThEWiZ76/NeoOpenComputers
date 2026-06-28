@@ -9927,6 +9927,43 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 220)
+    public static void tier3ComputerBootsOpenOsToTier3ScreenAndKeyboardTerminal(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER3.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER3.get());
+
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final ItemStack openOsFloppy = openOsFloppyStack();
+        helper.assertTrue(computer.canPlaceItem(7, openOsFloppy), "Tier 3 internal floppy slot rejected OpenOS floppy");
+
+        computer.setItem(0, new ItemStack(ModItems.GRAPHICS_CARD_TIER3.get()));
+        computer.setItem(3, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        computer.setItem(7, openOsFloppy);
+        computer.setItem(8, new ItemStack(ModItems.CPU_TIER3.get()));
+        computer.setItem(9, luaBiosEepromStack());
+
+        helper.assertTrue(computer.machine().components().containsValue("screen"), "Tier 3 screen is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.toggleMachine(), "Tier 3 computer did not start with tier 3 screen");
+        helper.runAtTickTime(90, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Tier 3 computer stopped while booting with tier 3 screen: " + computer.machine().lastError());
+            helper.assertTrue(screenHasNonBlankText(screen), "OpenOS did not write visible text to tier 3 screen:\n" + screenText(screen));
+
+            final Player player = helper.makeMockServerPlayerInLevel();
+            final BlockPos absoluteScreenPos = helper.absolutePos(screenPos);
+            final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absoluteScreenPos), Direction.NORTH, absoluteScreenPos, false);
+            final InteractionResult result = invokeUseWithoutItem(helper.getBlockState(screenPos), helper, screenPos, player, hit);
+            helper.assertTrue(result == InteractionResult.CONSUME, "Tier 3 screen terminal interaction did not consume activation");
+            helper.assertTrue(player.containerMenu instanceof li.cil.oc.common.menu.TerminalMenu, "Tier 3 screen did not open TerminalMenu");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void computerBootsLuaBiosFromInternalHardDisk(final GameTestHelper helper) {
         final BlockPos computerPos = new BlockPos(1, 1, 1);
