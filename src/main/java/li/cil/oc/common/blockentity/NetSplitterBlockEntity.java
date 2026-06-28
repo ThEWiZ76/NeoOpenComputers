@@ -16,6 +16,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
@@ -159,6 +161,34 @@ public class NetSplitterBlockEntity extends BlockEntity implements Environment, 
     }
 
     @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        tag.putBoolean(TAG_INVERTED, inverted);
+        tag.putByte(TAG_OPEN_SIDES, compressSides());
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        if (tag.contains(TAG_INVERTED)) {
+            inverted = tag.getBoolean(TAG_INVERTED);
+        }
+        if (tag.contains(TAG_OPEN_SIDES)) {
+            uncompressSides(tag.getByte(TAG_OPEN_SIDES));
+        }
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNode();
@@ -203,6 +233,7 @@ public class NetSplitterBlockEntity extends BlockEntity implements Environment, 
         removeNode();
         Network.joinOrCreateNetwork(level, worldPosition);
         level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+        level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         level.playSound(null, worldPosition, sound, SoundSource.BLOCKS, 0.5F, 0.8F);
     }
 
