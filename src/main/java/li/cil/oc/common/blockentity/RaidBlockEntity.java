@@ -13,6 +13,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
@@ -20,8 +21,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
@@ -31,6 +34,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import li.cil.oc.common.menu.RaidMenu;
@@ -42,11 +46,15 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     private static final String TAG_NODE = "node";
     private static final String TAG_FILESYSTEM = "filesystem";
     private static final String TAG_LABEL = "label";
+    private static final String TAG_VISUAL_PRESENCE_MASK = "oc:visualPresenceMask";
+    private static final String TAG_VISUAL_LAST_ACCESS = "oc:visualLastAccess";
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final RaidLabel label = new RaidLabel();
     private Node node;
     private ManagedEnvironment filesystem;
+    private int clientPresenceMask;
+    private long lastAccess;
 
     public RaidBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.RAID.get(), pos, blockState);
@@ -262,6 +270,33 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         return (int) Math.min(Integer.MAX_VALUE, totalCapacity());
     }
 
+    public int visualPresenceMask() {
+        if (level != null && level.isClientSide) {
+            return clientPresenceMask;
+        }
+        return presenceMask();
+    }
+
+    public int visualActiveSlot() {
+        if (System.currentTimeMillis() - lastAccess >= 400L) {
+            return -1;
+        }
+        return Math.floorMod(lastAccess, CONTAINER_SIZE);
+    }
+
+    public long getLastAccess() {
+        return lastAccess;
+    }
+
+    public boolean recordFileSystemAccess(final Node accessedNode, final long timestamp) {
+        if (!filesystemNodeMatches(accessedNode)) {
+            return false;
+        }
+        lastAccess = timestamp;
+        syncClientData();
+        return true;
+    }
+
     @Override
     public void load(final CompoundTag nbt) {
         if (nbt.contains(TAG_NODE) && node() != null) {
@@ -311,6 +346,34 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     }
 
     @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        tag.putInt(TAG_VISUAL_PRESENCE_MASK, presenceMask());
+        tag.putLong(TAG_VISUAL_LAST_ACCESS, lastAccess);
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        if (tag.contains(TAG_VISUAL_PRESENCE_MASK)) {
+            clientPresenceMask = tag.getInt(TAG_VISUAL_PRESENCE_MASK);
+        }
+        if (tag.contains(TAG_VISUAL_LAST_ACCESS)) {
+            lastAccess = tag.getLong(TAG_VISUAL_LAST_ACCESS);
+        }
+    }
+
+    @Override
+    public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNodes();
@@ -331,11 +394,12 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         if (isComplete()) {
             createFilesystem();
         }
+        syncClientData();
     }
 
     private void createFilesystem() {
         final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(totalCapacity());
-        filesystem = FileSystem.asManagedEnvironment(fileSystem, label, this, null, 6);
+        filesystem = FileSystem.asManagedEnvironment(fileSystem, label, this, ModSounds.HDD_ACCESS_ID, 6);
         connectFilesystem();
     }
 
@@ -368,6 +432,35 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
             filesystem.node().remove();
         }
         filesystem = null;
+    }
+
+    private int presenceMask() {
+        int mask = 0;
+        for (int slot = 0; slot < items.size(); slot++) {
+            if (!items.get(slot).isEmpty()) {
+                mask |= 1 << slot;
+            }
+        }
+        return mask;
+    }
+
+    private boolean filesystemNodeMatches(final Node accessedNode) {
+        if (accessedNode == null || filesystem == null || filesystem.node() == null) {
+            return false;
+        }
+        final Node filesystemNode = filesystem.node();
+        if (filesystemNode == accessedNode) {
+            return true;
+        }
+        return filesystemNode.address() != null && filesystemNode.address().equals(accessedNode.address());
+    }
+
+    private void syncClientData() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        final BlockState state = level.getBlockState(worldPosition);
+        level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_CLIENTS);
     }
 
     private void removeNodes() {

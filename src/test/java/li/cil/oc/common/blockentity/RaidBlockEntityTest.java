@@ -17,6 +17,9 @@ import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,6 +65,29 @@ final class RaidBlockEntityTest {
         final RaidBlockEntity raid = allocateRaid();
 
         assertArrayEquals(new Node[]{null}, raid.onAnalyze(null, null, 0F, 0F, 0F));
+    }
+
+    @Test
+    void raidExposesClientPresenceAndAccessStateLikeUpstream() throws Exception {
+        final Method presence = RaidBlockEntity.class.getMethod("visualPresenceMask");
+        final Method activeSlot = RaidBlockEntity.class.getMethod("visualActiveSlot");
+        final Method lastAccess = RaidBlockEntity.class.getMethod("getLastAccess");
+        final Method recordAccess = RaidBlockEntity.class.getMethod("recordFileSystemAccess", Node.class, long.class);
+
+        assertEquals(int.class, presence.getReturnType());
+        assertEquals(int.class, activeSlot.getReturnType());
+        assertEquals(long.class, lastAccess.getReturnType());
+        assertEquals(boolean.class, recordAccess.getReturnType());
+    }
+
+    @Test
+    void raidAccessUsesHddSoundAndAccessHandlerLikeUpstream() throws Exception {
+        final String raid = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RaidBlockEntity.java"));
+        final String accessHandler = Files.readString(Path.of("src/main/java/li/cil/oc/common/component/FileSystemAccessHandler.java"));
+
+        assertTrue(raid.contains("ModSounds.HDD_ACCESS_ID"));
+        assertTrue(accessHandler.contains("RaidBlockEntity"));
+        assertTrue(accessHandler.contains("recordRaidAccess"));
     }
 
     private static RaidBlockEntity allocateRaid() throws Exception {

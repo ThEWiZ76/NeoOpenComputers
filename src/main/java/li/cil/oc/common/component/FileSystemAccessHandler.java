@@ -5,6 +5,7 @@ import li.cil.oc.api.event.FileSystemAccessEvent;
 import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
+import li.cil.oc.common.blockentity.RaidBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.common.NeoForge;
@@ -21,6 +22,7 @@ public final class FileSystemAccessHandler {
         ModSounds.play(event.getWorld(), event.getX(), event.getY(), event.getZ(), ModSounds.soundEvent(event.getSound()));
         final long timestamp = System.currentTimeMillis();
         recordDiskDriveAccess(event, timestamp);
+        recordRaidAccess(event, timestamp);
         final RackBlockEntity rack = rackFor(event);
         if (rack == null) {
             return;
@@ -52,6 +54,19 @@ public final class FileSystemAccessHandler {
         final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
         return event.getWorld().getBlockEntity(pos) instanceof DiskDriveBlockEntity diskDrive
             && diskDrive.recordFileSystemAccess(event.getNode(), timestamp);
+    }
+
+    private static boolean recordRaidAccess(final FileSystemAccessEvent.Server event, final long timestamp) {
+        final BlockEntity eventBlockEntity = event.getTileEntity();
+        if (eventBlockEntity instanceof RaidBlockEntity raid) {
+            return raid.recordFileSystemAccess(event.getNode(), timestamp);
+        }
+        if (event.getWorld() == null) {
+            return false;
+        }
+        final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
+        return event.getWorld().getBlockEntity(pos) instanceof RaidBlockEntity raid
+            && raid.recordFileSystemAccess(event.getNode(), timestamp);
     }
 
     private static RackBlockEntity rackFor(final FileSystemAccessEvent.Server event) {
