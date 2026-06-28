@@ -14,6 +14,7 @@ import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.component.RedstoneControllerHost;
@@ -535,6 +536,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (!removed.isEmpty()) {
             setChanged();
             notifyHardwareChanged(machine);
+            playDiskRemoveSound(slot);
         }
         return removed;
     }
@@ -547,6 +549,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             notifyHardwareChanged(machine);
+            playDiskRemoveSound(slot);
         }
         return removed;
     }
@@ -556,12 +559,14 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (!isValidSlotForTier(slot)) {
             return;
         }
+        final ItemStack previous = items.get(slot).copy();
         items.set(slot, stack);
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
             stack.setCount(getMaxStackSize());
         }
         setChanged();
         notifyHardwareChanged(machine);
+        playDiskChangeSound(slot, previous, items.get(slot));
     }
 
     @Override
@@ -576,9 +581,13 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public void clearContent() {
+        final ItemStack previousFloppy = floppyStack().copy();
         fillExistingSlots(items, ItemStack.EMPTY);
         setChanged();
         notifyHardwareChanged(machine);
+        if (!previousFloppy.isEmpty()) {
+            ModSounds.playDiskEject(this);
+        }
     }
 
     @Override
@@ -673,6 +682,33 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private void removeMachineNode() {
         if (machine.node() != null) {
             machine.node().remove();
+        }
+    }
+
+    private ItemStack floppyStack() {
+        for (int slot = 0; slot < items.size(); slot++) {
+            if (Slot.Floppy.equals(slotType(tier, slot))) {
+                return items.get(slot);
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    private void playDiskRemoveSound(final int slot) {
+        if (Slot.Floppy.equals(slotType(tier, slot))) {
+            ModSounds.playDiskEject(this);
+        }
+    }
+
+    private void playDiskChangeSound(final int slot, final ItemStack previous, final ItemStack current) {
+        if (!Slot.Floppy.equals(slotType(tier, slot)) || ItemStack.matches(previous, current)) {
+            return;
+        }
+        if (!previous.isEmpty()) {
+            ModSounds.playDiskEject(this);
+        }
+        if (!current.isEmpty()) {
+            ModSounds.playDiskInsert(this);
         }
     }
 
