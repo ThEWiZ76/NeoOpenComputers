@@ -463,7 +463,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             ("computer.started".equals(message.name()) || "computer.stopped".equals(message.name()))) {
             activeBufferIndex = SCREEN_INDEX;
             videoBuffers.clear();
-            if ("computer.stopped".equals(message.name()) && screen != null) {
+            if ("computer.started".equals(message.name())) {
+                ensureScreenBinding();
+            } else if (screen != null) {
                 resetScreen(screen);
                 screen.fill(0, 0, screen.getWidth(), screen.getHeight(), ' ');
             }

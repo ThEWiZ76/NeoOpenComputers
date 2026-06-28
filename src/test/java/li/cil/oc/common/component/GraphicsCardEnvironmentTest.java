@@ -159,6 +159,22 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void bindsReachableScreenWhenComputerStarts() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        FakeEnvironment computer = new FakeEnvironment();
+        FakeTextBuffer screen = new FakeTextBuffer();
+        Network.joinNewNetwork(computer.node());
+        computer.node().connect(gpu.node());
+        computer.node().connect(screen.node());
+
+        gpu.onMessage(new TestMessage(computer.node(), "computer.started", new Object[0]));
+
+        assertArrayEquals(new Object[]{screen.node().address()}, gpu.getScreen(null, new TestArguments()));
+        assertArrayEquals(new Object[]{50, 16}, gpu.getResolution(null, new TestArguments()));
+    }
+
+    @Test
     void setResolutionUsesUpstreamAreaLimitInsteadOfGpuMaxHeight() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
@@ -654,6 +670,12 @@ final class GraphicsCardEnvironmentTest {
 
         private void disconnectNode() {
             setNode(null);
+        }
+    }
+
+    private static final class FakeEnvironment extends AbstractManagedEnvironment {
+        private FakeEnvironment() {
+            setNode(Network.newNode(this, li.cil.oc.api.network.Visibility.Network).create());
         }
     }
 
