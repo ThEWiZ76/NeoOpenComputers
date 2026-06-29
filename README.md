@@ -49,6 +49,8 @@ Reason: it is the newest useful maintained OpenComputers line. The branch still 
 
 The built mod jar is written to `build/libs`.
 
+Install `build/libs/neoopencomputers-0.1.0.jar` for smoke testing. This jar includes the bundled runtime libraries. Do not install `neoopencomputers-0.1.0-thin.jar`; it is the developer thin jar and does not include bundled runtime libraries.
+
 ## Run Development Client
 
 ```powershell
