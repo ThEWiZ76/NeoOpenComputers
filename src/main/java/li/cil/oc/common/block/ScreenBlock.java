@@ -73,10 +73,17 @@ public class ScreenBlock extends Block implements EntityBlock {
 
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(final Level level, final BlockState state, final BlockEntityType<T> type) {
-        if (level.isClientSide || type != ModBlockEntities.SCREEN.get()) {
+        if (type != ModBlockEntities.SCREEN.get()) {
             return null;
         }
-        return (tickerLevel, pos, blockState, blockEntity) -> ((ScreenBlockEntity) blockEntity).update();
+        return (tickerLevel, pos, blockState, blockEntity) -> {
+            final ScreenBlockEntity screen = (ScreenBlockEntity) blockEntity;
+            if (level.isClientSide) {
+                screen.updateClient();
+            } else {
+                screen.update();
+            }
+        };
     }
 
     @Override

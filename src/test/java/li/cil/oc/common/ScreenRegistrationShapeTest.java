@@ -105,6 +105,21 @@ final class ScreenRegistrationShapeTest {
     }
 
     @Test
+    void screenBlockTicksClientForDelayedMultiblockChecksLikeUpstream() throws Exception {
+        final String blockSource = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+        final String entitySource = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/ScreenBlockEntity.java"));
+
+        assertTrue(blockSource.contains("if (level.isClientSide)"),
+            "Client screens need a ticker so the upstream-style delayed multiblock check can count down");
+        assertTrue(blockSource.contains("screen.updateClient()"),
+            "Client screens need a ticker so the upstream-style delayed multiblock check can count down");
+        assertTrue(!blockSource.contains("level.isClientSide || type != ModBlockEntities.SCREEN.get()"),
+            "Client screens must not be excluded from ticking");
+        assertTrue(entitySource.contains("public void updateClient()"),
+            "Client ticking should use a render/layout-only path, not the server energy/network update");
+    }
+
+    @Test
     void screenPropertiesUseOcclusionSoStaticCaseCullsInternalMultiblockFaces() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/ModBlocks.java"));
         final String method = source.substring(
