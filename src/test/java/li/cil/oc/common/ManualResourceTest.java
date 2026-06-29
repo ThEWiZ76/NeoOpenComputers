@@ -132,6 +132,35 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualHomePagesDoNotLinkUnavailableAlphaDevices() throws Exception {
+        final Set<String> hiddenTargets = Set.of(
+            "item/drone.md",
+            "block/robot.md",
+            "block/microcontroller.md"
+        );
+        final List<String> links = new ArrayList<>();
+        try (Stream<Path> files = Files.list(DOC_ROOT)) {
+            for (final Path index : files
+                .filter(Files::isDirectory)
+                .map(path -> path.resolve("index.md"))
+                .filter(Files::exists)
+                .toList()) {
+                final Path relativeFile = DOC_ROOT.relativize(index);
+                final String content = Files.readString(index);
+                final var matcher = INTERNAL_MARKDOWN_LINK.matcher(content);
+                while (matcher.find()) {
+                    final String target = matcher.group(1).toLowerCase(Locale.ROOT);
+                    if (hiddenTargets.contains(target)) {
+                        links.add(relativeFile.toString().replace('\\', '/') + " -> " + matcher.group(1));
+                    }
+                }
+            }
+        }
+
+        assertTrue(links.isEmpty(), () -> "Manual home pages link unavailable alpha devices:\n" + String.join("\n", links));
+    }
+
+    @Test
     void bundledManualMarkdownUsesCommunityIssueTracker() throws Exception {
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             assertTrue(files
