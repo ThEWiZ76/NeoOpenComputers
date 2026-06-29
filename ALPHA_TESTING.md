@@ -34,6 +34,7 @@ Copy that jar into a clean Minecraft 1.21.1 NeoForge instance, then fully restar
 - Creative tab opens and item stacks can be picked up.
 - Computer case, screen, keyboard, disk drive, and basic cards can be placed.
 - Tier 1 computer boots OpenOS from valid boot media.
+- Computer and server boot failures show a player-visible last-error message.
 - Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart.
 - Keyboard input reaches the bound computer.
 - Terminal item input, paste, mouse click/drag/release, and scroll reach the bound computer.
