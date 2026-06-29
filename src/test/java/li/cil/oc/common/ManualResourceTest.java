@@ -161,6 +161,34 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualPagesDoNotLinkUnavailableAlphaDevices() throws Exception {
+        final Set<String> hiddenTargets = Set.of(
+            "item/drone.md",
+            "item/dronecase1.md",
+            "block/robot.md",
+            "block/microcontroller.md"
+        );
+        final List<String> links = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
+            for (final Path file : files
+                .filter(path -> path.getFileName().toString().endsWith(".md"))
+                .toList()) {
+                final Path relativeFile = DOC_ROOT.relativize(file);
+                final String content = Files.readString(file);
+                final var matcher = INTERNAL_MARKDOWN_LINK.matcher(content);
+                while (matcher.find()) {
+                    final String resolved = resolveManualLink(relativeFile, matcher.group(1));
+                    if (resolved != null && hiddenTargets.contains(stripManualLocale(resolved))) {
+                        links.add(relativeFile.toString().replace('\\', '/') + " -> " + matcher.group(1));
+                    }
+                }
+            }
+        }
+
+        assertTrue(links.isEmpty(), () -> "Manual pages link unavailable alpha devices:\n" + String.join("\n", links));
+    }
+
+    @Test
     void bundledManualMarkdownUsesCommunityIssueTracker() throws Exception {
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             assertTrue(files
@@ -282,6 +310,17 @@ final class ManualResourceTest {
             ? Path.of(path.substring(1))
             : source.getParent().resolve(path);
         return relative.normalize().toString().replace('\\', '/').toLowerCase(Locale.ROOT);
+    }
+
+    private static String stripManualLocale(final String path) {
+        final int separator = path.indexOf('/');
+        if (separator > 0) {
+            final String locale = path.substring(0, separator);
+            if (locale.matches("[a-z]{2}_[a-z]{2}")) {
+                return path.substring(separator + 1);
+            }
+        }
+        return path;
     }
 
     private static boolean manualPageExists(final String path, final Set<String> pages, final Set<String> locales) {

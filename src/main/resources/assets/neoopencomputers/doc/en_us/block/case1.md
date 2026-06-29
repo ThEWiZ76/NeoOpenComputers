@@ -2,7 +2,7 @@
 
 ![Just in case.](oredict:oc:case1)
 
-Computer cases come in three different tiers, which limits the components that can be inserted into them. An additional tier also exists for use in creative mode only. Computer cases can also be placed inside an [assembler](assembler.md) to build [robots](robot.md).
+Computer cases come in three different tiers, which limits the components that can be inserted into them. An additional tier also exists for use in creative mode only. Computer cases can also be placed inside an [assembler](assembler.md) to build robots.
 
 The maximum tier of the component that can be inserted into any slot of a computer case can be seen as a small roman numeral in the corner of a tier-limited slot. A tier 2 slot can take a tier 1 component, for instance.
 

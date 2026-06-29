@@ -2,7 +2,7 @@
 
 ![Just in case.](oredict:oc:case1)
 
-Computergehäuse gibt es in drei verschiedenen Stufen. Die Stufe bestimmt die maximale Anzahl an Komponenten, die eingesetzt werden können. Es gibt eine zusätzliche Stufe für den Kreativ-Modus. Gehäuse können ebenfalls in einer [Elektronik-Werkbank](assembler.md) platziert werden, um [Roboter](robot.md) zu bauen.
+Computergehäuse gibt es in drei verschiedenen Stufen. Die Stufe bestimmt die maximale Anzahl an Komponenten, die eingesetzt werden können. Es gibt eine zusätzliche Stufe für den Kreativ-Modus. Gehäuse können ebenfalls in einer [Elektronik-Werkbank](assembler.md) platziert werden, um Roboter zu bauen.
 
 Die größte Stufe, die eine Komponente haben kann wird im entsprechenden Slot als römische Zahl angezeigt. Ein Stufe-2-Slot kann beispielsweise eine Stufe-1-Komponente enthalten, aber keine Stufe-3-Komponente.
 

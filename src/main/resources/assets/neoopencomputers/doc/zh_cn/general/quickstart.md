@@ -47,6 +47,6 @@
 
 ![它活了！](neoopencomputers:doc/img/configuration_done.png)
 
-请享受搭建更复杂的[电脑](computer.md)，折腾[服务器](../item/server1.md)以及用[电子装配机](../block/assembler.md)组装[机器人](../block/robot.md)、[无人机](../item/drone.md)、[微控制器](../block/microcontroller.md)和[平板电脑](../item/tablet.md)。
+请享受搭建更复杂的[电脑](computer.md)，折腾[服务器](../item/server1.md)以及用[电子装配机](../block/assembler.md)组装机器人、无人机、微控制器和[平板电脑](../item/tablet.md)。
 
 祝编程愉快！

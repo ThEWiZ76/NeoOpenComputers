@@ -46,6 +46,6 @@ Damit bist du fertig. Der Computer läuft - probiere ihn gleich aus! Schreibe `l
 
 ![Es lebt~](neoopencomputers:doc/img/configuration_done.png)
 
-Viel Spaß beim Bauen komplexerer Computer. Probiere unbedingt auch [Server](../item/server1.md), [Roboter](../block/robot.md), [Drohnen](../item/drone.md), [Mikrocontroller](../block/microcontroller.md) oder [Tablets](../item/tablet.md) aus. Du kannst sie mit der [Elektronik-Werkbank](../block/assembler.md) bauen!
+Viel Spaß beim Bauen komplexerer Computer. Probiere unbedingt auch [Server](../item/server1.md), Roboter, Drohnen, Mikrocontroller oder [Tablets](../item/tablet.md) aus. Du kannst sie mit der [Elektronik-Werkbank](../block/assembler.md) bauen!
 
 Fröhliches Programmieren!

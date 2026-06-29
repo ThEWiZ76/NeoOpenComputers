@@ -2,7 +2,7 @@
 
 !["Da lang!" - "Nein, ganz falsch! Dort entlang!"](oredict:oc:waypoint)
 
-Der Wegpunkt kann mit Hilfe des [Navigations-Upgrades](../item/navigationUpgrade.md) erkannt werden. So können Geräte mit diesem Upgrade Wegpunkte verwenden um durch die Welt zu navigieren. Dies ist besonders nützlich zum Schreiben einfach wiederverwendbarer Programme für Geräte wie [Roboter](robot.md) und [Drohnen](../item/drone.md).
+Der Wegpunkt kann mit Hilfe des [Navigations-Upgrades](../item/navigationUpgrade.md) erkannt werden. So können Geräte mit diesem Upgrade Wegpunkte verwenden um durch die Welt zu navigieren. Dies ist besonders nützlich zum Schreiben einfach wiederverwendbarer Programme für Geräte wie Roboter und Drohnen.
 
 Es gilt zu beachten, dass die tatsächliche Position welche das Navigationsupgrade zurückgibt *der Block vor dem Wegpunkt* ist (wie durch die Partikel angedeutet). So kann der Wegpunkt neben und über eine Kiste platziert werden und die Position des Wegpunktes kann als "über der Kiste" bezeichnet werden, ohne die Rotation beachten zu müssen.
 

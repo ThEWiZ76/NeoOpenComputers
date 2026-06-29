@@ -45,6 +45,6 @@
 
 ![Оно живое!](neoopencomputers:doc/img/configuration_done.png)
 
-Получайте удовольствие от создания сложных [компьютеров](computer.md), [серверов](../item/server1.md) и сборки [роботов](../block/robot.md), [дронов](../item/drone.md), [микроконтроллеров](../block/microcontroller.md) и [планшетов](../item/tablet.md) в [сборщике](../block/assembler.md).
+Получайте удовольствие от создания сложных [компьютеров](computer.md), [серверов](../item/server1.md) и сборки роботов, дронов, микроконтроллеров и [планшетов](../item/tablet.md) в [сборщике](../block/assembler.md).
 
 Удачи!

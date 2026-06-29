@@ -2,9 +2,9 @@
 
 ![超可爱的。](oredict:oc:microcontrollerCase1)
 
-微控制器外壳是用于在[电子装配机](../block/assembler.md)中构建[微控制器](../block/microcontroller.md)的基础部件。[微控制器](../block/microcontroller.md)是一种极其简化的[电脑](../general/computer.md)，只能安装少量组件，且适用于高度特化的应用场景，例如转换或响应红石信号，又或者处理网络信息。
+微控制器外壳是用于在[电子装配机](../block/assembler.md)中构建微控制器的基础部件。微控制器是一种极其简化的[电脑](../general/computer.md)，只能安装少量组件，且适用于高度特化的应用场景，例如转换或响应红石信号，又或者处理网络信息。
 
-微控制器中并没有文件系统。所有程序都必须写进内置的[EEPROM](eeprom.md)中。可以将[微控制器](../block/microcontroller.md)与其他芯片一起合成以替换其中的EEPROM芯片。原有[EEPROM](../item/eeprom.md)会返还到你的物品栏中。
+微控制器中并没有文件系统。所有程序都必须写进内置的[EEPROM](eeprom.md)中。可以将微控制器与其他芯片一起合成以替换其中的EEPROM芯片。原有[EEPROM](../item/eeprom.md)会返还到你的物品栏中。
 
 尽管微控制器仍需耗能，但它的能耗很低。
 

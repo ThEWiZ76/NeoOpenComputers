@@ -2,7 +2,7 @@
 
 ![Step on it.](oredict:oc:hoverBoots)
 
-If you can't be bothered to program [drones](drone.md), here's an alternative use for them: stepping stones! Or glorified inline skates. Something like that.
+If you can't be bothered to program drones, here's an alternative use for them: stepping stones! Or glorified inline skates. Something like that.
 
 Either way, these boots have a few useful properties: as long as they have power they will let you jump higher, and absorb some of the shock when landing after a particularly high jump. Specifically, they'll allow you to jump up to four blocks high and cut the impact down to one third.
 

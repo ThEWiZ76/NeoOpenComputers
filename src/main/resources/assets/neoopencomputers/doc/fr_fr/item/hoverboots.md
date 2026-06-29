@@ -2,7 +2,7 @@
 
 ![Si vous attrapez un poulet, et que vous sautez...](oredict:oc:hoverBoots)
 
-Si vous ne voulez pas vous embêter à programmer un [drone](drone.md), voici un usage alternatif : un tremplin ! Ou de glorieux patins à roulettes. Un truc du genre.
+Si vous ne voulez pas vous embêter à programmer un drone, voici un usage alternatif : un tremplin ! Ou de glorieux patins à roulettes. Un truc du genre.
 
 Dans tous les cas, ces bottes ont quelques propriétés intéressantes : tant qu'elles ont de l'énergie elles vous permettront de sauter plus haut, et d'absorber le choc de l'aterrissage après un saut particulièrement haut. Techniquement, elles vous permettront de sauter jusqu'à 4 blocs de haut et de réduire les dommages de chute d'un tiers.
 

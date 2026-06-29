@@ -2,7 +2,7 @@
 
 ![Such a poser.](oredict:oc:transposer)
 
-The transposer bridges the gap between redstone controlled hoppers and [robots](robot.md), allowing [computer](../general/computer.md)-controlled transferral of items and fluids between adjacent blocks.
+The transposer bridges the gap between redstone controlled hoppers and robots, allowing [computer](../general/computer.md)-controlled transferral of items and fluids between adjacent blocks.
 
 *Note that this block has no internal inventory.*
 

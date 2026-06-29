@@ -45,6 +45,6 @@ And with that, you're done. The [computer](computer.md) is up and running and re
 
 ![It lives!](neoopencomputers:doc/img/configuration_done.png)
 
-Have fun building more complex [computers](computer.md), messing with [servers](../item/server1.md) and assembling [robots](../block/robot.md), [drones](../item/drone.md), [microcontrollers](../block/microcontroller.md) and [tablets](../item/tablet.md) in the [assembler](../block/assembler.md).
+Have fun building more complex [computers](computer.md), messing with [servers](../item/server1.md) and assembling robots, drones, microcontrollers and [tablets](../item/tablet.md) in the [assembler](../block/assembler.md).
 
 Happy coding!

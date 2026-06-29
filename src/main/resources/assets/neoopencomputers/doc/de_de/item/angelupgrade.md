@@ -2,4 +2,4 @@
 
 ![Hallelujah.](oredict:oc:angelUpgrade)
 
-Dieses Upgrade ermöglicht es [Robotern](../block/robot.md) Blöcke mitten in die Luft zu platzieren.
+Dieses Upgrade ermöglicht es Robotern Blöcke mitten in die Luft zu platzieren.

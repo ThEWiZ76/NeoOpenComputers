@@ -47,6 +47,6 @@ Avec ça, vous avez fini. L'[ordinateur](computer.md) fonctionne et prêt à l'a
 
 ![Il vit!](neoopencomputers:doc/img/configuration_done.png)
 
-Amusez vous à construire des [ordinateurs](computer.md) plus complexes, jouer avec des [serveurs](../item/server1.md) et assembler des [robots](../block/robot.md), des [drones](../item/drone.md), des [micro-contrôleurs](../block/microcontroller.md) et des [tablettes](../item/tablet.md) dans l'[assembleur électronique](../block/assembler.md).
+Amusez vous à construire des [ordinateurs](computer.md) plus complexes, jouer avec des [serveurs](../item/server1.md) et assembler des robots, des drones, des micro-contrôleurs et des [tablettes](../item/tablet.md) dans l'[assembleur électronique](../block/assembler.md).
 
 Bon code !

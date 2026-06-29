@@ -2,7 +2,7 @@
 
 !["This way!" - "No, that way!"](oredict:oc:waypoint)
 
-The waypoint's use lies not in itself, but in how it can be used. [Navigation upgrades](../item/navigationUpgrade.md) can detect waypoints, so devices with a navigation upgrade can use these waypoints to navigate the world. This is particularly useful for writing easily reusable programs for devices such as [robots](robot.md) and [drones](../item/drone.md).
+The waypoint's use lies not in itself, but in how it can be used. [Navigation upgrades](../item/navigationUpgrade.md) can detect waypoints, so devices with a navigation upgrade can use these waypoints to navigate the world. This is particularly useful for writing easily reusable programs for devices such as robots and drones.
 
 Note that the actual position reported when queried by a navigation upgrade is *the block in front of the waypoint* (indicated by the particle effects). This way you can place it next to and above a chest, and can refer to the waypoint's position as "above the chest", without having to take the waypoint's rotation into account in your program.
 
