@@ -130,6 +130,17 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererAppliesWorldTextZOnlyOnce() throws IOException {
+        final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
+
+        assertTrue(renderer.contains("poseStack.translate(layout.x(), layout.y(), SCREEN_TEXT_Z)"));
+        assertTrue(renderer.contains("TerminalFont.drawWorldCell(poseStack, bufferSource, cell, column, row, textColor, 0F)"),
+            "World glyph quads should use local Z after the text pose has been moved to the screen face.");
+        assertTrue(renderer.contains("SCREEN_TEXT_BACKGROUND_Z = -0.001F"),
+            "World background quads should sit just behind glyphs, not add SCREEN_TEXT_Z a second time.");
+    }
+
+    @Test
     void screenRendererOnlyDrawsTerminalTextForPlayersInFrontLikeUpstream() throws IOException {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
 

@@ -962,7 +962,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         }
         powered = !nbt.contains("powered") || nbt.getBoolean("powered");
         hasPower = !nbt.contains("hasPower") || nbt.getBoolean("hasPower");
-        renderColor = nbt.contains(TAG_RENDER_COLOR) ? nbt.getInt(TAG_RENDER_COLOR) & 0xFFFFFF : defaultRenderColor(tier);
+        final int savedRenderColor = nbt.contains(TAG_RENDER_COLOR) ? nbt.getInt(TAG_RENDER_COLOR) & 0xFFFFFF : 0;
+        renderColor = savedRenderColor == 0 ? defaultRenderColor(tier) : savedRenderColor;
         width = Math.clamp(nbt.getInt("width"), 1, maximumWidth);
         height = Math.clamp(nbt.getInt("height"), 1, maximumHeight);
         viewportWidth = Math.clamp(nbt.getInt("viewportWidth"), 1, width);

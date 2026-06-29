@@ -493,7 +493,52 @@ final class NetworkRegistry implements NetworkAPI {
             if (value.ordinal() > reachability().ordinal()) {
                 throw new IllegalArgumentException("component visibility cannot exceed node reachability");
             }
+            final Visibility oldVisibility = visibility == null ? Visibility.None : visibility;
+            if (oldVisibility == value) {
+                visibility = value;
+                return;
+            }
+            final Set<BaseNode> oldTargets = visibleTargets(oldVisibility);
+            final Set<BaseNode> newTargets = visibleTargets(value);
+            final WiredNetwork wiredNetwork = wiredNetwork();
+            if (wiredNetwork != null) {
+                for (final BaseNode target : oldTargets) {
+                    if (!newTargets.contains(target)) {
+                        wiredNetwork.notifyDisconnect(target, this);
+                    }
+                }
+            }
             visibility = value;
+            if (wiredNetwork != null) {
+                for (final BaseNode target : newTargets) {
+                    if (!oldTargets.contains(target)) {
+                        wiredNetwork.notifyConnect(target, this);
+                    }
+                }
+            }
+        }
+
+        private Set<BaseNode> visibleTargets(final Visibility value) {
+            final WiredNetwork wiredNetwork = wiredNetwork();
+            if (wiredNetwork == null) {
+                return Set.of();
+            }
+            final Iterable<Node> candidates = switch (value) {
+                case None -> List.of();
+                case Neighbors -> wiredNetwork.neighbors(this);
+                case Network -> wiredNetwork.nodes(this);
+            };
+            final Set<BaseNode> result = new LinkedHashSet<>();
+            for (final Node candidate : candidates) {
+                if (candidate instanceof BaseNode baseNode) {
+                    result.add(baseNode);
+                }
+            }
+            return result;
+        }
+
+        private WiredNetwork wiredNetwork() {
+            return network() instanceof WiredNetwork wiredNetwork ? wiredNetwork : null;
         }
 
         @Override

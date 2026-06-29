@@ -147,6 +147,33 @@ final class NetworkRegistryTest {
     }
 
     @Test
+    void componentVisibilityChangesNotifyReachableNodesLikeUpstream() {
+        NetworkRegistry registry = new NetworkRegistry();
+        RecordingEnvironment machineHost = new RecordingEnvironment();
+        TestEnvironment screenHost = new TestEnvironment();
+        Node machineNode = registry.newNode(machineHost, Visibility.Network).create();
+        Component screenNode = registry.newNode(screenHost, Visibility.Network).withComponent("screen", Visibility.Network).create();
+        machineHost.setNode(machineNode);
+        screenHost.node = screenNode;
+        registry.joinNewNetwork(machineNode);
+        machineNode.connect(screenNode);
+        machineHost.connected.clear();
+        machineHost.disconnected.clear();
+
+        screenNode.setVisibility(Visibility.None);
+
+        assertEquals(List.of(screenNode), machineHost.disconnected);
+        assertEquals(List.of(), machineHost.connected);
+        machineHost.connected.clear();
+        machineHost.disconnected.clear();
+
+        screenNode.setVisibility(Visibility.Network);
+
+        assertEquals(List.of(screenNode), machineHost.connected);
+        assertEquals(List.of(), machineHost.disconnected);
+    }
+
+    @Test
     void nodeJoinsAndConnectsAdjacentNeighborNodes() {
         NetworkRegistry registry = new NetworkRegistry();
         TestEnvironment hostA = new TestEnvironment();
@@ -371,9 +398,28 @@ final class NetworkRegistryTest {
             return messages.stream().map(Message::name).toList();
         }
 
+        void setNode(final Node node) {
+            this.node = node;
+        }
+
         @Callback(doc = "function():string -- Test callback.")
         public Object[] ping(final Context context, final Arguments arguments) {
             return new Object[]{"pong", arguments.checkString(0)};
+        }
+    }
+
+    private static final class RecordingEnvironment extends TestEnvironment {
+        private final List<Node> connected = new ArrayList<>();
+        private final List<Node> disconnected = new ArrayList<>();
+
+        @Override
+        public void onConnect(final Node node) {
+            connected.add(node);
+        }
+
+        @Override
+        public void onDisconnect(final Node node) {
+            disconnected.add(node);
         }
     }
 

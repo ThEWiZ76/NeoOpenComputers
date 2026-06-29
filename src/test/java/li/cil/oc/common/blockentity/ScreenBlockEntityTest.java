@@ -171,6 +171,17 @@ final class ScreenBlockEntityTest {
     }
 
     @Test
+    void migratesZeroRenderColorToTierDefault() throws Exception {
+        ScreenBlockEntity loaded = screenWithTier(2);
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("renderColorRGB", 0);
+
+        loaded.load(tag);
+
+        assertEquals(ScreenBlockEntity.rgbValue(DyeColor.CYAN), loaded.getRenderColor());
+    }
+
+    @Test
     void listsNeighborKeyboardAddresses() throws Exception {
         OpenComputersApi.initialize();
         ScreenBlockEntity screen = allocateScreen();

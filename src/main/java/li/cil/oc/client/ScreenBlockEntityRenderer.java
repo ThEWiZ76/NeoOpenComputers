@@ -33,6 +33,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
     private static final float SCREEN_FRONT_Z = 0.53F;
     private static final float SCREEN_TEXT_Z = 0.535F;
+    private static final float SCREEN_TEXT_BACKGROUND_Z = -0.001F;
     private static final float SCREEN_SIDE_OFFSET = 0.531F;
     private static final String[] SINGLE_SIDE = {"b", "b", "b2", "b2", "b2", "b2"};
     private static final String[][] HORIZONTAL_FRONT = {
@@ -168,7 +169,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
                 final String cell = cells.get(column);
                 if (!cell.isBlank()) {
                     final int textColor = textColorWithAlpha(screen.getForegroundColor(column, row), textAlpha);
-                    TerminalFont.drawWorldCell(poseStack, bufferSource, cell, column, row, textColor, SCREEN_TEXT_Z);
+                    TerminalFont.drawWorldCell(poseStack, bufferSource, cell, column, row, textColor, 0F);
                 }
             }
         }
@@ -575,7 +576,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         }
         final float x = column * CELL_WIDTH;
         final float y = row * LINE_HEIGHT;
-        final float z = SCREEN_TEXT_Z - 0.001F;
+        final float z = SCREEN_TEXT_BACKGROUND_Z;
         final VertexConsumer consumer = bufferSource.getBuffer(RenderType.gui());
         final PoseStack.Pose pose = poseStack.last();
         consumer.addVertex(pose, x, y + LINE_HEIGHT, z).setColor(color);
