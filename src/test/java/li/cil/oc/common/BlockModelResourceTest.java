@@ -66,16 +66,17 @@ final class BlockModelResourceTest {
     }
 
     @Test
-    void screenBlockModelsUseOpaqueNeutralStaticFrontFillLikeUpstreamScreenModel() throws IOException {
+    void screenBlockModelsUseGenericStaticBodyAndLeaveScreenFacesToRenderer() throws IOException {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_panel.json"))) {
             final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
             assertTrue("minecraft:block/block".equals(panel.get("parent").getAsString()));
             assertTrue(panel.has("elements"));
-            assertTrue(panel.getAsJsonArray("elements").size() == 1, "World screen needs an opaque static body behind transparent connected screen textures");
+            assertTrue(panel.getAsJsonArray("elements").size() == 1, "World screen needs an opaque static body for normal block culling");
             final JsonObject textures = panel.getAsJsonObject("textures");
             assertTrue("neoopencomputers:block/generic_top".equals(textures.get("top_bottom").getAsString()));
             assertTrue("neoopencomputers:block/generic_side".equals(textures.get("side").getAsString()));
-            assertTrue("neoopencomputers:block/screen/fmm".equals(textures.get("front").getAsString()), "Static front fill must be neutral and opaque; connected borders are rendered dynamically");
+            assertTrue("neoopencomputers:block/generic_side".equals(textures.get("front").getAsString()), "Static front must stay generic; connected screen faces are rendered dynamically from block-entity layout");
+            assertTrue(!panel.toString().contains("block/screen/"), "Static screen model must not draw fixed screen panel textures over dynamic connected faces");
             final JsonObject faces = panel.getAsJsonArray("elements").get(0).getAsJsonObject().getAsJsonObject("faces");
             assertTrue("#front".equals(faces.getAsJsonObject("south").get("texture").getAsString()), "Static south/front face should use the opaque fill alias");
         }

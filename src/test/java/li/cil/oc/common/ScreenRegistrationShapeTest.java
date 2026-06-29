@@ -115,6 +115,14 @@ final class ScreenRegistrationShapeTest {
     }
 
     @Test
+    void screenStaticModelDoesNotDrawFixedFrontOverDynamicConnectedFaces() throws Exception {
+        final String model = Files.readString(Path.of("src/main/resources/assets/neoopencomputers/models/block/screen_panel.json"));
+
+        assertTrue(!model.contains("block/screen/"),
+            "Static screen model must not draw fixed screen panel textures; the block-entity renderer owns upstream connected screen faces");
+    }
+
+    @Test
     void screenLocalEastMatchesUpstreamRotationHelper() {
         assertEquals(Direction.WEST, ScreenBlock.localRight(Direction.NORTH));
         assertEquals(Direction.NORTH, ScreenBlock.localRight(Direction.EAST));
