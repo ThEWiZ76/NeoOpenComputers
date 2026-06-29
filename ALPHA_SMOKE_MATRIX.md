@@ -18,3 +18,25 @@ Screen world rendering stays frozen unless there is a focused repro, focused fai
 | Manual and packaging | Manual link/resource tests, metadata tests, jar packaging tests, API jar tests, contributor docs, changelog, and alpha guide tests cover public artifact readiness. | Install `build/libs/neoopencomputers-0.1.0.jar` in a clean NeoForge 1.21.1 client and open the manual/creative tab. |
 
 Manual alpha smoke should save crash reports, client logs, screenshots, and exact reproduction steps for any mismatch.
+
+## Automated Evidence Anchors
+
+These are the named GameTests that back the automated side of the matrix. They do not replace the manual visual smoke pass, but they make the pre-alpha evidence traceable.
+
+- OpenOS boot: `computerRunsWithLuaBiosAndOpenOsFloppy`, `tier1ComputerWithNetworkCardBootsOpenOsHardDiskToLiveStyleScreenWall`, `tier1ComputerBootsOpenOsHardDiskWithZeroStoredDriveEnergy`, `tier3ComputerBootsOpenOsFromInternalFloppy`, `tier3ComputerBootsOpenOsToTier3ScreenAndKeyboardTerminal`.
+- Storage persistence: `computerCaseStorageStateSurvivesNbtReloadForFirstSmoke`.
+- Disk-drive floppy persistence: `diskDriveWritableFloppyStateSurvivesNbtReloadForFirstSmoke`, `rackDiskDriveWritableFloppyStateSurvivesNbtReloadForFirstSmoke`.
+- Terminal input: `terminalItemNetworkInputReachesComputerLikeFirstSmoke`, `terminalItemNetworkMouseInputReachesComputerLikeFirstSmoke`.
+- Redstone: `redstoneCardUsesComputerLocalSides`, `redstoneCardQueuesInputChangeSignal`, `redstoneWakeThresholdStartsComputer`, `redstoneIoWakeThresholdStartsReachableComputer`, `redstoneIoQueuesInputChangeSignalLikeUpstream`.
+- Transposer/tank: `transposerTransfersFluidBetweenAdjacentTanks`, `transposerItemTransferRequiresEnergy`, `transposerTransferFluidRequiresEnergy`, `tankControllerInspectsAdjacentFluidTanks`.
+- Printer/print: `printerProducesPrintItemAfterEnergyAndInputLikeUpstream`, `printItemPlacesConfiguredPrintLikeUpstream`, `printBlockRotatesShapeTowardFacingLikeUpstream`, `printBlockFollowsExternalRedstoneInputLikeUpstream`.
+
+## Remaining Manual Proof
+
+The current automated smoke report can prove startup, local-world entry, block placement, and MCP command transport. Human or screenshot-capable tooling still has to prove:
+
+- `/home #` is readable in-world after boot.
+- Screen text, GUI text, and item tooltips are visually readable.
+- Screen output and keyboard input still look correct after save/reload.
+- Creative tab and manual navigation are usable in a clean client profile.
+- Printer/print visuals look sane from player view.

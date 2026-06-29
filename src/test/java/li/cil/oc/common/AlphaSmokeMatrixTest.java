@@ -38,5 +38,17 @@ final class AlphaSmokeMatrixTest {
         assertTrue(matrix.contains("Manual alpha smoke"), "Matrix must distinguish manual alpha smoke");
         assertTrue(matrix.contains("Screen world rendering stays frozen"),
             "Matrix must keep the screen loop-control rule visible");
+        for (final String gameTestName : new String[]{
+            "computerRunsWithLuaBiosAndOpenOsFloppy",
+            "tier1ComputerWithNetworkCardBootsOpenOsHardDiskToLiveStyleScreenWall",
+            "computerCaseStorageStateSurvivesNbtReloadForFirstSmoke",
+            "rackDiskDriveWritableFloppyStateSurvivesNbtReloadForFirstSmoke",
+            "terminalItemNetworkInputReachesComputerLikeFirstSmoke",
+            "terminalItemNetworkMouseInputReachesComputerLikeFirstSmoke",
+            "printerProducesPrintItemAfterEnergyAndInputLikeUpstream",
+            "transposerTransfersFluidBetweenAdjacentTanks"
+        }) {
+            assertTrue(matrix.contains(gameTestName), "Matrix missing concrete GameTest evidence: " + gameTestName);
+        }
     }
 }
