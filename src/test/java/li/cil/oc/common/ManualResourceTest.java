@@ -189,6 +189,30 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualUnavailableAlphaPagesWarnWhenOpenedDirectly() throws Exception {
+        final Set<String> unavailablePages = Set.of(
+            "item/drone.md",
+            "item/dronecase1.md",
+            "block/robot.md",
+            "block/microcontroller.md"
+        );
+        final List<String> missingNotes = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
+            for (final Path file : files
+                .filter(path -> path.getFileName().toString().endsWith(".md"))
+                .toList()) {
+                final Path relativeFile = DOC_ROOT.relativize(file);
+                if (unavailablePages.contains(stripManualLocale(relativeFile.toString().replace('\\', '/').toLowerCase(Locale.ROOT)))
+                    && !Files.readString(file).contains("NeoOpenComputers alpha unavailable:")) {
+                    missingNotes.add(relativeFile.toString().replace('\\', '/'));
+                }
+            }
+        }
+
+        assertTrue(missingNotes.isEmpty(), () -> "Unavailable manual pages missing alpha warning:\n" + String.join("\n", missingNotes));
+    }
+
+    @Test
     void bundledManualMarkdownUsesCommunityIssueTracker() throws Exception {
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             assertTrue(files

@@ -1,5 +1,7 @@
 # Boitier de drone
 
+NeoOpenComputers alpha unavailable: this upstream device page is kept for reference, but this device is not available in the current alpha build.
+
 ![Le vol du bourdon.](oredict:oc:droneCase1)
 
 Le boitier de drone est utilisé pour construire des drones dans l'[assembler](../block/assembler.md). Les drones sont des machines légères, rapides et très mobiles avec des fonctionnalités réduites (moins d'améliorations et d'emplacements de composant disponibles). Contrairement aux robots, ils ne peuvent pas utiliser d'outils, et peuvent seulement interagir avec le monde de manière relativement limitée.

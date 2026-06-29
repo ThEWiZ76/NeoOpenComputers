@@ -1,5 +1,7 @@
 # Drone Case
 
+NeoOpenComputers alpha unavailable: this upstream device page is kept for reference, but this device is not available in the current alpha build.
+
 ![Droning on.](oredict:oc:droneCase1)
 
 The drone case is used to build drones in the [assembler](../block/assembler.md). Drones are light-weight, fast and very mobile machines with limited functionality (fewer upgrade and component slots available). Unlike robots they cannot use tools, and can interact with the world only in a relatively limited manner.

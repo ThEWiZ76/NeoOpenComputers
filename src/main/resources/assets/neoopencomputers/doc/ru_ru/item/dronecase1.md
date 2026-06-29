@@ -1,5 +1,7 @@
 # Корпус дрона
 
+NeoOpenComputers alpha unavailable: this upstream device page is kept for reference, but this device is not available in the current alpha build.
+
 ![Полетели.](oredict:oc:droneCase1)
 
 Корпус дрона используется для создания дронов в [сборщике](../block/assembler.md). Дроны - легковесные, быстрые и очень мобильные устройства с ограниченной функциональностью (доступно меньше слотов для компонентов и улучешний). В отличие от роботов, они не могут использовать инструменты и взаимодействуют с игровым миром ограниченно.
