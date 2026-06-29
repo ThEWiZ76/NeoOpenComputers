@@ -19,7 +19,7 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("First Technical Smoke Test"), "README must document first smoke testing");
         assertTrue(readme.contains("Current pushed first-smoke base"), "README must name the smoke-test base");
         assertTrue(readme.contains("develop"), "README must direct testers to develop");
-        assertTrue(readme.contains("329/329"), "README must include current GameTest evidence");
+        assertTrue(readme.contains("427/427"), "README must include current GameTest evidence");
         assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include disk-drive persistence smoke item");
         assertTrue(readme.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
             "README must include terminal item input smoke item");

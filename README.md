@@ -17,10 +17,10 @@ Current verification evidence:
 
 - Unit/build gate: `.\gradlew.bat test build --no-daemon --console=plain`
 - GameTest gate: `.\gradlew.bat runGameTestServer --no-daemon --console=plain`
-- Latest GameTest result: `329/329` required tests passed.
+- Latest GameTest result: `427/427` required tests passed.
 - Bounded client launch smoke reaches resource reload and texture atlas creation without print/model/missing-texture/error matches.
 
-The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, and packaging slices in place. It is ready for first technical smoke testing, not release-ready.
+The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, player-facing failure feedback, and packaging slices in place. It is ready for first technical smoke testing, not release-ready.
 
 GitHub Actions are intentionally disabled until the mod is ready enough for CI. Do not add `.github/workflows` yet.
 
