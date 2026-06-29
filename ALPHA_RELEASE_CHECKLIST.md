@@ -5,7 +5,7 @@ Use this checklist before sharing the first NeoOpenComputers alpha jar outside t
 ## Target
 
 - Minecraft 1.21.1
-- NeoForge 21.1.233
+- NeoForge 21.1.234
 - NeoOpenComputers 0.1.0 from `develop`
 - Java 21
 

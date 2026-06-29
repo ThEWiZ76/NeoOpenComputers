@@ -21,7 +21,7 @@ final class ReleaseNotesTest {
         final String changelog = Files.readString(changelogPath);
         assertTrue(changelog.contains("0.1.0-alpha"), "Changelog must name first alpha line");
         assertTrue(changelog.contains("Minecraft 1.21.1"), "Changelog must name target Minecraft version");
-        assertTrue(changelog.contains("NeoForge 21.1.233"), "Changelog must name target NeoForge version");
+        assertTrue(changelog.contains("NeoForge 21.1.234"), "Changelog must name target NeoForge version");
         assertTrue(changelog.contains("OpenOS boot"), "Changelog must summarize OpenOS boot scope");
         assertTrue(changelog.contains("Computer cases, servers, racks, screens, keyboards, storage, cards, and upgrades"),
             "Changelog must summarize current alpha device scope");

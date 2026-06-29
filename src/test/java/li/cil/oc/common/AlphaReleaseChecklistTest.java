@@ -21,6 +21,7 @@ final class AlphaReleaseChecklistTest {
         final String checklist = Files.readString(checklistPath);
         for (final String required : new String[]{
             "build/libs/neoopencomputers-0.1.0.jar",
+            "NeoForge 21.1.234",
             "Do not ship `neoopencomputers-0.1.0-thin.jar`",
             ".\\gradlew.bat test build --no-daemon --console=plain",
             ".\\gradlew.bat runGameTestServer --no-daemon --console=plain",

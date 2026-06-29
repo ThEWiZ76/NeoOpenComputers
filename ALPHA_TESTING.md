@@ -5,7 +5,7 @@ This guide tracks the first technical alpha test path for NeoOpenComputers. It i
 ## Target
 
 - Minecraft 1.21.1
-- NeoForge 21.1.233
+- NeoForge 21.1.234
 - NeoOpenComputers 0.1.0 from `develop`
 - Java 21
 
