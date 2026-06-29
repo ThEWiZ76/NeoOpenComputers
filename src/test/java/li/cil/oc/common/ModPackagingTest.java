@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
+import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -69,7 +70,36 @@ final class ModPackagingTest {
     void builtModJarContainsRuntimeInnerClassesUsedByAlphaSmokePaths() throws IOException {
         try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.modJar"))) {
             assertContains(jar, "li/cil/oc/common/FileSystemRegistry$ResourceFileSystem$ResourceHandle.class");
+            assertContains(jar, "li/cil/oc/common/block/ScreenHitMapper.class");
+            assertContains(jar, "li/cil/oc/common/block/ScreenHitMapper$ScreenClick.class");
+            assertContains(jar, "li/cil/oc/common/block/ScreenClickHandler.class");
+            assertContains(jar, "li/cil/oc/common/menu/ComputerCaseMenu$ServerComputerData.class");
             assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$HttpTransport.class");
+            assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$HttpResponse.class");
+            assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$HttpRequest.class");
+            assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$TcpAddress.class");
+            assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$TcpSocket.class");
+            assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$InternetFilteringRule.class");
+            assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$RulePredicate.class");
+            assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$InetAddressRange.class");
+            assertContains(jar, "li/cil/oc/common/component/TerminalScreenDelta$Row.class");
+            assertContains(jar, "li/cil/oc/client/TerminalScreen$TextCell.class");
+            assertContains(jar, "li/cil/oc/common/item/data/PrintRenderModel.class");
+            assertContains(jar, "li/cil/oc/common/item/data/PrintRenderModel$RenderShape.class");
+        }
+    }
+
+    @Test
+    void packagingGuardCoversEveryPreloadedCrashHardeningClass() throws IOException {
+        final String preloaderSource = Files.readString(Path.of("src/main/java/li/cil/oc/ModClassPreloader.java"));
+        final String packagingTestSource = Files.readString(Path.of("src/test/java/li/cil/oc/common/ModPackagingTest.java"));
+        final var classNamePattern = Pattern.compile("\"(li\\.cil\\.oc\\.[^\"]+)\"");
+        final var matcher = classNamePattern.matcher(preloaderSource);
+
+        while (matcher.find()) {
+            final String entryName = matcher.group(1).replace('.', '/') + ".class";
+            assertTrue(packagingTestSource.contains(entryName),
+                () -> "Packaging test must assert preloaded crash-hardening class " + entryName);
         }
     }
 
