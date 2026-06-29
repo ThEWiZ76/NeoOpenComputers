@@ -66,6 +66,14 @@ final class ModPackagingTest {
     }
 
     @Test
+    void builtModJarContainsRuntimeInnerClassesUsedByAlphaSmokePaths() throws IOException {
+        try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.modJar"))) {
+            assertContains(jar, "li/cil/oc/common/FileSystemRegistry$ResourceFileSystem$ResourceHandle.class");
+            assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$HttpTransport.class");
+        }
+    }
+
+    @Test
     void builtAllJarContainsJarJarLibrariesForRuntime() throws IOException {
         try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.allJar"))) {
             assertContains(jar, "META-INF/jarjar/metadata.json");
