@@ -102,7 +102,7 @@ public class AnalyzerItem extends Item {
     private static void describeNode(final Node node, final List<net.minecraft.network.chat.Component> lines) {
         if (node.host() instanceof Machine machine) {
             if (machine.lastError() != null && !machine.lastError().isEmpty()) {
-                lines.add(line("Last error: " + machine.lastError()));
+                lines.add(line("Last error: " + firstErrorLine(machine.lastError())));
             }
             lines.add(line("Components: " + machine.componentCount() + "/" + machine.maxComponents()));
             final String[] users = machine.users();
@@ -177,6 +177,19 @@ public class AnalyzerItem extends Item {
 
     private static MutableComponent line(final String value) {
         return net.minecraft.network.chat.Component.literal(value);
+    }
+
+    private static String firstErrorLine(final String lastError) {
+        int end = lastError.length();
+        final int carriageReturn = lastError.indexOf('\r');
+        final int lineFeed = lastError.indexOf('\n');
+        if (carriageReturn >= 0) {
+            end = Math.min(end, carriageReturn);
+        }
+        if (lineFeed >= 0) {
+            end = Math.min(end, lineFeed);
+        }
+        return lastError.substring(0, end);
     }
 
     private static String format(final double value) {
