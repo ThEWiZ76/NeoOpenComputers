@@ -172,6 +172,19 @@ final class ScreenBlockEntityTest {
     }
 
     @Test
+    void screenKeyboardUsabilityFollowsUpstreamAdjacentSideRule() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/ScreenBlockEntity.java"));
+        final int methodStart = source.indexOf("public boolean hasKeyboard(final Player player)");
+        final int methodEnd = source.indexOf("public TerminalScreenSnapshot terminalSnapshot()", methodStart);
+
+        assertTrue(methodStart >= 0);
+        assertTrue(methodEnd > methodStart);
+        final String method = source.substring(methodStart, methodEnd);
+        assertTrue(method.contains("keyboard.canConnect(side.getOpposite())"),
+            "Screen.hasKeyboard should only count adjacent keyboards exposing a node toward the screen, like upstream Keyboard.hasNodeOnSide(side.getOpposite).");
+    }
+
+    @Test
     void declaresClientSyncHooks() throws NoSuchMethodException {
         assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("getUpdatePacket").getDeclaringClass());
         assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("getUpdateTag", HolderLookup.Provider.class).getDeclaringClass());

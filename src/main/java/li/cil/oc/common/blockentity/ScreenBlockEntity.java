@@ -222,16 +222,6 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     }
 
     public boolean hasKeyboard(final Player player) {
-        if (node() != null) {
-            for (final Node neighbor : node().neighbors()) {
-                if (neighbor.host() instanceof KeyboardBlockEntity keyboard && keyboard.isUsableByPlayer(player)) {
-                    return true;
-                }
-                if (neighbor.host() instanceof Keyboard) {
-                    return true;
-                }
-            }
-        }
         if (level == null) {
             return false;
         }
@@ -243,7 +233,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         for (final BlockPos screenPos : connectedScreens(pitch, yaw, right, up)) {
             for (final Direction side : Direction.values()) {
                 if (level.getBlockEntity(screenPos.relative(side)) instanceof KeyboardBlockEntity keyboard
-                    && keyboard.isUsableByPlayer(player)) {
+                    && keyboard.canConnect(side.getOpposite())) {
                     return true;
                 }
             }
