@@ -125,6 +125,18 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenWaitsForCharacterEventForPrintableKeys() {
+        assertEquals(true, TerminalScreen.shouldWaitForCharacterInput(GLFW.GLFW_KEY_E));
+        assertEquals(true, TerminalScreen.shouldWaitForCharacterInput(GLFW.GLFW_KEY_SPACE));
+        assertEquals(true, TerminalScreen.shouldWaitForCharacterInput(GLFW.GLFW_KEY_1));
+        assertEquals(true, TerminalScreen.shouldWaitForCharacterInput(GLFW.GLFW_KEY_SLASH));
+        assertEquals(true, TerminalScreen.shouldWaitForCharacterInput(GLFW.GLFW_KEY_KP_1));
+        assertEquals(false, TerminalScreen.shouldWaitForCharacterInput(GLFW.GLFW_KEY_ENTER));
+        assertEquals(false, TerminalScreen.shouldWaitForCharacterInput(GLFW.GLFW_KEY_BACKSPACE));
+        assertEquals(false, TerminalScreen.shouldWaitForCharacterInput(GLFW.GLFW_KEY_LEFT));
+    }
+
+    @Test
     void terminalScreenSizesPanelForSnapshotDimensions() {
         final TerminalScreenSnapshot missing = new TerminalScreenSnapshot(0, 0, new String[0]);
         final TerminalScreenSnapshot terminalServerDefault = new TerminalScreenSnapshot(80, 25, new String[25]);
@@ -297,6 +309,7 @@ final class TerminalScreenShapeTest {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalScreen.java"));
 
         assertFalse(source.contains("sendKeyInput(false, codePoint, 0)"));
+        assertTrue(source.contains("shouldWaitForCharacterInput(keyCode)"));
         assertTrue(source.contains("pressedKeys.put(keyCode, codePoint)"));
     }
 

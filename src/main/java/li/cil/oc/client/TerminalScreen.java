@@ -112,6 +112,9 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             sendClipboardInput(minecraft.keyboardHandler.getClipboard());
             return;
         }
+        if (shouldWaitForCharacterInput(keyCode)) {
+            return;
+        }
         if (shouldForwardKeyPress(pressedKeys.containsKey(keyCode), keyCode)) {
             sendKeyInput(true, (char) 0, keyCode);
         }
@@ -239,6 +242,12 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     static boolean shouldForwardTerminalKey(final int keyCode) {
         return keyCode != GLFW.GLFW_KEY_ESCAPE && keyCode != GLFW.GLFW_KEY_F11;
+    }
+
+    static boolean shouldWaitForCharacterInput(final int keyCode) {
+        return keyCode == GLFW.GLFW_KEY_SPACE
+            || keyCode >= GLFW.GLFW_KEY_APOSTROPHE && keyCode <= GLFW.GLFW_KEY_GRAVE_ACCENT
+            || keyCode >= GLFW.GLFW_KEY_KP_0 && keyCode <= GLFW.GLFW_KEY_KP_EQUAL;
     }
 
     static boolean shouldForwardKeyPress(final boolean alreadyPressed, final int keyCode) {
