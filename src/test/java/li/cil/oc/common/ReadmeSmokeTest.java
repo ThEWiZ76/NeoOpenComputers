@@ -25,6 +25,8 @@ final class ReadmeSmokeTest {
             "README must include terminal item input smoke item");
         assertTrue(readme.contains("screenshots"), "README must tell testers to save screenshots");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
+        assertTrue(readme.contains("Robots, drones, and block microcontrollers are not available in this alpha build"),
+            "README must state unavailable alpha devices");
     }
 
     @Test

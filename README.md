@@ -22,6 +22,8 @@ Current verification evidence:
 
 The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, player-facing failure feedback, and packaging slices in place. It is ready for first technical smoke testing, not release-ready.
 
+Robots, drones, and block microcontrollers are not available in this alpha build. Computer cases, servers, racks, screens, keyboards, storage, cards, upgrades, and microcontroller case items are the current alpha focus.
+
 GitHub Actions are intentionally disabled until the mod is ready enough for CI. Do not add `.github/workflows` yet.
 
 Chosen upstream reference branch:
