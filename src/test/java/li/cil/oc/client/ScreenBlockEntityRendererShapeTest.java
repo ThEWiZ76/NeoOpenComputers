@@ -136,8 +136,19 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(renderer.contains("poseStack.translate(layout.x(), layout.y(), SCREEN_TEXT_Z)"));
         assertTrue(renderer.contains("TerminalFont.drawWorldCell(poseStack, bufferSource, cell, column, row, textColor, 0F)"),
             "World glyph quads should use local Z after the text pose has been moved to the screen face.");
-        assertTrue(renderer.contains("SCREEN_TEXT_BACKGROUND_Z = -0.001F"),
-            "World background quads should sit just behind glyphs, not add SCREEN_TEXT_Z a second time.");
+        assertTrue(renderer.contains("localBackgroundZ(layout.scale())"),
+            "World background quads should compensate for text scale instead of collapsing onto glyph depth.");
+    }
+
+    @Test
+    void screenRendererKeepsReadableDepthGapAfterScaling() {
+        final float singleScale = ScreenBlockEntityRenderer.textScale(1, 1, 50, 16);
+        final float wallScale = ScreenBlockEntityRenderer.textScale(3, 2, 80, 25);
+
+        assertEquals(0.002F, -ScreenBlockEntityRenderer.localBackgroundZ(singleScale) * singleScale, 0.000_001F);
+        assertEquals(0.002F, -ScreenBlockEntityRenderer.localBackgroundZ(wallScale) * wallScale, 0.000_001F);
+        assertTrue(ScreenBlockEntityRenderer.screenTextZ() + ScreenBlockEntityRenderer.localBackgroundZ(singleScale) * singleScale > ScreenBlockEntityRenderer.screenFrontZ());
+        assertTrue(ScreenBlockEntityRenderer.screenTextZ() + ScreenBlockEntityRenderer.localBackgroundZ(wallScale) * wallScale > ScreenBlockEntityRenderer.screenFrontZ());
     }
 
     @Test

@@ -33,7 +33,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     private static final int SCREEN_TIER3_COLOR = 0x66FFFF;
     private static final float SCREEN_FRONT_Z = 0.53F;
     private static final float SCREEN_TEXT_Z = 0.535F;
-    private static final float SCREEN_TEXT_BACKGROUND_Z = -0.001F;
+    private static final float SCREEN_TEXT_BACKGROUND_WORLD_GAP = 0.002F;
     private static final float SCREEN_SIDE_OFFSET = 0.531F;
     private static final String[] SINGLE_SIDE = {"b", "b", "b2", "b2", "b2", "b2"};
     private static final String[][] HORIZONTAL_FRONT = {
@@ -140,7 +140,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final TextLayout layout = textLayout(screen.renderBlockWidth(), screen.renderBlockHeight(), screen.renderWidth(), screen.renderHeight());
         poseStack.translate(layout.x(), layout.y(), SCREEN_TEXT_Z);
         poseStack.scale(layout.scale(), -layout.scale(), layout.scale());
-        renderTerminalBackgrounds(screen, poseStack, bufferSource, textAlpha);
+        renderTerminalBackgrounds(screen, poseStack, bufferSource, textAlpha, localBackgroundZ(layout.scale()));
         renderTerminalGlyphs(screen, poseStack, bufferSource, textAlpha);
         poseStack.popPose();
     }
@@ -149,11 +149,12 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final ScreenBlockEntity screen,
         final PoseStack poseStack,
         final MultiBufferSource bufferSource,
-        final float textAlpha) {
+        final float textAlpha,
+        final float backgroundZ) {
         for (int row = 0; row < screen.renderHeight(); row++) {
             for (int column = 0; column < screen.renderWidth(); column++) {
                 final int backgroundColor = textColorWithAlpha(screen.getBackgroundColor(column, row), textAlpha);
-                renderCellBackground(poseStack, bufferSource, column, row, backgroundColor);
+                renderCellBackground(poseStack, bufferSource, column, row, backgroundColor, backgroundZ);
             }
         }
     }
@@ -570,13 +571,13 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final MultiBufferSource bufferSource,
         final int column,
         final int row,
-        final int color) {
+        final int color,
+        final float z) {
         if (!shouldRenderCellBackground(color)) {
             return;
         }
         final float x = column * CELL_WIDTH;
         final float y = row * LINE_HEIGHT;
-        final float z = SCREEN_TEXT_BACKGROUND_Z;
         final VertexConsumer consumer = bufferSource.getBuffer(RenderType.gui());
         final PoseStack.Pose pose = poseStack.last();
         consumer.addVertex(pose, x, y + LINE_HEIGHT, z).setColor(color);
@@ -587,6 +588,11 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
 
     static boolean shouldRenderCellBackground(final int color) {
         return (color & 0xFF000000) != 0;
+    }
+
+    static float localBackgroundZ(final float textScale) {
+        final float safeScale = Math.max(0.000_001F, textScale);
+        return -SCREEN_TEXT_BACKGROUND_WORLD_GAP / safeScale;
     }
 
     static boolean playerIsInFrontOfScreen(final Direction front, final AABB bounds, final double playerX, final double playerY, final double playerZ) {
