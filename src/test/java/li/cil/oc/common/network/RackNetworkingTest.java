@@ -15,6 +15,7 @@ import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class RackNetworkingTest {
@@ -120,6 +122,42 @@ final class RackNetworkingTest {
         assertEquals(0, stopCount.get());
     }
 
+    @Test
+    void rackStartFailureMessageShowsFirstErrorLineForPlayerFeedback() {
+        final Component message = RackNetworking.startFailureMessage(
+            machine(false, false, "boot:60 no bootable medium found\r\nstack traceback"),
+            false,
+            RackControlPayload.START);
+
+        assertEquals("Last error: boot:60 no bootable medium found", message.getString());
+    }
+
+    @Test
+    void rackToggleStartFailureMessageShowsFirstErrorLineForPlayerFeedback() {
+        final Component message = RackNetworking.startFailureMessage(
+            machine(false, false, "missing required components"),
+            false,
+            RackControlPayload.TOGGLE);
+
+        assertEquals("Last error: missing required components", message.getString());
+    }
+
+    @Test
+    void rackStartFailureMessageDoesNotRepeatOldErrorWhenStoppingOrAlreadyRunning() {
+        assertNull(RackNetworking.startFailureMessage(
+            machine(true, false, "old error"),
+            true,
+            RackControlPayload.START));
+        assertNull(RackNetworking.startFailureMessage(
+            machine(true, false, "old error"),
+            true,
+            RackControlPayload.TOGGLE));
+        assertNull(RackNetworking.startFailureMessage(
+            machine(true, false, "old error"),
+            true,
+            RackControlPayload.STOP));
+    }
+
     private static TestRackBlockEntity allocateRack() throws Exception {
         return (TestRackBlockEntity) unsafe().allocateInstance(TestRackBlockEntity.class);
     }
@@ -153,9 +191,17 @@ final class RackNetworkingTest {
     }
 
     private static Machine runningMachine(final AtomicInteger stopCount) {
+        return machine(true, false, null, stopCount);
+    }
+
+    private static Machine machine(final boolean running, final boolean paused, final String lastError) {
+        return machine(running, paused, lastError, new AtomicInteger());
+    }
+
+    private static Machine machine(final boolean running, final boolean paused, final String lastError, final AtomicInteger stopCount) {
         return (Machine) Proxy.newProxyInstance(RackNetworkingTest.class.getClassLoader(), new Class<?>[]{Machine.class}, (proxy, method, args) -> switch (method.getName()) {
-            case "isRunning" -> true;
-            case "isPaused" -> false;
+            case "isRunning" -> running;
+            case "isPaused" -> paused;
             case "stop" -> {
                 stopCount.incrementAndGet();
                 yield true;
@@ -165,7 +211,8 @@ final class RackNetworkingTest {
             case "getCostPerTick", "upTime", "cpuTime", "worldTime" -> 0;
             case "components", "methods" -> java.util.Map.of();
             case "users" -> new String[0];
-            case "tmpAddress", "lastError" -> null;
+            case "lastError" -> lastError;
+            case "tmpAddress", "node" -> null;
             default -> defaultValue(method.getReturnType());
         });
     }

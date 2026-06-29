@@ -5,7 +5,9 @@ import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.component.ServerRackMountableEnvironment;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
+import li.cil.oc.api.machine.Machine;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -67,7 +69,11 @@ public final class RackNetworking {
         if (!menu.stillValid(player)) {
             return false;
         }
-        return applyRackControl(containerMenu, payload);
+        final ServerRackMountableEnvironment server = serverFor(menu, payload.slot());
+        final boolean wasRunning = server != null && (server.machine().isRunning() || server.machine().isPaused());
+        final boolean accepted = applyRackControl(containerMenu, payload);
+        reportStartFailure(player, server, wasRunning, payload.action());
+        return accepted;
     }
 
     static boolean applyRackOpenServer(final Player player, final AbstractContainerMenu containerMenu, final RackOpenServerPayload payload) {
@@ -108,7 +114,18 @@ public final class RackNetworking {
         if (player == null || !menu.stillValid(player)) {
             return false;
         }
-        return applyServerRackControl(containerMenu, payload);
+        final ServerRackMountableEnvironment server = menu.serverInventory() instanceof ServerRackMountableEnvironment environment ? environment : null;
+        final boolean wasRunning = server != null && (server.machine().isRunning() || server.machine().isPaused());
+        final boolean accepted = applyServerRackControl(containerMenu, payload);
+        reportStartFailure(player, server, wasRunning, payload.action());
+        return accepted;
+    }
+
+    static Component startFailureMessage(final Machine machine, final boolean wasRunning, final int action) {
+        if (!startsStoppedMachine(action, wasRunning)) {
+            return null;
+        }
+        return ComputerCaseNetworking.startErrorMessage(machine);
     }
 
     private static void handleRackControl(final RackControlPayload payload, final IPayloadContext context) {
@@ -129,6 +146,28 @@ public final class RackNetworking {
         }
         final Direction[] sides = Direction.values();
         return ordinal >= 0 && ordinal < sides.length ? sides[ordinal] : null;
+    }
+
+    private static ServerRackMountableEnvironment serverFor(final RackMenu menu, final int slot) {
+        if (!(menu.rackInventory() instanceof RackBlockEntity rack) || slot < 0 || slot >= RackBlockEntity.CONTAINER_SIZE) {
+            return null;
+        }
+        final RackMountable mountable = rack.getMountable(slot);
+        return mountable instanceof ServerRackMountableEnvironment server ? server : null;
+    }
+
+    private static void reportStartFailure(final Player player, final ServerRackMountableEnvironment server, final boolean wasRunning, final int action) {
+        if (player == null || server == null) {
+            return;
+        }
+        final Component message = startFailureMessage(server.machine(), wasRunning, action);
+        if (message != null) {
+            player.sendSystemMessage(message);
+        }
+    }
+
+    private static boolean startsStoppedMachine(final int action, final boolean wasRunning) {
+        return !wasRunning && (action == RackControlPayload.START || action == RackControlPayload.TOGGLE);
     }
 
     private RackNetworking() {
