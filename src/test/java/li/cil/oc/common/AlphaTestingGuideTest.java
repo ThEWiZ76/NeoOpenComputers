@@ -23,6 +23,8 @@ final class AlphaTestingGuideTest {
         assertTrue(guide.contains("NeoForge 21.1.233"), "Guide must name the current NeoForge version");
         assertTrue(guide.contains("build/libs/neoopencomputers-0.1.0.jar"),
             "Guide must name the alpha jar path");
+        assertTrue(guide.contains("Do not install `neoopencomputers-0.1.0-thin.jar`"),
+            "Guide must warn testers away from the developer thin jar");
         assertTrue(guide.contains("GitHub Actions stay disabled"),
             "Guide must keep CI disabled before release readiness");
         assertTrue(guide.contains("Robots, drones, and block microcontrollers are not available"),

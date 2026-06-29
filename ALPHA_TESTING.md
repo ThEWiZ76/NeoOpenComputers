@@ -26,6 +26,8 @@ The alpha jar is:
 build/libs/neoopencomputers-0.1.0.jar
 ```
 
+This is the installable jar with bundled runtime libraries. Do not install `neoopencomputers-0.1.0-thin.jar` for smoke testing; it is the developer thin jar and does not include bundled runtime libraries.
+
 Copy that jar into a clean Minecraft 1.21.1 NeoForge instance, then fully restart Minecraft. Replacing the jar while the game is running does not reload the mod.
 
 ## Must Smoke Before Sharing
