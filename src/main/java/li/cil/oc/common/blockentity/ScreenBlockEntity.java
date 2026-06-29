@@ -12,6 +12,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.ModBlockEntities;
@@ -40,7 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo, Tiered {
+public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo, Tiered, SidedEnvironment {
     private static final int MAX_MULTIBLOCK_WIDTH = 8;
     private static final int MAX_MULTIBLOCK_HEIGHT = 6;
     private static final int DEFAULT_WIDTH = 50;
@@ -833,6 +834,24 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             node = ScreenEnvironment.createNode(this);
         }
         return node;
+    }
+
+    @Override
+    public Node sidedNode(final Direction side) {
+        return canConnect(side) ? node() : null;
+    }
+
+    @Override
+    public boolean canConnect(final Direction side) {
+        return allowsNodeOnSide(ScreenBlock.facing(getBlockState()), side, hasKeyboardOnSide(side));
+    }
+
+    private boolean hasKeyboardOnSide(final Direction side) {
+        return side != null && level != null && level.getBlockEntity(worldPosition.relative(side)) instanceof Keyboard;
+    }
+
+    private static boolean allowsNodeOnSide(final Direction facing, final Direction side, final boolean frontHasKeyboard) {
+        return side != null && (side != facing || frontHasKeyboard);
     }
 
     @Override

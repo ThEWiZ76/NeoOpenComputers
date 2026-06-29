@@ -9,12 +9,14 @@ import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Network;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.KeyboardEnvironment;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.HolderLookup;
@@ -48,6 +50,24 @@ final class ScreenBlockEntityTest {
         assertCallback("setTouchModeInverted");
         assertCallback("isPrecise");
         assertCallback("setPrecise");
+    }
+
+    @Test
+    void screenNodeSidesFollowUpstreamKeyboardFrontException() throws Exception {
+        final Method method = ScreenBlockEntity.class.getDeclaredMethod(
+            "allowsNodeOnSide",
+            Direction.class,
+            Direction.class,
+            boolean.class);
+        method.setAccessible(true);
+
+        assertTrue(SidedEnvironment.class.isAssignableFrom(ScreenBlockEntity.class),
+            "Screen tile entity should be sided like upstream Screen");
+        assertEquals(true, method.invoke(null, Direction.NORTH, Direction.SOUTH, false));
+        assertEquals(false, method.invoke(null, Direction.NORTH, Direction.NORTH, false));
+        assertEquals(true, method.invoke(null, Direction.NORTH, Direction.NORTH, true));
+        assertEquals(false, method.invoke(null, Direction.UP, Direction.UP, false));
+        assertEquals(true, method.invoke(null, Direction.UP, Direction.DOWN, false));
     }
 
     @Test
