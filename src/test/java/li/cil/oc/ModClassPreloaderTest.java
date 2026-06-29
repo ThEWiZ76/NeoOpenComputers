@@ -28,6 +28,8 @@ final class ModClassPreloaderTest {
         assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$InternetFilteringRule"));
         assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$RulePredicate"));
         assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$InetAddressRange"));
+        assertTrue(classNames.contains("li.cil.oc.common.component.TerminalScreenDelta$Row"));
+        assertTrue(classNames.contains("li.cil.oc.client.TerminalScreen$TextCell"));
         assertTrue(classNames.contains("li.cil.oc.common.item.data.PrintRenderModel"));
         assertTrue(classNames.contains("li.cil.oc.common.item.data.PrintRenderModel$RenderShape"));
 

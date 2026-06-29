@@ -16,6 +16,8 @@ final class ModClassPreloader {
         "li.cil.oc.common.component.InternetCardEnvironment$InternetFilteringRule",
         "li.cil.oc.common.component.InternetCardEnvironment$RulePredicate",
         "li.cil.oc.common.component.InternetCardEnvironment$InetAddressRange",
+        "li.cil.oc.common.component.TerminalScreenDelta$Row",
+        "li.cil.oc.client.TerminalScreen$TextCell",
         "li.cil.oc.common.item.data.PrintRenderModel",
         "li.cil.oc.common.item.data.PrintRenderModel$RenderShape"
     );
