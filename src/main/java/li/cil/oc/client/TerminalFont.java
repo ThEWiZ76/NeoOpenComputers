@@ -107,26 +107,9 @@ final class TerminalFont {
             return false;
         }
         final int targetWidth = Math.max(CELL_WIDTH, (glyph.sourceWidth() / SOURCE_WIDTH) * CELL_WIDTH);
-        final int sourceX0 = scaledStart(x, glyph.sourceWidth(), targetWidth);
-        final int sourceX1 = scaledEndExclusive(x, glyph.sourceWidth(), targetWidth);
-        final int sourceY0 = scaledStart(y, SOURCE_HEIGHT, CELL_HEIGHT);
-        final int sourceY1 = scaledEndExclusive(y, SOURCE_HEIGHT, CELL_HEIGHT);
-        for (int sourceY = sourceY0; sourceY < sourceY1; sourceY++) {
-            for (int sourceX = sourceX0; sourceX < sourceX1; sourceX++) {
-                if ((glyph.rows()[sourceY] & (1 << (glyph.sourceWidth() - 1 - sourceX))) != 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private static int scaledStart(final int target, final int sourceSize, final int targetSize) {
-        return Math.max(0, Math.min(sourceSize - 1, (target * sourceSize) / targetSize));
-    }
-
-    private static int scaledEndExclusive(final int target, final int sourceSize, final int targetSize) {
-        return Math.max(scaledStart(target, sourceSize, targetSize) + 1, Math.min(sourceSize, ((target + 1) * sourceSize + targetSize - 1) / targetSize));
+        final int sourceX = Math.min(glyph.sourceWidth() - 1, (x * glyph.sourceWidth()) / targetWidth);
+        final int sourceY = Math.min(SOURCE_HEIGHT - 1, (y * SOURCE_HEIGHT) / CELL_HEIGHT);
+        return (glyph.rows()[sourceY] & (1 << (glyph.sourceWidth() - 1 - sourceX))) != 0;
     }
 
     private static int codePoint(final String text) {
