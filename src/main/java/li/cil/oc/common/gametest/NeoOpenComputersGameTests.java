@@ -10790,6 +10790,42 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void physicalTerminalKeyPayloadReachesComputer(final GameTestHelper helper) {
+        final BlockPos screenPos = new BlockPos(0, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(0, 1, 2);
+        final BlockPos computerPos = new BlockPos(1, 1, 1);
+
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
+        final KeyboardBlockEntity keyboard = helper.getBlockEntity(keyboardPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.moveTo(Vec3.atCenterOf(helper.absolutePos(keyboardPos)));
+        helper.assertTrue(screen.hasKeyboard(player), "Screen did not see attached keyboard");
+        helper.assertTrue(keyboard.isUsableByPlayer(player), "Nearby player could not use keyboard");
+        startSignalComputer(helper, computer);
+
+        final li.cil.oc.common.menu.TerminalMenu menu = new li.cil.oc.common.menu.TerminalMenu(
+            42,
+            player.getInventory(),
+            screen.terminalSnapshot(),
+            screen.originScreen());
+        helper.assertTrue(menu.stillValid(player), "Physical terminal menu was not valid");
+
+        invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, true, 'e', 0x12), player);
+        invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, false, 'e', 0x12), player);
+
+        helper.runAtTickTime(5, () -> {
+            assertNextSignal(helper, computer, "key_down", keyboard.node().address(), (int) 'e', 0x12, player.getName().getString());
+            assertNextSignal(helper, computer, "key_up", keyboard.node().address(), (int) 'e', 0x12, player.getName().getString());
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty")
     public static void keyboardDefaultUsabilityMatchesUpstreamRange(final GameTestHelper helper) {
         final BlockPos keyboardPos = new BlockPos(1, 1, 1);
