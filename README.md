@@ -25,6 +25,8 @@ The port has broad API, machine, network, filesystem, terminal, screen/GPU/input
 
 Robots, drones, and block microcontrollers are not available in this alpha build. Computer cases, servers, racks, screens, keyboards, storage, cards, upgrades, and microcontroller case items are the current alpha focus.
 
+See the [First Alpha Testing Guide](ALPHA_TESTING.md) for the current install, smoke-test, known-gap, and issue-reporting checklist.
+
 GitHub Actions are intentionally disabled until the mod is ready enough for CI. Do not add `.github/workflows` yet.
 
 Chosen upstream reference branch:
