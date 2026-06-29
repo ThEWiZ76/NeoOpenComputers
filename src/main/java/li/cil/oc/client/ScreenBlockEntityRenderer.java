@@ -223,42 +223,43 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final VertexConsumer consumer = sprite.wrap(bufferSource.getBuffer(RenderType.cutout()));
         final PoseStack.Pose pose = poseStack.last();
         final int color = 0xFF000000 | screen.getRenderColor();
+        final int textureRotationSteps = screenTextureRotationSteps(worldFace, ScreenBlock.yaw(state));
         switch (face) {
             case DOWN -> {
-                vertex(consumer, pose, -0.5F, -SCREEN_SIDE_OFFSET, 0.5F, 0F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, 0.5F, -SCREEN_SIDE_OFFSET, 0.5F, 1F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, 0.5F, -SCREEN_SIDE_OFFSET, -0.5F, 1F, 1F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, -0.5F, -SCREEN_SIDE_OFFSET, -0.5F, 0F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -0.5F, -SCREEN_SIDE_OFFSET, 0.5F, 0F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, 0.5F, -SCREEN_SIDE_OFFSET, 0.5F, 1F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, 0.5F, -SCREEN_SIDE_OFFSET, -0.5F, 1F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, -0.5F, -SCREEN_SIDE_OFFSET, -0.5F, 0F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
             }
             case UP -> {
-                vertex(consumer, pose, -0.5F, SCREEN_SIDE_OFFSET, -0.5F, 0F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, 0.5F, SCREEN_SIDE_OFFSET, -0.5F, 1F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, 0.5F, SCREEN_SIDE_OFFSET, 0.5F, 1F, 1F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, -0.5F, SCREEN_SIDE_OFFSET, 0.5F, 0F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -0.5F, SCREEN_SIDE_OFFSET, -0.5F, 0F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, 0.5F, SCREEN_SIDE_OFFSET, -0.5F, 1F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, 0.5F, SCREEN_SIDE_OFFSET, 0.5F, 1F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, -0.5F, SCREEN_SIDE_OFFSET, 0.5F, 0F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
             }
             case NORTH -> {
-                vertex(consumer, pose, 0.5F, -0.5F, -SCREEN_SIDE_OFFSET, 0F, 1F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, 0.5F, 0.5F, -SCREEN_SIDE_OFFSET, 0F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, -0.5F, 0.5F, -SCREEN_SIDE_OFFSET, 1F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, -0.5F, -0.5F, -SCREEN_SIDE_OFFSET, 1F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, 0.5F, -0.5F, -SCREEN_SIDE_OFFSET, 0F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, 0.5F, 0.5F, -SCREEN_SIDE_OFFSET, 0F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, -0.5F, 0.5F, -SCREEN_SIDE_OFFSET, 1F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, -0.5F, -0.5F, -SCREEN_SIDE_OFFSET, 1F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
             }
             case SOUTH -> {
-                vertex(consumer, pose, -0.5F, -0.5F, SCREEN_FRONT_Z, 0F, 1F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, -0.5F, 0.5F, SCREEN_FRONT_Z, 0F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, 0.5F, 0.5F, SCREEN_FRONT_Z, 1F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, 0.5F, -0.5F, SCREEN_FRONT_Z, 1F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -0.5F, -0.5F, SCREEN_FRONT_Z, 0F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, -0.5F, 0.5F, SCREEN_FRONT_Z, 0F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, 0.5F, 0.5F, SCREEN_FRONT_Z, 1F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, 0.5F, -0.5F, SCREEN_FRONT_Z, 1F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
             }
             case WEST -> {
-                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, -0.5F, -0.5F, 0F, 1F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, 0.5F, -0.5F, 0F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, 0.5F, 0.5F, 1F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, -0.5F, 0.5F, 1F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, -0.5F, -0.5F, 0F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, 0.5F, -0.5F, 0F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, 0.5F, 0.5F, 1F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, -SCREEN_SIDE_OFFSET, -0.5F, 0.5F, 1F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
             }
             case EAST -> {
-                vertex(consumer, pose, SCREEN_SIDE_OFFSET, -0.5F, 0.5F, 0F, 1F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, SCREEN_SIDE_OFFSET, 0.5F, 0.5F, 0F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, SCREEN_SIDE_OFFSET, 0.5F, -0.5F, 1F, 0F, color, packedLight, packedOverlay, face);
-                vertex(consumer, pose, SCREEN_SIDE_OFFSET, -0.5F, -0.5F, 1F, 1F, color, packedLight, packedOverlay, face);
+                vertex(consumer, pose, SCREEN_SIDE_OFFSET, -0.5F, 0.5F, 0F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, SCREEN_SIDE_OFFSET, 0.5F, 0.5F, 0F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, SCREEN_SIDE_OFFSET, 0.5F, -0.5F, 1F, 0F, color, packedLight, packedOverlay, face, textureRotationSteps);
+                vertex(consumer, pose, SCREEN_SIDE_OFFSET, -0.5F, -0.5F, 1F, 1F, color, packedLight, packedOverlay, face, textureRotationSteps);
             }
         }
     }
@@ -340,6 +341,25 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         return (safeWorldFace == Direction.DOWN || safeScreenFacing == Direction.DOWN) && safeWorldFace != safeScreenFacing;
     }
 
+    static int screenTextureRotationSteps(final Direction worldFace, final Direction yaw) {
+        if (worldFace == Direction.UP) {
+            return horizontalIndex(yaw);
+        }
+        if (worldFace == Direction.DOWN) {
+            return -horizontalIndex(yaw);
+        }
+        return 0;
+    }
+
+    private static int horizontalIndex(final Direction yaw) {
+        return switch (yaw == null ? Direction.SOUTH : yaw) {
+            case WEST -> 1;
+            case NORTH -> 2;
+            case EAST -> 3;
+            default -> 0;
+        };
+    }
+
     private static ResourceLocation screenFrontTexture(final ScreenBlockEntity screen) {
         final Direction pitch = ScreenBlock.pitch(screen.getBlockState());
         return screenFrontTexture(
@@ -363,6 +383,22 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     private static int texturePart(final int value, final int high, final boolean flipParts) {
         final int part = xy2part(value, high);
         return flipParts ? 2 - part : part;
+    }
+
+    record TextureUv(float u, float v) {
+    }
+
+    static TextureUv rotatedUv(final float u, final float v, final int rotationSteps) {
+        float rotatedU = u;
+        float rotatedV = v;
+        final int rotations = Math.floorMod(rotationSteps, 4);
+        for (int i = 0; i < rotations; i++) {
+            final float nextU = rotatedV;
+            final float nextV = 1F - rotatedU;
+            rotatedU = nextU;
+            rotatedV = nextV;
+        }
+        return new TextureUv(rotatedU, rotatedV);
     }
 
     private static int screenTierColor(final Block block) {
@@ -401,9 +437,26 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final int packedLight,
         final int packedOverlay,
         final Direction normal) {
+        vertex(consumer, pose, x, y, z, u, v, color, packedLight, packedOverlay, normal, 0);
+    }
+
+    private static void vertex(
+        final VertexConsumer consumer,
+        final PoseStack.Pose pose,
+        final float x,
+        final float y,
+        final float z,
+        final float u,
+        final float v,
+        final int color,
+        final int packedLight,
+        final int packedOverlay,
+        final Direction normal,
+        final int textureRotationSteps) {
+        final TextureUv uv = rotatedUv(u, v, textureRotationSteps);
         consumer.addVertex(pose, x, y, z)
             .setColor(color)
-            .setUv(u, v)
+            .setUv(uv.u(), uv.v())
             .setOverlay(packedOverlay)
             .setLight(packedLight)
             .setNormal(pose, normal.getStepX(), normal.getStepY(), normal.getStepZ());

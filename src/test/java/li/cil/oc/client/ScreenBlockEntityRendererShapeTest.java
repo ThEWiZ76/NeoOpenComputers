@@ -74,6 +74,18 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererRotatesUpAndDownTextureUvsLikeUpstream() {
+        assertEquals(0, ScreenBlockEntityRenderer.screenTextureRotationSteps(Direction.UP, Direction.SOUTH));
+        assertEquals(1, ScreenBlockEntityRenderer.screenTextureRotationSteps(Direction.UP, Direction.WEST));
+        assertEquals(2, ScreenBlockEntityRenderer.screenTextureRotationSteps(Direction.UP, Direction.NORTH));
+        assertEquals(3, ScreenBlockEntityRenderer.screenTextureRotationSteps(Direction.UP, Direction.EAST));
+        assertEquals(-3, ScreenBlockEntityRenderer.screenTextureRotationSteps(Direction.DOWN, Direction.EAST));
+        assertEquals(0, ScreenBlockEntityRenderer.screenTextureRotationSteps(Direction.NORTH, Direction.EAST));
+        assertEquals(new ScreenBlockEntityRenderer.TextureUv(0F, 1F), ScreenBlockEntityRenderer.rotatedUv(0F, 0F, 1));
+        assertEquals(new ScreenBlockEntityRenderer.TextureUv(1F, 0F), ScreenBlockEntityRenderer.rotatedUv(0F, 0F, -1));
+    }
+
+    @Test
     void screenRendererMapsLocalSideFacesToWorldDirectionsForCulling() {
         assertEquals(Direction.NORTH, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.EAST));
         assertEquals(Direction.SOUTH, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.WEST));
