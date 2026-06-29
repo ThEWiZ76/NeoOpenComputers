@@ -68,6 +68,7 @@ final class ScreenBlockInteractionTest {
     void physicalScreenClickEmitsOnlyTouchLikeUpstream() throws Exception {
         ScreenBlockEntity screen = allocateScreen();
         CapturingNode node = new CapturingNode();
+        setField(screen, "tier", 1);
         setField(screen, "inputDispatcher", new ScreenInputDispatcher());
         setField(screen, "node", node);
 
@@ -75,6 +76,19 @@ final class ScreenBlockInteractionTest {
 
         assertEquals(1, node.reachableMessages.size());
         assertEquals(Arrays.asList("computer.checked_signal", null, "touch", 13, 5, 0), node.reachableMessages.getFirst());
+    }
+
+    @Test
+    void physicalScreenClickRequiresTouchCapableTierLikeUpstream() throws Exception {
+        ScreenBlockEntity screen = allocateScreen();
+        CapturingNode node = new CapturingNode();
+        setField(screen, "tier", 0);
+        setField(screen, "inputDispatcher", new ScreenInputDispatcher());
+        setField(screen, "node", node);
+
+        ScreenClickHandler.clickScreen(screen, new ScreenHitMapper.ScreenClick(12, 4), null);
+
+        assertEquals(0, node.reachableMessages.size());
     }
 
     private static ScreenBlockEntity allocateScreen() throws Exception {

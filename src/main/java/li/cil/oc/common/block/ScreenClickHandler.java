@@ -5,6 +5,9 @@ import net.minecraft.world.entity.player.Player;
 
 final class ScreenClickHandler {
     static void clickScreen(final ScreenBlockEntity screen, final ScreenHitMapper.ScreenClick click, final Player player) {
+        if (screen.tier() <= 0) {
+            return;
+        }
         screen.mouseDown(click.x(), click.y(), 0, player);
     }
 

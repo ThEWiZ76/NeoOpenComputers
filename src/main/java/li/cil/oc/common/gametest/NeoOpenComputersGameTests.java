@@ -10762,7 +10762,7 @@ public final class NeoOpenComputersGameTests {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
         final BlockPos computerPos = new BlockPos(1, 1, 1);
 
-        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(screenPos, ModBlocks.SCREEN_TIER2.get());
         helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
 
         final ScreenBlockEntity screen = helper.getBlockEntity(screenPos);
@@ -10777,7 +10777,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(invokeUseWithoutItem(state, helper, screenPos, hit) == InteractionResult.CONSUME, "Screen click was not consumed");
 
         helper.runAtTickTime(5, () -> {
-            assertNextSignal(helper, computer, "touch", screen.node().address(), 43, 4, 0);
+            assertNextSignal(helper, computer, "touch", screen.node().address(), 68, 6, 0);
             helper.succeed();
         });
     }
@@ -10810,8 +10810,8 @@ public final class NeoOpenComputersGameTests {
         final BlockPos secondaryScreenPos = new BlockPos(0, 1, 1);
         final BlockPos computerPos = new BlockPos(0, 1, 2);
 
-        helper.setBlock(originScreenPos, ModBlocks.SCREEN_TIER1.get());
-        helper.setBlock(secondaryScreenPos, ModBlocks.SCREEN_TIER1.get());
+        helper.setBlock(originScreenPos, ModBlocks.SCREEN_TIER2.get());
+        helper.setBlock(secondaryScreenPos, ModBlocks.SCREEN_TIER2.get());
         helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
 
         final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
@@ -10829,7 +10829,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(invokeUseWithoutItem(state, helper, secondaryScreenPos, hit) == InteractionResult.CONSUME, "Secondary screen click was not consumed");
 
         helper.runAtTickTime(5, () -> {
-            assertNextTouchSignalFrom(helper, computer, originScreen.node().address(), 35, 45);
+            assertNextTouchSignalFrom(helper, computer, originScreen.node().address(), 56, 72);
             helper.succeed();
         });
     }
