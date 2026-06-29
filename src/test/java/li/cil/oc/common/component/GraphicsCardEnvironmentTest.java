@@ -191,7 +191,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void bindsReachableScreenWhenComputerStarts() {
+    void bindsOnlyReachableScreenWhenComputerStarts() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         FakeEnvironment computer = new FakeEnvironment();
@@ -207,7 +207,7 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void autoBindsReachableScreenOnConnectEvenWhenNotNeighbor() {
+    void doesNotAutoBindArbitraryScreenOnConnect() {
         OpenComputersApi.initialize();
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
         FakeEnvironment computer = new FakeEnvironment();
@@ -218,12 +218,13 @@ final class GraphicsCardEnvironmentTest {
 
         gpu.onConnect(screen.node());
 
-        assertArrayEquals(new Object[]{screen.node().address()}, gpu.getScreen(null, new TestArguments()));
-        assertArrayEquals(new Object[]{50, 16}, gpu.getResolution(null, new TestArguments()));
+        CompoundTag saved = new CompoundTag();
+        gpu.save(saved);
+        assertTrue(!saved.contains("screen"), "Screen connect alone should not persist an arbitrary auto-bind");
     }
 
     @Test
-    void autoBindsReachableScreenWhenComputerNetworkConnects() {
+    void recoversSingleReachableScreenWhenComputerNetworkConnects() {
         OpenComputersApi.initialize();
         final CompoundTag[] saved = new CompoundTag[1];
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0, new CompoundTag(), tag -> saved[0] = tag);
@@ -240,20 +241,25 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
-    void autoBindsReachableScreenWhenScreenNetworkConnects() {
+    void doesNotRecoverWhenMultipleReachableScreensAreAmbiguous() {
         OpenComputersApi.initialize();
         final CompoundTag[] saved = new CompoundTag[1];
         GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0, new CompoundTag(), tag -> saved[0] = tag);
         FakeEnvironment computer = new FakeEnvironment();
-        FakeTextBuffer screen = new FakeTextBuffer();
+        FakeTextBuffer firstScreen = new FakeTextBuffer();
+        FakeTextBuffer secondScreen = new FakeTextBuffer();
         Network.joinNewNetwork(computer.node());
         computer.node().connect(gpu.node());
+        computer.node().connect(firstScreen.node());
+        computer.node().connect(secondScreen.node());
         saved[0] = null;
 
-        computer.node().connect(screen.node());
+        assertArrayEquals(new Object[]{null, "no screen"}, gpu.getScreen(null, new TestArguments()));
 
-        assertNotNull(saved[0]);
-        assertEquals(screen.node().address(), saved[0].getString("screen"));
+        CompoundTag savedTag = new CompoundTag();
+        gpu.save(savedTag);
+        assertTrue(!savedTag.contains("screen"), "Ambiguous reachable screens should not be persisted as a random binding");
+        assertTrue(saved[0] == null || !saved[0].contains("screen"), "Ambiguous recovery should not persist a random binding");
     }
 
     @Test

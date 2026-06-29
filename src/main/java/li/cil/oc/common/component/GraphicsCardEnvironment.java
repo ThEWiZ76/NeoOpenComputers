@@ -446,11 +446,6 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
             screenAddress = targetAddress;
             screen = target;
             persistData();
-        } else if (screen == null && screenAddress == null && node() != null && connectedNode.canBeReachedFrom(node())) {
-            screenAddress = targetAddress;
-            screen = target;
-            resetScreen(target);
-            persistData();
         }
     }
 
@@ -532,15 +527,24 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
         if (screen != null || screenAddress != null || node() == null || node().network() == null) {
             return;
         }
+        TextBuffer singleTarget = null;
+        String singleAddress = null;
         for (Node candidate : node().network().nodes(node())) {
             if (candidate.host() instanceof TextBuffer buffer) {
                 final TextBuffer target = bindingTarget(buffer);
-                screenAddress = target.node() == null ? candidate.address() : target.node().address();
-                screen = target;
-                resetScreen(target);
-                persistData();
-                return;
+                final String targetAddress = target.node() == null ? candidate.address() : target.node().address();
+                if (singleTarget != null && singleTarget != target && !singleAddress.equals(targetAddress)) {
+                    return;
+                }
+                singleTarget = target;
+                singleAddress = targetAddress;
             }
+        }
+        if (singleTarget != null) {
+            screenAddress = singleAddress;
+            screen = singleTarget;
+            resetScreen(singleTarget);
+            persistData();
         }
     }
 
