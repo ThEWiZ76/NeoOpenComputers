@@ -17,6 +17,8 @@ import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.ScreenInputDispatcher;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.Direction;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.HolderLookup;
@@ -200,6 +202,8 @@ final class ScreenBlockEntityTest {
     void declaresClientSyncHooks() throws NoSuchMethodException {
         assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("getUpdatePacket").getDeclaringClass());
         assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("getUpdateTag", HolderLookup.Provider.class).getDeclaringClass());
+        assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("handleUpdateTag", CompoundTag.class, HolderLookup.Provider.class).getDeclaringClass());
+        assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("onDataPacket", Connection.class, ClientboundBlockEntityDataPacket.class, HolderLookup.Provider.class).getDeclaringClass());
         assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("loadAdditional", CompoundTag.class, HolderLookup.Provider.class).getDeclaringClass());
         assertEquals(ScreenBlockEntity.class, ScreenBlockEntity.class.getDeclaredMethod("saveAdditional", CompoundTag.class, HolderLookup.Provider.class).getDeclaringClass());
     }

@@ -153,8 +153,29 @@ final class TerminalScreenShapeTest {
     void terminalScreenLimitsVisibleColumnsAndRowsToClampedPanel() {
         final TerminalScreenSnapshot terminalServerDefault = new TerminalScreenSnapshot(80, 25, new String[25]);
 
-        assertEquals(64, TerminalScreen.visibleColumns(terminalServerDefault, 409));
-        assertEquals(20, TerminalScreen.visibleRows(terminalServerDefault, 222));
+        assertEquals(80, TerminalScreen.visibleColumns(terminalServerDefault, 409));
+        assertEquals(25, TerminalScreen.visibleRows(terminalServerDefault, 222));
+        assertTrue(TerminalScreen.terminalScale(terminalServerDefault, 409, 222) < 1.0D);
+    }
+
+    @Test
+    void physicalTerminalScalesTieredSnapshotsInsteadOfClipping() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+        final TerminalScreenSnapshot tierThree = new TerminalScreenSnapshot(160, 50, new String[50]);
+        final int imageWidth = TerminalScreen.imageWidth(tierThree, 427);
+        final int imageHeight = TerminalScreen.imageHeight(tierThree, 240);
+        final double scale = TerminalScreen.terminalScale(tierThree, imageWidth, imageHeight);
+
+        assertEquals(160, TerminalScreen.visibleColumns(tierThree, imageWidth));
+        assertEquals(50, TerminalScreen.visibleRows(tierThree, imageHeight));
+        assertTrue(scale < 0.5D);
+
+        final double mouseX = 10 + 12 + (159.5D * 6D * scale);
+        final double mouseY = 20 + 22 + (49.5D * 9D * scale);
+        final TerminalMousePayload payload = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, mouseX, mouseY, 0, 10, 20, tierThree, imageWidth, imageHeight);
+
+        assertEquals(159.5D, payload.x(), 1.0E-6D);
+        assertEquals(49.5D, payload.y(), 1.0E-6D);
     }
 
     @Test

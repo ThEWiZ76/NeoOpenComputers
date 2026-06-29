@@ -59,8 +59,12 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
             return;
         }
         final TerminalScreenSnapshot snapshot = menu.snapshot();
-        renderCellBackgrounds(guiGraphics, snapshot, left, top);
+        final double scale = terminalScale(snapshot, imageWidth, imageHeight);
+        renderCellBackgrounds(guiGraphics, snapshot, left, top, scale);
         guiGraphics.enableScissor(left + TEXT_LEFT, top + TEXT_TOP, left + imageWidth - TEXT_RIGHT_MARGIN, top + imageHeight - TEXT_BOTTOM_MARGIN);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(left + TEXT_LEFT, top + TEXT_TOP, 0);
+        guiGraphics.pose().scale((float) scale, (float) scale, 1.0F);
         try {
             for (int row = 0; row < visibleRows(snapshot, imageHeight); row++) {
                 for (final TextCell cell : textCells(snapshot, row, visibleColumns(snapshot, imageWidth))) {
@@ -68,13 +72,14 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
                         TerminalFont.drawGuiCell(
                             guiGraphics,
                             cell.text(),
-                            left + TEXT_LEFT + cell.column() * CELL_WIDTH + centeredCellOffset(TerminalFont.cellWidth()),
-                            top + TEXT_TOP + row * LINE_HEIGHT,
+                            cell.column() * CELL_WIDTH + centeredCellOffset(TerminalFont.cellWidth()),
+                            row * LINE_HEIGHT,
                             cell.color());
                     }
                 }
             }
         } finally {
+            guiGraphics.pose().popPose();
             guiGraphics.disableScissor();
         }
     }
@@ -322,14 +327,25 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         if (!acceptsInput(snapshot)) {
             return 0;
         }
-        return Math.min(snapshot.height(), Math.max(0, (imageHeight - TEXT_TOP - TEXT_BOTTOM_MARGIN) / LINE_HEIGHT));
+        return snapshot.height();
     }
 
     static int visibleColumns(final TerminalScreenSnapshot snapshot, final int imageWidth) {
         if (!acceptsInput(snapshot)) {
             return 0;
         }
-        return Math.min(snapshot.width(), Math.max(0, (imageWidth - TEXT_LEFT - TEXT_RIGHT_MARGIN) / CELL_WIDTH));
+        return snapshot.width();
+    }
+
+    static double terminalScale(final TerminalScreenSnapshot snapshot, final int imageWidth, final int imageHeight) {
+        if (!acceptsInput(snapshot)) {
+            return 1.0D;
+        }
+        final double availableWidth = Math.max(1.0D, imageWidth - TEXT_LEFT - TEXT_RIGHT_MARGIN);
+        final double availableHeight = Math.max(1.0D, imageHeight - TEXT_TOP - TEXT_BOTTOM_MARGIN);
+        final double contentWidth = Math.max(1.0D, snapshot.width() * (double) CELL_WIDTH);
+        final double contentHeight = Math.max(1.0D, snapshot.height() * (double) LINE_HEIGHT);
+        return Math.min(1.0D, Math.min(availableWidth / contentWidth, availableHeight / contentHeight));
     }
 
     static int textColor(final TerminalScreenSnapshot snapshot, final int column, final int row) {
@@ -425,10 +441,17 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static TerminalMousePayload mousePayload(final TerminalMenu menu, final int kind, final double mouseX, final double mouseY, final int buttonOrDelta, final int left, final int top, final TerminalScreenSnapshot snapshot) {
+        return mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, left, top, snapshot, imageWidth(snapshot), imageHeight(snapshot));
+    }
+
+    static TerminalMousePayload mousePayload(final TerminalMenu menu, final int kind, final double mouseX, final double mouseY, final int buttonOrDelta, final int left, final int top, final TerminalScreenSnapshot snapshot, final int imageWidth, final int imageHeight) {
         if (menu == null || !menu.supportsMouseInput() || !acceptsInput(snapshot)) {
             return null;
         }
-        final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, left, top);
+        final double scale = terminalScale(snapshot, imageWidth, imageHeight);
+        final double column = (mouseX - left - TEXT_LEFT) / (CELL_WIDTH * scale);
+        final double row = (mouseY - top - TEXT_TOP) / (LINE_HEIGHT * scale);
+        final TerminalMousePayload payload = new TerminalMousePayload(menu.containerId, kind, column, row, buttonOrDelta);
         if (payload.x() < 0 || payload.y() < 0 || payload.x() >= snapshot.width() || payload.y() >= snapshot.height()) {
             if (kind == TerminalMousePayload.MOUSE_UP) {
                 return new TerminalMousePayload(menu.containerId, kind, -1.0D, -1.0D, buttonOrDelta);
@@ -453,7 +476,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     private boolean sendMouseInput(final int kind, final double mouseX, final double mouseY, final int buttonOrDelta) {
-        final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, leftPos, topPos, menu.snapshot());
+        final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, leftPos, topPos, menu.snapshot(), imageWidth, imageHeight);
         if (payload != null) {
             PacketDistributor.sendToServer(payload);
             return true;
@@ -461,16 +484,18 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         return false;
     }
 
-    private void renderCellBackgrounds(final GuiGraphics guiGraphics, final TerminalScreenSnapshot snapshot, final int left, final int top) {
+    private void renderCellBackgrounds(final GuiGraphics guiGraphics, final TerminalScreenSnapshot snapshot, final int left, final int top, final double scale) {
         final int rows = visibleRows(snapshot, imageHeight);
         final int columns = visibleColumns(snapshot, imageWidth);
         for (int row = 0; row < rows; row++) {
-            final int y = top + TEXT_TOP + row * LINE_HEIGHT;
+            final int y = top + TEXT_TOP + (int) Math.floor(row * LINE_HEIGHT * scale);
+            final int nextY = top + TEXT_TOP + (int) Math.ceil((row + 1) * LINE_HEIGHT * scale);
             for (int column = 0; column < columns; column++) {
                 final int color = backgroundColor(snapshot, column, row);
                 if ((color & 0x00FFFFFF) != 0) {
-                    final int x = left + TEXT_LEFT + column * CELL_WIDTH;
-                    guiGraphics.fill(x, y, x + CELL_WIDTH, y + LINE_HEIGHT, color);
+                    final int x = left + TEXT_LEFT + (int) Math.floor(column * CELL_WIDTH * scale);
+                    final int nextX = left + TEXT_LEFT + (int) Math.ceil((column + 1) * CELL_WIDTH * scale);
+                    guiGraphics.fill(x, y, nextX, nextY, color);
                 }
             }
         }
