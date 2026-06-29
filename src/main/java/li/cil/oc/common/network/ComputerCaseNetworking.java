@@ -67,7 +67,20 @@ public final class ComputerCaseNetworking {
         if (machine == null || machine.lastError() == null || machine.lastError().isEmpty()) {
             return null;
         }
-        return Component.literal("Last error: " + machine.lastError());
+        return Component.literal("Last error: " + firstErrorLine(machine.lastError()));
+    }
+
+    static String firstErrorLine(final String lastError) {
+        int end = lastError.length();
+        final int carriageReturn = lastError.indexOf('\r');
+        final int lineFeed = lastError.indexOf('\n');
+        if (carriageReturn >= 0) {
+            end = Math.min(end, carriageReturn);
+        }
+        if (lineFeed >= 0) {
+            end = Math.min(end, lineFeed);
+        }
+        return lastError.substring(0, end);
     }
 
     private static void handleComputerCaseControl(final ComputerCaseControlPayload payload, final IPayloadContext context) {

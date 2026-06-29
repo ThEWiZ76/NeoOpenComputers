@@ -63,6 +63,16 @@ final class ComputerCaseNetworkingTest {
     }
 
     @Test
+    void computerCaseStartErrorMessageUsesFirstErrorLineForPlayerFeedback() {
+        assertEquals(
+            "Last error: boot:60 no bootable medium found",
+            ComputerCaseNetworking.startErrorMessage(machine(new AtomicBoolean(false), "boot:60 no bootable medium found\r\nstack traceback")).getString());
+        assertEquals(
+            "Last error: java.lang.IllegalStateException",
+            ComputerCaseNetworking.startErrorMessage(machine(new AtomicBoolean(false), "java.lang.IllegalStateException\n\tat test")).getString());
+    }
+
+    @Test
     void failedComputerCaseStartStillReportsLastError() {
         assertEquals(
             "Last error: missing required components",
