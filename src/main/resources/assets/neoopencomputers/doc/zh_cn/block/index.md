@@ -6,9 +6,7 @@
 
 ## 电脑
 * [机箱](case1.md)
-* [微控制器](microcontroller.md)
 * [机架](rack.md)
-* [机器人](robot.md)
 
 ## 组件
 

@@ -12,7 +12,6 @@
 * [Ключ](wrench.md)
 
 ## Устройства
-* [Дрон](drone.md)
 * [Сервер](server1.md)
 * [Планшет](tablet.md)
 
@@ -88,7 +87,6 @@
 ## Сборка / Печать
 * [Хамелиум](chamelium.md)
 * [Картиридж с чернилами](inkCartridge.md)
-* [Корпус дрона](droneCase1.md)
 * [Корпус микроконтроллера](microcontrollerCase1.md)
 * [Корпус планшета](tabletCase1.md)
 

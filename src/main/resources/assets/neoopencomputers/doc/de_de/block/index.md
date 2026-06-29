@@ -6,8 +6,6 @@ Es gilt zu bedenken, dass manche Blöcke nicht verfügbar sein könnten, wenn es
 
 ## Computer
 * [Computergehäuse](case1.md)
-* [Mikrocontroller](microcontroller.md)
-* [Roboter](robot.md)
 * [Serverschrank](serverrack.md)
 
 ## Komponenten

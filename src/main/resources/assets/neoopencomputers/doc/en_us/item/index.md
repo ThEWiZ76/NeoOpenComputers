@@ -12,7 +12,6 @@ Keep in mind that some of these may not be available, depending on the recipe se
 * [Scrench](wrench.md)
 
 ## Devices
-* [Drone](drone.md)
 * [Server](server1.md)
 * [Tablet](tablet.md)
 
@@ -89,7 +88,6 @@ Keep in mind that some of these may not be available, depending on the recipe se
 ## Assembling / Printing
 * [Chamelium](chamelium.md)
 * [Ink Cartridge](inkcartridge.md)
-* [Drone Case](dronecase1.md)
 * [Microcontroller Case](microcontrollercase1.md)
 * [Tablet Case](tabletcase1.md)
 

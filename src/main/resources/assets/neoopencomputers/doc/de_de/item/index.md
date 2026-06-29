@@ -12,7 +12,6 @@ Je nach dem, welches Recipe Set verwendet wird können einzelne Items nicht verf
 * [Schraubenziehschlüssel](wrench.md)
 
 ## Geräte
-* [Drohne](drone.md)
 * [Server](server1.md)
 * [Tablet](tablet.md)
 
@@ -81,7 +80,6 @@ Je nach dem, welches Recipe Set verwendet wird können einzelne Items nicht verf
 ## Montage / Druck
 * [Chamälium](chamelium.md)
 * [Tintenkartusche](inkcartridge.md)
-* [Drohnengehäuse](dronecase1.md)
 * [Mikrocontrollergehäuse](microcontrollercase1.md)
 * [Tabletgehäuse](tabletcase1.md)
 

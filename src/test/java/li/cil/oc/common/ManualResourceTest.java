@@ -81,6 +81,38 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualIndexesHideUnimplementedUpstreamDevices() throws Exception {
+        final Set<String> hiddenPages = Set.of(
+            "drone.md",
+            "dronecase1.md",
+            "robot.md",
+            "microcontroller.md"
+        );
+        final List<String> exposedPages = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
+            for (final Path file : files
+                .filter(path -> path.getFileName().toString().equals("index.md"))
+                .filter(path -> {
+                    final String parent = path.getParent().getFileName().toString();
+                    return parent.equals("item") || parent.equals("block");
+                })
+                .toList()) {
+                final Path relativeFile = DOC_ROOT.relativize(file);
+                final String content = Files.readString(file);
+                final var matcher = INTERNAL_MARKDOWN_LINK.matcher(content);
+                while (matcher.find()) {
+                    final String target = matcher.group(1).toLowerCase(Locale.ROOT);
+                    if (hiddenPages.contains(target)) {
+                        exposedPages.add(relativeFile.toString().replace('\\', '/') + " -> " + matcher.group(1));
+                    }
+                }
+            }
+        }
+
+        assertTrue(exposedPages.isEmpty(), () -> "Manual indexes expose unimplemented pages:\n" + String.join("\n", exposedPages));
+    }
+
+    @Test
     void bundledManualMarkdownUsesCommunityIssueTracker() throws Exception {
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             assertTrue(files

@@ -12,7 +12,6 @@
 * [螺丝刀扳手](wrench.md)
 
 ## 设备
-* [无人机](drone.md)
 * [服务器](server1.md)
 * [平板电脑](tablet.md)
 
@@ -89,7 +88,6 @@
 ## 组装 / 打印
 * [变色材料](chamelium.md)
 * [墨盒](inkCartridge.md)
-* [无人机外壳](droneCase1.md)
 * [微控制器外壳](microcontrollerCase1.md)
 * [平板电脑外壳](tabletCase1.md)
 

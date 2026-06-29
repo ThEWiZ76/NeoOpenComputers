@@ -12,7 +12,6 @@ Gardez en tête que certains d'entre eux ne sont pas disponibles, en fonction de
 * [Crisseur](wrench.md)
 
 ## Appareils
-* [Drone](drone.md)
 * [Serveur](server1.md)
 * [Tablette](tablet.md)
 
@@ -81,7 +80,6 @@ Gardez en tête que certains d'entre eux ne sont pas disponibles, en fonction de
 ## Assemblage / Impression
 * [Chamélium](chamelium.md)
 * [Cartouche d'encre](inkCartridge.md)
-* [Boitier de drone](droneCase1.md)
 * [Boitier de microcontrôleur](microcontrollerCase1.md)
 * [Boitier de tablette](tabletCase1.md)
 
