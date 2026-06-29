@@ -640,11 +640,9 @@ final class MachineRegistryTest {
 
     @Test
     void queuesComponentAddedSignalWhenVisibleComponentConnects() {
-        OpenComputersApi.initialize();
-        Machine machine = API.machine.create(null);
+        Machine machine = startedMachineWithArchitecture();
         TestEnvironment environment = new TestEnvironment();
         Network.joinNewNetwork(machine.node());
-        assertTrue(machine.start());
 
         machine.node().connect(environment.node());
 
@@ -655,12 +653,10 @@ final class MachineRegistryTest {
 
     @Test
     void queuesComponentAddedSignalWhenVisibleComponentConnectsThroughNeighbor() {
-        OpenComputersApi.initialize();
-        Machine machine = API.machine.create(null);
+        Machine machine = startedMachineWithArchitecture();
         TestEnvironment bridge = new TestEnvironment();
         TestEnvironment environment = new TestEnvironment();
         Network.joinNewNetwork(machine.node());
-        assertTrue(machine.start());
         machine.node().connect(bridge.node());
         machine.popSignal();
 
@@ -674,11 +670,9 @@ final class MachineRegistryTest {
 
     @Test
     void queuesComponentRemovedSignalWhenVisibleComponentDisconnects() {
-        OpenComputersApi.initialize();
-        Machine machine = API.machine.create(null);
+        Machine machine = startedMachineWithArchitecture();
         TestEnvironment environment = new TestEnvironment();
         Network.joinNewNetwork(machine.node());
-        assertTrue(machine.start());
         machine.node().connect(environment.node());
         machine.popSignal();
 
@@ -691,12 +685,10 @@ final class MachineRegistryTest {
 
     @Test
     void queuesComponentRemovedSignalWhenVisibleComponentDisconnectsThroughNeighbor() {
-        OpenComputersApi.initialize();
-        Machine machine = API.machine.create(null);
+        Machine machine = startedMachineWithArchitecture();
         TestEnvironment bridge = new TestEnvironment();
         TestEnvironment environment = new TestEnvironment();
         Network.joinNewNetwork(machine.node());
-        assertTrue(machine.start());
         machine.node().connect(bridge.node());
         machine.popSignal();
         bridge.node().connect(environment.node());
@@ -708,6 +700,25 @@ final class MachineRegistryTest {
         assertNotNull(signal);
         assertEquals("component_removed", signal.name());
         assertArrayEquals(new Object[]{environment.node().address(), "test_component"}, signal.args());
+    }
+
+    @Test
+    void loadDropsPersistedComponentChangeSignalsButKeepsInputSignals() {
+        SimpleMachine saved = assertInstanceOf(SimpleMachine.class, startedMachineWithArchitecture());
+        assertTrue(saved.signal("component_added", "stale-screen", "screen"));
+        assertTrue(saved.signal("component_removed", "stale-screen", "screen"));
+        assertTrue(saved.signal("key_down", "keyboard", (int) 'x', 0x2D, "player"));
+        CompoundTag tag = new CompoundTag();
+        saved.save(tag);
+
+        SimpleMachine loaded = assertInstanceOf(SimpleMachine.class, startedMachineWithArchitecture());
+        loaded.load(tag);
+
+        Signal signal = loaded.popSignal();
+        assertNotNull(signal);
+        assertEquals("key_down", signal.name());
+        assertArrayEquals(new Object[]{"keyboard", (int) 'x', 0x2D, "player"}, signal.args());
+        assertNull(loaded.popSignal());
     }
 
     @Test
@@ -2162,6 +2173,18 @@ final class MachineRegistryTest {
         final Object handle = machine.invoke(tmpAddress, "open", new Object[]{path, "w"})[0];
         machine.invoke(tmpAddress, "write", new Object[]{handle, content.getBytes(StandardCharsets.UTF_8)});
         machine.invoke(tmpAddress, "close", new Object[]{handle});
+    }
+
+    private static Machine startedMachineWithArchitecture() {
+        OpenComputersApi.initialize();
+        DriverRegistry driverRegistry = new DriverRegistry();
+        driverRegistry.add(new TestProcessorDriver());
+        API.driver = driverRegistry;
+        Machine machine = API.machine.create(new TestHost());
+        machine.onHostChanged();
+        assertTrue(machine.start());
+        assertTrue(machine.architecture().isInitialized());
+        return machine;
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

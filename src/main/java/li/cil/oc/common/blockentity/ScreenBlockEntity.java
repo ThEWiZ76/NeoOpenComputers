@@ -794,37 +794,48 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Override
     public void keyDown(final char character, final int code, final Player player) {
-        inputDispatcher.keyDown(node(), character, code, player);
+        final ScreenBlockEntity screen = inputScreen();
+        screen.inputDispatcher.keyDown(screen.node(), character, code, player);
     }
 
     @Override
     public void keyUp(final char character, final int code, final Player player) {
-        inputDispatcher.keyUp(node(), character, code, player);
+        final ScreenBlockEntity screen = inputScreen();
+        screen.inputDispatcher.keyUp(screen.node(), character, code, player);
     }
 
     @Override
     public void clipboard(final String value, final Player player) {
-        inputDispatcher.clipboard(node(), value, player);
+        final ScreenBlockEntity screen = inputScreen();
+        screen.inputDispatcher.clipboard(screen.node(), value, player);
     }
 
     @Override
     public void mouseDown(final double x, final double y, final int button, final Player player) {
-        inputDispatcher.mouseDown(node(), x, y, button, player, precisionMode);
+        final ScreenBlockEntity screen = inputScreen();
+        screen.inputDispatcher.mouseDown(screen.node(), x, y, button, player, screen.precisionMode);
     }
 
     @Override
     public void mouseDrag(final double x, final double y, final int button, final Player player) {
-        inputDispatcher.mouseDrag(node(), x, y, button, player, precisionMode);
+        final ScreenBlockEntity screen = inputScreen();
+        screen.inputDispatcher.mouseDrag(screen.node(), x, y, button, player, screen.precisionMode);
     }
 
     @Override
     public void mouseUp(final double x, final double y, final int button, final Player player) {
-        inputDispatcher.mouseUp(node(), x, y, button, player, precisionMode);
+        final ScreenBlockEntity screen = inputScreen();
+        screen.inputDispatcher.mouseUp(screen.node(), x, y, button, player, screen.precisionMode);
     }
 
     @Override
     public void mouseScroll(final double x, final double y, final int delta, final Player player) {
-        inputDispatcher.mouseScroll(node(), x, y, delta, player, precisionMode);
+        final ScreenBlockEntity screen = inputScreen();
+        screen.inputDispatcher.mouseScroll(screen.node(), x, y, delta, player, screen.precisionMode);
+    }
+
+    private ScreenBlockEntity inputScreen() {
+        return level == null ? this : originScreen();
     }
 
     @Override

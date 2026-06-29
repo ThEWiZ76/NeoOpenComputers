@@ -824,7 +824,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         final ListTag signalTags = nbt.getList(SIGNALS_TAG, CompoundTag.TAG_COMPOUND);
         for (int i = 0; i < signalTags.size(); i++) {
             final CompoundTag signalTag = signalTags.getCompound(i);
-            signals.addLast(loadSignal(signalTag));
+            final Signal signal = loadSignal(signalTag);
+            if (shouldRestoreSignal(signal)) {
+                signals.addLast(signal);
+            }
         }
         if (architecture != null && nbt.contains(ARCHITECTURE_TAG)) {
             architecture.load(nbt.getCompound(ARCHITECTURE_TAG));
@@ -1077,6 +1080,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (changedNode instanceof Component component && component.canBeSeenFrom(node())) {
             signal(name, component.address(), component.name());
         }
+    }
+
+    private static boolean shouldRestoreSignal(final Signal signal) {
+        return signal != null
+            && !"component_added".equals(signal.name())
+            && !"component_removed".equals(signal.name());
     }
 
     private void queueCheckedSignal(final Message message) {

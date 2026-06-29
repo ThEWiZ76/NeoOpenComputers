@@ -264,11 +264,12 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
     public void load(final CompoundTag nbt) {
         bootSource = nbt.contains(BOOT_SOURCE_TAG) ? nbt.getString(BOOT_SOURCE_TAG) : "";
         bootAddress = nbt.contains(BOOT_ADDRESS_TAG) ? nbt.getString(BOOT_ADDRESS_TAG) : null;
-        booted = nbt.getBoolean(BOOTED_TAG);
         if (nbt.getBoolean(INITIALIZED_TAG)) {
             initialize();
+            booted = false;
         } else {
             initialized = false;
+            booted = false;
         }
         memoryBytes = Math.max(0D, nbt.getDouble(MEMORY_TAG));
     }

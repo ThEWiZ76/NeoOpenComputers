@@ -10248,6 +10248,64 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 600)
+    public static void openOsPhysicalTerminalPayloadEchoesOnLiveStyleWall(final GameTestHelper helper) {
+        final BlockState screenState = ModBlocks.SCREEN_TIER1.get().defaultBlockState()
+            .setValue(ScreenBlock.PITCH, Direction.NORTH)
+            .setValue(ScreenBlock.YAW, Direction.EAST);
+        final BlockPos originScreenPos = new BlockPos(1, 2, 3);
+        final BlockPos nonOriginScreenPos = new BlockPos(1, 2, 1);
+        final BlockPos computerPos = new BlockPos(1, 1, 3);
+        final BlockPos keyboardPos = new BlockPos(1, 2, 4);
+
+        for (int y = 2; y <= 3; y++) {
+            for (int z = 1; z <= 3; z++) {
+                helper.setBlock(new BlockPos(1, y, z), screenState);
+            }
+        }
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get().defaultBlockState().setValue(KeyboardBlock.FACING, Direction.NORTH));
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ScreenBlockEntity nonOriginScreen = helper.getBlockEntity(nonOriginScreenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.moveTo(Vec3.atCenterOf(helper.absolutePos(keyboardPos)));
+        originScreen.update();
+        nonOriginScreen.update();
+
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_1, new ItemStack(ModItems.NETWORK_CARD.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, openOsHardDiskStack(helper));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
+
+        helper.assertTrue(originScreen.hasKeyboard(player), "Origin screen did not see attached keyboard");
+        helper.assertTrue(nonOriginScreen.hasKeyboard(player), "Non-origin screen did not see attached keyboard");
+        helper.assertTrue(computer.toggleMachine(), "Computer case did not start with live-style OpenOS terminal setup");
+
+        final AtomicBoolean typed = new AtomicBoolean(false);
+        helper.succeedWhen(() -> {
+            final String text = screenText(originScreen);
+            if (!typed.get() && text.contains("/home # ")) {
+                typed.set(true);
+                final li.cil.oc.common.menu.TerminalMenu menu = new li.cil.oc.common.menu.TerminalMenu(
+                    43,
+                    player.getInventory(),
+                    nonOriginScreen.terminalSnapshot(),
+                    nonOriginScreen);
+                helper.assertTrue(menu.stillValid(player), "Physical terminal menu was not valid");
+                invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, true, 'x', 0x2D), player);
+                invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, false, 'x', 0x2D), player);
+                invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, true, 'y', 0x15), player);
+                invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, false, 'y', 0x15), player);
+                helper.assertTrue(false, "OpenOS terminal prompt is ready; waiting for physical terminal text:\n" + text);
+            }
+            helper.assertTrue(screenText(originScreen).contains("xy"), "OpenOS terminal did not echo physical terminal input:\n" + screenText(originScreen));
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 2200)
     public static void openOsTerminalRunsTypedCommand(final GameTestHelper helper) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
@@ -10822,6 +10880,53 @@ public final class NeoOpenComputersGameTests {
         helper.runAtTickTime(5, () -> {
             assertNextSignal(helper, computer, "key_down", keyboard.node().address(), (int) 'e', 0x12, player.getName().getString());
             assertNextSignal(helper, computer, "key_up", keyboard.node().address(), (int) 'e', 0x12, player.getName().getString());
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void physicalTerminalKeyPayloadFromNonOriginScreenReachesComputer(final GameTestHelper helper) {
+        final BlockState screenState = ModBlocks.SCREEN_TIER1.get().defaultBlockState()
+            .setValue(ScreenBlock.PITCH, Direction.NORTH)
+            .setValue(ScreenBlock.YAW, Direction.EAST);
+        final BlockPos originScreenPos = new BlockPos(1, 2, 3);
+        final BlockPos nonOriginScreenPos = new BlockPos(1, 2, 1);
+        final BlockPos keyboardPos = new BlockPos(1, 2, 4);
+        final BlockPos computerPos = new BlockPos(1, 1, 3);
+
+        for (int y = 2; y <= 3; y++) {
+            for (int z = 1; z <= 3; z++) {
+                helper.setBlock(new BlockPos(1, y, z), screenState);
+            }
+        }
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get().defaultBlockState().setValue(KeyboardBlock.FACING, Direction.NORTH));
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER1.get());
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ScreenBlockEntity nonOriginScreen = helper.getBlockEntity(nonOriginScreenPos);
+        final KeyboardBlockEntity keyboard = helper.getBlockEntity(keyboardPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final net.minecraft.server.level.ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.moveTo(Vec3.atCenterOf(helper.absolutePos(keyboardPos)));
+        originScreen.update();
+        nonOriginScreen.update();
+        helper.assertTrue(originScreen.hasKeyboard(player), "Origin screen did not see attached keyboard");
+        helper.assertTrue(nonOriginScreen.hasKeyboard(player), "Non-origin screen did not see attached keyboard");
+        startSignalComputer(helper, computer);
+
+        final li.cil.oc.common.menu.TerminalMenu menu = new li.cil.oc.common.menu.TerminalMenu(
+            42,
+            player.getInventory(),
+            nonOriginScreen.terminalSnapshot(),
+            nonOriginScreen);
+        helper.assertTrue(menu.stillValid(player), "Physical terminal menu was not valid");
+
+        invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, true, 'x', 0x2D), player);
+        invokeTerminalKey(menu, new TerminalKeyPayload(menu.containerId, false, 'x', 0x2D), player);
+
+        helper.runAtTickTime(5, () -> {
+            assertNextSignal(helper, computer, "key_down", keyboard.node().address(), (int) 'x', 0x2D, player.getName().getString());
+            assertNextSignal(helper, computer, "key_up", keyboard.node().address(), (int) 'x', 0x2D, player.getName().getString());
             helper.succeed();
         });
     }

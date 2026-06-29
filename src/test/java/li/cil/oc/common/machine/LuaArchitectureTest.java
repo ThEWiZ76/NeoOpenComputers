@@ -104,6 +104,25 @@ final class LuaArchitectureTest {
     }
 
     @Test
+    void loadRestartsBootBecauseLuaThreadStateIsNotPersisted() {
+        LuaArchitecture saved = new LuaArchitecture("counter = (counter or 0) + 1");
+        assertTrue(saved.initialize());
+        assertInstanceOf(ExecutionResult.Sleep.class, saved.runThreaded(false));
+        assertEquals(true, saved.isInitialized());
+        CompoundTag tag = new CompoundTag();
+        saved.save(tag);
+
+        LuaArchitecture loaded = new LuaArchitecture();
+        loaded.load(tag);
+        assertEquals(false, loaded.isInitialized());
+
+        assertInstanceOf(ExecutionResult.Sleep.class, loaded.runThreaded(false));
+
+        assertEquals(1, loaded.globalInteger("counter"));
+        assertEquals(true, loaded.isInitialized());
+    }
+
+    @Test
     void doesNotReportInitializedDuringInitialBootCallbacks() {
         boolean[] initializedDuringInvoke = {true};
         LuaArchitecture architecture = new LuaArchitecture("result = component.invoke('fs-address', 'label')");

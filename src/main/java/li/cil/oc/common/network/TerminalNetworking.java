@@ -1,8 +1,8 @@
 package li.cil.oc.common.network;
 
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.menu.TerminalMenu;
-import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
