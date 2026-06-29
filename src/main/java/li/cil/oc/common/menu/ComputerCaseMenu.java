@@ -96,7 +96,7 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
         checkContainerSize(computerInventory, MIN_COMPUTER_SLOT_COUNT);
         this.computerInventory = computerInventory;
         this.computerData = computerData;
-        computerSlotCount = COMPUTER_SLOT_COUNT;
+        computerSlotCount = computerSlotCountForTier(computerTier());
         computerInventory.startOpen(playerInventory.player);
         addDataSlots(computerData);
 

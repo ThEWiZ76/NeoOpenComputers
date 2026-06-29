@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -58,6 +60,16 @@ final class ComputerCaseMenuShapeTest {
         assertEquals(52, ComputerCaseMenu.computerSlotY(2, 7));
         assertEquals(48, ComputerCaseMenu.computerSlotX(2, 9));
         assertEquals(34, ComputerCaseMenu.computerSlotY(2, 9));
+    }
+
+    @Test
+    void computerCaseMenuCreatesOnlyTierSlotsLikeUpstreamContainer() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/menu/ComputerCaseMenu.java"));
+
+        assertTrue(source.contains("computerSlotCount = computerSlotCountForTier(computerTier())"),
+            "Case menu should only create tier-specific component slots like upstream container.Case");
+        assertTrue(!source.contains("computerSlotCount = COMPUTER_SLOT_COUNT"),
+            "Tier 1/2 menus should not contain hidden max-tier slots at -1,-1");
     }
 
     @Test
