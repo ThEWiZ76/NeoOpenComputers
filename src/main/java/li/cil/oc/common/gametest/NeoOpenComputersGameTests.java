@@ -9817,6 +9817,60 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 220)
+    public static void tier2ComputerBootWritesToThreeByTwoTier2ScreenWall(final GameTestHelper helper) {
+        final BlockState screenState = ModBlocks.SCREEN_TIER2.get().defaultBlockState()
+            .setValue(ScreenBlock.PITCH, Direction.NORTH)
+            .setValue(ScreenBlock.YAW, Direction.EAST);
+        final BlockPos originScreenPos = new BlockPos(1, 2, 3);
+        final BlockPos attachedScreenPos = new BlockPos(1, 2, 1);
+        final BlockPos computerPos = new BlockPos(1, 1, 3);
+        final BlockPos diskDrivePos = new BlockPos(1, 1, 4);
+        final BlockPos keyboardPos = new BlockPos(1, 2, 4);
+
+        for (int y = 2; y <= 3; y++) {
+            for (int z = 1; z <= 3; z++) {
+                helper.setBlock(new BlockPos(1, y, z), screenState);
+            }
+        }
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER2.get());
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get().defaultBlockState().setValue(KeyboardBlock.FACING, Direction.NORTH));
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ScreenBlockEntity attachedScreen = helper.getBlockEntity(attachedScreenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        originScreen.update();
+        attachedScreen.update();
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+        computer.setItem(0, new ItemStack(ModItems.GRAPHICS_CARD_TIER2.get()));
+        computer.setItem(2, new ItemStack(ModItems.MEMORY_TIER2.get()));
+        computer.setItem(6, new ItemStack(ModItems.CPU_TIER2.get()));
+        computer.setItem(7, luaBiosEepromStack());
+
+        helper.assertTrue(computer.machine().components().containsValue("screen"), "Tier 2 screen wall is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.machine().components().containsValue("filesystem"), "Tier 2 external OpenOS floppy is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(attachedScreen.originScreen() == originScreen, "Attached tier 2 screen did not resolve to 3x2 wall origin");
+        helper.assertTrue(computer.toggleMachine(), "Tier 2 computer case did not start with screen wall");
+        helper.runAtTickTime(90, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Tier 2 computer stopped while booting with screen wall: " + computer.machine().lastError());
+            helper.assertTrue(screenHasNonBlankText(originScreen), "OpenOS did not write visible text to tier 2 wall origin:\n" + screenText(originScreen));
+            helper.assertTrue(!screenHasNonBlankText(attachedScreen), "Attached tier 2 wall screen should not receive independent text:\n" + screenText(attachedScreen));
+
+            final Player player = helper.makeMockServerPlayerInLevel();
+            player.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(keyboardPos.relative(Direction.WEST))));
+            final BlockPos absoluteScreenPos = helper.absolutePos(attachedScreenPos);
+            final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absoluteScreenPos), Direction.EAST, absoluteScreenPos, false);
+            final InteractionResult result = invokeUseWithoutItem(helper.getBlockState(attachedScreenPos), helper, attachedScreenPos, player, hit);
+            helper.assertTrue(result == InteractionResult.CONSUME, "Tier 2 wall screen terminal interaction did not consume activation");
+            helper.assertTrue(player.containerMenu instanceof li.cil.oc.common.menu.TerminalMenu, "Tier 2 wall screen did not open TerminalMenu");
+            final li.cil.oc.common.menu.TerminalMenu menu = (li.cil.oc.common.menu.TerminalMenu) player.containerMenu;
+            helper.assertTrue(java.util.Arrays.stream(menu.snapshot().lines()).anyMatch(line -> !line.isBlank()), "Tier 2 wall terminal opened with an empty snapshot");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 220)
     public static void tier3ComputerBootWritesToThreeByTwoTier3ScreenWall(final GameTestHelper helper) {
         final BlockState screenState = ModBlocks.SCREEN_TIER3.get().defaultBlockState()
             .setValue(ScreenBlock.PITCH, Direction.NORTH)
