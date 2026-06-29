@@ -219,6 +219,8 @@ final class ScreenBlockEntityRendererShapeTest {
         assertEquals(8, TerminalFont.cellHeight());
         assertEquals(4, TerminalFont.glyphCellWidth('i'));
         assertEquals(8, TerminalFont.glyphCellWidth(0x754C));
+        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 1)) >= 2, "Thin glyphs should survive 8x16 to 4x8 scaling");
+        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 6)) >= 2, "Lower pixels in thin glyphs should not be center-sampled away");
         assertTrue(renderer.contains("TerminalFont.drawWorldCell"), "World screen text should render fixed bitmap cells, not proportional Minecraft glyphs");
         assertTrue(renderer.contains("renderTerminalBackgrounds"), "World screen text should draw all cell backgrounds before wide glyphs");
         assertTrue(renderer.contains("renderTerminalGlyphs"), "World screen text should draw all glyphs after cell backgrounds");
