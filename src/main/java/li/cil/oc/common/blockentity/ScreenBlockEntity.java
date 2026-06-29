@@ -91,6 +91,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private int lastLayoutHeight = -1;
     private int lastLayoutLocalX = -1;
     private int lastLayoutLocalY = -1;
+    private boolean lastRenderOrigin = true;
     private volatile boolean pendingServerThreadChangeMark;
     private Node node;
 
@@ -898,12 +899,23 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             component.setVisibility(origin ? Visibility.Network : Visibility.None);
         }
         if (origin) {
+            lastRenderOrigin = true;
             setEnergyCostPerTick(ModSettings.screenCost() * layout.width() * layout.height());
             setAspectRatio(layout.width(), layout.height());
         } else {
+            if (layoutChanged || lastRenderOrigin) {
+                clearNonOriginBufferLikeUpstream();
+            }
+            lastRenderOrigin = false;
             setEnergyCostPerTick(ModSettings.screenCost());
             setAspectRatio(1.0D, 1.0D);
         }
+    }
+
+    private void clearNonOriginBufferLikeUpstream() {
+        setForegroundColor(DEFAULT_FOREGROUND, false);
+        setBackgroundColor(DEFAULT_BACKGROUND, false);
+        fill(0, 0, getWidth(), getHeight(), ' ');
     }
 
     @Override
