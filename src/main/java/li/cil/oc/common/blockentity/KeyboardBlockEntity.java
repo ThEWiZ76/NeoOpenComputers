@@ -61,7 +61,11 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard, Device
 
     @Override
     public boolean canConnect(final Direction side) {
-        return side != null && side == screenConnectionDirection();
+        if (side == null || !(getBlockState().getBlock() instanceof KeyboardBlock)) {
+            return false;
+        }
+        final BlockState state = getBlockState();
+        return hasNodeOnSide(state.getValue(KeyboardBlock.ATTACH_FACE), state.getValue(KeyboardBlock.FACING), side);
     }
 
     @Override
@@ -144,31 +148,12 @@ public class KeyboardBlockEntity extends BlockEntity implements Keyboard, Device
         }
     }
 
-    private Direction screenConnectionDirection() {
-        if (level == null || !(getBlockState().getBlock() instanceof KeyboardBlock)) {
-            return null;
+    private static boolean hasNodeOnSide(final Direction attachFace, final Direction facing, final Direction side) {
+        if (attachFace == null || side == null) {
+            return false;
         }
-
-        final BlockState state = getBlockState();
-        final Direction attachFace = state.getValue(KeyboardBlock.ATTACH_FACE);
-        final Direction attachedSide = attachFace.getOpposite();
-        if (screenAt(attachedSide)) {
-            return attachedSide;
-        }
-
-        final Direction forward = attachFace.getAxis().isVertical() ? state.getValue(KeyboardBlock.FACING) : Direction.UP;
-        if (screenAt(forward)) {
-            return forward;
-        }
-
-        final Direction backward = forward.getOpposite();
-        if (!attachFace.getAxis().isVertical() && screenAt(backward)) {
-            return backward;
-        }
-        return null;
-    }
-
-    private boolean screenAt(final Direction side) {
-        return side != null && level != null && level.getBlockEntity(worldPosition.relative(side)) instanceof ScreenBlockEntity;
+        final boolean onWall = !attachFace.getAxis().isVertical();
+        final Direction forward = onWall ? Direction.UP : facing;
+        return side != attachFace && (onWall || side.getOpposite() != forward);
     }
 }
