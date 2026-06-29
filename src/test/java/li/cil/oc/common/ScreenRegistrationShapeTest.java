@@ -133,8 +133,8 @@ final class ScreenRegistrationShapeTest {
     void screenStaticModelDoesNotDrawFixedFrontOverDynamicConnectedFaces() throws Exception {
         final String model = Files.readString(Path.of("src/main/resources/assets/neoopencomputers/models/block/screen_panel.json"));
 
-        assertTrue(!model.contains("block/screen/"),
-            "Static screen model must not draw fixed screen panel textures; the block-entity renderer owns upstream connected screen faces");
+        assertTrue(model.contains("\"front\": \"neoopencomputers:block/screen/fmm\""),
+            "Static screen model should use the plain opaque screen fill; the block-entity renderer owns connected frame pieces");
     }
 
     @Test

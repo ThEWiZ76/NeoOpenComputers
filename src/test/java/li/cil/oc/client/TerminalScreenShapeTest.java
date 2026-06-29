@@ -131,15 +131,15 @@ final class TerminalScreenShapeTest {
 
         assertEquals(248, TerminalScreen.imageWidth(missing));
         assertEquals(166, TerminalScreen.imageHeight(missing));
-        assertEquals(504, TerminalScreen.imageWidth(terminalServerDefault));
-        assertEquals(259, TerminalScreen.imageHeight(terminalServerDefault));
+        assertEquals(344, TerminalScreen.imageWidth(terminalServerDefault));
+        assertEquals(234, TerminalScreen.imageHeight(terminalServerDefault));
     }
 
     @Test
     void terminalScreenFitsPanelInsideAvailableGuiArea() {
         final TerminalScreenSnapshot terminalServerDefault = new TerminalScreenSnapshot(80, 25, new String[25]);
 
-        assertEquals(409, TerminalScreen.imageWidth(terminalServerDefault, 427));
+        assertEquals(344, TerminalScreen.imageWidth(terminalServerDefault, 427));
         assertEquals(222, TerminalScreen.imageHeight(terminalServerDefault, 240));
     }
 
@@ -170,8 +170,8 @@ final class TerminalScreenShapeTest {
         assertEquals(50, TerminalScreen.visibleRows(tierThree, imageHeight));
         assertTrue(scale < 0.5D);
 
-        final double mouseX = 10 + 12 + (159.5D * 6D * scale);
-        final double mouseY = 20 + 22 + (49.5D * 9D * scale);
+        final double mouseX = 10 + 12 + (159.5D * 4D * scale);
+        final double mouseY = 20 + 22 + (49.5D * 8D * scale);
         final TerminalMousePayload payload = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, mouseX, mouseY, 0, 10, 20, tierThree, imageWidth, imageHeight);
 
         assertEquals(159.5D, payload.x(), 1.0E-6D);
@@ -240,10 +240,10 @@ final class TerminalScreenShapeTest {
         assertTrue(TerminalFont.hasGlyph('i'));
         assertTrue(TerminalFont.hasGlyph('W'));
         assertTrue(TerminalFont.hasGlyph(0x754C));
-        assertEquals(6, TerminalFont.cellWidth());
-        assertEquals(9, TerminalFont.cellHeight());
-        assertEquals(6, TerminalFont.glyphCellWidth('i'));
-        assertEquals(12, TerminalFont.glyphCellWidth(0x754C));
+        assertEquals(4, TerminalFont.cellWidth());
+        assertEquals(8, TerminalFont.cellHeight());
+        assertEquals(4, TerminalFont.glyphCellWidth('i'));
+        assertEquals(8, TerminalFont.glyphCellWidth(0x754C));
         assertTrue(screen.contains("TerminalFont.drawGuiCell"), "Terminal GUI should render fixed bitmap cells, not proportional Minecraft glyphs");
     }
 
@@ -454,8 +454,8 @@ final class TerminalScreenShapeTest {
 
         assertEquals(12, payload.containerId());
         assertEquals(TerminalMousePayload.MOUSE_DOWN, payload.kind());
-        assertEquals(2.0D, payload.x());
-        assertEquals(2.0D, payload.y());
+        assertEquals(3.0D, payload.x());
+        assertEquals(2.25D, payload.y());
         assertEquals(0, payload.buttonOrDelta());
     }
 
@@ -464,11 +464,11 @@ final class TerminalScreenShapeTest {
         final TerminalMenu menu = allocateMenu(12);
         final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
 
-        final TerminalMousePayload payload = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 45, 47, 0, 10, 20, snapshot);
+        final TerminalMousePayload payload = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 35, 47, 0, 10, 20, snapshot);
 
         assertEquals(12, payload.containerId());
-        assertEquals(23.0D / 6.0D, payload.x(), 1.0E-6D);
-        assertEquals(5.0D / 9.0D, payload.y(), 1.0E-6D);
+        assertEquals(13.0D / 4.0D, payload.x(), 1.0E-6D);
+        assertEquals(5.0D / 8.0D, payload.y(), 1.0E-6D);
     }
 
     @Test

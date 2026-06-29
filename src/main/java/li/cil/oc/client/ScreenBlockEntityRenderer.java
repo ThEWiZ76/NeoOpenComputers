@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<ScreenBlockEntity> {
-    private static final int LINE_HEIGHT = 9;
-    private static final int CELL_WIDTH = 6;
+    private static final int LINE_HEIGHT = 8;
+    private static final int CELL_WIDTH = 4;
     private static final float SCREEN_BORDER = 2.25F / 16F;
     private static final int SCREEN_TIER1_COLOR = 0xABABAB;
     private static final int SCREEN_TIER2_COLOR = 0xFFFF66;

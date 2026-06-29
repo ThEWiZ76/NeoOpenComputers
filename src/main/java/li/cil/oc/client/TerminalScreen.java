@@ -20,8 +20,8 @@ import java.util.Map;
 public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     private static final int DEFAULT_IMAGE_WIDTH = 248;
     private static final int DEFAULT_IMAGE_HEIGHT = 166;
-    private static final int LINE_HEIGHT = 9;
-    private static final int CELL_WIDTH = 6;
+    private static final int LINE_HEIGHT = 8;
+    private static final int CELL_WIDTH = 4;
     private static final int TEXT_LEFT = 12;
     private static final int TEXT_TOP = 22;
     private static final int TEXT_RIGHT_MARGIN = 12;

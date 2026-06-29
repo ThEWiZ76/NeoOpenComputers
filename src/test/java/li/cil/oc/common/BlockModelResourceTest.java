@@ -66,7 +66,7 @@ final class BlockModelResourceTest {
     }
 
     @Test
-    void screenBlockModelsUseGenericStaticBodyAndLeaveScreenFacesToRenderer() throws IOException {
+    void screenBlockModelsUseScreenStaticBodyAndLeaveConnectedFramesToRenderer() throws IOException {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_panel.json"))) {
             final JsonObject panel = JsonParser.parseReader(reader).getAsJsonObject();
             assertTrue("minecraft:block/block".equals(panel.get("parent").getAsString()));
@@ -75,8 +75,7 @@ final class BlockModelResourceTest {
             final JsonObject textures = panel.getAsJsonObject("textures");
             assertTrue("neoopencomputers:block/generic_top".equals(textures.get("top_bottom").getAsString()));
             assertTrue("neoopencomputers:block/generic_side".equals(textures.get("side").getAsString()));
-            assertTrue("neoopencomputers:block/generic_side".equals(textures.get("front").getAsString()), "Static front must stay generic; connected screen faces are rendered dynamically from block-entity layout");
-            assertTrue(!panel.toString().contains("block/screen/"), "Static screen model must not draw fixed screen panel textures over dynamic connected faces");
+            assertTrue("neoopencomputers:block/screen/fmm".equals(textures.get("front").getAsString()), "Static front must use the plain opaque screen fill so missing/delayed dynamic faces do not regress to generic machine texture");
             final JsonObject faces = panel.getAsJsonArray("elements").get(0).getAsJsonObject().getAsJsonObject("faces");
             assertTrue("#front".equals(faces.getAsJsonObject("south").get("texture").getAsString()), "Static south/front face should use the opaque fill alias");
         }
@@ -102,7 +101,7 @@ final class BlockModelResourceTest {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_horizontal_panel.json"))) {
             final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
             assertTrue("neoopencomputers:block/screen_panel".equals(model.get("parent").getAsString()));
-            assertTrue(!model.has("textures"), "Horizontal screen static model should not override the generic opaque fill; f2 is drawn dynamically");
+            assertTrue(!model.has("textures"), "Horizontal screen static model should inherit the same plain opaque screen fill; f2 is drawn dynamically");
         }
     }
 

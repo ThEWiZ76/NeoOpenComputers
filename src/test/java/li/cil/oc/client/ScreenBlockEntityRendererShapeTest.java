@@ -169,11 +169,11 @@ final class ScreenBlockEntityRendererShapeTest {
     @Test
     void screenRendererScalesTerminalTextToInnerScreenArea() {
         final float singleScale = ScreenBlockEntityRenderer.textScale(1, 1, 50, 16);
-        assertTrue(50 * 6 * singleScale < 0.75F, "Single-screen text should fit inside the screen border");
+        assertTrue(50 * 4 * singleScale < 0.75F, "Single-screen text should fit inside the screen border");
 
         final float wallScale = ScreenBlockEntityRenderer.textScale(3, 2, 80, 25);
-        assertTrue(80 * 6 * wallScale < 2.75F, "Multiblock text should fit inside the wall border");
-        assertTrue(25 * 9 * wallScale < 1.75F, "Multiblock text should fit vertically inside the wall border");
+        assertTrue(80 * 4 * wallScale < 2.75F, "Multiblock text should fit inside the wall border");
+        assertTrue(25 * 8 * wallScale < 1.75F, "Multiblock text should fit vertically inside the wall border");
     }
 
     @Test
@@ -181,12 +181,12 @@ final class ScreenBlockEntityRendererShapeTest {
         final ScreenBlockEntityRenderer.TextLayout single = ScreenBlockEntityRenderer.textLayout(1, 1, 50, 16);
         assertTrue(single.x() > -0.5F && single.x() < 0.5F);
         assertTrue(single.y() > -0.5F && single.y() < 0.5F);
-        assertTrue(single.y() - 16 * 9 * single.scale() > -0.5F);
+        assertTrue(single.y() - 16 * 8 * single.scale() > -0.5F);
 
         final ScreenBlockEntityRenderer.TextLayout wall = ScreenBlockEntityRenderer.textLayout(3, 2, 80, 25);
         assertTrue(wall.x() > -0.5F && wall.x() < 2.5F);
         assertTrue(wall.y() > -0.5F && wall.y() < 1.5F);
-        assertTrue(wall.y() - 25 * 9 * wall.scale() > -0.5F);
+        assertTrue(wall.y() - 25 * 8 * wall.scale() > -0.5F);
     }
 
     @Test
@@ -196,17 +196,17 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
-    void screenRendererUsesBundledOpenComputersBitmapFontForWorldText() throws IOException {
+    void screenRendererUsesUpstreamHexFontCellMetricsForWorldText() throws IOException {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
 
         assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/font.hex")));
         assertTrue(TerminalFont.hasGlyph('i'));
         assertTrue(TerminalFont.hasGlyph('W'));
         assertTrue(TerminalFont.hasGlyph(0x754C));
-        assertEquals(6, TerminalFont.cellWidth());
-        assertEquals(9, TerminalFont.cellHeight());
-        assertEquals(6, TerminalFont.glyphCellWidth('i'));
-        assertEquals(12, TerminalFont.glyphCellWidth(0x754C));
+        assertEquals(4, TerminalFont.cellWidth());
+        assertEquals(8, TerminalFont.cellHeight());
+        assertEquals(4, TerminalFont.glyphCellWidth('i'));
+        assertEquals(8, TerminalFont.glyphCellWidth(0x754C));
         assertTrue(renderer.contains("TerminalFont.drawWorldCell"), "World screen text should render fixed bitmap cells, not proportional Minecraft glyphs");
         assertTrue(renderer.contains("renderTerminalBackgrounds"), "World screen text should draw all cell backgrounds before wide glyphs");
         assertTrue(renderer.contains("renderTerminalGlyphs"), "World screen text should draw all glyphs after cell backgrounds");

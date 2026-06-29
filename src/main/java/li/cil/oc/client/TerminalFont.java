@@ -18,8 +18,8 @@ import java.util.Map;
 final class TerminalFont {
     private static final int SOURCE_WIDTH = 8;
     private static final int SOURCE_HEIGHT = 16;
-    private static final int CELL_WIDTH = 6;
-    private static final int CELL_HEIGHT = 9;
+    private static final int CELL_WIDTH = 4;
+    private static final int CELL_HEIGHT = 8;
     private static final Map<Integer, Glyph> GLYPHS = loadGlyphs();
 
     private TerminalFont() {
