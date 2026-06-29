@@ -19,6 +19,7 @@ Current verification evidence:
 - GameTest gate: `.\gradlew.bat runGameTestServer --no-daemon --console=plain`
 - Latest GameTest result: `427/427` required tests passed.
 - Bounded client launch smoke reaches resource reload and texture atlas creation without print/model/missing-texture/error matches.
+- Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart.
 
 The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, player-facing failure feedback, and packaging slices in place. It is ready for first technical smoke testing, not release-ready.
 
@@ -73,6 +74,8 @@ Use this for local crash finding and first in-world proof. This is not a communi
 ```powershell
 .\gradlew.bat runClient --no-daemon --console=plain
 ```
+
+Restart the Minecraft client after replacing the mod jar; a running JVM keeps the old jar loaded.
 
 4. In a local test world, check these flows:
 

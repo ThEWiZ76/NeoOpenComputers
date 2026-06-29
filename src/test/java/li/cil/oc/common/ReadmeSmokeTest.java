@@ -23,6 +23,10 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include disk-drive persistence smoke item");
         assertTrue(readme.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
             "README must include terminal item input smoke item");
+        assertTrue(readme.contains("Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart"),
+            "README must include current tiered screen GUI smoke evidence");
+        assertTrue(readme.contains("Restart the Minecraft client after replacing the mod jar"),
+            "README must warn testers to restart after jar replacement");
         assertTrue(readme.contains("screenshots"), "README must tell testers to save screenshots");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
         assertTrue(readme.contains("Robots, drones, and block microcontrollers are not available in this alpha build"),
