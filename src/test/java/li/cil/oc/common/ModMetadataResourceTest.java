@@ -20,4 +20,12 @@ final class ModMetadataResourceTest {
         assertTrue(metadata.contains("credits=\"Based on MightyPirates/OpenComputers.\""));
         assertTrue(metadata.contains("authors=\"NeoOpenComputers community\""));
     }
+
+    @Test
+    void modMetadataDescribesCurrentPortInsteadOfInitialScaffold() throws IOException {
+        final String metadata = Files.readString(MODS_TOML);
+
+        assertTrue(metadata.contains("community-maintained Java-first NeoForge port"));
+        assertTrue(!metadata.contains("clean NeoForge MDK scaffold"));
+    }
 }
