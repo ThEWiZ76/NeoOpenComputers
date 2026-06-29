@@ -168,6 +168,7 @@
   "gui.neoopencomputers.computer_case.missing.eeprom_code": "Blank EEPROM (no BIOS code)",
   "gui.neoopencomputers.computer_case.power.turn_off": "Turn off",
   "gui.neoopencomputers.computer_case.power.turn_on": "Turn on",
+  "gui.neoopencomputers.computer_case.slot.floppy": "Floppy slot",
   "gui.neoopencomputers.computer_case.state.ready": "Ready",
   "gui.neoopencomputers.computer_case.state.running": "Running",
   "gui.neoopencomputers.disassembler.status": "Disassembler status",

@@ -88,6 +88,8 @@ final class ComputerCaseScreenShapeTest {
         final Method statusLabel = ComputerCaseScreen.class.getMethod("statusLabel", int.class);
         final Method statusTooltip = ComputerCaseScreen.class.getMethod("statusTooltip", int.class, int.class, int.class, int.class);
         final Method statusControlTooltip = ComputerCaseScreen.class.getMethod("statusControlTooltip", int.class);
+        final Method slotLabel = ComputerCaseScreen.class.getMethod("slotLabel", String.class);
+        final Method slotTierLabel = ComputerCaseScreen.class.getMethod("slotTierLabel", int.class);
         final Method slotAt = ComputerCaseScreen.class.getMethod("computerSlotAt", int.class, int.class, int.class, int.class, int.class);
         final Method slotOverlayTooltip = ComputerCaseScreen.class.getMethod("shouldRenderSlotOverlayTooltip", boolean.class, boolean.class);
         final Method controlAt = ComputerCaseScreen.class.getDeclaredMethod("statusControlAt", int.class, int.class, int.class, int.class);
@@ -97,6 +99,8 @@ final class ComputerCaseScreenShapeTest {
         assertEquals(Component.class, statusLabel.getReturnType());
         assertEquals(List.class, statusTooltip.getReturnType());
         assertEquals(List.class, statusControlTooltip.getReturnType());
+        assertEquals(Component.class, slotLabel.getReturnType());
+        assertEquals(Component.class, slotTierLabel.getReturnType());
         assertEquals(int.class, slotAt.getReturnType());
         assertEquals(boolean.class, slotOverlayTooltip.getReturnType());
         assertEquals(boolean.class, controlAt.getReturnType());
@@ -163,6 +167,22 @@ final class ComputerCaseScreenShapeTest {
         assertEquals(1, runningTooltip.size());
         assertTranslationKey("gui.neoopencomputers.computer_case.power.turn_on", readyTooltip.getFirst());
         assertTranslationKey("gui.neoopencomputers.computer_case.power.turn_off", runningTooltip.getFirst());
+    }
+
+    @Test
+    void computerCaseSlotTooltipUsesPlayerFacingTierNumbers() {
+        final List<Component> cpuTooltip = ComputerCaseScreen.slotTooltip("cpu", 0, false);
+        final List<Component> floppyTooltip = ComputerCaseScreen.slotTooltip("floppy", 0, false);
+        final List<Component> tierThreeTooltip = ComputerCaseScreen.slotTooltip("memory", 2, false);
+        final List<Component> eepromTooltip = ComputerCaseScreen.slotTooltip("eeprom", Integer.MAX_VALUE, false);
+
+        assertTranslationKey("gui.neoopencomputers.server_rack.slot.cpu", cpuTooltip.getFirst());
+        assertTranslationKey("gui.neoopencomputers.computer_case.slot.floppy", floppyTooltip.getFirst());
+        assertTranslationKey("gui.neoopencomputers.server_rack.slot.max_tier", cpuTooltip.get(1));
+        assertTranslationKey("gui.neoopencomputers.server_rack.slot.max_tier", tierThreeTooltip.get(1));
+        assertEquals(1, ((TranslatableContents) cpuTooltip.get(1).getContents()).getArgs()[0]);
+        assertEquals(3, ((TranslatableContents) tierThreeTooltip.get(1).getContents()).getArgs()[0]);
+        assertTranslationKey("gui.neoopencomputers.server_rack.slot.any_tier", eepromTooltip.get(1));
     }
 
     @Test

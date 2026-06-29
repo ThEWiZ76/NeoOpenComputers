@@ -133,11 +133,31 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
 
     public static List<Component> slotTooltip(final String kind, final int tier, final boolean occupied) {
         return List.of(
-            Component.literal(kind),
-            tier == Integer.MAX_VALUE
-                ? Component.translatable("gui.neoopencomputers.server_rack.slot.any_tier")
-                : Component.translatable("gui.neoopencomputers.server_rack.slot.max_tier", tier),
+            slotLabel(kind),
+            slotTierLabel(tier),
             Component.translatable(occupied ? "gui.neoopencomputers.server_rack.slot.installed" : "gui.neoopencomputers.server_rack.slot.empty_state"));
+    }
+
+    public static Component slotLabel(final String kind) {
+        return Component.translatable(switch (kind) {
+            case Slot.Card -> "gui.neoopencomputers.server_rack.slot.card";
+            case Slot.CPU -> "gui.neoopencomputers.server_rack.slot.cpu";
+            case Slot.Memory -> "gui.neoopencomputers.server_rack.slot.memory";
+            case Slot.HDD -> "gui.neoopencomputers.server_rack.slot.hdd";
+            case Slot.Floppy -> "gui.neoopencomputers.computer_case.slot.floppy";
+            case "eeprom" -> "gui.neoopencomputers.server_rack.slot.eeprom";
+            default -> "gui.neoopencomputers.server_rack.slot.empty";
+        });
+    }
+
+    public static Component slotTierLabel(final int tier) {
+        if (tier == Integer.MAX_VALUE) {
+            return Component.translatable("gui.neoopencomputers.server_rack.slot.any_tier");
+        }
+        if (tier < 0) {
+            return Component.translatable("gui.neoopencomputers.server_rack.slot.unavailable");
+        }
+        return Component.translatable("gui.neoopencomputers.server_rack.slot.max_tier", tier + 1);
     }
 
     public static List<Component> statusControlTooltip(final int state) {
