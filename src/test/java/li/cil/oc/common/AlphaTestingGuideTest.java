@@ -33,6 +33,8 @@ final class AlphaTestingGuideTest {
             "Guide must tell alpha testers to verify player-facing boot failure feedback");
         assertTrue(guide.contains("Screen output and keyboard input survive save/reload"),
             "Guide must tell alpha testers to verify screen and keyboard persistence");
+        assertTrue(guide.contains("Computer case hard-disk data survives save/reload"),
+            "Guide must tell alpha testers to verify computer case hard-disk persistence");
         assertTrue(guide.contains("https://github.com/ThEWiZ76/NeoOpenComputers/issues"),
             "Guide must route findings to the community issue tracker");
     }

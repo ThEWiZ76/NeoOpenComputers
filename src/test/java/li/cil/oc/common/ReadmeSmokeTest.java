@@ -21,6 +21,8 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("develop"), "README must direct testers to develop");
         assertTrue(readme.contains("428/428"), "README must include current GameTest evidence");
         assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include disk-drive persistence smoke item");
+        assertTrue(readme.contains("Computer case hard-disk data survives save/reload"),
+            "README must include computer case hard-disk persistence smoke item");
         assertTrue(readme.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
             "README must include terminal item input smoke item");
         assertTrue(readme.contains("Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart"),

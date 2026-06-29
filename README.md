@@ -88,6 +88,7 @@ Restart the Minecraft client after replacing the mod jar; a running JVM keeps th
 - Basic filesystem, EEPROM, floppy, and disk-drive actions work.
 - Screen output and keyboard input survive save/reload.
 - Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer.
+- Computer case hard-disk data survives save/reload.
 - Disk-drive floppy data survives save/reload.
 - Redstone, modem, inventory, tank, and transposer each get one basic smoke pass.
 - Texture picker reports usable atlas texture names such as `minecraft:block/stone`.
