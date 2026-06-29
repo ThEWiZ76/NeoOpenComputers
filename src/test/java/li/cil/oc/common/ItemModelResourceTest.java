@@ -90,6 +90,16 @@ final class ItemModelResourceTest {
         assertTrue(Files.exists(ITEM_TEXTURE_ROOT.resolve("tablet_on.png")));
     }
 
+    @Test
+    void screenItemModelsUseUpstreamBlockQuads() throws IOException {
+        for (final String tier : List.of("screen_tier1", "screen_tier2", "screen_tier3")) {
+            try (Reader reader = Files.newBufferedReader(ITEM_MODEL_ROOT.resolve(tier + ".json"))) {
+                final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
+                assertTrue("neoopencomputers:block/screen_item".equals(model.get("parent").getAsString()), tier);
+            }
+        }
+    }
+
     private static boolean isVanillaPlaceholder(final String texture) {
         return texture.startsWith("minecraft:item/") || texture.startsWith("minecraft:block/");
     }
