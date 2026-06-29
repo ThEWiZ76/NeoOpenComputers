@@ -571,7 +571,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final int column,
         final int row,
         final int color) {
-        if ((color & 0xFF000000) == 0 || (color & 0x00FFFFFF) == 0) {
+        if (!shouldRenderCellBackground(color)) {
             return;
         }
         final float x = column * CELL_WIDTH;
@@ -583,6 +583,10 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         consumer.addVertex(pose, x + CELL_WIDTH, y + LINE_HEIGHT, z).setColor(color);
         consumer.addVertex(pose, x + CELL_WIDTH, y, z).setColor(color);
         consumer.addVertex(pose, x, y, z).setColor(color);
+    }
+
+    static boolean shouldRenderCellBackground(final int color) {
+        return (color & 0xFF000000) != 0;
     }
 
     static boolean playerIsInFrontOfScreen(final Direction front, final AABB bounds, final double playerX, final double playerY, final double playerZ) {

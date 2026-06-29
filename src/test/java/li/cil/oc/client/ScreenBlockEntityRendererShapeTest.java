@@ -175,6 +175,9 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(renderer.contains("getBackgroundColor(column, row)"), "World screen text should render each cell background color");
         assertTrue(renderer.contains("renderCellBackground"), "Renderer should draw colored background cells before glyphs");
         assertEquals(0x80112233, ScreenBlockEntityRenderer.textColorWithAlpha(0x112233, 0.5F));
+        assertTrue(ScreenBlockEntityRenderer.shouldRenderCellBackground(0xFF000000), "World terminal must paint black background cells over the screen block texture");
+        assertTrue(ScreenBlockEntityRenderer.shouldRenderCellBackground(0xFF112233), "World terminal must paint colored background cells");
+        assertTrue(!ScreenBlockEntityRenderer.shouldRenderCellBackground(0x00000000), "Fully transparent background cells should be skipped");
         assertEquals(0x00000000, ScreenBlockEntityRenderer.textColorWithAlpha(0x112233, 0F));
     }
 
