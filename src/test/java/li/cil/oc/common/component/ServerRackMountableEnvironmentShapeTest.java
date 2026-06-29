@@ -192,6 +192,22 @@ final class ServerRackMountableEnvironmentShapeTest {
         assertEquals("Last error: boot:60 no bootable medium found", message.getString());
     }
 
+    @Test
+    void serverReportsDelayedMachineErrorAfterMachineWasRunning() {
+        assertTrue(ServerRackMountableEnvironment.shouldReportMachineError(true, false, "boot:60 no bootable medium found"));
+        assertEquals(
+            "Server error: boot:60 no bootable medium found",
+            ServerRackMountableEnvironment.machineErrorMessage("boot:60 no bootable medium found\nstack traceback").getString());
+    }
+
+    @Test
+    void serverDoesNotReportMachineErrorWithoutNewStoppedError() {
+        assertFalse(ServerRackMountableEnvironment.shouldReportMachineError(false, false, "boot failed"));
+        assertFalse(ServerRackMountableEnvironment.shouldReportMachineError(true, true, "boot failed"));
+        assertFalse(ServerRackMountableEnvironment.shouldReportMachineError(true, false, null));
+        assertFalse(ServerRackMountableEnvironment.shouldReportMachineError(true, false, ""));
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static ServerRackMountableEnvironment allocateServer(final int tier) throws Exception {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");

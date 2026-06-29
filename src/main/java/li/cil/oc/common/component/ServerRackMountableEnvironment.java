@@ -41,6 +41,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     public static final int MISSING_CPU = 1;
     public static final int MISSING_MEMORY = 2;
     public static final int MISSING_EEPROM = 4;
+    private static final double MACHINE_ERROR_MESSAGE_RANGE_SQUARED = 64D * 64D;
 
     private static final String TAG_MACHINE = "machine";
     private static final String TAG_IS_RUNNING = "isRunning";
@@ -382,6 +383,14 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         return net.minecraft.network.chat.Component.literal("Last error: " + firstErrorLine(machine.lastError()));
     }
 
+    static boolean shouldReportMachineError(final boolean wasRunning, final boolean running, final String lastError) {
+        return wasRunning && !running && lastError != null && !lastError.isEmpty();
+    }
+
+    static net.minecraft.network.chat.Component machineErrorMessage(final String lastError) {
+        return net.minecraft.network.chat.Component.literal("Server error: " + firstErrorLine(lastError));
+    }
+
     @Override
     public boolean canUpdate() {
         return machine.canUpdate();
@@ -622,14 +631,33 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     }
 
     private boolean updateWorkingState() {
+        final boolean previousWorking = wasWorking;
         final boolean working = machine.isRunning() || machine.isPaused();
-        final boolean errored = machine.lastError() != null;
+        final String lastError = machine.lastError();
+        final boolean errored = lastError != null;
         if (wasWorking == working && hadErrored == errored) {
             return false;
+        }
+        if (shouldReportMachineError(previousWorking, working, lastError)) {
+            reportMachineError(lastError);
         }
         wasWorking = working;
         hadErrored = errored;
         return true;
+    }
+
+    private void reportMachineError(final String lastError) {
+        final net.minecraft.network.chat.Component message = machineErrorMessage(lastError);
+        final Level level = world();
+        if (level != null) {
+            for (final Player player : level.players()) {
+                if (player.distanceToSqr(xPosition(), yPosition(), zPosition()) <= MACHINE_ERROR_MESSAGE_RANGE_SQUARED) {
+                    player.sendSystemMessage(message);
+                }
+            }
+        } else if (itemOwner != null) {
+            itemOwner.sendSystemMessage(message);
+        }
     }
 
     private record ServerSlot(String type, int tier) {
