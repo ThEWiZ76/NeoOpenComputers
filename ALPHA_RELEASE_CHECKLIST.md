@@ -65,6 +65,8 @@ Screen renderer, model, glyph, and multiblock code stay frozen unless all of the
 
 Do not fix screen visuals by flipping textures, offsets, transforms, or render layers without that evidence.
 
+Follow `SCREEN_WORK_PROTOCOL.md` before any screen patch.
+
 ## Stop Conditions
 
 Stop the release handoff if any of these happen:

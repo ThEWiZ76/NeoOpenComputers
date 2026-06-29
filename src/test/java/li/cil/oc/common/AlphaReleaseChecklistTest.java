@@ -29,10 +29,34 @@ final class AlphaReleaseChecklistTest {
             "git status --short --branch",
             "Get-FileHash",
             "ALPHA_SMOKE_MATRIX.md",
+            "SCREEN_WORK_PROTOCOL.md",
             "Do not add `.github/workflows`",
             "Screen renderer, model, glyph, and multiblock code stay frozen"
         }) {
             assertTrue(checklist.contains(required), "Checklist missing required release gate: " + required);
+        }
+    }
+
+    @Test
+    void screenWorkProtocolDocumentsAntiLoopGate() throws IOException {
+        final Path protocolPath = Path.of("SCREEN_WORK_PROTOCOL.md");
+        final String readme = Files.readString(Path.of("README.md"));
+
+        assertTrue(Files.isRegularFile(protocolPath), "Screen work protocol must exist");
+        assertTrue(readme.contains("[Screen Work Protocol](SCREEN_WORK_PROTOCOL.md)"),
+            "README must link screen work protocol");
+
+        final String protocol = Files.readString(protocolPath);
+        for (final String required : new String[]{
+            "No screen code changes before evidence",
+            "one reproducible root cause",
+            "one screen layer only",
+            "before screenshot",
+            "after screenshot",
+            "rollback point",
+            "Do not change textures, transforms, offsets, render layers, glyph sizing, or multiblock state in the same patch"
+        }) {
+            assertTrue(protocol.contains(required), "Screen work protocol missing anti-loop gate: " + required);
         }
     }
 }
