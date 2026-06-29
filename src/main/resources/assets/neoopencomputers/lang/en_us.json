@@ -264,6 +264,7 @@
   "gui.neoopencomputers.terminal.no_screen_data": "Waiting for terminal screen data",
   "gui.neoopencomputers.waypoint.label": "Label",
   "gui.neoopencomputers.waypoint.title": "Waypoint",
+  "message.neoopencomputers.screen.missing_keyboard": "No usable keyboard attached to this screen",
   "death.attack.oc.nanomachinesHungry.1": "%s was eaten by nanomachines.",
   "death.attack.oc.nanomachinesHungry.2": "%s didn't keep their nanomachines fed.",
   "death.attack.oc.nanomachinesHungry.3": "%s has been digested.",

@@ -71,6 +71,14 @@ final class ScreenBlockInteractionTest {
     }
 
     @Test
+    void screenTerminalUseModeIsIndependentFromKeyboardPresence() {
+        assertEquals(true, ScreenBlock.shouldUseAsPhysicalTerminal(false, false));
+        assertEquals(false, ScreenBlock.shouldUseAsPhysicalTerminal(true, false));
+        assertEquals(false, ScreenBlock.shouldUseAsPhysicalTerminal(false, true));
+        assertEquals(true, ScreenBlock.shouldUseAsPhysicalTerminal(true, true));
+    }
+
+    @Test
     void physicalScreenClickEmitsOnlyTouchLikeUpstream() throws Exception {
         ScreenBlockEntity screen = allocateScreen();
         CapturingNode node = new CapturingNode();

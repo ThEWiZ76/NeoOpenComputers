@@ -127,8 +127,14 @@ public class ScreenBlock extends Block implements EntityBlock {
         if (level.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
             final ScreenBlockEntity origin = screen.originScreen();
             final boolean playerIsSneaking = player != null && player.isShiftKeyDown();
-            if (shouldOpenPhysicalTerminal(origin.hasKeyboard(player), playerIsSneaking, origin.isTouchModeInverted())) {
+            final boolean hasKeyboard = origin.hasKeyboard(player);
+            if (shouldOpenPhysicalTerminal(hasKeyboard, playerIsSneaking, origin.isTouchModeInverted())) {
                 return openPhysicalTerminal(origin, player);
+            }
+            if (!hasKeyboard && shouldUseAsPhysicalTerminal(playerIsSneaking, origin.isTouchModeInverted())) {
+                if (player != null) {
+                    player.displayClientMessage(Component.translatable("message.neoopencomputers.screen.missing_keyboard"), true);
+                }
             }
             final ScreenHitMapper.ScreenClick click = screen.renderBlockWidth() > 1 || screen.renderBlockHeight() > 1
                 ? ScreenHitMapper.screenCoordinates(
@@ -190,7 +196,11 @@ public class ScreenBlock extends Block implements EntityBlock {
     }
 
     public static boolean shouldOpenPhysicalTerminal(final boolean hasKeyboard, final boolean playerIsSneaking, final boolean touchModeInverted) {
-        return hasKeyboard && playerIsSneaking == touchModeInverted;
+        return hasKeyboard && shouldUseAsPhysicalTerminal(playerIsSneaking, touchModeInverted);
+    }
+
+    public static boolean shouldUseAsPhysicalTerminal(final boolean playerIsSneaking, final boolean touchModeInverted) {
+        return playerIsSneaking == touchModeInverted;
     }
 
     @Override

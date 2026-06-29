@@ -164,6 +164,16 @@ final class ScreenRegistrationShapeTest {
     }
 
     @Test
+    void screenBlockReportsMissingKeyboardWhenTerminalModeCannotOpen() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+        final String lang = Files.readString(Path.of("src/main/resources/assets/neoopencomputers/lang/en_us.json"));
+
+        assertTrue(source.contains("message.neoopencomputers.screen.missing_keyboard"));
+        assertTrue(source.contains("displayClientMessage"));
+        assertTrue(lang.contains("message.neoopencomputers.screen.missing_keyboard"));
+    }
+
+    @Test
     void screenBlockHandlesDyeUseLikeUpstreamColoredBlocks() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
 
