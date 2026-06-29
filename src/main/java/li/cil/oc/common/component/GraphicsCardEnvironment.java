@@ -457,7 +457,9 @@ public class GraphicsCardEnvironment extends AbstractManagedEnvironment implemen
     @Override
     public void onDisconnect(final Node node) {
         if (node == node() || screenAddress != null && screenAddress.equals(node.address())) {
+            screenAddress = null;
             screen = null;
+            persistData();
         }
     }
 

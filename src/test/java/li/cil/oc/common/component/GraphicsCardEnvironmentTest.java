@@ -160,6 +160,22 @@ final class GraphicsCardEnvironmentTest {
     }
 
     @Test
+    void disconnectClearsBoundScreenAddressLikeUpstream() {
+        OpenComputersApi.initialize();
+        GraphicsCardEnvironment gpu = new GraphicsCardEnvironment(0);
+        FakeTextBuffer screen = new FakeTextBuffer();
+        Network.joinNewNetwork(gpu.node());
+        gpu.node().connect(screen.node());
+        gpu.bind(null, new TestArguments(screen.node().address(), true));
+
+        gpu.onDisconnect(screen.node());
+
+        CompoundTag saved = new CompoundTag();
+        gpu.save(saved);
+        assertTrue(!saved.contains("screen"), "Disconnected screen address should not persist");
+    }
+
+    @Test
     void bindsPhysicalMultiblockScreensThroughOriginBuffer() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java"));
 
