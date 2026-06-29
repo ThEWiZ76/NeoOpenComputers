@@ -3,6 +3,7 @@ package li.cil.oc.common.network;
 import li.cil.oc.common.component.TerminalScreenDelta;
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRackMountableEnvironment;
+import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.menu.TerminalMenu;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
@@ -84,6 +85,19 @@ final class TerminalNetworkingTest {
     }
 
     @Test
+    void rejectsPhysicalMouseInputForNonTouchScreenLikeUpstream() throws ReflectiveOperationException {
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
+        final TerminalMousePayload payload = new TerminalMousePayload(3, TerminalMousePayload.MOUSE_DOWN, 0, 0, 0);
+        final TerminalMenu tierOneMenu = allocateMenu(3, snapshot);
+        final TerminalMenu tierTwoMenu = allocateMenu(3, snapshot);
+        setField(tierOneMenu, "physicalScreen", screenWithTier(0));
+        setField(tierTwoMenu, "physicalScreen", screenWithTier(1));
+
+        assertEquals(false, TerminalNetworking.acceptsTerminalMouse(tierOneMenu, snapshot, payload));
+        assertEquals(true, TerminalNetworking.acceptsTerminalMouse(tierTwoMenu, snapshot, payload));
+    }
+
+    @Test
     void checksTerminalInputReadinessFromSnapshotBounds() {
         assertEquals(false, TerminalNetworking.acceptsTerminalInput(null));
         assertEquals(false, TerminalNetworking.acceptsTerminalInput(new TerminalScreenSnapshot(0, 0, new String[0])));
@@ -114,6 +128,20 @@ final class TerminalNetworkingTest {
         containerIdField.setInt(menu, containerId);
         menu.updateSnapshot(snapshot);
         return menu;
+    }
+
+    private static ScreenBlockEntity screenWithTier(final int tier) throws ReflectiveOperationException {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final ScreenBlockEntity screen = (ScreenBlockEntity) ((Unsafe) unsafeField.get(null)).allocateInstance(ScreenBlockEntity.class);
+        setField(screen, "tier", tier);
+        return screen;
+    }
+
+    private static void setField(final Object target, final String name, final Object value) throws ReflectiveOperationException {
+        final Field field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
     private static TestMenu allocateTestMenu(final int containerId) throws ReflectiveOperationException {

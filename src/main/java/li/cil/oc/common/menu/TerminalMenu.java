@@ -73,6 +73,10 @@ public class TerminalMenu extends AbstractContainerMenu {
         return physicalScreen;
     }
 
+    public boolean supportsMouseInput() {
+        return physicalScreen == null || physicalScreen.tier() > 0;
+    }
+
     public void updateSnapshot(final TerminalScreenSnapshot snapshot) {
         this.snapshot = snapshot == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : snapshot;
     }
