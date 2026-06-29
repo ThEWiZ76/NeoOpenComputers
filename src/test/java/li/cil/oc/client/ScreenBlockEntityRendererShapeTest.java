@@ -242,10 +242,10 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(renderer.contains("renderTerminalGlyphs"), "World screen text should draw all glyphs after cell backgrounds");
 
         final String font = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalFont.java"));
-        assertTrue(font.contains("sourceY < SOURCE_HEIGHT"), "World text should render the original 8x16 source glyph pixels before scaling");
-        assertTrue(font.contains("sourceX < glyph.sourceWidth()"), "World text should not pre-collapse glyphs to damaged 4x8 masks");
-        assertTrue(font.contains("quad(consumer, pose, baseX + sourceX * scale, baseY + sourceY * scale, z, color, scale)"),
-            "World glyph quads should scale source pixels by 0.5 like upstream TextureFontRenderer.");
+        assertTrue(font.contains("py < CELL_HEIGHT"), "World text should render stable 4x8 terminal cells, not tiny source-pixel quads");
+        assertTrue(font.contains("px < glyphCellWidth(codePoint)"), "World text should use the same fixed cell raster as the GUI terminal");
+        assertTrue(!font.contains("baseX + sourceX * scale"),
+            "Source-pixel quads become sub-pixel world geometry and make close screen text unreadable.");
     }
 
     @Test

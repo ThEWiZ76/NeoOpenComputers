@@ -89,15 +89,10 @@ final class TerminalFont {
         final PoseStack.Pose pose = poseStack.last();
         final float baseX = column * CELL_WIDTH;
         final float baseY = row * CELL_HEIGHT;
-        final Glyph glyph = glyph(codePoint);
-        if (glyph == null) {
-            return;
-        }
-        final float scale = worldPixelScale();
-        for (int sourceY = 0; sourceY < SOURCE_HEIGHT; sourceY++) {
-            for (int sourceX = 0; sourceX < glyph.sourceWidth(); sourceX++) {
-                if (sourcePixel(glyph, sourceX, sourceY)) {
-                    quad(consumer, pose, baseX + sourceX * scale, baseY + sourceY * scale, z, color, scale);
+        for (int py = 0; py < CELL_HEIGHT; py++) {
+            for (int px = 0; px < glyphCellWidth(codePoint); px++) {
+                if (pixel(codePoint, px, py)) {
+                    quad(consumer, pose, baseX + px, baseY + py, z, color);
                 }
             }
         }
