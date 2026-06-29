@@ -10886,7 +10886,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(invokeUseWithoutItem(state, helper, screenPos, hit) == InteractionResult.CONSUME, "Screen click was not consumed");
 
         helper.runAtTickTime(5, () -> {
-            assertNextSignal(helper, computer, "touch", screen.node().address(), 68, 6, 0);
+            assertNextSignal(helper, computer, "touch", screen.node().address(), 68, 7, 0);
             helper.succeed();
         });
     }
@@ -10938,7 +10938,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(invokeUseWithoutItem(state, helper, secondaryScreenPos, hit) == InteractionResult.CONSUME, "Secondary screen click was not consumed");
 
         helper.runAtTickTime(5, () -> {
-            assertNextTouchSignalFrom(helper, computer, originScreen.node().address(), 56, 72);
+            assertNextTouchSignalFrom(helper, computer, originScreen.node().address(), 72, 80);
             helper.succeed();
         });
     }

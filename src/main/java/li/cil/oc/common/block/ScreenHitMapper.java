@@ -8,8 +8,8 @@ import net.minecraft.world.phys.Vec3;
 
 final class ScreenHitMapper {
     private static final double SCREEN_BORDER = 2.25D / 16D;
-    private static final double CELL_WIDTH = 6D;
-    private static final double LINE_HEIGHT = 9D;
+    private static final double CELL_WIDTH = 4D;
+    private static final double LINE_HEIGHT = 8D;
 
     static ScreenClick screenCoordinates(final BlockState state, final BlockPos pos, final BlockHitResult hitResult, final int width, final int height) {
         return screenCoordinates(ScreenBlock.facing(state), ScreenBlock.up(state), ScreenBlock.localRight(state), pos, hitResult, width, height);
@@ -139,6 +139,14 @@ final class ScreenHitMapper {
     }
 
     record ScreenClick(int x, int y) {
+    }
+
+    static double cellWidth() {
+        return CELL_WIDTH;
+    }
+
+    static double lineHeight() {
+        return LINE_HEIGHT;
     }
 
     private static double localCoordinate(final Vec3 relative, final Direction direction) {

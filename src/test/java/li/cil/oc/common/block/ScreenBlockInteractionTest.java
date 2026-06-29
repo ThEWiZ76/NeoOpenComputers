@@ -30,7 +30,7 @@ final class ScreenBlockInteractionTest {
 
         ScreenHitMapper.ScreenClick click = ScreenHitMapper.screenCoordinates(Direction.NORTH, BlockPos.ZERO, hit, 40, 16);
 
-        assertArrayEquals(new int[]{6, 4}, new int[]{click.x(), click.y()});
+        assertArrayEquals(new int[]{6, 5}, new int[]{click.x(), click.y()});
     }
 
     @Test
@@ -53,7 +53,13 @@ final class ScreenBlockInteractionTest {
 
         ScreenHitMapper.ScreenClick click = ScreenHitMapper.screenCoordinates(Direction.NORTH, Direction.UP, BlockPos.ZERO, hit, 80, 25, 3, 2, 2, 1);
 
-        assertArrayEquals(new int[]{76, 0}, new int[]{click.x(), click.y()});
+        assertArrayEquals(new int[]{76, 3}, new int[]{click.x(), click.y()});
+    }
+
+    @Test
+    void screenHitMapperUsesRendererCellMetrics() {
+        assertEquals(4D, ScreenHitMapper.cellWidth());
+        assertEquals(8D, ScreenHitMapper.lineHeight());
     }
 
     @Test
