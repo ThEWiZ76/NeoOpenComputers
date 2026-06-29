@@ -209,14 +209,17 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         if (!shouldRenderScreenFace(screen, face)) {
             return;
         }
-        final Direction pitch = ScreenBlock.pitch(screen.getBlockState());
+        final BlockState state = screen.getBlockState();
+        final Direction pitch = ScreenBlock.pitch(state);
+        final Direction worldFace = localFaceDirection(pitch, ScreenBlock.yaw(state), face);
         final TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(screenTexture(
             pitch != Direction.NORTH,
             screen.renderBlockWidth(),
             screen.renderBlockHeight(),
             screen.localBlockX(),
             screen.localBlockY(),
-            face));
+            face,
+            shouldFlipTextureParts(worldFace, ScreenBlock.facing(state))));
         final VertexConsumer consumer = sprite.wrap(bufferSource.getBuffer(RenderType.cutout()));
         final PoseStack.Pose pose = poseStack.last();
         final int color = 0xFF000000 | screen.getRenderColor();
@@ -302,27 +305,39 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
     }
 
     static ResourceLocation screenTexture(final boolean horizontalPitch, final int width, final int height, final int localX, final int localY, final Direction localFace) {
+        return screenTexture(horizontalPitch, width, height, localX, localY, localFace, false);
+    }
+
+    static ResourceLocation screenTexture(final boolean horizontalPitch, final int width, final int height, final int localX, final int localY, final Direction localFace, final boolean flipParts) {
         final String texture;
         final int pitch = horizontalPitch ? 1 : 0;
         final Direction face = localFace == null ? Direction.SOUTH : localFace;
+        final int partX = texturePart(localX, width - 1, flipParts);
+        final int partY = texturePart(localY, height - 1, flipParts);
         if (face == Direction.SOUTH && width <= 1 && height <= 1) {
             texture = horizontalPitch ? "f2" : "f";
         } else if (face == Direction.SOUTH && width <= 1) {
-            texture = VERTICAL_FRONT[pitch][xy2part(localY, height - 1)];
+            texture = VERTICAL_FRONT[pitch][partY];
         } else if (face == Direction.SOUTH && height <= 1) {
-            texture = HORIZONTAL_FRONT[pitch][xy2part(localX, width - 1)];
+            texture = HORIZONTAL_FRONT[pitch][partX];
         } else if (face == Direction.SOUTH) {
-            texture = MULTI_FRONT[pitch][xy2part(localY, height - 1)][xy2part(localX, width - 1)];
+            texture = MULTI_FRONT[pitch][partY][partX];
         } else if (width <= 1 && height <= 1) {
             texture = SINGLE_SIDE[face.get3DDataValue()];
         } else if (width <= 1) {
-            texture = VERTICAL_SIDE[pitch][xy2part(localY, height - 1)][face.get3DDataValue()];
+            texture = VERTICAL_SIDE[pitch][partY][face.get3DDataValue()];
         } else if (height <= 1) {
-            texture = HORIZONTAL_SIDE[pitch][xy2part(localX, width - 1)][face.get3DDataValue()];
+            texture = HORIZONTAL_SIDE[pitch][partX][face.get3DDataValue()];
         } else {
-            texture = MULTI_SIDE[pitch][xy2part(localY, height - 1)][xy2part(localX, width - 1)][face.get3DDataValue()];
+            texture = MULTI_SIDE[pitch][partY][partX][face.get3DDataValue()];
         }
         return ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "block/screen/" + texture);
+    }
+
+    static boolean shouldFlipTextureParts(final Direction worldFace, final Direction screenFacing) {
+        final Direction safeWorldFace = worldFace == null ? Direction.SOUTH : worldFace;
+        final Direction safeScreenFacing = screenFacing == null ? Direction.SOUTH : screenFacing;
+        return (safeWorldFace == Direction.DOWN || safeScreenFacing == Direction.DOWN) && safeWorldFace != safeScreenFacing;
     }
 
     private static ResourceLocation screenFrontTexture(final ScreenBlockEntity screen) {
@@ -343,6 +358,11 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
             return 0;
         }
         return 1;
+    }
+
+    private static int texturePart(final int value, final int high, final boolean flipParts) {
+        final int part = xy2part(value, high);
+        return flipParts ? 2 - part : part;
     }
 
     private static int screenTierColor(final Block block) {

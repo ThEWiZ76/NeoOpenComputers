@@ -66,6 +66,14 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererFlipsConnectedTexturePartsLikeUpstreamForDownFaces() {
+        assertTrue(ScreenBlockEntityRenderer.shouldFlipTextureParts(Direction.DOWN, Direction.SOUTH));
+        assertTrue(ScreenBlockEntityRenderer.shouldFlipTextureParts(Direction.EAST, Direction.DOWN));
+        assertTrue(!ScreenBlockEntityRenderer.shouldFlipTextureParts(Direction.DOWN, Direction.DOWN));
+        assertEquals("neoopencomputers:block/screen/bml", ScreenBlockEntityRenderer.screenTexture(false, 3, 3, 0, 1, Direction.NORTH, true).toString());
+    }
+
+    @Test
     void screenRendererMapsLocalSideFacesToWorldDirectionsForCulling() {
         assertEquals(Direction.NORTH, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.EAST));
         assertEquals(Direction.SOUTH, ScreenBlockEntityRenderer.localFaceDirection(Direction.NORTH, Direction.EAST, Direction.WEST));
