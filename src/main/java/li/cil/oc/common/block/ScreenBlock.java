@@ -79,6 +79,14 @@ public class ScreenBlock extends Block implements EntityBlock {
     }
 
     @Override
+    protected void onRemove(final BlockState state, final Level level, final BlockPos pos, final BlockState newState, final boolean movedByPiston) {
+        if (!state.is(newState.getBlock())) {
+            notifyConnectedScreensForClientUpdate(level, pos, state);
+        }
+        super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    @Override
     protected void onPlace(final BlockState state, final Level level, final BlockPos pos, final BlockState oldState, final boolean movedByPiston) {
         super.onPlace(state, level, pos, oldState, movedByPiston);
         BlockNetworkConnector.joinIfServer(level, pos);
@@ -143,6 +151,7 @@ public class ScreenBlock extends Block implements EntityBlock {
         }
         if (!level.isClientSide) {
             screen.setRenderColor(dyeItem.getDyeColor());
+            notifyConnectedScreensForClientUpdate(level, pos, state);
             if (player != null) {
                 player.swing(hand);
             }

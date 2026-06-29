@@ -150,4 +150,22 @@ final class ScreenRegistrationShapeTest {
         assertTrue(source.contains("ItemInteractionResult.sidedSuccess"));
         assertTrue(!source.contains("stack.shrink(1)"), "Screen dye use should not consume dye, matching upstream Colored.consumesDye=false");
     }
+
+    @Test
+    void screenBlockRefreshesConnectedLayoutsAfterDyeAndRemovalLikeUpstream() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+
+        final int dyeUse = source.indexOf("protected ItemInteractionResult useItemOn");
+        final int dyeColor = source.indexOf("screen.setRenderColor", dyeUse);
+        final int dyeRefresh = source.indexOf("notifyConnectedScreensForClientUpdate", dyeColor);
+        final int afterDyeUse = source.indexOf("public static InteractionResult openPhysicalTerminal", dyeColor);
+        assertTrue(dyeUse >= 0 && dyeColor > dyeUse && dyeRefresh > dyeColor && dyeRefresh < afterDyeUse,
+            "Dyeing a screen should refresh connected screen layouts like upstream onColorChanged()");
+
+        final int removal = source.indexOf("protected void onRemove");
+        final int removalRefresh = source.indexOf("notifyConnectedScreensForClientUpdate", removal);
+        final int afterRemoval = source.indexOf("protected void onPlace", removal);
+        assertTrue(removal >= 0 && removalRefresh > removal && removalRefresh < afterRemoval,
+            "Removing a screen should refresh connected screen layouts like upstream dispose()");
+    }
 }
