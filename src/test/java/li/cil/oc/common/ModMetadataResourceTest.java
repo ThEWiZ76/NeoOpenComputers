@@ -28,4 +28,13 @@ final class ModMetadataResourceTest {
         assertTrue(metadata.contains("community-maintained Java-first NeoForge port"));
         assertTrue(!metadata.contains("clean NeoForge MDK scaffold"));
     }
+
+    @Test
+    void modMetadataDoesNotKeepExampleTemplateComments() throws IOException {
+        final String metadata = Files.readString(MODS_TOML);
+
+        assertTrue(!metadata.contains("This is an example neoforge.mods.toml file"));
+        assertTrue(!metadata.contains("change.me.example.invalid"));
+        assertTrue(!metadata.contains("All rights reserved is the default"));
+    }
 }
