@@ -145,11 +145,26 @@ final class TerminalFont {
         final float height = SOURCE_HEIGHT * worldPixelScale();
         final VertexConsumer consumer = bufferSource.getBuffer(RenderType.text(ASCII_GLYPH_TEXTURE));
         final PoseStack.Pose pose = poseStack.last();
-        consumer.addVertex(pose, x, y + height, z).setColor(color).setUv(minU, maxV).setLight(WORLD_GLYPH_LIGHT);
-        consumer.addVertex(pose, x + width, y + height, z).setColor(color).setUv(maxU, maxV).setLight(WORLD_GLYPH_LIGHT);
-        consumer.addVertex(pose, x + width, y, z).setColor(color).setUv(maxU, minV).setLight(WORLD_GLYPH_LIGHT);
-        consumer.addVertex(pose, x, y, z).setColor(color).setUv(minU, minV).setLight(WORLD_GLYPH_LIGHT);
+        texturedQuadVertex(consumer, pose, x, y + height, z, color, minU, maxV);
+        texturedQuadVertex(consumer, pose, x + width, y + height, z, color, maxU, maxV);
+        texturedQuadVertex(consumer, pose, x + width, y, z, color, maxU, minV);
+        texturedQuadVertex(consumer, pose, x, y, z, color, minU, minV);
         return true;
+    }
+
+    private static void texturedQuadVertex(
+        final VertexConsumer consumer,
+        final PoseStack.Pose pose,
+        final float x,
+        final float y,
+        final float z,
+        final int color,
+        final float u,
+        final float v) {
+        consumer.addVertex(pose, x, y, z)
+            .setColor(color)
+            .setUv(u, v)
+            .setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
     }
 
     private static void registerAsciiGlyphTexture() {
