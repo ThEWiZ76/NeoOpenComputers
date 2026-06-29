@@ -28,8 +28,8 @@ final class TerminalFont {
     private static final int CELL_HEIGHT = 8;
     private static final int ATLAS_COLUMNS = 16;
     private static final int ATLAS_ROWS = 16;
-    private static final int ATLAS_CELL_WIDTH = 16;
-    private static final int ATLAS_CELL_HEIGHT = SOURCE_HEIGHT;
+    private static final int ATLAS_CELL_WIDTH = CELL_WIDTH;
+    private static final int ATLAS_CELL_HEIGHT = CELL_HEIGHT;
     private static final int ATLAS_WIDTH = ATLAS_COLUMNS * ATLAS_CELL_WIDTH;
     private static final int ATLAS_HEIGHT = ATLAS_ROWS * ATLAS_CELL_HEIGHT;
     private static final ResourceLocation ASCII_GLYPH_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "dynamic/ascii_terminal_font");
@@ -136,13 +136,13 @@ final class TerminalFont {
         final int atlasColumn = codePoint % ATLAS_COLUMNS;
         final int atlasRow = codePoint / ATLAS_COLUMNS;
         final float minU = (atlasColumn * ATLAS_CELL_WIDTH) / (float) ATLAS_WIDTH;
-        final float maxU = (atlasColumn * ATLAS_CELL_WIDTH + glyph.sourceWidth()) / (float) ATLAS_WIDTH;
+        final float maxU = (atlasColumn * ATLAS_CELL_WIDTH + glyphCellWidth(codePoint)) / (float) ATLAS_WIDTH;
         final float minV = (atlasRow * ATLAS_CELL_HEIGHT) / (float) ATLAS_HEIGHT;
-        final float maxV = (atlasRow * ATLAS_CELL_HEIGHT + SOURCE_HEIGHT) / (float) ATLAS_HEIGHT;
+        final float maxV = (atlasRow * ATLAS_CELL_HEIGHT + CELL_HEIGHT) / (float) ATLAS_HEIGHT;
         final float x = column * CELL_WIDTH;
         final float y = row * CELL_HEIGHT;
-        final float width = glyph.sourceWidth() * worldPixelScale();
-        final float height = SOURCE_HEIGHT * worldPixelScale();
+        final float width = glyphCellWidth(codePoint);
+        final float height = CELL_HEIGHT;
         final VertexConsumer consumer = bufferSource.getBuffer(RenderType.text(ASCII_GLYPH_TEXTURE));
         final PoseStack.Pose pose = poseStack.last();
         texturedQuadVertex(consumer, pose, x, y + height, z, color, minU, maxV);
@@ -183,9 +183,9 @@ final class TerminalFont {
             }
             final int atlasX = (codePoint % ATLAS_COLUMNS) * ATLAS_CELL_WIDTH;
             final int atlasY = (codePoint / ATLAS_COLUMNS) * ATLAS_CELL_HEIGHT;
-            for (int y = 0; y < SOURCE_HEIGHT; y++) {
-                for (int x = 0; x < glyph.sourceWidth(); x++) {
-                    if (sourcePixel(glyph, x, y)) {
+            for (int y = 0; y < CELL_HEIGHT; y++) {
+                for (int x = 0; x < glyphCellWidth(codePoint); x++) {
+                    if (pixel(codePoint, x, y)) {
                         image.setPixelRGBA(atlasX + x, atlasY + y, 0xFFFFFFFF);
                     }
                 }

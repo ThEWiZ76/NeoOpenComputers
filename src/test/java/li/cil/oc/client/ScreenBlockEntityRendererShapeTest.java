@@ -249,6 +249,21 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void texturedWorldAsciiAtlasUsesTerminalCellRaster() throws IOException {
+        final String font = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalFont.java"));
+
+        assertTrue(font.contains("ATLAS_CELL_WIDTH = CELL_WIDTH"),
+            "World ASCII atlas must store the same fixed-width terminal cells as the GUI renderer.");
+        assertTrue(font.contains("ATLAS_CELL_HEIGHT = CELL_HEIGHT"),
+            "World ASCII atlas must store downsampled 4x8 cells, not 8x16 source glyphs.");
+        assertTrue(font.contains("image.setPixelRGBA(atlasX + x, atlasY + y, 0xFFFFFFFF)"));
+        assertTrue(font.contains("pixel(codePoint, x, y)"),
+            "The atlas should be rasterized through the GUI terminal sampling path to avoid GPU row dropping.");
+        assertTrue(!font.contains("SOURCE_HEIGHT * worldPixelScale()"),
+            "Textured world glyph quads should not squeeze 8x16 source glyphs into 4x8 cells at render time.");
+    }
+
+    @Test
     void screenRendererUsesUpstreamTextPlaneYawConvention() {
         assertEquals(180, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.NORTH));
         assertEquals(0, ScreenBlockEntityRenderer.yawRotationDegrees(Direction.SOUTH));
