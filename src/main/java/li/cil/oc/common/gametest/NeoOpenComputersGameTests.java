@@ -27,6 +27,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.ComponentConnector;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
@@ -6748,6 +6749,42 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(inventory.canPlaceItem(DiskDriveBlockEntity.SLOT_FLOPPY, floppy), "Disk drive mountable rejected floppy");
         inventory.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, floppy);
         helper.assertTrue(!inventory.isEmpty(), "Disk drive mountable did not keep inserted floppy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void rackDiskDriveWritableFloppyStateSurvivesNbtReloadForFirstSmoke(final GameTestHelper helper) {
+        final BlockPos rackPos = new BlockPos(1, 1, 1);
+        final BlockPos loadedRackPos = new BlockPos(3, 1, 1);
+        helper.setBlock(rackPos, ModBlocks.RACK.get());
+        final RackBlockEntity rack = helper.getBlockEntity(rackPos);
+
+        rack.setItem(0, new ItemStack(ModItems.DISK_DRIVE_MOUNTABLE.get()));
+        final li.cil.oc.api.component.RackMountable mountable = rack.getMountable(0);
+        helper.assertTrue(mountable instanceof net.minecraft.world.Container, "Rack disk drive mountable is not an inventory");
+        final net.minecraft.world.Container inventory = (net.minecraft.world.Container) mountable;
+        final ItemStack floppy = new ItemStack(ModItems.FLOPPY.get());
+        floppy.set(DataComponents.CUSTOM_NAME, Component.literal("Rack Smoke Disk"));
+        inventory.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, floppy);
+
+        final Node[] nodes = ((Analyzable) mountable).onAnalyze(null, Direction.NORTH, 0, 0, 0);
+        helper.assertTrue(nodes != null && nodes.length == 1 && nodes[0] instanceof li.cil.oc.api.network.Component, "Rack disk drive did not expose writable floppy filesystem");
+        final li.cil.oc.api.network.Component filesystem = (li.cil.oc.api.network.Component) nodes[0];
+        chargeConnector(helper, filesystem, 1D);
+        final Object[] open = invokeComponent(helper, filesystem, "open", "rack-drive.txt", "w");
+        invokeComponent(helper, filesystem, "write", open[0], "rack persisted".getBytes(StandardCharsets.UTF_8));
+        invokeComponent(helper, filesystem, "close", open[0]);
+
+        final CompoundTag saved = rack.saveWithFullMetadata(helper.getLevel().registryAccess());
+
+        helper.setBlock(loadedRackPos, ModBlocks.RACK.get());
+        final RackBlockEntity loadedRack = helper.getBlockEntity(loadedRackPos);
+        loadedRack.loadWithComponents(saved, helper.getLevel().registryAccess());
+        final li.cil.oc.api.component.RackMountable loadedMountable = loadedRack.getMountable(0);
+        helper.assertTrue(loadedMountable instanceof net.minecraft.world.Container, "Reloaded rack lost disk drive mountable inventory");
+        final ItemStack loadedFloppy = ((net.minecraft.world.Container) loadedMountable).getItem(DiskDriveBlockEntity.SLOT_FLOPPY);
+        helper.assertTrue(loadedFloppy.is(ModItems.FLOPPY.get()), "Reloaded rack disk drive lost floppy");
+        assertStorageStackContainsFile(helper, loadedFloppy, "rack-drive.txt", "Reloaded rack writable floppy");
         helper.succeed();
     }
 
