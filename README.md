@@ -17,7 +17,7 @@ Current verification evidence:
 
 - Unit/build gate: `.\gradlew.bat test build --no-daemon --console=plain`
 - GameTest gate: `.\gradlew.bat runGameTestServer --no-daemon --console=plain`
-- Latest GameTest result: `427/427` required tests passed.
+- Latest GameTest result: `428/428` required tests passed.
 - Bounded client launch smoke reaches resource reload and texture atlas creation without print/model/missing-texture/error matches.
 - Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart.
 
