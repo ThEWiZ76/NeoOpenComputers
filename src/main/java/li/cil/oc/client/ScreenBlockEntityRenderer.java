@@ -194,9 +194,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final MultiBufferSource bufferSource,
         final int packedLight,
         final int packedOverlay) {
-        for (final Direction face : Direction.values()) {
-            renderScreenFace(screen, poseStack, bufferSource, packedLight, packedOverlay, face);
-        }
+        renderScreenFace(screen, poseStack, bufferSource, packedLight, packedOverlay, Direction.SOUTH);
     }
 
     private static void renderScreenFace(

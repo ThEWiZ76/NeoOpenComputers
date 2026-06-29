@@ -106,12 +106,13 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
-    void screenRendererDrawsUpstreamConnectedTexturesForEveryFace() throws IOException {
+    void screenRendererLeavesOpaqueBodyFacesToStaticBlockModel() throws IOException {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
 
-        assertTrue(renderer.contains("for (final Direction face : Direction.values())"),
-            "Upstream ScreenModel selects connected screen textures for every face, not only the front.");
-        assertTrue(renderer.contains("renderScreenFace(screen, poseStack, bufferSource, packedLight, packedOverlay, face)"));
+        assertTrue(!renderer.contains("for (final Direction face : Direction.values())"),
+            "Block-entity renderer must not redraw side/back/top/bottom cutout overlays over the static opaque model.");
+        assertTrue(renderer.contains("Direction.SOUTH"),
+            "Block-entity renderer should only draw the connected front overlay; screen_panel.json owns opaque body faces.");
     }
 
     @Test
