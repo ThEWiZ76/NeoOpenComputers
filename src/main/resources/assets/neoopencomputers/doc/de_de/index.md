@@ -1,5 +1,7 @@
 # OpenComputers Bedienungsanleitung
 
+NeoOpenComputers alpha note: robots, drones, and block microcontrollers are not available in this build yet; computer cases, servers, racks, screens, keyboards, storage, cards, upgrades, and microcontroller case items are the current alpha focus.
+
 OpenComputer ist eine Modifikation, welche dauerhafte, modulare, und hochkonfigurierbare [Computer](general/computer.md), [Server](item/server1.md), [Roboter](block/robot.md), und [Drohnen](item/drone.md) zum Spiel hinzufügt. Alle Geräte können mittels Lua 5.2 programmiert werden, was unterschiedlich komplexe Systeme entsprechend der Anwendung ermöglicht.
 
 Um zu lernen, wie man die Bedienungsanleitung verwendet, siehe [die Seite über das Handbuch](item/manual.md) (der grüne Text ist ein Link - du kannst ihn anklicken!).

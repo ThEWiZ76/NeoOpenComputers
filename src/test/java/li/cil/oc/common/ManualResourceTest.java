@@ -113,6 +113,25 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualHomePagesWarnAboutUnavailableAlphaDevices() throws Exception {
+        final List<String> missingNotes = new ArrayList<>();
+        try (Stream<Path> files = Files.list(DOC_ROOT)) {
+            for (final Path index : files
+                .filter(Files::isDirectory)
+                .map(path -> path.resolve("index.md"))
+                .filter(Files::exists)
+                .toList()) {
+                final String content = Files.readString(index);
+                if (!content.contains("NeoOpenComputers alpha note:")) {
+                    missingNotes.add(DOC_ROOT.relativize(index).toString().replace('\\', '/'));
+                }
+            }
+        }
+
+        assertTrue(missingNotes.isEmpty(), () -> "Manual home pages missing alpha availability note:\n" + String.join("\n", missingNotes));
+    }
+
+    @Test
     void bundledManualMarkdownUsesCommunityIssueTracker() throws Exception {
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             assertTrue(files
