@@ -343,8 +343,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         this.width = width;
         this.height = height;
         buffer.resize(width, height);
-        viewportWidth = Math.min(viewportWidth, width);
-        viewportHeight = Math.min(viewportHeight, height);
+        viewportWidth = width;
+        viewportHeight = height;
         markChanged();
         return true;
     }

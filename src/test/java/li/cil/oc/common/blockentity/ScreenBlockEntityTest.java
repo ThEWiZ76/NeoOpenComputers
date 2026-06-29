@@ -318,6 +318,18 @@ final class ScreenBlockEntityTest {
     }
 
     @Test
+    void setResolutionResetsViewportLikeUpstream() throws Exception {
+        ScreenBlockEntity screen = screenWithTier(2);
+        screen.setResolution(20, 10);
+        screen.setViewport(4, 3);
+
+        assertEquals(true, screen.setResolution(40, 16));
+
+        assertEquals(40, screen.getViewportWidth());
+        assertEquals(16, screen.getViewportHeight());
+    }
+
+    @Test
     void litScreenConsumesConfiguredPowerOnUpdateLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         ScreenBlockEntity screen = allocateScreen();
