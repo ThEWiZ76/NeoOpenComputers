@@ -96,6 +96,15 @@ final class TerminalMenuShapeTest {
     }
 
     @Test
+    void terminalMenuUpdatesMouseCapabilityFromClientSyncPayload() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu();
+
+        assertEquals(true, menu.supportsMouseInput());
+        menu.updateMouseInputSupport(false);
+        assertEquals(false, menu.supportsMouseInput());
+    }
+
+    @Test
     void terminalMenuStoresUpdatedScreenSnapshot() throws ReflectiveOperationException {
         final TerminalMenu menu = allocateMenu();
 

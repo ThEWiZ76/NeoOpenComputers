@@ -425,7 +425,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     static TerminalMousePayload mousePayload(final TerminalMenu menu, final int kind, final double mouseX, final double mouseY, final int buttonOrDelta, final int left, final int top, final TerminalScreenSnapshot snapshot) {
-        if (!acceptsInput(snapshot)) {
+        if (menu == null || !menu.supportsMouseInput() || !acceptsInput(snapshot)) {
             return null;
         }
         final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, left, top);

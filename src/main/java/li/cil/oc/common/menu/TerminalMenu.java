@@ -25,6 +25,7 @@ public class TerminalMenu extends AbstractContainerMenu {
     private final ScreenBlockEntity physicalScreen;
     private final String terminalKey;
     private final Player player;
+    private Boolean supportsMouseInput;
 
     public TerminalMenu(final int containerId, final Inventory playerInventory) {
         this(containerId, playerInventory, new TerminalScreenSnapshot(0, 0, new String[0]));
@@ -53,12 +54,31 @@ public class TerminalMenu extends AbstractContainerMenu {
         final TerminalServerRackMountableEnvironment terminalServer,
         final ScreenBlockEntity physicalScreen,
         final String terminalKey) {
+        this(
+            containerId,
+            playerInventory,
+            snapshot,
+            terminalServer,
+            physicalScreen,
+            terminalKey,
+            physicalScreen == null || physicalScreen.tier() > 0);
+    }
+
+    private TerminalMenu(
+        final int containerId,
+        final Inventory playerInventory,
+        final TerminalScreenSnapshot snapshot,
+        final TerminalServerRackMountableEnvironment terminalServer,
+        final ScreenBlockEntity physicalScreen,
+        final String terminalKey,
+        final boolean supportsMouseInput) {
         super(ModMenus.TERMINAL.get(), containerId);
         this.snapshot = snapshot == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : snapshot;
         this.terminalServer = terminalServer;
         this.physicalScreen = physicalScreen;
         this.terminalKey = terminalKey == null || terminalKey.isBlank() ? null : terminalKey;
         this.player = playerInventory == null ? null : playerInventory.player;
+        this.supportsMouseInput = supportsMouseInput;
     }
 
     public TerminalScreenSnapshot snapshot() {
@@ -74,11 +94,17 @@ public class TerminalMenu extends AbstractContainerMenu {
     }
 
     public boolean supportsMouseInput() {
-        return physicalScreen == null || physicalScreen.tier() > 0;
+        return supportsMouseInput == null
+            ? physicalScreen == null || physicalScreen.tier() > 0
+            : supportsMouseInput;
     }
 
     public void updateSnapshot(final TerminalScreenSnapshot snapshot) {
         this.snapshot = snapshot == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : snapshot;
+    }
+
+    public void updateMouseInputSupport(final boolean supportsMouseInput) {
+        this.supportsMouseInput = supportsMouseInput;
     }
 
     @Override
@@ -153,4 +179,5 @@ public class TerminalMenu extends AbstractContainerMenu {
         }
         return null;
     }
+
 }

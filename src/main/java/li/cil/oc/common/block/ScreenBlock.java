@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.menu.TerminalMenu;
+import li.cil.oc.common.network.TerminalMouseInputSupportPayload;
 import li.cil.oc.common.network.TerminalNetworking;
 import li.cil.oc.common.network.TerminalScreenSnapshotPayload;
 import net.minecraft.core.BlockPos;
@@ -172,6 +173,9 @@ public class ScreenBlock extends Block implements EntityBlock {
         final var openedContainerId = serverPlayer.openMenu(new SimpleMenuProvider(
             (containerId, playerInventory, menuPlayer) -> new TerminalMenu(containerId, playerInventory, screen.terminalSnapshot(), screen),
             Component.translatable(screen.getBlockState().getBlock().getDescriptionId())));
+        openedContainerId.ifPresent(containerId -> TerminalNetworking.sendToPlayerIfSupported(
+            serverPlayer,
+            new TerminalMouseInputSupportPayload(containerId, screen.tier() > 0)));
         openedContainerId.ifPresent(containerId -> TerminalNetworking.sendToPlayerIfSupported(
             serverPlayer,
             new TerminalScreenSnapshotPayload(containerId, screen.terminalSnapshot())));

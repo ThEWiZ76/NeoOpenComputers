@@ -28,6 +28,11 @@ public final class TerminalNetworking {
                 TerminalScreenDeltaPayload.STREAM_CODEC,
                 TerminalNetworking::handleScreenDelta);
         event.registrar(NETWORK_VERSION)
+            .playToClient(
+                TerminalMouseInputSupportPayload.TYPE,
+                TerminalMouseInputSupportPayload.STREAM_CODEC,
+                TerminalNetworking::handleMouseInputSupport);
+        event.registrar(NETWORK_VERSION)
             .playToServer(
                 TerminalKeyPayload.TYPE,
                 TerminalKeyPayload.STREAM_CODEC,
@@ -53,6 +58,12 @@ public final class TerminalNetworking {
     static void applyScreenDelta(final AbstractContainerMenu containerMenu, final TerminalScreenDeltaPayload payload) {
         if (containerMenu instanceof TerminalMenu menu && menu.containerId == payload.containerId()) {
             menu.updateSnapshot(payload.delta().applyTo(menu.snapshot()));
+        }
+    }
+
+    static void applyMouseInputSupport(final AbstractContainerMenu containerMenu, final TerminalMouseInputSupportPayload payload) {
+        if (containerMenu instanceof TerminalMenu menu && menu.containerId == payload.containerId()) {
+            menu.updateMouseInputSupport(payload.supportsMouseInput());
         }
     }
 
@@ -188,6 +199,10 @@ public final class TerminalNetworking {
 
     private static void handleScreenDelta(final TerminalScreenDeltaPayload payload, final IPayloadContext context) {
         applyScreenDelta(context.player().containerMenu, payload);
+    }
+
+    private static void handleMouseInputSupport(final TerminalMouseInputSupportPayload payload, final IPayloadContext context) {
+        applyMouseInputSupport(context.player().containerMenu, payload);
     }
 
     private static void handleTerminalKey(final TerminalKeyPayload payload, final IPayloadContext context) {

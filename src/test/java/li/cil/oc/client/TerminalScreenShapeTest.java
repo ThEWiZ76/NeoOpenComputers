@@ -461,6 +461,16 @@ final class TerminalScreenShapeTest {
     }
 
     @Test
+    void terminalScreenDropsMousePayloadWhenMenuDoesNotSupportMouseLikeUpstreamHasMouse() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(12);
+        setField(menu, "supportsMouseInput", false);
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
+
+        assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN, 45, 47, 0, 10, 20, snapshot));
+        assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_SCROLL, 45, 47, 1, 10, 20, snapshot));
+    }
+
+    @Test
     void terminalScreenSendsOutsideMouseUpLikeUpstream() throws ReflectiveOperationException {
         final TerminalMenu menu = allocateMenu(12);
         final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
@@ -483,6 +493,12 @@ final class TerminalScreenShapeTest {
         containerIdField.setAccessible(true);
         containerIdField.setInt(menu, containerId);
         return menu;
+    }
+
+    private static void setField(final Object instance, final String name, final Object value) throws ReflectiveOperationException {
+        final Field field = TerminalMenu.class.getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(instance, value);
     }
 
     private static void assertTranslationKey(final String expected, final Component component) {

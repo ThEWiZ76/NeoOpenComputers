@@ -85,6 +85,24 @@ final class TerminalNetworkingTest {
     }
 
     @Test
+    void appliesMouseInputSupportPayloadToMatchingTerminalMenu() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(3, new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"}));
+
+        TerminalNetworking.applyMouseInputSupport(menu, new TerminalMouseInputSupportPayload(3, false));
+
+        assertEquals(false, menu.supportsMouseInput());
+    }
+
+    @Test
+    void ignoresMouseInputSupportPayloadForDifferentContainer() throws ReflectiveOperationException {
+        final TerminalMenu menu = allocateMenu(3, new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"}));
+
+        TerminalNetworking.applyMouseInputSupport(menu, new TerminalMouseInputSupportPayload(4, false));
+
+        assertEquals(true, menu.supportsMouseInput());
+    }
+
+    @Test
     void rejectsPhysicalMouseInputForNonTouchScreenLikeUpstream() throws ReflectiveOperationException {
         final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(4, 2, new String[]{"neo", "oc"});
         final TerminalMousePayload payload = new TerminalMousePayload(3, TerminalMousePayload.MOUSE_DOWN, 0, 0, 0);
