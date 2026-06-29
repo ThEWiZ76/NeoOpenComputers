@@ -182,6 +182,16 @@ final class ServerRackMountableEnvironmentShapeTest {
         assertEquals(EnumSet.of(StateAware.State.IsWorking), server.getCurrentState());
     }
 
+    @Test
+    void serverStartErrorMessageUsesFirstErrorLineForPlayerFeedback() {
+        final net.minecraft.network.chat.Component message = ServerRackMountableEnvironment.startErrorMessage(testMachine(
+            false,
+            false,
+            "boot:60 no bootable medium found\nstack traceback"));
+
+        assertEquals("Last error: boot:60 no bootable medium found", message.getString());
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static ServerRackMountableEnvironment allocateServer(final int tier) throws Exception {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");

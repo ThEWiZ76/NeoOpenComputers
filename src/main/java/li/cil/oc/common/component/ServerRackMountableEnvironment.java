@@ -295,11 +295,22 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
                 ServerRackMenu.serverTitle()));
             return true;
         }
-        if (!machine.isRunning() && !machine.isPaused() && stillValid(player) && canStartMachine()) {
-            final boolean changed = machine.start();
-            if (changed) {
-                updateWorkingState();
-                markChanged();
+        if (!machine.isRunning() && !machine.isPaused() && stillValid(player)) {
+            if (!canStartMachine()) {
+                machine.crash("missing required components");
+                final net.minecraft.network.chat.Component message = startErrorMessage(machine);
+                if (message != null) {
+                    player.sendSystemMessage(message);
+                }
+                if (updateWorkingState()) {
+                    markChanged();
+                }
+            } else {
+                final boolean changed = machine.start();
+                if (changed) {
+                    updateWorkingState();
+                    markChanged();
+                }
             }
         }
         return true;
@@ -362,6 +373,13 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
             missing |= MISSING_EEPROM;
         }
         return missing;
+    }
+
+    static net.minecraft.network.chat.Component startErrorMessage(final Machine machine) {
+        if (machine == null || machine.lastError() == null || machine.lastError().isEmpty()) {
+            return null;
+        }
+        return net.minecraft.network.chat.Component.literal("Last error: " + firstErrorLine(machine.lastError()));
     }
 
     @Override
@@ -588,6 +606,19 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     private boolean canStartMachine() {
         return missingRequiredComponents() == 0;
+    }
+
+    private static String firstErrorLine(final String lastError) {
+        int end = lastError.length();
+        final int carriageReturn = lastError.indexOf('\r');
+        final int lineFeed = lastError.indexOf('\n');
+        if (carriageReturn >= 0) {
+            end = Math.min(end, carriageReturn);
+        }
+        if (lineFeed >= 0) {
+            end = Math.min(end, lineFeed);
+        }
+        return lastError.substring(0, end);
     }
 
     private boolean updateWorkingState() {
