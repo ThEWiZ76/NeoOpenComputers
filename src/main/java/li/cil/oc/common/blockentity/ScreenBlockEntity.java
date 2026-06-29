@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class ScreenBlockEntity extends BlockEntity implements TextBuffer, DeviceInfo, Tiered, SidedEnvironment {
+    private static final int CLIENT_MULTIBLOCK_CHECK_DELAY_TICKS = 40;
     private static final int MAX_MULTIBLOCK_WIDTH = 8;
     private static final int MAX_MULTIBLOCK_HEIGHT = 6;
     private static final int DEFAULT_WIDTH = 50;
@@ -94,6 +95,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private int lastLayoutLocalX = -1;
     private int lastLayoutLocalY = -1;
     private boolean lastRenderOrigin = true;
+    private int clientMultiblockCheckDelay = CLIENT_MULTIBLOCK_CHECK_DELAY_TICKS;
     private volatile boolean pendingServerThreadChangeMark;
     private Node node;
 
@@ -592,6 +594,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (lastLayoutWidth > 0 && lastLayoutHeight > 0 && (level == null || level.isClientSide)) {
             return new ScreenLayout(lastLayoutOrigin == null ? BlockPos.ZERO : lastLayoutOrigin, lastLayoutWidth, lastLayoutHeight, lastLayoutLocalX, lastLayoutLocalY);
         }
+        if (level != null && level.isClientSide && clientMultiblockCheckDelay > 0) {
+            return new ScreenLayout(worldPosition, 1, 1, 0, 0);
+        }
         return screenLayout();
     }
 
@@ -893,6 +898,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (level == null) {
             return;
         }
+        if (!clientReadyForMultiblockCheck()) {
+            return;
+        }
         final ScreenLayout layout = screenLayout();
         final boolean layoutChanged = !layout.origin().equals(lastLayoutOrigin)
             || layout.width() != lastLayoutWidth
@@ -923,6 +931,17 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             setEnergyCostPerTick(ModSettings.screenCost());
             setAspectRatio(1.0D, 1.0D);
         }
+    }
+
+    private boolean clientReadyForMultiblockCheck() {
+        if (!level.isClientSide) {
+            return true;
+        }
+        if (clientMultiblockCheckDelay > 0) {
+            clientMultiblockCheckDelay--;
+            return false;
+        }
+        return true;
     }
 
     private void clearNonOriginBufferLikeUpstream() {

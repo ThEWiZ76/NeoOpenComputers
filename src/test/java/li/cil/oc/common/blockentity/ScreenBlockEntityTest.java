@@ -28,6 +28,7 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -228,6 +229,16 @@ final class ScreenBlockEntityTest {
         assertEquals(2, loaded.renderBlockHeight());
         assertEquals(1, loaded.localBlockX());
         assertEquals(0, loaded.localBlockY());
+    }
+
+    @Test
+    void clientMultiblockChecksAreDelayedLikeUpstream() throws IOException {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/ScreenBlockEntity.java"));
+
+        assertTrue(source.contains("CLIENT_MULTIBLOCK_CHECK_DELAY_TICKS"), "Client should delay initial multiblock checks like upstream Screen");
+        assertTrue(source.contains("clientReadyForMultiblockCheck"), "Delay should be explicit and testable");
+        assertTrue(source.contains("clientMultiblockCheckDelay > 0"), "Delay should count down before trusting client-side connected screens");
+        assertTrue(source.contains("level.isClientSide"), "Delay must only affect client-side layout probing");
     }
 
     @Test
