@@ -29,6 +29,8 @@ final class AlphaTestingGuideTest {
             "Guide must document known unavailable alpha devices");
         assertTrue(guide.contains("Computer and server boot failures show a player-visible last-error message"),
             "Guide must tell alpha testers to verify player-facing boot failure feedback");
+        assertTrue(guide.contains("Screen output and keyboard input survive save/reload"),
+            "Guide must tell alpha testers to verify screen and keyboard persistence");
         assertTrue(guide.contains("https://github.com/ThEWiZ76/NeoOpenComputers/issues"),
             "Guide must route findings to the community issue tracker");
     }

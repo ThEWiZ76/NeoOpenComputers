@@ -37,6 +37,7 @@ Copy that jar into a clean Minecraft 1.21.1 NeoForge instance, then fully restar
 - Computer and server boot failures show a player-visible last-error message.
 - Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart.
 - Keyboard input reaches the bound computer.
+- Screen output and keyboard input survive save/reload.
 - Terminal item input, paste, mouse click/drag/release, and scroll reach the bound computer.
 - Disk-drive floppy data survives save/reload.
 - Redstone, modem, inventory, tank, and transposer get one basic smoke pass.
