@@ -12,4 +12,4 @@ The manual will remember the page where you last left off, when re-opening it. Y
 
 If your questions are not answered by the manual, other places with information are [the wiki](https://ocdoc.cil.li), OpenComputers' [IRC channel](http://webchat.esper.net/?channels=#oc) and [the forums](https://oc.cil.li/).
 
-If you spot any mistakes in the manual, factual, grammatical or otherwise; or bugs in the mod, for that matter, please let us know [via the issue tracker](https://github.com/MightyPirates/OpenComputers/issues). If you'd like to contribute to the manual by adding content, get in touch via IRC or by creating a ticket on the issue tracker.
+If you spot any mistakes in the manual, factual, grammatical or otherwise; or bugs in the mod, for that matter, please let us know [via the issue tracker](https://github.com/ThEWiZ76/NeoOpenComputers/issues). If you'd like to contribute to the manual by adding content, get in touch via IRC or by creating a ticket on the issue tracker.

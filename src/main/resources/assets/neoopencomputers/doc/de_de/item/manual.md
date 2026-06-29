@@ -12,4 +12,4 @@ Das Handbuch erinnert sich an die Seite die zuletzt geöffnet war, wenn es geöf
 
 Sollten nach Lesen des Handbuchs Fragen übrig bleiben, gibt es andere Informationsquellen, wie das [Wiki](https://ocdoc.ci.li), der [IRC-Channel](http://webchat.esper.net/?channels=#oc) (#oc auf esper.net) sowie das [Forum](https://oc.cil.li).
 
-Sollten im Handbuch inhaltliche, grammatische oder andere Fehler oder Bugs in der Modifikation auftauchen, melde dies bitte über den [Issue Tracker](https://github.com/MightyPirates/OpenComputers/issues). Wenn du zum Handbuch beitragen möchtest, indem du es mit Inhalt bereicherst, bitte melde dich im IRC oder erstelle ein Ticket im Issue Tracker.
+Sollten im Handbuch inhaltliche, grammatische oder andere Fehler oder Bugs in der Modifikation auftauchen, melde dies bitte über den [Issue Tracker](https://github.com/ThEWiZ76/NeoOpenComputers/issues). Wenn du zum Handbuch beitragen möchtest, indem du es mit Inhalt bereicherst, bitte melde dich im IRC oder erstelle ein Ticket im Issue Tracker.

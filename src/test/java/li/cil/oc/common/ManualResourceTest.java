@@ -59,6 +59,22 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualMarkdownUsesCommunityIssueTracker() throws Exception {
+        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
+            assertTrue(files
+                .filter(path -> path.getFileName().toString().endsWith(".md"))
+                .map(path -> {
+                    try {
+                        return Files.readString(path);
+                    } catch (Exception e) {
+                        throw new IllegalStateException(e);
+                    }
+                })
+                .noneMatch(content -> content.contains("github.com/MightyPirates/OpenComputers/issues")));
+        }
+    }
+
+    @Test
     void bundledManualMarkdownResourcePathsAreLowercase() throws Exception {
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             assertTrue(files

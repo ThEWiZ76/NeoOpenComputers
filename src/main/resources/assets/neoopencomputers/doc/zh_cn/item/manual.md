@@ -12,4 +12,4 @@
 
 如果手册没能解决你的问题，还可以从[官方Wiki](https://ocdoc.cil.li/start:zh)、[IRC 频道](https://webchat.esper.net/?channels=#oc)或[论坛](https://oc.cil.li/)中获取更多信息。
 
-如果你在手册中发现了任何问题，无论是内容与现实不符或文本错误，又或者其他错误；再或者你发现了模组中的bug，那么请告知我们。渠道为[Github的issue页面](https://github.com/MightyPirates/OpenComputers/issues)。如果你想为手册添加内容，请通过IRC联系我们，或者在issue页面新建话题。
+如果你在手册中发现了任何问题，无论是内容与现实不符或文本错误，又或者其他错误；再或者你发现了模组中的bug，那么请告知我们。渠道为[Github的issue页面](https://github.com/ThEWiZ76/NeoOpenComputers/issues)。如果你想为手册添加内容，请通过IRC联系我们，或者在issue页面新建话题。
