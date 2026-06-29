@@ -33,6 +33,10 @@ final class TerminalFont {
         return CELL_HEIGHT;
     }
 
+    static float worldPixelScale() {
+        return CELL_WIDTH / (float) SOURCE_WIDTH;
+    }
+
     static boolean hasGlyph(final int codePoint) {
         return GLYPHS.containsKey(codePoint);
     }
@@ -85,19 +89,28 @@ final class TerminalFont {
         final PoseStack.Pose pose = poseStack.last();
         final float baseX = column * CELL_WIDTH;
         final float baseY = row * CELL_HEIGHT;
-        for (int py = 0; py < CELL_HEIGHT; py++) {
-            for (int px = 0; px < glyphCellWidth(codePoint); px++) {
-                if (pixel(codePoint, px, py)) {
-                    quad(consumer, pose, baseX + px, baseY + py, z, color);
+        final Glyph glyph = glyph(codePoint);
+        if (glyph == null) {
+            return;
+        }
+        final float scale = worldPixelScale();
+        for (int sourceY = 0; sourceY < SOURCE_HEIGHT; sourceY++) {
+            for (int sourceX = 0; sourceX < glyph.sourceWidth(); sourceX++) {
+                if (sourcePixel(glyph, sourceX, sourceY)) {
+                    quad(consumer, pose, baseX + sourceX * scale, baseY + sourceY * scale, z, color, scale);
                 }
             }
         }
     }
 
     private static void quad(final VertexConsumer consumer, final PoseStack.Pose pose, final float x, final float y, final float z, final int color) {
-        consumer.addVertex(pose, x, y + 1, z).setColor(color);
-        consumer.addVertex(pose, x + 1, y + 1, z).setColor(color);
-        consumer.addVertex(pose, x + 1, y, z).setColor(color);
+        quad(consumer, pose, x, y, z, color, 1F);
+    }
+
+    private static void quad(final VertexConsumer consumer, final PoseStack.Pose pose, final float x, final float y, final float z, final int color, final float size) {
+        consumer.addVertex(pose, x, y + size, z).setColor(color);
+        consumer.addVertex(pose, x + size, y + size, z).setColor(color);
+        consumer.addVertex(pose, x + size, y, z).setColor(color);
         consumer.addVertex(pose, x, y, z).setColor(color);
     }
 
@@ -109,6 +122,10 @@ final class TerminalFont {
         final int targetWidth = Math.max(CELL_WIDTH, (glyph.sourceWidth() / SOURCE_WIDTH) * CELL_WIDTH);
         final int sourceX = Math.min(glyph.sourceWidth() - 1, (x * glyph.sourceWidth()) / targetWidth);
         final int sourceY = Math.min(SOURCE_HEIGHT - 1, (y * SOURCE_HEIGHT) / CELL_HEIGHT);
+        return sourcePixel(glyph, sourceX, sourceY);
+    }
+
+    private static boolean sourcePixel(final Glyph glyph, final int sourceX, final int sourceY) {
         return (glyph.rows()[sourceY] & (1 << (glyph.sourceWidth() - 1 - sourceX))) != 0;
     }
 

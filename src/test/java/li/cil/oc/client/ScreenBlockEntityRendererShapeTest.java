@@ -217,6 +217,7 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(TerminalFont.hasGlyph(0x754C));
         assertEquals(4, TerminalFont.cellWidth());
         assertEquals(8, TerminalFont.cellHeight());
+        assertEquals(0.5F, TerminalFont.worldPixelScale());
         assertEquals(4, TerminalFont.glyphCellWidth('i'));
         assertEquals(8, TerminalFont.glyphCellWidth(0x754C));
         assertEquals(1, Integer.bitCount(TerminalFont.rowMask('i', 1)), "Thin glyphs should stay sparse after 8x16 to 4x8 scaling");
@@ -225,6 +226,12 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(renderer.contains("TerminalFont.drawWorldCell"), "World screen text should render fixed bitmap cells, not proportional Minecraft glyphs");
         assertTrue(renderer.contains("renderTerminalBackgrounds"), "World screen text should draw all cell backgrounds before wide glyphs");
         assertTrue(renderer.contains("renderTerminalGlyphs"), "World screen text should draw all glyphs after cell backgrounds");
+
+        final String font = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalFont.java"));
+        assertTrue(font.contains("sourceY < SOURCE_HEIGHT"), "World text should render the original 8x16 source glyph pixels before scaling");
+        assertTrue(font.contains("sourceX < glyph.sourceWidth()"), "World text should not pre-collapse glyphs to damaged 4x8 masks");
+        assertTrue(font.contains("quad(consumer, pose, baseX + sourceX * scale, baseY + sourceY * scale, z, color, scale)"),
+            "World glyph quads should scale source pixels by 0.5 like upstream TextureFontRenderer.");
     }
 
     @Test
