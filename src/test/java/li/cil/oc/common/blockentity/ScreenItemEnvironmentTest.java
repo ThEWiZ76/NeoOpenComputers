@@ -71,6 +71,21 @@ final class ScreenItemEnvironmentTest {
     }
 
     @Test
+    void touchModeInversionIsSupportedOnlyByTouchCapableScreensLikeUpstream() {
+        OpenComputersApi.initialize();
+        final ScreenItemEnvironment tierOne = new ScreenItemEnvironment(null, 0);
+        final ScreenItemEnvironment tierTwo = new ScreenItemEnvironment(null, 1);
+        final ScreenItemEnvironment tierThree = new ScreenItemEnvironment(null, 2);
+
+        assertArrayEquals(new Object[]{null, "unsupported operation"}, tierOne.setTouchModeInverted(null, new TestArguments(true)));
+        assertArrayEquals(new Object[]{false}, tierOne.isTouchModeInverted(null, new TestArguments()));
+        assertArrayEquals(new Object[]{false}, tierTwo.setTouchModeInverted(null, new TestArguments(true)));
+        assertArrayEquals(new Object[]{true}, tierTwo.isTouchModeInverted(null, new TestArguments()));
+        assertArrayEquals(new Object[]{false}, tierThree.setTouchModeInverted(null, new TestArguments(true)));
+        assertArrayEquals(new Object[]{true}, tierThree.isTouchModeInverted(null, new TestArguments()));
+    }
+
+    @Test
     void usesConfiguredScreenEnergyCostLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
 

@@ -170,11 +170,14 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
 
     @Callback(direct = true, doc = "function():boolean -- Whether touch mode is inverted.")
     public Object[] isTouchModeInverted(final Context context, final Arguments args) {
-        return new Object[]{touchModeInverted};
+        return new Object[]{supportsTouchMode() && touchModeInverted};
     }
 
     @Callback(doc = "function(value:boolean):boolean -- Sets whether to invert touch mode.")
     public Object[] setTouchModeInverted(final Context context, final Arguments args) {
+        if (!supportsTouchMode()) {
+            return new Object[]{null, "unsupported operation"};
+        }
         final boolean oldValue = touchModeInverted;
         touchModeInverted = args.checkBoolean(0);
         if (touchModeInverted != oldValue) {
@@ -538,5 +541,9 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
 
     private boolean supportsPrecisionMode() {
         return maximumColorDepth == ModSettings.screenDepthByTier(2);
+    }
+
+    private boolean supportsTouchMode() {
+        return tier > 0;
     }
 }

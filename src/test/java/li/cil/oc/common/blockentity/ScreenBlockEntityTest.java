@@ -113,7 +113,7 @@ final class ScreenBlockEntityTest {
 
     @Test
     void togglesTouchModeInversion() throws Exception {
-        ScreenBlockEntity screen = allocateScreen();
+        ScreenBlockEntity screen = screenWithTier(1);
 
         assertEquals(false, screen.isTouchModeInverted());
         assertArrayEquals(new Object[]{false}, screen.isTouchModeInverted(null, new TestArguments()));
@@ -123,6 +123,20 @@ final class ScreenBlockEntityTest {
         assertArrayEquals(new Object[]{true}, screen.setTouchModeInverted(null, new TestArguments(false)));
         assertEquals(false, screen.isTouchModeInverted());
         assertArrayEquals(new Object[]{false}, screen.isTouchModeInverted(null, new TestArguments()));
+    }
+
+    @Test
+    void touchModeInversionIsSupportedOnlyByTouchCapableScreensLikeUpstream() throws Exception {
+        ScreenBlockEntity tierOne = screenWithTier(0);
+        ScreenBlockEntity tierTwo = screenWithTier(1);
+        ScreenBlockEntity tierThree = screenWithTier(2);
+
+        assertArrayEquals(new Object[]{null, "unsupported operation"}, tierOne.setTouchModeInverted(null, new TestArguments(true)));
+        assertArrayEquals(new Object[]{false}, tierOne.isTouchModeInverted(null, new TestArguments()));
+        assertArrayEquals(new Object[]{false}, tierTwo.setTouchModeInverted(null, new TestArguments(true)));
+        assertArrayEquals(new Object[]{true}, tierTwo.isTouchModeInverted(null, new TestArguments()));
+        assertArrayEquals(new Object[]{false}, tierThree.setTouchModeInverted(null, new TestArguments(true)));
+        assertArrayEquals(new Object[]{true}, tierThree.isTouchModeInverted(null, new TestArguments()));
     }
 
     @Test
@@ -142,14 +156,12 @@ final class ScreenBlockEntityTest {
     @Test
     void persistsTouchModeInversion() throws Exception {
         OpenComputersApi.initialize();
-        ScreenBlockEntity saved = allocateScreen();
-        initializeBuffer(saved);
+        ScreenBlockEntity saved = screenWithTier(1);
         saved.setTouchModeInverted(null, new TestArguments(true));
         CompoundTag tag = new CompoundTag();
 
         saved.save(tag);
-        ScreenBlockEntity loaded = allocateScreen();
-        initializeBuffer(loaded);
+        ScreenBlockEntity loaded = screenWithTier(1);
         loaded.load(tag);
 
         assertArrayEquals(new Object[]{true}, loaded.isTouchModeInverted(null, new TestArguments()));

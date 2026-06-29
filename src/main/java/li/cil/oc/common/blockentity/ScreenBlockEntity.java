@@ -261,15 +261,18 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Callback(direct = true, doc = "function():boolean -- Whether touch mode is inverted.")
     public Object[] isTouchModeInverted(final Context context, final Arguments args) {
-        return new Object[]{touchModeInverted};
+        return new Object[]{isTouchModeInverted()};
     }
 
     public boolean isTouchModeInverted() {
-        return touchModeInverted;
+        return supportsTouchMode() && touchModeInverted;
     }
 
     @Callback(doc = "function(value:boolean):boolean -- Sets whether to invert touch mode.")
     public Object[] setTouchModeInverted(final Context context, final Arguments args) {
+        if (!supportsTouchMode()) {
+            return new Object[]{null, "unsupported operation"};
+        }
         final boolean oldValue = touchModeInverted;
         touchModeInverted = args.checkBoolean(0);
         if (touchModeInverted != oldValue) {
@@ -1086,6 +1089,10 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private boolean supportsPrecisionMode() {
         ensureTierConfigured();
         return maximumColorDepth == ModSettings.screenDepthByTier(2);
+    }
+
+    private boolean supportsTouchMode() {
+        return tier > 0;
     }
 
     private static int tierFromBlockState(final BlockState blockState) {
