@@ -86,12 +86,12 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
-    void screenRendererOnlyDrawsDynamicFrontOverlayAndLeavesOpaqueBodyToBlockModel() throws IOException {
+    void screenRendererDrawsUpstreamConnectedTexturesForEveryFace() throws IOException {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
 
-        assertTrue(!renderer.contains("Direction.values()"), "Block entity renderer must not bypass block-model culling for side/back screen faces");
-        assertTrue(renderer.contains("renderScreenFace(screen, poseStack, bufferSource, packedLight, packedOverlay, Direction.SOUTH)"),
-            "Only the visible front overlay should be drawn dynamically");
+        assertTrue(renderer.contains("for (final Direction face : Direction.values())"),
+            "Upstream ScreenModel selects connected screen textures for every face, not only the front.");
+        assertTrue(renderer.contains("renderScreenFace(screen, poseStack, bufferSource, packedLight, packedOverlay, face)"));
     }
 
     @Test
