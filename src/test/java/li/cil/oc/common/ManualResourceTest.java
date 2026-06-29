@@ -59,6 +59,28 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualImageReferencesUseCurrentNeoOpenComputersIds() throws Exception {
+        final List<String> staleImages = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
+            for (final Path file : files.filter(path -> path.getFileName().toString().endsWith(".md")).toList()) {
+                final Path relativeFile = DOC_ROOT.relativize(file);
+                final String content = Files.readString(file);
+                final var matcher = MARKDOWN_IMAGE.matcher(content);
+                while (matcher.find()) {
+                    final String target = matcher.group(1);
+                    if (target.startsWith("item:OpenComputers:")
+                        || target.startsWith("block:OpenComputers:")
+                        || target.matches("item:[^)]*@\\d+")) {
+                        staleImages.add(relativeFile.toString().replace('\\', '/') + " -> " + target);
+                    }
+                }
+            }
+        }
+
+        assertTrue(staleImages.isEmpty(), () -> "Stale manual image references:\n" + String.join("\n", staleImages));
+    }
+
+    @Test
     void bundledManualMarkdownUsesCommunityIssueTracker() throws Exception {
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             assertTrue(files
