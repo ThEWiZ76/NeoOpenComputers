@@ -57,6 +57,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private static final String TAG_LAYOUT_HEIGHT = "layoutHeight";
     private static final String TAG_LAYOUT_LOCAL_X = "layoutLocalX";
     private static final String TAG_LAYOUT_LOCAL_Y = "layoutLocalY";
+    private static final String TAG_HAD_REDSTONE_INPUT = "oc:hadRedstoneInput";
 
     private double energyCostPerTick;
     private int tier;
@@ -80,6 +81,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     private boolean backgroundFromPalette;
     private boolean precisionMode;
     private boolean touchModeInverted;
+    private boolean hadRedstoneInput;
     private boolean renderingEnabled = true;
     private final int[] palette = new int[16];
     private final TextBufferState buffer = new TextBufferState(DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -300,6 +302,41 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
             markChanged();
         }
         return new Object[]{oldValue};
+    }
+
+    public void updateRedstoneInput() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        handleRedstoneInput(connectedScreensHaveRedstoneInput());
+    }
+
+    boolean handleRedstoneInput(final boolean hasRedstoneInput) {
+        if (hadRedstoneInput == hasRedstoneInput) {
+            return false;
+        }
+        hadRedstoneInput = hasRedstoneInput;
+        markChanged();
+        if (hasRedstoneInput) {
+            final ScreenBlockEntity origin = level == null ? this : originScreen();
+            origin.setPowerState(!origin.getPowerState());
+            return true;
+        }
+        return false;
+    }
+
+    private boolean connectedScreensHaveRedstoneInput() {
+        final BlockState state = getBlockState();
+        final Direction right = localRight(state);
+        final Direction up = ScreenBlock.up(state);
+        final Direction pitch = ScreenBlock.pitch(state);
+        final Direction yaw = ScreenBlock.yaw(state);
+        for (final BlockPos screenPos : connectedScreens(pitch, yaw, right, up)) {
+            if (level.hasNeighborSignal(screenPos)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -886,6 +923,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         backgroundColor = nbt.getInt("background");
         precisionMode = nbt.getBoolean("precisionMode");
         touchModeInverted = nbt.getBoolean("touchModeInverted");
+        hadRedstoneInput = nbt.getBoolean(TAG_HAD_REDSTONE_INPUT);
         renderingEnabled = !nbt.contains("renderingEnabled") || nbt.getBoolean("renderingEnabled");
         if (nbt.contains(TAG_LAYOUT_WIDTH) && nbt.contains(TAG_LAYOUT_HEIGHT)) {
             lastLayoutOrigin = new BlockPos(
@@ -924,6 +962,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         nbt.putInt("background", backgroundColor);
         nbt.putBoolean("precisionMode", precisionMode);
         nbt.putBoolean("touchModeInverted", touchModeInverted);
+        nbt.putBoolean(TAG_HAD_REDSTONE_INPUT, hadRedstoneInput);
         nbt.putBoolean("renderingEnabled", renderingEnabled);
         if (lastLayoutWidth > 0 && lastLayoutHeight > 0) {
             final BlockPos layoutOrigin = lastLayoutOrigin == null ? BlockPos.ZERO : lastLayoutOrigin;

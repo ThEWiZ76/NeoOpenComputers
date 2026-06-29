@@ -168,4 +168,17 @@ final class ScreenRegistrationShapeTest {
         assertTrue(removal >= 0 && removalRefresh > removal && removalRefresh < afterRemoval,
             "Removing a screen should refresh connected screen layouts like upstream dispose()");
     }
+
+    @Test
+    void screenBlockUpdatesRedstoneInputLikeUpstreamScreenTile() throws Exception {
+        final String block = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/ScreenBlock.java"));
+        final String entity = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/ScreenBlockEntity.java"));
+
+        assertTrue(block.contains("screen.updateRedstoneInput()"),
+            "Screen neighbor changes should update redstone input like upstream RedstoneAware Screen");
+        assertTrue(entity.contains("hadRedstoneInput"),
+            "Screen should persist prior redstone input state like upstream HadRedstoneInputTag");
+        assertTrue(entity.contains("setPowerState(!origin.getPowerState())"),
+            "Rising redstone input should toggle the origin screen power state");
+    }
 }

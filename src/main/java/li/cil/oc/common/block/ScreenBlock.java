@@ -90,6 +90,9 @@ public class ScreenBlock extends Block implements EntityBlock {
     protected void onPlace(final BlockState state, final Level level, final BlockPos pos, final BlockState oldState, final boolean movedByPiston) {
         super.onPlace(state, level, pos, oldState, movedByPiston);
         BlockNetworkConnector.joinIfServer(level, pos);
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
+            screen.updateRedstoneInput();
+        }
         notifyConnectedScreensForClientUpdate(level, pos, state);
     }
 
@@ -97,6 +100,9 @@ public class ScreenBlock extends Block implements EntityBlock {
     protected void neighborChanged(final BlockState state, final Level level, final BlockPos pos, final Block block, final BlockPos fromPos, final boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         BlockNetworkConnector.joinIfServer(level, pos);
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
+            screen.updateRedstoneInput();
+        }
         notifyConnectedScreensForClientUpdate(level, pos, state);
     }
 
