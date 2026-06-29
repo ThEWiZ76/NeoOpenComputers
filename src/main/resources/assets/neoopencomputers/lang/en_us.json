@@ -165,6 +165,7 @@
   "gui.neoopencomputers.computer_case.status": "Computer status",
   "gui.neoopencomputers.computer_case.state.empty": "No computer data",
   "gui.neoopencomputers.computer_case.state.incomplete": "Incomplete computer",
+  "gui.neoopencomputers.computer_case.missing.eeprom_code": "Blank EEPROM (no BIOS code)",
   "gui.neoopencomputers.computer_case.power.turn_off": "Turn off",
   "gui.neoopencomputers.computer_case.power.turn_on": "Turn on",
   "gui.neoopencomputers.computer_case.state.ready": "Ready",

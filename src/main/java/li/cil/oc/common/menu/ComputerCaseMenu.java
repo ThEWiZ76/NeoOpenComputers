@@ -2,8 +2,12 @@ package li.cil.oc.common.menu;
 
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -36,6 +40,7 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
     public static final int MISSING_CPU = 1;
     public static final int MISSING_MEMORY = 2;
     public static final int MISSING_EEPROM = 4;
+    public static final int MISSING_EEPROM_CODE = 8;
 
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 84;
@@ -211,6 +216,7 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
         boolean hasCpu = false;
         boolean hasMemory = false;
         boolean hasEeprom = false;
+        boolean hasEepromCode = false;
         for (int slot = 0; slot < computerInventory.getContainerSize(); slot++) {
             final ItemStack stack = computerInventory.getItem(slot);
             if (stack.isEmpty() || !computerInventory.canPlaceItem(slot, stack)) {
@@ -227,6 +233,7 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
                 hasMemory = true;
             } else if (SLOT_TYPE_EEPROM.equals(slotType)) {
                 hasEeprom = true;
+                hasEepromCode |= hasEepromCode(stack);
             }
         }
         int missing = 0;
@@ -238,8 +245,19 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
         }
         if (!hasEeprom) {
             missing |= MISSING_EEPROM;
+        } else if (!hasEepromCode) {
+            missing |= MISSING_EEPROM_CODE;
         }
         return missing;
+    }
+
+    private static boolean hasEepromCode(final ItemStack stack) {
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return false;
+        }
+        final CompoundTag eepromData = customData.getUnsafe().getCompound(ItemRegistry.EEPROM_DATA_TAG);
+        return eepromData.getByteArray(ItemRegistry.EEPROM_CODE_TAG).length > 0;
     }
 
     public static int componentCountFor(final Container computerInventory) {

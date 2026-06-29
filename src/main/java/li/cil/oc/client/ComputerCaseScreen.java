@@ -125,6 +125,9 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         if ((missingRequirements & ComputerCaseMenu.MISSING_EEPROM) != 0) {
             tooltip.add(Component.translatable("gui.neoopencomputers.rack.missing.eeprom"));
         }
+        if ((missingRequirements & ComputerCaseMenu.MISSING_EEPROM_CODE) != 0) {
+            tooltip.add(Component.translatable("gui.neoopencomputers.computer_case.missing.eeprom_code"));
+        }
         return tooltip;
     }
 

@@ -9867,6 +9867,56 @@ public final class NeoOpenComputersGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 260)
+    public static void tier3LiveLayoutBootWritesToTier3ScreenWall(final GameTestHelper helper) {
+        final BlockState screenState = ModBlocks.SCREEN_TIER3.get().defaultBlockState()
+            .setValue(ScreenBlock.PITCH, Direction.NORTH)
+            .setValue(ScreenBlock.YAW, Direction.EAST);
+        final BlockPos originScreenPos = new BlockPos(1, 2, 3);
+        final BlockPos attachedScreenPos = new BlockPos(1, 2, 1);
+        final BlockPos computerPos = new BlockPos(1, 1, 3);
+        final BlockPos diskDrivePos = new BlockPos(1, 1, 1);
+        final BlockPos keyboardPos = new BlockPos(1, 2, 0);
+
+        for (int y = 2; y <= 3; y++) {
+            for (int z = 1; z <= 3; z++) {
+                helper.setBlock(new BlockPos(1, y, z), screenState);
+            }
+        }
+        helper.setBlock(computerPos, ModBlocks.COMPUTER_CASE_TIER3.get());
+        helper.setBlock(diskDrivePos, ModBlocks.DISK_DRIVE.get());
+        helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get().defaultBlockState().setValue(KeyboardBlock.FACING, Direction.SOUTH));
+
+        final ScreenBlockEntity originScreen = helper.getBlockEntity(originScreenPos);
+        final ScreenBlockEntity attachedScreen = helper.getBlockEntity(attachedScreenPos);
+        final ComputerCaseBlockEntity computer = helper.getBlockEntity(computerPos);
+        final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
+        originScreen.update();
+        attachedScreen.update();
+        diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
+        computer.setItem(0, new ItemStack(ModItems.GRAPHICS_CARD_TIER3.get()));
+        computer.setItem(1, new ItemStack(ModItems.INTERNET_CARD.get()));
+        computer.setItem(3, new ItemStack(ModItems.MEMORY_TIER3.get()));
+        computer.setItem(5, new ItemStack(ModItems.HDD_TIER3.get()));
+        computer.setItem(7, openOsFloppyStack());
+        computer.setItem(8, new ItemStack(ModItems.CPU_TIER3.get()));
+        computer.setItem(9, luaBiosEepromStack());
+
+        helper.assertTrue(attachedScreen.originScreen() == originScreen, "Live-layout tier 3 screen did not resolve to 3x2 wall origin");
+        helper.assertTrue(computer.machine().components().containsValue("screen"), "Live-layout tier 3 screen is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.machine().components().containsValue("filesystem"), "Live-layout tier 3 filesystem is not visible before boot: " + computer.machine().components());
+        helper.assertTrue(computer.toggleMachine(), "Live-layout tier 3 computer case did not start");
+        helper.runAtTickTime(140, () -> {
+            helper.assertTrue(computer.machine().isRunning(), "Live-layout tier 3 computer stopped while booting: " + computer.machine().lastError());
+            helper.assertTrue(screenHasNonBlankText(originScreen), "OpenOS did not write visible text to live-layout tier 3 wall origin. Components "
+                + computer.machine().componentCount() + "/" + computer.machine().maxComponents() + " " + computer.machine().components()
+                + "\nOrigin:\n" + screenText(originScreen)
+                + "\nAttached:\n" + screenText(attachedScreen));
+            helper.assertTrue(!screenHasNonBlankText(attachedScreen), "Attached live-layout tier 3 wall screen should not receive independent text:\n" + screenText(attachedScreen));
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 220)
     public static void tier1ComputerBootWritesToLiveStyleScreenWall(final GameTestHelper helper) {
         final BlockState screenState = ModBlocks.SCREEN_TIER1.get().defaultBlockState()
@@ -10294,6 +10344,11 @@ public final class NeoOpenComputersGameTests {
 
         computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
         computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, new ItemStack(ModItems.EEPROM.get()));
+
+        helper.assertTrue(ComputerCaseMenu.missingRequirementsFor(computer) == ComputerCaseMenu.MISSING_EEPROM_CODE, "Blank EEPROM did not report missing BIOS code");
+        helper.assertTrue(ComputerCaseMenu.computerStateFor(computer) == ComputerCaseMenu.STATE_INCOMPLETE, "Blank EEPROM setup did not report incomplete status");
+
         computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
 
         helper.assertTrue(ComputerCaseMenu.missingRequirementsFor(computer) == 0, "Complete computer case reported missing requirements");
