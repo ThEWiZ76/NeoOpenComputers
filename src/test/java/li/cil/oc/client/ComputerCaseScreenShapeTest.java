@@ -204,10 +204,10 @@ final class ComputerCaseScreenShapeTest {
     }
 
     @Test
-    void computerCaseScreenDrawsSlotKindBeforeTierBadgeSoTierRemainsVisible() {
+    void computerCaseScreenDrawsTierBadgeBeforeSlotKindLikeUpstream() {
         assertEquals(List.of(
-                ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/cpu.png"),
-                ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/tier2.png")),
+                ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/tier2.png"),
+                ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/icons/cpu.png")),
             ComputerCaseScreen.slotOverlayTextures("cpu", 2, false));
         assertEquals(List.of(), ComputerCaseScreen.slotOverlayTextures("cpu", 2, true));
     }

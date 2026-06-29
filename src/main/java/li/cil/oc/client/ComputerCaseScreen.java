@@ -252,13 +252,13 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
             return List.of();
         }
         final List<ResourceLocation> textures = new ArrayList<>(2);
-        final ResourceLocation slotTexture = slotIconTexture(kind);
-        if (slotTexture != null) {
-            textures.add(slotTexture);
-        }
         final ResourceLocation tierTexture = tierIconTexture(tier);
         if (tierTexture != null) {
             textures.add(tierTexture);
+        }
+        final ResourceLocation slotTexture = slotIconTexture(kind);
+        if (slotTexture != null) {
+            textures.add(slotTexture);
         }
         return textures;
     }
