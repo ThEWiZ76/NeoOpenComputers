@@ -20,6 +20,7 @@ final class ModClassPreloaderTest {
         assertTrue(classNames.contains("li.cil.oc.common.block.ScreenHitMapper"));
         assertTrue(classNames.contains("li.cil.oc.common.block.ScreenHitMapper$ScreenClick"));
         assertTrue(classNames.contains("li.cil.oc.common.block.ScreenClickHandler"));
+        assertTrue(classNames.contains("li.cil.oc.common.menu.ComputerCaseMenu$ServerComputerData"));
         assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$HttpTransport"));
         assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$HttpResponse"));
         assertTrue(classNames.contains("li.cil.oc.common.component.InternetCardEnvironment$HttpRequest"));

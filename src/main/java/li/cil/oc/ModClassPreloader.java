@@ -8,6 +8,7 @@ final class ModClassPreloader {
         "li.cil.oc.common.block.ScreenHitMapper",
         "li.cil.oc.common.block.ScreenHitMapper$ScreenClick",
         "li.cil.oc.common.block.ScreenClickHandler",
+        "li.cil.oc.common.menu.ComputerCaseMenu$ServerComputerData",
         "li.cil.oc.common.component.InternetCardEnvironment$HttpTransport",
         "li.cil.oc.common.component.InternetCardEnvironment$HttpResponse",
         "li.cil.oc.common.component.InternetCardEnvironment$HttpRequest",
