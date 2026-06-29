@@ -128,6 +128,22 @@ final class ComputerCaseBootValidationTest {
     }
 
     @Test
+    void reportsImmediateBlockUseStartFailure() {
+        assertEquals(
+            "Computer error: missing required components",
+            ComputerCaseBlockEntity.blockUseStartFailureMessage(machine(false, "missing required components")).getString());
+        assertEquals(
+            "Computer error: boot failed",
+            ComputerCaseBlockEntity.blockUseStartFailureMessage(machine(false, "boot failed\ntrace")).getString());
+    }
+
+    @Test
+    void doesNotReportBlockUseStartFailureWithoutError() {
+        assertEquals(null, ComputerCaseBlockEntity.blockUseStartFailureMessage(machine(false, (String) null)));
+        assertEquals(null, ComputerCaseBlockEntity.blockUseStartFailureMessage(machine(false, "")));
+    }
+
+    @Test
     void doesNotReportMachineErrorWithoutNewStoppedError() {
         assertFalse(ComputerCaseBlockEntity.shouldReportMachineError(false, false, "boot failed"));
         assertFalse(ComputerCaseBlockEntity.shouldReportMachineError(true, true, "boot failed"));
@@ -205,6 +221,20 @@ final class ComputerCaseBootValidationTest {
                     stops[0]++;
                     yield true;
                 }
+                case "equals" -> proxy == args[0];
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "toString" -> "test-machine";
+                default -> defaultValue(method.getReturnType());
+            });
+    }
+
+    private static Machine machine(final boolean running, final String lastError) {
+        return (Machine) Proxy.newProxyInstance(
+            Machine.class.getClassLoader(),
+            new Class<?>[]{Machine.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "isRunning", "isPaused" -> running;
+                case "lastError" -> lastError;
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
                 case "toString" -> "test-machine";

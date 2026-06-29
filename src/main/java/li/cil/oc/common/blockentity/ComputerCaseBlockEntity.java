@@ -476,6 +476,25 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         }
     }
 
+    public static void activateMachineFromBlockUse(final ComputerCaseBlockEntity computer, final Player player) {
+        if (computer == null || computer.machine().isRunning() || computer.machine().isPaused()) {
+            return;
+        }
+        if (!computer.toggleMachine() && player != null) {
+            final Component message = blockUseStartFailureMessage(computer.machine());
+            if (message != null) {
+                player.sendSystemMessage(message);
+            }
+        }
+    }
+
+    static Component blockUseStartFailureMessage(final Machine machine) {
+        if (machine == null || machine.lastError() == null || machine.lastError().isEmpty()) {
+            return null;
+        }
+        return machineErrorMessage(machine.lastError());
+    }
+
     static <T> void fillExistingSlots(final List<T> items, final T value) {
         for (int slot = 0; slot < items.size(); slot++) {
             items.set(slot, value);
