@@ -133,7 +133,7 @@ public class ScreenBlock extends Block implements EntityBlock {
             }
             if (!hasKeyboard && shouldUseAsPhysicalTerminal(playerIsSneaking, origin.isTouchModeInverted())) {
                 if (player != null) {
-                    player.displayClientMessage(Component.translatable("message.neoopencomputers.screen.missing_keyboard"), true);
+                    player.displayClientMessage(Component.translatable("message.neoopencomputers.screen.missing_keyboard"), false);
                 }
             }
             final ScreenHitMapper.ScreenClick click = screen.renderBlockWidth() > 1 || screen.renderBlockHeight() > 1

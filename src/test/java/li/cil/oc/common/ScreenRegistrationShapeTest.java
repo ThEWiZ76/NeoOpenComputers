@@ -169,7 +169,7 @@ final class ScreenRegistrationShapeTest {
         final String lang = Files.readString(Path.of("src/main/resources/assets/neoopencomputers/lang/en_us.json"));
 
         assertTrue(source.contains("message.neoopencomputers.screen.missing_keyboard"));
-        assertTrue(source.contains("displayClientMessage"));
+        assertTrue(source.contains("displayClientMessage(Component.translatable(\"message.neoopencomputers.screen.missing_keyboard\"), false)"));
         assertTrue(lang.contains("message.neoopencomputers.screen.missing_keyboard"));
     }
 
