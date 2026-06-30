@@ -29,6 +29,8 @@ final class AlphaTestingGuideTest {
             "Guide must keep CI disabled before release readiness");
         assertTrue(guide.contains("Robots, drones, and block microcontrollers are not available"),
             "Guide must document known unavailable alpha devices");
+        assertTrue(guide.contains("Microcontroller case items are present for recipe/API compatibility only"),
+            "Guide must not ask alpha testers to smoke unavailable microcontroller devices");
         assertTrue(guide.contains("Computer and server boot failures show a player-visible last-error message"),
             "Guide must tell alpha testers to verify player-facing boot failure feedback");
         assertTrue(guide.contains("Screen output and keyboard input survive save/reload"),

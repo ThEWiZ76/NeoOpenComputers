@@ -51,7 +51,7 @@ Copy that jar into a clean Minecraft 1.21.1 NeoForge instance, then fully restar
 
 ## Known Alpha Gaps
 
-Robots, drones, and block microcontrollers are not available in this alpha build.
+Robots, drones, and block microcontrollers are not available in this alpha build. Microcontroller case items are present for recipe/API compatibility only and are not alpha smoke targets.
 
 Screen world rendering is still considered visually sensitive. Do not change screen renderer, model, glyph, or multiblock code without fresh evidence and a focused failing test.
 

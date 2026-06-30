@@ -37,6 +37,8 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
         assertTrue(readme.contains("Robots, drones, and block microcontrollers are not available in this alpha build"),
             "README must state unavailable alpha devices");
+        assertTrue(readme.contains("Microcontroller case items are present for recipe/API compatibility only"),
+            "README must not imply microcontroller cases are an alpha smoke target");
         assertTrue(readme.contains("Do not install `neoopencomputers-0.1.0-thin.jar`"),
             "README must warn testers away from the developer thin jar");
     }

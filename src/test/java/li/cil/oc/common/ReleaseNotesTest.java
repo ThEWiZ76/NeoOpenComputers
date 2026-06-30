@@ -31,6 +31,8 @@ final class ReleaseNotesTest {
             "Changelog must summarize texture picker atlas smoke scope");
         assertTrue(changelog.contains("Robots, drones, and block microcontrollers are not available"),
             "Changelog must list known unavailable devices");
+        assertTrue(changelog.contains("Microcontroller case items are present for recipe/API compatibility only"),
+            "Changelog must keep microcontroller case item scope clear");
         assertTrue(changelog.contains("GitHub Actions are intentionally disabled"),
             "Changelog must keep CI state visible");
     }
