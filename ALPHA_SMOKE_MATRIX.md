@@ -7,6 +7,7 @@ Screen world rendering stays frozen unless there is a focused repro, focused fai
 | Area | Automated evidence | Manual alpha smoke |
 | --- | --- | --- |
 | OpenOS boot | GameTests cover booting a computer case with OpenOS media and visible terminal output. | Start a tier 1 computer from valid boot media and confirm `/home #` prompt appears. |
+| Lua/OpenOS API loading | `BiosResourceTest` covers that Lua BIOS does not provide `require`, OpenOS package setup provides it, raw API globals are moved into `package.loaded`, and `component.<type>` resolves the primary component proxy. | In OpenOS, run a Lua script using `local component = require("component")`, then verify `component.gpu` or another installed primary component works. |
 | Computer case storage persistence | GameTests cover computer-case hard-drive state through NBT save/load. | Write a small file to a hard drive, save/reload world, and read it back. |
 | Disk-drive floppy persistence | GameTests cover disk-drive and rack disk-drive floppy state through NBT save/load. | Insert OpenOS floppy in disk drive, save/reload world, and confirm media stays loaded. |
 | Redstone | Unit and GameTests cover redstone card, computer-case redstone IO, screen redstone, charger signal, print signal, and redstone IO block behavior. | Toggle neighboring redstone and verify signal/component behavior in-game. |
@@ -35,6 +36,7 @@ Required visual proof files before first alpha handoff:
 These are the named GameTests that back the automated side of the matrix. They do not replace the manual visual smoke pass, but they make the pre-alpha evidence traceable.
 
 - OpenOS boot: `computerRunsWithLuaBiosAndOpenOsFloppy`, `tier1ComputerWithNetworkCardBootsOpenOsHardDiskToLiveStyleScreenWall`, `tier1ComputerBootsOpenOsHardDiskWithZeroStoredDriveEnergy`, `tier3ComputerBootsOpenOsFromInternalFloppy`, `tier3ComputerBootsOpenOsToTier3ScreenAndKeyboardTerminal`.
+- Lua/OpenOS API loading: `BiosResourceTest.bundledLuaBiosDoesNotProvideOpenOsRequire`, `BiosResourceTest.bundledOpenOsProvidesRequireAndComponentPrimaryConvenience`.
 - Storage persistence: `computerCaseStorageStateSurvivesNbtReloadForFirstSmoke`.
 - Disk-drive floppy persistence: `diskDriveWritableFloppyStateSurvivesNbtReloadForFirstSmoke`, `rackDiskDriveWritableFloppyStateSurvivesNbtReloadForFirstSmoke`.
 - Terminal input: `terminalItemNetworkInputReachesComputerLikeFirstSmoke`, `terminalItemNetworkMouseInputReachesComputerLikeFirstSmoke`.

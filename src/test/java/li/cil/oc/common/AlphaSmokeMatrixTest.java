@@ -21,6 +21,7 @@ final class AlphaSmokeMatrixTest {
         final String matrix = Files.readString(matrixPath);
         for (final String requiredArea : new String[]{
             "OpenOS boot",
+            "Lua/OpenOS API loading",
             "Computer case storage persistence",
             "Disk-drive floppy persistence",
             "Redstone",
@@ -54,6 +55,8 @@ final class AlphaSmokeMatrixTest {
         }
         for (final String gameTestName : new String[]{
             "computerRunsWithLuaBiosAndOpenOsFloppy",
+            "BiosResourceTest.bundledOpenOsProvidesRequireAndComponentPrimaryConvenience",
+            "BiosResourceTest.bundledLuaBiosDoesNotProvideOpenOsRequire",
             "tier1ComputerWithNetworkCardBootsOpenOsHardDiskToLiveStyleScreenWall",
             "computerCaseStorageStateSurvivesNbtReloadForFirstSmoke",
             "rackDiskDriveWritableFloppyStateSurvivesNbtReloadForFirstSmoke",
