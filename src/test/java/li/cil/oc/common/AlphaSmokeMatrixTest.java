@@ -28,6 +28,7 @@ final class AlphaSmokeMatrixTest {
             "Inventory",
             "Tank",
             "Transposer",
+            "Power and charging",
             "Printer and print",
             "Manual and packaging"
         }) {
@@ -58,7 +59,10 @@ final class AlphaSmokeMatrixTest {
             "terminalItemNetworkInputReachesComputerLikeFirstSmoke",
             "terminalItemNetworkMouseInputReachesComputerLikeFirstSmoke",
             "printerProducesPrintItemAfterEnergyAndInputLikeUpstream",
-            "transposerTransfersFluidBetweenAdjacentTanks"
+            "transposerTransfersFluidBetweenAdjacentTanks",
+            "powerConverterAcceptsForgeEnergyCapabilityLikeUpstream",
+            "chargerChargesInternalTabletFromStoredEnergyAndRedstoneSpeed",
+            "poweredMachineBlocksAcceptForgeEnergyCapabilityLikeUpstream"
         }) {
             assertTrue(matrix.contains(gameTestName), "Matrix missing concrete GameTest evidence: " + gameTestName);
         }

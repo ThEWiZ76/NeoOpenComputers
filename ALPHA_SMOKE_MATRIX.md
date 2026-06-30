@@ -14,6 +14,7 @@ Screen world rendering stays frozen unless there is a focused repro, focused fai
 | Inventory | Inventory controller, driver registry, adapter/provider, and transposer coverage exercise item inventory access paths. | Use an inventory-facing component against a chest or compatible inventory. |
 | Tank | Tank controller and upgrade tests cover tank API shape and no-tank behavior. | Use a tank-facing component against a compatible tank/fluid handler. |
 | Transposer | Transposer registration, renderer, and component tests cover block/entity/component shape. | Move an item or fluid between adjacent inventories/tanks. |
+| Power and charging | GameTests cover battery charge, power converter Forge Energy input, charger Forge Energy input, internal tablet charging, player-equipment charging, powered machine Forge Energy input, and charger redstone speed. | Feed Forge Energy into a power converter or computer case, charge one battery/tablet in a charger, and verify a computer stays powered during a short OpenOS session. |
 | Printer and print | Printer, print item, placed print, redstone activation, texture fallback, tooltip, and render-model tests cover current print smoke paths. | Create a print item, place it, rotate it, and confirm the configured shape remains. |
 | Manual and packaging | Manual link/resource tests, metadata tests, jar packaging tests, API jar tests, contributor docs, changelog, and alpha guide tests cover public artifact readiness. | Install `build/libs/neoopencomputers-0.1.0.jar` in a clean NeoForge 1.21.1 client and open the manual/creative tab. |
 
@@ -38,6 +39,7 @@ These are the named GameTests that back the automated side of the matrix. They d
 - Terminal input: `terminalItemNetworkInputReachesComputerLikeFirstSmoke`, `terminalItemNetworkMouseInputReachesComputerLikeFirstSmoke`.
 - Redstone: `redstoneCardUsesComputerLocalSides`, `redstoneCardQueuesInputChangeSignal`, `redstoneWakeThresholdStartsComputer`, `redstoneIoWakeThresholdStartsReachableComputer`, `redstoneIoQueuesInputChangeSignalLikeUpstream`.
 - Transposer/tank: `transposerTransfersFluidBetweenAdjacentTanks`, `transposerItemTransferRequiresEnergy`, `transposerTransferFluidRequiresEnergy`, `tankControllerInspectsAdjacentFluidTanks`.
+- Power and charging: `powerConverterAcceptsForgeEnergyCapabilityLikeUpstream`, `chargerAcceptsForgeEnergyCapabilityLikeUpstream`, `chargerChargesInternalTabletFromStoredEnergyAndRedstoneSpeed`, `chargerChargesNearbyPlayerEquipmentLikeUpstream`, `poweredMachineBlocksAcceptForgeEnergyCapabilityLikeUpstream`, `computerCaseAcceptsForgeEnergyCapabilityLikeUpstream`.
 - Printer/print: `printerProducesPrintItemAfterEnergyAndInputLikeUpstream`, `printItemPlacesConfiguredPrintLikeUpstream`, `printBlockRotatesShapeTowardFacingLikeUpstream`, `printBlockFollowsExternalRedstoneInputLikeUpstream`.
 
 ## Remaining Manual Proof
