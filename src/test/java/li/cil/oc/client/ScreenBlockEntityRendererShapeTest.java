@@ -204,6 +204,35 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void screenRendererCoalescesSolidTerminalBackgroundRows() {
+        final List<ScreenBlockEntityRenderer.BackgroundRun> runs = ScreenBlockEntityRenderer.backgroundRuns(
+            160,
+            50,
+            (column, row) -> 0xFF000000);
+
+        assertEquals(50, runs.size(), "A tier 3 solid background should draw one rectangle per row, not one quad per cell.");
+        assertEquals(new ScreenBlockEntityRenderer.BackgroundRun(0, 0, 160, 0xFF000000), runs.get(0));
+        assertEquals(new ScreenBlockEntityRenderer.BackgroundRun(0, 49, 160, 0xFF000000), runs.get(49));
+    }
+
+    @Test
+    void screenRendererKeepsBackgroundColorRunsAndSkipsTransparentRows() {
+        final List<ScreenBlockEntityRenderer.BackgroundRun> runs = ScreenBlockEntityRenderer.backgroundRuns(
+            5,
+            2,
+            (column, row) -> {
+                if (row == 1) {
+                    return 0;
+                }
+                return column < 2 ? 0xFF000000 : 0xFF112233;
+            });
+
+        assertEquals(List.of(
+            new ScreenBlockEntityRenderer.BackgroundRun(0, 0, 2, 0xFF000000),
+            new ScreenBlockEntityRenderer.BackgroundRun(2, 0, 3, 0xFF112233)), runs);
+    }
+
+    @Test
     void screenRendererScalesTerminalTextToInnerScreenArea() {
         final float singleScale = ScreenBlockEntityRenderer.textScale(1, 1, 50, 16);
         assertTrue(50 * TerminalFont.cellWidth() * singleScale < 0.75F, "Single-screen text should fit inside the screen border");
@@ -262,17 +291,21 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
-    void worldTextUsesDirectTerminalCellRaster() throws IOException {
+    void worldTextUsesTexturedAsciiGlyphAtlasWithFallbackRaster() throws IOException {
         final String font = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalFont.java"));
 
-        assertTrue(!TerminalFont.usesWorldTexturedAsciiGlyphs(),
-            "World text should use the same direct bitmap raster as the GUI renderer.");
-        assertTrue(!font.contains("ASCII_GLYPH_TEXTURE"),
-            "The world renderer must not use a separate ASCII atlas with different sampling.");
+        assertTrue(TerminalFont.usesWorldTexturedAsciiGlyphs(),
+            "World ASCII text should use a baked atlas to avoid one quad per lit font pixel.");
+        assertTrue(font.contains("ASCII_GLYPH_TEXTURE"),
+            "The world renderer should use the generated hex-font atlas for common terminal glyphs.");
+        assertTrue(font.contains("RenderType.text(ASCII_GLYPH_TEXTURE)"),
+            "World ASCII glyphs should use the textured render type instead of GUI-colored pixel quads.");
+        assertTrue(font.contains("drawWorldTexturedCell"),
+            "World ASCII glyphs should route through the atlas path.");
         assertTrue(!font.contains("DynamicTexture"),
-            "The world renderer must not register a separate glyph texture path.");
+            "The world renderer should use a bundled resource atlas, not runtime texture registration.");
         assertTrue(font.contains("quad(consumer, pose, baseX + px, baseY + py, z, color)"),
-            "World glyphs should be emitted from fixed terminal-cell pixels.");
+            "World glyphs outside the atlas should still fall back to fixed terminal-cell pixels.");
         assertTrue(font.contains("setUv2(WORLD_GLYPH_LIGHT"),
             "World glyph pixels should stay full-bright for screen readability.");
     }

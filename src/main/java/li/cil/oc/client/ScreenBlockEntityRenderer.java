@@ -23,6 +23,7 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntBinaryOperator;
 
 public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<ScreenBlockEntity> {
     private static final int LINE_HEIGHT = TerminalFont.cellHeight();
@@ -151,11 +152,11 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final MultiBufferSource bufferSource,
         final float textAlpha,
         final float backgroundZ) {
-        for (int row = 0; row < screen.renderHeight(); row++) {
-            for (int column = 0; column < screen.renderWidth(); column++) {
-                final int backgroundColor = textColorWithAlpha(screen.getBackgroundColor(column, row), textAlpha);
-                renderCellBackground(poseStack, bufferSource, column, row, backgroundColor, backgroundZ);
-            }
+        for (final BackgroundRun run : backgroundRuns(
+            screen.renderWidth(),
+            screen.renderHeight(),
+            (column, row) -> textColorWithAlpha(screen.getBackgroundColor(column, row), textAlpha))) {
+            renderCellBackground(poseStack, bufferSource, run.column(), run.row(), run.width(), run.color(), backgroundZ);
         }
     }
 
@@ -571,6 +572,7 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         final MultiBufferSource bufferSource,
         final int column,
         final int row,
+        final int width,
         final int color,
         final float z) {
         if (!shouldRenderCellBackground(color)) {
@@ -578,12 +580,43 @@ public final class ScreenBlockEntityRenderer implements BlockEntityRenderer<Scre
         }
         final float x = column * CELL_WIDTH;
         final float y = row * LINE_HEIGHT;
+        final float right = x + width * CELL_WIDTH;
         final VertexConsumer consumer = bufferSource.getBuffer(RenderType.gui());
         final PoseStack.Pose pose = poseStack.last();
         consumer.addVertex(pose, x, y + LINE_HEIGHT, z).setColor(color);
-        consumer.addVertex(pose, x + CELL_WIDTH, y + LINE_HEIGHT, z).setColor(color);
-        consumer.addVertex(pose, x + CELL_WIDTH, y, z).setColor(color);
+        consumer.addVertex(pose, right, y + LINE_HEIGHT, z).setColor(color);
+        consumer.addVertex(pose, right, y, z).setColor(color);
         consumer.addVertex(pose, x, y, z).setColor(color);
+    }
+
+    static List<BackgroundRun> backgroundRuns(final int width, final int height, final IntBinaryOperator colorAt) {
+        if (width <= 0 || height <= 0 || colorAt == null) {
+            return List.of();
+        }
+        final List<BackgroundRun> runs = new ArrayList<>();
+        for (int row = 0; row < height; row++) {
+            int runColumn = 0;
+            int runColor = colorAt.applyAsInt(0, row);
+            for (int column = 1; column < width; column++) {
+                final int color = colorAt.applyAsInt(column, row);
+                if (color != runColor) {
+                    addBackgroundRun(runs, runColumn, row, column - runColumn, runColor);
+                    runColumn = column;
+                    runColor = color;
+                }
+            }
+            addBackgroundRun(runs, runColumn, row, width - runColumn, runColor);
+        }
+        return runs;
+    }
+
+    private static void addBackgroundRun(final List<BackgroundRun> runs, final int column, final int row, final int width, final int color) {
+        if (shouldRenderCellBackground(color)) {
+            runs.add(new BackgroundRun(column, row, width, color));
+        }
+    }
+
+    record BackgroundRun(int column, int row, int width, int color) {
     }
 
     static boolean shouldRenderCellBackground(final int color) {

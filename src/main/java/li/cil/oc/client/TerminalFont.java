@@ -2,11 +2,13 @@ package li.cil.oc.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.util.FontWidths;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -24,8 +26,14 @@ final class TerminalFont {
     private static final int TEXTURE_SOURCE_WIDTH = 10;
     private static final int CELL_WIDTH = HEX_SOURCE_WIDTH;
     private static final int CELL_HEIGHT = HEX_SOURCE_HEIGHT;
+    private static final int WORLD_ATLAS_COLUMNS = 16;
+    private static final int WORLD_ATLAS_ROWS = 16;
+    private static final int WORLD_ATLAS_WIDTH = WORLD_ATLAS_COLUMNS * CELL_WIDTH;
+    private static final int WORLD_ATLAS_HEIGHT = WORLD_ATLAS_ROWS * CELL_HEIGHT;
+    private static final ResourceLocation ASCII_GLYPH_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/font/terminal_hex_cp437.png");
     private static final int WORLD_GLYPH_LIGHT = LightTexture.FULL_BRIGHT;
     private static final Map<Integer, Glyph> GLYPHS = loadGlyphs();
+    private static final Map<Integer, Integer> WORLD_TEXTURE_GLYPHS = loadWorldTextureGlyphs();
 
     private TerminalFont() {
     }
@@ -90,6 +98,11 @@ final class TerminalFont {
         if (codePoint == ' ') {
             return;
         }
+        final Integer atlasIndex = WORLD_TEXTURE_GLYPHS.get(codePoint);
+        if (atlasIndex != null && glyphCellWidth(codePoint) == CELL_WIDTH) {
+            drawWorldTexturedCell(poseStack, bufferSource, atlasIndex, column, row, color, z);
+            return;
+        }
         final VertexConsumer consumer = bufferSource.getBuffer(RenderType.gui());
         final PoseStack.Pose pose = poseStack.last();
         final float baseX = column * CELL_WIDTH;
@@ -104,7 +117,45 @@ final class TerminalFont {
     }
 
     static boolean usesWorldTexturedAsciiGlyphs() {
-        return false;
+        return true;
+    }
+
+    private static void drawWorldTexturedCell(
+        final PoseStack poseStack,
+        final MultiBufferSource bufferSource,
+        final int atlasIndex,
+        final int column,
+        final int row,
+        final int color,
+        final float z) {
+        final VertexConsumer consumer = bufferSource.getBuffer(RenderType.text(ASCII_GLYPH_TEXTURE));
+        final PoseStack.Pose pose = poseStack.last();
+        final float x = column * CELL_WIDTH;
+        final float y = row * CELL_HEIGHT;
+        final float u0 = (atlasIndex % WORLD_ATLAS_COLUMNS) * CELL_WIDTH / (float) WORLD_ATLAS_WIDTH;
+        final float v0 = (atlasIndex / WORLD_ATLAS_COLUMNS) * CELL_HEIGHT / (float) WORLD_ATLAS_HEIGHT;
+        final float u1 = u0 + CELL_WIDTH / (float) WORLD_ATLAS_WIDTH;
+        final float v1 = v0 + CELL_HEIGHT / (float) WORLD_ATLAS_HEIGHT;
+        texturedQuad(consumer, pose, x, y, x + CELL_WIDTH, y + CELL_HEIGHT, z, color, u0, v0, u1, v1);
+    }
+
+    private static void texturedQuad(
+        final VertexConsumer consumer,
+        final PoseStack.Pose pose,
+        final float x0,
+        final float y0,
+        final float x1,
+        final float y1,
+        final float z,
+        final int color,
+        final float u0,
+        final float v0,
+        final float u1,
+        final float v1) {
+        consumer.addVertex(pose, x0, y1, z).setColor(color).setUv(u0, v1).setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
+        consumer.addVertex(pose, x1, y1, z).setColor(color).setUv(u1, v1).setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
+        consumer.addVertex(pose, x1, y0, z).setColor(color).setUv(u1, v0).setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
+        consumer.addVertex(pose, x0, y0, z).setColor(color).setUv(u0, v0).setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
     }
 
     private static void quad(final VertexConsumer consumer, final PoseStack.Pose pose, final float x, final float y, final float z, final int color) {
@@ -162,6 +213,31 @@ final class TerminalFont {
         loadHexGlyphs(glyphs);
         loadTextureGlyphs(glyphs);
         return Map.copyOf(glyphs);
+    }
+
+    private static Map<Integer, Integer> loadWorldTextureGlyphs() {
+        try (InputStream stream = TerminalFont.class.getResourceAsStream("/assets/neoopencomputers/textures/font/chars.txt")) {
+            if (stream == null) {
+                return Map.of();
+            }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                final String chars = reader.readLine();
+                if (chars == null) {
+                    return Map.of();
+                }
+                final Map<Integer, Integer> glyphs = new HashMap<>();
+                int index = 0;
+                for (int offset = 0; offset < chars.length() && index < WORLD_ATLAS_COLUMNS * WORLD_ATLAS_ROWS; offset = chars.offsetByCodePoints(offset, 1), index++) {
+                    final int codePoint = chars.codePointAt(offset);
+                    if (hasGlyph(codePoint) && glyphCellWidth(codePoint) == CELL_WIDTH) {
+                        glyphs.putIfAbsent(codePoint, index);
+                    }
+                }
+                return Map.copyOf(glyphs);
+            }
+        } catch (final IOException ignored) {
+            return Map.of();
+        }
     }
 
     private static void loadTextureGlyphs(final Map<Integer, Glyph> glyphs) {
