@@ -61,6 +61,9 @@ final class AlphaReleaseChecklistTest {
             "before screenshot",
             "after screenshot",
             "rollback point",
+            "If the after screenshot proves one behavior but another screen behavior regresses, revert the screen patch",
+            "After two failed screen patches in the same layer, stop implementation and write a root-cause note",
+            "After three failed screen patches in the same area, require architecture review before another screen patch",
             "Do not change textures, transforms, offsets, render layers, glyph sizing, or multiblock state in the same patch"
         }) {
             assertTrue(protocol.contains(required), "Screen work protocol missing anti-loop gate: " + required);

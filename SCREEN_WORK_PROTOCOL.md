@@ -29,6 +29,12 @@ Examples:
 
 If a fix appears to require multiple layers, stop and split the proof into separate failing checks before editing.
 
+## Loop Breaker
+
+After two failed screen patches in the same layer, stop implementation and write a root-cause note before another code change.
+
+After three failed screen patches in the same area, require architecture review before another screen patch.
+
 ## Verification
 
 Before handing a jar to testers, capture:
