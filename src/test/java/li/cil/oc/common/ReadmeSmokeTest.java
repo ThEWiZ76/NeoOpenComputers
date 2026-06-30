@@ -58,6 +58,9 @@ final class ReadmeSmokeTest {
         final String readme = Files.readString(Path.of("README.md"));
 
         assertTrue(!readme.contains(".\\scripts\\"), "Public README must not reference ignored local helper scripts");
+        assertTrue(!readme.contains("C:\\Users\\rolan"), "Public README must not include machine-specific profile paths");
+        assertTrue(readme.contains("$profileRoot = Join-Path $env:APPDATA \"ModrinthApp\\profiles\\<profile-name>\""),
+            "Public README should use a generic Modrinth profile path placeholder");
     }
 
     @Test

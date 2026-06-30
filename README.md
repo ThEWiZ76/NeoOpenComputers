@@ -85,7 +85,8 @@ Verify the installed jar hash matches the built jar hash after copying, before l
 
 ```powershell
 $built = Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256
-$installedPath = "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\mods\neoopencomputers-0.1.0.jar"
+$profileRoot = Join-Path $env:APPDATA "ModrinthApp\profiles\<profile-name>"
+$installedPath = Join-Path $profileRoot "mods\neoopencomputers-0.1.0.jar"
 Copy-Item .\build\libs\neoopencomputers-0.1.0.jar $installedPath -Force
 $installedAfter = Get-FileHash $installedPath -Algorithm SHA256
 if ($built.Hash -ne $installedAfter.Hash) {

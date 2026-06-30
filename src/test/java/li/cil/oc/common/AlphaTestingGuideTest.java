@@ -29,6 +29,10 @@ final class AlphaTestingGuideTest {
             "Guide must require post-copy installed jar proof so stale profile jars are caught");
         assertTrue(guide.contains("$installedAfter"),
             "Guide must show the after-copy hash variable testers should compare");
+        assertTrue(!guide.contains("C:\\Users\\rolan"),
+            "Public alpha guide must not include machine-specific profile paths");
+        assertTrue(guide.contains("$profileRoot = Join-Path $env:APPDATA \"ModrinthApp\\profiles\\<profile-name>\""),
+            "Public alpha guide should use a generic Modrinth profile path placeholder");
         assertTrue(guide.contains("GitHub Actions stay disabled"),
             "Guide must keep CI disabled before release readiness");
         assertTrue(guide.contains("Robots, drones, and block microcontrollers are not available"),

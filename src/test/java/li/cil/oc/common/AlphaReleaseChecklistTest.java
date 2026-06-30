@@ -51,6 +51,10 @@ final class AlphaReleaseChecklistTest {
         }
         assertTrue(!checklist.contains(".\\scripts\\"),
             "Public alpha checklist must not depend on ignored local helper scripts");
+        assertTrue(!checklist.contains("C:\\Users\\rolan"),
+            "Public alpha checklist must not include machine-specific profile paths");
+        assertTrue(checklist.contains("$profileRoot = Join-Path $env:APPDATA \"ModrinthApp\\profiles\\<profile-name>\""),
+            "Public alpha checklist should use a generic Modrinth profile path placeholder");
     }
 
     @Test
@@ -187,5 +191,9 @@ final class AlphaReleaseChecklistTest {
         }
         assertTrue(!runbook.contains(".\\scripts\\"),
             "Public visual smoke runbook must not depend on ignored local helper scripts");
+        assertTrue(!runbook.contains("C:\\Users\\rolan"),
+            "Public visual smoke runbook must not include machine-specific profile paths");
+        assertTrue(runbook.contains("$profileRoot = Join-Path $env:APPDATA \"ModrinthApp\\profiles\\<profile-name>\""),
+            "Public visual smoke runbook should use a generic Modrinth profile path placeholder");
     }
 }

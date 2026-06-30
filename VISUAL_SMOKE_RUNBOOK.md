@@ -18,7 +18,8 @@ Compare the installed profile jar hash to the built jar hash before starting the
 
 ```powershell
 $built = Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256
-$installedPath = "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\mods\neoopencomputers-0.1.0.jar"
+$profileRoot = Join-Path $env:APPDATA "ModrinthApp\profiles\<profile-name>"
+$installedPath = Join-Path $profileRoot "mods\neoopencomputers-0.1.0.jar"
 $installed = Get-FileHash $installedPath -Algorithm SHA256
 $built.Hash
 $installed.Hash
@@ -67,8 +68,9 @@ Optional screenshots can use a descriptive suffix, for example `07-disk-drive-me
 10. Archive the screenshots, logs, crash reports, and checksum in one folder after screenshots are present in `$report`:
 
 ```powershell
-Copy-Item "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\logs\latest.log" $report -ErrorAction SilentlyContinue
-Copy-Item "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\crash-reports\*.txt" $report -ErrorAction SilentlyContinue
+$profileRoot = Join-Path $env:APPDATA "ModrinthApp\profiles\<profile-name>"
+Copy-Item (Join-Path $profileRoot "logs\latest.log") $report -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $profileRoot "crash-reports\*.txt") $report -ErrorAction SilentlyContinue
 Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256 | Format-List | Out-File "$report\jar-sha256.txt"
 Compress-Archive -Path "$report\*" -DestinationPath "$report.zip" -Force
 ```

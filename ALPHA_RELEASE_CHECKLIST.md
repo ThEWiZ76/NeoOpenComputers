@@ -49,7 +49,8 @@ Compare the installed profile jar hash to the built jar hash before smoke testin
 
 ```powershell
 $built = Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256
-$installedPath = "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\mods\neoopencomputers-0.1.0.jar"
+$profileRoot = Join-Path $env:APPDATA "ModrinthApp\profiles\<profile-name>"
+$installedPath = Join-Path $profileRoot "mods\neoopencomputers-0.1.0.jar"
 $installed = Get-FileHash $installedPath -Algorithm SHA256
 $built.Hash
 $installed.Hash
