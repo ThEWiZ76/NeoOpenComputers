@@ -8,6 +8,8 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,9 +19,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 final class TerminalFont {
-    private static final int SOURCE_WIDTH = 8;
-    private static final int SOURCE_HEIGHT = 16;
-    private static final int CELL_WIDTH = 6;
+    private static final int HEX_SOURCE_WIDTH = 8;
+    private static final int HEX_SOURCE_HEIGHT = 16;
+    private static final int TEXTURE_SOURCE_WIDTH = 10;
+    private static final int CELL_WIDTH = 5;
     private static final int CELL_HEIGHT = 9;
     private static final int WORLD_GLYPH_LIGHT = LightTexture.FULL_BRIGHT;
     private static final Map<Integer, Glyph> GLYPHS = loadGlyphs();
@@ -36,7 +39,7 @@ final class TerminalFont {
     }
 
     static float worldPixelScale() {
-        return CELL_WIDTH / (float) SOURCE_WIDTH;
+        return CELL_WIDTH / (float) TEXTURE_SOURCE_WIDTH;
     }
 
     static boolean hasGlyph(final int codePoint) {
@@ -45,7 +48,7 @@ final class TerminalFont {
 
     static int glyphCellWidth(final int codePoint) {
         final Glyph glyph = glyph(codePoint);
-        return Math.max(CELL_WIDTH, (glyph.sourceWidth() / SOURCE_WIDTH) * CELL_WIDTH);
+        return targetWidth(glyph);
     }
 
     static int rowMask(final int codePoint, final int row) {
@@ -120,10 +123,23 @@ final class TerminalFont {
         if (glyph == null) {
             return false;
         }
-        final int targetWidth = Math.max(CELL_WIDTH, (glyph.sourceWidth() / SOURCE_WIDTH) * CELL_WIDTH);
-        final int sourceX = Math.min(glyph.sourceWidth() - 1, (x * glyph.sourceWidth() + glyph.sourceWidth() / 2) / targetWidth);
-        final int sourceY = Math.min(SOURCE_HEIGHT - 1, (y * SOURCE_HEIGHT + SOURCE_HEIGHT / 2) / CELL_HEIGHT);
-        return sourcePixel(glyph, sourceX, sourceY);
+        final int width = targetWidth(glyph);
+        final int sourceX0 = x * glyph.sourceWidth() / width;
+        final int sourceX1 = Math.min(glyph.sourceWidth() - 1, ((x + 1) * glyph.sourceWidth() + width - 1) / width - 1);
+        final int sourceY0 = y * glyph.sourceHeight() / CELL_HEIGHT;
+        final int sourceY1 = Math.min(glyph.sourceHeight() - 1, ((y + 1) * glyph.sourceHeight() + CELL_HEIGHT - 1) / CELL_HEIGHT - 1);
+        for (int sourceY = sourceY0; sourceY <= sourceY1; sourceY++) {
+            for (int sourceX = sourceX0; sourceX <= sourceX1; sourceX++) {
+                if (sourcePixel(glyph, sourceX, sourceY)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static int targetWidth(final Glyph glyph) {
+        return Math.max(CELL_WIDTH, (glyph.sourceWidth() / glyph.sourceCellWidth()) * CELL_WIDTH);
     }
 
     private static boolean sourcePixel(final Glyph glyph, final int sourceX, final int sourceY) {
@@ -143,9 +159,63 @@ final class TerminalFont {
 
     private static Map<Integer, Glyph> loadGlyphs() {
         final Map<Integer, Glyph> glyphs = new HashMap<>();
+        loadTextureGlyphs(glyphs);
+        loadHexGlyphs(glyphs);
+        return Map.copyOf(glyphs);
+    }
+
+    private static void loadTextureGlyphs(final Map<Integer, Glyph> glyphs) {
+        try (
+            InputStream metadataStream = TerminalFont.class.getResourceAsStream("/assets/neoopencomputers/textures/font/chars.txt");
+            InputStream imageStream = TerminalFont.class.getResourceAsStream("/assets/neoopencomputers/textures/font/chars_aliased.png")) {
+            if (metadataStream == null || imageStream == null) {
+                return;
+            }
+            final BufferedImage image = ImageIO.read(imageStream);
+            if (image == null) {
+                return;
+            }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(metadataStream, StandardCharsets.UTF_8))) {
+                final String chars = reader.readLine();
+                final String size = reader.readLine();
+                if (chars == null || size == null) {
+                    return;
+                }
+                final String[] parts = size.trim().split(" ", 2);
+                final int sourceWidth = Integer.parseInt(parts[0]);
+                final int sourceHeight = Integer.parseInt(parts[1]);
+                final int columns = Math.max(1, image.getWidth() / sourceWidth);
+                int index = 0;
+                for (int offset = 0; offset < chars.length(); offset = chars.offsetByCodePoints(offset, 1), index++) {
+                    final int codePoint = chars.codePointAt(offset);
+                    final int atlasX = index % columns * sourceWidth;
+                    final int atlasY = index / columns * (sourceHeight + 1);
+                    if (atlasX + sourceWidth > image.getWidth() || atlasY + sourceHeight > image.getHeight()) {
+                        break;
+                    }
+                    final int[] rows = new int[sourceHeight];
+                    for (int row = 0; row < sourceHeight; row++) {
+                        int mask = 0;
+                        for (int x = 0; x < sourceWidth; x++) {
+                            final int alpha = image.getRGB(atlasX + x, atlasY + row) >>> 24;
+                            if (alpha > 0) {
+                                mask |= 1 << (sourceWidth - 1 - x);
+                            }
+                        }
+                        rows[row] = mask;
+                    }
+                    glyphs.putIfAbsent(codePoint, new Glyph(sourceWidth, sourceHeight, sourceWidth, rows));
+                }
+            }
+        } catch (final IOException | NumberFormatException ignored) {
+            // Fall back to the bundled hex font below.
+        }
+    }
+
+    private static void loadHexGlyphs(final Map<Integer, Glyph> glyphs) {
         try (InputStream stream = TerminalFont.class.getResourceAsStream("/assets/neoopencomputers/font.hex")) {
             if (stream == null) {
-                return glyphs;
+                return;
             }
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
                 String line;
@@ -155,29 +225,28 @@ final class TerminalFont {
                         continue;
                     }
                     final String hex = line.substring(separator + 1).trim();
-                    if (hex.length() < SOURCE_HEIGHT * 2) {
+                    if (hex.length() < HEX_SOURCE_HEIGHT * 2) {
                         continue;
                     }
                     final int codePoint = Integer.parseInt(line.substring(0, separator), 16);
-                    final int bytesPerRow = (hex.length() / 2) / SOURCE_HEIGHT;
+                    final int bytesPerRow = (hex.length() / 2) / HEX_SOURCE_HEIGHT;
                     if (bytesPerRow < 1 || bytesPerRow > 2 || bytesPerRow != FontWidths.wcwidth(codePoint)) {
                         continue;
                     }
-                    final int[] rows = new int[SOURCE_HEIGHT];
-                    for (int row = 0; row < SOURCE_HEIGHT; row++) {
+                    final int[] rows = new int[HEX_SOURCE_HEIGHT];
+                    for (int row = 0; row < HEX_SOURCE_HEIGHT; row++) {
                         final int start = row * bytesPerRow * 2;
                         final int end = start + bytesPerRow * 2;
                         rows[row] = Integer.parseInt(hex.substring(start, end), 16);
                     }
-                    glyphs.putIfAbsent(codePoint, new Glyph(bytesPerRow * SOURCE_WIDTH, rows));
+                    glyphs.putIfAbsent(codePoint, new Glyph(bytesPerRow * HEX_SOURCE_WIDTH, HEX_SOURCE_HEIGHT, HEX_SOURCE_WIDTH, rows));
                 }
             }
         } catch (final IOException | NumberFormatException ignored) {
-            return Map.of();
+            // Keep any texture glyphs loaded above.
         }
-        return Map.copyOf(glyphs);
     }
 
-    private record Glyph(int sourceWidth, int[] rows) {
+    private record Glyph(int sourceWidth, int sourceHeight, int sourceCellWidth, int[] rows) {
     }
 }

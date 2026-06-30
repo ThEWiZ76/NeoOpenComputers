@@ -240,12 +240,14 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(TerminalFont.hasGlyph('i'));
         assertTrue(TerminalFont.hasGlyph('W'));
         assertTrue(TerminalFont.hasGlyph(0x754C));
-        assertEquals(6, TerminalFont.cellWidth());
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/font/chars_aliased.png")));
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/font/chars.txt")));
+        assertEquals(5, TerminalFont.cellWidth());
         assertEquals(9, TerminalFont.cellHeight());
-        assertEquals(0.75F, TerminalFont.worldPixelScale());
-        assertEquals(6, TerminalFont.glyphCellWidth('i'));
-        assertEquals(12, TerminalFont.glyphCellWidth(0x754C));
-        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 1)) >= 1, "Thin glyph strokes should survive 8x16 to 6x9 scaling");
+        assertEquals(0.5F, TerminalFont.worldPixelScale());
+        assertEquals(5, TerminalFont.glyphCellWidth('i'));
+        assertEquals(10, TerminalFont.glyphCellWidth(0x754C));
+        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 1)) >= 1, "Thin glyph strokes should survive 10x18 to 5x9 scaling");
         assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 6)) >= 1, "Lower pixels in thin glyphs should not be center-sampled away");
         assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 3)) <= 3, "Thin glyphs should not be expanded into blocky coverage buckets");
         assertTrue(renderer.contains("TerminalFont.drawWorldCell"), "World screen text should render fixed bitmap cells, not proportional Minecraft glyphs");
@@ -253,7 +255,7 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(renderer.contains("renderTerminalGlyphs"), "World screen text should draw all glyphs after cell backgrounds");
 
         final String font = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalFont.java"));
-        assertTrue(font.contains("py < CELL_HEIGHT"), "World text should render stable 6x9 terminal cells, not tiny source-pixel quads");
+        assertTrue(font.contains("py < CELL_HEIGHT"), "World text should render stable 5x9 terminal cells, not tiny source-pixel quads");
         assertTrue(font.contains("px < glyphCellWidth(codePoint)"), "World text should use the same fixed cell raster as the GUI terminal");
         assertTrue(!font.contains("baseX + sourceX * scale"),
             "Source-pixel quads become sub-pixel world geometry and make close screen text unreadable.");

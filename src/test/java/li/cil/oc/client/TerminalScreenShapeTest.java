@@ -143,7 +143,7 @@ final class TerminalScreenShapeTest {
 
         assertEquals(248, TerminalScreen.imageWidth(missing));
         assertEquals(166, TerminalScreen.imageHeight(missing));
-        assertEquals(504, TerminalScreen.imageWidth(terminalServerDefault));
+        assertEquals(424, TerminalScreen.imageWidth(terminalServerDefault));
         assertEquals(259, TerminalScreen.imageHeight(terminalServerDefault));
     }
 
@@ -252,10 +252,12 @@ final class TerminalScreenShapeTest {
         assertTrue(TerminalFont.hasGlyph('i'));
         assertTrue(TerminalFont.hasGlyph('W'));
         assertTrue(TerminalFont.hasGlyph(0x754C));
-        assertEquals(6, TerminalFont.cellWidth());
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/font/chars_aliased.png")));
+        assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/font/chars.txt")));
+        assertEquals(5, TerminalFont.cellWidth());
         assertEquals(9, TerminalFont.cellHeight());
-        assertEquals(6, TerminalFont.glyphCellWidth('i'));
-        assertEquals(12, TerminalFont.glyphCellWidth(0x754C));
+        assertEquals(5, TerminalFont.glyphCellWidth('i'));
+        assertEquals(10, TerminalFont.glyphCellWidth(0x754C));
         assertTrue(screen.contains("TerminalFont.drawGuiCell"), "Terminal GUI should render fixed bitmap cells, not proportional Minecraft glyphs");
     }
 
@@ -467,7 +469,7 @@ final class TerminalScreenShapeTest {
 
         assertEquals(12, payload.containerId());
         assertEquals(TerminalMousePayload.MOUSE_DOWN, payload.kind());
-        assertEquals(2.0D, payload.x());
+        assertEquals(2.4D, payload.x());
         assertEquals(2.0D, payload.y());
         assertEquals(0, payload.buttonOrDelta());
     }
