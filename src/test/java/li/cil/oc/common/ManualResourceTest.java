@@ -132,6 +132,26 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualHomePagesDoNotAdvertiseMicrocontrollerCasesAsAlphaFocus() throws Exception {
+        final List<String> staleNotes = new ArrayList<>();
+        try (Stream<Path> files = Files.list(DOC_ROOT)) {
+            for (final Path index : files
+                .filter(Files::isDirectory)
+                .map(path -> path.resolve("index.md"))
+                .filter(Files::exists)
+                .toList()) {
+                final String content = Files.readString(index);
+                if (content.contains("microcontroller case items are the current alpha focus")
+                    || !content.contains("Microcontroller case items are present for recipe/API compatibility only")) {
+                    staleNotes.add(DOC_ROOT.relativize(index).toString().replace('\\', '/'));
+                }
+            }
+        }
+
+        assertTrue(staleNotes.isEmpty(), () -> "Manual home pages have stale microcontroller alpha scope:\n" + String.join("\n", staleNotes));
+    }
+
+    @Test
     void bundledManualHomePagesDoNotLinkUnavailableAlphaDevices() throws Exception {
         final Set<String> hiddenTargets = Set.of(
             "item/drone.md",

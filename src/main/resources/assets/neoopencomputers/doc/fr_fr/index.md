@@ -1,6 +1,6 @@
 # Manuel d'OpenComputers
 
-NeoOpenComputers alpha note: robots, drones, and block microcontrollers are not available in this build yet; computer cases, servers, racks, screens, keyboards, storage, cards, upgrades, and microcontroller case items are the current alpha focus.
+NeoOpenComputers alpha note: robots, drones, and block microcontrollers are not available in this build yet; computer cases, servers, racks, screens, keyboards, storage, cards, and upgrades are the current alpha focus. Microcontroller case items are present for recipe/API compatibility only and are not alpha smoke targets.
 
 OpenComputers est un mod qui ajoute au jeu des [ordinateurs](general/computer.md), des [serveurs](item/server1.md), des robots, et des drones persistants, modulaires et très configurables. Tous les appareils peuvent être programmés en utilisant Lua 5.2, permettant d'avoir des systèmes à complexité variable en fonction de leur usage.
 
