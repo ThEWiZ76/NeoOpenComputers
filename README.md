@@ -21,7 +21,7 @@ Current verification evidence:
 - Bounded client launch smoke reaches resource reload and texture atlas creation without NeoOpenComputers-owned missing model, missing texture, or mod loading errors.
 - MCP evidence shows tier 2 and tier 3 screens open their terminal GUI after a fresh client restart. World-render screenshot proof for tier 2 and tier 3 screens is still pending, so screen visuals are not treated as verified alpha evidence yet.
 
-The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, player-facing failure feedback, and packaging slices in place. It is ready for first technical smoke testing, not release-ready.
+The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, player-facing failure feedback, and packaging slices in place. It is ready for first technical alpha testing, not stable-release-ready.
 
 Robots, drones, and block microcontrollers are not available in this alpha build. Microcontroller case items are present for recipe/API compatibility only and are not alpha smoke targets. Computer cases, servers, racks, screens, keyboards, storage, cards, and upgrades are the current alpha focus.
 

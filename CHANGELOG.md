@@ -2,7 +2,7 @@
 
 ## 0.1.0-alpha
 
-First technical alpha line for NeoOpenComputers on Minecraft 1.21.1 with NeoForge 21.1.234.
+First technical alpha release line for NeoOpenComputers on Minecraft 1.21.1 with NeoForge 21.1.234.
 
 This is a crash-finding and basic OpenOS proof build, not a public beta promise.
 
