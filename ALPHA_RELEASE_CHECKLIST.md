@@ -47,7 +47,7 @@ Copy the installable jar into a clean Minecraft 1.21.1 NeoForge profile, then fu
 
 ## Smoke Handoff
 
-Use `ALPHA_SMOKE_MATRIX.md` as the required manual smoke list and `VISUAL_SMOKE_RUNBOOK.md` as the required screenshot proof list. Save crash reports, client logs, screenshots, and exact reproduction steps for every mismatch.
+Use `ALPHA_SMOKE_MATRIX.md` as the required manual smoke list, `VISUAL_SMOKE_RUNBOOK.md` as the required screenshot proof list, and `ALPHA_FINDING_TEMPLATE.md` for every crash, visual, or behavior mismatch. Save crash reports, client logs, screenshots, and exact reproduction steps for every mismatch.
 
 MCP terminal-open evidence alone is not enough for screen visual handoff. The screenshot proof must show readable in-world screen output and the terminal GUI after a fresh client restart.
 

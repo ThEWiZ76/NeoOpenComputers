@@ -47,5 +47,7 @@ final class AlphaTestingGuideTest {
             "Guide must tell alpha testers to verify texture picker atlas names before alpha handoff");
         assertTrue(guide.contains("https://github.com/ThEWiZ76/NeoOpenComputers/issues"),
             "Guide must route findings to the community issue tracker");
+        assertTrue(guide.contains("ALPHA_FINDING_TEMPLATE.md"),
+            "Guide must link the reusable alpha finding template outside .github");
     }
 }

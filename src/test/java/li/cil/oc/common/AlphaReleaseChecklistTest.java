@@ -33,6 +33,7 @@ final class AlphaReleaseChecklistTest {
             "ALPHA_SMOKE_MATRIX.md",
             "SCREEN_WORK_PROTOCOL.md",
             "VISUAL_SMOKE_RUNBOOK.md",
+            "ALPHA_FINDING_TEMPLATE.md",
             "Do not add `.github/workflows`",
             "Screen renderer, model, glyph, and multiblock code stay frozen",
             "MCP terminal-open evidence alone is not enough",
@@ -44,6 +45,39 @@ final class AlphaReleaseChecklistTest {
         }
         assertTrue(!checklist.contains(".\\scripts\\"),
             "Public alpha checklist must not depend on ignored local helper scripts");
+    }
+
+    @Test
+    void alphaFindingTemplateDocumentsReportBundle() throws IOException {
+        final Path templatePath = Path.of("ALPHA_FINDING_TEMPLATE.md");
+        final String readme = Files.readString(Path.of("README.md"));
+        final String guide = Files.readString(Path.of("ALPHA_TESTING.md"));
+        final String checklist = Files.readString(Path.of("ALPHA_RELEASE_CHECKLIST.md"));
+
+        assertTrue(Files.isRegularFile(templatePath), "Reusable alpha finding template must exist outside .github");
+        assertTrue(readme.contains("[Alpha Finding Template](ALPHA_FINDING_TEMPLATE.md)"),
+            "README must link the alpha finding template");
+        assertTrue(guide.contains("ALPHA_FINDING_TEMPLATE.md"),
+            "Alpha testing guide must link the alpha finding template");
+        assertTrue(checklist.contains("ALPHA_FINDING_TEMPLATE.md"),
+            "Alpha release checklist must require the alpha finding template");
+
+        final String template = Files.readString(templatePath);
+        for (final String required : new String[]{
+            "NeoOpenComputers jar version or commit",
+            "Exact reproduction steps",
+            "Expected result",
+            "Actual result",
+            "Crash report path or full crash log",
+            "Client log section around the failure",
+            "Screenshot or short video",
+            "World name, seed, coordinates, component tiers",
+            "Jar SHA256",
+            "Third-party profile warnings",
+            "Screen issue evidence"
+        }) {
+            assertTrue(template.contains(required), "Alpha finding template missing report field: " + required);
+        }
     }
 
     @Test
