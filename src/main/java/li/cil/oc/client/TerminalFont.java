@@ -1,17 +1,12 @@
 package li.cil.oc.client;
 
-import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.util.FontWidths;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,18 +19,10 @@ import java.util.Map;
 final class TerminalFont {
     private static final int SOURCE_WIDTH = 8;
     private static final int SOURCE_HEIGHT = 16;
-    private static final int CELL_WIDTH = 4;
-    private static final int CELL_HEIGHT = 8;
-    private static final int ATLAS_COLUMNS = 16;
-    private static final int ATLAS_ROWS = 16;
-    private static final int ATLAS_CELL_WIDTH = CELL_WIDTH;
-    private static final int ATLAS_CELL_HEIGHT = CELL_HEIGHT;
-    private static final int ATLAS_WIDTH = ATLAS_COLUMNS * ATLAS_CELL_WIDTH;
-    private static final int ATLAS_HEIGHT = ATLAS_ROWS * ATLAS_CELL_HEIGHT;
-    private static final ResourceLocation ASCII_GLYPH_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "dynamic/ascii_terminal_font");
+    private static final int CELL_WIDTH = 6;
+    private static final int CELL_HEIGHT = 9;
     private static final int WORLD_GLYPH_LIGHT = LightTexture.FULL_BRIGHT;
     private static final Map<Integer, Glyph> GLYPHS = loadGlyphs();
-    private static boolean asciiGlyphTextureRegistered;
 
     private TerminalFont() {
     }
@@ -100,9 +87,6 @@ final class TerminalFont {
         if (codePoint == ' ') {
             return;
         }
-        if (drawWorldTexturedAsciiCell(poseStack, bufferSource, codePoint, column, row, color, z)) {
-            return;
-        }
         final VertexConsumer consumer = bufferSource.getBuffer(RenderType.gui());
         final PoseStack.Pose pose = poseStack.last();
         final float baseX = column * CELL_WIDTH;
@@ -117,85 +101,7 @@ final class TerminalFont {
     }
 
     static boolean usesWorldTexturedAsciiGlyphs() {
-        return true;
-    }
-
-    private static boolean drawWorldTexturedAsciiCell(
-        final PoseStack poseStack,
-        final MultiBufferSource bufferSource,
-        final int codePoint,
-        final int column,
-        final int row,
-        final int color,
-        final float z) {
-        final Glyph glyph = glyph(codePoint);
-        if (glyph == null || codePoint < 0 || codePoint > 0xFF) {
-            return false;
-        }
-        registerAsciiGlyphTexture();
-        final int atlasColumn = codePoint % ATLAS_COLUMNS;
-        final int atlasRow = codePoint / ATLAS_COLUMNS;
-        final float minU = (atlasColumn * ATLAS_CELL_WIDTH) / (float) ATLAS_WIDTH;
-        final float maxU = (atlasColumn * ATLAS_CELL_WIDTH + glyphCellWidth(codePoint)) / (float) ATLAS_WIDTH;
-        final float minV = (atlasRow * ATLAS_CELL_HEIGHT) / (float) ATLAS_HEIGHT;
-        final float maxV = (atlasRow * ATLAS_CELL_HEIGHT + CELL_HEIGHT) / (float) ATLAS_HEIGHT;
-        final float x = column * CELL_WIDTH;
-        final float y = row * CELL_HEIGHT;
-        final float width = glyphCellWidth(codePoint);
-        final float height = CELL_HEIGHT;
-        final VertexConsumer consumer = bufferSource.getBuffer(RenderType.text(ASCII_GLYPH_TEXTURE));
-        final PoseStack.Pose pose = poseStack.last();
-        texturedQuadVertex(consumer, pose, x, y + height, z, color, minU, maxV);
-        texturedQuadVertex(consumer, pose, x + width, y + height, z, color, maxU, maxV);
-        texturedQuadVertex(consumer, pose, x + width, y, z, color, maxU, minV);
-        texturedQuadVertex(consumer, pose, x, y, z, color, minU, minV);
-        return true;
-    }
-
-    private static void texturedQuadVertex(
-        final VertexConsumer consumer,
-        final PoseStack.Pose pose,
-        final float x,
-        final float y,
-        final float z,
-        final int color,
-        final float u,
-        final float v) {
-        consumer.addVertex(pose, x, y, z)
-            .setColor(color)
-            .setUv(u, v)
-            .setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
-    }
-
-    private static void registerAsciiGlyphTexture() {
-        if (asciiGlyphTextureRegistered) {
-            return;
-        }
-        final Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft == null) {
-            return;
-        }
-        final NativeImage image = new NativeImage(ATLAS_WIDTH, ATLAS_HEIGHT, true);
-        for (int codePoint = 0; codePoint <= 0xFF; codePoint++) {
-            final Glyph glyph = glyph(codePoint);
-            if (glyph == null) {
-                continue;
-            }
-            final int atlasX = (codePoint % ATLAS_COLUMNS) * ATLAS_CELL_WIDTH;
-            final int atlasY = (codePoint / ATLAS_COLUMNS) * ATLAS_CELL_HEIGHT;
-            for (int y = 0; y < CELL_HEIGHT; y++) {
-                for (int x = 0; x < glyphCellWidth(codePoint); x++) {
-                    if (pixel(codePoint, x, y)) {
-                        image.setPixelRGBA(atlasX + x, atlasY + y, 0xFFFFFFFF);
-                    }
-                }
-            }
-        }
-        final DynamicTexture texture = new DynamicTexture(image);
-        texture.setFilter(false, false);
-        texture.upload();
-        minecraft.getTextureManager().register(ASCII_GLYPH_TEXTURE, texture);
-        asciiGlyphTextureRegistered = true;
+        return false;
     }
 
     private static void quad(final VertexConsumer consumer, final PoseStack.Pose pose, final float x, final float y, final float z, final int color) {
@@ -203,10 +109,10 @@ final class TerminalFont {
     }
 
     private static void quad(final VertexConsumer consumer, final PoseStack.Pose pose, final float x, final float y, final float z, final int color, final float size) {
-        consumer.addVertex(pose, x, y + size, z).setColor(color);
-        consumer.addVertex(pose, x + size, y + size, z).setColor(color);
-        consumer.addVertex(pose, x + size, y, z).setColor(color);
-        consumer.addVertex(pose, x, y, z).setColor(color);
+        consumer.addVertex(pose, x, y + size, z).setColor(color).setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
+        consumer.addVertex(pose, x + size, y + size, z).setColor(color).setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
+        consumer.addVertex(pose, x + size, y, z).setColor(color).setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
+        consumer.addVertex(pose, x, y, z).setColor(color).setUv2(WORLD_GLYPH_LIGHT & 0xFFFF, WORLD_GLYPH_LIGHT >> 16 & 0xFFFF);
     }
 
     private static boolean pixel(final int codePoint, final int x, final int y) {
@@ -215,8 +121,8 @@ final class TerminalFont {
             return false;
         }
         final int targetWidth = Math.max(CELL_WIDTH, (glyph.sourceWidth() / SOURCE_WIDTH) * CELL_WIDTH);
-        final int sourceX = Math.min(glyph.sourceWidth() - 1, (x * glyph.sourceWidth()) / targetWidth);
-        final int sourceY = Math.min(SOURCE_HEIGHT - 1, (y * SOURCE_HEIGHT) / CELL_HEIGHT);
+        final int sourceX = Math.min(glyph.sourceWidth() - 1, (x * glyph.sourceWidth() + glyph.sourceWidth() / 2) / targetWidth);
+        final int sourceY = Math.min(SOURCE_HEIGHT - 1, (y * SOURCE_HEIGHT + SOURCE_HEIGHT / 2) / CELL_HEIGHT);
         return sourcePixel(glyph, sourceX, sourceY);
     }
 

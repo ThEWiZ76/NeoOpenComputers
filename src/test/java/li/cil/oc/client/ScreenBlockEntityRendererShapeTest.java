@@ -240,38 +240,39 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(TerminalFont.hasGlyph('i'));
         assertTrue(TerminalFont.hasGlyph('W'));
         assertTrue(TerminalFont.hasGlyph(0x754C));
-        assertEquals(4, TerminalFont.cellWidth());
-        assertEquals(8, TerminalFont.cellHeight());
-        assertEquals(0.5F, TerminalFont.worldPixelScale());
-        assertEquals(4, TerminalFont.glyphCellWidth('i'));
-        assertEquals(8, TerminalFont.glyphCellWidth(0x754C));
-        assertEquals(1, Integer.bitCount(TerminalFont.rowMask('i', 1)), "Thin glyphs should stay sparse after 8x16 to 4x8 scaling");
+        assertEquals(6, TerminalFont.cellWidth());
+        assertEquals(9, TerminalFont.cellHeight());
+        assertEquals(0.75F, TerminalFont.worldPixelScale());
+        assertEquals(6, TerminalFont.glyphCellWidth('i'));
+        assertEquals(12, TerminalFont.glyphCellWidth(0x754C));
+        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 1)) >= 1, "Thin glyph strokes should survive 8x16 to 6x9 scaling");
         assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 6)) >= 1, "Lower pixels in thin glyphs should not be center-sampled away");
-        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 3)) <= 2, "Thin glyphs should not be expanded into blocky coverage buckets");
+        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 3)) <= 3, "Thin glyphs should not be expanded into blocky coverage buckets");
         assertTrue(renderer.contains("TerminalFont.drawWorldCell"), "World screen text should render fixed bitmap cells, not proportional Minecraft glyphs");
         assertTrue(renderer.contains("renderTerminalBackgrounds"), "World screen text should draw all cell backgrounds before wide glyphs");
         assertTrue(renderer.contains("renderTerminalGlyphs"), "World screen text should draw all glyphs after cell backgrounds");
 
         final String font = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalFont.java"));
-        assertTrue(font.contains("py < CELL_HEIGHT"), "World text should render stable 4x8 terminal cells, not tiny source-pixel quads");
+        assertTrue(font.contains("py < CELL_HEIGHT"), "World text should render stable 6x9 terminal cells, not tiny source-pixel quads");
         assertTrue(font.contains("px < glyphCellWidth(codePoint)"), "World text should use the same fixed cell raster as the GUI terminal");
         assertTrue(!font.contains("baseX + sourceX * scale"),
             "Source-pixel quads become sub-pixel world geometry and make close screen text unreadable.");
     }
 
     @Test
-    void texturedWorldAsciiAtlasUsesTerminalCellRaster() throws IOException {
+    void worldTextUsesDirectTerminalCellRaster() throws IOException {
         final String font = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalFont.java"));
 
-        assertTrue(font.contains("ATLAS_CELL_WIDTH = CELL_WIDTH"),
-            "World ASCII atlas must store the same fixed-width terminal cells as the GUI renderer.");
-        assertTrue(font.contains("ATLAS_CELL_HEIGHT = CELL_HEIGHT"),
-            "World ASCII atlas must store downsampled 4x8 cells, not 8x16 source glyphs.");
-        assertTrue(font.contains("image.setPixelRGBA(atlasX + x, atlasY + y, 0xFFFFFFFF)"));
-        assertTrue(font.contains("pixel(codePoint, x, y)"),
-            "The atlas should be rasterized through the GUI terminal sampling path to avoid GPU row dropping.");
-        assertTrue(!font.contains("SOURCE_HEIGHT * worldPixelScale()"),
-            "Textured world glyph quads should not squeeze 8x16 source glyphs into 4x8 cells at render time.");
+        assertTrue(!TerminalFont.usesWorldTexturedAsciiGlyphs(),
+            "World text should use the same direct bitmap raster as the GUI renderer.");
+        assertTrue(!font.contains("ASCII_GLYPH_TEXTURE"),
+            "The world renderer must not use a separate ASCII atlas with different sampling.");
+        assertTrue(!font.contains("DynamicTexture"),
+            "The world renderer must not register a separate glyph texture path.");
+        assertTrue(font.contains("quad(consumer, pose, baseX + px, baseY + py, z, color)"),
+            "World glyphs should be emitted from fixed terminal-cell pixels.");
+        assertTrue(font.contains("setUv2(WORLD_GLYPH_LIGHT"),
+            "World glyph pixels should stay full-bright for screen readability.");
     }
 
     @Test
