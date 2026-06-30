@@ -16,7 +16,7 @@ Screen world rendering stays frozen unless there is a focused repro, focused fai
 | Transposer | Transposer registration, renderer, and component tests cover block/entity/component shape. | Move an item or fluid between adjacent inventories/tanks. |
 | Power and charging | GameTests cover battery charge, power converter Forge Energy input, charger Forge Energy input, internal tablet charging, player-equipment charging, powered machine Forge Energy input, and charger redstone speed. | Feed Forge Energy into a power converter or computer case, charge one battery/tablet in a charger, and verify a computer stays powered during a short OpenOS session. |
 | Texture picker | GameTests cover texture picker atlas naming for a target block, including `minecraft:block/stone`. | Use a texture picker on a normal block and verify the reported atlas texture name is usable for printer shapes. |
-| Printer and print | Printer, print item, placed print, redstone activation, texture fallback, tooltip, and render-model tests cover current print smoke paths. | Create a print item, place it, rotate it, and confirm the configured shape remains. |
+| Printer and print | Printer, print item, placed print, redstone activation, held-item activation, button release, beacon-base, configured drops, opacity, texture fallback, tooltip, ray-trace, and render-model tests cover current print smoke paths. | Create a print item, place it, rotate it, activate it, break it, and confirm the configured shape/data remains. |
 | Manual and packaging | Manual link/resource tests, metadata tests, jar packaging tests, API jar tests, contributor docs, changelog, and alpha guide tests cover public artifact readiness. | Install `build/libs/neoopencomputers-0.1.0.jar` in a clean NeoForge 1.21.1 client and open the manual/creative tab. |
 
 Manual alpha smoke must follow `VISUAL_SMOKE_RUNBOOK.md`. Save crash reports, client logs, screenshots, and exact reproduction steps for any mismatch.
@@ -42,7 +42,7 @@ These are the named GameTests that back the automated side of the matrix. They d
 - Transposer/tank: `transposerTransfersFluidBetweenAdjacentTanks`, `transposerItemTransferRequiresEnergy`, `transposerTransferFluidRequiresEnergy`, `tankControllerInspectsAdjacentFluidTanks`.
 - Power and charging: `powerConverterAcceptsForgeEnergyCapabilityLikeUpstream`, `chargerAcceptsForgeEnergyCapabilityLikeUpstream`, `chargerChargesInternalTabletFromStoredEnergyAndRedstoneSpeed`, `chargerChargesNearbyPlayerEquipmentLikeUpstream`, `poweredMachineBlocksAcceptForgeEnergyCapabilityLikeUpstream`, `computerCaseAcceptsForgeEnergyCapabilityLikeUpstream`.
 - Texture picker: `texturePickerDescribesTargetBlock`.
-- Printer/print: `printerProducesPrintItemAfterEnergyAndInputLikeUpstream`, `printItemPlacesConfiguredPrintLikeUpstream`, `printBlockRotatesShapeTowardFacingLikeUpstream`, `printBlockFollowsExternalRedstoneInputLikeUpstream`.
+- Printer/print: `printerProducesPrintItemAfterEnergyAndInputLikeUpstream`, `printDataCreatesPrintItemStackLikeUpstreamItemData`, `printItemPlacesConfiguredPrintLikeUpstream`, `printItemTooltipShowsConfiguredDataLikeUpstream`, `printBlockEntityLoadsStackAndTogglesRedstoneLikeUpstream`, `printBlockActivatesWithHeldItemLikeUpstream`, `printBlockRotatesShapeTowardFacingLikeUpstream`, `printBlockRayTraceHitsNearestConfiguredShapeLikeUpstream`, `printBlockFollowsExternalRedstoneInputLikeUpstream`, `redstoneActivatedButtonPrintReleasesAfterScheduledTickLikeUpstream`, `beaconAcceptsConfiguredPrintBaseLikeUpstream`, `brokenPrintDropsConfiguredPrintStackLikeUpstream`, `printBlockUsesConfiguredOpacityWhenEnabledLikeUpstream`.
 
 ## Remaining Manual Proof
 
@@ -53,4 +53,4 @@ The current automated smoke report can prove startup, local-world entry, block p
 - Screen output and keyboard input still look correct after save/reload.
 - Creative tab and manual navigation are usable in a clean client profile.
 - Texture picker returns usable atlas texture names such as `minecraft:block/stone`.
-- Printer/print visuals look sane from player view.
+- Printer/print visuals and data behavior look sane from player view, including placement, rotation, activation, drops, tooltip data, beacon-base, opacity, and legacy texture-name use.

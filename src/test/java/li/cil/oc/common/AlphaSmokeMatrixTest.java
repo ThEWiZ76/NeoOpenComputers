@@ -68,5 +68,18 @@ final class AlphaSmokeMatrixTest {
         }) {
             assertTrue(matrix.contains(gameTestName), "Matrix missing concrete GameTest evidence: " + gameTestName);
         }
+        for (final String printGameTestName : new String[]{
+            "printDataCreatesPrintItemStackLikeUpstreamItemData",
+            "printItemTooltipShowsConfiguredDataLikeUpstream",
+            "printBlockEntityLoadsStackAndTogglesRedstoneLikeUpstream",
+            "printBlockActivatesWithHeldItemLikeUpstream",
+            "redstoneActivatedButtonPrintReleasesAfterScheduledTickLikeUpstream",
+            "beaconAcceptsConfiguredPrintBaseLikeUpstream",
+            "brokenPrintDropsConfiguredPrintStackLikeUpstream",
+            "printBlockUsesConfiguredOpacityWhenEnabledLikeUpstream",
+            "printBlockRayTraceHitsNearestConfiguredShapeLikeUpstream"
+        }) {
+            assertTrue(matrix.contains(printGameTestName), "Matrix missing detailed print GameTest evidence: " + printGameTestName);
+        }
     }
 }
