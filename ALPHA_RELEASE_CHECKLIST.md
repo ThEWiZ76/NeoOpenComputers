@@ -58,6 +58,7 @@ Minimum handoff proof:
 - Tier 1 computer boots OpenOS from valid media.
 - Tier 2 and tier 3 computers open their terminal GUI after a fresh client restart.
 - Power and charging smoke passes: a computer accepts Forge Energy or runs from a powered OC network, and one chargeable item accepts charger energy.
+- Texture picker reports usable atlas texture names such as `minecraft:block/stone`.
 - Storage, floppy, redstone, modem, inventory, tank, transposer, printer, and print paths get one smoke pass.
 
 ## Screen Loop Guard
@@ -80,6 +81,7 @@ Stop the release handoff if any of these happen:
 - Minecraft crashes during startup, creative tab use, computer boot, screen interaction, or save/reload.
 - The artifact path or checksum is unclear.
 - Power and charging cannot be proven with the current profile setup.
+- Texture picker atlas names cannot be proven with the current profile setup.
 - `.github/workflows` exists locally, in `HEAD`, or on `origin/develop`.
 - Screen work starts without the screen loop guard evidence.
 - The working tree has unexplained changes.

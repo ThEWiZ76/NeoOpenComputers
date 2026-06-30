@@ -27,6 +27,8 @@ final class ReleaseNotesTest {
             "Changelog must summarize current alpha device scope");
         assertTrue(changelog.contains("Power and charging"),
             "Changelog must summarize power and charging smoke scope");
+        assertTrue(changelog.contains("Texture picker"),
+            "Changelog must summarize texture picker atlas smoke scope");
         assertTrue(changelog.contains("Robots, drones, and block microcontrollers are not available"),
             "Changelog must list known unavailable devices");
         assertTrue(changelog.contains("GitHub Actions are intentionally disabled"),

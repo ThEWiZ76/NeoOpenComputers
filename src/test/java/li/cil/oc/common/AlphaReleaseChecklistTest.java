@@ -36,7 +36,8 @@ final class AlphaReleaseChecklistTest {
             "Do not add `.github/workflows`",
             "Screen renderer, model, glyph, and multiblock code stay frozen",
             "MCP terminal-open evidence alone is not enough",
-            "Power and charging"
+            "Power and charging",
+            "Texture picker"
         }) {
             assertTrue(checklist.contains(required), "Checklist missing required release gate: " + required);
         }

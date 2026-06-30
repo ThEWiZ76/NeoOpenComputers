@@ -39,6 +39,8 @@ final class AlphaTestingGuideTest {
             "Guide must tell alpha testers to verify computer case hard-disk persistence");
         assertTrue(guide.contains("Power and charging smoke passes"),
             "Guide must tell alpha testers to verify power and charging before alpha handoff");
+        assertTrue(guide.contains("Texture picker reports usable atlas texture names"),
+            "Guide must tell alpha testers to verify texture picker atlas names before alpha handoff");
         assertTrue(guide.contains("https://github.com/ThEWiZ76/NeoOpenComputers/issues"),
             "Guide must route findings to the community issue tracker");
     }

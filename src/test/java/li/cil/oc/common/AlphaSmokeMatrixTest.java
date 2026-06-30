@@ -29,6 +29,7 @@ final class AlphaSmokeMatrixTest {
             "Tank",
             "Transposer",
             "Power and charging",
+            "Texture picker",
             "Printer and print",
             "Manual and packaging"
         }) {
@@ -62,7 +63,8 @@ final class AlphaSmokeMatrixTest {
             "transposerTransfersFluidBetweenAdjacentTanks",
             "powerConverterAcceptsForgeEnergyCapabilityLikeUpstream",
             "chargerChargesInternalTabletFromStoredEnergyAndRedstoneSpeed",
-            "poweredMachineBlocksAcceptForgeEnergyCapabilityLikeUpstream"
+            "poweredMachineBlocksAcceptForgeEnergyCapabilityLikeUpstream",
+            "texturePickerDescribesTargetBlock"
         }) {
             assertTrue(matrix.contains(gameTestName), "Matrix missing concrete GameTest evidence: " + gameTestName);
         }
