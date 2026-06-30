@@ -81,6 +81,18 @@ Use this for local crash finding and first in-world proof. This is not a communi
 
 Restart the Minecraft client after replacing the mod jar; a running JVM keeps the old jar loaded.
 
+Verify the installed jar hash matches the built jar hash after copying, before launching Minecraft:
+
+```powershell
+$built = Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256
+$installedPath = "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\mods\neoopencomputers-0.1.0.jar"
+Copy-Item .\build\libs\neoopencomputers-0.1.0.jar $installedPath -Force
+$installedAfter = Get-FileHash $installedPath -Algorithm SHA256
+if ($built.Hash -ne $installedAfter.Hash) {
+    throw "Installed NeoOpenComputers jar hash does not match the built jar hash after copying."
+}
+```
+
 4. In a local test world, check these flows:
 
 - Computer case, screen, and keyboard place without crashing.

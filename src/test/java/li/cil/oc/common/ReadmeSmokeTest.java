@@ -33,6 +33,8 @@ final class ReadmeSmokeTest {
             "README must not imply tiered screen world rendering is visually verified");
         assertTrue(readme.contains("Restart the Minecraft client after replacing the mod jar"),
             "README must warn testers to restart after jar replacement");
+        assertTrue(readme.contains("Verify the installed jar hash matches the built jar hash after copying"),
+            "README must require post-copy installed jar hash proof so stale profile jars are caught");
         assertTrue(readme.contains("screenshots"), "README must tell testers to save screenshots");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
         assertTrue(readme.contains("Robots, drones, and block microcontrollers are not available in this alpha build"),
