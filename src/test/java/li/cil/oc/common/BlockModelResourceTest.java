@@ -75,9 +75,9 @@ final class BlockModelResourceTest {
             final JsonObject textures = panel.getAsJsonObject("textures");
             assertTrue("neoopencomputers:block/generic_top".equals(textures.get("top_bottom").getAsString()));
             assertTrue("neoopencomputers:block/generic_side".equals(textures.get("side").getAsString()));
-            assertTrue("neoopencomputers:block/screen/fmm".equals(textures.get("front").getAsString()), "Static front must use the plain opaque screen fill so missing/delayed dynamic faces do not regress to generic machine texture");
+            assertTrue("neoopencomputers:block/generic_side".equals(textures.get("front").getAsString()), "Static front must stay neutral; connected screen front pieces are drawn dynamically");
             final JsonObject faces = panel.getAsJsonArray("elements").get(0).getAsJsonObject().getAsJsonObject("faces");
-            assertTrue("#front".equals(faces.getAsJsonObject("south").get("texture").getAsString()), "Static south/front face should use the opaque fill alias");
+            assertTrue("#front".equals(faces.getAsJsonObject("south").get("texture").getAsString()), "Static south/front face should use the neutral opaque body alias");
         }
 
         final List<String> modelNames = List.of("screen_tier1.json", "screen_tier2.json", "screen_tier3.json");
@@ -101,7 +101,7 @@ final class BlockModelResourceTest {
         try (Reader reader = Files.newBufferedReader(BLOCK_MODEL_ROOT.resolve("screen_horizontal_panel.json"))) {
             final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
             assertTrue("neoopencomputers:block/screen_panel".equals(model.get("parent").getAsString()));
-            assertTrue(!model.has("textures"), "Horizontal screen static model should inherit the same plain opaque screen fill; f2 is drawn dynamically");
+            assertTrue(!model.has("textures"), "Horizontal screen static model should inherit the same neutral opaque body; f2 is drawn dynamically");
         }
     }
 

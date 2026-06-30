@@ -116,6 +116,17 @@ final class ScreenBlockEntityRendererShapeTest {
     }
 
     @Test
+    void staticScreenPanelDoesNotPaintFixedConnectedFrontTexture() throws IOException {
+        try (Reader reader = Files.newBufferedReader(Path.of("src/main/resources/assets/neoopencomputers/models/block/screen_panel.json"))) {
+            final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
+            final JsonObject textures = model.getAsJsonObject("textures");
+
+            assertEquals("neoopencomputers:block/generic_side", textures.get("front").getAsString(),
+                "Static screen model must not paint a fixed connected-screen front; the block-entity renderer owns dynamic front parts.");
+        }
+    }
+
+    @Test
     void screenRendererDrawsConnectedFrontOverlayClearlyInFrontOfStaticModel() throws IOException {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/ScreenBlockEntityRenderer.java"));
 
