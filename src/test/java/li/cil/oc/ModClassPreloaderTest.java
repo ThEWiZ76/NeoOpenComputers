@@ -33,6 +33,8 @@ final class ModClassPreloaderTest {
         assertTrue(classNames.contains("li.cil.oc.client.TerminalScreen$TextCell"));
         assertTrue(classNames.contains("li.cil.oc.common.item.data.PrintRenderModel"));
         assertTrue(classNames.contains("li.cil.oc.common.item.data.PrintRenderModel$RenderShape"));
+        assertTrue(!classNames.contains("li.cil.oc.client.ManualScreen"),
+            "ManualScreen extends client-only Screen and must be preloaded from client setup, not the common mod constructor.");
 
         for (final String className : classNames) {
             assertEquals(className, Class.forName(className, false, ModClassPreloader.class.getClassLoader()).getName());

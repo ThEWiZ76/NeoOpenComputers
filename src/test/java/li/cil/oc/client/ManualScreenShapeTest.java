@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ManualScreenShapeTest {
     private static final Path MANUAL_SCREEN_SOURCE = Path.of("src/main/java/li/cil/oc/client/ManualScreen.java");
+    private static final Path CLIENT_SOURCE = Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java");
 
     @Test
     void manualScreenHasRegistryConstructor() throws NoSuchMethodException {
@@ -35,6 +36,18 @@ final class ManualScreenShapeTest {
 
         assertTrue(Screen.class.isAssignableFrom(ManualScreen.class));
         assertArrayEquals(new Class<?>[]{ManualRegistry.class}, constructor.getParameterTypes());
+    }
+
+    @Test
+    void clientSetupPreloadsManualScreenBeforeManualItemUse() throws IOException {
+        final String source = Files.readString(CLIENT_SOURCE);
+
+        assertTrue(source.contains("preloadClientOnlyClasses();"),
+            "Client setup must preload manual GUI classes before ManualItem can open the manual.");
+        assertTrue(source.contains("\"li.cil.oc.client.ManualScreen\""),
+            "Fresh alpha smoke showed ManualItem use can lazily fail loading ManualScreen.");
+        assertTrue(source.contains("Class.forName(className, true, loader)"),
+            "Client-only preload must initialize classes, matching the common crash-hardening preloader.");
     }
 
     @Test

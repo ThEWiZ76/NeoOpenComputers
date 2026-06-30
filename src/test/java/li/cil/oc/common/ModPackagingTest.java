@@ -84,6 +84,7 @@ final class ModPackagingTest {
             assertContains(jar, "li/cil/oc/common/component/InternetCardEnvironment$InetAddressRange.class");
             assertContains(jar, "li/cil/oc/common/component/TerminalScreenDelta$Row.class");
             assertContains(jar, "li/cil/oc/client/TerminalScreen$TextCell.class");
+            assertContains(jar, "li/cil/oc/client/ManualScreen.class");
             assertContains(jar, "li/cil/oc/common/item/data/PrintRenderModel.class");
             assertContains(jar, "li/cil/oc/common/item/data/PrintRenderModel$RenderShape.class");
         }

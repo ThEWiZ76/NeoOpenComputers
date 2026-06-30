@@ -35,9 +35,14 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 
+import java.util.List;
+
 @Mod(value = NeoOpenComputers.MODID, dist = Dist.CLIENT)
 @EventBusSubscriber(modid = NeoOpenComputers.MODID, value = Dist.CLIENT)
 public final class NeoOpenComputersClient {
+    private static final List<String> PRELOADED_CLIENT_CLASS_NAMES = List.of(
+        "li.cil.oc.client.ManualScreen"
+    );
     private static final ResourceLocation NANOMACHINE_HUD = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "nanomachine_hud");
     private static final ResourceLocation FLOPPY_COLOR_PROPERTY = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "floppy_color");
     private static final ResourceLocation TABLET_RUNNING_PROPERTY = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "tablet_running");
@@ -53,6 +58,7 @@ public final class NeoOpenComputersClient {
 
     @SubscribeEvent
     static void onClientSetup(final FMLClientSetupEvent event) {
+        preloadClientOnlyClasses();
         if (API.manual instanceof final ManualRegistry manualRegistry) {
             manualRegistry.setLanguageSupplier(() -> Minecraft.getInstance().options.languageCode);
             manualRegistry.setOpenHandler(player -> ManualScreen.open(manualRegistry));
@@ -67,6 +73,17 @@ public final class NeoOpenComputersClient {
             TABLET_RUNNING_PROPERTY,
             (stack, level, entity, seed) -> tabletRunningModelProperty(stack)));
         NeoOpenComputers.LOGGER.debug("NeoOpenComputers client setup complete.");
+    }
+
+    static void preloadClientOnlyClasses() {
+        final ClassLoader loader = NeoOpenComputersClient.class.getClassLoader();
+        for (final String className : PRELOADED_CLIENT_CLASS_NAMES) {
+            try {
+                Class.forName(className, true, loader);
+            } catch (final ClassNotFoundException e) {
+                throw new ExceptionInInitializerError(e);
+            }
+        }
     }
 
     @SubscribeEvent
