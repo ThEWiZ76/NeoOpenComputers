@@ -17,7 +17,16 @@ Screen world rendering stays frozen unless there is a focused repro, focused fai
 | Printer and print | Printer, print item, placed print, redstone activation, texture fallback, tooltip, and render-model tests cover current print smoke paths. | Create a print item, place it, rotate it, and confirm the configured shape remains. |
 | Manual and packaging | Manual link/resource tests, metadata tests, jar packaging tests, API jar tests, contributor docs, changelog, and alpha guide tests cover public artifact readiness. | Install `build/libs/neoopencomputers-0.1.0.jar` in a clean NeoForge 1.21.1 client and open the manual/creative tab. |
 
-Manual alpha smoke should save crash reports, client logs, screenshots, and exact reproduction steps for any mismatch.
+Manual alpha smoke must follow `VISUAL_SMOKE_RUNBOOK.md`. Save crash reports, client logs, screenshots, and exact reproduction steps for any mismatch.
+
+Required visual proof files before first alpha handoff:
+
+- `01-openos-prompt.png`
+- `02-computer-gui.png`
+- `03-screen-after-reload.png`
+- `04-creative-tab.png`
+- `05-manual.png`
+- `06-printer-print.png`
 
 ## Automated Evidence Anchors
 

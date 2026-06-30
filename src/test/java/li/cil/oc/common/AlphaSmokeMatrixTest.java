@@ -38,6 +38,18 @@ final class AlphaSmokeMatrixTest {
         assertTrue(matrix.contains("Manual alpha smoke"), "Matrix must distinguish manual alpha smoke");
         assertTrue(matrix.contains("Screen world rendering stays frozen"),
             "Matrix must keep the screen loop-control rule visible");
+        assertTrue(matrix.contains("VISUAL_SMOKE_RUNBOOK.md"),
+            "Matrix must point manual visual proof to the visual smoke runbook");
+        for (final String screenshotName : new String[]{
+            "01-openos-prompt.png",
+            "02-computer-gui.png",
+            "03-screen-after-reload.png",
+            "04-creative-tab.png",
+            "05-manual.png",
+            "06-printer-print.png"
+        }) {
+            assertTrue(matrix.contains(screenshotName), "Matrix missing required visual proof: " + screenshotName);
+        }
         for (final String gameTestName : new String[]{
             "computerRunsWithLuaBiosAndOpenOsFloppy",
             "tier1ComputerWithNetworkCardBootsOpenOsHardDiskToLiveStyleScreenWall",
