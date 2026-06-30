@@ -25,6 +25,10 @@ final class AlphaTestingGuideTest {
             "Guide must name the alpha jar path");
         assertTrue(guide.contains("Do not install `neoopencomputers-0.1.0-thin.jar`"),
             "Guide must warn testers away from the developer thin jar");
+        assertTrue(guide.contains("Verify the installed jar hash matches the built jar hash after copying"),
+            "Guide must require post-copy installed jar proof so stale profile jars are caught");
+        assertTrue(guide.contains("$installedAfter"),
+            "Guide must show the after-copy hash variable testers should compare");
         assertTrue(guide.contains("GitHub Actions stay disabled"),
             "Guide must keep CI disabled before release readiness");
         assertTrue(guide.contains("Robots, drones, and block microcontrollers are not available"),

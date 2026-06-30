@@ -30,6 +30,18 @@ This is the installable jar with bundled runtime libraries. Do not install `neoo
 
 Copy that jar into a clean Minecraft 1.21.1 NeoForge instance, then fully restart Minecraft. Replacing the jar while the game is running does not reload the mod.
 
+Verify the installed jar hash matches the built jar hash after copying before launching Minecraft:
+
+```powershell
+$built = Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256
+$installedPath = "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\mods\neoopencomputers-0.1.0.jar"
+Copy-Item .\build\libs\neoopencomputers-0.1.0.jar $installedPath -Force
+$installedAfter = Get-FileHash $installedPath -Algorithm SHA256
+if ($built.Hash -ne $installedAfter.Hash) {
+    throw "Installed NeoOpenComputers jar hash does not match the built jar hash after copying."
+}
+```
+
 ## Must Smoke Before Sharing
 
 - Game starts without NeoOpenComputers-owned missing model, missing texture, or mod loading errors.
