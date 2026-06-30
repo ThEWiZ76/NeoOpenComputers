@@ -11,9 +11,9 @@ Pour apprendre à utiliser ce manuel, allez sur [la page parlant du manuel](item
 ### Appareils
 - [Ordinateurs](general/computer.md)
 - [Serveurs](item/server1.md)
-- Micro-contrôleurs
-- Robots
-- Drones
+- Micro-contrôleurs (alpha unavailable)
+- Robots (alpha unavailable)
+- Drones (alpha unavailable)
 
 ### Logiciel et programmation
 - [OpenOS](general/openOS.md)

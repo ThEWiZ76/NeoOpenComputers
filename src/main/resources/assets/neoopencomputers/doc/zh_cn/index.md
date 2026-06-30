@@ -11,9 +11,9 @@ NeoOpenComputers alpha note: robots, drones, and block microcontrollers are not 
 ### 设备
 - [电脑](general/computer.md)
 - [服务器](item/server1.md)
-- 微控制器
-- 机器人
-- 无人机
+- 微控制器 (alpha unavailable)
+- 机器人 (alpha unavailable)
+- 无人机 (alpha unavailable)
 
 ### 软件与编程
 - [OpenOS](general/openOS.md)

@@ -12,9 +12,9 @@ OpenComputers - мод, который добавляет модульные и 
 
 - [Компьютеры](general/computer.md)
 - [Серверы](item/server1.md)
-- Микроконтроллеры
-- Роботы
-- Дроны
+- Микроконтроллеры (alpha unavailable)
+- Роботы (alpha unavailable)
+- Дроны (alpha unavailable)
 
 ### Программы и программирование
 - [OpenOS](general/openOS.md)

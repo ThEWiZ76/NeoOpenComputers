@@ -152,6 +152,42 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualHomePagesMarkUnavailableDeviceEntries() throws Exception {
+        final Set<String> unavailableDeviceEntries = Set.of(
+            "- Microcontrollers",
+            "- Robots",
+            "- Drones",
+            "- Mikrocontroller",
+            "- Roboter",
+            "- Drohnen",
+            "- Micro-contrôleurs",
+            "- Микроконтроллеры",
+            "- Роботы",
+            "- Дроны",
+            "- 微控制器",
+            "- 机器人",
+            "- 无人机"
+        );
+        final List<String> unmarkedEntries = new ArrayList<>();
+        try (Stream<Path> files = Files.list(DOC_ROOT)) {
+            for (final Path index : files
+                .filter(Files::isDirectory)
+                .map(path -> path.resolve("index.md"))
+                .filter(Files::exists)
+                .toList()) {
+                final Path relativeFile = DOC_ROOT.relativize(index);
+                for (final String line : Files.readAllLines(index)) {
+                    if (unavailableDeviceEntries.contains(line) && !line.contains("(alpha unavailable)")) {
+                        unmarkedEntries.add(relativeFile.toString().replace('\\', '/') + " -> " + line);
+                    }
+                }
+            }
+        }
+
+        assertTrue(unmarkedEntries.isEmpty(), () -> "Manual home pages have unmarked unavailable alpha device entries:\n" + String.join("\n", unmarkedEntries));
+    }
+
+    @Test
     void bundledManualHomePagesDoNotLinkUnavailableAlphaDevices() throws Exception {
         final Set<String> hiddenTargets = Set.of(
             "item/drone.md",

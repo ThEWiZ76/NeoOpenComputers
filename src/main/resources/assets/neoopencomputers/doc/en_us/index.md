@@ -11,9 +11,9 @@ To learn about how to use the manual, check out [the page about the manual](item
 ### Devices
 - [Computers](general/computer.md)
 - [Servers](item/server1.md)
-- Microcontrollers
-- Robots
-- Drones
+- Microcontrollers (alpha unavailable)
+- Robots (alpha unavailable)
+- Drones (alpha unavailable)
 
 ### Software and Programming
 - [OpenOS](general/openos.md)

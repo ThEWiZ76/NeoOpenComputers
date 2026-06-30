@@ -11,9 +11,9 @@ Um zu lernen, wie man die Bedienungsanleitung verwendet, siehe [die Seite über 
 ### Geräte
 - [Computer](general/computer.md)
 - [Server](item/server1.md)
-- Mikrocontroller
-- Roboter
-- Drohnen
+- Mikrocontroller (alpha unavailable)
+- Roboter (alpha unavailable)
+- Drohnen (alpha unavailable)
 
 ### Software und Programmierung
 - [OpenOS](general/openos.md)
