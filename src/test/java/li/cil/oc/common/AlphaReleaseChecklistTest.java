@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -98,6 +99,8 @@ final class AlphaReleaseChecklistTest {
         }
 
         final String issueForm = Files.readString(Path.of(".github", "ISSUE_TEMPLATE", "alpha-finding.yml"));
+        assertTrue(!Pattern.compile("(?m)^\\s+description: [^\"'][^#\\r\\n]*:\\s+").matcher(issueForm).find(),
+            "GitHub issue form descriptions with colon-space must be quoted or GitHub ignores the form");
         for (final String required : new String[]{
             "NeoOpenComputers jar version or commit",
             "Jar SHA256",
