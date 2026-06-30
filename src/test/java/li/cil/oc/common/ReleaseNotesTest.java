@@ -25,6 +25,8 @@ final class ReleaseNotesTest {
         assertTrue(changelog.contains("OpenOS boot"), "Changelog must summarize OpenOS boot scope");
         assertTrue(changelog.contains("Computer cases, servers, racks, screens, keyboards, storage, cards, and upgrades"),
             "Changelog must summarize current alpha device scope");
+        assertTrue(changelog.contains("Power and charging"),
+            "Changelog must summarize power and charging smoke scope");
         assertTrue(changelog.contains("Robots, drones, and block microcontrollers are not available"),
             "Changelog must list known unavailable devices");
         assertTrue(changelog.contains("GitHub Actions are intentionally disabled"),

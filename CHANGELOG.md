@@ -14,6 +14,7 @@ This is a crash-finding and basic OpenOS proof build, not a public beta promise.
 - Basic filesystem, EEPROM, floppy, disk-drive, hard-drive, and persistence smoke coverage.
 - Terminal GUI, terminal item, keyboard input, mouse events, paste, and screen save/reload paths.
 - Redstone, modem, inventory, tank, transposer, nanomachine, printer, print, rack, and server smoke coverage.
+- Power and charging smoke coverage for Forge Energy input, powered OC networks, charger flow, and chargeable items.
 - Player-visible boot failure feedback.
 - Installable jar with bundled runtime libraries at `build/libs/neoopencomputers-0.1.0.jar`.
 
