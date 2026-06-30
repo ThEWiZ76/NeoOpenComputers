@@ -33,6 +33,7 @@ final class BiosResourceTest {
     void bundledOpenOsProvidesRequireAndComponentPrimaryConvenience() throws IOException {
         final String packageLib = Files.readString(Path.of("src/main/resources/assets/neoopencomputers/loot/openos/lib/package.lua"));
         final String componentBoot = Files.readString(Path.of("src/main/resources/assets/neoopencomputers/loot/openos/boot/04_component.lua"));
+        final String coreBoot = Files.readString(Path.of("src/main/resources/assets/neoopencomputers/loot/openos/lib/core/boot.lua"));
 
         assertTrue(packageLib.contains("function require(module)"),
             "OpenOS package library must provide require().");
@@ -42,6 +43,10 @@ final class BiosResourceTest {
             "OpenOS package library must register itself as loaded.");
         assertTrue(!packageLib.contains("[\"component\"]"),
             "OpenOS component API should be loaded through require/boot setup, not package.loaded defaults.");
+        assertTrue(coreBoot.contains("_G.component = nil"),
+            "OpenOS boot must remove raw runtime component global from user script globals.");
+        assertTrue(coreBoot.contains("package.loaded.component = component"),
+            "OpenOS boot must make component available through require(\"component\").");
         assertTrue(componentBoot.contains("return component.getPrimary(key)"),
             "OpenOS component boot wrapper must keep component.<type> primary-proxy convenience.");
     }
