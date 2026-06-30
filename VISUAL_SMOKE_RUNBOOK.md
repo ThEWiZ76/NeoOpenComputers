@@ -14,6 +14,17 @@ Use this runbook for the remaining first-alpha proof that cannot be trusted to u
 
 Record the world name, seed, coordinates, component tiers, and any companion mods used.
 
+Compare the installed profile jar hash to the built jar hash before starting the smoke pass. Close Minecraft before replacing the installed jar; a running JVM keeps the old jar loaded and may lock the file on Windows.
+
+```powershell
+$built = Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256
+$installedPath = "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\mods\neoopencomputers-0.1.0.jar"
+$installed = Get-FileHash $installedPath -Algorithm SHA256
+$built.Hash
+$installed.Hash
+Copy-Item .\build\libs\neoopencomputers-0.1.0.jar $installedPath -Force
+```
+
 Create the smoke report folder before capturing screenshots. Save every required screenshot directly in `$report`:
 
 ```powershell

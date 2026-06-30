@@ -45,6 +45,17 @@ Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256
 
 Copy the installable jar into a clean Minecraft 1.21.1 NeoForge profile, then fully restart Minecraft before testing.
 
+Compare the installed profile jar hash to the built jar hash before smoke testing. Close Minecraft before replacing the installed jar; a running JVM keeps the old jar loaded and may also lock the jar on Windows.
+
+```powershell
+$built = Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256
+$installedPath = "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\mods\neoopencomputers-0.1.0.jar"
+$installed = Get-FileHash $installedPath -Algorithm SHA256
+$built.Hash
+$installed.Hash
+Copy-Item .\build\libs\neoopencomputers-0.1.0.jar $installedPath -Force
+```
+
 ## Smoke Handoff
 
 Use `ALPHA_SMOKE_MATRIX.md` as the required manual smoke list, `VISUAL_SMOKE_RUNBOOK.md` as the required screenshot proof list, and `ALPHA_FINDING_TEMPLATE.md` for every crash, visual, or behavior mismatch. Save crash reports, client logs, screenshots, and exact reproduction steps for every mismatch.
