@@ -25,8 +25,10 @@ final class ReadmeSmokeTest {
             "README must include computer case hard-disk persistence smoke item");
         assertTrue(readme.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
             "README must include terminal item input smoke item");
-        assertTrue(readme.contains("Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart"),
-            "README must include current tiered screen GUI smoke evidence");
+        assertTrue(readme.contains("MCP evidence shows tier 2 and tier 3 screens open their terminal GUI after a fresh client restart"),
+            "README must scope current tiered screen GUI evidence to MCP");
+        assertTrue(readme.contains("World-render screenshot proof for tier 2 and tier 3 screens is still pending"),
+            "README must not imply tiered screen world rendering is visually verified");
         assertTrue(readme.contains("Restart the Minecraft client after replacing the mod jar"),
             "README must warn testers to restart after jar replacement");
         assertTrue(readme.contains("screenshots"), "README must tell testers to save screenshots");

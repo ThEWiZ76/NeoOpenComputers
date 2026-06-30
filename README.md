@@ -19,7 +19,7 @@ Current verification evidence:
 - GameTest gate: `.\gradlew.bat runGameTestServer --no-daemon --console=plain`
 - Latest GameTest result: `428/428` required tests passed.
 - Bounded client launch smoke reaches resource reload and texture atlas creation without print/model/missing-texture/error matches.
-- Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart.
+- MCP evidence shows tier 2 and tier 3 screens open their terminal GUI after a fresh client restart. World-render screenshot proof for tier 2 and tier 3 screens is still pending, so screen visuals are not treated as verified alpha evidence yet.
 
 The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, player-facing failure feedback, and packaging slices in place. It is ready for first technical smoke testing, not release-ready.
 
