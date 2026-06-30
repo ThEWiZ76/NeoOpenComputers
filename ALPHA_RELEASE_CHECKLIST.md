@@ -44,7 +44,7 @@ Copy the installable jar into a clean Minecraft 1.21.1 NeoForge profile, then fu
 
 ## Smoke Handoff
 
-Use `ALPHA_SMOKE_MATRIX.md` as the required manual smoke list. Save crash reports, client logs, screenshots, and exact reproduction steps for every mismatch.
+Use `ALPHA_SMOKE_MATRIX.md` as the required manual smoke list and `VISUAL_SMOKE_RUNBOOK.md` as the required screenshot proof list. Save crash reports, client logs, screenshots, and exact reproduction steps for every mismatch.
 
 Minimum handoff proof:
 

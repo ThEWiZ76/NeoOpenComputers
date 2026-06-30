@@ -25,7 +25,7 @@ The port has broad API, machine, network, filesystem, terminal, screen/GPU/input
 
 Robots, drones, and block microcontrollers are not available in this alpha build. Computer cases, servers, racks, screens, keyboards, storage, cards, upgrades, and microcontroller case items are the current alpha focus.
 
-See the [First Alpha Testing Guide](ALPHA_TESTING.md) for the current install, smoke-test, known-gap, and issue-reporting checklist. See the [Alpha Smoke Matrix](ALPHA_SMOKE_MATRIX.md) for evidence mapping, [Alpha Release Checklist](ALPHA_RELEASE_CHECKLIST.md) for first-alpha handoff gates, [Screen Work Protocol](SCREEN_WORK_PROTOCOL.md) for the anti-loop screen evidence gate, [Contributing](CONTRIBUTING.md) for community development rules, and [Changelog](CHANGELOG.md) for alpha scope notes.
+See the [First Alpha Testing Guide](ALPHA_TESTING.md) for the current install, smoke-test, known-gap, and issue-reporting checklist. See the [Alpha Smoke Matrix](ALPHA_SMOKE_MATRIX.md) for evidence mapping, [Alpha Release Checklist](ALPHA_RELEASE_CHECKLIST.md) for first-alpha handoff gates, [Visual Smoke Runbook](VISUAL_SMOKE_RUNBOOK.md) for screenshot proof, [Screen Work Protocol](SCREEN_WORK_PROTOCOL.md) for the anti-loop screen evidence gate, [Contributing](CONTRIBUTING.md) for community development rules, and [Changelog](CHANGELOG.md) for alpha scope notes.
 
 GitHub Actions are intentionally disabled until the mod is ready enough for CI. Do not add `.github/workflows` yet.
 

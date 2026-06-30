@@ -30,6 +30,7 @@ final class AlphaReleaseChecklistTest {
             "Get-FileHash",
             "ALPHA_SMOKE_MATRIX.md",
             "SCREEN_WORK_PROTOCOL.md",
+            "VISUAL_SMOKE_RUNBOOK.md",
             "Do not add `.github/workflows`",
             "Screen renderer, model, glyph, and multiblock code stay frozen"
         }) {
@@ -57,6 +58,30 @@ final class AlphaReleaseChecklistTest {
             "Do not change textures, transforms, offsets, render layers, glyph sizing, or multiblock state in the same patch"
         }) {
             assertTrue(protocol.contains(required), "Screen work protocol missing anti-loop gate: " + required);
+        }
+    }
+
+    @Test
+    void visualSmokeRunbookDocumentsManualProof() throws IOException {
+        final Path runbookPath = Path.of("VISUAL_SMOKE_RUNBOOK.md");
+        final String readme = Files.readString(Path.of("README.md"));
+
+        assertTrue(Files.isRegularFile(runbookPath), "Visual smoke runbook must exist");
+        assertTrue(readme.contains("[Visual Smoke Runbook](VISUAL_SMOKE_RUNBOOK.md)"),
+            "README must link visual smoke runbook");
+
+        final String runbook = Files.readString(runbookPath);
+        for (final String required : new String[]{
+            "01-openos-prompt.png",
+            "02-computer-gui.png",
+            "03-screen-after-reload.png",
+            "04-creative-tab.png",
+            "05-manual.png",
+            "06-printer-print.png",
+            "Jar SHA256",
+            "Stop and file a finding"
+        }) {
+            assertTrue(runbook.contains(required), "Visual smoke runbook missing proof item: " + required);
         }
     }
 }
