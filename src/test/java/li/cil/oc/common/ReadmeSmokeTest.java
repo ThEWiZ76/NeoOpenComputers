@@ -36,6 +36,12 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("Verify the installed jar hash matches the built jar hash after copying"),
             "README must require post-copy installed jar hash proof so stale profile jars are caught");
         assertTrue(readme.contains("screenshots"), "README must tell testers to save screenshots");
+        assertTrue(readme.contains("Jar SHA256"),
+            "README finding instructions must ask for the exact jar hash");
+        assertTrue(readme.contains("current jar install timestamp"),
+            "README finding instructions must ask for jar install freshness");
+        assertTrue(readme.contains("Crash report timestamp"),
+            "README finding instructions must ask for crash-report freshness");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
         assertTrue(readme.contains("Robots, drones, and block microcontrollers are not available in this alpha build"),
             "README must state unavailable alpha devices");

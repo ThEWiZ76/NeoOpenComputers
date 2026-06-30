@@ -112,6 +112,17 @@ if ($built.Hash -ne $installedAfter.Hash) {
 
 5. Save logs and screenshots for any crash, missing texture, client/server error, or unexpected visual behavior.
 
+For every first-smoke finding, include:
+
+- NeoOpenComputers jar version or commit.
+- Jar SHA256.
+- current jar install timestamp.
+- Crash report timestamp.
+- Crash report path or full crash log.
+- Client log section around the failure.
+- Screenshot or short video for visual bugs.
+- Exact steps to reproduce in a fresh world when possible.
+
 ## Run Development Server
 
 ```powershell
