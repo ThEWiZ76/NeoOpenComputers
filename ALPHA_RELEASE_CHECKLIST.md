@@ -54,7 +54,14 @@ $installed = Get-FileHash $installedPath -Algorithm SHA256
 $built.Hash
 $installed.Hash
 Copy-Item .\build\libs\neoopencomputers-0.1.0.jar $installedPath -Force
+$installedAfter = Get-FileHash $installedPath -Algorithm SHA256
+$installedAfter.Hash
+if ($built.Hash -ne $installedAfter.Hash) {
+    throw "Installed NeoOpenComputers jar hash does not match the built jar hash after copying."
+}
 ```
+
+Verify the installed jar hash matches the built jar hash after copying before launching Minecraft.
 
 ## Smoke Handoff
 
