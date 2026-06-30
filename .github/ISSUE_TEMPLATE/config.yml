@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Alpha finding form
+    url: https://github.com/ThEWiZ76/NeoOpenComputers/issues/new?template=alpha-finding.yml
+    about: Report NeoOpenComputers alpha crashes, visual issues, or behavior mismatches.

@@ -62,6 +62,8 @@ final class AlphaReleaseChecklistTest {
         assertTrue(Files.isRegularFile(templatePath), "Reusable alpha finding template must exist");
         assertTrue(Files.isRegularFile(Path.of(".github", "ISSUE_TEMPLATE", "alpha-finding.yml")),
             "GitHub alpha finding issue form must exist");
+        assertTrue(Files.isRegularFile(Path.of(".github", "ISSUE_TEMPLATE", "config.yml")),
+            "GitHub issue template config must exist");
         assertTrue(!Files.exists(Path.of(".github", "workflows")),
             "GitHub Actions workflows must stay absent during alpha hardening");
         assertTrue(readme.contains("[Alpha Finding Template](ALPHA_FINDING_TEMPLATE.md)"),
@@ -109,6 +111,12 @@ final class AlphaReleaseChecklistTest {
         }) {
             assertTrue(issueForm.contains(required), "GitHub issue form missing report field: " + required);
         }
+
+        final String issueConfig = Files.readString(Path.of(".github", "ISSUE_TEMPLATE", "config.yml"));
+        assertTrue(issueConfig.contains("blank_issues_enabled: false"),
+            "GitHub issue config should force alpha reports through the structured form");
+        assertTrue(issueConfig.contains("issues/new?template=alpha-finding.yml"),
+            "GitHub issue config should include a direct alpha finding form link");
     }
 
     @Test
