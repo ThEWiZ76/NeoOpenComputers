@@ -30,6 +30,9 @@ Use this template for first-alpha crash, visual, or behavior findings. Keep it o
 ## Evidence
 
 - Crash report path or full crash log:
+- Crash report timestamp:
+- Minecraft restart timestamp:
+- Does the crash report timestamp come after the current jar install:
 - Client log section around the failure:
 - Screenshot or short video:
 - Save or structure file, if relevant:
