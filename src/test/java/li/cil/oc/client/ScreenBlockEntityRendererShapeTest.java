@@ -206,11 +206,11 @@ final class ScreenBlockEntityRendererShapeTest {
     @Test
     void screenRendererScalesTerminalTextToInnerScreenArea() {
         final float singleScale = ScreenBlockEntityRenderer.textScale(1, 1, 50, 16);
-        assertTrue(50 * 4 * singleScale < 0.75F, "Single-screen text should fit inside the screen border");
+        assertTrue(50 * TerminalFont.cellWidth() * singleScale < 0.75F, "Single-screen text should fit inside the screen border");
 
         final float wallScale = ScreenBlockEntityRenderer.textScale(3, 2, 80, 25);
-        assertTrue(80 * 4 * wallScale < 2.75F, "Multiblock text should fit inside the wall border");
-        assertTrue(25 * 8 * wallScale < 1.75F, "Multiblock text should fit vertically inside the wall border");
+        assertTrue(80 * TerminalFont.cellWidth() * wallScale < 2.75F, "Multiblock text should fit inside the wall border");
+        assertTrue(25 * TerminalFont.cellHeight() * wallScale < 1.75F, "Multiblock text should fit vertically inside the wall border");
     }
 
     @Test
@@ -218,12 +218,12 @@ final class ScreenBlockEntityRendererShapeTest {
         final ScreenBlockEntityRenderer.TextLayout single = ScreenBlockEntityRenderer.textLayout(1, 1, 50, 16);
         assertTrue(single.x() > -0.5F && single.x() < 0.5F);
         assertTrue(single.y() > -0.5F && single.y() < 0.5F);
-        assertTrue(single.y() - 16 * 8 * single.scale() > -0.5F);
+        assertTrue(single.y() - 16 * TerminalFont.cellHeight() * single.scale() > -0.5F);
 
         final ScreenBlockEntityRenderer.TextLayout wall = ScreenBlockEntityRenderer.textLayout(3, 2, 80, 25);
         assertTrue(wall.x() > -0.5F && wall.x() < 2.5F);
         assertTrue(wall.y() > -0.5F && wall.y() < 1.5F);
-        assertTrue(wall.y() - 25 * 8 * wall.scale() > -0.5F);
+        assertTrue(wall.y() - 25 * TerminalFont.cellHeight() * wall.scale() > -0.5F);
     }
 
     @Test
@@ -242,20 +242,20 @@ final class ScreenBlockEntityRendererShapeTest {
         assertTrue(TerminalFont.hasGlyph(0x754C));
         assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/font/chars_aliased.png")));
         assertTrue(Files.exists(Path.of("src/main/resources/assets/neoopencomputers/textures/font/chars.txt")));
-        assertEquals(5, TerminalFont.cellWidth());
-        assertEquals(9, TerminalFont.cellHeight());
-        assertEquals(0.5F, TerminalFont.worldPixelScale());
-        assertEquals(5, TerminalFont.glyphCellWidth('i'));
-        assertEquals(10, TerminalFont.glyphCellWidth(0x754C));
-        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 1)) >= 1, "Thin glyph strokes should survive 10x18 to 5x9 scaling");
-        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 6)) >= 1, "Lower pixels in thin glyphs should not be center-sampled away");
-        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 3)) <= 3, "Thin glyphs should not be expanded into blocky coverage buckets");
+        assertEquals(8, TerminalFont.cellWidth());
+        assertEquals(16, TerminalFont.cellHeight());
+        assertEquals(0.8F, TerminalFont.worldPixelScale());
+        assertEquals(8, TerminalFont.glyphCellWidth('i'));
+        assertEquals(16, TerminalFont.glyphCellWidth(0x754C));
+        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 2)) >= 1, "Thin glyph strokes should survive full 8x16 raster rendering");
+        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 11)) >= 1, "Lower pixels in thin glyphs should not be sampled away");
+        assertTrue(Integer.bitCount(TerminalFont.rowMask('i', 5)) <= 2, "Thin glyphs should not be expanded into blocky coverage buckets");
         assertTrue(renderer.contains("TerminalFont.drawWorldCell"), "World screen text should render fixed bitmap cells, not proportional Minecraft glyphs");
         assertTrue(renderer.contains("renderTerminalBackgrounds"), "World screen text should draw all cell backgrounds before wide glyphs");
         assertTrue(renderer.contains("renderTerminalGlyphs"), "World screen text should draw all glyphs after cell backgrounds");
 
         final String font = Files.readString(Path.of("src/main/java/li/cil/oc/client/TerminalFont.java"));
-        assertTrue(font.contains("py < CELL_HEIGHT"), "World text should render stable 5x9 terminal cells, not tiny source-pixel quads");
+        assertTrue(font.contains("py < CELL_HEIGHT"), "World text should render stable 8x16 terminal cells, not lossy downsampled cells");
         assertTrue(font.contains("px < glyphCellWidth(codePoint)"), "World text should use the same fixed cell raster as the GUI terminal");
         assertTrue(!font.contains("baseX + sourceX * scale"),
             "Source-pixel quads become sub-pixel world geometry and make close screen text unreadable.");

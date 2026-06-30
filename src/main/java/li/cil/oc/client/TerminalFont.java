@@ -22,8 +22,8 @@ final class TerminalFont {
     private static final int HEX_SOURCE_WIDTH = 8;
     private static final int HEX_SOURCE_HEIGHT = 16;
     private static final int TEXTURE_SOURCE_WIDTH = 10;
-    private static final int CELL_WIDTH = 5;
-    private static final int CELL_HEIGHT = 9;
+    private static final int CELL_WIDTH = HEX_SOURCE_WIDTH;
+    private static final int CELL_HEIGHT = HEX_SOURCE_HEIGHT;
     private static final int WORLD_GLYPH_LIGHT = LightTexture.FULL_BRIGHT;
     private static final Map<Integer, Glyph> GLYPHS = loadGlyphs();
 
@@ -159,8 +159,8 @@ final class TerminalFont {
 
     private static Map<Integer, Glyph> loadGlyphs() {
         final Map<Integer, Glyph> glyphs = new HashMap<>();
-        loadTextureGlyphs(glyphs);
         loadHexGlyphs(glyphs);
+        loadTextureGlyphs(glyphs);
         return Map.copyOf(glyphs);
     }
 
@@ -204,7 +204,9 @@ final class TerminalFont {
                         }
                         rows[row] = mask;
                     }
-                    glyphs.putIfAbsent(codePoint, new Glyph(sourceWidth, sourceHeight, sourceWidth, rows));
+                    if (hasPixels(rows)) {
+                        glyphs.putIfAbsent(codePoint, new Glyph(sourceWidth, sourceHeight, sourceWidth, rows));
+                    }
                 }
             }
         } catch (final IOException | NumberFormatException ignored) {
@@ -245,6 +247,15 @@ final class TerminalFont {
         } catch (final IOException | NumberFormatException ignored) {
             // Keep any texture glyphs loaded above.
         }
+    }
+
+    private static boolean hasPixels(final int[] rows) {
+        for (final int row : rows) {
+            if (row != 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private record Glyph(int sourceWidth, int sourceHeight, int sourceCellWidth, int[] rows) {
