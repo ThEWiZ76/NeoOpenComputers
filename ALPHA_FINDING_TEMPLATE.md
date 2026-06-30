@@ -1,6 +1,6 @@
 # Alpha Finding Template
 
-Use this template for first-alpha crash, visual, or behavior findings. Keep it outside `.github` while GitHub Actions and repository automation stay disabled.
+Use this template for first-alpha crash, visual, or behavior findings. The GitHub issue form in `.github/ISSUE_TEMPLATE/alpha-finding.yml` mirrors these fields; `.github/workflows` must remain absent while GitHub Actions stay disabled.
 
 ## Build
 

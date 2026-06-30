@@ -79,7 +79,7 @@ Report crashes and clear regressions at:
 https://github.com/ThEWiZ76/NeoOpenComputers/issues
 ```
 
-Use `ALPHA_FINDING_TEMPLATE.md` when filing first-alpha findings so logs, screenshots, coordinates, jar hashes, and third-party warning scope stay reproducible.
+Use the GitHub `Alpha finding` issue form or `ALPHA_FINDING_TEMPLATE.md` when filing first-alpha findings so logs, screenshots, coordinates, jar hashes, and third-party warning scope stay reproducible.
 
 Include:
 

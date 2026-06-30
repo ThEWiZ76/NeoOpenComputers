@@ -25,9 +25,9 @@ final class AlphaReleaseChecklistTest {
             "Do not ship `neoopencomputers-0.1.0-thin.jar`",
             ".\\gradlew.bat test build --no-daemon --console=plain",
             ".\\gradlew.bat runGameTestServer --no-daemon --console=plain",
-            "Test-Path .github",
-            "git ls-tree -r HEAD .github",
-            "git ls-tree -r origin/develop .github",
+            "Test-Path .github\\workflows",
+            "git ls-tree -r HEAD .github/workflows",
+            "git ls-tree -r origin/develop .github/workflows",
             "git status --short --branch",
             "Get-FileHash",
             "Compare the installed profile jar hash to the built jar hash",
@@ -38,6 +38,7 @@ final class AlphaReleaseChecklistTest {
             "SCREEN_WORK_PROTOCOL.md",
             "VISUAL_SMOKE_RUNBOOK.md",
             "ALPHA_FINDING_TEMPLATE.md",
+            ".github/ISSUE_TEMPLATE/alpha-finding.yml",
             "Do not add `.github/workflows`",
             "Screen renderer, model, glyph, and multiblock code stay frozen",
             "MCP terminal-open evidence alone is not enough",
@@ -58,11 +59,19 @@ final class AlphaReleaseChecklistTest {
         final String guide = Files.readString(Path.of("ALPHA_TESTING.md"));
         final String checklist = Files.readString(Path.of("ALPHA_RELEASE_CHECKLIST.md"));
 
-        assertTrue(Files.isRegularFile(templatePath), "Reusable alpha finding template must exist outside .github");
+        assertTrue(Files.isRegularFile(templatePath), "Reusable alpha finding template must exist");
+        assertTrue(Files.isRegularFile(Path.of(".github", "ISSUE_TEMPLATE", "alpha-finding.yml")),
+            "GitHub alpha finding issue form must exist");
+        assertTrue(!Files.exists(Path.of(".github", "workflows")),
+            "GitHub Actions workflows must stay absent during alpha hardening");
         assertTrue(readme.contains("[Alpha Finding Template](ALPHA_FINDING_TEMPLATE.md)"),
             "README must link the alpha finding template");
+        assertTrue(readme.contains("GitHub `Alpha finding` issue form"),
+            "README must mention the GitHub alpha finding issue form");
         assertTrue(guide.contains("ALPHA_FINDING_TEMPLATE.md"),
             "Alpha testing guide must link the alpha finding template");
+        assertTrue(guide.contains("GitHub `Alpha finding` issue form"),
+            "Alpha testing guide must mention the GitHub alpha finding issue form");
         assertTrue(checklist.contains("ALPHA_FINDING_TEMPLATE.md"),
             "Alpha release checklist must require the alpha finding template");
 
@@ -84,6 +93,21 @@ final class AlphaReleaseChecklistTest {
             "Screen issue evidence"
         }) {
             assertTrue(template.contains(required), "Alpha finding template missing report field: " + required);
+        }
+
+        final String issueForm = Files.readString(Path.of(".github", "ISSUE_TEMPLATE", "alpha-finding.yml"));
+        for (final String required : new String[]{
+            "NeoOpenComputers jar version or commit",
+            "Jar SHA256",
+            "Exact reproduction steps",
+            "Expected result",
+            "Actual result",
+            "Crash report timestamp",
+            "Minecraft restart timestamp",
+            "Does the crash report timestamp come after the current jar install",
+            "Screen issue evidence"
+        }) {
+            assertTrue(issueForm.contains(required), "GitHub issue form missing report field: " + required);
         }
     }
 

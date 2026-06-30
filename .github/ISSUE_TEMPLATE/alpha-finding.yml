@@ -1,0 +1,136 @@
+name: Alpha finding
+description: Report a NeoOpenComputers alpha crash, visual issue, or behavior mismatch.
+title: "[alpha] "
+labels:
+  - alpha
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for first-alpha crash, visual, or behavior findings. Please keep reports tied to the exact jar and profile you tested.
+  - type: input
+    id: jar-commit
+    attributes:
+      label: NeoOpenComputers jar version or commit
+      description: Example: 0.1.0-alpha, develop SHA, or GitHub release tag.
+    validations:
+      required: true
+  - type: input
+    id: jar-sha256
+    attributes:
+      label: Jar SHA256
+      description: Hash from Get-FileHash for the jar installed in the test profile.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Minecraft, NeoForge, Java, and launcher
+      description: Include Minecraft version, NeoForge version, Java version, launcher/profile, and companion mods.
+      placeholder: Minecraft 1.21.1, NeoForge 21.1.234, Java 21, Modrinth profile ...
+    validations:
+      required: true
+  - type: textarea
+    id: location
+    attributes:
+      label: World, seed, coordinates, and component tiers
+      description: Include world name, seed if relevant, coordinates, computer/screen/component tiers, and layout.
+    validations:
+      required: false
+  - type: textarea
+    id: steps
+    attributes:
+      label: Exact reproduction steps
+      description: List every step needed to reproduce from a fresh client or fresh world when possible.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: dropdown
+    id: restart-repro
+    attributes:
+      label: Does it reproduce after a full Minecraft restart?
+      options:
+        - "Yes"
+        - "No"
+        - "Not tested"
+    validations:
+      required: true
+  - type: dropdown
+    id: fresh-world-repro
+    attributes:
+      label: Does it reproduce in a fresh world?
+      options:
+        - "Yes"
+        - "No"
+        - "Not tested"
+    validations:
+      required: true
+  - type: input
+    id: crash-report-timestamp
+    attributes:
+      label: Crash report timestamp
+      description: If no crash happened, write "no crash".
+    validations:
+      required: true
+  - type: input
+    id: minecraft-restart-timestamp
+    attributes:
+      label: Minecraft restart timestamp
+      description: Helps separate stale reports from current-jar reports.
+    validations:
+      required: false
+  - type: dropdown
+    id: crash-after-current-jar
+    attributes:
+      label: Does the crash report timestamp come after the current jar install?
+      options:
+        - "Yes"
+        - "No"
+        - "No crash"
+        - "Not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Crash report path, crash log, or client log section
+      description: Paste the relevant crash report or latest.log section around the failure.
+    validations:
+      required: false
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshot, video, save, or structure evidence
+      description: Attach screenshots/videos for visual bugs and save/structure files when relevant.
+    validations:
+      required: false
+  - type: textarea
+    id: scope-notes
+    attributes:
+      label: Scope notes
+      description: Record third-party profile warnings and NeoOpenComputers-owned missing model, missing texture, or mod loading errors.
+    validations:
+      required: false
+  - type: textarea
+    id: screen-evidence
+    attributes:
+      label: Screen issue evidence
+      description: For screen issues, include jar/profile/world/coordinates/tier/layout/action, before screenshot with Minecraft pixels, and suspected layer.
+    validations:
+      required: false

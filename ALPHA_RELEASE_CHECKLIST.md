@@ -16,14 +16,14 @@ Run these from the repository root:
 ```powershell
 .\gradlew.bat test build --no-daemon --console=plain
 .\gradlew.bat runGameTestServer --no-daemon --console=plain
-Test-Path .github
-git ls-tree -r HEAD .github
+Test-Path .github\workflows
+git ls-tree -r HEAD .github/workflows
 git fetch origin develop
-git ls-tree -r origin/develop .github
+git ls-tree -r origin/develop .github/workflows
 git status --short --branch
 ```
 
-All tests must pass, GameTests must pass, GitHub Actions must stay disabled, and the working tree must only contain intentional release notes or artifact updates. `Test-Path .github` must print `False`; both `git ls-tree` commands must print no workflow files.
+All tests must pass, GameTests must pass, GitHub Actions must stay disabled, and the working tree must only contain intentional release notes or artifact updates. `Test-Path .github\workflows` must print `False`; both `git ls-tree` commands must print no workflow files. `.github/ISSUE_TEMPLATE/alpha-finding.yml` is allowed and must exist for first-alpha issue reports.
 
 Do not add `.github/workflows` for this alpha.
 
@@ -65,7 +65,7 @@ Verify the installed jar hash matches the built jar hash after copying before la
 
 ## Smoke Handoff
 
-Use `ALPHA_SMOKE_MATRIX.md` as the required manual smoke list, `VISUAL_SMOKE_RUNBOOK.md` as the required screenshot proof list, and `ALPHA_FINDING_TEMPLATE.md` for every crash, visual, or behavior mismatch. Save crash reports, client logs, screenshots, and exact reproduction steps for every mismatch.
+Use `ALPHA_SMOKE_MATRIX.md` as the required manual smoke list, `VISUAL_SMOKE_RUNBOOK.md` as the required screenshot proof list, and `ALPHA_FINDING_TEMPLATE.md` or the GitHub alpha finding issue form for every crash, visual, or behavior mismatch. Save crash reports, client logs, screenshots, and exact reproduction steps for every mismatch.
 
 MCP terminal-open evidence alone is not enough for screen visual handoff. The screenshot proof must show readable in-world screen output and the terminal GUI after a fresh client restart.
 
@@ -102,5 +102,6 @@ Stop the release handoff if any of these happen:
 - Power and charging cannot be proven with the current profile setup.
 - Texture picker atlas names cannot be proven with the current profile setup.
 - `.github/workflows` exists locally, in `HEAD`, or on `origin/develop`.
+- `.github/ISSUE_TEMPLATE/alpha-finding.yml` is missing.
 - Screen work starts without the screen loop guard evidence.
 - The working tree has unexplained changes.
