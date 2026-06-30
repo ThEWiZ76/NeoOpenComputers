@@ -16,11 +16,14 @@ Run these from the repository root:
 ```powershell
 .\gradlew.bat test build --no-daemon --console=plain
 .\gradlew.bat runGameTestServer --no-daemon --console=plain
-.\scripts\check-actions-disabled.ps1
+Test-Path .github
+git ls-tree -r HEAD .github
+git fetch origin develop
+git ls-tree -r origin/develop .github
 git status --short --branch
 ```
 
-All tests must pass, GameTests must pass, GitHub Actions must stay disabled, and the working tree must only contain intentional release notes or artifact updates.
+All tests must pass, GameTests must pass, GitHub Actions must stay disabled, and the working tree must only contain intentional release notes or artifact updates. `Test-Path .github` must print `False`; both `git ls-tree` commands must print no workflow files.
 
 Do not add `.github/workflows` for this alpha.
 

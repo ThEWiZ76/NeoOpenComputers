@@ -25,7 +25,9 @@ final class AlphaReleaseChecklistTest {
             "Do not ship `neoopencomputers-0.1.0-thin.jar`",
             ".\\gradlew.bat test build --no-daemon --console=plain",
             ".\\gradlew.bat runGameTestServer --no-daemon --console=plain",
-            ".\\scripts\\check-actions-disabled.ps1",
+            "Test-Path .github",
+            "git ls-tree -r HEAD .github",
+            "git ls-tree -r origin/develop .github",
             "git status --short --branch",
             "Get-FileHash",
             "ALPHA_SMOKE_MATRIX.md",
@@ -37,6 +39,8 @@ final class AlphaReleaseChecklistTest {
         }) {
             assertTrue(checklist.contains(required), "Checklist missing required release gate: " + required);
         }
+        assertTrue(!checklist.contains(".\\scripts\\"),
+            "Public alpha checklist must not depend on ignored local helper scripts");
     }
 
     @Test
@@ -83,9 +87,12 @@ final class AlphaReleaseChecklistTest {
             "mcp-client.json",
             "8081",
             "NVIDIA Broadcast",
+            "Compress-Archive",
             "Stop and file a finding"
         }) {
             assertTrue(runbook.contains(required), "Visual smoke runbook missing proof item: " + required);
         }
+        assertTrue(!runbook.contains(".\\scripts\\"),
+            "Public visual smoke runbook must not depend on ignored local helper scripts");
     }
 }
