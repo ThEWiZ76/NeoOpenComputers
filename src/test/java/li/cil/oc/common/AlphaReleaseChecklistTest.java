@@ -89,6 +89,8 @@ final class AlphaReleaseChecklistTest {
             "8081",
             "NVIDIA Broadcast",
             "Compress-Archive",
+            "Create the smoke report folder before capturing screenshots",
+            "Save every required screenshot directly in `$report`",
             "Stop and file a finding"
         }) {
             assertTrue(runbook.contains(required), "Visual smoke runbook missing proof item: " + required);

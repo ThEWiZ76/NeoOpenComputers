@@ -14,9 +14,17 @@ Use this runbook for the remaining first-alpha proof that cannot be trusted to u
 
 Record the world name, seed, coordinates, component tiers, and any companion mods used.
 
+Create the smoke report folder before capturing screenshots. Save every required screenshot directly in `$report`:
+
+```powershell
+$stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$report = "build\first-smoke-reports\first-smoke-$stamp"
+New-Item -ItemType Directory -Force -Path $report | Out-Null
+```
+
 ## Required Screenshots
 
-Save screenshots with these exact names in the smoke report folder:
+Save screenshots with these exact names in the smoke report folder from the setup step:
 
 - `01-openos-prompt.png`: tier 1 computer booted to a readable `/home #` prompt on a connected screen or terminal.
 - `02-computer-gui.png`: computer case GUI open with component tooltip visible and readable.
@@ -38,12 +46,9 @@ Optional screenshots can use a descriptive suffix, for example `07-disk-drive-me
 7. Open the creative tab and capture `04-creative-tab.png`.
 8. Open the manual and capture `05-manual.png`.
 9. Create or load a print item, place it, rotate/activate it once, and capture `06-printer-print.png`.
-10. Archive the screenshots, logs, crash reports, and checksum in one folder after screenshots are present:
+10. Archive the screenshots, logs, crash reports, and checksum in one folder after screenshots are present in `$report`:
 
 ```powershell
-$stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$report = "build\first-smoke-reports\first-smoke-$stamp"
-New-Item -ItemType Directory -Force -Path $report | Out-Null
 Copy-Item "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\logs\latest.log" $report -ErrorAction SilentlyContinue
 Copy-Item "C:\Users\rolan\AppData\Roaming\ModrinthApp\profiles\NeoOpenComputers test instance\crash-reports\*.txt" $report -ErrorAction SilentlyContinue
 Get-FileHash .\build\libs\neoopencomputers-0.1.0.jar -Algorithm SHA256 | Format-List | Out-File "$report\jar-sha256.txt"
