@@ -32,7 +32,8 @@ Copy that jar into a clean Minecraft 1.21.1 NeoForge instance, then fully restar
 
 ## Must Smoke Before Sharing
 
-- Game starts without missing model, missing texture, or mod loading errors.
+- Game starts without NeoOpenComputers-owned missing model, missing texture, or mod loading errors.
+- Third-party profile warnings should be recorded separately and only block alpha if they break NeoOpenComputers testing.
 - Creative tab opens and item stacks can be picked up.
 - Computer case, screen, keyboard, disk drive, and basic cards can be placed.
 - Tier 1 computer boots OpenOS from valid boot media.

@@ -18,7 +18,7 @@ Current verification evidence:
 - Unit/build gate: `.\gradlew.bat test build --no-daemon --console=plain`
 - GameTest gate: `.\gradlew.bat runGameTestServer --no-daemon --console=plain`
 - Latest GameTest result: `428/428` required tests passed.
-- Bounded client launch smoke reaches resource reload and texture atlas creation without print/model/missing-texture/error matches.
+- Bounded client launch smoke reaches resource reload and texture atlas creation without NeoOpenComputers-owned missing model, missing texture, or mod loading errors.
 - MCP evidence shows tier 2 and tier 3 screens open their terminal GUI after a fresh client restart. World-render screenshot proof for tier 2 and tier 3 screens is still pending, so screen visuals are not treated as verified alpha evidence yet.
 
 The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, player-facing failure feedback, and packaging slices in place. It is ready for first technical smoke testing, not release-ready.
@@ -84,6 +84,7 @@ Restart the Minecraft client after replacing the mod jar; a running JVM keeps th
 4. In a local test world, check these flows:
 
 - Computer case, screen, and keyboard place without crashing.
+- Logs show no NeoOpenComputers-owned missing model, missing texture, or mod loading errors. Third-party profile warnings should be recorded separately and only block alpha if they break NeoOpenComputers testing.
 - OpenOS/Lua prompt boots.
 - Basic filesystem, EEPROM, floppy, and disk-drive actions work.
 - Screen output and keyboard input survive save/reload.

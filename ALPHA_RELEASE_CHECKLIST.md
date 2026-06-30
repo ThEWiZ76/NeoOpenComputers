@@ -53,7 +53,7 @@ MCP terminal-open evidence alone is not enough for screen visual handoff. The sc
 
 Minimum handoff proof:
 
-- Client reaches a local world without missing model, missing texture, or mod loading errors.
+- Client reaches a local world without NeoOpenComputers-owned missing model, missing texture, or mod loading errors. Third-party profile warnings should be recorded separately and only block alpha if they break NeoOpenComputers testing.
 - Creative tab opens and current alpha items can be picked up.
 - Tier 1 computer boots OpenOS from valid media.
 - Tier 2 and tier 3 computers open their terminal GUI after a fresh client restart.

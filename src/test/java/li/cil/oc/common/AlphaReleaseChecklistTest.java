@@ -36,6 +36,7 @@ final class AlphaReleaseChecklistTest {
             "Do not add `.github/workflows`",
             "Screen renderer, model, glyph, and multiblock code stay frozen",
             "MCP terminal-open evidence alone is not enough",
+            "NeoOpenComputers-owned missing model, missing texture, or mod loading errors",
             "Power and charging",
             "Texture picker"
         }) {

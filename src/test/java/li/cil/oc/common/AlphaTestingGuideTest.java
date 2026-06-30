@@ -31,6 +31,8 @@ final class AlphaTestingGuideTest {
             "Guide must document known unavailable alpha devices");
         assertTrue(guide.contains("Microcontroller case items are present for recipe/API compatibility only"),
             "Guide must not ask alpha testers to smoke unavailable microcontroller devices");
+        assertTrue(guide.contains("NeoOpenComputers-owned missing model, missing texture, or mod loading errors"),
+            "Guide must scope log-error smoke failures to NeoOpenComputers-owned resources");
         assertTrue(guide.contains("Computer and server boot failures show a player-visible last-error message"),
             "Guide must tell alpha testers to verify player-facing boot failure feedback");
         assertTrue(guide.contains("Screen output and keyboard input survive save/reload"),
