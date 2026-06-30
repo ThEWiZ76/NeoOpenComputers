@@ -66,6 +66,7 @@ Minimum handoff proof:
 
 - Client reaches a local world without NeoOpenComputers-owned missing model, missing texture, or mod loading errors. Third-party profile warnings should be recorded separately and only block alpha if they break NeoOpenComputers testing.
 - Creative tab opens and current alpha items can be picked up.
+- In-game manual opens and shows the alpha note plus `(alpha unavailable)` markers for unavailable devices.
 - Tier 1 computer boots OpenOS from valid media.
 - Tier 2 and tier 3 computers open their terminal GUI after a fresh client restart.
 - Power and charging smoke passes: a computer accepts Forge Energy or runs from a powered OC network, and one chargeable item accepts charger energy.

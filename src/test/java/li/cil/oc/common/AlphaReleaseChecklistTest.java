@@ -138,6 +138,7 @@ final class AlphaReleaseChecklistTest {
             "Compress-Archive",
             "Create the smoke report folder before capturing screenshots",
             "Save every required screenshot directly in `$report`",
+            "(alpha unavailable)",
             "Stop and file a finding"
         }) {
             assertTrue(runbook.contains(required), "Visual smoke runbook missing proof item: " + required);
