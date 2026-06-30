@@ -49,6 +49,9 @@ if ($built.Hash -ne $installedAfter.Hash) {
 - Creative tab opens and item stacks can be picked up.
 - Computer case, screen, keyboard, disk drive, and basic cards can be placed.
 - Tier 1 computer boots OpenOS from valid boot media.
+- Normal Lua BIOS/runtime scripts do not get `require()` or OpenOS library search paths. OpenOS provides `require()` after boot.
+- OpenOS user scripts should import non-standard APIs explicitly. Use `local component = require("component")` and similar imports instead of assuming OpenOS scripts get API globals for free.
+- After OpenOS boots, `component.<type>` resolves the primary component proxy, so `component.gpu` or `component.filesystem` should work after `require("component")`.
 - Computer and server boot failures show a player-visible last-error message.
 - Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart.
 - MCP terminal-open evidence alone does not verify screen world rendering; capture readable world-render screenshots before treating tiered screen visuals as alpha-ready.
