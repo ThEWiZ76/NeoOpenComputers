@@ -38,6 +38,7 @@ Copy that jar into a clean Minecraft 1.21.1 NeoForge instance, then fully restar
 - Tier 1 computer boots OpenOS from valid boot media.
 - Computer and server boot failures show a player-visible last-error message.
 - Tier 2 and tier 3 screens open their terminal GUI after a fresh client restart.
+- MCP terminal-open evidence alone does not verify screen world rendering; capture readable world-render screenshots before treating tiered screen visuals as alpha-ready.
 - Keyboard input reaches the bound computer.
 - Screen output and keyboard input survive save/reload.
 - Terminal item input, paste, mouse click/drag/release, and scroll reach the bound computer.
