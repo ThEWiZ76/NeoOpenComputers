@@ -44,6 +44,7 @@ Copy that jar into a clean Minecraft 1.21.1 NeoForge instance, then fully restar
 - Terminal item input, paste, mouse click/drag/release, and scroll reach the bound computer.
 - Computer case hard-disk data survives save/reload.
 - Disk-drive floppy data survives save/reload.
+- Power and charging smoke passes: a computer accepts Forge Energy or runs from a powered OC network, and one chargeable item accepts charger energy.
 - Redstone, modem, inventory, tank, and transposer get one basic smoke pass.
 - Printer creates a print item and placed prints keep their configured data.
 

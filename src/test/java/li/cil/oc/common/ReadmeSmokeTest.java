@@ -23,6 +23,8 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include disk-drive persistence smoke item");
         assertTrue(readme.contains("Computer case hard-disk data survives save/reload"),
             "README must include computer case hard-disk persistence smoke item");
+        assertTrue(readme.contains("Power and charging smoke passes"),
+            "README must include power and charging smoke item");
         assertTrue(readme.contains("Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer"),
             "README must include terminal item input smoke item");
         assertTrue(readme.contains("MCP evidence shows tier 2 and tier 3 screens open their terminal GUI after a fresh client restart"),

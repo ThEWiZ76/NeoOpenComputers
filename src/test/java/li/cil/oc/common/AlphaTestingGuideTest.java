@@ -37,6 +37,8 @@ final class AlphaTestingGuideTest {
             "Guide must not imply MCP terminal-open evidence verifies screen visuals");
         assertTrue(guide.contains("Computer case hard-disk data survives save/reload"),
             "Guide must tell alpha testers to verify computer case hard-disk persistence");
+        assertTrue(guide.contains("Power and charging smoke passes"),
+            "Guide must tell alpha testers to verify power and charging before alpha handoff");
         assertTrue(guide.contains("https://github.com/ThEWiZ76/NeoOpenComputers/issues"),
             "Guide must route findings to the community issue tracker");
     }

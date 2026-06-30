@@ -90,6 +90,7 @@ Restart the Minecraft client after replacing the mod jar; a running JVM keeps th
 - Terminal item key input, paste, mouse click/drag/release, and scroll reach the bound computer.
 - Computer case hard-disk data survives save/reload.
 - Disk-drive floppy data survives save/reload.
+- Power and charging smoke passes: a computer accepts Forge Energy or runs from a powered OC network, and one chargeable item accepts charger energy.
 - Redstone, modem, inventory, tank, and transposer each get one basic smoke pass.
 - Texture picker reports usable atlas texture names such as `minecraft:block/stone`.
 - Printer creates a print item.
