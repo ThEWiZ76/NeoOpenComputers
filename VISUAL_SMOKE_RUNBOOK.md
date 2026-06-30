@@ -10,6 +10,7 @@ Use this runbook for the remaining first-alpha proof that cannot be trusted to u
 - NeoForge: 21.1.234
 - Branch: `develop`
 - Commit: latest pushed commit from `git log -1 --oneline`
+- MCP endpoint: read the active profile's `config/mcp-client.json` and use the configured `server.port`. In the current Modrinth test profile this is `8081`; do not assume `8080`, because it can be owned by other software such as NVIDIA Broadcast.
 
 Record the world name, seed, coordinates, component tiers, and any companion mods used.
 
@@ -30,13 +31,14 @@ Optional screenshots can use a descriptive suffix, for example `07-disk-drive-me
 
 1. Install only the bundled jar, not `neoopencomputers-0.1.0-thin.jar`.
 2. Fully restart Minecraft after replacing the jar.
-3. Boot a tier 1 computer from valid OpenOS media and capture `01-openos-prompt.png`.
-4. Open the computer case GUI, hover at least one component, and capture `02-computer-gui.png`.
-5. Save and reload the world, verify the screen still shows usable output, type one key through the keyboard or terminal, and capture `03-screen-after-reload.png`.
-6. Open the creative tab and capture `04-creative-tab.png`.
-7. Open the manual and capture `05-manual.png`.
-8. Create or load a print item, place it, rotate/activate it once, and capture `06-printer-print.png`.
-9. Run `.\scripts\collect-first-smoke-report.ps1` after screenshots are present so the report archive contains logs and images together.
+3. If using MCP, verify the real endpoint from `mcp-client.json` before testing. Use `8081` for the current Modrinth test profile unless that config changes.
+4. Boot a tier 1 computer from valid OpenOS media and capture `01-openos-prompt.png`.
+5. Open the computer case GUI, hover at least one component, and capture `02-computer-gui.png`.
+6. Save and reload the world, verify the screen still shows usable output, type one key through the keyboard or terminal, and capture `03-screen-after-reload.png`.
+7. Open the creative tab and capture `04-creative-tab.png`.
+8. Open the manual and capture `05-manual.png`.
+9. Create or load a print item, place it, rotate/activate it once, and capture `06-printer-print.png`.
+10. Run `.\scripts\collect-first-smoke-report.ps1` after screenshots are present so the report archive contains logs and images together.
 
 ## Stop Conditions
 

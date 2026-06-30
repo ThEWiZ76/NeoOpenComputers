@@ -79,6 +79,9 @@ final class AlphaReleaseChecklistTest {
             "05-manual.png",
             "06-printer-print.png",
             "Jar SHA256",
+            "mcp-client.json",
+            "8081",
+            "NVIDIA Broadcast",
             "Stop and file a finding"
         }) {
             assertTrue(runbook.contains(required), "Visual smoke runbook missing proof item: " + required);
