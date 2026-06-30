@@ -65,7 +65,10 @@ final class AlphaReleaseChecklistTest {
             "If the after screenshot proves one behavior but another screen behavior regresses, revert the screen patch",
             "After two failed screen patches in the same layer, stop implementation and write a root-cause note",
             "After three failed screen patches in the same area, require architecture review before another screen patch",
-            "Do not change textures, transforms, offsets, render layers, glyph sizing, or multiblock state in the same patch"
+            "Do not change textures, transforms, offsets, render layers, glyph sizing, or multiblock state in the same patch",
+            "Do not reintroduce a previously reverted screen texture, model, glyph, transform, render layer, or multiblock choice",
+            "Do not claim world-render verification from MCP terminal-open evidence or screenshots that do not show Minecraft pixels",
+            "If a screen fix has been reverted once, the next screen implementation patch must name the architecture owner"
         }) {
             assertTrue(protocol.contains(required), "Screen work protocol missing anti-loop gate: " + required);
         }
