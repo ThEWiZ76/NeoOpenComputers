@@ -7,6 +7,7 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
+import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.TabletItem;
@@ -128,6 +129,11 @@ public final class NeoOpenComputersClient {
     @SubscribeEvent
     static void registerBlockColors(final RegisterColorHandlersEvent.Block event) {
         event.register(
+            NeoOpenComputersClient::computerCaseBlockColor,
+            ModBlocks.COMPUTER_CASE_TIER1.get(),
+            ModBlocks.COMPUTER_CASE_TIER2.get(),
+            ModBlocks.COMPUTER_CASE_TIER3.get());
+        event.register(
             NeoOpenComputersClient::screenBlockColor,
             ModBlocks.SCREEN_TIER1.get(),
             ModBlocks.SCREEN_TIER2.get(),
@@ -136,6 +142,11 @@ public final class NeoOpenComputersClient {
 
     @SubscribeEvent
     static void registerItemColors(final RegisterColorHandlersEvent.Item event) {
+        event.register(
+            NeoOpenComputersClient::computerCaseItemColor,
+            ModBlocks.COMPUTER_CASE_TIER1.get(),
+            ModBlocks.COMPUTER_CASE_TIER2.get(),
+            ModBlocks.COMPUTER_CASE_TIER3.get());
         event.register(
             (stack, tintIndex) -> {
                 if (tintIndex != 0) {
@@ -154,14 +165,41 @@ public final class NeoOpenComputersClient {
             ModBlocks.SCREEN_TIER3.get());
     }
 
-    private static int screenTierColor(final Block block) {
-        if (block == ModBlocks.SCREEN_TIER3.get()) {
-            return SCREEN_TIER3_COLOR;
-        }
-        if (block == ModBlocks.SCREEN_TIER2.get()) {
-            return SCREEN_TIER2_COLOR;
+    private static int caseTierColor(final Block block) {
+        if (block instanceof ComputerCaseBlock computerCase) {
+            return tierColor(computerCase.tier());
         }
         return SCREEN_TIER1_COLOR;
+    }
+
+    private static int screenTierColor(final Block block) {
+        if (block == ModBlocks.SCREEN_TIER3.get()) {
+            return tierColor(2);
+        }
+        if (block == ModBlocks.SCREEN_TIER2.get()) {
+            return tierColor(1);
+        }
+        return tierColor(0);
+    }
+
+    static int computerCaseBlockColor(final BlockState state, final BlockAndTintGetter tintGetter, final BlockPos pos, final int tintIndex) {
+        if (tintIndex != 0) {
+            return 0xFFFFFF;
+        }
+        return caseTierColor(state.getBlock());
+    }
+
+    static int computerCaseItemColor(final ItemStack stack, final int tintIndex) {
+        if (tintIndex != 0) {
+            return 0xFFFFFF;
+        }
+        if (stack.is(ModBlocks.COMPUTER_CASE_TIER3.get().asItem())) {
+            return tierColor(2);
+        }
+        if (stack.is(ModBlocks.COMPUTER_CASE_TIER2.get().asItem())) {
+            return tierColor(1);
+        }
+        return tierColor(0);
     }
 
     static int screenBlockColor(final BlockState state, final BlockAndTintGetter tintGetter, final BlockPos pos, final int tintIndex) {
@@ -172,6 +210,14 @@ public final class NeoOpenComputersClient {
             return screen.getRenderColor();
         }
         return screenTierColor(state.getBlock());
+    }
+
+    private static int tierColor(final int tier) {
+        return switch (tier) {
+            case 2 -> SCREEN_TIER3_COLOR;
+            case 1 -> SCREEN_TIER2_COLOR;
+            default -> SCREEN_TIER1_COLOR;
+        };
     }
 
     static float tabletRunningModelProperty(final ItemStack stack) {

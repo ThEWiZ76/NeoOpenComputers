@@ -21,6 +21,19 @@ final class ScreenColorHandlerShapeTest {
     }
 
     @Test
+    void clientRegistersUpstreamComputerCaseTierTintHandlers() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java"));
+
+        assertTrue(source.contains("caseTierColor"));
+        assertTrue(source.contains("ModBlocks.COMPUTER_CASE_TIER1.get()"));
+        assertTrue(source.contains("ModBlocks.COMPUTER_CASE_TIER2.get()"));
+        assertTrue(source.contains("ModBlocks.COMPUTER_CASE_TIER3.get()"));
+        assertTrue(source.contains("0xABABAB"), "Tier 1 cases should use upstream silver tint");
+        assertTrue(source.contains("0xFFFF66"), "Tier 2 cases should use upstream yellow tint");
+        assertTrue(source.contains("0x66FFFF"), "Tier 3 cases should use upstream cyan tint");
+    }
+
+    @Test
     void screenBlockColorUsesBlockEntityRenderColorLikeUpstream() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java"));
 

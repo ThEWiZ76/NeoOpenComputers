@@ -31,6 +31,7 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
     private static final int STATUS_CONTROL_X = 70;
     private static final int STATUS_CONTROL_Y = 33;
     private static final int STATUS_CONTROL_SIZE = 18;
+    private static final float SLOT_OVERLAY_ALPHA = 0.35F;
     private static final Component SCREEN_TITLE = Component.translatable("gui.neoopencomputers.computer_case.title");
 
     public ComputerCaseScreen(final ComputerCaseMenu menu, final Inventory playerInventory, final Component title) {
@@ -243,6 +244,10 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         return SLOT_TEXTURE_SIZE;
     }
 
+    public static float slotOverlayAlpha() {
+        return SLOT_OVERLAY_ALPHA;
+    }
+
     private static void drawSlot(
         final GuiGraphics guiGraphics,
         final int left,
@@ -265,9 +270,15 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         if (occupied) {
             return;
         }
-        for (final ResourceLocation texture : slotOverlayTextures(kind, tier, occupied)) {
+        final List<ResourceLocation> overlayTextures = slotOverlayTextures(kind, tier, occupied);
+        if (overlayTextures.isEmpty()) {
+            return;
+        }
+        guiGraphics.setColor(1F, 1F, 1F, slotOverlayAlpha());
+        for (final ResourceLocation texture : overlayTextures) {
             guiGraphics.blit(texture, iconLeft, iconTop, 0, 0, SLOT_SIZE, SLOT_SIZE, SLOT_SIZE, SLOT_SIZE);
         }
+        guiGraphics.setColor(1F, 1F, 1F, 1F);
     }
 
     static List<ResourceLocation> slotOverlayTextures(final String kind, final int tier, final boolean occupied) {

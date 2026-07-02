@@ -232,6 +232,16 @@ final class ComputerCaseScreenShapeTest {
         assertEquals(List.of(), ComputerCaseScreen.slotOverlayTextures("cpu", 2, true));
     }
 
+    @Test
+    void computerCaseScreenDrawsEmptySlotOverlaysAsWatermarks() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/ComputerCaseScreen.java"));
+
+        assertTrue(ComputerCaseScreen.slotOverlayAlpha() > 0F);
+        assertTrue(ComputerCaseScreen.slotOverlayAlpha() <= 0.45F);
+        assertTrue(source.contains("guiGraphics.setColor(1F, 1F, 1F, slotOverlayAlpha())"));
+        assertTrue(source.contains("guiGraphics.setColor(1F, 1F, 1F, 1F)"));
+    }
+
     private static void assertTranslationKey(final String expected, final Component component) {
         assertTrue(component.getContents() instanceof TranslatableContents);
         assertEquals(expected, ((TranslatableContents) component.getContents()).getKey());
