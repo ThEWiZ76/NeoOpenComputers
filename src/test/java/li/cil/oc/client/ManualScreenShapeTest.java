@@ -104,6 +104,18 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenRendersPlainScreenLayerBeforeBookContent() throws IOException {
+        final String source = Files.readString(MANUAL_SCREEN_SOURCE);
+        final int superRender = source.indexOf("super.render(graphics, mouseX, mouseY, partialTick);");
+        final int bookTexture = source.indexOf("graphics.blit(MANUAL_TEXTURE");
+        final int documentRender = source.indexOf("renderDocumentClipped(graphics");
+
+        assertTrue(superRender >= 0, "Manual screen must keep vanilla Screen render call.");
+        assertTrue(superRender < bookTexture, "Plain Screen render layer must not run over the manual texture.");
+        assertTrue(superRender < documentRender, "Plain Screen render layer must not run over manual text.");
+    }
+
+    @Test
     void manualScreenSelectsUpstreamButtonTextureRowsForHoverState() {
         assertEquals(0, ManualScreen.buttonTextureYOffset(false, ManualScreen.TAB_HEIGHT));
         assertEquals(ManualScreen.TAB_HEIGHT, ManualScreen.buttonTextureYOffset(true, ManualScreen.TAB_HEIGHT));
