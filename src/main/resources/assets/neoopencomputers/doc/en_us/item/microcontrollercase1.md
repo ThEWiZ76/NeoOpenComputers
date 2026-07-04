@@ -8,7 +8,7 @@ They do not have an actual file system. All programming must be done using the [
 
 While they also require power to run, they consume very little energy.
 
-The tier 1 microcontroller case can accept the following components:
+The creative microcontroller case can accept the following components:
 - 1x tier 1 [CPU](cpu1.md)
 - 1x tier 1 [RAM](ram1.md)
 - 1x [EEPROM](eeprom.md)

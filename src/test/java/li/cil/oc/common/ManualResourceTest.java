@@ -261,6 +261,32 @@ final class ManualResourceTest {
     }
 
     @Test
+    void bundledManualMicrocontrollerPagesAreNoLongerMarkedAlphaUnavailable() throws Exception {
+        final List<String> stalePages = new ArrayList<>();
+        try (Stream<Path> files = Files.list(DOC_ROOT)) {
+            for (final Path file : files
+                .filter(Files::isDirectory)
+                .map(path -> path.resolve("block/microcontroller.md"))
+                .filter(Files::exists)
+                .toList()) {
+                if (Files.readString(file).contains("NeoOpenComputers alpha unavailable:")) {
+                    stalePages.add(DOC_ROOT.relativize(file).toString().replace('\\', '/'));
+                }
+            }
+        }
+
+        assertTrue(stalePages.isEmpty(), () -> "Microcontroller manual pages still marked alpha unavailable:\n" + String.join("\n", stalePages));
+    }
+
+    @Test
+    void bundledEnglishMicrocontrollerCaseDocumentsCreativeTierSlots() throws Exception {
+        final String content = Files.readString(DOC_ROOT.resolve("en_us/item/microcontrollercase1.md"));
+
+        assertTrue(content.contains("The creative microcontroller case can accept the following components:"),
+            "English microcontroller case page must label the creative tier slot list");
+    }
+
+    @Test
     void bundledManualMarkdownUsesCommunityIssueTracker() throws Exception {
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             assertTrue(files
