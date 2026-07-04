@@ -20,6 +20,7 @@ final class AssemblerTemplatesTest {
     @Test
     void defaultTemplatesIncludeTabletAssembler() {
         assertTrue(AssemblerTemplates.defaultTemplateNames().contains("tablet"));
+        assertTrue(AssemblerTemplates.defaultTemplateNames().contains("microcontroller"));
     }
 
     @Test
