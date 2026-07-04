@@ -38,4 +38,13 @@ final class MicrocontrollerMenuShapeTest {
         assertEquals(-1, MicrocontrollerMenu.microcontrollerSlotX(3, 16));
         assertEquals(-1, MicrocontrollerMenu.microcontrollerSlotY(3, 16));
     }
+
+    @Test
+    void menuSyncsMicrocontrollerStatusForScreenControls() {
+        assertEquals(ComputerCaseMenu.STATE_EMPTY, MicrocontrollerMenu.STATE_EMPTY);
+        assertEquals(ComputerCaseMenu.STATE_READY, MicrocontrollerMenu.STATE_READY);
+        assertEquals(ComputerCaseMenu.STATE_RUNNING, MicrocontrollerMenu.STATE_RUNNING);
+        assertEquals(ComputerCaseMenu.STATE_INCOMPLETE, MicrocontrollerMenu.STATE_INCOMPLETE);
+        assertEquals(5, MicrocontrollerMenu.MICROCONTROLLER_DATA_COUNT);
+    }
 }

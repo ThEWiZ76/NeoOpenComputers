@@ -48,6 +48,13 @@ final class MicrocontrollerScreenShapeTest {
     }
 
     @Test
+    void microcontrollerScreenHasComputerStyleStatusControl() {
+        assertTrue(MicrocontrollerScreen.statusControlAt(70, 33, 0, 0));
+        assertEquals(0, MicrocontrollerScreen.statusControlAction(MicrocontrollerMenu.STATE_READY));
+        assertEquals(1, MicrocontrollerScreen.statusControlAction(MicrocontrollerMenu.STATE_RUNNING));
+    }
+
+    @Test
     void clientRegistersMicrocontrollerMenuScreen() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java"));
 

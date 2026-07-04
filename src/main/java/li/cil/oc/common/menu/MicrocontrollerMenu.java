@@ -1,8 +1,13 @@
 package li.cil.oc.common.menu;
 
+import li.cil.oc.api.Driver;
+import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.blockentity.MicrocontrollerBlockEntity;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -12,17 +17,31 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 public class MicrocontrollerMenu extends AbstractContainerMenu {
     public static final int MIN_MICROCONTROLLER_SLOT_COUNT = 6;
     public static final int MAX_MICROCONTROLLER_SLOT_COUNT = 16;
     public static final int PLAYER_SLOT_COUNT = 36;
-    public static final int MICROCONTROLLER_TIER_INDEX = 0;
-    public static final int MICROCONTROLLER_DATA_COUNT = 1;
+    public static final int MICROCONTROLLER_STATUS_INDEX = 0;
+    public static final int MICROCONTROLLER_MISSING_REQUIREMENTS_INDEX = 1;
+    public static final int MICROCONTROLLER_COMPONENT_COUNT_INDEX = 2;
+    public static final int MICROCONTROLLER_MAX_COMPONENTS_INDEX = 3;
+    public static final int MICROCONTROLLER_TIER_INDEX = 4;
+    public static final int MICROCONTROLLER_DATA_COUNT = 5;
+    public static final int STATE_EMPTY = ComputerCaseMenu.STATE_EMPTY;
+    public static final int STATE_READY = ComputerCaseMenu.STATE_READY;
+    public static final int STATE_RUNNING = ComputerCaseMenu.STATE_RUNNING;
+    public static final int STATE_INCOMPLETE = ComputerCaseMenu.STATE_INCOMPLETE;
+    public static final int MISSING_CPU = ComputerCaseMenu.MISSING_CPU;
+    public static final int MISSING_MEMORY = ComputerCaseMenu.MISSING_MEMORY;
+    public static final int MISSING_EEPROM = ComputerCaseMenu.MISSING_EEPROM;
+    public static final int MISSING_EEPROM_CODE = ComputerCaseMenu.MISSING_EEPROM_CODE;
 
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 84;
     private static final int PLAYER_HOTBAR_Y = 142;
+    private static final String SLOT_TYPE_EEPROM = "eeprom";
     private static final int[][][] MICROCONTROLLER_SLOT_POSITIONS = {
         {
             {48, 16},
@@ -117,6 +136,22 @@ public class MicrocontrollerMenu extends AbstractContainerMenu {
         return microcontrollerData.get(MICROCONTROLLER_TIER_INDEX);
     }
 
+    public int microcontrollerState() {
+        return microcontrollerData.get(MICROCONTROLLER_STATUS_INDEX);
+    }
+
+    public int missingRequirements() {
+        return microcontrollerData.get(MICROCONTROLLER_MISSING_REQUIREMENTS_INDEX);
+    }
+
+    public int componentCount() {
+        return microcontrollerData.get(MICROCONTROLLER_COMPONENT_COUNT_INDEX);
+    }
+
+    public int maxComponents() {
+        return microcontrollerData.get(MICROCONTROLLER_MAX_COMPONENTS_INDEX);
+    }
+
     public Container microcontrollerInventory() {
         return microcontrollerInventory;
     }
@@ -158,6 +193,79 @@ public class MicrocontrollerMenu extends AbstractContainerMenu {
 
     private static ContainerData microcontrollerData(final Container microcontrollerInventory) {
         return new ServerMicrocontrollerData(microcontrollerInventory);
+    }
+
+    public static int microcontrollerStateFor(final Container microcontrollerInventory) {
+        if (!(microcontrollerInventory instanceof MicrocontrollerBlockEntity microcontroller)) {
+            return STATE_EMPTY;
+        }
+        if (microcontroller.machine().isRunning() || microcontroller.machine().isPaused()) {
+            return STATE_RUNNING;
+        }
+        return missingRequirementsFor(microcontrollerInventory) == 0 ? STATE_READY : STATE_INCOMPLETE;
+    }
+
+    public static int missingRequirementsFor(final Container microcontrollerInventory) {
+        if (!(microcontrollerInventory instanceof MicrocontrollerBlockEntity)) {
+            return 0;
+        }
+        boolean hasCpu = false;
+        boolean hasMemory = false;
+        boolean hasEeprom = false;
+        boolean hasEepromCode = false;
+        for (int slot = 0; slot < microcontrollerInventory.getContainerSize(); slot++) {
+            final ItemStack stack = microcontrollerInventory.getItem(slot);
+            if (stack.isEmpty() || !microcontrollerInventory.canPlaceItem(slot, stack)) {
+                continue;
+            }
+            final DriverItem driver = Driver.driverFor(stack, MicrocontrollerBlockEntity.class);
+            if (driver == null) {
+                continue;
+            }
+            final String slotType = driver.slot(stack);
+            if (li.cil.oc.api.driver.item.Slot.CPU.equals(slotType)) {
+                hasCpu = true;
+            } else if (li.cil.oc.api.driver.item.Slot.Memory.equals(slotType)) {
+                hasMemory = true;
+            } else if (SLOT_TYPE_EEPROM.equals(slotType)) {
+                hasEeprom = true;
+                hasEepromCode |= hasEepromCode(stack);
+            }
+        }
+        int missing = 0;
+        if (!hasCpu) {
+            missing |= MISSING_CPU;
+        }
+        if (!hasMemory) {
+            missing |= MISSING_MEMORY;
+        }
+        if (!hasEeprom) {
+            missing |= MISSING_EEPROM;
+        } else if (!hasEepromCode) {
+            missing |= MISSING_EEPROM_CODE;
+        }
+        return missing;
+    }
+
+    public static int componentCountFor(final Container microcontrollerInventory) {
+        return microcontrollerInventory instanceof MicrocontrollerBlockEntity microcontroller ? microcontroller.machine().componentCount() : 0;
+    }
+
+    public static int maxComponentsFor(final Container microcontrollerInventory) {
+        return microcontrollerInventory instanceof MicrocontrollerBlockEntity microcontroller ? microcontroller.machine().maxComponents() : 0;
+    }
+
+    public static int microcontrollerTierFor(final Container microcontrollerInventory) {
+        return microcontrollerInventory instanceof MicrocontrollerBlockEntity microcontroller ? microcontroller.tier() : 0;
+    }
+
+    private static boolean hasEepromCode(final ItemStack stack) {
+        final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null) {
+            return false;
+        }
+        final CompoundTag eepromData = customData.getUnsafe().getCompound(ItemRegistry.EEPROM_DATA_TAG);
+        return eepromData.getByteArray(ItemRegistry.EEPROM_CODE_TAG).length > 0;
     }
 
     private static ContainerData clientMicrocontrollerData(final RegistryFriendlyByteBuf extraData) {
@@ -216,7 +324,11 @@ public class MicrocontrollerMenu extends AbstractContainerMenu {
         @Override
         public int get(final int index) {
             return switch (index) {
-                case MICROCONTROLLER_TIER_INDEX -> microcontrollerInventory instanceof MicrocontrollerBlockEntity microcontroller ? microcontroller.tier() : 0;
+                case MICROCONTROLLER_STATUS_INDEX -> microcontrollerStateFor(microcontrollerInventory);
+                case MICROCONTROLLER_MISSING_REQUIREMENTS_INDEX -> missingRequirementsFor(microcontrollerInventory);
+                case MICROCONTROLLER_COMPONENT_COUNT_INDEX -> componentCountFor(microcontrollerInventory);
+                case MICROCONTROLLER_MAX_COMPONENTS_INDEX -> maxComponentsFor(microcontrollerInventory);
+                case MICROCONTROLLER_TIER_INDEX -> microcontrollerTierFor(microcontrollerInventory);
                 default -> 0;
             };
         }

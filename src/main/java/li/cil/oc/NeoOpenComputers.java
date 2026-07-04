@@ -40,6 +40,7 @@ import li.cil.oc.common.machine.ProgramLocationImc;
 import li.cil.oc.common.machine.ProgramLocations;
 import li.cil.oc.common.network.DebugNetworking;
 import li.cil.oc.common.network.ComputerCaseNetworking;
+import li.cil.oc.common.network.MicrocontrollerNetworking;
 import li.cil.oc.common.network.NanomachinesNetworking;
 import li.cil.oc.common.network.RackNetworking;
 import li.cil.oc.common.network.TerminalNetworking;
@@ -87,6 +88,7 @@ public final class NeoOpenComputers {
         modEventBus.addListener(ChunkloaderUpgradeEnvironment::registerTicketController);
         modEventBus.addListener(ComputerCaseNetworking::register);
         modEventBus.addListener(DebugNetworking::register);
+        modEventBus.addListener(MicrocontrollerNetworking::register);
         modEventBus.addListener(NanomachinesNetworking::register);
         modEventBus.addListener(RackNetworking::register);
         modEventBus.addListener(TerminalNetworking::register);

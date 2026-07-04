@@ -1,11 +1,14 @@
 package li.cil.oc.client;
 
 import li.cil.oc.common.menu.MicrocontrollerMenu;
+import li.cil.oc.common.network.MicrocontrollerControlPayload;
+import li.cil.oc.common.network.RackControlPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class MicrocontrollerScreen extends AbstractContainerScreen<MicrocontrollerMenu> {
     public static final ResourceLocation BACKGROUND_TEXTURE = ComputerCaseScreen.BACKGROUND_TEXTURE;
@@ -16,6 +19,9 @@ public class MicrocontrollerScreen extends AbstractContainerScreen<Microcontroll
     private static final int TITLE_TEXT_Y = 6;
     private static final int INVENTORY_TEXT_X = 8;
     private static final int INVENTORY_TEXT_Y = 72;
+    private static final int STATUS_CONTROL_X = 70;
+    private static final int STATUS_CONTROL_Y = 33;
+    private static final int STATUS_CONTROL_SIZE = 18;
     private static final Component SCREEN_TITLE = Component.translatable("gui.neoopencomputers.microcontroller.title");
 
     public MicrocontrollerScreen(final MicrocontrollerMenu menu, final Inventory playerInventory, final Component title) {
@@ -45,6 +51,7 @@ public class MicrocontrollerScreen extends AbstractContainerScreen<Microcontroll
                 MicrocontrollerMenu.microcontrollerSlotTierLimit(tier, slot),
                 menu.getSlot(slot).hasItem());
         }
+        drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, top + STATUS_CONTROL_Y, menu.microcontrollerState(), statusControlAt(mouseX, mouseY, left, top));
     }
 
     @Override
@@ -64,7 +71,20 @@ public class MicrocontrollerScreen extends AbstractContainerScreen<Microcontroll
                 MicrocontrollerMenu.microcontrollerSlotKind(menu.microcontrollerTier(), slot),
                 MicrocontrollerMenu.microcontrollerSlotTierLimit(menu.microcontrollerTier(), slot),
                 menu.getSlot(slot).hasItem()), mouseX, mouseY);
+        } else if (statusControlAt(mouseX, mouseY, leftPos, topPos)) {
+            guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.statusControlTooltip(menu.microcontrollerState()), mouseX, mouseY);
+        } else if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
+            guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.statusTooltip(menu.microcontrollerState(), menu.missingRequirements(), menu.componentCount(), menu.maxComponents()), mouseX, mouseY);
         }
+    }
+
+    @Override
+    public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
+        if (button == 0 && statusControlAt((int) mouseX, (int) mouseY, leftPos, topPos)) {
+            PacketDistributor.sendToServer(controlPayload(menu, statusControlAction(menu.microcontrollerState())));
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     public static Component screenTitle() {
@@ -80,5 +100,32 @@ public class MicrocontrollerScreen extends AbstractContainerScreen<Microcontroll
             }
         }
         return -1;
+    }
+
+    static MicrocontrollerControlPayload controlPayload(final MicrocontrollerMenu menu, final int action) {
+        return new MicrocontrollerControlPayload(menu.containerId, action);
+    }
+
+    static int statusControlAction(final int state) {
+        return state == MicrocontrollerMenu.STATE_RUNNING ? RackControlPayload.STOP : RackControlPayload.START;
+    }
+
+    static boolean statusControlAt(final int mouseX, final int mouseY, final int left, final int top) {
+        final int x = mouseX - left;
+        final int y = mouseY - top;
+        return x >= STATUS_CONTROL_X && x < STATUS_CONTROL_X + STATUS_CONTROL_SIZE && y >= STATUS_CONTROL_Y && y < STATUS_CONTROL_Y + STATUS_CONTROL_SIZE;
+    }
+
+    private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state, final boolean hovered) {
+        guiGraphics.blit(
+            ComputerCaseScreen.POWER_BUTTON_TEXTURE,
+            left,
+            top,
+            ComputerCaseScreen.powerButtonTextureX(state),
+            ComputerCaseScreen.powerButtonTextureY(hovered),
+            STATUS_CONTROL_SIZE,
+            STATUS_CONTROL_SIZE,
+            ComputerCaseScreen.powerButtonTextureWidth(),
+            ComputerCaseScreen.powerButtonTextureHeight());
     }
 }
