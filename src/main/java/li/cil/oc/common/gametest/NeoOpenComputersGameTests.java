@@ -59,6 +59,7 @@ import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
+import li.cil.oc.common.blockentity.MicrocontrollerBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.NetSplitterBlockEntity;
 import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
@@ -4030,6 +4031,27 @@ public final class NeoOpenComputersGameTests {
             new ItemStack(Items.REDSTONE_BLOCK), new ItemStack(Items.CHEST), new ItemStack(Items.REDSTONE_BLOCK),
             new ItemStack(Items.GOLD_NUGGET), new ItemStack(ModItems.PRINTED_CIRCUIT_BOARD.get()), new ItemStack(Items.GOLD_NUGGET)
         )));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void microcontrollerBlockStoresComponentsAndStarts(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(0, 1, 0);
+        helper.setBlock(pos, ModBlocks.MICROCONTROLLER_TIER1.get());
+        final MicrocontrollerBlockEntity microcontroller = helper.getBlockEntity(pos);
+
+        helper.assertTrue(microcontroller.tier() == 0, "Tier 1 microcontroller reported wrong tier");
+        helper.assertTrue(microcontroller.getContainerSize() == 6, "Tier 1 microcontroller slot count mismatch");
+        helper.assertTrue(microcontroller.canPlaceItem(0, new ItemStack(ModItems.CPU_TIER1.get())), "Microcontroller rejected tier 1 CPU");
+        helper.assertTrue(microcontroller.canPlaceItem(1, new ItemStack(ModItems.MEMORY_TIER1.get())), "Microcontroller rejected tier 1 memory");
+        helper.assertTrue(microcontroller.canPlaceItem(2, luaBiosEepromStack()), "Microcontroller rejected EEPROM");
+        helper.assertTrue(!microcontroller.canPlaceItem(0, new ItemStack(ModItems.CPU_TIER2.get())), "Tier 1 microcontroller accepted tier 2 CPU");
+        helper.assertTrue(!microcontroller.canPlaceItem(3, new ItemStack(ModItems.HDD_TIER1.get())), "Microcontroller accepted a hard disk");
+
+        microcontroller.setItem(0, new ItemStack(ModItems.CPU_TIER1.get()));
+        microcontroller.setItem(1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        microcontroller.setItem(2, luaBiosEepromStack());
+        helper.assertTrue(microcontroller.toggleMachine(), "Microcontroller did not start with CPU, memory, and programmed EEPROM");
         helper.succeed();
     }
 

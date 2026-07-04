@@ -1,6 +1,7 @@
 package li.cil.oc.common.template;
 
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -11,6 +12,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -47,6 +49,19 @@ final class AssemblerTemplatesTest {
         assertFalse(TabletAssemblerTemplate.isComplexityAllowed(0, 0, 12));
         assertTrue(TabletAssemblerTemplate.isComplexityAllowed(1, 0, 14));
         assertFalse(TabletAssemblerTemplate.isComplexityAllowed(1, 0, 15));
+    }
+
+    @Test
+    void microcontrollerAssemblerRejectsInputsThatDoNotFitInternalSlots() {
+        assertTrue(MicrocontrollerAssemblerTemplate.canPlaceAllDrivers(0,
+            List.of(new ItemDriver(Slot.CPU, 0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0)),
+            List.of()));
+        assertFalse(MicrocontrollerAssemblerTemplate.canPlaceAllDrivers(0,
+            List.of(new ItemDriver(Slot.CPU, 0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0), new ItemDriver(Slot.CPU, 0)),
+            List.of()));
+        assertFalse(MicrocontrollerAssemblerTemplate.canPlaceAllDrivers(0,
+            List.of(new ItemDriver(Slot.CPU, 0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0), new ItemDriver(Slot.HDD, 0)),
+            List.of()));
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
