@@ -10,7 +10,7 @@ This is a crash-finding and basic OpenOS proof build, not a public beta promise.
 
 - Java-first NeoForge port foundation under the MIT license.
 - OpenOS boot path using the bundled Lua/OpenOS assets.
-- Computer cases, servers, racks, screens, keyboards, storage, cards, and upgrades.
+- Computer cases, servers, racks, screens, keyboards, storage, cards, upgrades, and microcontrollers.
 - Basic filesystem, EEPROM, floppy, disk-drive, hard-drive, and persistence smoke coverage.
 - Terminal GUI, terminal item, keyboard input, mouse events, paste, and screen save/reload paths.
 - Redstone, modem, inventory, tank, transposer, nanomachine, printer, print, rack, and server smoke coverage.
@@ -21,8 +21,8 @@ This is a crash-finding and basic OpenOS proof build, not a public beta promise.
 
 ### Known Gaps
 
-- Robots, drones, and block microcontrollers are not available in this alpha build.
-- Microcontroller case items are present for recipe/API compatibility only and are not alpha smoke targets.
+- Robots and drones are not available in this alpha build.
+- Microcontrollers have automated GameTest coverage and still need manual visual smoke before alpha handoff.
 - Screen world rendering is visually sensitive. Do not change screen renderer, model, glyph, or multiblock code without a focused repro, focused failing test, narrow patch, and screenshot evidence.
 - First alpha testing should use the checklist in `ALPHA_TESTING.md`.
 

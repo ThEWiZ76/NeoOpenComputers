@@ -85,8 +85,7 @@ final class ManualResourceTest {
         final Set<String> hiddenPages = Set.of(
             "drone.md",
             "dronecase1.md",
-            "robot.md",
-            "microcontroller.md"
+            "robot.md"
         );
         final List<String> exposedPages = new ArrayList<>();
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
@@ -132,7 +131,7 @@ final class ManualResourceTest {
     }
 
     @Test
-    void bundledManualHomePagesDoNotAdvertiseMicrocontrollerCasesAsAlphaFocus() throws Exception {
+    void bundledManualHomePagesDocumentMicrocontrollerManualSmokeStatus() throws Exception {
         final List<String> staleNotes = new ArrayList<>();
         try (Stream<Path> files = Files.list(DOC_ROOT)) {
             for (final Path index : files
@@ -142,7 +141,8 @@ final class ManualResourceTest {
                 .toList()) {
                 final String content = Files.readString(index);
                 if (content.contains("microcontroller case items are the current alpha focus")
-                    || !content.contains("Microcontroller case items are present for recipe/API compatibility only")) {
+                    || content.contains("Microcontroller case items are present for recipe/API compatibility only")
+                    || !content.contains("Microcontrollers have automated GameTest coverage")) {
                     staleNotes.add(DOC_ROOT.relativize(index).toString().replace('\\', '/'));
                 }
             }
@@ -154,17 +154,12 @@ final class ManualResourceTest {
     @Test
     void bundledManualHomePagesMarkUnavailableDeviceEntries() throws Exception {
         final Set<String> unavailableDeviceEntries = Set.of(
-            "- Microcontrollers",
             "- Robots",
             "- Drones",
-            "- Mikrocontroller",
             "- Roboter",
             "- Drohnen",
-            "- Micro-contrôleurs",
-            "- Микроконтроллеры",
             "- Роботы",
             "- Дроны",
-            "- 微控制器",
             "- 机器人",
             "- 无人机"
         );
@@ -191,8 +186,7 @@ final class ManualResourceTest {
     void bundledManualHomePagesDoNotLinkUnavailableAlphaDevices() throws Exception {
         final Set<String> hiddenTargets = Set.of(
             "item/drone.md",
-            "block/robot.md",
-            "block/microcontroller.md"
+            "block/robot.md"
         );
         final List<String> links = new ArrayList<>();
         try (Stream<Path> files = Files.list(DOC_ROOT)) {
@@ -221,8 +215,7 @@ final class ManualResourceTest {
         final Set<String> hiddenTargets = Set.of(
             "item/drone.md",
             "item/dronecase1.md",
-            "block/robot.md",
-            "block/microcontroller.md"
+            "block/robot.md"
         );
         final List<String> links = new ArrayList<>();
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
@@ -249,8 +242,7 @@ final class ManualResourceTest {
         final Set<String> unavailablePages = Set.of(
             "item/drone.md",
             "item/dronecase1.md",
-            "block/robot.md",
-            "block/microcontroller.md"
+            "block/robot.md"
         );
         final List<String> missingNotes = new ArrayList<>();
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {

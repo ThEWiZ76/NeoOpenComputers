@@ -1,6 +1,6 @@
 # 开放式电脑手册
 
-NeoOpenComputers alpha note: robots, drones, and block microcontrollers are not available in this build yet; computer cases, servers, racks, screens, keyboards, storage, cards, and upgrades are the current alpha focus. Microcontroller case items are present for recipe/API compatibility only and are not alpha smoke targets.
+NeoOpenComputers alpha note: robots and drones are not available in this build yet; computer cases, servers, racks, screens, keyboards, storage, cards, upgrades, and microcontrollers are the current alpha focus. Microcontrollers have automated GameTest coverage, but still need manual visual smoke before alpha handoff.
 
 开放式电脑（OpenComputers，下简称OC）是一个向Minecraft添加了可持续的、模块化的、可高度定制的[电脑](general/computer.md)、[服务器](item/server1.md)、机器人和无人机的Mod。所有设备均可通过Lua 5.2编程，用户可根据需求构建复杂度不同的电脑系统。
 
@@ -11,7 +11,7 @@ NeoOpenComputers alpha note: robots, drones, and block microcontrollers are not 
 ### 设备
 - [电脑](general/computer.md)
 - [服务器](item/server1.md)
-- 微控制器 (alpha unavailable)
+- [微控制器](block/microcontroller.md)
 - 机器人 (alpha unavailable)
 - 无人机 (alpha unavailable)
 

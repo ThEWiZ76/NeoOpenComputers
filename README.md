@@ -17,13 +17,13 @@ Current verification evidence:
 
 - Unit/build gate: `.\gradlew.bat test build --no-daemon --console=plain`
 - GameTest gate: `.\gradlew.bat runGameTestServer --no-daemon --console=plain`
-- Latest GameTest result: `428/428` required tests passed.
+- Latest GameTest result: `429/429` required tests passed.
 - Bounded client launch smoke reaches resource reload and texture atlas creation without NeoOpenComputers-owned missing model, missing texture, or mod loading errors.
 - MCP evidence shows tier 2 and tier 3 screens open their terminal GUI after a fresh client restart. World-render screenshot proof for tier 2 and tier 3 screens is still pending, so screen visuals are not treated as verified alpha evidence yet.
 
-The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, nanomachine, printer, print, manual, player-facing failure feedback, and packaging slices in place. It is ready for first technical alpha testing, not stable-release-ready.
+The port has broad API, machine, network, filesystem, terminal, screen/GPU/input, modem/redstone, storage, inventory/tank/transposer, rack/server, microcontroller, nanomachine, printer, print, manual, player-facing failure feedback, and packaging slices in place. It is ready for first technical alpha testing, not stable-release-ready.
 
-Robots, drones, and block microcontrollers are not available in this alpha build. Microcontroller case items are present for recipe/API compatibility only and are not alpha smoke targets. Computer cases, servers, racks, screens, keyboards, storage, cards, and upgrades are the current alpha focus.
+Robots and drones are not available in this alpha build. Microcontrollers have automated GameTest coverage and still need manual visual smoke before alpha handoff. Computer cases, servers, racks, screens, keyboards, storage, cards, upgrades, and microcontrollers are the current alpha focus.
 
 See the [First Alpha Testing Guide](ALPHA_TESTING.md) for the current install, smoke-test, known-gap, and issue-reporting checklist. See the [Alpha Smoke Matrix](ALPHA_SMOKE_MATRIX.md) for evidence mapping, [Alpha Release Checklist](ALPHA_RELEASE_CHECKLIST.md) for first-alpha handoff gates, [Visual Smoke Runbook](VISUAL_SMOKE_RUNBOOK.md) for screenshot proof, [Screen Work Protocol](SCREEN_WORK_PROTOCOL.md) for the anti-loop screen evidence gate, [Alpha Finding Template](ALPHA_FINDING_TEMPLATE.md) and the GitHub `Alpha finding` issue form for reproducible issue reports, [Contributing](CONTRIBUTING.md) for community development rules, and [Changelog](CHANGELOG.md) for alpha scope notes.
 

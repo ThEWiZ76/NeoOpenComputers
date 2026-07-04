@@ -63,12 +63,15 @@ if ($built.Hash -ne $installedAfter.Hash) {
 - Disk-drive floppy data survives save/reload.
 - Power and charging smoke passes: a computer accepts Forge Energy or runs from a powered OC network, and one chargeable item accepts charger energy.
 - Redstone, modem, inventory, tank, and transposer get one basic smoke pass.
+- Assemble a tier 1 microcontroller, install a CPU, memory, and programmed EEPROM, then verify it starts without a crash.
 - Texture picker reports usable atlas texture names such as `minecraft:block/stone`.
 - Printer creates a print item and placed prints keep their configured data.
 
 ## Known Alpha Gaps
 
-Robots, drones, and block microcontrollers are not available in this alpha build. Microcontroller case items are present for recipe/API compatibility only and are not alpha smoke targets.
+Robots and drones are not available in this alpha build.
+
+Microcontrollers have automated GameTest coverage and still need manual visual smoke before alpha handoff.
 
 Screen world rendering is still considered visually sensitive. Do not change screen renderer, model, glyph, or multiblock code without fresh evidence and a focused failing test.
 

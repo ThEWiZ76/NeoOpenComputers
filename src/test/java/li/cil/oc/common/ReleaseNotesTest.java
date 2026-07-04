@@ -23,16 +23,16 @@ final class ReleaseNotesTest {
         assertTrue(changelog.contains("Minecraft 1.21.1"), "Changelog must name target Minecraft version");
         assertTrue(changelog.contains("NeoForge 21.1.234"), "Changelog must name target NeoForge version");
         assertTrue(changelog.contains("OpenOS boot"), "Changelog must summarize OpenOS boot scope");
-        assertTrue(changelog.contains("Computer cases, servers, racks, screens, keyboards, storage, cards, and upgrades"),
+        assertTrue(changelog.contains("Computer cases, servers, racks, screens, keyboards, storage, cards, upgrades, and microcontrollers"),
             "Changelog must summarize current alpha device scope");
         assertTrue(changelog.contains("Power and charging"),
             "Changelog must summarize power and charging smoke scope");
         assertTrue(changelog.contains("Texture picker"),
             "Changelog must summarize texture picker atlas smoke scope");
-        assertTrue(changelog.contains("Robots, drones, and block microcontrollers are not available"),
+        assertTrue(changelog.contains("Robots and drones are not available"),
             "Changelog must list known unavailable devices");
-        assertTrue(changelog.contains("Microcontroller case items are present for recipe/API compatibility only"),
-            "Changelog must keep microcontroller case item scope clear");
+        assertTrue(changelog.contains("Microcontrollers have automated GameTest coverage"),
+            "Changelog must keep microcontroller manual-smoke status clear");
         assertTrue(changelog.contains("GitHub Actions are intentionally disabled"),
             "Changelog must keep CI state visible");
     }

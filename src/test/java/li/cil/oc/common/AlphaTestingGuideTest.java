@@ -35,10 +35,12 @@ final class AlphaTestingGuideTest {
             "Public alpha guide should use a generic Modrinth profile path placeholder");
         assertTrue(guide.contains("GitHub Actions stay disabled"),
             "Guide must keep CI disabled before release readiness");
-        assertTrue(guide.contains("Robots, drones, and block microcontrollers are not available"),
+        assertTrue(guide.contains("Robots and drones are not available"),
             "Guide must document known unavailable alpha devices");
-        assertTrue(guide.contains("Microcontroller case items are present for recipe/API compatibility only"),
-            "Guide must not ask alpha testers to smoke unavailable microcontroller devices");
+        assertTrue(guide.contains("Microcontrollers have automated GameTest coverage"),
+            "Guide must keep microcontroller manual-smoke status clear");
+        assertTrue(guide.contains("Assemble a tier 1 microcontroller"),
+            "Guide must ask alpha testers to smoke microcontroller assembly before handoff");
         assertTrue(guide.contains("NeoOpenComputers-owned missing model, missing texture, or mod loading errors"),
             "Guide must scope log-error smoke failures to NeoOpenComputers-owned resources");
         assertTrue(guide.contains("Normal Lua BIOS/runtime scripts do not get `require()`"),

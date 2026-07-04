@@ -15,6 +15,7 @@ Screen world rendering stays frozen unless there is a focused repro, focused fai
 | Inventory | Inventory controller, driver registry, adapter/provider, and transposer coverage exercise item inventory access paths. | Use an inventory-facing component against a chest or compatible inventory. |
 | Tank | Tank controller and upgrade tests cover tank API shape and no-tank behavior. | Use a tank-facing component against a compatible tank/fluid handler. |
 | Transposer | Transposer registration, renderer, and component tests cover block/entity/component shape. | Move an item or fluid between adjacent inventories/tanks. |
+| Microcontrollers | GameTests cover tier 1 microcontroller placement, slot restrictions, required CPU/memory/EEPROM inputs, hard-disk rejection, and starting with a programmed EEPROM. | Assemble a tier 1 microcontroller, install CPU, memory, and programmed EEPROM, then verify it starts and the GUI/manual are usable. |
 | Power and charging | GameTests cover battery charge, power converter Forge Energy input, charger Forge Energy input, internal tablet charging, player-equipment charging, powered machine Forge Energy input, and charger redstone speed. | Feed Forge Energy into a power converter or computer case, charge one battery/tablet in a charger, and verify a computer stays powered during a short OpenOS session. |
 | Texture picker | GameTests cover texture picker atlas naming for a target block, including `minecraft:block/stone`. | Use a texture picker on a normal block and verify the reported atlas texture name is usable for printer shapes. |
 | Printer and print | Printer, print item, placed print, redstone activation, held-item activation, button release, beacon-base, configured drops, opacity, texture fallback, tooltip, ray-trace, and render-model tests cover current print smoke paths. | Create a print item, place it, rotate it, activate it, break it, and confirm the configured shape/data remains. |
@@ -42,6 +43,7 @@ These are the named GameTests that back the automated side of the matrix. They d
 - Terminal input: `terminalItemNetworkInputReachesComputerLikeFirstSmoke`, `terminalItemNetworkMouseInputReachesComputerLikeFirstSmoke`.
 - Redstone: `redstoneCardUsesComputerLocalSides`, `redstoneCardQueuesInputChangeSignal`, `redstoneWakeThresholdStartsComputer`, `redstoneIoWakeThresholdStartsReachableComputer`, `redstoneIoQueuesInputChangeSignalLikeUpstream`.
 - Transposer/tank: `transposerTransfersFluidBetweenAdjacentTanks`, `transposerItemTransferRequiresEnergy`, `transposerTransferFluidRequiresEnergy`, `tankControllerInspectsAdjacentFluidTanks`.
+- Microcontrollers: `microcontrollerBlockStoresComponentsAndStarts`.
 - Power and charging: `powerConverterAcceptsForgeEnergyCapabilityLikeUpstream`, `chargerAcceptsForgeEnergyCapabilityLikeUpstream`, `chargerChargesInternalTabletFromStoredEnergyAndRedstoneSpeed`, `chargerChargesNearbyPlayerEquipmentLikeUpstream`, `poweredMachineBlocksAcceptForgeEnergyCapabilityLikeUpstream`, `computerCaseAcceptsForgeEnergyCapabilityLikeUpstream`.
 - Texture picker: `texturePickerDescribesTargetBlock`.
 - Printer/print: `printerProducesPrintItemAfterEnergyAndInputLikeUpstream`, `printDataCreatesPrintItemStackLikeUpstreamItemData`, `printItemPlacesConfiguredPrintLikeUpstream`, `printItemTooltipShowsConfiguredDataLikeUpstream`, `printBlockEntityLoadsStackAndTogglesRedstoneLikeUpstream`, `printBlockActivatesWithHeldItemLikeUpstream`, `printBlockRotatesShapeTowardFacingLikeUpstream`, `printBlockRayTraceHitsNearestConfiguredShapeLikeUpstream`, `printBlockFollowsExternalRedstoneInputLikeUpstream`, `redstoneActivatedButtonPrintReleasesAfterScheduledTickLikeUpstream`, `beaconAcceptsConfiguredPrintBaseLikeUpstream`, `brokenPrintDropsConfiguredPrintStackLikeUpstream`, `printBlockUsesConfiguredOpacityWhenEnabledLikeUpstream`.
@@ -54,5 +56,6 @@ The current automated smoke report can prove startup, local-world entry, block p
 - Screen text, GUI text, and item tooltips are visually readable.
 - Screen output and keyboard input still look correct after save/reload.
 - Creative tab and manual navigation are usable in a clean client profile.
+- Microcontroller assembly, GUI, and startup are usable from player view.
 - Texture picker returns usable atlas texture names such as `minecraft:block/stone`.
 - Printer/print visuals and data behavior look sane from player view, including placement, rotation, activation, drops, tooltip data, beacon-base, opacity, and legacy texture-name use.
