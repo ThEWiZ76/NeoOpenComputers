@@ -68,4 +68,32 @@ final class MicrocontrollerRegistrationShapeTest {
         assertTrue(blockEntities.contains("MICROCONTROLLER"));
         assertTrue(menus.contains("MICROCONTROLLER"));
     }
+
+    @Test
+    void microcontrollerBlockHasRuntimeHooks() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/block/MicrocontrollerBlock.java"));
+
+        assertTrue(source.contains("getTicker"));
+        assertTrue(source.contains("MicrocontrollerBlockEntity.serverTick"));
+        assertTrue(source.contains("BlockNetworkConnector.joinIfServer"));
+        assertTrue(source.contains("isSignalSource"));
+        assertTrue(source.contains("redstoneOutput"));
+        assertTrue(source.contains("machine().save"));
+    }
+
+    @Test
+    void microcontrollerBlockEntityPersistsRuntimeState() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java"));
+
+        assertTrue(source.contains("TAG_MACHINE"));
+        assertTrue(source.contains("TAG_REDSTONE_OUTPUTS"));
+        assertTrue(source.contains("TAG_BUNDLED_REDSTONE_OUTPUTS"));
+        assertTrue(source.contains("TAG_WAKE_THRESHOLD"));
+        assertTrue(source.contains("loadAdditional"));
+        assertTrue(source.contains("saveAdditional"));
+        assertTrue(source.contains("ContainerHelper.loadAllItems"));
+        assertTrue(source.contains("ContainerHelper.saveAllItems"));
+        assertTrue(source.contains("Network.joinOrCreateNetwork"));
+        assertTrue(source.contains("machine.node().remove"));
+    }
 }

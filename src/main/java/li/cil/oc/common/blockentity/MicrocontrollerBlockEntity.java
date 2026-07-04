@@ -1,6 +1,7 @@
 package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Driver;
+import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
@@ -17,7 +18,9 @@ import li.cil.oc.common.component.RedstoneControllerHost;
 import li.cil.oc.common.menu.MicrocontrollerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
@@ -39,6 +42,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 public class MicrocontrollerBlockEntity extends BlockEntity implements Microcontroller, Container, MenuProvider, IMenuProviderExtension, DeviceInfo, RedstoneControllerHost, StateAware, Analyzable {
+    private static final String TAG_MACHINE = "oc:machine";
+    private static final String TAG_REDSTONE_OUTPUTS = "oc:redstoneOutputs";
+    private static final String TAG_BUNDLED_REDSTONE_OUTPUTS = "oc:bundledRedstoneOutputs";
+    private static final String TAG_WAKE_THRESHOLD = "oc:wakeThreshold";
     private static final String SLOT_TYPE_EEPROM = "eeprom";
     private static final int TIER_ANY = Integer.MAX_VALUE;
     private static final int BUNDLED_COLOR_COUNT = 16;
@@ -417,7 +424,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     @Override
     public boolean stillValid(final Player player) {
-        return true;
+        return !isRemoved();
     }
 
     @Override
@@ -433,7 +440,55 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     @Override
     public void clearContent() {
-        items.clear();
+        final boolean hadCpu = hasCpuStack();
+        fillExistingSlots(items, ItemStack.EMPTY);
+        setChanged();
+        notifyHardwareChanged(machine);
+        if (hadCpu) {
+            notifyItemRemoved(machine, tier, cpuSlot(tier));
+        }
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) {
+            Network.joinOrCreateNetwork(this);
+        }
+    }
+
+    @Override
+    public void onChunkUnloaded() {
+        super.onChunkUnloaded();
+        removeMachineNode();
+    }
+
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        removeMachineNode();
+    }
+
+    @Override
+    protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
+        loadRedstoneOutputs(tag);
+        ContainerHelper.loadAllItems(tag, items, registries);
+        notifyHardwareChanged(machine);
+        machine.load(tag.getCompound(TAG_MACHINE));
+    }
+
+    @Override
+    protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
+        tag.putIntArray(TAG_REDSTONE_OUTPUTS, redstoneOutputs);
+        tag.putIntArray(TAG_BUNDLED_REDSTONE_OUTPUTS, saveBundledRedstoneOutputs());
+        final CompoundTag machineTag = new CompoundTag();
+        machine.save(machineTag);
+        tag.put(TAG_MACHINE, machineTag);
+        ContainerHelper.saveAllItems(tag, items, registries);
     }
 
     private boolean isValidSlot(final int slot) {
@@ -449,10 +504,52 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         return -1;
     }
 
+    private boolean hasCpuStack() {
+        final int slot = cpuSlot(tier);
+        return slot >= 0 && slot < items.size() && !items.get(slot).isEmpty();
+    }
+
     private void tickServer() {
         updateRedstoneInputs();
         if (machine.canUpdate()) {
             machine.update();
+        }
+    }
+
+    private void removeMachineNode() {
+        if (machine.node() != null) {
+            machine.node().remove();
+        }
+    }
+
+    private void loadRedstoneOutputs(final CompoundTag tag) {
+        final int[] savedOutputs = tag.getIntArray(TAG_REDSTONE_OUTPUTS);
+        for (int index = 0; index < redstoneOutputs.length; index++) {
+            redstoneOutputs[index] = index < savedOutputs.length ? Math.clamp(savedOutputs[index], 0, 15) : 0;
+        }
+        loadBundledRedstoneOutputs(tag.getIntArray(TAG_BUNDLED_REDSTONE_OUTPUTS));
+    }
+
+    private int[] saveBundledRedstoneOutputs() {
+        final int[] saved = new int[bundledRedstoneOutputs.length * BUNDLED_COLOR_COUNT];
+        synchronized (bundledRedstoneOutputs) {
+            for (Direction direction : Direction.values()) {
+                final int side = direction.get3DDataValue();
+                System.arraycopy(bundledRedstoneOutputs[side], 0, saved, side * BUNDLED_COLOR_COUNT, BUNDLED_COLOR_COUNT);
+            }
+        }
+        return saved;
+    }
+
+    private void loadBundledRedstoneOutputs(final int[] saved) {
+        synchronized (bundledRedstoneOutputs) {
+            for (Direction direction : Direction.values()) {
+                final int side = direction.get3DDataValue();
+                for (int color = 0; color < BUNDLED_COLOR_COUNT; color++) {
+                    final int index = side * BUNDLED_COLOR_COUNT + color;
+                    bundledRedstoneOutputs[side][color] = index < saved.length ? Math.clamp(saved[index], 0, 255) : 0;
+                }
+            }
         }
     }
 
@@ -534,6 +631,22 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     private static void notifyItemRemoved(final Machine machine, final int tier, final int slot) {
         if (Slot.CPU.equals(slotType(tier, slot))) {
             machine.stop();
+        }
+    }
+
+    private static int cpuSlot(final int tier) {
+        final MicrocontrollerSlot[] layout = slotLayout(tier);
+        for (int slot = 0; slot < layout.length; slot++) {
+            if (Slot.CPU.equals(layout[slot].type())) {
+                return slot;
+            }
+        }
+        return -1;
+    }
+
+    private static <T> void fillExistingSlots(final NonNullList<T> items, final T value) {
+        for (int slot = 0; slot < items.size(); slot++) {
+            items.set(slot, value);
         }
     }
 
