@@ -2,16 +2,21 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
+import li.cil.oc.api.event.RobotMoveEvent;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.MultiTank;
 import li.cil.oc.api.internal.Robot;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.OpenComputersApi;
@@ -34,10 +39,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.extensions.IMenuProviderExtension;
 import net.neoforged.neoforge.fluids.IFluidTank;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -49,9 +56,11 @@ import java.util.UUID;
 public class RobotBlockEntity extends BlockEntity implements Robot, Container, WorldlyContainer, MenuProvider, IMenuProviderExtension, DeviceInfo, StateAware, Analyzable {
     public static final String TAG_TIER = "oc:tier";
     private static final String TAG_MACHINE = "oc:machine";
+    private static final String TAG_ROBOT_NODE = "oc:robotNode";
     private static final String TAG_SELECTED_SLOT = "oc:selectedSlot";
     private static final String TAG_SELECTED_TANK = "oc:selectedTank";
     private static final String TAG_NAME = "oc:name";
+    private static final String TAG_LIGHT_COLOR = "oc:lightColor";
     private static final String TAG_OWNER_NAME = "oc:ownerName";
     private static final String TAG_OWNER_UUID = "oc:ownerUUID";
     private static final int TIER_ANY = Integer.MAX_VALUE;
@@ -134,14 +143,16 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     };
 
     private final Machine machine;
-    private final NonNullList<ItemStack> items = NonNullList.withSize(MAX_SLOT_COUNT, ItemStack.EMPTY);
+    private NonNullList<ItemStack> items = NonNullList.withSize(MAX_SLOT_COUNT, ItemStack.EMPTY);
     private final Container equipmentInventory = new SimpleContainer(1);
     private final Map<String, Integer> componentSlots = new HashMap<>();
+    private Node robotNode;
     private int pendingComponentSlot = -1;
     private volatile boolean pendingServerThreadChangeMark;
     private int tier;
     private int selectedSlot;
     private int selectedTank;
+    private int lightColor;
     private String name = "Robot";
     private String ownerName = "";
     private UUID ownerUUID = new UUID(0L, 0L);
@@ -150,6 +161,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         super(ModBlockEntities.ROBOT.get(), pos, blockState);
         OpenComputersApi.initialize();
         machine = li.cil.oc.api.Machine.create(this);
+        robotNode = createRobotNode();
     }
 
     public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final RobotBlockEntity blockEntity) {
@@ -164,6 +176,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             machine.crash("missing required components");
             return false;
         }
+        connectMachineNode();
         return machine.start();
     }
 
@@ -199,7 +212,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public Node node() {
-        return machine.node();
+        return robotNode;
     }
 
     @Override
@@ -223,7 +236,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
-        return new Node[]{machine.node()};
+        return robotNode == null ? new Node[]{machine.node()} : new Node[]{robotNode, machine.node()};
     }
 
     @Override
@@ -383,10 +396,27 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return name;
     }
 
+    @Callback(direct = true, doc = "function():string -- Gets robot name.")
+    public Object[] name(final Context context, final Arguments arguments) {
+        return new Object[]{name()};
+    }
+
     @Override
     public void setName(final String name) {
         this.name = name == null || name.isBlank() ? "Robot" : name;
         setChanged();
+    }
+
+    @Callback(direct = true, doc = "function():number -- Gets robot light color.")
+    public Object[] getLightColor(final Context context, final Arguments arguments) {
+        return new Object[]{lightColor};
+    }
+
+    @Callback(doc = "function(value:number):boolean -- Sets robot light color.")
+    public Object[] setLightColor(final Context context, final Arguments arguments) {
+        lightColor = arguments.checkInteger(0) & 0xFFFFFF;
+        setChanged();
+        return new Object[]{true};
     }
 
     @Override
@@ -430,6 +460,90 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     @Override
     public boolean shouldAnimate() {
         return machine.isRunning() || machine.isPaused();
+    }
+
+    @Callback(direct = true, doc = "function():number -- Gets robot inventory size.")
+    public Object[] inventorySize(final Context context, final Arguments arguments) {
+        return new Object[]{getContainerSize()};
+    }
+
+    @Callback(direct = true, doc = "function([slot:number]):number -- Gets or sets selected inventory slot.")
+    public Object[] select(final Context context, final Arguments arguments) {
+        if (arguments.count() > 0 && arguments.checkAny(0) != null) {
+            setSelectedSlot(checkRobotSlot(arguments.checkInteger(0)));
+        }
+        return new Object[]{selectedSlot + 1};
+    }
+
+    @Callback(direct = true, doc = "function([slot:number]):number -- Gets item count in the selected or specified slot.")
+    public Object[] count(final Context context, final Arguments arguments) {
+        return new Object[]{getItem(callbackSlot(arguments, 0)).getCount()};
+    }
+
+    @Callback(direct = true, doc = "function([slot:number]):number -- Gets remaining stack space in the selected or specified slot.")
+    public Object[] space(final Context context, final Arguments arguments) {
+        final ItemStack stack = getItem(callbackSlot(arguments, 0));
+        if (stack.isEmpty()) {
+            return new Object[]{getMaxStackSize()};
+        }
+        return new Object[]{Math.max(0, Math.min(stack.getMaxStackSize(), getMaxStackSize()) - stack.getCount())};
+    }
+
+    @Callback(direct = true, doc = "function(slot:number):boolean -- Compares selected slot with specified slot.")
+    public Object[] compareTo(final Context context, final Arguments arguments) {
+        final ItemStack selected = getItem(selectedSlot);
+        final ItemStack other = getItem(checkRobotSlot(arguments.checkInteger(0)));
+        return new Object[]{!selected.isEmpty() && ItemStack.isSameItemSameComponents(selected, other)};
+    }
+
+    @Callback(doc = "function(slot:number[, count:number]):boolean -- Transfers items from selected slot to another slot.")
+    public Object[] transferTo(final Context context, final Arguments arguments) {
+        final int targetSlot = checkRobotSlot(arguments.checkInteger(0));
+        if (targetSlot == selectedSlot) {
+            return new Object[]{false};
+        }
+        final ItemStack source = getItem(selectedSlot);
+        if (source.isEmpty()) {
+            return new Object[]{false};
+        }
+        final ItemStack target = getItem(targetSlot);
+        if (!target.isEmpty() && !ItemStack.isSameItemSameComponents(source, target)) {
+            return new Object[]{false};
+        }
+        final int requested = Math.max(0, arguments.count() > 1 && arguments.checkAny(1) != null ? arguments.checkInteger(1) : source.getCount());
+        final int limit = target.isEmpty() ? Math.min(source.getMaxStackSize(), getMaxStackSize()) : Math.min(target.getMaxStackSize(), getMaxStackSize());
+        final int moved = Math.min(requested, Math.min(source.getCount(), limit - target.getCount()));
+        if (moved <= 0) {
+            return new Object[]{false};
+        }
+        if (target.isEmpty()) {
+            final ItemStack transferred = source.copyWithCount(moved);
+            items.set(targetSlot, transferred);
+        } else {
+            target.grow(moved);
+        }
+        source.shrink(moved);
+        if (source.isEmpty()) {
+            items.set(selectedSlot, ItemStack.EMPTY);
+        }
+        setChanged();
+        return new Object[]{true};
+    }
+
+    @Callback(doc = "function(side:number):boolean,string -- Moves the robot.")
+    public Object[] move(final Context context, final Arguments arguments) {
+        final Direction direction = movementDirection(facing(), arguments.checkInteger(0));
+        return moveRobot(direction);
+    }
+
+    @Callback(doc = "function(clockwise:boolean):boolean -- Turns the robot.")
+    public Object[] turn(final Context context, final Arguments arguments) {
+        final Direction newFacing = turnedFacing(facing(), arguments.checkBoolean(0));
+        if (level != null && getBlockState().hasProperty(RobotBlock.FACING)) {
+            level.setBlock(worldPosition, getBlockState().setValue(RobotBlock.FACING, newFacing), 3);
+        }
+        setChanged();
+        return new Object[]{true};
     }
 
     public static int slotCount(final int tier) {
@@ -567,6 +681,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         super.onLoad();
         if (level != null && !level.isClientSide) {
             Network.joinOrCreateNetwork(this);
+            connectMachineNode();
         }
     }
 
@@ -588,9 +703,13 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         tier = normalizeTier(tag.getInt(TAG_TIER));
         selectedSlot = tag.getInt(TAG_SELECTED_SLOT);
         selectedTank = tag.getInt(TAG_SELECTED_TANK);
+        lightColor = tag.getInt(TAG_LIGHT_COLOR);
         name = tag.getString(TAG_NAME).isBlank() ? "Robot" : tag.getString(TAG_NAME);
         ownerName = tag.getString(TAG_OWNER_NAME);
         ownerUUID = tag.hasUUID(TAG_OWNER_UUID) ? tag.getUUID(TAG_OWNER_UUID) : new UUID(0L, 0L);
+        if (robotNode != null) {
+            robotNode.load(tag.getCompound(TAG_ROBOT_NODE));
+        }
         ContainerHelper.loadAllItems(tag, items, registries);
         notifyHardwareChanged(machine);
         machine.load(tag.getCompound(TAG_MACHINE));
@@ -602,9 +721,15 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         tag.putInt(TAG_TIER, tier);
         tag.putInt(TAG_SELECTED_SLOT, selectedSlot);
         tag.putInt(TAG_SELECTED_TANK, selectedTank);
+        tag.putInt(TAG_LIGHT_COLOR, lightColor);
         tag.putString(TAG_NAME, name);
         tag.putString(TAG_OWNER_NAME, ownerName);
         tag.putUUID(TAG_OWNER_UUID, ownerUUID);
+        if (robotNode != null) {
+            final CompoundTag robotNodeTag = new CompoundTag();
+            robotNode.save(robotNodeTag);
+            tag.put(TAG_ROBOT_NODE, robotNodeTag);
+        }
         final CompoundTag machineTag = new CompoundTag();
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
@@ -620,6 +745,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private void removeMachineNode() {
         if (machine.node() != null) {
             machine.node().remove();
+        }
+        if (robotNode != null) {
+            robotNode.remove();
         }
     }
 
@@ -662,8 +790,75 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         super.setChanged();
     }
 
+    private Object[] moveRobot(final Direction direction) {
+        if (level == null) {
+            return new Object[]{false, "no world"};
+        }
+        final BlockPos targetPos = worldPosition.relative(direction);
+        if (!level.isLoaded(targetPos)) {
+            return new Object[]{false, "target not loaded"};
+        }
+        if (!level.isEmptyBlock(targetPos)) {
+            return new Object[]{false, "blocked"};
+        }
+        final RobotMoveEvent.Pre pre = new RobotMoveEvent.Pre(this, direction);
+        NeoForge.EVENT_BUS.post(pre);
+        if (pre.isCanceled()) {
+            return new Object[]{false, "blocked"};
+        }
+        final CompoundTag saved = saveWithFullMetadata(level.registryAccess());
+        saved.putInt("x", targetPos.getX());
+        saved.putInt("y", targetPos.getY());
+        saved.putInt("z", targetPos.getZ());
+        final BlockState state = getBlockState();
+        level.removeBlockEntity(worldPosition);
+        level.setBlock(targetPos, state, 3);
+        RobotBlockEntity eventRobot = this;
+        if (level.getBlockEntity(targetPos) instanceof RobotBlockEntity movedRobot) {
+            movedRobot.loadWithComponents(saved, level.registryAccess());
+            movedRobot.connectMachineNode();
+            eventRobot = movedRobot;
+        }
+        level.setBlock(worldPosition, Blocks.AIR.defaultBlockState(), 3);
+        NeoForge.EVENT_BUS.post(new RobotMoveEvent.Post(eventRobot, direction));
+        return new Object[]{true};
+    }
+
+    private void connectMachineNode() {
+        if (robotNode == null) {
+            robotNode = createRobotNode();
+        }
+        if (robotNode == null || machine == null || machine.node() == null) {
+            return;
+        }
+        if (robotNode.network() == null) {
+            Network.joinNewNetwork(robotNode);
+        }
+        if (machine.node().network() == null) {
+            Network.joinNewNetwork(machine.node());
+        }
+        machine.node().connect(robotNode);
+    }
+
+    private Node createRobotNode() {
+        final var builder = Network.newNode(this, Visibility.Network);
+        return builder == null ? null : builder.withComponent("robot", Visibility.Neighbors).create();
+    }
+
     private boolean isValidSlot(final int slot) {
         return slot >= 0 && slot < getContainerSize();
+    }
+
+    private int callbackSlot(final Arguments arguments, final int index) {
+        return arguments.count() > index && arguments.checkAny(index) != null ? checkRobotSlot(arguments.checkInteger(index)) : selectedSlot;
+    }
+
+    private int checkRobotSlot(final int slot) {
+        final int zeroBased = slot - 1;
+        if (!isValidSlot(zeroBased)) {
+            throw new IndexOutOfBoundsException("slot");
+        }
+        return zeroBased;
     }
 
     private static void notifyHardwareChanged(final Machine machine) {
@@ -693,6 +888,14 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return driver != null
             && slotType(tier, slot).equals(driver.slot(stack))
             && driver.tier(stack) <= slotTier(tier, slot);
+    }
+
+    public static Direction movementDirection(final Direction facing, final int side) {
+        return rotateHorizontal(Direction.from3DDataValue(side), horizontalSteps(facing));
+    }
+
+    public static Direction turnedFacing(final Direction facing, final boolean clockwise) {
+        return clockwise ? facing.getClockWise() : facing.getCounterClockWise();
     }
 
     private static RobotSlot slotAt(final int tier, final int slot) {
@@ -733,9 +936,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     private static int horizontalSteps(final Direction facing) {
         return switch (facing) {
-            case EAST -> 1;
+            case WEST -> 1;
             case SOUTH -> 2;
-            case WEST -> 3;
+            case EAST -> 3;
             default -> 0;
         };
     }
