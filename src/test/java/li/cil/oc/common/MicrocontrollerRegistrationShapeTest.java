@@ -1,5 +1,13 @@
 package li.cil.oc.common;
 
+import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.internal.Microcontroller;
+import li.cil.oc.api.machine.MachineHost;
+import li.cil.oc.api.network.Analyzable;
+import li.cil.oc.api.util.StateAware;
+import li.cil.oc.common.blockentity.MicrocontrollerBlockEntity;
+import li.cil.oc.common.component.RedstoneControllerHost;
+import net.minecraft.world.Container;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -31,6 +39,17 @@ final class MicrocontrollerRegistrationShapeTest {
         assertTrue(Block.class.isAssignableFrom(blockClass));
         assertTrue(HorizontalDirectionalBlock.class.isAssignableFrom(blockClass));
         assertTrue(EntityBlock.class.isAssignableFrom(blockClass));
+    }
+
+    @Test
+    void microcontrollerBlockEntityHostsMachineAndRedstone() {
+        assertTrue(Microcontroller.class.isAssignableFrom(MicrocontrollerBlockEntity.class));
+        assertTrue(Container.class.isAssignableFrom(MicrocontrollerBlockEntity.class));
+        assertTrue(MachineHost.class.isAssignableFrom(MicrocontrollerBlockEntity.class));
+        assertTrue(RedstoneControllerHost.class.isAssignableFrom(MicrocontrollerBlockEntity.class));
+        assertTrue(Analyzable.class.isAssignableFrom(MicrocontrollerBlockEntity.class));
+        assertTrue(DeviceInfo.class.isAssignableFrom(MicrocontrollerBlockEntity.class));
+        assertTrue(StateAware.class.isAssignableFrom(MicrocontrollerBlockEntity.class));
     }
 
     @Test
