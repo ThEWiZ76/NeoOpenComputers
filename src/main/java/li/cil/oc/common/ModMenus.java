@@ -13,6 +13,7 @@ import li.cil.oc.common.menu.PrinterMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.RaidMenu;
 import li.cil.oc.common.menu.RelayMenu;
+import li.cil.oc.common.menu.RobotMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
 import li.cil.oc.common.menu.TerminalMenu;
 import li.cil.oc.common.menu.WaypointMenu;
@@ -38,6 +39,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<MicrocontrollerMenu>> MICROCONTROLLER = MENUS.register(
         ModContentIds.MICROCONTROLLER_MENU,
         () -> IMenuTypeExtension.create(MicrocontrollerMenu::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<RobotMenu>> ROBOT = MENUS.register(
+        ModContentIds.ROBOT_MENU,
+        () -> IMenuTypeExtension.create(RobotMenu::new));
 
     public static final DeferredHolder<MenuType<?>, MenuType<AssemblerMenu>> ASSEMBLER = MENUS.register(
         ModContentIds.ASSEMBLER_MENU,

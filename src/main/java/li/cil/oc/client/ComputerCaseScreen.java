@@ -146,6 +146,8 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
             case Slot.Memory -> "gui.neoopencomputers.server_rack.slot.memory";
             case Slot.HDD -> "gui.neoopencomputers.server_rack.slot.hdd";
             case Slot.Floppy -> "gui.neoopencomputers.computer_case.slot.floppy";
+            case Slot.Container -> "gui.neoopencomputers.robot.slot.container";
+            case Slot.Upgrade -> "gui.neoopencomputers.robot.slot.upgrade";
             case "eeprom" -> "gui.neoopencomputers.server_rack.slot.eeprom";
             default -> "gui.neoopencomputers.server_rack.slot.empty";
         });
