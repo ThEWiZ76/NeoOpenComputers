@@ -23,6 +23,7 @@ import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.block.RaidBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.RelayBlock;
+import li.cil.oc.common.block.RobotBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.TransposerBlock;
 import li.cil.oc.common.block.WaypointBlock;
@@ -156,6 +157,10 @@ public final class ModBlocks {
         ModContentIds.RELAY,
         () -> new RelayBlock(networkInfrastructureProperties()));
 
+    public static final DeferredBlock<Block> ROBOT = BLOCKS.register(
+        ModContentIds.ROBOT,
+        () -> new RobotBlock(robotProperties()));
+
     public static final DeferredBlock<Block> NET_SPLITTER = BLOCKS.register(
         ModContentIds.NET_SPLITTER,
         () -> new NetSplitterBlock(networkInfrastructureProperties()));
@@ -270,6 +275,12 @@ public final class ModBlocks {
     }
 
     private static BlockBehaviour.Properties networkInfrastructureProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
+            .strength(1.5F, 4.0F);
+    }
+
+    private static BlockBehaviour.Properties robotProperties() {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F);

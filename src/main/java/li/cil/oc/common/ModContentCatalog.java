@@ -253,6 +253,8 @@ public final class ModContentCatalog {
                 ModItems.REDSTONE_IO.get(),
                 ModBlocks.RELAY.get(),
                 ModItems.RELAY.get(),
+                ModBlocks.ROBOT.get(),
+                ModItems.ROBOT.get(),
                 ModBlocks.NET_SPLITTER.get(),
                 ModItems.NET_SPLITTER.get(),
                 ModBlocks.TRANSPOSER.get(),
@@ -539,6 +541,8 @@ public final class ModContentCatalog {
         final Item redstoneIoItem,
         final Block relay,
         final Item relayItem,
+        final Block robot,
+        final Item robotItem,
         final Block netSplitter,
         final Item netSplitterItem,
         final Block transposer,
@@ -698,6 +702,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.REDSTONE_IO, redstoneIo, redstoneIoItem);
         registry.register(ModContentIds.RELAY, relay, relayItem);
         registry.register(COMPAT_RELAY, relay, relayItem);
+        registry.register(ModContentIds.ROBOT, robot, robotItem);
         registry.register(ModContentIds.NET_SPLITTER, netSplitter, netSplitterItem);
         registry.register(COMPAT_NET_SPLITTER, netSplitter, netSplitterItem);
         registry.register(COMPAT_NET_SPLITTER_UPSTREAM, netSplitter, netSplitterItem);

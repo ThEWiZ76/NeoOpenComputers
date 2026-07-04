@@ -22,6 +22,7 @@ import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.blockentity.RedstoneIoBlockEntity;
 import li.cil.oc.common.blockentity.RelayBlockEntity;
+import li.cil.oc.common.blockentity.RobotBlockEntity;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.TransposerBlockEntity;
 import li.cil.oc.common.blockentity.WaypointBlockEntity;
@@ -154,6 +155,11 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.RELAY_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(RelayBlockEntity::new, ModBlocks.RELAY.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RobotBlockEntity>> ROBOT =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.ROBOT_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(RobotBlockEntity::new, ModBlocks.ROBOT.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NetSplitterBlockEntity>> NET_SPLITTER =
         BLOCK_ENTITY_TYPES.register(

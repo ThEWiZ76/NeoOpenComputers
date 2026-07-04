@@ -36,6 +36,13 @@ final class AssetModelResourceTest {
     }
 
     @Test
+    void robotFoundationModelsExistForClientResourceReload() {
+        assertTrue(Files.exists(ASSET_ROOT.resolve("blockstates/robot.json")), "Missing robot blockstate");
+        assertTrue(Files.exists(MODEL_ROOT.resolve("block/robot.json")), "Missing robot block model");
+        assertTrue(Files.exists(MODEL_ROOT.resolve("item/robot.json")), "Missing robot item model");
+    }
+
+    @Test
     void neoOpenComputersTextureReferencesHaveLocalPngs() throws IOException {
         List<String> missing = new ArrayList<>();
         for (TextureReference reference : textureReferences()) {

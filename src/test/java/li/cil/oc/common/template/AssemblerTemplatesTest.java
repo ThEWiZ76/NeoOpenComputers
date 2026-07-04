@@ -12,6 +12,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,6 +24,7 @@ final class AssemblerTemplatesTest {
     void defaultTemplatesIncludeTabletAssembler() {
         assertTrue(AssemblerTemplates.defaultTemplateNames().contains("tablet"));
         assertTrue(AssemblerTemplates.defaultTemplateNames().contains("microcontroller"));
+        assertTrue(AssemblerTemplates.defaultTemplateNames().contains("robot"));
     }
 
     @Test
@@ -62,6 +64,35 @@ final class AssemblerTemplatesTest {
         assertFalse(MicrocontrollerAssemblerTemplate.canPlaceAllDrivers(0,
             List.of(new ItemDriver(Slot.CPU, 0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0), new ItemDriver(Slot.HDD, 0)),
             List.of()));
+    }
+
+    @Test
+    void robotAssemblerUsesUpstreamSlotLayout() throws Exception {
+        assertTrue(robotCanPlaceAllDrivers(0,
+            List.of(new ContainerDriver(1), new ContainerDriver(0), new ContainerDriver(0)),
+            List.of(
+                new ItemDriver(Slot.Card, 0),
+                new ProcessorDriver(0),
+                new ItemDriver(Slot.Memory, 0),
+                new ItemDriver(Slot.Memory, 0),
+                new ItemDriver("eeprom", 0),
+                new ItemDriver(Slot.HDD, 0))));
+        assertFalse(robotCanPlaceAllDrivers(0,
+            List.of(new ContainerDriver(2)),
+            List.of(new ProcessorDriver(0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0))));
+        assertFalse(robotCanPlaceAllDrivers(0,
+            List.of(),
+            List.of(new ItemDriver(Slot.Card, 0), new ItemDriver(Slot.Card, 0), new ProcessorDriver(0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0))));
+        assertFalse(robotCanPlaceAllDrivers(0,
+            List.of(),
+            List.of(new ProcessorDriver(0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0), new ItemDriver(Slot.HDD, 1))));
+    }
+
+    private static boolean robotCanPlaceAllDrivers(final int tier, final Iterable<DriverItem> containerDrivers, final Iterable<DriverItem> componentDrivers) throws Exception {
+        final Class<?> template = Class.forName("li.cil.oc.common.template.RobotAssemblerTemplate");
+        final Method method = template.getDeclaredMethod("canPlaceAllDrivers", int.class, Iterable.class, Iterable.class);
+        method.setAccessible(true);
+        return (boolean) method.invoke(null, tier, containerDrivers, componentDrivers);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

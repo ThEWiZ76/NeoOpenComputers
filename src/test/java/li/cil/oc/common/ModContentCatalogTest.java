@@ -218,6 +218,7 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.REDSTONE_IO));
         assertNotNull(registry.get(ModContentIds.RELAY));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_RELAY));
+        assertNotNull(registry.get(ModContentIds.ROBOT));
         assertNotNull(registry.get(ModContentIds.TRANSPOSER));
         assertNotNull(registry.get(ModContentIds.HOLOGRAM_TIER1));
         assertNotNull(registry.get(ModContentIds.HOLOGRAM_TIER2));
@@ -439,6 +440,7 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.REDSTONE_IO, registry.get(ModContentIds.REDSTONE_IO).name());
         assertEquals(ModContentIds.RELAY, registry.get(ModContentIds.RELAY).name());
         assertEquals(ModContentCatalog.COMPAT_RELAY, registry.get(ModContentCatalog.COMPAT_RELAY).name());
+        assertEquals(ModContentIds.ROBOT, registry.get(ModContentIds.ROBOT).name());
         assertEquals(ModContentIds.TRANSPOSER, registry.get(ModContentIds.TRANSPOSER).name());
         assertEquals(ModContentIds.HOLOGRAM_TIER1, registry.get(ModContentIds.HOLOGRAM_TIER1).name());
         assertEquals(ModContentIds.HOLOGRAM_TIER2, registry.get(ModContentIds.HOLOGRAM_TIER2).name());

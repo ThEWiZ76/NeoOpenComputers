@@ -196,6 +196,10 @@ public final class ModItems {
         ModContentIds.RELAY,
         ModBlocks.RELAY);
 
+    public static final DeferredItem<BlockItem> ROBOT = ITEMS.registerSimpleBlockItem(
+        ModContentIds.ROBOT,
+        ModBlocks.ROBOT);
+
     public static final DeferredItem<BlockItem> NET_SPLITTER = ITEMS.registerSimpleBlockItem(
         ModContentIds.NET_SPLITTER,
         ModBlocks.NET_SPLITTER);
