@@ -96,6 +96,7 @@ public final class NeoOpenComputersClient {
         event.register(ModMenus.DISASSEMBLER.get(), DisassemblerScreen::new);
         event.register(ModMenus.DISK_DRIVE.get(), DiskDriveScreen::new);
         event.register(ModMenus.DRIVE.get(), DriveScreen::new);
+        event.register(ModMenus.MICROCONTROLLER.get(), MicrocontrollerScreen::new);
         event.register(ModMenus.PRINTER.get(), PrinterScreen::new);
         event.register(ModMenus.RACK.get(), RackScreen::new);
         event.register(ModMenus.RAID.get(), RaidScreen::new);

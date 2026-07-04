@@ -248,7 +248,7 @@ public class ComputerCaseScreen extends AbstractContainerScreen<ComputerCaseMenu
         return SLOT_OVERLAY_ALPHA;
     }
 
-    private static void drawSlot(
+    static void drawSlot(
         final GuiGraphics guiGraphics,
         final int left,
         final int top,
