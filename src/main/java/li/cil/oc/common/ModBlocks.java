@@ -12,6 +12,7 @@ import li.cil.oc.common.block.DiskDriveBlock;
 import li.cil.oc.common.block.GeolyzerBlock;
 import li.cil.oc.common.block.HologramBlock;
 import li.cil.oc.common.block.KeyboardBlock;
+import li.cil.oc.common.block.MicrocontrollerBlock;
 import li.cil.oc.common.block.MotionSensorBlock;
 import li.cil.oc.common.block.NetSplitterBlock;
 import li.cil.oc.common.block.PowerConverterBlock;
@@ -106,6 +107,18 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> KEYBOARD = BLOCKS.register(
         ModContentIds.KEYBOARD,
         () -> new KeyboardBlock(keyboardProperties()));
+
+    public static final DeferredBlock<Block> MICROCONTROLLER_TIER1 = BLOCKS.register(
+        ModContentIds.MICROCONTROLLER_TIER1,
+        () -> new MicrocontrollerBlock(microcontrollerProperties(), 0));
+
+    public static final DeferredBlock<Block> MICROCONTROLLER_TIER2 = BLOCKS.register(
+        ModContentIds.MICROCONTROLLER_TIER2,
+        () -> new MicrocontrollerBlock(microcontrollerProperties(), 1));
+
+    public static final DeferredBlock<Block> MICROCONTROLLER_CREATIVE = BLOCKS.register(
+        ModContentIds.MICROCONTROLLER_CREATIVE,
+        () -> new MicrocontrollerBlock(microcontrollerProperties(), 3));
 
     public static final DeferredBlock<Block> MOTION_SENSOR = BLOCKS.register(
         ModContentIds.MOTION_SENSOR,
@@ -229,6 +242,12 @@ public final class ModBlocks {
             .mapColor(MapColor.COLOR_GRAY)
             .strength(1.0F, 3.0F)
             .noOcclusion();
+    }
+
+    private static BlockBehaviour.Properties microcontrollerProperties() {
+        return BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL)
+            .strength(1.5F, 4.0F);
     }
 
     private static BlockBehaviour.Properties hologramProperties() {

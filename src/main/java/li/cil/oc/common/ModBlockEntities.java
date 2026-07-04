@@ -11,6 +11,7 @@ import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.blockentity.GeolyzerBlockEntity;
 import li.cil.oc.common.blockentity.HologramBlockEntity;
 import li.cil.oc.common.blockentity.KeyboardBlockEntity;
+import li.cil.oc.common.blockentity.MicrocontrollerBlockEntity;
 import li.cil.oc.common.blockentity.MotionSensorBlockEntity;
 import li.cil.oc.common.blockentity.NetSplitterBlockEntity;
 import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
@@ -99,6 +100,15 @@ public final class ModBlockEntities {
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.KEYBOARD_BLOCK_ENTITY,
             () -> BlockEntityType.Builder.of(KeyboardBlockEntity::new, ModBlocks.KEYBOARD.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<MicrocontrollerBlockEntity>> MICROCONTROLLER =
+        BLOCK_ENTITY_TYPES.register(
+            ModContentIds.MICROCONTROLLER_BLOCK_ENTITY,
+            () -> BlockEntityType.Builder.of(
+                MicrocontrollerBlockEntity::new,
+                ModBlocks.MICROCONTROLLER_TIER1.get(),
+                ModBlocks.MICROCONTROLLER_TIER2.get(),
+                ModBlocks.MICROCONTROLLER_CREATIVE.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<MotionSensorBlockEntity>> MOTION_SENSOR =
         BLOCK_ENTITY_TYPES.register(

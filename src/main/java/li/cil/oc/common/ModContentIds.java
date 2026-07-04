@@ -39,6 +39,11 @@ public final class ModContentIds {
     public static final String MICROCONTROLLER_CASE_TIER1 = "microcontroller_case_tier1";
     public static final String MICROCONTROLLER_CASE_TIER2 = "microcontroller_case_tier2";
     public static final String MICROCONTROLLER_CASE_CREATIVE = "microcontroller_case_creative";
+    public static final String MICROCONTROLLER_TIER1 = "microcontroller_tier1";
+    public static final String MICROCONTROLLER_TIER2 = "microcontroller_tier2";
+    public static final String MICROCONTROLLER_CREATIVE = "microcontroller_creative";
+    public static final String MICROCONTROLLER_BLOCK_ENTITY = "microcontroller";
+    public static final String MICROCONTROLLER_MENU = "microcontroller";
     public static final String TABLET_CASE_TIER1 = "tablet_case_tier1";
     public static final String TABLET_CASE_TIER2 = "tablet_case_tier2";
     public static final String TABLET_CASE_CREATIVE = "tablet_case_creative";

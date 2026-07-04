@@ -8,6 +8,7 @@ import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.DriveMenu;
+import li.cil.oc.common.menu.MicrocontrollerMenu;
 import li.cil.oc.common.menu.PrinterMenu;
 import li.cil.oc.common.menu.RackMenu;
 import li.cil.oc.common.menu.RaidMenu;
@@ -33,6 +34,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<ComputerCaseMenu>> COMPUTER_CASE = MENUS.register(
         ModContentIds.COMPUTER_CASE_MENU,
         () -> IMenuTypeExtension.create(ComputerCaseMenu::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<MicrocontrollerMenu>> MICROCONTROLLER = MENUS.register(
+        ModContentIds.MICROCONTROLLER_MENU,
+        () -> IMenuTypeExtension.create(MicrocontrollerMenu::new));
 
     public static final DeferredHolder<MenuType<?>, MenuType<AssemblerMenu>> ASSEMBLER = MENUS.register(
         ModContentIds.ASSEMBLER_MENU,

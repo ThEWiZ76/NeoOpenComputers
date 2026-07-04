@@ -277,6 +277,18 @@ public final class ModItems {
         ModContentIds.MICROCONTROLLER_CASE_CREATIVE,
         () -> new MicrocontrollerCaseItem(new Item.Properties(), 3));
 
+    public static final DeferredItem<BlockItem> MICROCONTROLLER_TIER1 = ITEMS.registerSimpleBlockItem(
+        ModContentIds.MICROCONTROLLER_TIER1,
+        ModBlocks.MICROCONTROLLER_TIER1);
+
+    public static final DeferredItem<BlockItem> MICROCONTROLLER_TIER2 = ITEMS.registerSimpleBlockItem(
+        ModContentIds.MICROCONTROLLER_TIER2,
+        ModBlocks.MICROCONTROLLER_TIER2);
+
+    public static final DeferredItem<BlockItem> MICROCONTROLLER_CREATIVE = ITEMS.registerSimpleBlockItem(
+        ModContentIds.MICROCONTROLLER_CREATIVE,
+        ModBlocks.MICROCONTROLLER_CREATIVE);
+
     public static final DeferredItem<TabletCaseItem> TABLET_CASE_TIER1 = ITEMS.register(
         ModContentIds.TABLET_CASE_TIER1,
         () -> new TabletCaseItem(new Item.Properties(), 0));
