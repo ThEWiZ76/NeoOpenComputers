@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "neoopencomputers:block/microcontroller_creative" },
+    "facing=east": { "model": "neoopencomputers:block/microcontroller_creative", "y": 90 },
+    "facing=south": { "model": "neoopencomputers:block/microcontroller_creative", "y": 180 },
+    "facing=west": { "model": "neoopencomputers:block/microcontroller_creative", "y": 270 }
+  }
+}

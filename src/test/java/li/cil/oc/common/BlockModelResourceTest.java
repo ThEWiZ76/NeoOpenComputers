@@ -162,4 +162,19 @@ final class BlockModelResourceTest {
 
         assertTrue(!Files.exists(BLOCK_MODEL_ROOT.resolve("disk_drive_loaded.json")));
     }
+
+    @Test
+    void microcontrollerBlockstatesUseTierModelsForHorizontalPlacement() throws IOException {
+        for (final String tier : List.of("microcontroller_tier1", "microcontroller_tier2", "microcontroller_creative")) {
+            final Path blockstatePath = Path.of("src/main/resources/assets/neoopencomputers/blockstates/" + tier + ".json");
+            assertTrue(Files.isRegularFile(blockstatePath), "Missing blockstate for " + tier);
+            try (Reader reader = Files.newBufferedReader(blockstatePath)) {
+                final JsonObject variants = JsonParser.parseReader(reader).getAsJsonObject().getAsJsonObject("variants");
+                for (final String facing : List.of("north", "east", "south", "west")) {
+                    assertTrue(variants.getAsJsonObject("facing=" + facing).get("model").getAsString().equals("neoopencomputers:block/" + tier), tier + " " + facing);
+                }
+            }
+            assertTrue(Files.isRegularFile(BLOCK_MODEL_ROOT.resolve(tier + ".json")), "Missing model for " + tier);
+        }
+    }
 }

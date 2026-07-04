@@ -100,6 +100,16 @@ final class ItemModelResourceTest {
         }
     }
 
+    @Test
+    void microcontrollerItemModelsUseTheirBlockModels() throws IOException {
+        for (final String tier : List.of("microcontroller_tier1", "microcontroller_tier2", "microcontroller_creative")) {
+            try (Reader reader = Files.newBufferedReader(ITEM_MODEL_ROOT.resolve(tier + ".json"))) {
+                final JsonObject model = JsonParser.parseReader(reader).getAsJsonObject();
+                assertTrue(("neoopencomputers:block/" + tier).equals(model.get("parent").getAsString()), tier);
+            }
+        }
+    }
+
     private static boolean isVanillaPlaceholder(final String texture) {
         return texture.startsWith("minecraft:item/") || texture.startsWith("minecraft:block/");
     }
