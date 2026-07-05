@@ -9,6 +9,8 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -52,6 +54,16 @@ final class RobotNetworkingTest {
 
         assertFalse(running.get());
         assertEquals(0, toggles.get());
+    }
+
+    @Test
+    void robotStartFailureReportsMachineErrorLikeComputerCase() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/network/RobotNetworking.java"));
+
+        assertTrue(source.contains("ComputerCaseNetworking.startFailureMessage"),
+            "Robot GUI start failure must report machine.lastError to the player like computer cases do.");
+        assertTrue(source.contains("player.sendSystemMessage(message)"),
+            "Robot GUI start failure must be visible immediately when the power button does nothing.");
     }
 
     private static RobotMenu allocateMenu(final int containerId, final RobotBlockEntity robot) throws Exception {

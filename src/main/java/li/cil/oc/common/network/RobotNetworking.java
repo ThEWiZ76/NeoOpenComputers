@@ -2,6 +2,7 @@ package li.cil.oc.common.network;
 
 import li.cil.oc.common.blockentity.RobotBlockEntity;
 import li.cil.oc.common.menu.RobotMenu;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -42,7 +43,16 @@ public final class RobotNetworking {
         if (player == null || !menu.stillValid(player)) {
             return false;
         }
-        return applyRobotControl(containerMenu, payload);
+        final RobotBlockEntity robot = menu.robotInventory() instanceof RobotBlockEntity blockEntity ? blockEntity : null;
+        final boolean wasRunning = robot != null && (robot.machine().isRunning() || robot.machine().isPaused());
+        final boolean accepted = applyRobotControl(containerMenu, payload);
+        if (robot != null) {
+            final Component message = ComputerCaseNetworking.startFailureMessage(robot.machine(), wasRunning, payload.action());
+            if (message != null) {
+                player.sendSystemMessage(message);
+            }
+        }
+        return accepted;
     }
 
     private static void handleRobotControl(final RobotControlPayload payload, final IPayloadContext context) {

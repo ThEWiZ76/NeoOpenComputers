@@ -129,6 +129,16 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenPassesGuiGraphicsToManualImageRenderers() throws IOException {
+        final String source = Files.readString(MANUAL_SCREEN_SOURCE);
+
+        assertTrue(source.contains("ManualRenderContext.withGraphics(graphics, () -> tab.renderer().render())"),
+            "Tab item renderers must draw into the manual GuiGraphics pose, not a fresh top-left GuiGraphics.");
+        assertTrue(source.contains("ManualRenderContext.withGraphics(graphics, () -> image.renderAt(left + entry.x(), y, mouseX, mouseY))"),
+            "Inline item/block image renderers must draw into the clipped manual GuiGraphics pose.");
+    }
+
+    @Test
     void manualScreenSelectsUpstreamButtonTextureRowsForHoverState() {
         assertEquals(0, ManualScreen.buttonTextureYOffset(false, ManualScreen.TAB_HEIGHT));
         assertEquals(ManualScreen.TAB_HEIGHT, ManualScreen.buttonTextureYOffset(true, ManualScreen.TAB_HEIGHT));

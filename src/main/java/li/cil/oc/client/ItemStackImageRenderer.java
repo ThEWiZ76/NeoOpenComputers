@@ -40,11 +40,14 @@ public final class ItemStackImageRenderer implements ImageRenderer {
 
         final int index = (int) ((System.currentTimeMillis() % ((long) CYCLE_SPEED_MS * stacks.size())) / CYCLE_SPEED_MS);
         final Minecraft minecraft = Minecraft.getInstance();
-        final GuiGraphics graphics = new GuiGraphics(minecraft, minecraft.renderBuffers().bufferSource());
+        final GuiGraphics activeGraphics = ManualRenderContext.currentGraphics();
+        final GuiGraphics graphics = activeGraphics == null ? new GuiGraphics(minecraft, minecraft.renderBuffers().bufferSource()) : activeGraphics;
         graphics.pose().pushPose();
         graphics.pose().scale(2.0F, 2.0F, 2.0F);
         graphics.renderItem(stacks.get(index), 0, 0);
         graphics.pose().popPose();
-        graphics.flush();
+        if (activeGraphics == null) {
+            graphics.flush();
+        }
     }
 }

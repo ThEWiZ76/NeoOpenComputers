@@ -3,7 +3,11 @@ package li.cil.oc.common.menu;
 import li.cil.oc.api.driver.item.Slot;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class RobotMenuShapeTest {
     private static final String EEPROM = "eeprom";
@@ -47,5 +51,17 @@ final class RobotMenuShapeTest {
         assertEquals(ComputerCaseMenu.STATE_RUNNING, RobotMenu.STATE_RUNNING);
         assertEquals(ComputerCaseMenu.STATE_INCOMPLETE, RobotMenu.STATE_INCOMPLETE);
         assertEquals(5, RobotMenu.ROBOT_DATA_COUNT);
+    }
+
+    @Test
+    void robotShiftClickTargetsCompatibleComponentSlotsBeforeInventorySlots() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/menu/RobotMenu.java"));
+
+        assertTrue(source.contains("movePlayerStackToRobot(stack)"),
+            "Player shift-click must use robot-aware routing instead of vanilla first-slot transfer.");
+        assertTrue(source.contains("movePlayerStackToRobotSlots(stack, menuTier, false)")
+                && source.contains("movePlayerStackToRobotSlots(stack, menuTier, true)")
+                && source.contains("li.cil.oc.api.driver.item.Slot.Container.equals(RobotBlockEntity.slotType(menuTier, slot))"),
+            "Component stacks must be tried in matching component/upgrade slots before generic container slots.");
     }
 }

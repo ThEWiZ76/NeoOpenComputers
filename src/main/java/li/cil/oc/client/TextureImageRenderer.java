@@ -42,9 +42,12 @@ public class TextureImageRenderer implements ImageRenderer {
     @Override
     public void render(final int mouseX, final int mouseY) {
         final Minecraft minecraft = Minecraft.getInstance();
-        final GuiGraphics graphics = new GuiGraphics(minecraft, minecraft.renderBuffers().bufferSource());
+        final GuiGraphics activeGraphics = ManualRenderContext.currentGraphics();
+        final GuiGraphics graphics = activeGraphics == null ? new GuiGraphics(minecraft, minecraft.renderBuffers().bufferSource()) : activeGraphics;
         graphics.blit(location, 0, 0, 0.0F, 0.0F, getWidth(), getHeight(), getWidth(), getHeight());
-        graphics.flush();
+        if (activeGraphics == null) {
+            graphics.flush();
+        }
     }
 
     private void loadSize() {

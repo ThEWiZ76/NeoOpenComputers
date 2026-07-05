@@ -1,6 +1,7 @@
 package li.cil.oc.api.prefab;
 
 import li.cil.oc.api.manual.TabIconRenderer;
+import li.cil.oc.client.ManualRenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
@@ -22,8 +23,11 @@ public class ItemStackTabIconRenderer implements TabIconRenderer {
         }
 
         final Minecraft minecraft = Minecraft.getInstance();
-        final GuiGraphics graphics = new GuiGraphics(minecraft, minecraft.renderBuffers().bufferSource());
+        final GuiGraphics activeGraphics = ManualRenderContext.currentGraphics();
+        final GuiGraphics graphics = activeGraphics == null ? new GuiGraphics(minecraft, minecraft.renderBuffers().bufferSource()) : activeGraphics;
         graphics.renderItem(stack, 0, 0);
-        graphics.flush();
+        if (activeGraphics == null) {
+            graphics.flush();
+        }
     }
 }

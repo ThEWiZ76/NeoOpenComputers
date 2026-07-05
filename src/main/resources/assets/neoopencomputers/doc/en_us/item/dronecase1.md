@@ -2,7 +2,7 @@
 
 ![Droning on.](oredict:oc:droneCase1)
 
-The drone case is used to build drones in the [assembler](../block/assembler.md). Drones are light-weight, fast and very mobile machines with limited functionality (fewer upgrade and component slots available). Unlike robots they cannot use tools, and can interact with the world only in a relatively limited manner.
+The drone case is used to build drones in the [assembler](../block/assembler.md). The case itself is not placeable; assemble it first, then place the finished [drone](drone.md) item in the world. Drones are light-weight, fast and very mobile machines with limited functionality (fewer upgrade and component slots available). Unlike robots they cannot use tools, and can interact with the world only in a relatively limited manner.
 
 They make up for their limitations with speed and lower running energy costs. They are well suited for transport of small amounts of items, and ideal for reconnaissance. Pairing a drone with a robot can be quite powerful, with the robot doing the "hard work", and the drone providing information about the environment and transporting items to and from a central hub, for example.
 

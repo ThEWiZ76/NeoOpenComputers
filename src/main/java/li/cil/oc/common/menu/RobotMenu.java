@@ -129,7 +129,7 @@ public class RobotMenu extends AbstractContainerMenu {
                 if (!moveItemStackTo(stack, robotSlotCount, robotSlotCount + PLAYER_SLOT_COUNT, true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!moveItemStackTo(stack, 0, robotSlotCount, false)) {
+            } else if (!movePlayerStackToRobot(stack)) {
                 return ItemStack.EMPTY;
             }
 
@@ -140,6 +140,25 @@ public class RobotMenu extends AbstractContainerMenu {
             }
         }
         return moved;
+    }
+
+    private boolean movePlayerStackToRobot(final ItemStack stack) {
+        final int menuTier = robotTier();
+        return movePlayerStackToRobotSlots(stack, menuTier, false)
+            || movePlayerStackToRobotSlots(stack, menuTier, true);
+    }
+
+    private boolean movePlayerStackToRobotSlots(final ItemStack stack, final int menuTier, final boolean containerSlots) {
+        for (int slot = 0; slot < robotSlotCount && !stack.isEmpty(); slot++) {
+            final boolean isContainerSlot = li.cil.oc.api.driver.item.Slot.Container.equals(RobotBlockEntity.slotType(menuTier, slot));
+            if (isContainerSlot != containerSlots) {
+                continue;
+            }
+            if (getSlot(slot).mayPlace(stack) && moveItemStackTo(stack, slot, slot + 1, false)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

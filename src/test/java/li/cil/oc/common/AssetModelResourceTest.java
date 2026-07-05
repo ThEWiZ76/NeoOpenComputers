@@ -46,6 +46,10 @@ final class AssetModelResourceTest {
     void robotAndDroneUseDedicatedVisualAssets() throws IOException {
         assertTrue(Files.exists(TEXTURE_ROOT.resolve("model/robot.png")), "Missing upstream robot model texture");
         assertTrue(Files.exists(TEXTURE_ROOT.resolve("model/drone.png")), "Missing upstream drone model texture");
+        assertTrue(Files.exists(TEXTURE_ROOT.resolve("item/drone.png")), "Missing upstream drone item texture");
+        assertTrue(Files.exists(TEXTURE_ROOT.resolve("item/drone_case_tier1.png")), "Missing tier 1 drone case item texture");
+        assertTrue(Files.exists(TEXTURE_ROOT.resolve("item/drone_case_tier2.png")), "Missing tier 2 drone case item texture");
+        assertTrue(Files.exists(TEXTURE_ROOT.resolve("item/drone_case_creative.png")), "Missing creative drone case item texture");
         assertTrue(Files.exists(TEXTURE_ROOT.resolve("block/robot.png")), "Missing robot block texture");
 
         final String robotModel = Files.readString(MODEL_ROOT.resolve("block/robot.json"));
@@ -56,9 +60,9 @@ final class AssetModelResourceTest {
         assertTrue(robotModel.contains("neoopencomputers:block/robot"), "Robot block model should use robot block texture");
         assertTrue(!robotModel.contains("computer_case"), "Robot block model must not reuse computer case geometry");
         assertTrue(robotItemModel.contains("block/robot"), "Robot item model should use robot block model");
-        assertTrue(droneModel.contains("neoopencomputers:model/drone"), "Drone item model should use drone texture");
+        assertTrue(droneModel.contains("neoopencomputers:item/drone"), "Drone item model should use drone item texture");
         assertTrue(!droneModel.contains("item/tablet"), "Drone item model must not reuse tablet texture");
-        assertTrue(droneCaseModel.contains("neoopencomputers:model/drone"), "Drone case model should use drone texture");
+        assertTrue(droneCaseModel.contains("neoopencomputers:item/drone_case_tier1"), "Drone case model should use matching case item texture");
         assertTrue(!droneCaseModel.contains("item/tablet_case"), "Drone case item model must not reuse tablet case texture");
     }
 

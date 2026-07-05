@@ -548,7 +548,8 @@ public class ManualScreen extends Screen {
             graphics.blit(TAB_TEXTURE, x, y, 0, tabTextureYOffset(index, mouseX, mouseY), TAB_WIDTH, TAB_HEIGHT);
             graphics.pose().pushPose();
             graphics.pose().translate(x + 4, y + 5, 0);
-            tabs.get(index).renderer().render();
+            final ManualRegistry.ManualTab tab = tabs.get(index);
+            ManualRenderContext.withGraphics(graphics, () -> tab.renderer().render());
             graphics.pose().popPose();
         }
     }
@@ -571,7 +572,7 @@ public class ManualScreen extends Screen {
             } else if (entry.segment() instanceof final ManualDocument.ImageSegment image) {
                 graphics.pose().pushPose();
                 graphics.pose().translate(left + entry.x(), y, 0);
-                image.renderAt(left + entry.x(), y, mouseX, mouseY);
+                ManualRenderContext.withGraphics(graphics, () -> image.renderAt(left + entry.x(), y, mouseX, mouseY));
                 graphics.pose().popPose();
             }
         }
