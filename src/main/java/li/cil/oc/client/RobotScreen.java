@@ -1,5 +1,6 @@
 package li.cil.oc.client;
 
+import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.menu.RobotMenu;
 import li.cil.oc.common.network.RackControlPayload;
 import li.cil.oc.common.network.RobotControlPayload;
@@ -11,22 +12,29 @@ import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
-    public static final ResourceLocation BACKGROUND_TEXTURE = ComputerCaseScreen.BACKGROUND_TEXTURE;
-    public static final ResourceLocation ROBOT_TEXTURE = ComputerCaseScreen.COMPUTER_TEXTURE;
+    public static final ResourceLocation ROBOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/robot.png");
+    public static final ResourceLocation ROBOT_NO_SCREEN_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/robot_noscreen.png");
 
     private static final int SLOT_SIZE = 16;
     private static final int TITLE_TEXT_X = 8;
     private static final int TITLE_TEXT_Y = 6;
-    private static final int INVENTORY_TEXT_X = 8;
-    private static final int INVENTORY_TEXT_Y = 72;
-    private static final int STATUS_CONTROL_X = 142;
-    private static final int STATUS_CONTROL_Y = 33;
+    private static final int INVENTORY_TEXT_X = 6;
+    private static final int INVENTORY_TEXT_Y = 162;
+    private static final int STATUS_CONTROL_X = 5;
+    private static final int STATUS_CONTROL_Y = 153;
     private static final int STATUS_CONTROL_SIZE = 18;
+    private static final int POWER_BAR_X = 26;
+    private static final int POWER_BAR_Y = 156;
+    private static final int POWER_BAR_WIDTH = 140;
+    private static final int POWER_BAR_HEIGHT = 12;
+    private static final int IMAGE_WIDTH = 256;
+    private static final int IMAGE_HEIGHT_WITH_SCREEN = 256;
     private static final Component SCREEN_TITLE = Component.translatable("gui.neoopencomputers.robot.title");
 
     public RobotScreen(final RobotMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
-        imageHeight = 166;
+        imageWidth = IMAGE_WIDTH;
+        imageHeight = IMAGE_HEIGHT_WITH_SCREEN;
         titleLabelX = TITLE_TEXT_X;
         titleLabelY = TITLE_TEXT_Y;
         inventoryLabelX = INVENTORY_TEXT_X;
@@ -37,8 +45,8 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
     protected void renderBg(final GuiGraphics guiGraphics, final float partialTick, final int mouseX, final int mouseY) {
         final int left = leftPos;
         final int top = topPos;
-        guiGraphics.blit(BACKGROUND_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
         guiGraphics.blit(ROBOT_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
+        drawPowerBar(guiGraphics, left + POWER_BAR_X, top + POWER_BAR_Y, menu.energy(), menu.maxEnergy());
         final int tier = menu.robotTier();
         for (int slot = 0; slot < RobotMenu.robotSlotCountForTier(tier); slot++) {
             ComputerCaseScreen.drawSlot(
@@ -73,8 +81,8 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
                 menu.getSlot(slot).hasItem()), mouseX, mouseY);
         } else if (statusControlAt(mouseX, mouseY, leftPos, topPos)) {
             guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.statusControlTooltip(menu.robotState()), mouseX, mouseY);
-        } else if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
-            guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.statusTooltip(menu.robotState(), menu.missingRequirements(), menu.componentCount(), menu.maxComponents()), mouseX, mouseY);
+        } else if (powerBarAt(mouseX, mouseY, leftPos, topPos)) {
+            guiGraphics.renderComponentTooltip(font, powerTooltip(menu.energy(), menu.maxEnergy()), mouseX, mouseY);
         }
     }
 
@@ -89,6 +97,14 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
 
     public static Component screenTitle() {
         return SCREEN_TITLE;
+    }
+
+    public static int robotImageWidth() {
+        return IMAGE_WIDTH;
+    }
+
+    public static int robotImageHeightWithScreen() {
+        return IMAGE_HEIGHT_WITH_SCREEN;
     }
 
     public static int robotSlotAt(final int mouseX, final int mouseY, final int left, final int top, final int tier) {
@@ -114,6 +130,26 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
         final int x = mouseX - left;
         final int y = mouseY - top;
         return x >= STATUS_CONTROL_X && x < STATUS_CONTROL_X + STATUS_CONTROL_SIZE && y >= STATUS_CONTROL_Y && y < STATUS_CONTROL_Y + STATUS_CONTROL_SIZE;
+    }
+
+    private static boolean powerBarAt(final int mouseX, final int mouseY, final int left, final int top) {
+        final int x = mouseX - left;
+        final int y = mouseY - top;
+        return x >= POWER_BAR_X && x < POWER_BAR_X + POWER_BAR_WIDTH && y >= POWER_BAR_Y && y < POWER_BAR_Y + POWER_BAR_HEIGHT;
+    }
+
+    private static java.util.List<Component> powerTooltip(final int energy, final int maxEnergy) {
+        final int percent = maxEnergy <= 0 ? 0 : (int) Math.min(100L, Math.max(0L, (long) energy * 100L / maxEnergy));
+        return java.util.List.of(Component.literal("Power: " + percent + "% (" + energy + "/" + maxEnergy + ")"));
+    }
+
+    private static void drawPowerBar(final GuiGraphics guiGraphics, final int left, final int top, final int energy, final int maxEnergy) {
+        if (maxEnergy <= 0 || energy <= 0) {
+            return;
+        }
+        final int width = (int) Math.max(1L, Math.min(POWER_BAR_WIDTH, (long) energy * POWER_BAR_WIDTH / maxEnergy));
+        guiGraphics.fill(left, top, left + width, top + POWER_BAR_HEIGHT, 0xFF62C864);
+        guiGraphics.fill(left, top, left + width, top + 2, 0xFF9EEAA0);
     }
 
     private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state, final boolean hovered) {

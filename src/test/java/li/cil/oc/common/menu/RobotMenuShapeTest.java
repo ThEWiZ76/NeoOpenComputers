@@ -35,11 +35,11 @@ final class RobotMenuShapeTest {
     }
 
     @Test
-    void robotMenuLaysOutAllSlotsInThreeRows() {
-        assertEquals(8, RobotMenu.robotSlotX(0, 0));
-        assertEquals(16, RobotMenu.robotSlotY(0, 0));
-        assertEquals(116, RobotMenu.robotSlotX(2, 20));
-        assertEquals(52, RobotMenu.robotSlotY(2, 20));
+    void robotMenuLaysOutSlotsOnUpstreamRobotGui() {
+        assertEquals(170, RobotMenu.robotSlotX(0, 0));
+        assertEquals(232, RobotMenu.robotSlotY(0, 0));
+        assertEquals(152, RobotMenu.robotSlotX(2, 20));
+        assertEquals(232, RobotMenu.robotSlotY(2, 20));
         assertEquals(-1, RobotMenu.robotSlotX(2, 21));
         assertEquals(-1, RobotMenu.robotSlotY(2, 21));
     }
@@ -50,7 +50,9 @@ final class RobotMenuShapeTest {
         assertEquals(ComputerCaseMenu.STATE_READY, RobotMenu.STATE_READY);
         assertEquals(ComputerCaseMenu.STATE_RUNNING, RobotMenu.STATE_RUNNING);
         assertEquals(ComputerCaseMenu.STATE_INCOMPLETE, RobotMenu.STATE_INCOMPLETE);
-        assertEquals(5, RobotMenu.ROBOT_DATA_COUNT);
+        assertEquals(7, RobotMenu.ROBOT_DATA_COUNT);
+        assertEquals(5, RobotMenu.ROBOT_ENERGY_INDEX);
+        assertEquals(6, RobotMenu.ROBOT_MAX_ENERGY_INDEX);
     }
 
     @Test

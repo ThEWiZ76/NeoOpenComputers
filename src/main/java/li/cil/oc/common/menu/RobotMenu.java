@@ -2,6 +2,7 @@ package li.cil.oc.common.menu;
 
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -24,7 +25,9 @@ public class RobotMenu extends AbstractContainerMenu {
     public static final int ROBOT_COMPONENT_COUNT_INDEX = 2;
     public static final int ROBOT_MAX_COMPONENTS_INDEX = 3;
     public static final int ROBOT_TIER_INDEX = 4;
-    public static final int ROBOT_DATA_COUNT = 5;
+    public static final int ROBOT_ENERGY_INDEX = 5;
+    public static final int ROBOT_MAX_ENERGY_INDEX = 6;
+    public static final int ROBOT_DATA_COUNT = 7;
     public static final int STATE_EMPTY = ComputerCaseMenu.STATE_EMPTY;
     public static final int STATE_READY = ComputerCaseMenu.STATE_READY;
     public static final int STATE_RUNNING = ComputerCaseMenu.STATE_RUNNING;
@@ -33,13 +36,16 @@ public class RobotMenu extends AbstractContainerMenu {
     public static final int MISSING_MEMORY = ComputerCaseMenu.MISSING_MEMORY;
     public static final int MISSING_EEPROM = ComputerCaseMenu.MISSING_EEPROM;
 
-    private static final int PLAYER_INVENTORY_X = 8;
-    private static final int PLAYER_INVENTORY_Y = 84;
-    private static final int PLAYER_HOTBAR_Y = 142;
+    private static final int PLAYER_INVENTORY_X = 6;
+    private static final int PLAYER_INVENTORY_Y = 174;
+    private static final int PLAYER_HOTBAR_Y = 232;
     private static final int[][] ROBOT_SLOT_POSITIONS = {
-        {8, 16}, {26, 16}, {44, 16}, {62, 16}, {80, 16}, {98, 16}, {116, 16},
-        {8, 34}, {26, 34}, {44, 34}, {62, 34}, {80, 34}, {98, 34}, {116, 34},
-        {8, 52}, {26, 52}, {44, 52}, {62, 52}, {80, 52}, {98, 52}, {116, 52}
+        {170, 232}, {188, 232}, {206, 232}, {224, 232},
+        {170, 156}, {188, 156}, {206, 156}, {224, 156},
+        {170, 174}, {188, 174}, {206, 174}, {224, 174},
+        {170, 192}, {188, 192}, {206, 192}, {224, 192},
+        {170, 210}, {188, 210}, {206, 210}, {224, 210},
+        {152, 232}
     };
 
     private final Container robotInventory;
@@ -112,6 +118,14 @@ public class RobotMenu extends AbstractContainerMenu {
 
     public int maxComponents() {
         return robotData.get(ROBOT_MAX_COMPONENTS_INDEX);
+    }
+
+    public int energy() {
+        return robotData.get(ROBOT_ENERGY_INDEX);
+    }
+
+    public int maxEnergy() {
+        return robotData.get(ROBOT_MAX_ENERGY_INDEX);
     }
 
     public Container robotInventory() {
@@ -232,6 +246,20 @@ public class RobotMenu extends AbstractContainerMenu {
         return robotInventory instanceof RobotBlockEntity robot ? robot.tier() : 0;
     }
 
+    public static int energyFor(final Container robotInventory) {
+        if (!(robotInventory instanceof RobotBlockEntity robot) || !(robot.machine().node() instanceof Connector connector)) {
+            return 0;
+        }
+        return clampEnergy(connector.globalBuffer());
+    }
+
+    public static int maxEnergyFor(final Container robotInventory) {
+        if (!(robotInventory instanceof RobotBlockEntity robot) || !(robot.machine().node() instanceof Connector connector)) {
+            return 0;
+        }
+        return clampEnergy(connector.globalBufferSize());
+    }
+
     private static ContainerData robotData(final Container robotInventory) {
         return new ServerRobotData(robotInventory);
     }
@@ -286,6 +314,8 @@ public class RobotMenu extends AbstractContainerMenu {
                 case ROBOT_COMPONENT_COUNT_INDEX -> componentCountFor(robotInventory);
                 case ROBOT_MAX_COMPONENTS_INDEX -> maxComponentsFor(robotInventory);
                 case ROBOT_TIER_INDEX -> robotTierFor(robotInventory);
+                case ROBOT_ENERGY_INDEX -> energyFor(robotInventory);
+                case ROBOT_MAX_ENERGY_INDEX -> maxEnergyFor(robotInventory);
                 default -> 0;
             };
         }
@@ -298,5 +328,12 @@ public class RobotMenu extends AbstractContainerMenu {
         public int getCount() {
             return ROBOT_DATA_COUNT;
         }
+    }
+
+    private static int clampEnergy(final double value) {
+        if (Double.isNaN(value) || value <= 0D) {
+            return 0;
+        }
+        return value >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) value;
     }
 }

@@ -49,7 +49,7 @@ public final class RobotNetworking {
         if (robot != null) {
             final Component message = ComputerCaseNetworking.startFailureMessage(robot.machine(), wasRunning, payload.action());
             if (message != null) {
-                player.sendSystemMessage(message);
+                player.displayClientMessage(message, false);
             }
         }
         return accepted;

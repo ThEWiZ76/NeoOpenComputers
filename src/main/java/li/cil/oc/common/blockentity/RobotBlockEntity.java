@@ -197,7 +197,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             return machine.stop();
         }
         if (!canStartMachine()) {
-            machine.crash("missing required components");
+            machine.crash(missingRequirementsError());
             return false;
         }
         connectMachineNode();
@@ -996,6 +996,21 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             }
         }
         return hasCpu && hasMemory && hasEeprom;
+    }
+
+    private String missingRequirementsError() {
+        final int missing = RobotMenu.missingRequirementsFor(this);
+        final List<String> components = new ArrayList<>(3);
+        if ((missing & RobotMenu.MISSING_CPU) != 0) {
+            components.add("CPU");
+        }
+        if ((missing & RobotMenu.MISSING_MEMORY) != 0) {
+            components.add("memory");
+        }
+        if ((missing & RobotMenu.MISSING_EEPROM) != 0) {
+            components.add("EEPROM");
+        }
+        return components.isEmpty() ? "missing required components" : "missing " + String.join(", ", components);
     }
 
     private int nextComponentSlot(final int start) {

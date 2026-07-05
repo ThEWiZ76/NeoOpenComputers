@@ -62,7 +62,7 @@ final class RobotNetworkingTest {
 
         assertTrue(source.contains("ComputerCaseNetworking.startFailureMessage"),
             "Robot GUI start failure must report machine.lastError to the player like computer cases do.");
-        assertTrue(source.contains("player.sendSystemMessage(message)"),
+        assertTrue(source.contains("player.displayClientMessage(message, false)"),
             "Robot GUI start failure must be visible immediately when the power button does nothing.");
     }
 

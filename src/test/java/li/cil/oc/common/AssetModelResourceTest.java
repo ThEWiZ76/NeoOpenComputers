@@ -45,6 +45,7 @@ final class AssetModelResourceTest {
     @Test
     void robotAndDroneUseDedicatedVisualAssets() throws IOException {
         assertTrue(Files.exists(TEXTURE_ROOT.resolve("model/robot.png")), "Missing upstream robot model texture");
+        assertTrue(Files.exists(TEXTURE_ROOT.resolve("item/robot.png")), "Missing upstream robot item texture");
         assertTrue(Files.exists(TEXTURE_ROOT.resolve("model/drone.png")), "Missing upstream drone model texture");
         assertTrue(Files.exists(TEXTURE_ROOT.resolve("item/drone.png")), "Missing upstream drone item texture");
         assertTrue(Files.exists(TEXTURE_ROOT.resolve("item/drone_case_tier1.png")), "Missing tier 1 drone case item texture");
@@ -57,9 +58,13 @@ final class AssetModelResourceTest {
         final String droneModel = Files.readString(MODEL_ROOT.resolve("item/drone.json"));
         final String droneCaseModel = Files.readString(MODEL_ROOT.resolve("item/drone_case_tier1.json"));
 
-        assertTrue(robotModel.contains("neoopencomputers:block/robot"), "Robot block model should use robot block texture");
+        assertTrue(robotModel.contains("\"elements\": []"), "Robot block model should be invisible so the block entity renderer owns the world shape");
+        assertTrue(robotModel.contains("neoopencomputers:block/robot"), "Robot block model should keep a robot particle texture");
+        assertTrue(!robotModel.contains("minecraft:block/cube_all"), "Robot block model must not render as a cube");
         assertTrue(!robotModel.contains("computer_case"), "Robot block model must not reuse computer case geometry");
-        assertTrue(robotItemModel.contains("block/robot"), "Robot item model should use robot block model");
+        assertTrue(robotItemModel.contains("minecraft:item/generated"), "Robot item model should be a flat generated item");
+        assertTrue(robotItemModel.contains("neoopencomputers:item/robot"), "Robot item model should use the upstream robot item texture");
+        assertTrue(!robotItemModel.contains("block/robot"), "Robot item model must not inherit the invisible block model");
         assertTrue(droneModel.contains("neoopencomputers:item/drone"), "Drone item model should use drone item texture");
         assertTrue(!droneModel.contains("item/tablet"), "Drone item model must not reuse tablet texture");
         assertTrue(droneCaseModel.contains("neoopencomputers:item/drone_case_tier1"), "Drone case model should use matching case item texture");

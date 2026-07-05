@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "neoopencomputers:block/robot"
-  }
+    "particle": "neoopencomputers:block/robot"
+  },
+  "elements": []
 }

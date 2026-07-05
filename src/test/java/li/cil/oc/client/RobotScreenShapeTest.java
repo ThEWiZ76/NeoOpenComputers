@@ -29,9 +29,11 @@ final class RobotScreenShapeTest {
     }
 
     @Test
-    void robotScreenUsesExistingComputerTextures() {
-        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/background.png"), RobotScreen.BACKGROUND_TEXTURE);
-        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/computer.png"), RobotScreen.ROBOT_TEXTURE);
+    void robotScreenUsesUpstreamRobotTextures() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/robot.png"), RobotScreen.ROBOT_TEXTURE);
+        assertEquals(ResourceLocation.fromNamespaceAndPath("neoopencomputers", "textures/gui/robot_noscreen.png"), RobotScreen.ROBOT_NO_SCREEN_TEXTURE);
+        assertEquals(256, RobotScreen.robotImageWidth());
+        assertEquals(256, RobotScreen.robotImageHeightWithScreen());
     }
 
     @Test
@@ -41,15 +43,15 @@ final class RobotScreenShapeTest {
 
     @Test
     void robotSlotHitTestingUsesMenuPositions() {
-        assertEquals(0, RobotScreen.robotSlotAt(8, 16, 0, 0, 0));
-        assertEquals(14, RobotScreen.robotSlotAt(8, 52, 0, 0, 1));
-        assertEquals(20, RobotScreen.robotSlotAt(116, 52, 0, 0, 3));
-        assertEquals(-1, RobotScreen.robotSlotAt(116, 52, 0, 0, 0));
+        assertEquals(0, RobotScreen.robotSlotAt(170, 232, 0, 0, 0));
+        assertEquals(14, RobotScreen.robotSlotAt(206, 192, 0, 0, 1));
+        assertEquals(20, RobotScreen.robotSlotAt(152, 232, 0, 0, 3));
+        assertEquals(-1, RobotScreen.robotSlotAt(152, 232, 0, 0, 0));
     }
 
     @Test
     void robotScreenHasComputerStyleStatusControl() {
-        assertTrue(RobotScreen.statusControlAt(142, 33, 0, 0));
+        assertTrue(RobotScreen.statusControlAt(5, 153, 0, 0));
         assertEquals(0, RobotScreen.statusControlAction(RobotMenu.STATE_READY));
         assertEquals(1, RobotScreen.statusControlAction(RobotMenu.STATE_RUNNING));
     }

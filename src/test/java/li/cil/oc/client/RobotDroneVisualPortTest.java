@@ -37,7 +37,9 @@ final class RobotDroneVisualPortTest {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/RobotBlockEntityRenderer.java"));
 
         assertTrue(renderer.contains("BlockEntityRenderer<RobotBlockEntity>"));
-        assertTrue(renderer.contains("new RobotModel(context.bakeLayer(RobotModel.LAYER_LOCATION))"));
+        assertTrue(renderer.contains("renderPyramid"));
+        assertTrue(renderer.contains("renderLeg"));
+        assertTrue(!renderer.contains("new RobotModel(context.bakeLayer(RobotModel.LAYER_LOCATION))"));
         assertTrue(renderer.contains("RobotModel.TEXTURE"));
         assertTrue(renderer.contains("RenderType.entityCutout"));
     }
