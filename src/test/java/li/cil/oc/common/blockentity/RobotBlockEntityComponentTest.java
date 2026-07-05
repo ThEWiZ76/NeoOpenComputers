@@ -140,6 +140,18 @@ final class RobotBlockEntityComponentTest {
         assertTrue(source.contains("RobotUsedToolEvent.ApplyDamageRate"));
     }
 
+    @Test
+    void useRunsThroughOwnerBackedFakePlayer() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
+
+        assertTrue(source.contains("FakePlayerFactory.get"));
+        assertTrue(source.contains("new GameProfile"));
+        assertTrue(source.contains("moveTo(xPosition(), yPosition(), zPosition()"));
+        assertTrue(source.contains("player.setItemInHand(InteractionHand.MAIN_HAND"));
+        assertTrue(source.contains("setItem(selectedSlot, player.getItemInHand(InteractionHand.MAIN_HAND).copy())"));
+        assertFalse(source.contains("return new Object[]{false, \"no player\"}"));
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         final Method method = RobotBlockEntity.class.getMethod(methodName, Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class), methodName + " must be a robot component callback");

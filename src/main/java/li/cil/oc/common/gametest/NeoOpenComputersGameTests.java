@@ -6070,6 +6070,21 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void robotComponentUseRunsSelectedToolThroughFakePlayer(final GameTestHelper helper) {
+        final RobotBlockEntity robot = placeRobot(helper, new BlockPos(1, 1, 1));
+        helper.setBlock(new BlockPos(1, 1, 2), Blocks.OAK_LOG.defaultBlockState());
+        robot.setItem(0, new ItemStack(Items.STONE_AXE));
+
+        final Object[] use = robot.use(null, new GameTestArguments(3));
+
+        helper.assertTrue(Boolean.TRUE.equals(use[0]), "Robot use did not report success");
+        helper.assertTrue(helper.getBlockState(new BlockPos(1, 1, 2)).is(Blocks.STRIPPED_OAK_LOG), "Robot use did not strip target log");
+        helper.assertTrue(robot.getItem(0).is(Items.STONE_AXE), "Robot use did not keep selected tool stack");
+        helper.assertTrue(robot.getItem(0).getDamageValue() > 0, "Robot use did not copy used tool damage back into inventory");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotAcceptsForgeEnergyCapabilityLikeComputerCase(final GameTestHelper helper) throws Exception {
         withCachedConfig(ModSettings.COMPUTER_BUFFER, 100D, () ->
             withCachedConfig(ModSettings.CASE_RATES, List.of(5D, 10D, 20D), () ->

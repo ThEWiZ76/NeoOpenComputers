@@ -1,5 +1,6 @@
 package li.cil.oc.common.blockentity;
 
+import com.mojang.authlib.GameProfile;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.event.RobotBreakBlockEvent;
@@ -35,6 +36,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionHand;
@@ -58,9 +60,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.extensions.IMenuProviderExtension;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.fluids.IFluidTank;
 
+import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -78,6 +82,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private static final String TAG_LIGHT_COLOR = "oc:lightColor";
     private static final String TAG_OWNER_NAME = "oc:ownerName";
     private static final String TAG_OWNER_UUID = "oc:ownerUUID";
+    private static final UUID NIL_UUID = new UUID(0L, 0L);
     private static final int TIER_ANY = Integer.MAX_VALUE;
     private static final String SLOT_TYPE_EEPROM = "eeprom";
     private static final RobotSlot[][] CONTAINER_LAYOUTS = {
@@ -171,7 +176,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private int lightColor;
     private String name = "Robot";
     private String ownerName = "";
-    private UUID ownerUUID = new UUID(0L, 0L);
+    private UUID ownerUUID = NIL_UUID;
 
     public RobotBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.ROBOT.get(), pos, blockState);
@@ -412,7 +417,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public Player player() {
-        return null;
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return null;
+        }
+        final Player player = FakePlayerFactory.get(serverLevel, robotProfile());
+        player.moveTo(xPosition(), yPosition(), zPosition(), facing().toYRot(), 0F);
+        return player;
     }
 
     @Override
@@ -459,7 +469,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     public void setOwnerUUID(final UUID ownerUUID) {
-        this.ownerUUID = ownerUUID == null ? new UUID(0L, 0L) : ownerUUID;
+        this.ownerUUID = ownerUUID == null ? NIL_UUID : ownerUUID;
         setChanged();
     }
 
@@ -739,7 +749,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
         final Player player = player();
         if (player == null) {
-            return new Object[]{false, "no player"};
+            return new Object[]{false, "no server"};
         }
         final ItemStack source = getItem(selectedSlot);
         if (source.isEmpty()) {
@@ -748,11 +758,15 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         final Direction direction = movementDirection(facing(), arguments.checkInteger(0));
         final BlockPos target = worldPosition.relative(direction);
         final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(target), direction.getOpposite(), target, false);
-        final InteractionResult result = source.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+        player.setItemInHand(InteractionHand.MAIN_HAND, source.copy());
+        final InteractionResult result = player.getItemInHand(InteractionHand.MAIN_HAND).useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
         if (result.consumesAction()) {
+            setItem(selectedSlot, player.getItemInHand(InteractionHand.MAIN_HAND).copy());
+            player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
             setChanged();
             return new Object[]{true};
         }
+        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         return new Object[]{false, "failed"};
     }
 
@@ -916,7 +930,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         lightColor = tag.getInt(TAG_LIGHT_COLOR);
         name = tag.getString(TAG_NAME).isBlank() ? "Robot" : tag.getString(TAG_NAME);
         ownerName = tag.getString(TAG_OWNER_NAME);
-        ownerUUID = tag.hasUUID(TAG_OWNER_UUID) ? tag.getUUID(TAG_OWNER_UUID) : new UUID(0L, 0L);
+        ownerUUID = tag.hasUUID(TAG_OWNER_UUID) ? tag.getUUID(TAG_OWNER_UUID) : NIL_UUID;
         if (robotNode != null) {
             robotNode.load(tag.getCompound(TAG_ROBOT_NODE));
         }
@@ -1094,6 +1108,14 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     private Connector connectorNode() {
         return machine.node() instanceof Connector connector ? connector : null;
+    }
+
+    private GameProfile robotProfile() {
+        final UUID uuid = NIL_UUID.equals(ownerUUID)
+            ? UUID.nameUUIDFromBytes(("neoopencomputers:robot:" + worldPosition.asLong()).getBytes(StandardCharsets.UTF_8))
+            : ownerUUID;
+        final String profileName = ownerName == null || ownerName.isBlank() ? "[OC Robot]" : ownerName;
+        return new GameProfile(uuid, profileName.length() > 16 ? profileName.substring(0, 16) : profileName);
     }
 
     private boolean isValidSlot(final int slot) {
