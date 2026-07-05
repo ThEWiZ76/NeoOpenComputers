@@ -64,14 +64,14 @@ if ($built.Hash -ne $installedAfter.Hash) {
 - Power and charging smoke passes: a computer accepts Forge Energy or runs from a powered OC network, and one chargeable item accepts charger energy.
 - Redstone, modem, inventory, tank, and transposer get one basic smoke pass.
 - Assemble a tier 1 microcontroller, install a CPU, memory, and programmed EEPROM, then verify it starts without a crash.
+- Assemble a tier 1 robot, install CPU/memory/boot media or a programmed EEPROM as needed for the smoke, then verify the GUI opens and a basic robot callback or movement/action succeeds.
+- Assemble a tier 1 drone, install CPU, memory, and programmed EEPROM, place it in-world, then verify the GUI opens and a basic drone callback or movement target succeeds.
 - Texture picker reports usable atlas texture names such as `minecraft:block/stone`.
 - Printer creates a print item and placed prints keep their configured data.
 
-## Known Alpha Gaps
+## Remaining Alpha Proof
 
-Robots and drones are not available in this alpha build.
-
-Microcontrollers have automated GameTest coverage and still need manual visual smoke before alpha handoff.
+Robots, drones, and microcontrollers have automated GameTest coverage and still need manual visual smoke before alpha handoff.
 
 Screen world rendering is still considered visually sensitive. Do not change screen renderer, model, glyph, or multiblock code without fresh evidence and a focused failing test.
 

@@ -49,8 +49,10 @@ Save screenshots with these exact names in the smoke report folder from the setu
 - `02-computer-gui.png`: computer case GUI open with component tooltip visible and readable.
 - `03-screen-after-reload.png`: same computer and screen after save/reload, proving screen output and keyboard path still look sane.
 - `04-creative-tab.png`: NeoOpenComputers creative tab open with current alpha items visible and no missing-texture cubes.
-- `05-manual.png`: in-game manual opened from the alpha jar with the alpha availability note, microcontroller entry, and robot/drone `(alpha unavailable)` markers visible.
-- `06-printer-print.png`: printer-created print item placed in-world with shape/texture visible from player view.
+- `05-manual.png`: in-game manual opened from the alpha jar with the alpha availability note and linked microcontroller, robot, and drone entries visible.
+- `06-robot.png`: assembled robot in-world with GUI or visible runtime proof from player view.
+- `07-drone.png`: assembled and placed drone with GUI or visible runtime proof from player view.
+- `08-printer-print.png`: printer-created print item placed in-world with shape/texture visible from player view.
 
 Optional screenshots can use a descriptive suffix, for example `07-disk-drive-media.png` or `08-redstone-smoke.png`.
 
@@ -63,10 +65,12 @@ Optional screenshots can use a descriptive suffix, for example `07-disk-drive-me
 5. Open the computer case GUI, hover at least one component, and capture `02-computer-gui.png`.
 6. Save and reload the world, verify the screen still shows usable output, type one key through the keyboard or terminal, and capture `03-screen-after-reload.png`.
 7. Open the creative tab and capture `04-creative-tab.png`.
-8. Open the manual, verify microcontrollers are linked and robots/drones are marked `(alpha unavailable)`, and capture `05-manual.png`.
+8. Open the manual, verify microcontrollers, robots, and drones are linked without stale `(alpha unavailable)` markers, and capture `05-manual.png`.
 9. Assemble a tier 1 microcontroller, install a CPU, memory, and programmed EEPROM, then verify it starts.
-10. Create or load a print item, place it, rotate/activate it once, and capture `06-printer-print.png`.
-11. Archive the screenshots, logs, crash reports, and checksum in one folder after screenshots are present in `$report`:
+10. Assemble a tier 1 robot, open its GUI, start/stop it, move or turn it, perform one simple item action, and capture `06-robot.png`.
+11. Assemble a tier 1 drone, place it in-world, open its GUI, start/stop it, set a status/light value or movement target, and capture `07-drone.png`.
+12. Create or load a print item, place it, rotate/activate it once, and capture `08-printer-print.png`.
+13. Archive the screenshots, logs, crash reports, and checksum in one folder after screenshots are present in `$report`:
 
 ```powershell
 $profileRoot = Join-Path $env:APPDATA "ModrinthApp\profiles\<profile-name>"

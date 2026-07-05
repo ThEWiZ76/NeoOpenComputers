@@ -1,7 +1,5 @@
 # Drohnengehäuse
 
-NeoOpenComputers alpha unavailable: this upstream device page is kept for reference, but this device is not available in the current alpha build.
-
 ![Droning on.](oredict:oc:droneCase1)
 
 Das Drohnengehäuse wird verwendet um Drohnen in der [Elektronik-Werkbank](../block/assembler.md) zu bauen. Drohnen sind leicht, schnell und sehr mobil, haben jedoch einen eingeschränkten Funktionenszeitraum (d.h. weniger Upgrade- und Komponentenslots sind verfügbar). Im Gegensatz zu Robotern können sie keine Werkzeuge verwenden und können nur indirekt mit der Welt interagieren.

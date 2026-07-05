@@ -16,6 +16,8 @@ Screen world rendering stays frozen unless there is a focused repro, focused fai
 | Tank | Tank controller and upgrade tests cover tank API shape and no-tank behavior. | Use a tank-facing component against a compatible tank/fluid handler. |
 | Transposer | Transposer registration, renderer, and component tests cover block/entity/component shape. | Move an item or fluid between adjacent inventories/tanks. |
 | Microcontrollers | GameTests cover tier 1 microcontroller placement, slot restrictions, required CPU/memory/EEPROM inputs, hard-disk rejection, and starting with a programmed EEPROM. | Assemble a tier 1 microcontroller, install CPU, memory, and programmed EEPROM, then verify it starts and the GUI/manual are usable. |
+| Robots | GameTests cover robot assembly, runtime machine lifecycle, external energy input, tank upgrades, fake-player item use, inventory transfer, movement, detection, comparison, drop/suck/place/swing/use world actions, and robot component callbacks. | Assemble a tier 1 robot, open its GUI, start/stop it, move or turn it, and perform one simple item action from player view. |
+| Drones | GameTests cover drone case assembly, component persistence, item placement, runtime machine lifecycle, status/light callbacks, and movement target updates. | Assemble a tier 1 drone, place it in-world, open its GUI, start/stop it, set a status/light value, and issue one movement target from player view. |
 | Power and charging | GameTests cover battery charge, power converter Forge Energy input, charger Forge Energy input, internal tablet charging, player-equipment charging, powered machine Forge Energy input, and charger redstone speed. | Feed Forge Energy into a power converter or computer case, charge one battery/tablet in a charger, and verify a computer stays powered during a short OpenOS session. |
 | Texture picker | GameTests cover texture picker atlas naming for a target block, including `minecraft:block/stone`. | Use a texture picker on a normal block and verify the reported atlas texture name is usable for printer shapes. |
 | Printer and print | Printer, print item, placed print, redstone activation, held-item activation, button release, beacon-base, configured drops, opacity, texture fallback, tooltip, ray-trace, and render-model tests cover current print smoke paths. | Create a print item, place it, rotate it, activate it, break it, and confirm the configured shape/data remains. |
@@ -30,11 +32,13 @@ Required visual proof files before first alpha handoff:
 - `03-screen-after-reload.png`
 - `04-creative-tab.png`
 - `05-manual.png`
-- `06-printer-print.png`
+- `06-robot.png`
+- `07-drone.png`
+- `08-printer-print.png`
 
 ## Automated Evidence Anchors
 
-These are the named GameTests that back the automated side of the matrix. They do not replace the manual visual smoke pass, but they make the pre-alpha evidence traceable.
+These are the named automated tests that back the automated side of the matrix. They do not replace the manual visual smoke pass, but they make the pre-alpha evidence traceable.
 
 - OpenOS boot: `computerRunsWithLuaBiosAndOpenOsFloppy`, `tier1ComputerWithNetworkCardBootsOpenOsHardDiskToLiveStyleScreenWall`, `tier1ComputerBootsOpenOsHardDiskWithZeroStoredDriveEnergy`, `tier3ComputerBootsOpenOsFromInternalFloppy`, `tier3ComputerBootsOpenOsToTier3ScreenAndKeyboardTerminal`.
 - Lua/OpenOS API loading: `BiosResourceTest.bundledLuaBiosDoesNotProvideOpenOsRequire`, `BiosResourceTest.bundledOpenOsProvidesRequireAndComponentPrimaryConvenience`.
@@ -44,6 +48,8 @@ These are the named GameTests that back the automated side of the matrix. They d
 - Redstone: `redstoneCardUsesComputerLocalSides`, `redstoneCardQueuesInputChangeSignal`, `redstoneWakeThresholdStartsComputer`, `redstoneIoWakeThresholdStartsReachableComputer`, `redstoneIoQueuesInputChangeSignalLikeUpstream`.
 - Transposer/tank: `transposerTransfersFluidBetweenAdjacentTanks`, `transposerItemTransferRequiresEnergy`, `transposerTransferFluidRequiresEnergy`, `tankControllerInspectsAdjacentFluidTanks`.
 - Microcontrollers: `microcontrollerBlockStoresComponentsAndStarts`.
+- Robots: `RobotRegistrationShapeTest.robotBlockEntityIsRunnableRobotHost`, `RobotMenuShapeTest.robotMenuUsesTieredSlotCounts`, `robotAcceptsForgeEnergyCapabilityLikeComputerCase`, `robotTankUpgradeExposesInternalFluidTank`, `robotComponentUseRunsSelectedToolThroughFakePlayer`, `robotComponentDetectAndCompareTargetBlock`, `robotComponentDropsSelectedStackTowardSide`, `robotComponentSucksItemIntoInventory`, `robotComponentPlacesSelectedBlock`, `robotComponentSwingBreaksTargetBlock`.
+- Drones: `AssemblerTemplatesTest.droneAssemblerUsesSmallUpstreamSlotLayout`, `assemblerBlockAssemblesDroneFoundationFromInputs`, `droneItemPlacesRuntimeEntityWithComponentsAndCallbacks`.
 - Power and charging: `powerConverterAcceptsForgeEnergyCapabilityLikeUpstream`, `chargerAcceptsForgeEnergyCapabilityLikeUpstream`, `chargerChargesInternalTabletFromStoredEnergyAndRedstoneSpeed`, `chargerChargesNearbyPlayerEquipmentLikeUpstream`, `poweredMachineBlocksAcceptForgeEnergyCapabilityLikeUpstream`, `computerCaseAcceptsForgeEnergyCapabilityLikeUpstream`.
 - Texture picker: `texturePickerDescribesTargetBlock`.
 - Printer/print: `printerProducesPrintItemAfterEnergyAndInputLikeUpstream`, `printDataCreatesPrintItemStackLikeUpstreamItemData`, `printItemPlacesConfiguredPrintLikeUpstream`, `printItemTooltipShowsConfiguredDataLikeUpstream`, `printBlockEntityLoadsStackAndTogglesRedstoneLikeUpstream`, `printBlockActivatesWithHeldItemLikeUpstream`, `printBlockRotatesShapeTowardFacingLikeUpstream`, `printBlockRayTraceHitsNearestConfiguredShapeLikeUpstream`, `printBlockFollowsExternalRedstoneInputLikeUpstream`, `redstoneActivatedButtonPrintReleasesAfterScheduledTickLikeUpstream`, `beaconAcceptsConfiguredPrintBaseLikeUpstream`, `brokenPrintDropsConfiguredPrintStackLikeUpstream`, `printBlockUsesConfiguredOpacityWhenEnabledLikeUpstream`.
@@ -57,5 +63,7 @@ The current automated smoke report can prove startup, local-world entry, block p
 - Screen output and keyboard input still look correct after save/reload.
 - Creative tab and manual navigation are usable in a clean client profile.
 - Microcontroller assembly, GUI, and startup are usable from player view.
+- Robot assembly, GUI, startup, movement, energy input, and one simple world action are usable from player view.
+- Drone assembly, placement, GUI, startup, status/light, and one movement target are usable from player view.
 - Texture picker returns usable atlas texture names such as `minecraft:block/stone`.
 - Printer/print visuals and data behavior look sane from player view, including placement, rotation, activation, drops, tooltip data, beacon-base, opacity, and legacy texture-name use.

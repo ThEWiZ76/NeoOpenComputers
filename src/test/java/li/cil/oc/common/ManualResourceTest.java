@@ -81,34 +81,35 @@ final class ManualResourceTest {
     }
 
     @Test
-    void bundledManualIndexesHideUnimplementedUpstreamDevices() throws Exception {
-        final Set<String> hiddenPages = Set.of(
-            "drone.md",
-            "dronecase1.md",
-            "robot.md"
+    void bundledManualIndexesExposeImplementedAgentDevices() throws Exception {
+        final Set<String> requiredTargets = Set.of(
+            "block/robot.md",
+            "item/drone.md",
+            "item/dronecase1.md"
         );
-        final List<String> exposedPages = new ArrayList<>();
+        final Set<String> exposedTargets = new HashSet<>();
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             for (final Path file : files
                 .filter(path -> path.getFileName().toString().equals("index.md"))
-                .filter(path -> {
-                    final String parent = path.getParent().getFileName().toString();
-                    return parent.equals("item") || parent.equals("block");
-                })
                 .toList()) {
                 final Path relativeFile = DOC_ROOT.relativize(file);
                 final String content = Files.readString(file);
                 final var matcher = INTERNAL_MARKDOWN_LINK.matcher(content);
                 while (matcher.find()) {
-                    final String target = matcher.group(1).toLowerCase(Locale.ROOT);
-                    if (hiddenPages.contains(target)) {
-                        exposedPages.add(relativeFile.toString().replace('\\', '/') + " -> " + matcher.group(1));
+                    final String resolved = resolveManualLink(relativeFile, matcher.group(1));
+                    if (resolved != null) {
+                        final String target = stripManualLocale(resolved);
+                        if (requiredTargets.contains(target)) {
+                            exposedTargets.add(target);
+                        }
                     }
                 }
             }
         }
 
-        assertTrue(exposedPages.isEmpty(), () -> "Manual indexes expose unimplemented pages:\n" + String.join("\n", exposedPages));
+        assertTrue(exposedTargets.containsAll(requiredTargets),
+            () -> "Manual indexes do not expose implemented agent pages. Missing: "
+                + requiredTargets.stream().filter(target -> !exposedTargets.contains(target)).toList());
     }
 
     @Test
@@ -131,7 +132,7 @@ final class ManualResourceTest {
     }
 
     @Test
-    void bundledManualHomePagesDocumentMicrocontrollerManualSmokeStatus() throws Exception {
+    void bundledManualHomePagesDocumentAgentDeviceManualSmokeStatus() throws Exception {
         final List<String> staleNotes = new ArrayList<>();
         try (Stream<Path> files = Files.list(DOC_ROOT)) {
             for (final Path index : files
@@ -142,28 +143,22 @@ final class ManualResourceTest {
                 final String content = Files.readString(index);
                 if (content.contains("microcontroller case items are the current alpha focus")
                     || content.contains("Microcontroller case items are present for recipe/API compatibility only")
-                    || !content.contains("Microcontrollers have automated GameTest coverage")) {
+                    || !content.contains("Robots, drones, and microcontrollers have automated GameTest coverage")) {
                     staleNotes.add(DOC_ROOT.relativize(index).toString().replace('\\', '/'));
                 }
             }
         }
 
-        assertTrue(staleNotes.isEmpty(), () -> "Manual home pages have stale microcontroller alpha scope:\n" + String.join("\n", staleNotes));
+        assertTrue(staleNotes.isEmpty(), () -> "Manual home pages have stale agent-device alpha scope:\n" + String.join("\n", staleNotes));
     }
 
     @Test
-    void bundledManualHomePagesMarkUnavailableDeviceEntries() throws Exception {
-        final Set<String> unavailableDeviceEntries = Set.of(
-            "- Robots",
-            "- Drones",
-            "- Roboter",
-            "- Drohnen",
-            "- Роботы",
-            "- Дроны",
-            "- 机器人",
-            "- 无人机"
+    void bundledManualHomePagesLinkImplementedAgentDeviceEntries() throws Exception {
+        final Set<String> requiredTargets = Set.of(
+            "block/robot.md",
+            "item/drone.md"
         );
-        final List<String> unmarkedEntries = new ArrayList<>();
+        final List<String> missingLinks = new ArrayList<>();
         try (Stream<Path> files = Files.list(DOC_ROOT)) {
             for (final Path index : files
                 .filter(Files::isDirectory)
@@ -171,24 +166,29 @@ final class ManualResourceTest {
                 .filter(Files::exists)
                 .toList()) {
                 final Path relativeFile = DOC_ROOT.relativize(index);
-                for (final String line : Files.readAllLines(index)) {
-                    if (unavailableDeviceEntries.contains(line) && !line.contains("(alpha unavailable)")) {
-                        unmarkedEntries.add(relativeFile.toString().replace('\\', '/') + " -> " + line);
+                final Set<String> linkedTargets = new HashSet<>();
+                final String content = Files.readString(index);
+                final var matcher = INTERNAL_MARKDOWN_LINK.matcher(content);
+                while (matcher.find()) {
+                    final String resolved = resolveManualLink(relativeFile, matcher.group(1));
+                    if (resolved != null) {
+                        linkedTargets.add(stripManualLocale(resolved));
+                    }
+                }
+                for (final String target : requiredTargets) {
+                    if (!linkedTargets.contains(target)) {
+                        missingLinks.add(relativeFile.toString().replace('\\', '/') + " -> " + target);
                     }
                 }
             }
         }
 
-        assertTrue(unmarkedEntries.isEmpty(), () -> "Manual home pages have unmarked unavailable alpha device entries:\n" + String.join("\n", unmarkedEntries));
+        assertTrue(missingLinks.isEmpty(), () -> "Manual home pages do not link implemented agent devices:\n" + String.join("\n", missingLinks));
     }
 
     @Test
-    void bundledManualHomePagesDoNotLinkUnavailableAlphaDevices() throws Exception {
-        final Set<String> hiddenTargets = Set.of(
-            "item/drone.md",
-            "block/robot.md"
-        );
-        final List<String> links = new ArrayList<>();
+    void bundledManualHomePagesDoNotMarkAgentDevicesAlphaUnavailable() throws Exception {
+        final List<String> staleMarkers = new ArrayList<>();
         try (Stream<Path> files = Files.list(DOC_ROOT)) {
             for (final Path index : files
                 .filter(Files::isDirectory)
@@ -197,67 +197,36 @@ final class ManualResourceTest {
                 .toList()) {
                 final Path relativeFile = DOC_ROOT.relativize(index);
                 final String content = Files.readString(index);
-                final var matcher = INTERNAL_MARKDOWN_LINK.matcher(content);
-                while (matcher.find()) {
-                    final String target = matcher.group(1).toLowerCase(Locale.ROOT);
-                    if (hiddenTargets.contains(target)) {
-                        links.add(relativeFile.toString().replace('\\', '/') + " -> " + matcher.group(1));
-                    }
+                if (content.contains("(alpha unavailable)")) {
+                    staleMarkers.add(relativeFile.toString().replace('\\', '/'));
                 }
             }
         }
 
-        assertTrue(links.isEmpty(), () -> "Manual home pages link unavailable alpha devices:\n" + String.join("\n", links));
+        assertTrue(staleMarkers.isEmpty(), () -> "Manual home pages still mark implemented agent devices unavailable:\n" + String.join("\n", staleMarkers));
     }
 
     @Test
-    void bundledManualPagesDoNotLinkUnavailableAlphaDevices() throws Exception {
-        final Set<String> hiddenTargets = Set.of(
+    void bundledManualAgentPagesAreNoLongerMarkedAlphaUnavailable() throws Exception {
+        final Set<String> implementedPages = Set.of(
             "item/drone.md",
             "item/dronecase1.md",
             "block/robot.md"
         );
-        final List<String> links = new ArrayList<>();
+        final List<String> stalePages = new ArrayList<>();
         try (Stream<Path> files = Files.walk(DOC_ROOT)) {
             for (final Path file : files
                 .filter(path -> path.getFileName().toString().endsWith(".md"))
                 .toList()) {
                 final Path relativeFile = DOC_ROOT.relativize(file);
-                final String content = Files.readString(file);
-                final var matcher = INTERNAL_MARKDOWN_LINK.matcher(content);
-                while (matcher.find()) {
-                    final String resolved = resolveManualLink(relativeFile, matcher.group(1));
-                    if (resolved != null && hiddenTargets.contains(stripManualLocale(resolved))) {
-                        links.add(relativeFile.toString().replace('\\', '/') + " -> " + matcher.group(1));
-                    }
+                if (implementedPages.contains(stripManualLocale(relativeFile.toString().replace('\\', '/').toLowerCase(Locale.ROOT)))
+                    && Files.readString(file).contains("NeoOpenComputers alpha unavailable:")) {
+                    stalePages.add(relativeFile.toString().replace('\\', '/'));
                 }
             }
         }
 
-        assertTrue(links.isEmpty(), () -> "Manual pages link unavailable alpha devices:\n" + String.join("\n", links));
-    }
-
-    @Test
-    void bundledManualUnavailableAlphaPagesWarnWhenOpenedDirectly() throws Exception {
-        final Set<String> unavailablePages = Set.of(
-            "item/drone.md",
-            "item/dronecase1.md",
-            "block/robot.md"
-        );
-        final List<String> missingNotes = new ArrayList<>();
-        try (Stream<Path> files = Files.walk(DOC_ROOT)) {
-            for (final Path file : files
-                .filter(path -> path.getFileName().toString().endsWith(".md"))
-                .toList()) {
-                final Path relativeFile = DOC_ROOT.relativize(file);
-                if (unavailablePages.contains(stripManualLocale(relativeFile.toString().replace('\\', '/').toLowerCase(Locale.ROOT)))
-                    && !Files.readString(file).contains("NeoOpenComputers alpha unavailable:")) {
-                    missingNotes.add(relativeFile.toString().replace('\\', '/'));
-                }
-            }
-        }
-
-        assertTrue(missingNotes.isEmpty(), () -> "Unavailable manual pages missing alpha warning:\n" + String.join("\n", missingNotes));
+        assertTrue(stalePages.isEmpty(), () -> "Implemented agent manual pages still marked alpha unavailable:\n" + String.join("\n", stalePages));
     }
 
     @Test

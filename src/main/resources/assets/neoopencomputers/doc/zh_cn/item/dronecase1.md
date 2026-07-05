@@ -1,7 +1,5 @@
 # 无人机外壳
 
-NeoOpenComputers alpha unavailable: this upstream device page is kept for reference, but this device is not available in the current alpha build.
-
 ![在空中嗡嗡作响。](oredict:oc:droneCase1)
 
 无人机外壳的用途是在[电子装配机](../block/assembler.md)中构建无人机。无人机是一种轻量、快速且移动性能很高的机器，但它们功能有限（可用的升级与组件槽位较少）。不像机器人，无人机不能使用工具，也只能以相对受限的方式与世界交互。

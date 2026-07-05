@@ -30,6 +30,8 @@ final class AlphaSmokeMatrixTest {
             "Tank",
             "Transposer",
             "Microcontrollers",
+            "Robots",
+            "Drones",
             "Power and charging",
             "Texture picker",
             "Printer and print",
@@ -50,7 +52,9 @@ final class AlphaSmokeMatrixTest {
             "03-screen-after-reload.png",
             "04-creative-tab.png",
             "05-manual.png",
-            "06-printer-print.png"
+            "06-robot.png",
+            "07-drone.png",
+            "08-printer-print.png"
         }) {
             assertTrue(matrix.contains(screenshotName), "Matrix missing required visual proof: " + screenshotName);
         }
@@ -66,6 +70,10 @@ final class AlphaSmokeMatrixTest {
             "printerProducesPrintItemAfterEnergyAndInputLikeUpstream",
             "transposerTransfersFluidBetweenAdjacentTanks",
             "microcontrollerBlockStoresComponentsAndStarts",
+            "robotAcceptsForgeEnergyCapabilityLikeComputerCase",
+            "robotTankUpgradeExposesInternalFluidTank",
+            "robotComponentUseRunsSelectedToolThroughFakePlayer",
+            "droneItemPlacesRuntimeEntityWithComponentsAndCallbacks",
             "powerConverterAcceptsForgeEnergyCapabilityLikeUpstream",
             "chargerChargesInternalTabletFromStoredEnergyAndRedstoneSpeed",
             "poweredMachineBlocksAcceptForgeEnergyCapabilityLikeUpstream",

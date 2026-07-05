@@ -74,12 +74,12 @@ Minimum handoff proof:
 
 - Client reaches a local world without NeoOpenComputers-owned missing model, missing texture, or mod loading errors. Third-party profile warnings should be recorded separately and only block alpha if they break NeoOpenComputers testing.
 - Creative tab opens and current alpha items can be picked up.
-- In-game manual opens and shows the alpha note plus `(alpha unavailable)` markers for unavailable devices.
+- In-game manual opens, shows the alpha note, and links microcontroller, robot, and drone entries without stale `(alpha unavailable)` markers.
 - Tier 1 computer boots OpenOS from valid media.
 - Tier 2 and tier 3 computers open their terminal GUI after a fresh client restart.
 - Power and charging smoke passes: a computer accepts Forge Energy or runs from a powered OC network, and one chargeable item accepts charger energy.
 - Texture picker reports usable atlas texture names such as `minecraft:block/stone`.
-- Storage, floppy, redstone, modem, inventory, tank, transposer, printer, and print paths get one smoke pass.
+- Storage, floppy, redstone, modem, inventory, tank, transposer, microcontroller, robot, drone, printer, and print paths get one smoke pass.
 
 ## Screen Loop Guard
 

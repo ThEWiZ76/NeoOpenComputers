@@ -19,7 +19,7 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("First Technical Smoke Test"), "README must document first smoke testing");
         assertTrue(readme.contains("Current pushed first-smoke base"), "README must name the smoke-test base");
         assertTrue(readme.contains("develop"), "README must direct testers to develop");
-        assertTrue(readme.contains("429/429"), "README must include current GameTest evidence");
+        assertTrue(readme.contains("439/439"), "README must include current GameTest evidence");
         assertTrue(readme.contains("Disk-drive floppy data survives save/reload"), "README must include disk-drive persistence smoke item");
         assertTrue(readme.contains("Computer case hard-disk data survives save/reload"),
             "README must include computer case hard-disk persistence smoke item");
@@ -43,10 +43,8 @@ final class ReadmeSmokeTest {
         assertTrue(readme.contains("Crash report timestamp"),
             "README finding instructions must ask for crash-report freshness");
         assertTrue(readme.contains("GitHub Actions are intentionally disabled"), "README must warn Actions remain disabled");
-        assertTrue(readme.contains("Robots and drones are not available in this alpha build"),
-            "README must state unavailable alpha devices");
-        assertTrue(readme.contains("Microcontrollers have automated GameTest coverage"),
-            "README must keep microcontroller manual-smoke status clear");
+        assertTrue(readme.contains("Robots, drones, and microcontrollers have automated GameTest coverage"),
+            "README must keep agent-device alpha smoke status clear");
         assertTrue(readme.contains("NeoOpenComputers-owned missing model, missing texture, or mod loading errors"),
             "README must scope log-error smoke failures to NeoOpenComputers-owned resources");
         assertTrue(readme.contains("Do not install `neoopencomputers-0.1.0-thin.jar`"),

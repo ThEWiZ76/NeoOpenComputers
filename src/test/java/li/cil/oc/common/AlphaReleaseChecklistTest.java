@@ -171,7 +171,9 @@ final class AlphaReleaseChecklistTest {
             "03-screen-after-reload.png",
             "04-creative-tab.png",
             "05-manual.png",
-            "06-printer-print.png",
+            "06-robot.png",
+            "07-drone.png",
+            "08-printer-print.png",
             "Jar SHA256",
             "Compare the installed profile jar hash to the built jar hash",
             "Close Minecraft before replacing the installed jar",
@@ -184,7 +186,7 @@ final class AlphaReleaseChecklistTest {
             "Compress-Archive",
             "Create the smoke report folder before capturing screenshots",
             "Save every required screenshot directly in `$report`",
-            "(alpha unavailable)",
+            "microcontrollers, robots, and drones are linked without stale",
             "Stop and file a finding"
         }) {
             assertTrue(runbook.contains(required), "Visual smoke runbook missing proof item: " + required);
