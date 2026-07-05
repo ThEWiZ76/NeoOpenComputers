@@ -152,6 +152,19 @@ final class RobotBlockEntityComponentTest {
         assertFalse(source.contains("return new Object[]{false, \"no player\"}"));
     }
 
+    @Test
+    void tankViewExposesInternalFluidTankEnvironmentsBySlot() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
+
+        assertFalse(source.contains("private static final MultiTank EMPTY_TANK"));
+        assertTrue(source.contains("new MultiTank()"));
+        assertTrue(source.contains("machine.node().neighbors()"));
+        assertTrue(source.contains("node.host() instanceof IFluidTank"));
+        assertTrue(source.contains("componentSlot(node.address())"));
+        assertTrue(source.contains("Slot.Upgrade.equals(slotType(tier, slot))"));
+        assertTrue(source.contains("Comparator.comparingInt"));
+    }
+
     private static void assertCallback(final String methodName) throws NoSuchMethodException {
         final Method method = RobotBlockEntity.class.getMethod(methodName, Context.class, Arguments.class);
         assertTrue(method.isAnnotationPresent(Callback.class), methodName + " must be a robot component callback");

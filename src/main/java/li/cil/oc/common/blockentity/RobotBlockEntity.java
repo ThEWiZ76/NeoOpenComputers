@@ -65,9 +65,12 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.fluids.IFluidTank;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -150,20 +153,20 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
     };
     private static final int MAX_SLOT_COUNT = slotCount(2);
-    private static final MultiTank EMPTY_TANK = new MultiTank() {
+    private final Machine machine;
+    private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, this::energyThroughput);
+    private final MultiTank internalTanks = new MultiTank() {
         @Override
         public int tankCount() {
-            return 0;
+            return internalFluidTanks().size();
         }
 
         @Override
         public IFluidTank getFluidTank(final int index) {
-            return null;
+            final List<IFluidTank> tanks = internalFluidTanks();
+            return index >= 0 && index < tanks.size() ? tanks.get(index) : null;
         }
     };
-
-    private final Machine machine;
-    private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, this::energyThroughput);
     private NonNullList<ItemStack> items = NonNullList.withSize(MAX_SLOT_COUNT, ItemStack.EMPTY);
     private final Container equipmentInventory = new SimpleContainer(1);
     private final Map<String, Integer> componentSlots = new HashMap<>();
@@ -390,7 +393,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public MultiTank tank() {
-        return EMPTY_TANK;
+        return internalTanks;
     }
 
     @Override
@@ -1118,6 +1121,31 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new GameProfile(uuid, profileName.length() > 16 ? profileName.substring(0, 16) : profileName);
     }
 
+    private List<IFluidTank> internalFluidTanks() {
+        if (machine == null || machine.node() == null) {
+            return List.of();
+        }
+
+        final List<InternalTank> tanks = new ArrayList<>();
+        for (final Node node : machine.node().neighbors()) {
+            if (node == null || node.address() == null || !(node.host() instanceof IFluidTank tank)) {
+                continue;
+            }
+            final int slot = componentSlot(node.address());
+            if (!isValidSlot(slot) || !Slot.Upgrade.equals(slotType(tier, slot))) {
+                continue;
+            }
+            tanks.add(new InternalTank(slot, tank));
+        }
+
+        tanks.sort(Comparator.comparingInt(InternalTank::slot));
+        final List<IFluidTank> result = new ArrayList<>(tanks.size());
+        for (final InternalTank tank : tanks) {
+            result.add(tank.tank());
+        }
+        return result;
+    }
+
     private boolean isValidSlot(final int slot) {
         return slot >= 0 && slot < getContainerSize();
     }
@@ -1225,5 +1253,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     private record RobotSlot(String type, int tier) {
         private static final RobotSlot NONE = new RobotSlot(Slot.None, -1);
+    }
+
+    private record InternalTank(int slot, IFluidTank tank) {
     }
 }

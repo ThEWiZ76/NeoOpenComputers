@@ -6121,6 +6121,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void robotTankUpgradeExposesInternalFluidTank(final GameTestHelper helper) {
+        final RobotBlockEntity robot = placeRobot(helper, new BlockPos(1, 1, 1));
+        robot.setTier(2);
+        robot.setItem(RobotBlockEntity.containerSlotCount(2), new ItemStack(ModItems.TANK_UPGRADE.get()));
+
+        final li.cil.oc.api.internal.MultiTank tanks = robot.tank();
+        helper.assertTrue(tanks.tankCount() == 1, "Robot did not expose one internal tank upgrade");
+        final IFluidTank tank = tanks.getFluidTank(0);
+        helper.assertTrue(tank != null, "Robot internal tank was null");
+        helper.assertTrue(tank.fill(new FluidStack(Fluids.WATER, 1000), FluidAction.EXECUTE) == 1000, "Robot tank upgrade did not accept water");
+        helper.assertTrue(tank.getFluidAmount() == 1000, "Robot tank upgrade did not store water");
+        helper.assertTrue(tank.drain(250, FluidAction.EXECUTE).getAmount() == 250, "Robot tank upgrade did not drain water");
+        helper.assertTrue(tank.getFluidAmount() == 750, "Robot tank upgrade did not keep remaining water");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void signUpgradeReadsAndWritesHostSign(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.SIGN_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for sign upgrade");
