@@ -6,6 +6,7 @@ import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
 import li.cil.oc.common.blockentity.RelayBlockEntity;
+import li.cil.oc.common.blockentity.RobotBlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
@@ -45,5 +46,9 @@ public final class ModCapabilities {
             Capabilities.EnergyStorage.BLOCK,
             ModBlockEntities.RELAY.get(),
             RelayBlockEntity::energyStorage);
+        event.registerBlockEntity(
+            Capabilities.EnergyStorage.BLOCK,
+            ModBlockEntities.ROBOT.get(),
+            RobotBlockEntity::energyStorage);
     }
 }

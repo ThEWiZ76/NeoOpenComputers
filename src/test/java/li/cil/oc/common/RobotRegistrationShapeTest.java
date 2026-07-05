@@ -94,4 +94,17 @@ final class RobotRegistrationShapeTest {
         assertTrue(source.contains("machine.save"));
         assertTrue(source.contains("slotCount"));
     }
+
+    @Test
+    void robotBlockEntityExposesExternalEnergyInput() throws Exception {
+        final String robotSource = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
+        final String capabilitiesSource = Files.readString(Path.of("src/main/java/li/cil/oc/common/ModCapabilities.java"));
+
+        assertTrue(robotSource.contains("ForgeEnergyStorageView"));
+        assertTrue(robotSource.contains("public IEnergyStorage energyStorage(final Direction side)"));
+        assertTrue(robotSource.contains("machine.node() instanceof Connector"));
+        assertTrue(robotSource.contains("ModSettings.caseRate(tier)"));
+        assertTrue(capabilitiesSource.contains("ModBlockEntities.ROBOT.get()"));
+        assertTrue(capabilitiesSource.contains("RobotBlockEntity::energyStorage"));
+    }
 }

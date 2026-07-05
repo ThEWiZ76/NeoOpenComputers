@@ -16,12 +16,15 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Analyzable;
+import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.util.StateAware;
+import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.RobotBlock;
 import li.cil.oc.common.menu.RobotMenu;
@@ -54,8 +57,9 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.extensions.IMenuProviderExtension;
-import net.neoforged.neoforge.fluids.IFluidTank;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.fluids.IFluidTank;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -154,6 +158,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     };
 
     private final Machine machine;
+    private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, this::energyThroughput);
     private NonNullList<ItemStack> items = NonNullList.withSize(MAX_SLOT_COUNT, ItemStack.EMPTY);
     private final Container equipmentInventory = new SimpleContainer(1);
     private final Map<String, Integer> componentSlots = new HashMap<>();
@@ -196,6 +201,10 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return tier;
     }
 
+    public double energyThroughput() {
+        return ModSettings.caseRate(tier);
+    }
+
     public void setTier(final int tier) {
         this.tier = normalizeTier(tier);
         setChanged();
@@ -224,6 +233,10 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     @Override
     public Node node() {
         return robotNode;
+    }
+
+    public IEnergyStorage energyStorage(final Direction side) {
+        return energyStorage;
     }
 
     @Override
@@ -1077,6 +1090,10 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private Node createRobotNode() {
         final var builder = Network.newNode(this, Visibility.Network);
         return builder == null ? null : builder.withComponent("robot", Visibility.Neighbors).create();
+    }
+
+    private Connector connectorNode() {
+        return machine.node() instanceof Connector connector ? connector : null;
     }
 
     private boolean isValidSlot(final int slot) {

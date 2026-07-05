@@ -6070,6 +6070,42 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void robotAcceptsForgeEnergyCapabilityLikeComputerCase(final GameTestHelper helper) throws Exception {
+        withCachedConfig(ModSettings.COMPUTER_BUFFER, 100D, () ->
+            withCachedConfig(ModSettings.CASE_RATES, List.of(5D, 10D, 20D), () ->
+                withCachedConfig(ModSettings.POWER_VALUE_FORGE_ENERGY, 100D, () -> {
+                    final BlockPos robotPos = new BlockPos(1, 1, 1);
+                    final RobotBlockEntity robot = placeRobot(helper, robotPos);
+                    robot.setTier(1);
+                    Network.joinOrCreateNetwork(helper.getLevel(), helper.absolutePos(robotPos));
+
+                    final Connector connector = (Connector) robot.machine().node();
+                    connector.changeBuffer(-connector.localBuffer());
+                    final IEnergyStorage storage = helper.getLevel().getCapability(
+                        Capabilities.EnergyStorage.BLOCK,
+                        helper.absolutePos(robotPos),
+                        helper.getBlockState(robotPos),
+                        robot,
+                        Direction.NORTH);
+
+                    helper.assertTrue(storage != null, "Robot did not expose Forge Energy capability");
+                    helper.assertTrue(storage.canReceive(), "Robot Forge Energy storage did not accept input");
+                    helper.assertTrue(!storage.canExtract(), "Robot Forge Energy storage allowed extraction");
+                    helper.assertTrue(storage.getEnergyStored() == 0, "Robot Forge Energy storage started filled after drain");
+
+                    final int simulated = storage.receiveEnergy(700, true);
+                    helper.assertTrue(simulated == 100, "Robot simulated receive did not cap by tier-two case throughput");
+                    helper.assertTrue(Double.compare(0D, connector.localBuffer()) == 0, "Robot simulation changed buffer");
+
+                    final int received = storage.receiveEnergy(700, false);
+                    helper.assertTrue(received == 100, "Robot receive did not cap by tier-two case throughput");
+                    helper.assertTrue(Double.compare(10D, connector.localBuffer()) == 0, "Robot did not fill OC buffer from Forge Energy");
+                    helper.assertTrue(storage.getEnergyStored() == 100, "Robot Forge Energy stored amount mismatch");
+                })));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void signUpgradeReadsAndWritesHostSign(final GameTestHelper helper) throws Exception {
         final DriverItem driver = Driver.driverFor(new ItemStack(ModItems.SIGN_UPGRADE.get()));
         helper.assertTrue(driver != null, "No driver for sign upgrade");
