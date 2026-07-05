@@ -35,12 +35,24 @@ final class RobotBlockEntityComponentTest {
         assertCallback("transferTo");
         assertCallback("move");
         assertCallback("turn");
+        assertCallback("detect");
+        assertCallback("compare");
+        assertCallback("drop");
+        assertCallback("suck");
+        assertCallback("place");
+        assertCallback("swing");
+        assertCallback("use");
     }
 
     @Test
     void movementCallbacksAreSynchronizedLikeUpstream() throws NoSuchMethodException {
         assertFalse(RobotBlockEntity.class.getMethod("move", Context.class, Arguments.class).getAnnotation(Callback.class).direct());
         assertFalse(RobotBlockEntity.class.getMethod("turn", Context.class, Arguments.class).getAnnotation(Callback.class).direct());
+        assertFalse(RobotBlockEntity.class.getMethod("drop", Context.class, Arguments.class).getAnnotation(Callback.class).direct());
+        assertFalse(RobotBlockEntity.class.getMethod("suck", Context.class, Arguments.class).getAnnotation(Callback.class).direct());
+        assertFalse(RobotBlockEntity.class.getMethod("place", Context.class, Arguments.class).getAnnotation(Callback.class).direct());
+        assertFalse(RobotBlockEntity.class.getMethod("swing", Context.class, Arguments.class).getAnnotation(Callback.class).direct());
+        assertFalse(RobotBlockEntity.class.getMethod("use", Context.class, Arguments.class).getAnnotation(Callback.class).direct());
     }
 
     @Test
@@ -113,6 +125,19 @@ final class RobotBlockEntityComponentTest {
 
         assertTrue(source.contains("if (source.isEmpty())"));
         assertTrue(source.contains("return new Object[]{false}"));
+    }
+
+    @Test
+    void worldActionsUseRobotSideTargetingAndEvents() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
+
+        assertTrue(source.contains("targetPos(arguments.checkInteger(0))"));
+        assertTrue(source.contains("RobotPlaceBlockEvent.Pre"));
+        assertTrue(source.contains("RobotPlaceBlockEvent.Post"));
+        assertTrue(source.contains("RobotBreakBlockEvent.Pre"));
+        assertTrue(source.contains("RobotBreakBlockEvent.Post"));
+        assertTrue(source.contains("RobotUsedToolEvent.ComputeDamageRate"));
+        assertTrue(source.contains("RobotUsedToolEvent.ApplyDamageRate"));
     }
 
     private static void assertCallback(final String methodName) throws NoSuchMethodException {

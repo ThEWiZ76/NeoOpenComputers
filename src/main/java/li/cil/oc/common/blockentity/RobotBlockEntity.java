@@ -2,7 +2,10 @@ package li.cil.oc.common.blockentity;
 
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
+import li.cil.oc.api.event.RobotBreakBlockEvent;
 import li.cil.oc.api.event.RobotMoveEvent;
+import li.cil.oc.api.event.RobotPlaceBlockEvent;
+import li.cil.oc.api.event.RobotUsedToolEvent;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
@@ -31,17 +34,25 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.WorldlyContainer;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.extensions.IMenuProviderExtension;
 import net.neoforged.neoforge.fluids.IFluidTank;
 import net.neoforged.neoforge.common.NeoForge;
@@ -546,6 +557,192 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new Object[]{true};
     }
 
+    @Callback(direct = true, doc = "function(side:number):boolean,string -- Detects block state on the specified side.")
+    public Object[] detect(final Context context, final Arguments arguments) {
+        if (level == null) {
+            return new Object[]{false, "no world"};
+        }
+        final BlockPos target = targetPos(arguments.checkInteger(0));
+        if (!level.isLoaded(target)) {
+            return new Object[]{false, "target not loaded"};
+        }
+        final BlockState state = level.getBlockState(target);
+        if (state.isAir()) {
+            return new Object[]{false, "air"};
+        }
+        if (!state.getFluidState().isEmpty()) {
+            return new Object[]{true, "liquid"};
+        }
+        if (state.canBeReplaced()) {
+            return new Object[]{false, "replaceable"};
+        }
+        return new Object[]{true, "solid"};
+    }
+
+    @Callback(direct = true, doc = "function(side:number):boolean -- Compares selected stack with block on the specified side.")
+    public Object[] compare(final Context context, final Arguments arguments) {
+        if (level == null) {
+            return new Object[]{false};
+        }
+        final ItemStack selected = getItem(selectedSlot);
+        if (selected.isEmpty()) {
+            return new Object[]{false};
+        }
+        final BlockPos target = targetPos(arguments.checkInteger(0));
+        if (!level.isLoaded(target)) {
+            return new Object[]{false};
+        }
+        return new Object[]{selected.is(level.getBlockState(target).getBlock().asItem())};
+    }
+
+    @Callback(doc = "function(side:number[, count:number]):boolean,string -- Drops items from the selected slot.")
+    public Object[] drop(final Context context, final Arguments arguments) {
+        if (level == null) {
+            return new Object[]{false, "no world"};
+        }
+        final ItemStack source = getItem(selectedSlot);
+        if (source.isEmpty()) {
+            return new Object[]{false, "empty"};
+        }
+        final int amount = Math.min(source.getCount(), Math.max(1, arguments.count() > 1 ? arguments.checkInteger(1) : source.getCount()));
+        final ItemStack dropped = removeItem(selectedSlot, amount);
+        if (dropped.isEmpty()) {
+            return new Object[]{false, "empty"};
+        }
+        final BlockPos target = targetPos(arguments.checkInteger(0));
+        final ItemEntity entity = new ItemEntity(level, target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, dropped);
+        level.addFreshEntity(entity);
+        setChanged();
+        return new Object[]{true};
+    }
+
+    @Callback(doc = "function(side:number):boolean,string -- Sucks a nearby item stack into the robot inventory.")
+    public Object[] suck(final Context context, final Arguments arguments) {
+        if (level == null) {
+            return new Object[]{false, "no world"};
+        }
+        final BlockPos target = targetPos(arguments.checkInteger(0));
+        final AABB bounds = new AABB(target).inflate(0.5D);
+        for (final ItemEntity entity : level.getEntitiesOfClass(ItemEntity.class, bounds)) {
+            if (entity.isRemoved() || entity.getItem().isEmpty() || entity.hasPickUpDelay()) {
+                continue;
+            }
+            final ItemStack stack = entity.getItem();
+            final int originalCount = stack.getCount();
+            final int remaining = insertIntoInventory(stack.copy());
+            if (remaining >= originalCount) {
+                continue;
+            }
+            stack.setCount(remaining);
+            if (remaining <= 0) {
+                entity.discard();
+            } else {
+                entity.setItem(stack);
+            }
+            setChanged();
+            return new Object[]{true};
+        }
+        return new Object[]{false, "nothing to suck"};
+    }
+
+    @Callback(doc = "function(side:number):boolean,string -- Places the selected block item on the specified side.")
+    public Object[] place(final Context context, final Arguments arguments) {
+        if (level == null) {
+            return new Object[]{false, "no world"};
+        }
+        final ItemStack source = getItem(selectedSlot);
+        if (source.isEmpty()) {
+            return new Object[]{false, "empty"};
+        }
+        if (!(source.getItem() instanceof BlockItem blockItem)) {
+            return new Object[]{false, "not a block"};
+        }
+        final BlockPos target = targetPos(arguments.checkInteger(0));
+        if (!level.isLoaded(target)) {
+            return new Object[]{false, "target not loaded"};
+        }
+        final BlockState oldState = level.getBlockState(target);
+        if (!oldState.isAir() && !oldState.canBeReplaced()) {
+            return new Object[]{false, "blocked"};
+        }
+        final ItemStack placedStack = source.copyWithCount(1);
+        final RobotPlaceBlockEvent.Pre pre = new RobotPlaceBlockEvent.Pre(this, placedStack, level, target);
+        NeoForge.EVENT_BUS.post(pre);
+        if (pre.isCanceled()) {
+            return new Object[]{false, "blocked"};
+        }
+        final BlockState newState = blockItem.getBlock().defaultBlockState();
+        if (!newState.canSurvive(level, target) || !level.setBlock(target, newState, 3)) {
+            return new Object[]{false, "cannot place"};
+        }
+        source.shrink(1);
+        if (source.isEmpty()) {
+            items.set(selectedSlot, ItemStack.EMPTY);
+        }
+        setChanged();
+        NeoForge.EVENT_BUS.post(new RobotPlaceBlockEvent.Post(this, placedStack, level, target));
+        return new Object[]{true};
+    }
+
+    @Callback(doc = "function(side:number):boolean,string -- Breaks the block on the specified side.")
+    public Object[] swing(final Context context, final Arguments arguments) {
+        if (level == null) {
+            return new Object[]{false, "no world"};
+        }
+        final BlockPos target = targetPos(arguments.checkInteger(0));
+        if (!level.isLoaded(target)) {
+            return new Object[]{false, "target not loaded"};
+        }
+        final BlockState state = level.getBlockState(target);
+        if (state.isAir()) {
+            return new Object[]{false, "air"};
+        }
+        final float hardness = state.getDestroySpeed(level, target);
+        if (hardness < 0F) {
+            return new Object[]{false, "unbreakable"};
+        }
+        final RobotBreakBlockEvent.Pre pre = new RobotBreakBlockEvent.Pre(this, level, target, Math.max(0.05D, hardness));
+        NeoForge.EVENT_BUS.post(pre);
+        if (pre.isCanceled()) {
+            return new Object[]{false, "blocked"};
+        }
+        final ItemStack before = getItem(selectedSlot).copy();
+        final ItemStack after = getItem(selectedSlot).copy();
+        final RobotUsedToolEvent.ComputeDamageRate damageRate = new RobotUsedToolEvent.ComputeDamageRate(this, before, after, 1D);
+        NeoForge.EVENT_BUS.post(damageRate);
+        if (!level.destroyBlock(target, true)) {
+            return new Object[]{false, "cannot break"};
+        }
+        NeoForge.EVENT_BUS.post(new RobotUsedToolEvent.ApplyDamageRate(this, before, after, damageRate.getDamageRate()));
+        NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(this, 0D));
+        setChanged();
+        return new Object[]{true};
+    }
+
+    @Callback(doc = "function(side:number):boolean,string -- Uses the selected item on the specified side.")
+    public Object[] use(final Context context, final Arguments arguments) {
+        if (level == null) {
+            return new Object[]{false, "no world"};
+        }
+        final Player player = player();
+        if (player == null) {
+            return new Object[]{false, "no player"};
+        }
+        final ItemStack source = getItem(selectedSlot);
+        if (source.isEmpty()) {
+            return new Object[]{false, "empty"};
+        }
+        final Direction direction = movementDirection(facing(), arguments.checkInteger(0));
+        final BlockPos target = worldPosition.relative(direction);
+        final BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(target), direction.getOpposite(), target, false);
+        final InteractionResult result = source.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+        if (result.consumesAction()) {
+            setChanged();
+            return new Object[]{true};
+        }
+        return new Object[]{false, "failed"};
+    }
+
     public static int slotCount(final int tier) {
         return containerSlotCount(tier) + upgradeSlotCount(tier) + componentSlotCount(tier);
     }
@@ -824,6 +1021,43 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new Object[]{true};
     }
 
+    private BlockPos targetPos(final int side) {
+        return worldPosition.relative(movementDirection(facing(), side));
+    }
+
+    private int insertIntoInventory(final ItemStack stack) {
+        int remaining = stack.getCount();
+        final int size = getContainerSize();
+        final int startSlot = isValidSlot(selectedSlot) ? selectedSlot : 0;
+        for (int offset = 0; offset < size && remaining > 0; offset++) {
+            final int slot = (startSlot + offset) % size;
+            if (!isContainerSlot(slot)) {
+                continue;
+            }
+            final ItemStack existing = getItem(slot);
+            if (existing.isEmpty() || !ItemStack.isSameItemSameComponents(existing, stack)) {
+                continue;
+            }
+            final int limit = Math.min(existing.getMaxStackSize(), getMaxStackSize());
+            final int inserted = Math.min(remaining, limit - existing.getCount());
+            if (inserted > 0) {
+                existing.grow(inserted);
+                remaining -= inserted;
+            }
+        }
+        for (int offset = 0; offset < size && remaining > 0; offset++) {
+            final int slot = (startSlot + offset) % size;
+            if (!isContainerSlot(slot) || !getItem(slot).isEmpty()) {
+                continue;
+            }
+            final int inserted = Math.min(remaining, Math.min(stack.getMaxStackSize(), getMaxStackSize()));
+            final ItemStack insertedStack = stack.copyWithCount(inserted);
+            items.set(slot, insertedStack);
+            remaining -= inserted;
+        }
+        return remaining;
+    }
+
     private void connectMachineNode() {
         if (robotNode == null) {
             robotNode = createRobotNode();
@@ -847,6 +1081,10 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     private boolean isValidSlot(final int slot) {
         return slot >= 0 && slot < getContainerSize();
+    }
+
+    private boolean isContainerSlot(final int slot) {
+        return Slot.Container.equals(slotType(tier, slot));
     }
 
     private int callbackSlot(final Arguments arguments, final int index) {
@@ -883,6 +1121,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private static boolean slotAcceptsStack(final int tier, final int slot, final ItemStack stack) {
         if (stack.isEmpty()) {
             return false;
+        }
+        if (Slot.Container.equals(slotType(tier, slot))) {
+            return true;
         }
         final DriverItem driver = Driver.driverFor(stack, Robot.class);
         return driver != null
