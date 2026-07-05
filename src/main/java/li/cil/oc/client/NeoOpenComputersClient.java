@@ -258,8 +258,15 @@ public final class NeoOpenComputersClient {
         event.registerBlockEntityRenderer(ModBlockEntities.RACK.get(), RackBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.RAID.get(), RaidBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.RELAY.get(), RelayBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.ROBOT.get(), RobotBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SCREEN.get(), ScreenBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.TRANSPOSER.get(), TransposerBlockEntityRenderer::new);
         event.registerEntityRenderer(ModEntities.DRONE.get(), DroneEntityRenderer::new);
+    }
+
+    @SubscribeEvent
+    static void registerLayerDefinitions(final EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(RobotModel.LAYER_LOCATION, RobotModel::createBodyLayer);
+        event.registerLayerDefinition(DroneModel.LAYER_LOCATION, DroneModel::createBodyLayer);
     }
 }

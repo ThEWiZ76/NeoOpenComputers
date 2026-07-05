@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "neoopencomputers:item/tablet"
+    "layer0": "neoopencomputers:model/drone"
   }
 }
