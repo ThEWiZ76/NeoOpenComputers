@@ -116,6 +116,19 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenLetsVanillaSuperRenderOwnBackgroundPass() throws IOException {
+        final String source = Files.readString(MANUAL_SCREEN_SOURCE);
+        final int renderMethod = source.indexOf("public void render(final GuiGraphics graphics");
+        final int superRender = source.indexOf("super.render(graphics, mouseX, mouseY, partialTick);", renderMethod);
+        final int explicitBackground = source.indexOf("renderBackground(graphics, mouseX, mouseY, partialTick);", renderMethod);
+
+        assertTrue(renderMethod >= 0, "Manual render method must be present.");
+        assertTrue(superRender >= 0, "Manual render must keep vanilla Screen render call.");
+        assertTrue(explicitBackground < 0 || explicitBackground > superRender,
+            "Manual screen must not render the vanilla background before super.render; Screen.render already does that and double blur makes the manual fuzzy.");
+    }
+
+    @Test
     void manualScreenSelectsUpstreamButtonTextureRowsForHoverState() {
         assertEquals(0, ManualScreen.buttonTextureYOffset(false, ManualScreen.TAB_HEIGHT));
         assertEquals(ManualScreen.TAB_HEIGHT, ManualScreen.buttonTextureYOffset(true, ManualScreen.TAB_HEIGHT));

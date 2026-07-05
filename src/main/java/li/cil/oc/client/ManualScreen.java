@@ -530,7 +530,6 @@ public class ManualScreen extends Screen {
 
     @Override
     public void render(final GuiGraphics graphics, final int mouseX, final int mouseY, final float partialTick) {
-        renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
         final int left = (width - WINDOW_WIDTH) / 2;
         final int top = (height - WINDOW_HEIGHT) / 2;
