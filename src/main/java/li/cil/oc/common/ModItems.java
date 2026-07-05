@@ -15,6 +15,8 @@ import li.cil.oc.common.item.DataCardItem;
 import li.cil.oc.common.item.DatabaseUpgradeItem;
 import li.cil.oc.common.item.DebugCardItem;
 import li.cil.oc.common.item.DiskDriveMountableItem;
+import li.cil.oc.common.item.DroneCaseItem;
+import li.cil.oc.common.item.DroneItem;
 import li.cil.oc.common.item.EepromItem;
 import li.cil.oc.common.item.ExperienceUpgradeItem;
 import li.cil.oc.common.item.FloppyItem;
@@ -308,6 +310,22 @@ public final class ModItems {
     public static final DeferredItem<TabletItem> TABLET = ITEMS.register(
         ModContentIds.TABLET,
         () -> new TabletItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<DroneCaseItem> DRONE_CASE_TIER1 = ITEMS.register(
+        ModContentIds.DRONE_CASE_TIER1,
+        () -> new DroneCaseItem(new Item.Properties(), 0));
+
+    public static final DeferredItem<DroneCaseItem> DRONE_CASE_TIER2 = ITEMS.register(
+        ModContentIds.DRONE_CASE_TIER2,
+        () -> new DroneCaseItem(new Item.Properties(), 1));
+
+    public static final DeferredItem<DroneCaseItem> DRONE_CASE_CREATIVE = ITEMS.register(
+        ModContentIds.DRONE_CASE_CREATIVE,
+        () -> new DroneCaseItem(new Item.Properties().rarity(Rarity.EPIC), 3));
+
+    public static final DeferredItem<DroneItem> DRONE = ITEMS.register(
+        ModContentIds.DRONE,
+        () -> new DroneItem(new Item.Properties().stacksTo(1)));
 
     public static final DeferredItem<CpuItem> CPU_TIER1 = ITEMS.register(
         ModContentIds.CPU_TIER1,

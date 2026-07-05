@@ -235,6 +235,10 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentIds.TABLET_CASE_TIER2));
         assertNotNull(registry.get(ModContentIds.TABLET_CASE_CREATIVE));
         assertNotNull(registry.get(ModContentIds.TABLET));
+        assertNotNull(registry.get(ModContentIds.DRONE_CASE_TIER1));
+        assertNotNull(registry.get(ModContentIds.DRONE_CASE_TIER2));
+        assertNotNull(registry.get(ModContentIds.DRONE_CASE_CREATIVE));
+        assertNotNull(registry.get(ModContentIds.DRONE));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER1));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER2));
         assertNotNull(registry.get(ModContentIds.DATA_CARD_TIER3));
@@ -305,6 +309,9 @@ final class ModContentCatalogTest {
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TABLET_CASE_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TABLET_CASE_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_TABLET_CASE_CREATIVE));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_DRONE_CASE_TIER1));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_DRONE_CASE_TIER2));
+        assertNotNull(registry.get(ModContentCatalog.COMPAT_DRONE_CASE_CREATIVE));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER1));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER2));
         assertNotNull(registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER3));
@@ -457,6 +464,10 @@ final class ModContentCatalogTest {
         assertEquals(ModContentIds.TABLET_CASE_TIER2, registry.get(ModContentIds.TABLET_CASE_TIER2).name());
         assertEquals(ModContentIds.TABLET_CASE_CREATIVE, registry.get(ModContentIds.TABLET_CASE_CREATIVE).name());
         assertEquals(ModContentIds.TABLET, registry.get(ModContentIds.TABLET).name());
+        assertEquals(ModContentIds.DRONE_CASE_TIER1, registry.get(ModContentIds.DRONE_CASE_TIER1).name());
+        assertEquals(ModContentIds.DRONE_CASE_TIER2, registry.get(ModContentIds.DRONE_CASE_TIER2).name());
+        assertEquals(ModContentIds.DRONE_CASE_CREATIVE, registry.get(ModContentIds.DRONE_CASE_CREATIVE).name());
+        assertEquals(ModContentIds.DRONE, registry.get(ModContentIds.DRONE).name());
         assertEquals(ModContentIds.DATA_CARD_TIER1, registry.get(ModContentIds.DATA_CARD_TIER1).name());
         assertEquals(ModContentIds.DATA_CARD_TIER2, registry.get(ModContentIds.DATA_CARD_TIER2).name());
         assertEquals(ModContentIds.DATA_CARD_TIER3, registry.get(ModContentIds.DATA_CARD_TIER3).name());
@@ -527,6 +538,9 @@ final class ModContentCatalogTest {
         assertEquals(ModContentCatalog.COMPAT_TABLET_CASE_TIER1, registry.get(ModContentCatalog.COMPAT_TABLET_CASE_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_TABLET_CASE_TIER2, registry.get(ModContentCatalog.COMPAT_TABLET_CASE_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_TABLET_CASE_CREATIVE, registry.get(ModContentCatalog.COMPAT_TABLET_CASE_CREATIVE).name());
+        assertEquals(ModContentCatalog.COMPAT_DRONE_CASE_TIER1, registry.get(ModContentCatalog.COMPAT_DRONE_CASE_TIER1).name());
+        assertEquals(ModContentCatalog.COMPAT_DRONE_CASE_TIER2, registry.get(ModContentCatalog.COMPAT_DRONE_CASE_TIER2).name());
+        assertEquals(ModContentCatalog.COMPAT_DRONE_CASE_CREATIVE, registry.get(ModContentCatalog.COMPAT_DRONE_CASE_CREATIVE).name());
         assertEquals(ModContentCatalog.COMPAT_DATA_CARD_TIER1, registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER1).name());
         assertEquals(ModContentCatalog.COMPAT_DATA_CARD_TIER2, registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER2).name());
         assertEquals(ModContentCatalog.COMPAT_DATA_CARD_TIER3, registry.get(ModContentCatalog.COMPAT_DATA_CARD_TIER3).name());
@@ -622,6 +636,8 @@ final class ModContentCatalogTest {
         assertAlias(registry, "redstoneCard1");
         assertAlias(registry, "tabletCase1");
         assertAlias(registry, "tabletCase2");
+        assertAlias(registry, "droneCase1");
+        assertAlias(registry, "droneCase2");
         assertAlias(registry, "upgradeContainer1");
         assertAlias(registry, "upgradeContainer2");
         assertAlias(registry, "upgradeContainer3");

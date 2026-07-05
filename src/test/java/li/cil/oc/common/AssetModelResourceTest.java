@@ -43,6 +43,14 @@ final class AssetModelResourceTest {
     }
 
     @Test
+    void droneFoundationItemModelsExistForClientResourceReload() {
+        assertTrue(Files.exists(MODEL_ROOT.resolve("item/drone_case_tier1.json")), "Missing tier 1 drone case item model");
+        assertTrue(Files.exists(MODEL_ROOT.resolve("item/drone_case_tier2.json")), "Missing tier 2 drone case item model");
+        assertTrue(Files.exists(MODEL_ROOT.resolve("item/drone_case_creative.json")), "Missing creative drone case item model");
+        assertTrue(Files.exists(MODEL_ROOT.resolve("item/drone.json")), "Missing drone item model");
+    }
+
+    @Test
     void neoOpenComputersTextureReferencesHaveLocalPngs() throws IOException {
         List<String> missing = new ArrayList<>();
         for (TextureReference reference : textureReferences()) {

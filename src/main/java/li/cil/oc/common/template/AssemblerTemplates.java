@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class AssemblerTemplates {
-    private static final List<AssemblerTemplate> DEFAULT_TEMPLATES = List.of(new TabletAssemblerTemplate(), new MicrocontrollerAssemblerTemplate(), new RobotAssemblerTemplate());
+    private static final List<AssemblerTemplate> DEFAULT_TEMPLATES = List.of(new TabletAssemblerTemplate(), new MicrocontrollerAssemblerTemplate(), new RobotAssemblerTemplate(), new DroneAssemblerTemplate());
     private static final CopyOnWriteArrayList<AssemblerTemplate> CUSTOM_TEMPLATES = new CopyOnWriteArrayList<>();
     private static final CopyOnWriteArrayList<Predicate<ItemStack>> TEMPLATE_FILTERS = new CopyOnWriteArrayList<>();
 

@@ -25,6 +25,7 @@ final class AssemblerTemplatesTest {
         assertTrue(AssemblerTemplates.defaultTemplateNames().contains("tablet"));
         assertTrue(AssemblerTemplates.defaultTemplateNames().contains("microcontroller"));
         assertTrue(AssemblerTemplates.defaultTemplateNames().contains("robot"));
+        assertTrue(AssemblerTemplates.defaultTemplateNames().contains("drone"));
     }
 
     @Test
@@ -88,11 +89,31 @@ final class AssemblerTemplatesTest {
             List.of(new ProcessorDriver(0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0), new ItemDriver(Slot.HDD, 1))));
     }
 
+    @Test
+    void droneAssemblerUsesSmallUpstreamSlotLayout() throws Exception {
+        assertTrue(droneCanPlaceAllDrivers(0,
+            List.of(new ItemDriver(Slot.Upgrade, 1), new ItemDriver(Slot.Upgrade, 0)),
+            List.of(new ProcessorDriver(0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0), new ItemDriver(Slot.Card, 1), new ItemDriver(Slot.Card, 0))));
+        assertFalse(droneCanPlaceAllDrivers(0,
+            List.of(new ItemDriver(Slot.Upgrade, 1), new ItemDriver(Slot.Upgrade, 0)),
+            List.of(new ProcessorDriver(0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0), new ItemDriver(Slot.Card, 1), new ItemDriver(Slot.Card, 0), new ItemDriver(Slot.Card, 0))));
+        assertFalse(droneCanPlaceAllDrivers(0,
+            List.of(),
+            List.of(new ProcessorDriver(0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0), new ItemDriver(Slot.HDD, 0))));
+    }
+
     private static boolean robotCanPlaceAllDrivers(final int tier, final Iterable<DriverItem> containerDrivers, final Iterable<DriverItem> componentDrivers) throws Exception {
         final Class<?> template = Class.forName("li.cil.oc.common.template.RobotAssemblerTemplate");
         final Method method = template.getDeclaredMethod("canPlaceAllDrivers", int.class, Iterable.class, Iterable.class);
         method.setAccessible(true);
         return (boolean) method.invoke(null, tier, containerDrivers, componentDrivers);
+    }
+
+    private static boolean droneCanPlaceAllDrivers(final int tier, final Iterable<DriverItem> upgradeDrivers, final Iterable<DriverItem> componentDrivers) throws Exception {
+        final Class<?> template = Class.forName("li.cil.oc.common.template.DroneAssemblerTemplate");
+        final Method method = template.getDeclaredMethod("canPlaceAllDrivers", int.class, Iterable.class, Iterable.class);
+        method.setAccessible(true);
+        return (boolean) method.invoke(null, tier, upgradeDrivers, componentDrivers);
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

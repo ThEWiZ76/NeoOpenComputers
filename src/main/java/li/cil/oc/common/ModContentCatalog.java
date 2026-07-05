@@ -49,6 +49,11 @@ public final class ModContentCatalog {
     public static final String COMPAT_TABLET_CASE_CREATIVE = "tabletcasecreative";
     public static final String COMPAT_TABLET_CASE_TIER1_CAMEL = "tabletCase1";
     public static final String COMPAT_TABLET_CASE_TIER2_CAMEL = "tabletCase2";
+    public static final String COMPAT_DRONE_CASE_TIER1 = "dronecase1";
+    public static final String COMPAT_DRONE_CASE_TIER2 = "dronecase2";
+    public static final String COMPAT_DRONE_CASE_CREATIVE = "dronecasecreative";
+    public static final String COMPAT_DRONE_CASE_TIER1_CAMEL = "droneCase1";
+    public static final String COMPAT_DRONE_CASE_TIER2_CAMEL = "droneCase2";
     public static final String COMPAT_COMPUTER_CASE_TIER1 = "case1";
     public static final String COMPAT_COMPUTER_CASE_TIER2 = "case2";
     public static final String COMPAT_COMPUTER_CASE_TIER3 = "case3";
@@ -294,6 +299,10 @@ public final class ModContentCatalog {
                 ModItems.TABLET_CASE_TIER2.get(),
                 ModItems.TABLET_CASE_CREATIVE.get(),
                 ModItems.TABLET.get(),
+                ModItems.DRONE_CASE_TIER1.get(),
+                ModItems.DRONE_CASE_TIER2.get(),
+                ModItems.DRONE_CASE_CREATIVE.get(),
+                ModItems.DRONE.get(),
                 ModItems.DATA_CARD_TIER1.get(),
                 ModItems.DATA_CARD_TIER2.get(),
                 ModItems.DATA_CARD_TIER3.get(),
@@ -582,6 +591,10 @@ public final class ModContentCatalog {
         final Item tabletCaseTier2Item,
         final Item tabletCaseCreativeItem,
         final Item tabletItem,
+        final Item droneCaseTier1Item,
+        final Item droneCaseTier2Item,
+        final Item droneCaseCreativeItem,
+        final Item droneItem,
         final Item dataCardTier1Item,
         final Item dataCardTier2Item,
         final Item dataCardTier3Item,
@@ -725,6 +738,10 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.TABLET_CASE_TIER2, null, tabletCaseTier2Item);
         registry.register(ModContentIds.TABLET_CASE_CREATIVE, null, tabletCaseCreativeItem);
         registry.register(ModContentIds.TABLET, null, tabletItem);
+        registry.register(ModContentIds.DRONE_CASE_TIER1, null, droneCaseTier1Item);
+        registry.register(ModContentIds.DRONE_CASE_TIER2, null, droneCaseTier2Item);
+        registry.register(ModContentIds.DRONE_CASE_CREATIVE, null, droneCaseCreativeItem);
+        registry.register(ModContentIds.DRONE, null, droneItem);
         registry.register(ModContentIds.DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(ModContentIds.DATA_CARD_TIER2, null, dataCardTier2Item);
         registry.register(ModContentIds.DATA_CARD_TIER3, null, dataCardTier3Item);
@@ -798,6 +815,11 @@ public final class ModContentCatalog {
         registry.register(COMPAT_TABLET_CASE_CREATIVE, null, tabletCaseCreativeItem);
         registry.register(COMPAT_TABLET_CASE_TIER1_CAMEL, null, tabletCaseTier1Item);
         registry.register(COMPAT_TABLET_CASE_TIER2_CAMEL, null, tabletCaseTier2Item);
+        registry.register(COMPAT_DRONE_CASE_TIER1, null, droneCaseTier1Item);
+        registry.register(COMPAT_DRONE_CASE_TIER2, null, droneCaseTier2Item);
+        registry.register(COMPAT_DRONE_CASE_CREATIVE, null, droneCaseCreativeItem);
+        registry.register(COMPAT_DRONE_CASE_TIER1_CAMEL, null, droneCaseTier1Item);
+        registry.register(COMPAT_DRONE_CASE_TIER2_CAMEL, null, droneCaseTier2Item);
         registry.register(COMPAT_DATA_CARD_TIER1, null, dataCardTier1Item);
         registry.register(COMPAT_DATA_CARD_TIER2, null, dataCardTier2Item);
         registry.register(COMPAT_DATA_CARD_TIER3, null, dataCardTier3Item);

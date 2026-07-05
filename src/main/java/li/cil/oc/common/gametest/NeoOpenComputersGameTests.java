@@ -83,6 +83,7 @@ import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.WaypointBlock;
 import li.cil.oc.common.item.AnalyzerItem;
+import li.cil.oc.common.item.DroneItem;
 import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.item.NanomachineItemData;
@@ -4858,6 +4859,29 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(ItemStack.isSameItemSameComponents(memory, tablet.getComponent(output, 2)), "Output tablet memory missing");
         helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_CONTAINER_START).isEmpty(), "Assembler did not consume container slot");
         helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_COMPONENT_START).isEmpty(), "Assembler did not consume component slot");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void assemblerBlockAssemblesDroneFoundationFromInputs(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.ASSEMBLER.get());
+        final AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
+
+        assembler.setItem(AssemblerBlockEntity.SLOT_TEMPLATE, new ItemStack(ModItems.DRONE_CASE_TIER1.get()));
+        assembler.setItem(AssemblerBlockEntity.SLOT_COMPONENT_START, new ItemStack(ModItems.CPU_TIER1.get()));
+        assembler.setItem(AssemblerBlockEntity.SLOT_COMPONENT_START + 1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        assembler.setItem(AssemblerBlockEntity.SLOT_COMPONENT_START + 2, luaBiosEepromStack());
+
+        helper.assertTrue(assembler.canAssemble(), "Assembler did not accept drone foundation inputs");
+        helper.assertTrue(assembler.start(true), "Assembler did not start drone foundation assembly");
+        final ItemStack output = assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE);
+
+        helper.assertTrue(output.is(ModItems.DRONE.get()), "Assembler did not output a drone item");
+        final DroneItem drone = (DroneItem) output.getItem();
+        helper.assertTrue(drone.tier(output) == 0, "Output drone tier did not match drone case");
+        helper.assertTrue(drone.components(output).size() == 3, "Output drone did not persist CPU, memory, and EEPROM inputs");
+        helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_COMPONENT_START).isEmpty(), "Assembler did not consume drone component slot");
         helper.succeed();
     }
 

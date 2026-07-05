@@ -285,6 +285,14 @@ final class ModContentRegistrationTest {
     }
 
     @Test
+    void droneItemIdsAreStable() {
+        assertEquals("drone_case_tier1", ModContentIds.DRONE_CASE_TIER1);
+        assertEquals("drone_case_tier2", ModContentIds.DRONE_CASE_TIER2);
+        assertEquals("drone_case_creative", ModContentIds.DRONE_CASE_CREATIVE);
+        assertEquals("drone", ModContentIds.DRONE);
+    }
+
+    @Test
     void upgradeContainerTier1ItemIdIsStable() {
         assertEquals("upgrade_container_tier1", ModContentIds.UPGRADE_CONTAINER_TIER1);
     }
