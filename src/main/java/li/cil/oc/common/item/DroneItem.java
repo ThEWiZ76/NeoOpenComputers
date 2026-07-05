@@ -1,14 +1,24 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.internal.Tiered;
+import li.cil.oc.common.ModEntities;
+import li.cil.oc.common.entity.DroneEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DroneItem extends Item implements Tiered {
     public static final String DATA_TAG = "oc:drone";
@@ -56,6 +66,41 @@ public class DroneItem extends Item implements Tiered {
         return readData(stack).getList(COMPONENTS_TAG, Tag.TAG_COMPOUND);
     }
 
+    public List<ItemStack> componentStacks(final ItemStack stack) {
+        final List<ItemStack> result = new ArrayList<>();
+        final ListTag components = components(stack);
+        for (int index = 0; index < components.size(); index++) {
+            final CompoundTag entry = components.getCompound(index);
+            final ItemStack component = decodeStack(entry.getCompound(STACK_TAG));
+            if (!component.isEmpty()) {
+                result.add(component);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public InteractionResult useOn(final UseOnContext context) {
+        final Level level = context.getLevel();
+        final ItemStack stack = context.getItemInHand();
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        final DroneEntity drone = ModEntities.DRONE.get().create(level);
+        if (drone == null) {
+            return InteractionResult.FAIL;
+        }
+        final BlockPos clicked = context.getClickedPos();
+        final Vec3 position = Vec3.atCenterOf(clicked.relative(context.getClickedFace())).add(0D, -0.3125D, 0D);
+        drone.moveTo(position.x, position.y, position.z, context.getHorizontalDirection().toYRot(), 0F);
+        drone.loadFromItemStack(stack, context.getPlayer());
+        level.addFreshEntity(drone);
+        if (context.getPlayer() == null || !context.getPlayer().getAbilities().instabuild) {
+            stack.shrink(1);
+        }
+        return InteractionResult.CONSUME;
+    }
+
     private static int caseTier(final ItemStack stack) {
         if (stack.getItem() instanceof DroneCaseItem item) {
             return item.tier();
@@ -83,5 +128,11 @@ public class DroneItem extends Item implements Tiered {
             .filter(CompoundTag.class::isInstance)
             .map(CompoundTag.class::cast)
             .orElseGet(CompoundTag::new);
+    }
+
+    private static ItemStack decodeStack(final CompoundTag tag) {
+        return ItemStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, tag)
+            .result()
+            .orElse(ItemStack.EMPTY);
     }
 }

@@ -269,6 +269,7 @@
   "gui.neoopencomputers.relay.repeater.enabled": "Repeater enabled",
   "gui.neoopencomputers.relay.status": "Relay status",
   "gui.neoopencomputers.robot.title": "Robot",
+  "gui.neoopencomputers.drone.title": "Drone",
   "gui.neoopencomputers.robot.slot.container": "Container slot",
   "gui.neoopencomputers.robot.slot.upgrade": "Upgrade slot",
   "gui.neoopencomputers.relay.strength": "Wireless strength %s",

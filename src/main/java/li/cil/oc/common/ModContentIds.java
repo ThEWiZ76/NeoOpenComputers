@@ -52,6 +52,7 @@ public final class ModContentIds {
     public static final String DRONE_CASE_TIER2 = "drone_case_tier2";
     public static final String DRONE_CASE_CREATIVE = "drone_case_creative";
     public static final String DRONE = "drone";
+    public static final String DRONE_MENU = "drone_menu";
     public static final String COMPUTER_CASE_BLOCK_ENTITY = "computer_case";
     public static final String COMPUTER_CASE_MENU = "computer_case";
     public static final String COMPUTER_CASE_TIER1 = "computer_case_tier1";

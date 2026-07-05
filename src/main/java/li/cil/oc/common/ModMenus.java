@@ -8,6 +8,7 @@ import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.DiskDriveMenu;
 import li.cil.oc.common.menu.DriveMenu;
+import li.cil.oc.common.menu.DroneMenu;
 import li.cil.oc.common.menu.MicrocontrollerMenu;
 import li.cil.oc.common.menu.PrinterMenu;
 import li.cil.oc.common.menu.RackMenu;
@@ -43,6 +44,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<RobotMenu>> ROBOT = MENUS.register(
         ModContentIds.ROBOT_MENU,
         () -> IMenuTypeExtension.create(RobotMenu::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<DroneMenu>> DRONE = MENUS.register(
+        ModContentIds.DRONE_MENU,
+        () -> IMenuTypeExtension.create(DroneMenu::new));
 
     public static final DeferredHolder<MenuType<?>, MenuType<AssemblerMenu>> ASSEMBLER = MENUS.register(
         ModContentIds.ASSEMBLER_MENU,

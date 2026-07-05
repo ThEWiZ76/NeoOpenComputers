@@ -5,6 +5,7 @@ import li.cil.oc.api.API;
 import li.cil.oc.common.ManualRegistry;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModBlocks;
+import li.cil.oc.common.ModEntities;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.block.ComputerCaseBlock;
@@ -95,6 +96,7 @@ public final class NeoOpenComputersClient {
         event.register(ModMenus.COMPUTER_CASE.get(), ComputerCaseScreen::new);
         event.register(ModMenus.DISASSEMBLER.get(), DisassemblerScreen::new);
         event.register(ModMenus.DISK_DRIVE.get(), DiskDriveScreen::new);
+        event.register(ModMenus.DRONE.get(), DroneScreen::new);
         event.register(ModMenus.DRIVE.get(), DriveScreen::new);
         event.register(ModMenus.MICROCONTROLLER.get(), MicrocontrollerScreen::new);
         event.register(ModMenus.PRINTER.get(), PrinterScreen::new);
@@ -258,5 +260,6 @@ public final class NeoOpenComputersClient {
         event.registerBlockEntityRenderer(ModBlockEntities.RELAY.get(), RelayBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SCREEN.get(), ScreenBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.TRANSPOSER.get(), TransposerBlockEntityRenderer::new);
+        event.registerEntityRenderer(ModEntities.DRONE.get(), DroneEntityRenderer::new);
     }
 }

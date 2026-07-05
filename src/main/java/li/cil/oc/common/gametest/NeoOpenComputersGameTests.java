@@ -42,6 +42,7 @@ import li.cil.oc.common.ModInkProviders;
 import li.cil.oc.common.ModItemCharges;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEeproms;
+import li.cil.oc.common.ModEntities;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModWrenches;
 import li.cil.oc.common.ModSettings;
@@ -82,6 +83,7 @@ import li.cil.oc.common.block.PrintBlock;
 import li.cil.oc.common.block.RackBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.WaypointBlock;
+import li.cil.oc.common.entity.DroneEntity;
 import li.cil.oc.common.item.AnalyzerItem;
 import li.cil.oc.common.item.DroneItem;
 import li.cil.oc.common.item.ItemDriverData;
@@ -4882,6 +4884,55 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(drone.tier(output) == 0, "Output drone tier did not match drone case");
         helper.assertTrue(drone.components(output).size() == 3, "Output drone did not persist CPU, memory, and EEPROM inputs");
         helper.assertTrue(assembler.getItem(AssemblerBlockEntity.SLOT_COMPONENT_START).isEmpty(), "Assembler did not consume drone component slot");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void droneItemPlacesRuntimeEntityWithComponentsAndCallbacks(final GameTestHelper helper) {
+        final DroneItem item = (DroneItem) ModItems.DRONE.get();
+        final ItemStack droneStack = item.assembleFromCase(
+            new ItemStack(ModItems.DRONE_CASE_TIER1.get()),
+            new ItemStack(ModItems.CPU_TIER1.get()),
+            new ItemStack(ModItems.MEMORY_TIER1.get()),
+            luaBiosEepromStack());
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, droneStack);
+
+        final BlockPos base = new BlockPos(1, 1, 1);
+        helper.setBlock(base, Blocks.STONE);
+        final BlockPos absoluteBase = helper.absolutePos(base);
+        final InteractionResult result = droneStack.useOn(new UseOnContext(
+            player,
+            InteractionHand.MAIN_HAND,
+            new BlockHitResult(Vec3.atCenterOf(absoluteBase), Direction.UP, absoluteBase, false)));
+
+        helper.assertTrue(result.consumesAction(), "Drone item did not place a drone entity");
+        helper.assertTrue(droneStack.isEmpty(), "Survival placement did not consume drone item");
+        final java.util.List<DroneEntity> drones = helper.getEntities(ModEntities.DRONE.get(), base.above(), 2D);
+        helper.assertTrue(drones.size() == 1, "Drone placement did not spawn exactly one drone entity");
+        final DroneEntity drone = drones.getFirst();
+
+        helper.assertTrue(drone.tier() == 0, "Drone entity tier did not load from item");
+        helper.assertTrue(drone.getContainerSize() == DroneEntity.slotCount(0), "Drone entity slot count did not match tier");
+        helper.assertTrue(drone.getItem(DroneEntity.upgradeSlotCount(0)).is(ModItems.CPU_TIER1.get()), "Drone CPU did not load into first component slot");
+        helper.assertTrue(drone.toggleMachine(), "Drone machine did not start from loaded components: error=" + drone.machine().lastError() + ", architecture=" + drone.machine().architecture() + ", components=" + drone.machine().components());
+        helper.assertTrue(drone.machine().isRunning(), "Drone machine was not running after toggle");
+        helper.assertTrue(drone.toggleMachine(), "Drone machine did not stop");
+        helper.assertTrue(!drone.machine().isRunning(), "Drone machine was still running after stop toggle");
+
+        helper.assertTrue("".equals(drone.getStatusText(null, new GameTestArguments())[0]), "Drone initial status text mismatch");
+        final Object[] status = drone.setStatusText(null, new GameTestArguments("Alpha testing status text longer than upstream allows"));
+        helper.assertTrue("Alpha test".equals(status[0]), "Drone status text was not clamped to one ten-character line");
+        final Object[] light = drone.setLightColor(null, new GameTestArguments(0x123456));
+        helper.assertTrue(Integer.valueOf(0x123456).equals(light[0]), "Drone light color callback did not store RGB value");
+        final Vec3 beforeTarget = drone.getTarget();
+        drone.move(null, new GameTestArguments(1.0D, 0.5D, -1.0D));
+        final Vec3 expectedTarget = new Vec3(
+            Math.round((beforeTarget.x + 1.0D) * 4D) / 4D,
+            Math.round((beforeTarget.y + 0.5D) * 4D) / 4D,
+            Math.round((beforeTarget.z - 1.0D) * 4D) / 4D);
+        helper.assertTrue(drone.getTarget().equals(expectedTarget), "Drone move callback did not offset target");
+        helper.assertTrue(((Number) drone.getMaxVelocity(null, new GameTestArguments())[0]).doubleValue() > 0D, "Drone max velocity callback returned no velocity");
         helper.succeed();
     }
 
