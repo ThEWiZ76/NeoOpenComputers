@@ -28,12 +28,17 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.RobotBlock;
+import li.cil.oc.common.item.ApuItem;
+import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.menu.RobotMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -77,6 +82,11 @@ import java.util.UUID;
 
 public class RobotBlockEntity extends BlockEntity implements Robot, Container, WorldlyContainer, MenuProvider, IMenuProviderExtension, DeviceInfo, StateAware, Analyzable {
     public static final String TAG_TIER = "oc:tier";
+    public static final String TAG_HARDWARE = "oc:hardware";
+    public static final int TOOL_SLOT = 0;
+    public static final int CARGO_SLOT_START = 4;
+    public static final int CARGO_SLOT_COUNT = 16;
+    public static final String SLOT_TYPE_TOOL = "tool";
     private static final String TAG_MACHINE = "oc:machine";
     private static final String TAG_ROBOT_NODE = "oc:robotNode";
     private static final String TAG_SELECTED_SLOT = "oc:selectedSlot";
@@ -88,6 +98,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private static final UUID NIL_UUID = new UUID(0L, 0L);
     private static final int TIER_ANY = Integer.MAX_VALUE;
     private static final String SLOT_TYPE_EEPROM = "eeprom";
+    private static final int CONTAINER_RUNTIME_SLOT_START = 1;
+    private static final int CONTAINER_RUNTIME_SLOT_COUNT = 3;
     private static final RobotSlot[][] CONTAINER_LAYOUTS = {
         {new RobotSlot(Slot.Container, 1), new RobotSlot(Slot.Container, 0), new RobotSlot(Slot.Container, 0)},
         {new RobotSlot(Slot.Container, 2), new RobotSlot(Slot.Container, 1), new RobotSlot(Slot.Container, 0)},
@@ -152,7 +164,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             new RobotSlot(Slot.HDD, 1)
         }
     };
-    private static final int MAX_SLOT_COUNT = slotCount(2);
+    private static final int MUTABLE_SLOT_COUNT = CARGO_SLOT_START + CARGO_SLOT_COUNT;
+    private static final int MAX_HARDWARE_SLOT_COUNT = slotCount(2);
     private final Machine machine;
     private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, this::energyThroughput);
     private final MultiTank internalTanks = new MultiTank() {
@@ -167,7 +180,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             return index >= 0 && index < tanks.size() ? tanks.get(index) : null;
         }
     };
-    private NonNullList<ItemStack> items = NonNullList.withSize(MAX_SLOT_COUNT, ItemStack.EMPTY);
+    private NonNullList<ItemStack> items = NonNullList.withSize(MUTABLE_SLOT_COUNT, ItemStack.EMPTY);
+    private NonNullList<ItemStack> hardwareItems = NonNullList.withSize(MAX_HARDWARE_SLOT_COUNT, ItemStack.EMPTY);
     private final Container equipmentInventory = new SimpleContainer(1);
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private Node robotNode;
@@ -285,25 +299,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public Iterable<ItemStack> internalComponents() {
-        return () -> new Iterator<>() {
-            private int nextSlot = nextComponentSlot(0);
-
-            @Override
-            public boolean hasNext() {
-                return nextSlot >= 0;
-            }
-
-            @Override
-            public ItemStack next() {
-                if (nextSlot < 0) {
-                    throw new NoSuchElementException();
-                }
-                final int slot = nextSlot;
-                nextSlot = nextComponentSlot(slot + 1);
-                pendingComponentSlot = slot;
-                return items.get(slot);
-            }
-        };
+        return hardwareItemsForMachine();
     }
 
     @Override
@@ -403,7 +399,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public void setSelectedSlot(final int index) {
-        selectedSlot = Math.clamp(index, 0, Math.max(0, getContainerSize() - 1));
+        selectedSlot = Math.clamp(index, 0, CARGO_SLOT_COUNT - 1);
         setChanged();
     }
 
@@ -488,7 +484,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public void synchronizeSlot(final int slot) {
-        if (isValidSlot(slot)) {
+        if (isHardwareSlot(slot)) {
             notifyHardwareChanged(machine);
             setChanged();
         }
@@ -501,7 +497,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Callback(direct = true, doc = "function():number -- Gets robot inventory size.")
     public Object[] inventorySize(final Context context, final Arguments arguments) {
-        return new Object[]{getContainerSize()};
+        return new Object[]{CARGO_SLOT_COUNT};
     }
 
     @Callback(direct = true, doc = "function([slot:number]):number -- Gets or sets selected inventory slot.")
@@ -514,12 +510,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Callback(direct = true, doc = "function([slot:number]):number -- Gets item count in the selected or specified slot.")
     public Object[] count(final Context context, final Arguments arguments) {
-        return new Object[]{getItem(callbackSlot(arguments, 0)).getCount()};
+        return new Object[]{selectedItem(callbackSlot(arguments, 0)).getCount()};
     }
 
     @Callback(direct = true, doc = "function([slot:number]):number -- Gets remaining stack space in the selected or specified slot.")
     public Object[] space(final Context context, final Arguments arguments) {
-        final ItemStack stack = getItem(callbackSlot(arguments, 0));
+        final ItemStack stack = selectedItem(callbackSlot(arguments, 0));
         if (stack.isEmpty()) {
             return new Object[]{getMaxStackSize()};
         }
@@ -528,8 +524,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Callback(direct = true, doc = "function(slot:number):boolean -- Compares selected slot with specified slot.")
     public Object[] compareTo(final Context context, final Arguments arguments) {
-        final ItemStack selected = getItem(selectedSlot);
-        final ItemStack other = getItem(checkRobotSlot(arguments.checkInteger(0)));
+        final ItemStack selected = selectedItem(selectedSlot);
+        final ItemStack other = selectedItem(checkRobotSlot(arguments.checkInteger(0)));
         return new Object[]{!selected.isEmpty() && ItemStack.isSameItemSameComponents(selected, other)};
     }
 
@@ -539,11 +535,11 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (targetSlot == selectedSlot) {
             return new Object[]{false};
         }
-        final ItemStack source = getItem(selectedSlot);
+        final ItemStack source = selectedItem(selectedSlot);
         if (source.isEmpty()) {
             return new Object[]{false};
         }
-        final ItemStack target = getItem(targetSlot);
+        final ItemStack target = selectedItem(targetSlot);
         if (!target.isEmpty() && !ItemStack.isSameItemSameComponents(source, target)) {
             return new Object[]{false};
         }
@@ -555,13 +551,13 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
         if (target.isEmpty()) {
             final ItemStack transferred = source.copyWithCount(moved);
-            items.set(targetSlot, transferred);
+            setSelectedItem(targetSlot, transferred);
         } else {
             target.grow(moved);
         }
         source.shrink(moved);
         if (source.isEmpty()) {
-            items.set(selectedSlot, ItemStack.EMPTY);
+            setSelectedItem(selectedSlot, ItemStack.EMPTY);
         }
         setChanged();
         return new Object[]{true};
@@ -610,7 +606,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (level == null) {
             return new Object[]{false};
         }
-        final ItemStack selected = getItem(selectedSlot);
+        final ItemStack selected = selectedItem(selectedSlot);
         if (selected.isEmpty()) {
             return new Object[]{false};
         }
@@ -626,12 +622,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (level == null) {
             return new Object[]{false, "no world"};
         }
-        final ItemStack source = getItem(selectedSlot);
+        final ItemStack source = selectedItem(selectedSlot);
         if (source.isEmpty()) {
             return new Object[]{false, "empty"};
         }
         final int amount = Math.min(source.getCount(), Math.max(1, arguments.count() > 1 ? arguments.checkInteger(1) : source.getCount()));
-        final ItemStack dropped = removeItem(selectedSlot, amount);
+        final ItemStack dropped = removeSelectedItem(selectedSlot, amount);
         if (dropped.isEmpty()) {
             return new Object[]{false, "empty"};
         }
@@ -676,7 +672,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (level == null) {
             return new Object[]{false, "no world"};
         }
-        final ItemStack source = getItem(selectedSlot);
+        final ItemStack source = selectedItem(selectedSlot);
         if (source.isEmpty()) {
             return new Object[]{false, "empty"};
         }
@@ -703,7 +699,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
         source.shrink(1);
         if (source.isEmpty()) {
-            items.set(selectedSlot, ItemStack.EMPTY);
+            setSelectedItem(selectedSlot, ItemStack.EMPTY);
         }
         setChanged();
         NeoForge.EVENT_BUS.post(new RobotPlaceBlockEvent.Post(this, placedStack, level, target));
@@ -732,8 +728,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (pre.isCanceled()) {
             return new Object[]{false, "blocked"};
         }
-        final ItemStack before = getItem(selectedSlot).copy();
-        final ItemStack after = getItem(selectedSlot).copy();
+        final ItemStack before = selectedItem(selectedSlot).copy();
+        final ItemStack after = selectedItem(selectedSlot).copy();
         final RobotUsedToolEvent.ComputeDamageRate damageRate = new RobotUsedToolEvent.ComputeDamageRate(this, before, after, 1D);
         NeoForge.EVENT_BUS.post(damageRate);
         if (!level.destroyBlock(target, true)) {
@@ -754,7 +750,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (player == null) {
             return new Object[]{false, "no server"};
         }
-        final ItemStack source = getItem(selectedSlot);
+        final ItemStack source = selectedItem(selectedSlot);
         if (source.isEmpty()) {
             return new Object[]{false, "empty"};
         }
@@ -764,7 +760,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         player.setItemInHand(InteractionHand.MAIN_HAND, source.copy());
         final InteractionResult result = player.getItemInHand(InteractionHand.MAIN_HAND).useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
         if (result.consumesAction()) {
-            setItem(selectedSlot, player.getItemInHand(InteractionHand.MAIN_HAND).copy());
+            setSelectedItem(selectedSlot, player.getItemInHand(InteractionHand.MAIN_HAND).copy());
             player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
             setChanged();
             return new Object[]{true};
@@ -797,9 +793,44 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return slotAt(tier, slot).tier();
     }
 
+    public static int mutableSlotCount() {
+        return MUTABLE_SLOT_COUNT;
+    }
+
+    public static boolean isRuntimeMutableSlot(final int slot) {
+        return slot >= 0 && slot < mutableSlotCount();
+    }
+
+    public static String mutableSlotType(final int slot) {
+        if (slot == TOOL_SLOT) {
+            return SLOT_TYPE_TOOL;
+        }
+        if (slot >= CONTAINER_RUNTIME_SLOT_START && slot < CONTAINER_RUNTIME_SLOT_START + CONTAINER_RUNTIME_SLOT_COUNT) {
+            return Slot.Any;
+        }
+        if (slot >= CARGO_SLOT_START && slot < CARGO_SLOT_START + CARGO_SLOT_COUNT) {
+            return Slot.Any;
+        }
+        return Slot.None;
+    }
+
+    public static int mutableSlotTier(final int slot) {
+        return isRuntimeMutableSlot(slot) ? TIER_ANY : -1;
+    }
+
+    public static boolean mutableSlotAcceptsStack(final int tier, final int slot, final ItemStack stack) {
+        if (!isRuntimeMutableSlot(slot) || stack.isEmpty()) {
+            return false;
+        }
+        if (isAssemblerOnlyHardware(stack)) {
+            return false; // Assembler-only hardware.
+        }
+        return true;
+    }
+
     @Override
     public int getContainerSize() {
-        return slotCount(tier);
+        return mutableSlotCount();
     }
 
     @Override
@@ -825,8 +856,6 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             setChanged();
-            notifyHardwareChanged(machine);
-            notifyItemRemoved(machine, tier, slot);
         }
         return removed;
     }
@@ -838,8 +867,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
-            notifyHardwareChanged(machine);
-            notifyItemRemoved(machine, tier, slot);
+            setChanged();
         }
         return removed;
     }
@@ -849,16 +877,11 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (!isValidSlot(slot)) {
             return;
         }
-        final ItemStack previous = items.get(slot).copy();
         items.set(slot, stack);
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
             stack.setCount(getMaxStackSize());
         }
         setChanged();
-        notifyHardwareChanged(machine);
-        if (!previous.isEmpty() && !ItemStack.matches(previous, items.get(slot))) {
-            notifyItemRemoved(machine, tier, slot);
-        }
     }
 
     @Override
@@ -868,20 +891,15 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public boolean canPlaceItem(final int slot, final ItemStack stack) {
-        return slotAcceptsStack(tier, slot, stack);
+        return mutableSlotAcceptsStack(tier, slot, stack);
     }
 
     @Override
     public void clearContent() {
-        final boolean hadCpu = hasCpuStack();
         for (int slot = 0; slot < items.size(); slot++) {
             items.set(slot, ItemStack.EMPTY);
         }
         setChanged();
-        notifyHardwareChanged(machine);
-        if (hadCpu) {
-            notifyItemRemoved(machine, tier, cpuSlot(tier));
-        }
     }
 
     @Override
@@ -937,7 +955,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (robotNode != null) {
             robotNode.load(tag.getCompound(TAG_ROBOT_NODE));
         }
+        items = NonNullList.withSize(MUTABLE_SLOT_COUNT, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(tag, items, registries);
+        hardwareItems = NonNullList.withSize(MAX_HARDWARE_SLOT_COUNT, ItemStack.EMPTY);
+        if (tag.contains(TAG_HARDWARE, Tag.TAG_LIST)) {
+            loadHardwareItems(tag.getList(TAG_HARDWARE, Tag.TAG_COMPOUND), hardwareItems);
+        }
         notifyHardwareChanged(machine);
         machine.load(tag.getCompound(TAG_MACHINE));
     }
@@ -961,6 +984,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
         ContainerHelper.saveAllItems(tag, items, registries);
+        tag.put(TAG_HARDWARE, saveHardwareItems(hardwareItems));
     }
 
     private void tickServer() {
@@ -979,12 +1003,16 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     private boolean canStartMachine() {
+        return canStartMachineFromHardware();
+    }
+
+    public int missingHardwareRequirements() {
         boolean hasCpu = false;
         boolean hasMemory = false;
         boolean hasEeprom = false;
-        for (int slot = 0; slot < getContainerSize(); slot++) {
+        for (int slot = 0; slot < slotCount(tier); slot++) {
             final String expected = slotType(tier, slot);
-            if (!slotAcceptsStack(tier, slot, items.get(slot))) {
+            if (!slotAcceptsStack(tier, slot, hardwareItems.get(slot))) {
                 continue;
             }
             if (Slot.CPU.equals(expected)) {
@@ -995,7 +1023,30 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
                 hasEeprom = true;
             }
         }
-        return hasCpu && hasMemory && hasEeprom;
+        int missing = 0;
+        if (!hasCpu) {
+            missing |= RobotMenu.MISSING_CPU;
+        }
+        if (!hasMemory) {
+            missing |= RobotMenu.MISSING_MEMORY;
+        }
+        if (!hasEeprom) {
+            missing |= RobotMenu.MISSING_EEPROM;
+        }
+        return missing;
+    }
+
+    public boolean hasScreenHardware() {
+        for (final ItemStack stack : hardwareItems) {
+            if (stack.getItem() instanceof GraphicsCardItem || stack.getItem() instanceof ApuItem) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean canStartMachineFromHardware() {
+        return missingHardwareRequirements() == 0;
     }
 
     private String missingRequirementsError() {
@@ -1014,8 +1065,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     private int nextComponentSlot(final int start) {
-        for (int slot = start; slot < getContainerSize(); slot++) {
-            if (slotAcceptsStack(tier, slot, items.get(slot))) {
+        for (int slot = start; slot < slotCount(tier); slot++) {
+            if (slotAcceptsStack(tier, slot, hardwareItems.get(slot))) {
                 return slot;
             }
         }
@@ -1024,7 +1075,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     private boolean hasCpuStack() {
         final int slot = cpuSlot(tier);
-        return slot >= 0 && slot < items.size() && !items.get(slot).isEmpty();
+        return slot >= 0 && slot < hardwareItems.size() && !hardwareItems.get(slot).isEmpty();
     }
 
     private void markChangedOnServerThread() {
@@ -1072,13 +1123,11 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     private int insertIntoInventory(final ItemStack stack) {
         int remaining = stack.getCount();
-        final int size = getContainerSize();
-        final int startSlot = isValidSlot(selectedSlot) ? selectedSlot : 0;
+        final int size = CARGO_SLOT_COUNT;
+        final int startSlot = Math.clamp(selectedSlot, 0, CARGO_SLOT_COUNT - 1);
         for (int offset = 0; offset < size && remaining > 0; offset++) {
-            final int slot = (startSlot + offset) % size;
-            if (!isContainerSlot(slot)) {
-                continue;
-            }
+            final int selected = (startSlot + offset) % size;
+            final int slot = CARGO_SLOT_START + selected;
             final ItemStack existing = getItem(slot);
             if (existing.isEmpty() || !ItemStack.isSameItemSameComponents(existing, stack)) {
                 continue;
@@ -1091,8 +1140,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             }
         }
         for (int offset = 0; offset < size && remaining > 0; offset++) {
-            final int slot = (startSlot + offset) % size;
-            if (!isContainerSlot(slot) || !getItem(slot).isEmpty()) {
+            final int selected = (startSlot + offset) % size;
+            final int slot = CARGO_SLOT_START + selected;
+            if (!getItem(slot).isEmpty()) {
                 continue;
             }
             final int inserted = Math.min(remaining, Math.min(stack.getMaxStackSize(), getMaxStackSize()));
@@ -1147,7 +1197,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
                 continue;
             }
             final int slot = componentSlot(node.address());
-            if (!isValidSlot(slot) || !Slot.Upgrade.equals(slotType(tier, slot))) {
+            if (!isHardwareSlot(slot) || !Slot.Upgrade.equals(slotType(tier, slot))) {
                 continue;
             }
             tanks.add(new InternalTank(slot, tank));
@@ -1165,8 +1215,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return slot >= 0 && slot < getContainerSize();
     }
 
-    private boolean isContainerSlot(final int slot) {
-        return Slot.Container.equals(slotType(tier, slot));
+    private boolean isHardwareSlot(final int slot) {
+        return slot >= 0 && slot < slotCount(tier);
     }
 
     private int callbackSlot(final Arguments arguments, final int index) {
@@ -1175,10 +1225,44 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     private int checkRobotSlot(final int slot) {
         final int zeroBased = slot - 1;
-        if (!isValidSlot(zeroBased)) {
+        if (zeroBased < 0 || zeroBased >= CARGO_SLOT_COUNT) {
             throw new IndexOutOfBoundsException("slot");
         }
         return zeroBased;
+    }
+
+    private ItemStack selectedItem(final int selectedSlot) {
+        return getItem(CARGO_SLOT_START + selectedSlot);
+    }
+
+    private void setSelectedItem(final int selectedSlot, final ItemStack stack) {
+        setItem(CARGO_SLOT_START + selectedSlot, stack);
+    }
+
+    private ItemStack removeSelectedItem(final int selectedSlot, final int amount) {
+        return removeItem(CARGO_SLOT_START + selectedSlot, amount);
+    }
+
+    private Iterable<ItemStack> hardwareItemsForMachine() {
+        return () -> new Iterator<>() {
+            private int nextSlot = nextComponentSlot(0);
+
+            @Override
+            public boolean hasNext() {
+                return nextSlot >= 0;
+            }
+
+            @Override
+            public ItemStack next() {
+                if (nextSlot < 0) {
+                    throw new NoSuchElementException();
+                }
+                final int slot = nextSlot;
+                nextSlot = nextComponentSlot(slot + 1);
+                pendingComponentSlot = slot;
+                return hardwareItems.get(slot);
+            }
+        };
     }
 
     private static void notifyHardwareChanged(final Machine machine) {
@@ -1211,6 +1295,52 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return driver != null
             && slotType(tier, slot).equals(driver.slot(stack))
             && driver.tier(stack) <= slotTier(tier, slot);
+    }
+
+    private static boolean isAssemblerOnlyHardware(final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack, Robot.class);
+        if (driver == null) {
+            return false;
+        }
+        final String slot = driver.slot(stack);
+        return Slot.Container.equals(slot)
+            || Slot.Upgrade.equals(slot)
+            || Slot.Card.equals(slot)
+            || Slot.CPU.equals(slot)
+            || Slot.Memory.equals(slot)
+            || Slot.HDD.equals(slot)
+            || SLOT_TYPE_EEPROM.equals(slot);
+    }
+
+    public static ListTag saveHardwareItems(final NonNullList<ItemStack> hardwareItems) {
+        final ListTag itemTags = new ListTag();
+        for (int slot = 0; slot < hardwareItems.size(); slot++) {
+            final ItemStack stack = hardwareItems.get(slot);
+            if (!stack.isEmpty()) {
+                final CompoundTag stackTag = ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack)
+                    .result()
+                    .filter(CompoundTag.class::isInstance)
+                    .map(CompoundTag.class::cast)
+                    .orElseGet(CompoundTag::new);
+                stackTag.putByte("Slot", (byte) slot);
+                itemTags.add(stackTag);
+            }
+        }
+        return itemTags;
+    }
+
+    public static void loadHardwareItems(final ListTag itemTags, final NonNullList<ItemStack> hardwareItems) {
+        for (int index = 0; index < itemTags.size(); index++) {
+            final CompoundTag stackTag = itemTags.getCompound(index);
+            final int slot = stackTag.getByte("Slot") & 255;
+            if (slot < 0 || slot >= hardwareItems.size()) {
+                continue;
+            }
+            final ItemStack stack = ItemStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, stackTag)
+                .result()
+                .orElse(ItemStack.EMPTY);
+            hardwareItems.set(slot, stack);
+        }
     }
 
     public static Direction movementDirection(final Direction facing, final int side) {

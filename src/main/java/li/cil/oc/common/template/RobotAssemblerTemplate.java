@@ -12,8 +12,6 @@ import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 
@@ -70,7 +68,7 @@ final class RobotAssemblerTemplate implements AssemblerTemplate {
         final ItemStack output = new ItemStack(ModBlocks.ROBOT.get().asItem());
         final CompoundTag blockEntityData = new CompoundTag();
         blockEntityData.putInt(RobotBlockEntity.TAG_TIER, tier);
-        saveItems(blockEntityData, placement.items());
+        blockEntityData.put(RobotBlockEntity.TAG_HARDWARE, RobotBlockEntity.saveHardwareItems(placement.items()));
         BlockItem.setBlockEntityData(output, ModBlockEntities.ROBOT.get(), blockEntityData);
         return output;
     }
@@ -204,23 +202,6 @@ final class RobotAssemblerTemplate implements AssemblerTemplate {
             complexity += TabletAssemblerTemplate.complexityOf(Driver.driverFor(stack, Robot.class), stack);
         }
         return complexity;
-    }
-
-    private static void saveItems(final CompoundTag tag, final NonNullList<ItemStack> items) {
-        final ListTag itemTags = new ListTag();
-        for (int slot = 0; slot < items.size(); slot++) {
-            final ItemStack stack = items.get(slot);
-            if (!stack.isEmpty()) {
-                final CompoundTag stackTag = ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack)
-                    .result()
-                    .filter(CompoundTag.class::isInstance)
-                    .map(CompoundTag.class::cast)
-                    .orElseGet(CompoundTag::new);
-                stackTag.putByte("Slot", (byte) slot);
-                itemTags.add(stackTag);
-            }
-        }
-        tag.put("Items", itemTags);
     }
 
     private static boolean isContainerSlot(final int slot) {

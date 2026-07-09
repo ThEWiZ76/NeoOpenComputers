@@ -45,8 +45,8 @@ final class RobotScreenShapeTest {
     void robotSlotHitTestingUsesMenuPositions() {
         assertEquals(0, RobotScreen.robotSlotAt(170, 232, 0, 0, 0));
         assertEquals(14, RobotScreen.robotSlotAt(206, 192, 0, 0, 1));
-        assertEquals(20, RobotScreen.robotSlotAt(152, 232, 0, 0, 3));
-        assertEquals(-1, RobotScreen.robotSlotAt(152, 232, 0, 0, 0));
+        assertEquals(19, RobotScreen.robotSlotAt(224, 210, 0, 0, 3));
+        assertEquals(-1, RobotScreen.robotSlotAt(152, 232, 0, 0, 3));
     }
 
     @Test

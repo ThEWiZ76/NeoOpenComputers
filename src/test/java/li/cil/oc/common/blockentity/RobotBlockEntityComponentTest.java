@@ -102,7 +102,7 @@ final class RobotBlockEntityComponentTest {
 
         assertTrue(source.contains("return new Object[]{selectedSlot + 1}"));
         assertTrue(source.contains("setSelectedSlot(checkRobotSlot(arguments.checkInteger(0)))"));
-        assertTrue(source.contains("return new Object[]{getItem(callbackSlot(arguments, 0)).getCount()}"));
+        assertTrue(source.contains("return new Object[]{selectedItem(callbackSlot(arguments, 0)).getCount()}"));
         assertTrue(source.contains("return arguments.count() > index"));
         assertTrue(source.contains("final int zeroBased = slot - 1"));
     }
@@ -117,6 +117,7 @@ final class RobotBlockEntityComponentTest {
         assertTrue(source.contains("source.copyWithCount(moved)"));
         assertTrue(source.contains("target.grow(moved)"));
         assertTrue(source.contains("source.shrink(moved)"));
+        assertTrue(source.contains("setSelectedItem(targetSlot, transferred)"));
     }
 
     @Test
@@ -148,8 +149,34 @@ final class RobotBlockEntityComponentTest {
         assertTrue(source.contains("new GameProfile"));
         assertTrue(source.contains("moveTo(xPosition(), yPosition(), zPosition()"));
         assertTrue(source.contains("player.setItemInHand(InteractionHand.MAIN_HAND"));
-        assertTrue(source.contains("setItem(selectedSlot, player.getItemInHand(InteractionHand.MAIN_HAND).copy())"));
+        assertTrue(source.contains("setSelectedItem(selectedSlot, player.getItemInHand(InteractionHand.MAIN_HAND).copy())"));
         assertFalse(source.contains("return new Object[]{false, \"no player\"}"));
+    }
+
+    @Test
+    void assembledComputerComponentsAreInternalHardwareNotRobotInventory() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
+
+        assertTrue(source.contains("TAG_HARDWARE"));
+        assertTrue(source.contains("hardwareItems"));
+        assertTrue(source.contains("loadHardwareItems"));
+        assertTrue(source.contains("saveHardwareItems"));
+        assertTrue(source.contains("canStartMachineFromHardware"));
+        assertTrue(source.contains("hardwareItemsForMachine"));
+        assertTrue(source.contains("public static boolean isRuntimeMutableSlot"));
+        assertTrue(source.contains("public static boolean mutableSlotAcceptsStack"));
+        assertTrue(source.contains("return mutableSlotCount()"));
+        assertFalse(source.contains("return slotCount(tier);"));
+    }
+
+    @Test
+    void directRobotInventoryRejectsAssemblerOnlyHardware() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
+
+        assertTrue(source.contains("Slot.CPU.equals(slot)"));
+        assertTrue(source.contains("Slot.Memory.equals(slot)"));
+        assertTrue(source.contains("SLOT_TYPE_EEPROM.equals(slot)"));
+        assertTrue(source.contains("return false; // Assembler-only hardware."));
     }
 
     @Test

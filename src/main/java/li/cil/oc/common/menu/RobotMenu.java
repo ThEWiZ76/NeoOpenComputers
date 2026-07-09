@@ -1,12 +1,8 @@
 package li.cil.oc.common.menu;
 
-import li.cil.oc.api.Driver;
-import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
-import li.cil.oc.common.item.ApuItem;
-import li.cil.oc.common.item.GraphicsCardItem;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -19,8 +15,8 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 public class RobotMenu extends AbstractContainerMenu {
-    public static final int MIN_ROBOT_SLOT_COUNT = RobotBlockEntity.slotCount(0);
-    public static final int MAX_ROBOT_SLOT_COUNT = RobotBlockEntity.slotCount(2);
+    public static final int MIN_ROBOT_SLOT_COUNT = RobotBlockEntity.mutableSlotCount();
+    public static final int MAX_ROBOT_SLOT_COUNT = RobotBlockEntity.mutableSlotCount();
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int ROBOT_STATUS_INDEX = 0;
     public static final int ROBOT_MISSING_REQUIREMENTS_INDEX = 1;
@@ -47,8 +43,7 @@ public class RobotMenu extends AbstractContainerMenu {
         {170, 156}, {188, 156}, {206, 156}, {224, 156},
         {170, 174}, {188, 174}, {206, 174}, {224, 174},
         {170, 192}, {188, 192}, {206, 192}, {224, 192},
-        {170, 210}, {188, 210}, {206, 210}, {224, 210},
-        {152, 232}
+        {170, 210}, {188, 210}, {206, 210}, {224, 210}
     };
 
     private final Container robotInventory;
@@ -92,15 +87,15 @@ public class RobotMenu extends AbstractContainerMenu {
     }
 
     public static int robotSlotCountForTier(final int tier) {
-        return RobotBlockEntity.slotCount(tier);
+        return RobotBlockEntity.mutableSlotCount();
     }
 
     public static String robotSlotKind(final int tier, final int slot) {
-        return RobotBlockEntity.slotType(tier, slot);
+        return RobotBlockEntity.mutableSlotType(slot);
     }
 
     public static int robotSlotTierLimit(final int tier, final int slot) {
-        return RobotBlockEntity.slotTier(tier, slot);
+        return RobotBlockEntity.mutableSlotTier(slot);
     }
 
     public int robotTier() {
@@ -165,17 +160,15 @@ public class RobotMenu extends AbstractContainerMenu {
 
     private boolean movePlayerStackToRobot(final ItemStack stack) {
         final int menuTier = robotTier();
-        return movePlayerStackToRobotSlots(stack, menuTier, false)
-            || movePlayerStackToRobotSlots(stack, menuTier, true);
+        return movePlayerStackToRobotSlots(stack, menuTier);
     }
 
-    private boolean movePlayerStackToRobotSlots(final ItemStack stack, final int menuTier, final boolean containerSlots) {
+    private boolean movePlayerStackToRobotSlots(final ItemStack stack, final int menuTier) {
         for (int slot = 0; slot < robotSlotCount && !stack.isEmpty(); slot++) {
-            final boolean isContainerSlot = li.cil.oc.api.driver.item.Slot.Container.equals(RobotBlockEntity.slotType(menuTier, slot));
-            if (isContainerSlot != containerSlots) {
+            if (!RobotBlockEntity.isRuntimeMutableSlot(slot)) {
                 continue;
             }
-            if (getSlot(slot).mayPlace(stack) && moveItemStackTo(stack, slot, slot + 1, false)) {
+            if (RobotBlockEntity.mutableSlotAcceptsStack(menuTier, slot, stack) && getSlot(slot).mayPlace(stack) && moveItemStackTo(stack, slot, slot + 1, false)) {
                 return true;
             }
         }
@@ -204,41 +197,10 @@ public class RobotMenu extends AbstractContainerMenu {
     }
 
     public static int missingRequirementsFor(final Container robotInventory) {
-        if (!(robotInventory instanceof RobotBlockEntity)) {
+        if (!(robotInventory instanceof RobotBlockEntity robot)) {
             return 0;
         }
-        boolean hasCpu = false;
-        boolean hasMemory = false;
-        boolean hasEeprom = false;
-        for (int slot = 0; slot < robotInventory.getContainerSize(); slot++) {
-            final ItemStack stack = robotInventory.getItem(slot);
-            if (stack.isEmpty() || !robotInventory.canPlaceItem(slot, stack)) {
-                continue;
-            }
-            final DriverItem driver = Driver.driverFor(stack, li.cil.oc.api.internal.Robot.class);
-            if (driver == null) {
-                continue;
-            }
-            final String slotType = driver.slot(stack);
-            if (li.cil.oc.api.driver.item.Slot.CPU.equals(slotType)) {
-                hasCpu = true;
-            } else if (li.cil.oc.api.driver.item.Slot.Memory.equals(slotType)) {
-                hasMemory = true;
-            } else if ("eeprom".equals(slotType)) {
-                hasEeprom = true;
-            }
-        }
-        int missing = 0;
-        if (!hasCpu) {
-            missing |= MISSING_CPU;
-        }
-        if (!hasMemory) {
-            missing |= MISSING_MEMORY;
-        }
-        if (!hasEeprom) {
-            missing |= MISSING_EEPROM;
-        }
-        return missing;
+        return robot.missingHardwareRequirements();
     }
 
     public static int componentCountFor(final Container robotInventory) {
@@ -268,13 +230,7 @@ public class RobotMenu extends AbstractContainerMenu {
     }
 
     public static boolean hasScreenFor(final Container robotInventory) {
-        for (int slot = 0; slot < robotInventory.getContainerSize(); slot++) {
-            final ItemStack stack = robotInventory.getItem(slot);
-            if (stack.getItem() instanceof GraphicsCardItem || stack.getItem() instanceof ApuItem) {
-                return true;
-            }
-        }
-        return false;
+        return robotInventory instanceof RobotBlockEntity robot && robot.hasScreenHardware();
     }
 
     private static ContainerData robotData(final Container robotInventory) {

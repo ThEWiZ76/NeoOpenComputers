@@ -101,6 +101,7 @@ import li.cil.oc.common.menu.ChargerMenu;
 import li.cil.oc.common.menu.ComputerCaseMenu;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.menu.RackMenu;
+import li.cil.oc.common.menu.RobotMenu;
 import li.cil.oc.common.menu.ServerRackMenu;
 import li.cil.oc.common.network.RackNetworking;
 import li.cil.oc.common.network.RackOpenServerPayload;
@@ -4888,6 +4889,23 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void assemblerBlockAssemblesRobotWithInternalHardwareForPlacement(final GameTestHelper helper) {
+        final ItemStack output = assembleRobot(helper, new BlockPos(1, 1, 1),
+            new ItemStack(ModItems.COMPUTER_CASE_TIER1.get()),
+            List.of(),
+            List.of(new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get())),
+            List.of(new ItemStack(ModItems.CPU_TIER1.get()), new ItemStack(ModItems.MEMORY_TIER1.get()), luaBiosEepromStack(), new ItemStack(ModItems.HDD_TIER1.get())));
+
+        helper.assertTrue(output.is(ModBlocks.ROBOT.get().asItem()), "Assembler did not output a robot item");
+        final RobotBlockEntity robot = placeRobotStack(helper, output, new BlockPos(3, 1, 1));
+
+        helper.assertTrue(RobotMenu.missingRequirementsFor(robot) == 0, "Placed robot did not load assembled CPU, memory, and EEPROM");
+        helper.assertTrue(robot.hasScreenHardware(), "Placed robot did not report assembled graphics hardware");
+        helper.assertFalse(robot.canPlaceItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(ModItems.CPU_TIER1.get())), "Robot allowed direct CPU insertion into runtime inventory");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void droneItemPlacesRuntimeEntityWithComponentsAndCallbacks(final GameTestHelper helper) {
         final DroneItem item = (DroneItem) ModItems.DRONE.get();
         final ItemStack droneStack = item.assembleFromCase(
@@ -6073,7 +6091,7 @@ public final class NeoOpenComputersGameTests {
     public static void robotComponentDetectAndCompareTargetBlock(final GameTestHelper helper) {
         final RobotBlockEntity robot = placeRobot(helper, new BlockPos(1, 1, 1));
         helper.setBlock(new BlockPos(1, 1, 2), Blocks.STONE);
-        robot.setItem(0, new ItemStack(Items.STONE));
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.STONE));
 
         final Object[] detectSolid = robot.detect(null, new GameTestArguments(3));
         final Object[] compare = robot.compare(null, new GameTestArguments(3));
@@ -6089,12 +6107,12 @@ public final class NeoOpenComputersGameTests {
     @GameTest(template = "empty")
     public static void robotComponentDropsSelectedStackTowardSide(final GameTestHelper helper) {
         final RobotBlockEntity robot = placeRobot(helper, new BlockPos(1, 1, 1));
-        robot.setItem(0, new ItemStack(Items.DIRT, 3));
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.DIRT, 3));
 
         final Object[] drop = robot.drop(null, new GameTestArguments(3, 2));
 
         helper.assertTrue(Boolean.TRUE.equals(drop[0]), "Robot drop did not report success");
-        helper.assertTrue(robot.getItem(0).is(Items.DIRT) && robot.getItem(0).getCount() == 1, "Robot drop did not remove requested item count");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START).is(Items.DIRT) && robot.getItem(RobotBlockEntity.CARGO_SLOT_START).getCount() == 1, "Robot drop did not remove requested item count");
         helper.assertTrue(helper.getEntities(EntityType.ITEM).stream().anyMatch(entity ->
             entity.getItem().is(Items.DIRT) && entity.getItem().getCount() == 2), "Robot drop did not spawn requested item entity");
         helper.succeed();
@@ -6114,7 +6132,7 @@ public final class NeoOpenComputersGameTests {
         final Object[] suck = robot.suck(null, new GameTestArguments(3));
 
         helper.assertTrue(Boolean.TRUE.equals(suck[0]), "Robot suck did not report success");
-        helper.assertTrue(robot.getItem(0).is(Items.DIAMOND) && robot.getItem(0).getCount() == 2, "Robot suck did not insert item into inventory");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START).is(Items.DIAMOND) && robot.getItem(RobotBlockEntity.CARGO_SLOT_START).getCount() == 2, "Robot suck did not insert item into inventory");
         helper.assertTrue(drop.isRemoved() || drop.getItem().isEmpty(), "Robot suck left item in world");
         helper.succeed();
     }
@@ -6122,13 +6140,13 @@ public final class NeoOpenComputersGameTests {
     @GameTest(template = "empty")
     public static void robotComponentPlacesSelectedBlock(final GameTestHelper helper) {
         final RobotBlockEntity robot = placeRobot(helper, new BlockPos(1, 1, 1));
-        robot.setItem(0, new ItemStack(Items.DIRT));
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.DIRT));
 
         final Object[] place = robot.place(null, new GameTestArguments(3));
 
         helper.assertTrue(Boolean.TRUE.equals(place[0]), "Robot place did not report success");
         helper.assertTrue(helper.getBlockState(new BlockPos(1, 1, 2)).is(Blocks.DIRT), "Robot place did not put selected block at target");
-        helper.assertTrue(robot.getItem(0).isEmpty(), "Robot place did not consume selected block");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START).isEmpty(), "Robot place did not consume selected block");
         helper.succeed();
     }
 
@@ -6148,14 +6166,14 @@ public final class NeoOpenComputersGameTests {
     public static void robotComponentUseRunsSelectedToolThroughFakePlayer(final GameTestHelper helper) {
         final RobotBlockEntity robot = placeRobot(helper, new BlockPos(1, 1, 1));
         helper.setBlock(new BlockPos(1, 1, 2), Blocks.OAK_LOG.defaultBlockState());
-        robot.setItem(0, new ItemStack(Items.STONE_AXE));
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.STONE_AXE));
 
         final Object[] use = robot.use(null, new GameTestArguments(3));
 
         helper.assertTrue(Boolean.TRUE.equals(use[0]), "Robot use did not report success");
         helper.assertTrue(helper.getBlockState(new BlockPos(1, 1, 2)).is(Blocks.STRIPPED_OAK_LOG), "Robot use did not strip target log");
-        helper.assertTrue(robot.getItem(0).is(Items.STONE_AXE), "Robot use did not keep selected tool stack");
-        helper.assertTrue(robot.getItem(0).getDamageValue() > 0, "Robot use did not copy used tool damage back into inventory");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START).is(Items.STONE_AXE), "Robot use did not keep selected tool stack");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START).getDamageValue() > 0, "Robot use did not copy used tool damage back into inventory");
         helper.succeed();
     }
 
@@ -6197,9 +6215,12 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty")
     public static void robotTankUpgradeExposesInternalFluidTank(final GameTestHelper helper) {
-        final RobotBlockEntity robot = placeRobot(helper, new BlockPos(1, 1, 1));
-        robot.setTier(2);
-        robot.setItem(RobotBlockEntity.containerSlotCount(2), new ItemStack(ModItems.TANK_UPGRADE.get()));
+        final ItemStack output = assembleRobot(helper, new BlockPos(1, 1, 1),
+            new ItemStack(ModItems.COMPUTER_CASE_TIER3.get()),
+            List.of(),
+            List.of(new ItemStack(ModItems.TANK_UPGRADE.get())),
+            List.of(new ItemStack(ModItems.CPU_TIER1.get()), new ItemStack(ModItems.MEMORY_TIER1.get()), luaBiosEepromStack()));
+        final RobotBlockEntity robot = placeRobotStack(helper, output, new BlockPos(3, 1, 1));
 
         final li.cil.oc.api.internal.MultiTank tanks = robot.tank();
         helper.assertTrue(tanks.tankCount() == 1, "Robot did not expose one internal tank upgrade");
@@ -11738,6 +11759,46 @@ public final class NeoOpenComputersGameTests {
         robot.setTier(0);
         robot.setSelectedSlot(0);
         return robot;
+    }
+
+    private static ItemStack assembleRobot(
+        final GameTestHelper helper,
+        final BlockPos assemblerPos,
+        final ItemStack template,
+        final List<ItemStack> containers,
+        final List<ItemStack> upgrades,
+        final List<ItemStack> components
+    ) {
+        helper.setBlock(assemblerPos, ModBlocks.ASSEMBLER.get());
+        final AssemblerBlockEntity assembler = helper.getBlockEntity(assemblerPos);
+        assembler.setItem(AssemblerBlockEntity.SLOT_TEMPLATE, template);
+        for (int index = 0; index < containers.size(); index++) {
+            assembler.setItem(AssemblerBlockEntity.SLOT_CONTAINER_START + index, containers.get(index).copy());
+        }
+        for (int index = 0; index < upgrades.size(); index++) {
+            assembler.setItem(AssemblerBlockEntity.SLOT_UPGRADE_START + index, upgrades.get(index).copy());
+        }
+        for (int index = 0; index < components.size(); index++) {
+            assembler.setItem(AssemblerBlockEntity.SLOT_COMPONENT_START + index, components.get(index).copy());
+        }
+
+        helper.assertTrue(assembler.canAssemble(), "Assembler did not accept robot recipe inputs");
+        helper.assertTrue(assembler.start(true), "Assembler did not start robot assembly");
+        return assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).copy();
+    }
+
+    private static RobotBlockEntity placeRobotStack(final GameTestHelper helper, final ItemStack robotStack, final BlockPos supportPos) {
+        helper.setBlock(supportPos, Blocks.STONE);
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, robotStack);
+        final BlockPos absoluteSupport = helper.absolutePos(supportPos);
+        final InteractionResult result = robotStack.useOn(new UseOnContext(
+            player,
+            InteractionHand.MAIN_HAND,
+            new BlockHitResult(Vec3.atCenterOf(absoluteSupport), Direction.UP, absoluteSupport, false)));
+
+        helper.assertTrue(result.consumesAction(), "Robot item did not place robot block");
+        return helper.getBlockEntity(supportPos.above());
     }
 
     private static void removeMockServerPlayers(final GameTestHelper helper) {

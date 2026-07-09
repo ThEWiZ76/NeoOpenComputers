@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -87,6 +89,16 @@ final class AssemblerTemplatesTest {
         assertFalse(robotCanPlaceAllDrivers(0,
             List.of(),
             List.of(new ProcessorDriver(0), new ItemDriver(Slot.Memory, 0), new ItemDriver("eeprom", 0), new ItemDriver(Slot.HDD, 1))));
+    }
+
+    @Test
+    void robotAssemblerPersistsInternalHardwareForPlacedRobot() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/template/RobotAssemblerTemplate.java"));
+
+        assertTrue(source.contains("RobotBlockEntity.TAG_HARDWARE"));
+        assertTrue(source.contains("saveHardwareItems"));
+        assertTrue(source.contains("blockEntityData.put(RobotBlockEntity.TAG_HARDWARE"));
+        assertTrue(source.contains("BlockItem.setBlockEntityData(output, ModBlockEntities.ROBOT.get(), blockEntityData)"));
     }
 
     @Test

@@ -13,35 +13,35 @@ final class RobotMenuShapeTest {
     private static final String EEPROM = "eeprom";
 
     @Test
-    void robotMenuUsesTieredSlotCounts() {
-        assertEquals(14, RobotMenu.robotSlotCountForTier(0));
-        assertEquals(17, RobotMenu.robotSlotCountForTier(1));
-        assertEquals(21, RobotMenu.robotSlotCountForTier(2));
-        assertEquals(21, RobotMenu.robotSlotCountForTier(3));
+    void robotMenuUsesMutableSlotCountsLikeUpstream() {
+        assertEquals(20, RobotMenu.robotSlotCountForTier(0));
+        assertEquals(20, RobotMenu.robotSlotCountForTier(1));
+        assertEquals(20, RobotMenu.robotSlotCountForTier(2));
+        assertEquals(20, RobotMenu.robotSlotCountForTier(3));
     }
 
     @Test
-    void robotMenuExposesRobotSlotKindsAndTierLimits() {
-        assertEquals(Slot.Container, RobotMenu.robotSlotKind(0, 0));
-        assertEquals(Slot.Upgrade, RobotMenu.robotSlotKind(1, 3));
-        assertEquals(Slot.Card, RobotMenu.robotSlotKind(2, 12));
-        assertEquals(Slot.CPU, RobotMenu.robotSlotKind(2, 15));
-        assertEquals(Slot.Memory, RobotMenu.robotSlotKind(2, 16));
-        assertEquals(EEPROM, RobotMenu.robotSlotKind(2, 18));
-        assertEquals(Slot.HDD, RobotMenu.robotSlotKind(2, 19));
+    void robotMenuDoesNotExposeAssembledComponentSlots() {
+        assertEquals("tool", RobotMenu.robotSlotKind(0, 0));
+        assertEquals(Slot.Any, RobotMenu.robotSlotKind(0, 4));
+        assertEquals(Slot.Any, RobotMenu.robotSlotKind(2, 19));
+        assertEquals(Slot.None, RobotMenu.robotSlotKind(2, 20));
         assertEquals(Slot.None, RobotMenu.robotSlotKind(2, 21));
-        assertEquals(2, RobotMenu.robotSlotTierLimit(2, 3));
-        assertEquals(Integer.MAX_VALUE, RobotMenu.robotSlotTierLimit(2, 18));
+        assertEquals(Integer.MAX_VALUE, RobotMenu.robotSlotTierLimit(2, 4));
     }
 
     @Test
     void robotMenuLaysOutSlotsOnUpstreamRobotGui() {
         assertEquals(170, RobotMenu.robotSlotX(0, 0));
         assertEquals(232, RobotMenu.robotSlotY(0, 0));
-        assertEquals(152, RobotMenu.robotSlotX(2, 20));
-        assertEquals(232, RobotMenu.robotSlotY(2, 20));
-        assertEquals(-1, RobotMenu.robotSlotX(2, 21));
-        assertEquals(-1, RobotMenu.robotSlotY(2, 21));
+        assertEquals(224, RobotMenu.robotSlotX(2, 3));
+        assertEquals(232, RobotMenu.robotSlotY(2, 3));
+        assertEquals(170, RobotMenu.robotSlotX(2, 4));
+        assertEquals(156, RobotMenu.robotSlotY(2, 4));
+        assertEquals(224, RobotMenu.robotSlotX(2, 19));
+        assertEquals(210, RobotMenu.robotSlotY(2, 19));
+        assertEquals(-1, RobotMenu.robotSlotX(2, 20));
+        assertEquals(-1, RobotMenu.robotSlotY(2, 20));
     }
 
     @Test
@@ -57,15 +57,17 @@ final class RobotMenuShapeTest {
     }
 
     @Test
-    void robotShiftClickTargetsCompatibleComponentSlotsBeforeInventorySlots() throws Exception {
+    void robotShiftClickDoesNotInstallAssembledComputerComponents() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/menu/RobotMenu.java"));
 
         assertTrue(source.contains("movePlayerStackToRobot(stack)"),
             "Player shift-click must use robot-aware routing instead of vanilla first-slot transfer.");
-        assertTrue(source.contains("movePlayerStackToRobotSlots(stack, menuTier, false)")
-                && source.contains("movePlayerStackToRobotSlots(stack, menuTier, true)")
-                && source.contains("li.cil.oc.api.driver.item.Slot.Container.equals(RobotBlockEntity.slotType(menuTier, slot))"),
-            "Component stacks must be tried in matching component/upgrade slots before generic container slots.");
+        assertTrue(source.contains("RobotBlockEntity.isRuntimeMutableSlot(slot)"),
+            "Menu must route only into tool/cargo/runtime mutable slots.");
+        assertTrue(source.contains("RobotBlockEntity.mutableSlotAcceptsStack(menuTier, slot, stack)"),
+            "Menu must delegate mutable slot validation to robot runtime rules.");
+        assertTrue(!source.contains("Slot.Container.equals(RobotBlockEntity.slotType(menuTier, slot))"),
+            "Menu must not expose assembler hardware slots for direct component insertion.");
     }
 
     @Test
@@ -73,7 +75,7 @@ final class RobotMenuShapeTest {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/menu/RobotMenu.java"));
 
         assertTrue(source.contains("hasScreenFor"));
-        assertTrue(source.contains("stack.getItem() instanceof GraphicsCardItem"));
+        assertTrue(source.contains("robot.hasScreenHardware()"));
         assertTrue(source.contains("case ROBOT_HAS_SCREEN_INDEX -> hasScreenFor(robotInventory) ? 1 : 0"));
     }
 }
