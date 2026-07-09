@@ -33,22 +33,23 @@ final class RobotDroneVisualPortTest {
     }
 
     @Test
-    void robotRendererUsesLegacyLikeSolidPyramidMesh() throws Exception {
+    void robotRendererUsesLegacyChassisMesh() throws Exception {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/RobotBlockEntityRenderer.java"));
 
         assertTrue(renderer.contains("BlockEntityRenderer<RobotBlockEntity>"));
-        assertTrue(renderer.contains("renderPyramid"));
-        assertTrue(renderer.contains("renderFrontChest"));
+        assertTrue(renderer.contains("renderLegacyChassis"));
+        assertTrue(renderer.contains("renderTopChassis"));
+        assertTrue(renderer.contains("renderBottomChassis"));
+        assertTrue(renderer.contains("renderSelectedStack"));
         assertTrue(!renderer.contains("new RobotModel(context.bakeLayer(RobotModel.LAYER_LOCATION))"));
-        assertTrue(renderer.contains("ROBOT_RENDER_TEXTURE"));
-        assertTrue(!renderer.contains("RobotModel.TEXTURE"));
+        assertTrue(renderer.contains("RobotModel.TEXTURE"));
         assertTrue(renderer.contains("RenderType.entityCutout"));
-        assertTrue(renderer.contains("ROBOT_Y_OFFSET"));
-        assertTrue(renderer.contains("PYRAMID_HALF = 0.60F"));
-        assertTrue(renderer.contains("PYRAMID_BASE_Y = 0.30F"));
-        assertTrue(renderer.contains("PYRAMID_APEX_Y = 0.74F"));
-        assertTrue(renderer.contains("CHEST_MIN_Z = 0.28F"));
-        assertTrue(renderer.contains("minY = 0F"));
+        assertTrue(renderer.contains("CHASSIS_HALF = 0.40F"));
+        assertTrue(renderer.contains("TOP_SEAM_Y = 0.54F"));
+        assertTrue(renderer.contains("BOTTOM_SEAM_Y = 0.46F"));
+        assertTrue(renderer.contains("TOP_APEX_Y = 0.96F"));
+        assertTrue(renderer.contains("BOTTOM_APEX_Y = 0.04F"));
+        assertTrue(!renderer.contains("renderFrontChest"));
         assertTrue(!renderer.contains("0xFFE2E2E2"));
     }
 
