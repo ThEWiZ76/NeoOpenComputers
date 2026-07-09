@@ -3,6 +3,7 @@ package li.cil.oc.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.block.RobotBlock;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -11,12 +12,20 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 
 public final class RobotBlockEntityRenderer implements BlockEntityRenderer<RobotBlockEntity> {
-    private static final int COLOR_TOP = 0xFFE2E2E2;
-    private static final int COLOR_SIDE = 0xFF7B8085;
-    private static final int COLOR_FRONT = 0xFF50565C;
-    private static final int COLOR_LEG = 0xFF7A4E28;
+    private static final ResourceLocation ROBOT_RENDER_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/block/white.png");
+    private static final float PYRAMID_HALF = 0.60F;
+    private static final float PYRAMID_BASE_Y = 0.30F;
+    private static final float PYRAMID_APEX_Y = 0.74F;
+    private static final float CHEST_MIN_Z = 0.28F;
+    private static final int COLOR_TOP = 0xFF30343A;
+    private static final int COLOR_LEFT = 0xFF3F464D;
+    private static final int COLOR_RIGHT = 0xFF181B1F;
+    private static final int COLOR_FRONT = 0xFF24282D;
+    private static final int COLOR_CHEST = 0xFF8A5B32;
+    private static final int COLOR_CHEST_DARK = 0xFF3A2414;
     private static final double ROBOT_Y_OFFSET = 0.08D;
 
     public RobotBlockEntityRenderer(final BlockEntityRendererProvider.Context context) {
@@ -34,9 +43,9 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
         poseStack.pushPose();
         poseStack.translate(0.5D, ROBOT_Y_OFFSET + (robot.machine().isRunning() ? 0.06D : 0D), 0.5D);
         poseStack.mulPose(Axis.YP.rotationDegrees(yawRotation(robot.getBlockState().getValue(RobotBlock.FACING))));
-        final VertexConsumer buffer = bufferSource.getBuffer(RenderType.entityCutout(RobotModel.TEXTURE));
+        final VertexConsumer buffer = bufferSource.getBuffer(RenderType.entityCutout(ROBOT_RENDER_TEXTURE));
         renderPyramid(poseStack.last(), buffer, packedLight);
-        renderLeg(poseStack.last(), buffer, packedLight);
+        renderFrontChest(poseStack.last(), buffer, packedLight);
         poseStack.popPose();
     }
 
@@ -50,29 +59,26 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
     }
 
     private static void renderPyramid(final PoseStack.Pose pose, final VertexConsumer consumer, final int packedLight) {
-        final float half = 0.48F;
-        final float baseY = 0.18F;
-        final float apexY = 0.86F;
-        quad(consumer, pose, -half, baseY, -half, half, baseY, -half, half, baseY, half, -half, baseY, half, COLOR_SIDE, 0F, -1F, 0F, packedLight);
-        quad(consumer, pose, -half, baseY, -half, 0F, apexY, 0F, 0F, apexY, 0F, half, baseY, -half, COLOR_TOP, 0F, 0.7F, -0.7F, packedLight);
-        quad(consumer, pose, half, baseY, -half, 0F, apexY, 0F, 0F, apexY, 0F, half, baseY, half, COLOR_SIDE, 0.7F, 0.7F, 0F, packedLight);
-        quad(consumer, pose, half, baseY, half, 0F, apexY, 0F, 0F, apexY, 0F, -half, baseY, half, COLOR_FRONT, 0F, 0.7F, 0.7F, packedLight);
-        quad(consumer, pose, -half, baseY, half, 0F, apexY, 0F, 0F, apexY, 0F, -half, baseY, -half, COLOR_SIDE, -0.7F, 0.7F, 0F, packedLight);
+        quad(consumer, pose, -PYRAMID_HALF, PYRAMID_BASE_Y, -PYRAMID_HALF, PYRAMID_HALF, PYRAMID_BASE_Y, -PYRAMID_HALF, PYRAMID_HALF, PYRAMID_BASE_Y, PYRAMID_HALF, -PYRAMID_HALF, PYRAMID_BASE_Y, PYRAMID_HALF, COLOR_RIGHT, 0F, -1F, 0F, packedLight);
+        quad(consumer, pose, -PYRAMID_HALF, PYRAMID_BASE_Y, -PYRAMID_HALF, 0F, PYRAMID_APEX_Y, 0F, 0F, PYRAMID_APEX_Y, 0F, PYRAMID_HALF, PYRAMID_BASE_Y, -PYRAMID_HALF, COLOR_TOP, 0F, 0.7F, -0.7F, packedLight);
+        quad(consumer, pose, PYRAMID_HALF, PYRAMID_BASE_Y, -PYRAMID_HALF, 0F, PYRAMID_APEX_Y, 0F, 0F, PYRAMID_APEX_Y, 0F, PYRAMID_HALF, PYRAMID_BASE_Y, PYRAMID_HALF, COLOR_RIGHT, 0.7F, 0.7F, 0F, packedLight);
+        quad(consumer, pose, PYRAMID_HALF, PYRAMID_BASE_Y, PYRAMID_HALF, 0F, PYRAMID_APEX_Y, 0F, 0F, PYRAMID_APEX_Y, 0F, -PYRAMID_HALF, PYRAMID_BASE_Y, PYRAMID_HALF, COLOR_FRONT, 0F, 0.7F, 0.7F, packedLight);
+        quad(consumer, pose, -PYRAMID_HALF, PYRAMID_BASE_Y, PYRAMID_HALF, 0F, PYRAMID_APEX_Y, 0F, 0F, PYRAMID_APEX_Y, 0F, -PYRAMID_HALF, PYRAMID_BASE_Y, -PYRAMID_HALF, COLOR_LEFT, -0.7F, 0.7F, 0F, packedLight);
     }
 
-    private static void renderLeg(final PoseStack.Pose pose, final VertexConsumer consumer, final int packedLight) {
-        final float minX = -0.16F;
-        final float maxX = 0.16F;
+    private static void renderFrontChest(final PoseStack.Pose pose, final VertexConsumer consumer, final int packedLight) {
+        final float minX = -0.14F;
+        final float maxX = 0.14F;
         final float minY = 0F;
-        final float maxY = 0.22F;
-        final float minZ = -0.16F;
-        final float maxZ = 0.16F;
-        quad(consumer, pose, minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ, maxX, minY, minZ, COLOR_LEG, 0F, 0F, -1F, packedLight);
-        quad(consumer, pose, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ, minX, minY, maxZ, COLOR_LEG, 0F, 0F, 1F, packedLight);
-        quad(consumer, pose, minX, minY, maxZ, minX, maxY, maxZ, minX, maxY, minZ, minX, minY, minZ, COLOR_LEG, -1F, 0F, 0F, packedLight);
-        quad(consumer, pose, maxX, minY, minZ, maxX, maxY, minZ, maxX, maxY, maxZ, maxX, minY, maxZ, COLOR_LEG, 1F, 0F, 0F, packedLight);
-        quad(consumer, pose, minX, maxY, minZ, minX, maxY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, COLOR_LEG, 0F, 1F, 0F, packedLight);
-        quad(consumer, pose, minX, minY, maxZ, minX, minY, minZ, maxX, minY, minZ, maxX, minY, maxZ, COLOR_LEG, 0F, -1F, 0F, packedLight);
+        final float maxY = 0.34F;
+        final float minZ = CHEST_MIN_Z;
+        final float maxZ = 0.56F;
+        quad(consumer, pose, minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ, maxX, minY, minZ, COLOR_CHEST_DARK, 0F, 0F, -1F, packedLight);
+        quad(consumer, pose, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ, minX, minY, maxZ, COLOR_CHEST, 0F, 0F, 1F, packedLight);
+        quad(consumer, pose, minX, minY, maxZ, minX, maxY, maxZ, minX, maxY, minZ, minX, minY, minZ, COLOR_CHEST_DARK, -1F, 0F, 0F, packedLight);
+        quad(consumer, pose, maxX, minY, minZ, maxX, maxY, minZ, maxX, maxY, maxZ, maxX, minY, maxZ, COLOR_CHEST, 1F, 0F, 0F, packedLight);
+        quad(consumer, pose, minX, maxY, minZ, minX, maxY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, COLOR_CHEST, 0F, 1F, 0F, packedLight);
+        quad(consumer, pose, minX, minY, maxZ, minX, minY, minZ, maxX, minY, minZ, maxX, minY, maxZ, COLOR_CHEST_DARK, 0F, -1F, 0F, packedLight);
     }
 
     private static void quad(

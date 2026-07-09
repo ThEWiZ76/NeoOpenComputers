@@ -2,6 +2,8 @@ package li.cil.oc.common;
 
 import org.junit.jupiter.api.Test;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,6 +46,14 @@ final class ManualResourceTest {
         assertArrayEquals(new int[]{6, 26}, pngDimensions(TEXTURE_ROOT.resolve("button_scroll.png")));
         assertArrayEquals(new int[]{16, 16}, pngDimensions(TEXTURE_ROOT.resolve("manual_blocks.png")));
         assertArrayEquals(new int[]{16, 16}, pngDimensions(TEXTURE_ROOT.resolve("manual_items.png")));
+    }
+
+    @Test
+    void manualTabIconsAreHighContrastCategoryGlyphs() throws IOException {
+        assertTrue(maxChannel(TEXTURE_ROOT.resolve("manual_blocks.png"), 1) >= 220,
+            "Blocks tab icon must be visibly green, not another dark block silhouette.");
+        assertTrue(maxChannel(TEXTURE_ROOT.resolve("manual_items.png"), 0) >= 230,
+            "Items tab icon must be visibly warm/bright, not another grey component silhouette.");
     }
 
     @Test
@@ -363,6 +373,21 @@ final class ManualResourceTest {
             readBigEndianInt(bytes, 16),
             readBigEndianInt(bytes, 20)
         };
+    }
+
+    private static int maxChannel(final Path path, final int channel) throws IOException {
+        final BufferedImage image = ImageIO.read(path.toFile());
+        int max = 0;
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                final int argb = image.getRGB(x, y);
+                if (((argb >>> 24) & 0xFF) == 0) {
+                    continue;
+                }
+                max = Math.max(max, (argb >>> (16 - channel * 8)) & 0xFF);
+            }
+        }
+        return max;
     }
 
     private static int readBigEndianInt(final byte[] bytes, final int offset) {

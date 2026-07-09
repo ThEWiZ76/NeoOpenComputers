@@ -33,18 +33,23 @@ final class RobotDroneVisualPortTest {
     }
 
     @Test
-    void robotRendererUsesDedicatedModelAndTexture() throws Exception {
+    void robotRendererUsesLegacyLikeSolidPyramidMesh() throws Exception {
         final String renderer = Files.readString(Path.of("src/main/java/li/cil/oc/client/RobotBlockEntityRenderer.java"));
 
         assertTrue(renderer.contains("BlockEntityRenderer<RobotBlockEntity>"));
         assertTrue(renderer.contains("renderPyramid"));
-        assertTrue(renderer.contains("renderLeg"));
+        assertTrue(renderer.contains("renderFrontChest"));
         assertTrue(!renderer.contains("new RobotModel(context.bakeLayer(RobotModel.LAYER_LOCATION))"));
-        assertTrue(renderer.contains("RobotModel.TEXTURE"));
+        assertTrue(renderer.contains("ROBOT_RENDER_TEXTURE"));
+        assertTrue(!renderer.contains("RobotModel.TEXTURE"));
         assertTrue(renderer.contains("RenderType.entityCutout"));
         assertTrue(renderer.contains("ROBOT_Y_OFFSET"));
+        assertTrue(renderer.contains("PYRAMID_HALF = 0.60F"));
+        assertTrue(renderer.contains("PYRAMID_BASE_Y = 0.30F"));
+        assertTrue(renderer.contains("PYRAMID_APEX_Y = 0.74F"));
+        assertTrue(renderer.contains("CHEST_MIN_Z = 0.28F"));
         assertTrue(renderer.contains("minY = 0F"));
-        assertTrue(!renderer.contains("0xFF1F2226"));
+        assertTrue(!renderer.contains("0xFFE2E2E2"));
     }
 
     @Test

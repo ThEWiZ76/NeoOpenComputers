@@ -57,14 +57,40 @@ public final class RobotNetworking {
     }
 
     static Component robotStartFailureMessage(final RobotBlockEntity robot, final boolean wasRunning, final int action, final boolean accepted) {
-        final Component message = ComputerCaseNetworking.startFailureMessage(robot.machine(), wasRunning, action);
-        if (message != null) {
-            return message;
+        if (action != RackControlPayload.START || wasRunning) {
+            return null;
         }
-        if (action == RackControlPayload.START && !wasRunning && (!accepted || !robot.machine().isRunning())) {
+        if (!accepted || !robot.machine().isRunning()) {
+            final Component missingRequirementsMessage = robotMissingRequirementsMessage(RobotMenu.missingRequirementsFor(robot));
+            if (missingRequirementsMessage != null) {
+                return missingRequirementsMessage;
+            }
             return ComputerCaseNetworking.startErrorMessage(robot.machine());
         }
         return null;
+    }
+
+    static Component robotMissingRequirementsMessage(final int missingRequirements) {
+        if (missingRequirements == 0) {
+            return null;
+        }
+        final StringBuilder message = new StringBuilder("Robot cannot start: missing ");
+        boolean first = true;
+        first = appendMissingRequirement(message, first, missingRequirements, RobotMenu.MISSING_CPU, "CPU");
+        first = appendMissingRequirement(message, first, missingRequirements, RobotMenu.MISSING_MEMORY, "memory");
+        appendMissingRequirement(message, first, missingRequirements, RobotMenu.MISSING_EEPROM, "EEPROM");
+        return Component.literal(message.toString());
+    }
+
+    private static boolean appendMissingRequirement(final StringBuilder message, final boolean first, final int missingRequirements, final int mask, final String name) {
+        if ((missingRequirements & mask) == 0) {
+            return first;
+        }
+        if (!first) {
+            message.append(", ");
+        }
+        message.append(name);
+        return false;
     }
 
     private static void handleRobotControl(final RobotControlPayload payload, final IPayloadContext context) {

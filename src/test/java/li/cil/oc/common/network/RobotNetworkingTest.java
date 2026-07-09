@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class RobotNetworkingTest {
@@ -62,10 +63,23 @@ final class RobotNetworkingTest {
 
         assertTrue(source.contains("robotStartFailureMessage"),
             "Robot GUI start failure must report machine.lastError to the player like computer cases do.");
+        assertTrue(source.contains("robotMissingRequirementsMessage(RobotMenu.missingRequirementsFor(robot))"),
+            "Robot GUI start failure must explain missing robot components when the machine has no last error.");
         assertTrue(source.contains("player.sendSystemMessage(message)"),
             "Robot GUI start failure must be visible immediately when the power button does nothing.");
         assertTrue(source.contains("player.displayClientMessage(message, true)"),
             "Robot GUI start failure must also be visible while the robot screen is open.");
+    }
+
+    @Test
+    void robotMissingRequirementsMessageListsRequiredComponents() {
+        assertEquals(
+            "Robot cannot start: missing CPU, memory, EEPROM",
+            RobotNetworking.robotMissingRequirementsMessage(RobotMenu.MISSING_CPU | RobotMenu.MISSING_MEMORY | RobotMenu.MISSING_EEPROM).getString());
+        assertEquals(
+            "Robot cannot start: missing EEPROM",
+            RobotNetworking.robotMissingRequirementsMessage(RobotMenu.MISSING_EEPROM).getString());
+        assertNull(RobotNetworking.robotMissingRequirementsMessage(0));
     }
 
     private static RobotMenu allocateMenu(final int containerId, final RobotBlockEntity robot) throws Exception {
