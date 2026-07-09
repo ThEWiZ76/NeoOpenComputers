@@ -50,9 +50,10 @@ final class RobotMenuShapeTest {
         assertEquals(ComputerCaseMenu.STATE_READY, RobotMenu.STATE_READY);
         assertEquals(ComputerCaseMenu.STATE_RUNNING, RobotMenu.STATE_RUNNING);
         assertEquals(ComputerCaseMenu.STATE_INCOMPLETE, RobotMenu.STATE_INCOMPLETE);
-        assertEquals(7, RobotMenu.ROBOT_DATA_COUNT);
+        assertEquals(8, RobotMenu.ROBOT_DATA_COUNT);
         assertEquals(5, RobotMenu.ROBOT_ENERGY_INDEX);
         assertEquals(6, RobotMenu.ROBOT_MAX_ENERGY_INDEX);
+        assertEquals(7, RobotMenu.ROBOT_HAS_SCREEN_INDEX);
     }
 
     @Test
@@ -65,5 +66,14 @@ final class RobotMenuShapeTest {
                 && source.contains("movePlayerStackToRobotSlots(stack, menuTier, true)")
                 && source.contains("li.cil.oc.api.driver.item.Slot.Container.equals(RobotBlockEntity.slotType(menuTier, slot))"),
             "Component stacks must be tried in matching component/upgrade slots before generic container slots.");
+    }
+
+    @Test
+    void robotMenuReportsInstalledGpuAsScreenCapable() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/menu/RobotMenu.java"));
+
+        assertTrue(source.contains("hasScreenFor"));
+        assertTrue(source.contains("stack.getItem() instanceof GraphicsCardItem"));
+        assertTrue(source.contains("case ROBOT_HAS_SCREEN_INDEX -> hasScreenFor(robotInventory) ? 1 : 0"));
     }
 }

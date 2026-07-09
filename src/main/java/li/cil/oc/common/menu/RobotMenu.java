@@ -5,6 +5,8 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
+import li.cil.oc.common.item.ApuItem;
+import li.cil.oc.common.item.GraphicsCardItem;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -27,7 +29,8 @@ public class RobotMenu extends AbstractContainerMenu {
     public static final int ROBOT_TIER_INDEX = 4;
     public static final int ROBOT_ENERGY_INDEX = 5;
     public static final int ROBOT_MAX_ENERGY_INDEX = 6;
-    public static final int ROBOT_DATA_COUNT = 7;
+    public static final int ROBOT_HAS_SCREEN_INDEX = 7;
+    public static final int ROBOT_DATA_COUNT = 8;
     public static final int STATE_EMPTY = ComputerCaseMenu.STATE_EMPTY;
     public static final int STATE_READY = ComputerCaseMenu.STATE_READY;
     public static final int STATE_RUNNING = ComputerCaseMenu.STATE_RUNNING;
@@ -126,6 +129,10 @@ public class RobotMenu extends AbstractContainerMenu {
 
     public int maxEnergy() {
         return robotData.get(ROBOT_MAX_ENERGY_INDEX);
+    }
+
+    public boolean hasScreen() {
+        return robotData.get(ROBOT_HAS_SCREEN_INDEX) != 0;
     }
 
     public Container robotInventory() {
@@ -260,6 +267,16 @@ public class RobotMenu extends AbstractContainerMenu {
         return clampEnergy(connector.globalBufferSize());
     }
 
+    public static boolean hasScreenFor(final Container robotInventory) {
+        for (int slot = 0; slot < robotInventory.getContainerSize(); slot++) {
+            final ItemStack stack = robotInventory.getItem(slot);
+            if (stack.getItem() instanceof GraphicsCardItem || stack.getItem() instanceof ApuItem) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static ContainerData robotData(final Container robotInventory) {
         return new ServerRobotData(robotInventory);
     }
@@ -316,6 +333,7 @@ public class RobotMenu extends AbstractContainerMenu {
                 case ROBOT_TIER_INDEX -> robotTierFor(robotInventory);
                 case ROBOT_ENERGY_INDEX -> energyFor(robotInventory);
                 case ROBOT_MAX_ENERGY_INDEX -> maxEnergyFor(robotInventory);
+                case ROBOT_HAS_SCREEN_INDEX -> hasScreenFor(robotInventory) ? 1 : 0;
                 default -> 0;
             };
         }

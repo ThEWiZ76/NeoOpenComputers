@@ -18,8 +18,10 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
     private static final int SLOT_SIZE = 16;
     private static final int TITLE_TEXT_X = 8;
     private static final int TITLE_TEXT_Y = 6;
-    private static final int INVENTORY_TEXT_X = 6;
-    private static final int INVENTORY_TEXT_Y = 162;
+    private static final int SCREEN_X = 8;
+    private static final int SCREEN_Y = 18;
+    private static final int SCREEN_WIDTH = 240;
+    private static final int SCREEN_HEIGHT = 130;
     private static final int STATUS_CONTROL_X = 5;
     private static final int STATUS_CONTROL_Y = 153;
     private static final int STATUS_CONTROL_SIZE = 18;
@@ -37,8 +39,6 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
         imageHeight = IMAGE_HEIGHT_WITH_SCREEN;
         titleLabelX = TITLE_TEXT_X;
         titleLabelY = TITLE_TEXT_Y;
-        inventoryLabelX = INVENTORY_TEXT_X;
-        inventoryLabelY = INVENTORY_TEXT_Y;
     }
 
     @Override
@@ -46,6 +46,7 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
         final int left = leftPos;
         final int top = topPos;
         guiGraphics.blit(ROBOT_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
+        drawScreenPanel(guiGraphics, left + SCREEN_X, top + SCREEN_Y, menu.hasScreen());
         drawPowerBar(guiGraphics, left + POWER_BAR_X, top + POWER_BAR_Y, menu.energy(), menu.maxEnergy());
         final int tier = menu.robotTier();
         for (int slot = 0; slot < RobotMenu.robotSlotCountForTier(tier); slot++) {
@@ -65,7 +66,6 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
     @Override
     protected void renderLabels(final GuiGraphics guiGraphics, final int mouseX, final int mouseY) {
         guiGraphics.drawString(font, screenTitle(), titleLabelX, titleLabelY, 0xFF404040, false);
-        guiGraphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, 0xFF404040, false);
     }
 
     @Override
@@ -150,6 +150,15 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
         final int width = (int) Math.max(1L, Math.min(POWER_BAR_WIDTH, (long) energy * POWER_BAR_WIDTH / maxEnergy));
         guiGraphics.fill(left, top, left + width, top + POWER_BAR_HEIGHT, 0xFF62C864);
         guiGraphics.fill(left, top, left + width, top + 2, 0xFF9EEAA0);
+    }
+
+    private static void drawScreenPanel(final GuiGraphics guiGraphics, final int left, final int top, final boolean hasScreen) {
+        if (!hasScreen) {
+            return;
+        }
+        guiGraphics.fill(left, top, left + SCREEN_WIDTH, top + SCREEN_HEIGHT, 0xFF000000);
+        guiGraphics.fill(left, top, left + SCREEN_WIDTH, top + 1, 0xFF303030);
+        guiGraphics.fill(left, top + SCREEN_HEIGHT - 1, left + SCREEN_WIDTH, top + SCREEN_HEIGHT, 0xFF303030);
     }
 
     private static void drawStatusControl(final GuiGraphics guiGraphics, final int left, final int top, final int state, final boolean hovered) {

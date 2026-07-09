@@ -47,12 +47,24 @@ public final class RobotNetworking {
         final boolean wasRunning = robot != null && (robot.machine().isRunning() || robot.machine().isPaused());
         final boolean accepted = applyRobotControl(containerMenu, payload);
         if (robot != null) {
-            final Component message = ComputerCaseNetworking.startFailureMessage(robot.machine(), wasRunning, payload.action());
+            final Component message = robotStartFailureMessage(robot, wasRunning, payload.action(), accepted);
             if (message != null) {
-                player.displayClientMessage(message, false);
+                player.sendSystemMessage(message);
+                player.displayClientMessage(message, true);
             }
         }
         return accepted;
+    }
+
+    static Component robotStartFailureMessage(final RobotBlockEntity robot, final boolean wasRunning, final int action, final boolean accepted) {
+        final Component message = ComputerCaseNetworking.startFailureMessage(robot.machine(), wasRunning, action);
+        if (message != null) {
+            return message;
+        }
+        if (action == RackControlPayload.START && !wasRunning && (!accepted || !robot.machine().isRunning())) {
+            return ComputerCaseNetworking.startErrorMessage(robot.machine());
+        }
+        return null;
     }
 
     private static void handleRobotControl(final RobotControlPayload payload, final IPayloadContext context) {

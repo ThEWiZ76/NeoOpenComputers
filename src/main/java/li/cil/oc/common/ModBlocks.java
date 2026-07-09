@@ -283,7 +283,8 @@ public final class ModBlocks {
     private static BlockBehaviour.Properties robotProperties() {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.METAL)
-            .strength(1.5F, 4.0F);
+            .strength(1.5F, 4.0F)
+            .noOcclusion();
     }
 
     private static BlockBehaviour.Properties printProperties() {

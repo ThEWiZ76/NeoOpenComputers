@@ -33,6 +33,8 @@ final class ManualResourceTest {
         assertTrue(Files.exists(DOC_ROOT.resolve("img/manual.png")));
         assertTrue(Files.exists(DOC_ROOT.resolve("img/configuration_case1.png")));
         assertTrue(Files.exists(TEXTURE_ROOT.resolve("manual_home.png")));
+        assertTrue(Files.exists(TEXTURE_ROOT.resolve("manual_blocks.png")));
+        assertTrue(Files.exists(TEXTURE_ROOT.resolve("manual_items.png")));
     }
 
     @Test
@@ -40,6 +42,8 @@ final class ManualResourceTest {
         assertArrayEquals(new int[]{256, 192}, pngDimensions(TEXTURE_ROOT.resolve("manual.png")));
         assertArrayEquals(new int[]{23, 52}, pngDimensions(TEXTURE_ROOT.resolve("manual_tab.png")));
         assertArrayEquals(new int[]{6, 26}, pngDimensions(TEXTURE_ROOT.resolve("button_scroll.png")));
+        assertArrayEquals(new int[]{16, 16}, pngDimensions(TEXTURE_ROOT.resolve("manual_blocks.png")));
+        assertArrayEquals(new int[]{16, 16}, pngDimensions(TEXTURE_ROOT.resolve("manual_items.png")));
     }
 
     @Test

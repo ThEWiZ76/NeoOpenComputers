@@ -42,6 +42,9 @@ final class RobotDroneVisualPortTest {
         assertTrue(!renderer.contains("new RobotModel(context.bakeLayer(RobotModel.LAYER_LOCATION))"));
         assertTrue(renderer.contains("RobotModel.TEXTURE"));
         assertTrue(renderer.contains("RenderType.entityCutout"));
+        assertTrue(renderer.contains("ROBOT_Y_OFFSET"));
+        assertTrue(renderer.contains("minY = 0F"));
+        assertTrue(!renderer.contains("0xFF1F2226"));
     }
 
     @Test

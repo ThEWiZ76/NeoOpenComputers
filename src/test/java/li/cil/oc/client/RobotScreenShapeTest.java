@@ -57,6 +57,21 @@ final class RobotScreenShapeTest {
     }
 
     @Test
+    void robotScreenDoesNotDrawInventoryLabelOverPowerControls() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/RobotScreen.java"));
+
+        assertTrue(!source.contains("drawString(font, playerInventoryTitle"));
+    }
+
+    @Test
+    void robotScreenUsesGpuScreenFlagForUpperPanel() throws Exception {
+        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/RobotScreen.java"));
+
+        assertTrue(source.contains("menu.hasScreen()"));
+        assertTrue(source.contains("drawScreenPanel"));
+    }
+
+    @Test
     void clientRegistersRobotMenuScreen() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/NeoOpenComputersClient.java"));
 

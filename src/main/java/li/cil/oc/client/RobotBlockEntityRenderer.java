@@ -14,9 +14,10 @@ import net.minecraft.core.Direction;
 
 public final class RobotBlockEntityRenderer implements BlockEntityRenderer<RobotBlockEntity> {
     private static final int COLOR_TOP = 0xFFE2E2E2;
-    private static final int COLOR_SIDE = 0xFF303438;
-    private static final int COLOR_FRONT = 0xFF1F2226;
+    private static final int COLOR_SIDE = 0xFF7B8085;
+    private static final int COLOR_FRONT = 0xFF50565C;
     private static final int COLOR_LEG = 0xFF7A4E28;
+    private static final double ROBOT_Y_OFFSET = 0.08D;
 
     public RobotBlockEntityRenderer(final BlockEntityRendererProvider.Context context) {
     }
@@ -31,7 +32,7 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
         final int packedOverlay
     ) {
         poseStack.pushPose();
-        poseStack.translate(0.5D, robot.machine().isRunning() ? 0.06D : 0D, 0.5D);
+        poseStack.translate(0.5D, ROBOT_Y_OFFSET + (robot.machine().isRunning() ? 0.06D : 0D), 0.5D);
         poseStack.mulPose(Axis.YP.rotationDegrees(yawRotation(robot.getBlockState().getValue(RobotBlock.FACING))));
         final VertexConsumer buffer = bufferSource.getBuffer(RenderType.entityCutout(RobotModel.TEXTURE));
         renderPyramid(poseStack.last(), buffer, packedLight);
@@ -62,7 +63,7 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
     private static void renderLeg(final PoseStack.Pose pose, final VertexConsumer consumer, final int packedLight) {
         final float minX = -0.16F;
         final float maxX = 0.16F;
-        final float minY = -0.15F;
+        final float minY = 0F;
         final float maxY = 0.22F;
         final float minZ = -0.16F;
         final float maxZ = 0.16F;

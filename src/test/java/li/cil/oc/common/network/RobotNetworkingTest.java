@@ -60,10 +60,12 @@ final class RobotNetworkingTest {
     void robotStartFailureReportsMachineErrorLikeComputerCase() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/network/RobotNetworking.java"));
 
-        assertTrue(source.contains("ComputerCaseNetworking.startFailureMessage"),
+        assertTrue(source.contains("robotStartFailureMessage"),
             "Robot GUI start failure must report machine.lastError to the player like computer cases do.");
-        assertTrue(source.contains("player.displayClientMessage(message, false)"),
+        assertTrue(source.contains("player.sendSystemMessage(message)"),
             "Robot GUI start failure must be visible immediately when the power button does nothing.");
+        assertTrue(source.contains("player.displayClientMessage(message, true)"),
+            "Robot GUI start failure must also be visible while the robot screen is open.");
     }
 
     private static RobotMenu allocateMenu(final int containerId, final RobotBlockEntity robot) throws Exception {

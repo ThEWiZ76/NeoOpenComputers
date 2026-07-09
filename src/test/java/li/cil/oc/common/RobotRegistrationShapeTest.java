@@ -81,6 +81,17 @@ final class RobotRegistrationShapeTest {
         assertTrue(source.contains("BlockNetworkConnector.joinIfServer"));
         assertTrue(source.contains("useWithoutItem"));
         assertTrue(source.contains("openMenu"));
+        assertTrue(source.contains("ROBOT_SHAPE"));
+        assertTrue(source.contains("getShape"));
+    }
+
+    @Test
+    void robotBlockUsesNonFullVisualShape() throws Exception {
+        final String blocks = Files.readString(Path.of("src/main/java/li/cil/oc/common/ModBlocks.java"));
+        final int methodStart = blocks.indexOf("private static BlockBehaviour.Properties robotProperties()");
+        final int methodEnd = blocks.indexOf("private static BlockBehaviour.Properties printProperties()", methodStart);
+
+        assertTrue(blocks.substring(methodStart, methodEnd).contains(".noOcclusion()"));
     }
 
     @Test
