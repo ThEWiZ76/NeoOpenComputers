@@ -159,3 +159,11 @@ DroneEntity.interact now follows upstream: ordinary interaction opens cargo GUI;
 DronePickupGameTests checks sneak start, packing a running drone, repeated interaction without duplicate drops, preservation of five hardware components/tier, seven diamond cargo drops, three queued generator coal drops, no retained generator fuel after replacement, empty replacement cargo and exact231 machine energy. Initial energy fixture incorrectly requested731 in a500-capacity connector; diagnostics showed packed/restored500, so the fixture was corrected and initialization explicitly asserted. Final build,2106 unit tests and all585 GameTests pass (drone-pickup-final.log).
 
 Direct test uses the actual interaction and item-loading APIs, not rendered client clicks. Void removal, damage/hit signals, dimension target offsets, full survival placement and visual acceptance remain open. No client launch/install, push or merge.
+
+## Drone targeting and hit signals - 2026-09-22
+
+DroneEntity previously inherited Entity.isPickable=false, so normal entity ray selection could not reach its interaction even though direct interaction tests passed. It now reports pickable/pushable while present. skipAttackInteraction mirrors upstream hitByEntity for a running drone: normalized attacker-eye direction, hit signal arguments x,z,y and optional configured username, plus immediate velocity impulse away from the attacker. Stopped and removed drones do not emit hit signals.
+
+DroneInteractionGameTests uses ProjectileUtil with the normal pickable/non-spectator predicate, then Player.attack against an actual running drone. It checks selected entity, hit name/direction/argument count, immediate velocity and stopped/removed behavior. Initial run failed normal targeting (drone-hit-red.log). Final build,2106 unit tests and all586 GameTests pass (drone-hit-verified.log).
+
+This proves targeting and attack entry points, not rendered crosshair/client networking or displacement over subsequent ticks. Current DroneEntity.tick still uses simplified target-step movement which overwrites velocity; upstream inertia/gravity/drag and sustained knockback need a separate movement parity pass. Void behavior, dimension targets and visual acceptance also remain open. No client launch/install, push or merge.

@@ -162,6 +162,32 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     }
 
     @Override
+    public boolean isPickable() {
+        return !isRemoved();
+    }
+
+    @Override
+    public boolean isPushable() {
+        return !isRemoved();
+    }
+
+    @Override
+    public boolean skipAttackInteraction(final Entity attacker) {
+        if (!isRemoved() && machine.isRunning()) {
+            final Vec3 direction = attacker.getEyePosition().subtract(position()).normalize();
+            if (!level().isClientSide) {
+                if (li.cil.oc.common.ModSettings.inputUsername()) {
+                    machine.signal("hit", direction.x, direction.z, direction.y, attacker.getName().getString());
+                } else {
+                    machine.signal("hit", direction.x, direction.z, direction.y);
+                }
+            }
+            setDeltaMovement(getDeltaMovement().subtract(direction).scale(0.5));
+        }
+        return super.skipAttackInteraction(attacker);
+    }
+
+    @Override
     public InteractionResult interact(final Player player, final InteractionHand hand) {
         if (isRemoved()) return InteractionResult.PASS;
         if (!level().isClientSide) {
