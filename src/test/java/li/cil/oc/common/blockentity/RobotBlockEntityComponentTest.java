@@ -128,38 +128,6 @@ final class RobotBlockEntityComponentTest {
     }
 
     @Test
-    void inventoryCallbacksUseOneBasedSelectedSlots() throws Exception {
-        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
-
-        assertTrue(source.contains("return new Object[]{selectedSlot + 1}"));
-        assertTrue(source.contains("setSelectedSlot(checkRobotSlot(arguments.checkInteger(0)))"));
-        assertTrue(source.contains("return new Object[]{selectedItem(callbackSlot(arguments, 0)).getCount()}"));
-        assertTrue(source.contains("return arguments.count() > index"));
-        assertTrue(source.contains("final int zeroBased = slot - 1"));
-    }
-
-    @Test
-    void transferToUsesSelectedRobotSlotAndMergesStacks() throws Exception {
-        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
-
-        assertTrue(source.contains("checkRobotSlot(arguments.checkInteger(0))"));
-        assertTrue(source.contains("if (targetSlot == selectedSlot)"));
-        assertTrue(source.contains("ItemStack.isSameItemSameComponents(source, target)"));
-        assertTrue(source.contains("source.copyWithCount(moved)"));
-        assertTrue(source.contains("target.grow(moved)"));
-        assertTrue(source.contains("source.shrink(moved)"));
-        assertTrue(source.contains("setSelectedItem(targetSlot, transferred)"));
-    }
-
-    @Test
-    void transferToRejectsEmptySelectedSlot() throws Exception {
-        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
-
-        assertTrue(source.contains("if (source.isEmpty())"));
-        assertTrue(source.contains("return new Object[]{false}"));
-    }
-
-    @Test
     void worldActionsUseRobotSideTargetingAndEvents() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
 

@@ -779,65 +779,27 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Callback(direct = true, doc = "function([slot:number]):number -- Gets or sets selected inventory slot.")
     public Object[] select(final Context context, final Arguments arguments) {
-        if (arguments.count() > 0 && arguments.checkAny(0) != null) {
-            setSelectedSlot(checkRobotSlot(arguments.checkInteger(0)));
-        }
-        return new Object[]{selectedSlot + 1};
+        return li.cil.oc.common.component.AgentInventoryControl.select(this, arguments);
     }
 
     @Callback(direct = true, doc = "function([slot:number]):number -- Gets item count in the selected or specified slot.")
     public Object[] count(final Context context, final Arguments arguments) {
-        return new Object[]{selectedItem(callbackSlot(arguments, 0)).getCount()};
+        return li.cil.oc.common.component.AgentInventoryControl.count(this, arguments);
     }
 
     @Callback(direct = true, doc = "function([slot:number]):number -- Gets remaining stack space in the selected or specified slot.")
     public Object[] space(final Context context, final Arguments arguments) {
-        final ItemStack stack = selectedItem(callbackSlot(arguments, 0));
-        if (stack.isEmpty()) {
-            return new Object[]{getMaxStackSize()};
-        }
-        return new Object[]{Math.max(0, Math.min(stack.getMaxStackSize(), getMaxStackSize()) - stack.getCount())};
+        return li.cil.oc.common.component.AgentInventoryControl.space(this, arguments);
     }
 
-    @Callback(direct = true, doc = "function(slot:number):boolean -- Compares selected slot with specified slot.")
+    @Callback(direct = true, doc = "function(slot:number[, checkNBT:boolean=false]):boolean -- Compares selected slot with specified slot.")
     public Object[] compareTo(final Context context, final Arguments arguments) {
-        final ItemStack selected = selectedItem(selectedSlot);
-        final ItemStack other = selectedItem(checkRobotSlot(arguments.checkInteger(0)));
-        return new Object[]{!selected.isEmpty() && ItemStack.isSameItemSameComponents(selected, other)};
+        return li.cil.oc.common.component.AgentInventoryControl.compare(this, arguments);
     }
 
     @Callback(doc = "function(slot:number[, count:number]):boolean -- Transfers items from selected slot to another slot.")
     public Object[] transferTo(final Context context, final Arguments arguments) {
-        final int targetSlot = checkRobotSlot(arguments.checkInteger(0));
-        if (targetSlot == selectedSlot) {
-            return new Object[]{false};
-        }
-        final ItemStack source = selectedItem(selectedSlot);
-        if (source.isEmpty()) {
-            return new Object[]{false};
-        }
-        final ItemStack target = selectedItem(targetSlot);
-        if (!target.isEmpty() && !ItemStack.isSameItemSameComponents(source, target)) {
-            return new Object[]{false};
-        }
-        final int requested = Math.max(0, arguments.count() > 1 && arguments.checkAny(1) != null ? arguments.checkInteger(1) : source.getCount());
-        final int limit = target.isEmpty() ? Math.min(source.getMaxStackSize(), getMaxStackSize()) : Math.min(target.getMaxStackSize(), getMaxStackSize());
-        final int moved = Math.min(requested, Math.min(source.getCount(), limit - target.getCount()));
-        if (moved <= 0) {
-            return new Object[]{false};
-        }
-        if (target.isEmpty()) {
-            final ItemStack transferred = source.copyWithCount(moved);
-            setSelectedItem(targetSlot, transferred);
-        } else {
-            target.grow(moved);
-        }
-        source.shrink(moved);
-        if (source.isEmpty()) {
-            setSelectedItem(selectedSlot, ItemStack.EMPTY);
-        }
-        setChanged();
-        return new Object[]{true};
+        return li.cil.oc.common.component.AgentInventoryControl.transfer(this, arguments);
     }
 
     @Callback(doc = "function(side:number):boolean,string -- Moves the robot.")

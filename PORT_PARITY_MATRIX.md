@@ -119,3 +119,11 @@ DroneEntity no longer exposes an always-empty main inventory. Capacity follows u
 DroneInventoryGameTests covers zero/one/two/three upgrades, sparse cargo in slots 2 and 8, NBT entity reload with exact item counts and selection, and removal/reinstallation with eleven overflow iron ingots dropped exactly once and three diamonds retained. Initial tests failed against zero-slot inventory (drone-cargo-red.log). Final build and all 578 GameTests pass (drone-cargo-final.log), with 2109 unit tests unchanged.
 
 This is cargo storage groundwork, not completed drone parity. DroneMenu still exposes hardware only; cargo GUI/synchronization, InventoryControl Lua callbacks, world inventory interactions, destruction/pickup semantics, native running-drone cargo continuation and real-client visuals remain open. No client launch/install, push or merge.
+
+## Drone and robot inventory callbacks - 2026-09-22
+
+Drone now exposes inventorySize, select, count, space, compareTo and transferTo. AgentInventoryControl implements upstream InventoryControl behavior and is shared with RobotBlockEntity: one-based slots, empty stacks compare equal, compareTo defaults to ignoring item data with optional strict comparison, bounded partial merges, successful self/zero transfers, full incompatible-stack swaps, and 0..64 requested counts. This fixes corresponding robot parity discrepancies as well as missing drone APIs.
+
+InventoryControlGameTests invokes registered callbacks on actual robot/drone components. It checks slot numbering, empty source rejection, merge conservation at a full stack, full destination rejection, self/zero transfer, partial incompatible rejection, full swap, default/strict custom-name comparison, count/space and invalid index. Red run failed robot empty equality and missing drone inventorySize. Three old RobotBlockEntity source-string tests were removed in favor of these behavioral checks; one had falsely passed because unrelated methods contained matching strings. Final build, 2106 remaining unit tests and all 580 GameTests pass (inventory-api-final.log).
+
+Native Lua continuation with drone cargo, cargo menu/client synchronization, world interactions, pickup/destruction and visual acceptance remain open. No client launch/install, push or merge.

@@ -335,6 +335,36 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         return mainInventory;
     }
 
+    @Callback(doc = "function():number -- Gets internal inventory size.")
+    public Object[] inventorySize(final Context context, final Arguments args) {
+        return new Object[]{mainInventory.getContainerSize()};
+    }
+
+    @Callback(doc = "function([slot:number]):number -- Gets or sets the selected inventory slot.")
+    public Object[] select(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentInventoryControl.select(this, args);
+    }
+
+    @Callback(direct = true, doc = "function([slot:number]):number -- Gets item count.")
+    public Object[] count(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentInventoryControl.count(this, args);
+    }
+
+    @Callback(direct = true, doc = "function([slot:number]):number -- Gets remaining stack space.")
+    public Object[] space(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentInventoryControl.space(this, args);
+    }
+
+    @Callback(doc = "function(slot:number[, checkNBT:boolean=false]):boolean -- Compares with the selected slot.")
+    public Object[] compareTo(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentInventoryControl.compare(this, args);
+    }
+
+    @Callback(doc = "function(slot:number[, count:number=64]):boolean -- Transfers items from the selected slot.")
+    public Object[] transferTo(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentInventoryControl.transfer(this, args);
+    }
+
 
     @Callback(doc = "function():number -- Gets the number of installed tanks.")
     public Object[] tankCount(final Context context, final Arguments args) {
