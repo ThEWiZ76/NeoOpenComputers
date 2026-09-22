@@ -892,22 +892,41 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (hardness < 0F) {
             return new Object[]{false, "unbreakable"};
         }
-        final RobotBreakBlockEvent.Pre pre = new RobotBreakBlockEvent.Pre(this, level, target, Math.max(0.05D, hardness));
-        NeoForge.EVENT_BUS.post(pre);
-        if (pre.isCanceled()) {
-            return new Object[]{false, "blocked"};
+        if (!(player() instanceof net.minecraft.server.level.ServerPlayer player)) {
+            return new Object[]{false, "no server"};
         }
-        final ItemStack before = selectedItem(selectedSlot).copy();
-        final ItemStack after = selectedItem(selectedSlot).copy();
-        final RobotUsedToolEvent.ComputeDamageRate damageRate = new RobotUsedToolEvent.ComputeDamageRate(this, before, after, 1D);
-        NeoForge.EVENT_BUS.post(damageRate);
-        if (!level.destroyBlock(target, true)) {
-            return new Object[]{false, "cannot break"};
+        final ItemStack previousHand = player.getMainHandItem();
+        final var previousGameMode = player.gameMode.getGameModeForPlayer();
+        final ItemStack before = getItem(TOOL_SLOT).copy();
+        player.setItemInHand(InteractionHand.MAIN_HAND, before.copy());
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        try {
+            if (!state.canHarvestBlock(level, target, player)) {
+                return new Object[]{false, "cannot harvest"};
+            }
+            final RobotBreakBlockEvent.Pre pre = new RobotBreakBlockEvent.Pre(this, level, target, Math.max(0.05D, hardness));
+            NeoForge.EVENT_BUS.post(pre);
+            if (pre.isCanceled()) {
+                return new Object[]{false, "blocked"};
+            }
+            // The player path applies block protection, harvest rules, loot and tool wear.
+            if (!player.gameMode.destroyBlock(target)) {
+                return new Object[]{false, "cannot break"};
+            }
+            final ItemStack after = player.getMainHandItem().copy();
+            if (!before.isEmpty() && !after.isEmpty() && before.is(after.getItem())) {
+                final RobotUsedToolEvent.ComputeDamageRate damageRate = new RobotUsedToolEvent.ComputeDamageRate(this, before, after, 1D);
+                NeoForge.EVENT_BUS.post(damageRate);
+                NeoForge.EVENT_BUS.post(new RobotUsedToolEvent.ApplyDamageRate(this, before, after, damageRate.getDamageRate()));
+            }
+            setItem(TOOL_SLOT, after);
+            NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(this, 0D));
+            setChanged();
+            return new Object[]{true, "block"};
+        } finally {
+            player.setItemInHand(InteractionHand.MAIN_HAND, previousHand);
+            player.setGameMode(previousGameMode);
         }
-        NeoForge.EVENT_BUS.post(new RobotUsedToolEvent.ApplyDamageRate(this, before, after, damageRate.getDamageRate()));
-        NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(this, 0D));
-        setChanged();
-        return new Object[]{true};
     }
 
     @Callback(doc = "function(side:number):boolean,string -- Uses the selected item on the specified side.")

@@ -6153,7 +6153,7 @@ public final class NeoOpenComputersGameTests {
     @GameTest(template = "empty")
     public static void robotComponentSwingBreaksTargetBlock(final GameTestHelper helper) {
         final RobotBlockEntity robot = placeRobot(helper, new BlockPos(1, 1, 1));
-        helper.setBlock(new BlockPos(1, 1, 2), Blocks.STONE);
+        helper.setBlock(new BlockPos(1, 1, 2), Blocks.DIRT);
 
         final Object[] swing = robot.swing(null, new GameTestArguments(3));
 
@@ -11669,7 +11669,7 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 2200)
-    public static void robotBootsOpenOsAndRunsBundledGoFromAutomaticallyMountedRom(final GameTestHelper helper) throws Exception {
+    public static void robotBootsOpenOsAndRunsBundledGoAfterPickup(final GameTestHelper helper) throws Exception {
         final ItemStack disk = openOsHardDiskStack(helper);
         final ManagedEnvironment storage = Driver.driverFor(disk).createEnvironment(disk, null);
         chargeConnector(helper, storage.node(), 1024D);
@@ -11687,7 +11687,19 @@ public final class NeoOpenComputersGameTests {
             local robot = require("robot")
             assert(require("filesystem").exists("/bin/go.lua"))
             assert(require("shell").execute("go left 1"))
-            robot.setLightColor(0x123456)
+            local fs = require("filesystem")
+            if fs.exists("/home/pickup.txt") then
+              local saved = assert(io.open("/home/pickup.txt", "r"))
+              assert(saved:read("*a") == "OpenOS robot data")
+              saved:close()
+              robot.setLightColor(0x654321)
+            else
+              if not fs.isDirectory("/home") then assert(fs.makeDirectory("/home")) end
+              local saved = assert(io.open("/home/pickup.txt", "w"))
+              assert(saved:write("OpenOS robot data"))
+              saved:close()
+              robot.setLightColor(0x123456)
+            end
             while true do require("event").pull() end
             """;
         final Object handle = filesystem.invoke("open", null, "init.lua", "w")[0];
@@ -11702,11 +11714,36 @@ public final class NeoOpenComputersGameTests {
         chargeConnector(helper, robot.machine().node(), 10000D);
         final Direction facing = robot.facing();
         helper.assertTrue(robot.toggleMachine(), "OpenOS robot did not start");
-        helper.succeedWhen(() -> {
+        final java.util.concurrent.atomic.AtomicReference<RobotBlockEntity> replacement = new java.util.concurrent.atomic.AtomicReference<>();
+        final java.util.concurrent.atomic.AtomicReference<Direction> replacementFacing = new java.util.concurrent.atomic.AtomicReference<>();
+        helper.startSequence().thenWaitUntil(() -> {
             helper.assertTrue(Integer.valueOf(0x123456).equals(robot.getLightColor(null, null)[0]),
                 "OpenOS did not load robot ROM and run go: " + robot.machine().lastError());
             helper.assertTrue(robot.facing() == facing.getCounterClockWise(), "Bundled go did not turn robot left");
-        });
+        }).thenExecute(() -> {
+            final BlockPos oldPos = robot.getBlockPos();
+            helper.assertTrue(helper.getLevel().destroyBlock(oldPos, true), "Could not pick up running OpenOS robot");
+            final var drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                new net.minecraft.world.phys.AABB(oldPos).inflate(1D));
+            final var robotDrops = drops.stream().filter(entity -> entity.getItem().is(ModItems.ROBOT.get())).toList();
+            helper.assertTrue(robotDrops.size() == 1 && robotDrops.getFirst().getItem().getCount() == 1,
+                "OpenOS robot pickup did not return exactly one assembled robot");
+            final ItemStack pickedUp = robotDrops.getFirst().getItem().copy();
+            robotDrops.forEach(net.minecraft.world.entity.Entity::discard);
+            final RobotBlockEntity placed = placeRobotStack(helper, pickedUp, new BlockPos(3, 1, 1));
+            placed.onLoad();
+            helper.assertFalse(placed.machine().isRunning(), "Picked-up OpenOS robot should wait for explicit boot");
+            chargeConnector(helper, placed.machine().node(), 10000D);
+            replacement.set(placed);
+            replacementFacing.set(placed.facing());
+            helper.assertTrue(placed.toggleMachine(), "Replaced OpenOS robot did not start");
+        }).thenWaitUntil(() -> {
+            final RobotBlockEntity placed = replacement.get();
+            helper.assertTrue(placed.lightColor() == 0x654321,
+                "Replaced robot did not boot OpenOS and read saved file: " + placed.machine().lastError());
+            helper.assertTrue(placed.facing() == replacementFacing.get().getCounterClockWise(),
+                "Replaced OpenOS robot did not remount ROM and run go");
+        }).thenSucceed();
     }
 
     private static ItemStack openOsHardDiskStack(final GameTestHelper helper) {

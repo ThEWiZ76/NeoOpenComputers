@@ -19,3 +19,7 @@ Extended the same survival break and real item-placement test with a managed HDD
 No production change was needed for this HDD path. The first fixture used a 17-character label and failed discovery because ItemDiskLabel correctly truncates to 16; corrected fixture label robot-disk. This was a test setup issue, not an HDD persistence defect.
 
 Evidence: build/finish-port-implementation/robot-hdd-final.log, test build runGameTestServer successful, 2057 unit tests (zero failures/errors), all 454 required GameTests. Artifact SHA256 0F00E34B5A9FB5FA008B03382787CBB2C71DDD7F2C02F383B5AB90DBDF0B2E83. Not installed/live-tested; Minecraft stays closed. This covers managed disk data and a disk-loaded program, not full installed OpenOS roundtrip, unmanaged sectors, chunk reload or suspended Lua state.
+
+## Complete OpenOS boot after pickup
+
+robotBootsOpenOsAndRunsBundledGoAfterPickup now boots the full bundled OpenOS image twice around a real block drop and item placement. First boot mounts robot ROM, runs go left and writes /home/pickup.txt; second boot reads exact saved content and runs go again. It uses real assembler inputs and Lua BIOS. The fixture copies OpenOS files onto HDD; interactive installation and live UI remain unverified. Evidence and current artifact: ROBOT_BLOCK_SWING.md / robot-swing-protection.log (2057 unit tests, 456 GameTests).

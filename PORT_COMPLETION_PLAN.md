@@ -241,3 +241,7 @@ Ontbrekende robotloot hersteld: hardware en componentgegevens blijven in het rob
 ### Robot-HDD na afbreken en plaatsen
 
 Bestaande survival-roundtrip uitgebreid: HDD-adres/label, map en exacte binaire inhoud blijven bewaard; EEPROM voert na terugplaatsen init.lua vanaf dezelfde schijf uit. Adresvergelijking houdt nu alle filesystem-componenten bij. Geen extra productiepatch nodig. Full build: 2057 unit-tests en 454 GameTests groen; robot-hdd-final.log. Zie ROBOT_BREAK_REPLACE.md. Volledig geinstalleerd OpenOS, unmanaged-sectoren, chunk/reload en live controles blijven open.
+
+### OpenOS-pickup en echte swing-harvest
+
+Volledige OpenOS-image start opnieuw na robot-drop en echte itemplaatsing, leest het eerder geschreven bestand en mount/gebruikt robot-ROM opnieuw. HDD-fixture kopieert bestanden; interactief installeren blijft open. Swing gebruikt nu gereedschapsslot en normale speler-harvest met blokbeveiliging, loot en daadwerkelijke slijtage; cargo blijft intact. RED/GREEN en full build: 2057 unit-tests en 456 GameTests. Zie ROBOT_BLOCK_SWING.md. Volledige swing-timing/animatie/entities, overige wereldacties en live controles blijven open.
