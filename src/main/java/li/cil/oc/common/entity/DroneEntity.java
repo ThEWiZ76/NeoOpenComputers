@@ -39,6 +39,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.extensions.IMenuProviderExtension;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
@@ -826,6 +827,19 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
             mainInventory = resized;
         }
         setSelectedSlot(selectedSlot);
+    }
+
+    @Override
+    public Entity changeDimension(final DimensionTransition transition) {
+        final Vec3 offset = target.subtract(position());
+        final Entity moved = super.changeDimension(transition);
+        if (moved instanceof DroneEntity drone) {
+            drone.target = drone.position().add(offset);
+            if (drone != this) {
+                removeMachineNode();
+            }
+        }
+        return moved;
     }
 
     @Override

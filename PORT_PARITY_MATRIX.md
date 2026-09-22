@@ -229,3 +229,11 @@ DroneEntity.onBelowWorld now reuses the stopped/disconnected item-packing and ca
 DronePickupGameTests moves an assembled inventory drone below minBuildHeight-64, ticks twice and verifies exactly one packed drone and seven cargo diamonds. Red run lost the packed drone (drone-void-red.log). Final build,2106 units/all596 GameTests pass (drone-void-verified.log).
 
 This verifies the immediate upstream drop lifecycle; items spawned below the world may themselves be removed by normal Minecraft void handling on later ticks. It does not provide a new recovery/teleport mechanic. Dimension target offsets and visual/client acceptance remain open. No client launch/install, push or merge.
+
+## Drone dimension transfer - 2026-09-22
+
+DroneEntity.changeDimension now preserves target minus position across a successful transfer and closes/disconnects the old machine after the new entity has copied its state. Failed transfers leave the original target intact; same-dimension relocation does not close its own machine.
+
+DroneDimensionGameTests performs a real Overworld/Nether round trip with a native Lua machine and seven cargo diamonds. It verifies relative flight target, cargo, component address and disposal of the old VM. Red runs reproduced both the absolute-target bug (drone-dimension-red.log) and the retained old VM (drone-dimension-verified.log). Final build, 2106 unit tests and all 597 GameTests pass (drone-dimension-final.log).
+
+This test starts a native machine but does not demonstrate resumed Lua heap execution after transfer. Full process restart, portal gameplay and rendered client acceptance remain open. No client launch/install, push or merge.
