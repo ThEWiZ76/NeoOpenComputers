@@ -232,6 +232,9 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     public void tick() {
         super.tick();
         if (level().isClientSide) return;
+        if (isEyeInFluid(net.minecraft.tags.FluidTags.WATER) || isEyeInFluid(net.minecraft.tags.FluidTags.LAVA)) {
+            machine.stop();
+        }
         if (machine.canUpdate()) machine.update();
         if (machine.isRunning()) {
             final Vec3 offset = target.subtract(position());

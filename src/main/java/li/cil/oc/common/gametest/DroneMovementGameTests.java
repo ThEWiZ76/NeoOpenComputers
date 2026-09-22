@@ -17,6 +17,37 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class DroneMovementGameTests {
     @GameTest(template = "empty")
+    public static void submergedDroneStopsInWaterAndRestartsDry(GameTestHelper helper) {
+        submerged(helper, net.minecraft.world.level.block.Blocks.WATER, net.minecraft.tags.FluidTags.WATER);
+    }
+
+    @GameTest(template = "empty")
+    public static void submergedDroneStopsInLavaAndRestartsDry(GameTestHelper helper) {
+        submerged(helper, net.minecraft.world.level.block.Blocks.LAVA, net.minecraft.tags.FluidTags.LAVA);
+    }
+
+    private static void submerged(GameTestHelper helper, net.minecraft.world.level.block.Block fluid,
+                                  net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> tag) {
+        final var drone = create(helper);
+        final var position = drone.position();
+        final var block = drone.blockPosition();
+        helper.getLevel().setBlockAndUpdate(block, fluid.defaultBlockState());
+        helper.assertTrue(drone.toggleMachine(), "Submersion fixture did not start");
+        drone.tick();
+        helper.assertTrue(drone.isEyeInFluid(tag), "Submersion fixture did not cover drone eyes");
+        helper.assertTrue(!drone.machine().isRunning(), "Submerged drone kept running in " + fluid);
+        helper.assertTrue(drone.getDeltaMovement().y < 0, "Submerged stopped drone did not fall");
+        helper.getLevel().setBlockAndUpdate(block, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+        drone.setPos(position.add(0, 2, 0));
+        drone.setDeltaMovement(Vec3.ZERO);
+        helper.assertTrue(drone.toggleMachine(), "Dry drone could not restart");
+        drone.tick();
+        helper.assertTrue(!drone.isEyeInFluid(tag) && drone.machine().isRunning(), "Dry drone stopped again after restart");
+        drone.discard();
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void droneAcceleratesAndRetainsLateralMomentum(GameTestHelper helper) throws Exception {
         final var drone = create(helper);
         helper.assertTrue(drone.toggleMachine(), "Movement fixture did not start");

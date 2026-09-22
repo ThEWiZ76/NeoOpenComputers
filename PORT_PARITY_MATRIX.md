@@ -175,3 +175,9 @@ DroneEntity.tick now uses the upstream acceleration/inertia model instead of ove
 DroneMovementGameTests manually ticks real drones in fixed conditions: first0.1 movement/0.08 velocity, cumulative0.28 after the second tick with0.144 velocity, retained lateral0.2 motion, stopped0.05 fall/0.04 falling velocity and NoGravity suspension. Before the fix tests failed absent falling and absent drag (drone-movement-red.log). Final build,2106 unit tests and all588 GameTests pass (drone-movement-verified.log), including existing native drone reload, cargo, leash and pickup tests.
 
 This is focused server physics coverage. Water/lava shutdown, void handling, dimension target offsets, long-path/collision convergence, client interpolation/animations and rendered flight acceptance remain open. Upstream also cancels motion at an exactly equal target; no broader knockback claim is made for that case. No client launch/install, push or merge.
+
+## Drone water/lava shutdown - 2026-09-22
+
+DroneEntity now stops the machine before its update when the drone eye position is inside water or lava, matching upstream isInsideOfMaterial behavior. DroneMovementGameTests covers both real fluids: confirmed eye submersion, stopped machine, falling motion, removal from fluid and successful dry restart. Both red cases kept running before the fix (drone-fluid-red.log). Final build,2106 unit tests and all590 GameTests pass (drone-fluid-verified.log).
+
+Coverage is synchronous server ticks and actual fluid blocks, not rendered submerged-flight acceptance. Other-mod fluids, flowing-fluid boundaries, void behavior, dimension offsets and client visuals remain separate gates. TankWorldControl callbacks compareFluid/drain/fill are also still absent from robot and drone. No client launch/install, push or merge.
