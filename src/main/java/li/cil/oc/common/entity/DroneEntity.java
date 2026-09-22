@@ -204,7 +204,12 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         if (stack.getItem() instanceof li.cil.oc.common.item.DroneItem item) {
             tier = normalizeTier(item.tier(stack));
             clearContent();
-            for (final ItemStack component : item.componentStacks(stack)) {
+            final var components = item.componentStacks(stack);
+            components.sort(java.util.Comparator.comparingInt((ItemStack component) -> {
+                final var driver = Driver.driverFor(component, Drone.class);
+                return driver == null ? -1 : driver.tier(component);
+            }).reversed());
+            for (final ItemStack component : components) {
                 placeLoadedComponent(component.copy());
             }
             resizeCargo();

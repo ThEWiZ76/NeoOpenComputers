@@ -133,13 +133,13 @@ final class DroneAssemblerTemplate implements AssemblerTemplate {
             return false;
         }
         final boolean[] upgrades = new boolean[upgradeSlotCount(tier)];
-        for (final DriverItem driver : upgradeDrivers) {
+        for (final DriverItem driver : driversByDescendingTier(upgradeDrivers)) {
             if (!placeDriver(upgrades, driver, UPGRADE_LAYOUTS[normalizeTier(tier)])) {
                 return false;
             }
         }
         final boolean[] components = new boolean[componentSlotCount(tier)];
-        for (final DriverItem driver : componentDrivers) {
+        for (final DriverItem driver : driversByDescendingTier(componentDrivers)) {
             if (!placeDriver(components, driver, COMPONENT_LAYOUTS[normalizeTier(tier)])) {
                 return false;
             }
@@ -147,18 +147,29 @@ final class DroneAssemblerTemplate implements AssemblerTemplate {
         return true;
     }
 
+    private static java.util.List<DriverItem> driversByDescendingTier(Iterable<DriverItem> drivers) {
+        return java.util.stream.StreamSupport.stream(drivers.spliterator(), false)
+            .sorted(java.util.Comparator.comparingInt((DriverItem driver) -> driver.tier(null)).reversed()).toList();
+    }
+
     private static Placement placedItems(final AssemblerBlockEntity assembler, final int tier) {
         if (tier < 0) {
             return new Placement(NonNullList.create(), false);
         }
         final NonNullList<ItemStack> result = NonNullList.withSize(slotCount(tier), ItemStack.EMPTY);
+        final var inputs = new java.util.ArrayList<ItemStack>();
         for (int slot = AssemblerBlockEntity.SLOT_UPGRADE_START; slot < AssemblerBlockEntity.SLOT_UPGRADE_START + AssemblerBlockEntity.UPGRADE_SLOT_COUNT; slot++) {
-            if (!place(result, assembler.getItem(slot), tier)) {
-                return new Placement(result, false);
-            }
+            if (!assembler.getItem(slot).isEmpty()) inputs.add(assembler.getItem(slot));
         }
         for (int slot = AssemblerBlockEntity.SLOT_COMPONENT_START; slot < AssemblerBlockEntity.SLOT_COMPONENT_START + AssemblerBlockEntity.COMPONENT_SLOT_COUNT; slot++) {
-            if (!place(result, assembler.getItem(slot), tier)) {
+            if (!assembler.getItem(slot).isEmpty()) inputs.add(assembler.getItem(slot));
+        }
+        inputs.sort(java.util.Comparator.comparingInt((ItemStack stack) -> {
+            final var driver = Driver.driverFor(stack, Drone.class);
+            return driver == null ? -1 : driver.tier(stack);
+        }).reversed());
+        for (final var stack : inputs) {
+            if (!place(result, stack, tier)) {
                 return new Placement(result, false);
             }
         }

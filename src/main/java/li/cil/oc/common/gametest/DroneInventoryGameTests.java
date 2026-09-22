@@ -16,6 +16,58 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class DroneInventoryGameTests {
     @GameTest(template = "empty")
+    public static void assemblerAcceptsMixedTierUpgradesInEveryOrder(GameTestHelper helper) {
+        final var pos = new net.minecraft.core.BlockPos(1, 1, 1);
+        helper.setBlock(pos, li.cil.oc.common.ModBlocks.ASSEMBLER.get());
+        final li.cil.oc.common.blockentity.AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
+        final var upgrades = new net.minecraft.world.item.Item[]{ModItems.INVENTORY_UPGRADE.get(),
+            ModItems.INVENTORY_CONTROLLER_UPGRADE.get(), ModItems.TRACTOR_BEAM_UPGRADE.get()};
+        for (int first = 0; first < 3; first++) {
+            for (int second = 0; second < 3; second++) {
+                if (first == second) continue;
+                assembler.clearContent();
+                assembler.setItem(assembler.SLOT_TEMPLATE, new ItemStack(ModItems.DRONE_CASE_TIER2.get()));
+                assembler.setItem(assembler.SLOT_COMPONENT_START, new ItemStack(ModItems.CPU_TIER1.get()));
+                assembler.setItem(assembler.SLOT_COMPONENT_START + 1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+                assembler.setItem(assembler.SLOT_COMPONENT_START + 2, RobotMovementPersistenceGameTests.eeprom("while true do computer.pullSignal() end"));
+                assembler.setItem(assembler.SLOT_UPGRADE_START, new ItemStack(upgrades[first]));
+                assembler.setItem(assembler.SLOT_UPGRADE_START + 1, new ItemStack(upgrades[second]));
+                assembler.setItem(assembler.SLOT_UPGRADE_START + 2, new ItemStack(upgrades[3 - first - second]));
+                helper.assertTrue(assembler.canAssemble() && assembler.start(true), "Valid upgrade order rejected by assembler: " + first + second);
+                final var output = assembler.getItem(assembler.SLOT_TEMPLATE);
+                helper.assertTrue(output.is(ModItems.DRONE.get()), "Assembler did not produce drone");
+                final var components = ((DroneItem) output.getItem()).componentStacks(output);
+                helper.assertTrue(components.size() == 6, "Assembly lost components");
+                for (var upgrade : upgrades) helper.assertTrue(components.stream().filter(stack -> stack.is(upgrade)).count() == 1, "Assembly lost upgrade");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void mixedTierUpgradesLoadInEveryOrder(GameTestHelper helper) {
+        final var upgrades = new net.minecraft.world.item.Item[]{ModItems.INVENTORY_UPGRADE.get(),
+            ModItems.INVENTORY_CONTROLLER_UPGRADE.get(), ModItems.TRACTOR_BEAM_UPGRADE.get()};
+        for (int first = 0; first < 3; first++) {
+            for (int second = 0; second < 3; second++) {
+                if (first == second) continue;
+                final int third = 3 - first - second;
+                final var drone = new DroneEntity(helper.getLevel());
+                drone.loadFromItemStack(((DroneItem) ModItems.DRONE.get()).assembleFromCase(
+                    new ItemStack(ModItems.DRONE_CASE_TIER2.get()), new ItemStack(upgrades[first]),
+                    new ItemStack(upgrades[second]), new ItemStack(upgrades[third])), null);
+                for (var expected : upgrades) {
+                    int found = 0;
+                    for (var component : drone.internalComponents()) if (component.is(expected)) found += component.getCount();
+                    helper.assertTrue(found == 1, "Upgrade lost for permutation " + first + second + third + ": " + expected);
+                }
+                drone.discard();
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void removingInventoryUpgradeDropsOnlyOverflow(GameTestHelper helper) {
         final var drone = create(helper, 2);
         drone.mainInventory().setItem(1, new ItemStack(Items.DIAMOND, 3));

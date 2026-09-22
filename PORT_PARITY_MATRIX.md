@@ -143,3 +143,11 @@ DroneMenu now exposes eight cargo slots in four columns/two rows rather than edi
 DroneMenuGameTests failed against the old hardware menu, then passed: eight cargo plus36 player slots, four-slot gating, shift-in/out conservation of11 diamonds without changing the inventory upgrade, live expansion to8 and writing slot8 after the underlying container changes. It also roundtrips writeClientSideData into the client constructor and applies capacity updates to4 and0, checking slot activation/insertion restrictions. Final build,2106 unit tests and all582 GameTests pass (drone-menu-final.log).
 
 Not a full rendered-client or network-transport acceptance test. Screen3 client testing, drone status text/energy display, world actions, pickup/destruction and component-order-sensitive loading remain open. No client launch/install, push or merge.
+
+## Drone component placement order - 2026-09-22
+
+DroneEntity.loadFromItemStack and DroneAssemblerTemplate now allocate components in descending driver tier order (stable among equal tiers), preventing low-tier upgrades from occupying scarce high-tier slots first. The assembler driver-validation helper uses the same ordering. Existing slot types, tier limits and capacity restrictions remain intact.
+
+DroneInventoryGameTests now checks all six permutations of inventory(tier0), inventory controller(tier1), tractor(tier2). Direct loading must retain exactly one of each; assembler tests supply CPU/RAM/EEPROM plus each permutation, assemble instantly through the existing test API, and check all six output components. Before the fix, order012 lost the tractor on loading (drone-order-red.log). Final build,2106 units and all584 GameTests pass (drone-order-verified.log). Earlier native cargo test fixture ordering workaround is no longer required for valid combinations.
+
+This covers valid mixed-tier component lists. Malformed or over-capacity externally fabricated items, drone destruction/pickup, world actions, status/energy UI and real-client visual acceptance remain separate work. No client launch/install, push or merge.
