@@ -87,5 +87,26 @@ public final class TankWorldControlGameTests {
         helper.getLevel().setBlockAndUpdate(target, Blocks.LAVA.defaultBlockState());
         helper.assertTrue(component.invoke("drain", agent.machine(), side)[0] == null, "Incompatible lava entered water tank");
         helper.assertTrue(tank.getFluidAmount() == 1000 && helper.getLevel().getFluidState(target).is(Fluids.LAVA), "Rejected drain changed fluid");
+        final var lava = new net.neoforged.neoforge.fluids.capability.templates.FluidTank(1000);
+        lava.setFluid(new FluidStack(Fluids.LAVA, 1000));
+        final var water = new net.neoforged.neoforge.fluids.capability.templates.FluidTank(2000);
+        water.setFluid(new FluidStack(Fluids.WATER, 1200));
+        try (var fixture = TestFluidCapabilities.attach(helper.getLevel(), target, direction.getOpposite(), lava, water)) {
+            helper.assertTrue(Boolean.TRUE.equals(component.invoke("compareFluid", agent.machine(), side)[0]), "Multi-tank search missed matching fluid");
+            helper.assertTrue(Boolean.FALSE.equals(component.invoke("compareFluid", agent.machine(), side, 1)[0])
+                && Boolean.TRUE.equals(component.invoke("compareFluid", agent.machine(), side, 2)[0]), "Explicit external tank selection failed");
+            final var partialFill = component.invoke("fill", agent.machine(), side, 1000);
+            helper.assertTrue(Boolean.TRUE.equals(partialFill[0]) && ((Number) partialFill[1]).intValue() == 800
+                && tank.getFluidAmount() == 200 && water.getFluidAmount() == 2000, "Partial capability fill lost fluid");
+            helper.assertTrue(component.invoke("fill", agent.machine(), side)[0] == null
+                && tank.getFluidAmount() == 200, "Full external tank consumed fluid");
+            final var partialDrain = component.invoke("drain", agent.machine(), side, 600);
+            helper.assertTrue(Boolean.TRUE.equals(partialDrain[0]) && ((Number) partialDrain[1]).intValue() == 600
+                && tank.getFluidAmount() == 800 && water.getFluidAmount() == 1400, "Typed drain chose wrong tank or lost fluid");
+            helper.assertTrue(lava.getFluidAmount() == 1000, "Water transfer changed neighboring lava tank");
+            tank.fill(new FluidStack(Fluids.WATER, tank.getCapacity()), FluidAction.EXECUTE);
+            final var full = component.invoke("drain", agent.machine(), side);
+            helper.assertTrue(full[0] == null && "tank is full".equals(full[1]) && water.getFluidAmount() == 1400, "Full internal tank consumed external fluid");
+        }
     }
 }

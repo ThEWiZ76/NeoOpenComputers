@@ -109,6 +109,7 @@ runs {
     }
     gameTestServer {
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        systemProperty 'neoopencomputers.testFluidCapabilities', 'true'
         if (project.hasProperty('neoopencomputers.restartPhase')) {
             def phase = project.property('neoopencomputers.restartPhase').toString()
             def world = project.findProperty('neoopencomputers.restartWorld')?.toString()

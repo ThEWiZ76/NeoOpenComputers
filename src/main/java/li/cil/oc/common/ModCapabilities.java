@@ -15,6 +15,9 @@ public final class ModCapabilities {
     }
 
     public static void register(final RegisterCapabilitiesEvent event) {
+        if (Boolean.getBoolean("neoopencomputers.testFluidCapabilities")) {
+            li.cil.oc.common.gametest.TestFluidCapabilities.register(event);
+        }
         event.registerItem(
             Capabilities.EnergyStorage.ITEM,
             ChargeableItemEnergyStorage::create,

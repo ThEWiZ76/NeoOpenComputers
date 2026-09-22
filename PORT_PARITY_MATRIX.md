@@ -197,3 +197,11 @@ Robot and drone expose drain/fill via AgentTankWorldControl, retaining the compa
 TankWorldControlGameTests now also runs a source-water roundtrip through both host APIs: solid destination rejection,999mB placement/pickup rejection without mutation,1000mB placement and pickup conservation, and lava rejection by a water-filled tank. Red run lacked fill; final build,2106 units and all592 GameTests pass (tank-transfer-verified.log). The existing two host tests were expanded, so the GameTest count did not increase.
 
 External modded capability handlers, full/zero/empty return-value edge cases, flowing/waterlogged blocks, protected locations, Nether evaporation and native Lua continuation remain additional gates. This completes the basic callbacks but does not certify the full fluid interoperability matrix. No client launch/install, push or merge.
+
+## Sided multi-tank capability integration - 2026-09-22
+
+Added opt-in TestFluidCapabilities, enabled only by runGameTestServer via neoopencomputers.testFluidCapabilities. ModCapabilities registers its provider only when this property is true. The provider exposes fixture-specific handlers on one exact side of a lodestone at a dimension/position key; AutoCloseable cleanup removes state, restores the block and invalidates capability caches. Normal client/server launches do not enable it.
+
+The existing robot/drone TankWorldControl tests now exercise actual world capability lookup against two external FluidTanks (lava1000, water1200/2000): any/explicit comparison,800mB partial insertion, full-destination rejection without loss,600mB typed extraction from the second reservoir, preservation of the first lava reservoir, and full-internal-tank rejection. Build,2106 unit tests and all592 GameTests pass (tank-capability-verified.log). No production fluid algorithm change was needed for these cases.
+
+This verifies NeoForge capability interoperability with a controlled test provider, not a separately installed third-party tank mod. Remaining fluid gates include data-component persistence, zero/empty edge cases, protection events, flowing/waterlogged blocks, Nether evaporation and native continuation. No client launch/install, push or merge.
