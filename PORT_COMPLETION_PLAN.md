@@ -245,3 +245,7 @@ Bestaande survival-roundtrip uitgebreid: HDD-adres/label, map en exacte binaire 
 ### OpenOS-pickup en echte swing-harvest
 
 Volledige OpenOS-image start opnieuw na robot-drop en echte itemplaatsing, leest het eerder geschreven bestand en mount/gebruikt robot-ROM opnieuw. HDD-fixture kopieert bestanden; interactief installeren blijft open. Swing gebruikt nu gereedschapsslot en normale speler-harvest met blokbeveiliging, loot en daadwerkelijke slijtage; cargo blijft intact. RED/GREEN en full build: 2057 unit-tests en 456 GameTests. Zie ROBOT_BLOCK_SWING.md. Volledige swing-timing/animatie/entities, overige wereldacties en live controles blijven open.
+
+### Configureerbare robotslijtage
+
+robot.itemDamageRate toegevoegd met upstream default 0.1 en bereik 0..1. Swing gebruikt deze basis voor de bestaande upgrade-/damage-events. Tests bewijzen geen slijtage bij nul, normale slijtage bij een en aanpasbare werkelijke schade via events. Full build: 2058 unit-tests en 457 GameTests; robot-wear-final.log. Zie ROBOT_BLOCK_SWING.md. Overige swing- en wereldactiepariteit en live verificatie blijven open.

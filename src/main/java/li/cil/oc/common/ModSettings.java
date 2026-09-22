@@ -119,6 +119,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue HOLOGRAM_SET_RAW_DELAY;
     public static final ModConfigSpec.BooleanValue IGNORE_POWER;
     public static final ModConfigSpec.DoubleValue ROBOT_MOVE_COST;
+    public static final ModConfigSpec.DoubleValue ROBOT_ITEM_DAMAGE_RATE;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_COST;
     public static final ModConfigSpec.DoubleValue ROBOT_MOVE_DELAY;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_DELAY;
@@ -357,6 +358,8 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("robot");
+        ROBOT_ITEM_DAMAGE_RATE = builder.comment("Damage rate for tools equipped by robots. OpenComputers upstream default is 0.1; zero prevents wear and one keeps normal wear.")
+            .defineInRange("itemDamageRate", 0.1D, 0D, 1D);
         builder.push("delays");
         ROBOT_MOVE_DELAY = builder.comment("Robot movement delay in seconds, before upstream 0.06-second scheduling adjustment.")
             .defineInRange("move", 0.4D, 0D, Double.MAX_VALUE);
@@ -935,6 +938,10 @@ public final class ModSettings {
 
     public static double robotMoveCost() {
         return Math.max(0D, doubleValue(ROBOT_MOVE_COST));
+    }
+
+    public static double robotItemDamageRate() {
+        return Math.max(0D, Math.min(1D, doubleValue(ROBOT_ITEM_DAMAGE_RATE)));
     }
 
     public static double robotTurnCost() {

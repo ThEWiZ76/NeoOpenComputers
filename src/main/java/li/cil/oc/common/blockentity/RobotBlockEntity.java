@@ -915,7 +915,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             }
             final ItemStack after = player.getMainHandItem().copy();
             if (!before.isEmpty() && !after.isEmpty() && before.is(after.getItem())) {
-                final RobotUsedToolEvent.ComputeDamageRate damageRate = new RobotUsedToolEvent.ComputeDamageRate(this, before, after, 1D);
+                final RobotUsedToolEvent.ComputeDamageRate damageRate = new RobotUsedToolEvent.ComputeDamageRate(this, before, after, ModSettings.robotItemDamageRate());
                 NeoForge.EVENT_BUS.post(damageRate);
                 NeoForge.EVENT_BUS.post(new RobotUsedToolEvent.ApplyDamageRate(this, before, after, damageRate.getDamageRate()));
             }

@@ -11,3 +11,11 @@ The same run also verifies robotBootsOpenOsAndRunsBundledGoAfterPickup: assemble
 Artifact SHA256 91A11C984C8862DB951857D1B24EA852189131B231BD6E6E1EA07B006FC4CECF. Not installed/live-tested. Minecraft remains closed pending safe display-3 placement.
 
 Remaining swing parity: configurable upstream itemDamageRate (currently existing rate 1), harvestRatio and dig speed, delayed block damage/progress, world-action delay, swing animation, entity attacks/fire, calibrated face/sneaky handling, drop collection and experience capture. Also continue place/use parity, creative pick/drop variants, chunk/Lua persistence and the broad port plan. This change does not claim complete swing parity.
+
+## Configurable tool wear
+
+Added robot.itemDamageRate with upstream default 0.1 and allowed range 0..1. Swing supplies it as the ComputeDamageRate base rate, so existing experience-upgrade/event modifiers and RobotCommonHandler adjustment operate on real before/after tool damage. This supersedes the earlier remaining itemDamageRate note for block swing. Other world actions still need their own parity work. Existing upstream-style fractional rounding is unchanged; this is not a claim of a measured 10% empirical wear probability.
+
+robot-wear-red.log reproduces wear at configured zero. Added GameTest checks zero rate prevents wear on an intact tool, rate 0.1 reaches modifier with actual damage delta, modifier override to zero is applied, and rate one still loses one durability point through existing harvest test. No stochastic assertions: rates actually applied in these checks are zero or one. Runtime settings and temporary event listener restored in finally. Unit test verifies public config path and default.
+
+Full robot-wear-final.log: test build runGameTestServer passed, 2058 unit tests zero failures/errors, all 457 required GameTests. Artifact SHA256 406CF7FCA07F282CA9CD88EADAE49C28D98DEBB6C726D1B218EADB7D000ECF54. Not installed or live-tested; Minecraft closed. Pending: harvest/delay/damage-over-time/animation, entities/fire, face/sneak, XP/drop collection and broader plan.

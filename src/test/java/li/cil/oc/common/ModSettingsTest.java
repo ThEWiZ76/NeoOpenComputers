@@ -18,6 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 final class ModSettingsTest {
     @Test
+    void robotToolWearUsesUpstreamSettingAndDefault() {
+        assertEquals(List.of("robot", "itemDamageRate"), ModSettings.ROBOT_ITEM_DAMAGE_RATE.getPath());
+        assertEquals(0.1D, ModSettings.robotItemDamageRate());
+    }
+
+    @Test
     void mfuSettingsExposeUpstreamDefaultsWhenConfigIsUnloaded() {
         assertEquals(3D, ModSettings.mfuRange());
         assertEquals(8D, ModSettings.tradingRange());
