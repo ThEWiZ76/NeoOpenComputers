@@ -188,3 +188,9 @@ MicrocontrollerBlockEntity now snapshots before disconnect/stop, preserves save-
 An intermittent resume hang exposed a shared scheduler bug: after consuming one event, SimpleMachine could sleep with more signals queued. World-time and fallback sleep gates now require signals.isEmpty(), matching upstream. A fixed-clock regression failed with only first received instead of first and second, and verifies sleeping resumes after the queue drains. No timeout increase or extra wakeup signal was used to hide the hang.
 
 native-micro-queue-integrated.log passed2103 units, all514 GameTests and build. No client/install/push. Robot and drone lifecycle, external filesystem ordering, full-world restart and remaining full-port gates are still open.
+
+## Drone disposal and hardware-before-VM restore: 2026-09-22
+
+DroneEntity snapshots additional save data before disconnect/stop and reuses it if serialization follows removal. readAdditionalSaveData now rebuilds CPU/components before restoring machine state. Two NativeDronePersistenceGameTests spawn real entities, preserve local731/tmp identity/status, remove the old entity, assert VM closure and resume a freshly loaded entity without reboot. Save-before-removal and save-after-removal both failed retained-VM checks before correction. Entity removal and replacement are separated by two ticks for UUID registration cleanup.
+
+native-drone-disposal-integrated.log passed2103 units, all516 GameTests and build. No client/install/push. Robot lifecycle, external filesystem ordering/full-world restart, platform/client coverage and remaining full-port requirements are still open.

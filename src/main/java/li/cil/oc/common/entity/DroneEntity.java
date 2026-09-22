@@ -115,6 +115,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     private static final int MAX_SLOT_COUNT = slotCount(2);
 
     private final Machine machine;
+    private CompoundTag removedState;
     private final Container equipmentInventory = new SimpleContainer(1);
     private final Container mainInventory = new SimpleContainer(0);
     private final MultiTank tank = new MultiTank() {
@@ -574,6 +575,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
 
     @Override
     protected void readAdditionalSaveData(final CompoundTag tag) {
+        removedState = null;
         tier = normalizeTier(tag.getInt(TAG_TIER));
         selectedSlot = tag.getInt(TAG_SELECTED_SLOT);
         selectedTank = tag.getInt(TAG_SELECTED_TANK);
@@ -588,12 +590,17 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
             droneNode.load(tag.getCompound(TAG_DRONE_NODE));
         }
         ContainerHelper.loadAllItems(tag, items, level().registryAccess());
+        machine.onHostChanged();
         machine.load(tag.getCompound(TAG_MACHINE));
         connectMachineNode();
     }
 
     @Override
     protected void addAdditionalSaveData(final CompoundTag tag) {
+        if (removedState != null) {
+            tag.merge(removedState.copy());
+            return;
+        }
         tag.putInt(TAG_TIER, tier);
         tag.putInt(TAG_SELECTED_SLOT, selectedSlot);
         tag.putInt(TAG_SELECTED_TANK, selectedTank);
@@ -682,12 +689,18 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     }
 
     private void removeMachineNode() {
+        if (!level().isClientSide && removedState == null) {
+            final CompoundTag saved = new CompoundTag();
+            addAdditionalSaveData(saved);
+            removedState = saved;
+        }
         if (machine.node() != null) {
             machine.node().remove();
         }
         if (droneNode != null) {
             droneNode.remove();
         }
+        if (removedState != null) machine.stop();
     }
 
     private Node createDroneNode() {
