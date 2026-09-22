@@ -22,6 +22,44 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
+    @GameTest(template = "empty", timeoutTicks = 300)
+    public static void robotRebootExecutesReprogrammedEeprom(final GameTestHelper helper) {
+        verifyReprogrammedEeprom(helper, false);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 300)
+    public static void robotReloadDoesNotOverrideReprogrammedEepromWithCachedSource(final GameTestHelper helper) {
+        verifyReprogrammedEeprom(helper, true);
+    }
+
+    private static void verifyReprogrammedEeprom(final GameTestHelper helper, final boolean reload) {
+        final String first = "component.proxy(component.list('robot')()).setLightColor(0x220001); while true do computer.pullSignal() end";
+        final String second = "component.proxy(component.list('robot')()).setLightColor(0x220002); while true do computer.pullSignal() end";
+        final RobotBlockEntity robot = robot(helper, first);
+        helper.startSequence()
+            .thenWaitUntil(() -> helper.assertTrue(robot.lightColor() == 0x220001, "Initial EEPROM did not execute: " + robot.machine().lastError()))
+            .thenExecute(() -> {
+                li.cil.oc.api.network.Component eeprom = null;
+                for (final var node : robot.machine().node().neighbors()) {
+                    if (node instanceof li.cil.oc.api.network.Component component && "eeprom".equals(component.name())) eeprom = component;
+                }
+                helper.assertTrue(eeprom != null, "Fixture has no EEPROM component");
+                try {
+                    eeprom.invoke("set", null, second.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                } catch (Exception exception) {
+                    throw new RuntimeException(exception);
+                }
+                robot.machine().stop();
+                if (reload) {
+                    final var saved = robot.saveWithFullMetadata(helper.getLevel().registryAccess());
+                    robot.loadWithComponents(saved, helper.getLevel().registryAccess());
+                }
+                helper.assertTrue(robot.toggleMachine(), "Reprogrammed robot did not restart");
+            })
+            .thenWaitUntil(() -> helper.assertTrue(robot.lightColor() == 0x220002, "Robot executed stale EEPROM code: " + robot.machine().lastError()))
+            .thenSucceed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void robotLuaSurvivesRuntimeCardChangesAndReceivesComponentSignals(final GameTestHelper helper) {
         final BlockPos position = new BlockPos(1, 1, 1);

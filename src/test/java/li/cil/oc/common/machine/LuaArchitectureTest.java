@@ -4001,6 +4001,7 @@ final class LuaArchitectureTest {
             Robot.class.getClassLoader(),
             new Class<?>[]{Robot.class},
             (proxy, method, args) -> switch (method.getName()) {
+                case "internalComponents" -> List.of();
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
                 case "toString" -> "test-robot-host";
@@ -4519,6 +4520,7 @@ final class LuaArchitectureTest {
             MachineHost.class.getClassLoader(),
             new Class<?>[]{MachineHost.class},
             (proxy, method, args) -> switch (method.getName()) {
+                case "internalComponents" -> List.of();
                 case "componentSlot" -> address.equals(args[0]) ? slot : -1;
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);
@@ -4533,6 +4535,7 @@ final class LuaArchitectureTest {
             MachineHost.class.getClassLoader(),
             new Class<?>[]{MachineHost.class},
             (proxy, method, args) -> switch (method.getName()) {
+                case "internalComponents" -> List.of();
                 case "componentSlot" -> address.equals(args[0]) ? slot : -1;
                 case "equals" -> proxy == args[0];
                 case "hashCode" -> System.identityHashCode(proxy);

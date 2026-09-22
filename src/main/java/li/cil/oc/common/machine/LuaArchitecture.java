@@ -137,6 +137,16 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
 
     @Override
     public boolean initialize() {
+        // A cold boot must read the current EEPROM, not code cached before reprogramming or save/load.
+        if (machine != null && machine.host() != null) {
+            for (final ItemStack stack : machine.host().internalComponents()) {
+                final DriverItem driver = Driver.driverFor(stack);
+                if (driver != null && EEPROM_SLOT.equals(driver.slot(stack))) {
+                    configureBootSource(driver.dataTag(stack));
+                    break;
+                }
+            }
+        }
         componentProxyCache.clear();
         primaryComponents.clear();
         pendingPrimaryComponents.clear();

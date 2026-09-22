@@ -309,3 +309,7 @@ Runtime slots krijgen een aparte lifecycle: laden/verbinden, tick-updates, data 
 ### Lua-continuiteit en verwijdermeldingen bij hot-swap
 
 Echte EEPROM/Lua-test houdt lokale tabeltoestand vast, ontvangt add/remove/add voor hetzelfde modemadres, controleert component.list en geopende poort, en detecteert onverwachte reboot via EEPROM-data. Vond ontbrekende component_removed voor neighbor-only nodes: zichtbaarheid is na edge-verwijdering al weg. SimpleMachine bewaart eerdere zichtbaarheid voor die melding; twee units bewaken precies een zichtbare verwijdermelding en geen verborgen componentmelding. Full build: 2059 unit-tests en 495 GameTests; robot-hot-swap-lua-signals.log. Zie ROBOT_RUNTIME_CONTAINERS.md. Wereldreload van Lua-coroutines, cached EEPROM-bootbron, runtime tanks en overige pariteit blijven open.
+
+### Gewijzigde EEPROM daadwerkelijk uitvoeren na herstart
+
+LuaArchitecture leest bij initialisatie de actuele EEPROM opnieuw. Echte robotreproducties bevestigen dat geprogrammeerde nieuwe code zowel na stop/start als na save/load van de gestopte machine wordt uitgevoerd; voorheen bleef oude bootSource actief. 497 GameTests groen; aansluitend test/build groen met 2059 unit-tests na correctie van drie null-hardwarelijstfixtures. Zie EEPROM_COLD_BOOT.md en eeprom-reboot-final/unit-verified.log. Live flashflow, Lua-geinitieerde restart en volledige coroutinepersistence blijven open.
