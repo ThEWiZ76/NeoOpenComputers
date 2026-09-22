@@ -874,20 +874,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return li.cil.oc.common.component.AgentWorldControl.detect(this, arguments);
     }
 
-    @Callback(doc = "function(side:number):boolean -- Compares selected stack with block on the specified side.")
+    @Callback(doc = "function(side:number[, fuzzy:boolean=false]):boolean -- Compares the selected block item with the specified side.")
     public Object[] compare(final Context context, final Arguments arguments) {
-        if (level == null) {
-            return new Object[]{false};
-        }
-        final ItemStack selected = selectedItem(selectedSlot);
-        if (selected.isEmpty()) {
-            return new Object[]{false};
-        }
-        final BlockPos target = targetPos(arguments.checkInteger(0));
-        if (!level.isLoaded(target)) {
-            return new Object[]{false};
-        }
-        return new Object[]{selected.is(level.getBlockState(target).getBlock().asItem())};
+        return li.cil.oc.common.component.AgentWorldControl.compare(this, arguments);
     }
 
     @Callback(doc = "function(side:number[, count:number]):boolean,string -- Drops items from the selected slot.")

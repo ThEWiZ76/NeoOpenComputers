@@ -251,3 +251,11 @@ Added the previously missing drone detect callback and shared AgentWorldControl.
 AgentDetectionGameTests exercises both component callbacks against air, stone, waterlogged slab, water, short grass, torch and a sheep; a position-scoped event listener checks protected water/grass, unregisters in finally, and verifies unprotected grass afterward. Invalid side6 is rejected. Build and all600 GameTests pass (agent-detection.log).
 
 This restores detection only; drone item world interactions such as suck/drop and actual third-party protection integration remain open. The tests use a controlled NeoForge listener, not an installed protection mod. No client launch/install, push or merge.
+
+## Robot/drone block comparison - 2026-09-22
+
+Added drone compare(side[, fuzzy]) and shared its implementation with robots in AgentWorldControl. Side validation now precedes empty-slot handling, and block identity is resolved from the selected BlockItem rather than reverse block.asItem lookup. This supports modern ItemNameBlockItem mappings such as redstone wire. Legacy subtype metadata is represented by distinct modern blocks; fuzzy remains accepted for API compatibility without comparing placement orientation or arbitrary item data.
+
+AgentBlockComparisonGameTests covers both hosts: selected versus other slot, empty/matching/different block, rotated oak log, fuzzy argument, redstone wire with a supporting block, non-block diamond, inventory/selection conservation and invalid side on an empty slot. Initial failures proved missing drone compare and robot invalid-side acceptance (agent-compare-red.log). A later fixture needed a support block for redstone; final build/all602 GameTests pass (agent-compare-final.log).
+
+World item insertion/extraction, actual protection-mod interoperability, native continuation of these world callbacks and client acceptance remain open. No client launch/install, push or merge.

@@ -8,6 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.common.NeoForge;
@@ -16,14 +17,30 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 public final class AgentWorldControl {
     private AgentWorldControl() { }
 
-    public static Object[] detect(Agent agent, Arguments args) {
+    private static BlockPos target(Agent agent, Arguments args) {
         final int side = args.checkInteger(0);
         if (side < 0 || side > 5 || agent instanceof Robot && side != 0 && side != 1 && side != 3) {
             throw new IllegalArgumentException("invalid side");
         }
         final var direction = Direction.from3DDataValue(side);
-        final var pos = BlockPos.containing(agent.xPosition(), agent.yPosition(), agent.zPosition())
+        return BlockPos.containing(agent.xPosition(), agent.yPosition(), agent.zPosition())
             .relative(agent instanceof Robot robot ? robot.toGlobal(direction) : direction);
+    }
+
+    public static Object[] compare(Agent agent, Arguments args) {
+        final var pos = target(agent, args);
+        final var inventory = agent.mainInventory();
+        if (agent.selectedSlot() < 0 || agent.selectedSlot() >= inventory.getContainerSize()) return new Object[]{false};
+        final var stack = inventory.getItem(agent.selectedSlot());
+        if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem item)) return new Object[]{false};
+        // Legacy metadata variants are distinct blocks now; placement state is not an item subtype.
+        args.optBoolean(1, false);
+        return new Object[]{agent.world() != null && agent.world().isLoaded(pos)
+            && agent.world().getBlockState(pos).is(item.getBlock())};
+    }
+
+    public static Object[] detect(Agent agent, Arguments args) {
+        final var pos = target(agent, args);
         final var world = agent.world();
         if (world == null) return new Object[]{false, "no world"};
         if (!world.isLoaded(pos)) return new Object[]{false, "target not loaded"};
