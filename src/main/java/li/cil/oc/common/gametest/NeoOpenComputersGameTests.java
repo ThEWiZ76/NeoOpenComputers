@@ -11600,6 +11600,38 @@ public final class NeoOpenComputersGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void robotWithoutScreenUsesCompactMatchingClientSlots(final GameTestHelper helper) {
+        final BlockPos position = new BlockPos(1, 1, 1);
+        helper.setBlock(position, ModBlocks.ROBOT.get());
+        final RobotBlockEntity robot = (RobotBlockEntity) helper.getBlockEntity(position);
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        verifyRobotMenuLayout(helper, robot, player, 148);
+        helper.succeed();
+    }
+
+    private static void verifyRobotMenuLayout(final GameTestHelper helper, final RobotBlockEntity robot,
+                                             final Player player, final int expectedOffset) {
+        final RobotMenu serverMenu = new RobotMenu(90, player.getInventory(), robot);
+        final var data = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), helper.getLevel().registryAccess());
+        try {
+            robot.writeClientSideData(serverMenu, data);
+            final RobotMenu clientMenu = new RobotMenu(90, player.getInventory(), data);
+            helper.assertTrue(serverMenu.layoutOffset() == expectedOffset && clientMenu.layoutOffset() == expectedOffset,
+                "Client and server disagree about initial robot layout");
+            helper.assertTrue(clientMenu.hasScreen() == serverMenu.hasScreen(), "Opening payload lost screen presence");
+            helper.assertTrue(clientMenu.getSlot(0).y == 232 - expectedOffset, "Tool slot is not aligned with robot frame");
+            helper.assertTrue(clientMenu.getSlot(4).y == 156 - expectedOffset, "Cargo slot is not aligned with robot frame");
+            helper.assertTrue(clientMenu.getSlot(20).y == 174 - expectedOffset, "Player inventory is not aligned with robot frame");
+            for (int slot = 0; slot < serverMenu.slots.size(); slot++) {
+                helper.assertTrue(clientMenu.getSlot(slot).x == serverMenu.getSlot(slot).x
+                    && clientMenu.getSlot(slot).y == serverMenu.getSlot(slot).y, "Client/server slot coordinate mismatch");
+            }
+        } finally {
+            data.release();
+        }
+    }
+
+    @GameTest(template = "empty")
     public static void robotTerminalRequiresInstalledScreenKeyboardNearbyAuthorizedPlayer(final GameTestHelper helper) throws Exception {
         final ItemStack assembled = assembleRobot(helper, new BlockPos(1, 1, 1),
             new ItemStack(ModItems.COMPUTER_CASE_TIER1.get()), List.of(),
@@ -11611,6 +11643,7 @@ public final class NeoOpenComputersGameTests {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.moveTo(robot.xPosition(), robot.yPosition(), robot.zPosition());
         final RobotMenu menu = new RobotMenu(91, player.getInventory(), robot);
+        verifyRobotMenuLayout(helper, robot, player, 0);
         helper.assertTrue(menu.itemScreen() != null && menu.itemScreen().hasKeyboard(), "Assembled robot has no connected screen and keyboard");
         helper.assertTrue(menu.stillValid(player) && menu.acceptsInput(player), "Nearby player cannot use robot terminal");
         helper.assertFalse(menu.supportsMouseInput(), "Tier one screen accepted mouse input");

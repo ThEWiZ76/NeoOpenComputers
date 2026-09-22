@@ -251,6 +251,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     @Override
     public void writeClientSideData(final AbstractContainerMenu menu, final RegistryFriendlyByteBuf buffer) {
         buffer.writeVarInt(tier);
+        buffer.writeBoolean(hasScreenHardware());
     }
 
     @Override

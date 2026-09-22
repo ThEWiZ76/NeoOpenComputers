@@ -78,6 +78,19 @@ final class RobotScreenShapeTest {
     }
 
     @Test
+    void compactRobotControlsAndSlotsUseTheSameVerticalOffset() {
+        final int compactTop = 100 - RobotMenu.layoutOffset(false);
+        assertEquals(148, RobotMenu.layoutOffset(false));
+        assertEquals(0, RobotMenu.layoutOffset(true));
+        assertTrue(RobotScreen.statusControlAt(5, 105, 0, compactTop));
+        assertEquals(false, RobotScreen.statusControlAt(5, 104, 0, compactTop));
+        assertEquals(false, RobotScreen.statusControlAt(5, 253, 0, compactTop));
+        assertEquals(4, RobotScreen.robotSlotAt(170, 108, 0, compactTop, 0));
+        assertEquals(0, RobotScreen.robotSlotAt(170, 184, 0, compactTop, 0));
+        assertEquals(-1, RobotScreen.robotSlotAt(170, 107, 0, compactTop, 0));
+    }
+
+    @Test
     void robotTerminalMouseCoordinatesMatchItsScaledUpperPanel() throws Exception {
         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);

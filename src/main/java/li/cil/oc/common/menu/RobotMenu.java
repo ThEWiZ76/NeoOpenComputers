@@ -50,6 +50,7 @@ public class RobotMenu extends TerminalMenu {
     private final Container robotInventory;
     private final ContainerData robotData;
     private final int robotSlotCount;
+    private final int layoutOffset;
 
     public RobotMenu(final int containerId, final Inventory playerInventory) {
         this(containerId, playerInventory, new SimpleContainer(MAX_ROBOT_SLOT_COUNT), new SimpleContainerData(ROBOT_DATA_COUNT));
@@ -68,13 +69,14 @@ public class RobotMenu extends TerminalMenu {
         checkContainerSize(robotInventory, MIN_ROBOT_SLOT_COUNT);
         this.robotInventory = robotInventory;
         this.robotData = robotData;
+        layoutOffset = layoutOffset(hasScreen());
         robotSlotCount = robotSlotCountForTier(robotTier());
         robotInventory.startOpen(playerInventory.player);
         addDataSlots(robotData);
 
         for (int slot = 0; slot < robotSlotCount; slot++) {
             final int[] position = slotPosition(slot);
-            addSlot(new RobotSlot(robotInventory, slot, position[0], position[1]));
+            addSlot(new RobotSlot(robotInventory, slot, position[0], position[1] - layoutOffset));
         }
         addPlayerInventory(playerInventory);
     }
@@ -129,6 +131,14 @@ public class RobotMenu extends TerminalMenu {
 
     public boolean hasScreen() {
         return robotData.get(ROBOT_HAS_SCREEN_INDEX) != 0;
+    }
+
+    public static int layoutOffset(final boolean hasScreen) {
+        return hasScreen ? 0 : 148;
+    }
+
+    public int layoutOffset() {
+        return layoutOffset;
     }
 
     public Container robotInventory() {
@@ -266,6 +276,7 @@ public class RobotMenu extends TerminalMenu {
         final SimpleContainerData data = new SimpleContainerData(ROBOT_DATA_COUNT);
         if (extraData != null) {
             data.set(ROBOT_TIER_INDEX, extraData.readVarInt());
+            data.set(ROBOT_HAS_SCREEN_INDEX, extraData.readBoolean() ? 1 : 0);
         }
         return data;
     }
@@ -277,12 +288,12 @@ public class RobotMenu extends TerminalMenu {
     private void addPlayerInventory(final Inventory playerInventory) {
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
-                addSlot(new Slot(playerInventory, column + row * 9 + 9, PLAYER_INVENTORY_X + column * 18, PLAYER_INVENTORY_Y + row * 18));
+                addSlot(new Slot(playerInventory, column + row * 9 + 9, PLAYER_INVENTORY_X + column * 18, PLAYER_INVENTORY_Y + row * 18 - layoutOffset));
             }
         }
 
         for (int column = 0; column < 9; column++) {
-            addSlot(new Slot(playerInventory, column, PLAYER_INVENTORY_X + column * 18, PLAYER_HOTBAR_Y));
+            addSlot(new Slot(playerInventory, column, PLAYER_INVENTORY_X + column * 18, PLAYER_HOTBAR_Y - layoutOffset));
         }
     }
 

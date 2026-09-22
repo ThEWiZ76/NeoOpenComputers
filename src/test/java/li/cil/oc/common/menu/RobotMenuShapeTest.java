@@ -71,7 +71,7 @@ final class RobotMenuShapeTest {
     }
 
     @Test
-    void robotMenuReportsInstalledGpuAsScreenCapable() throws Exception {
+    void robotMenuReportsInstalledScreenHardware() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/menu/RobotMenu.java"));
 
         assertTrue(source.contains("hasScreenFor"));

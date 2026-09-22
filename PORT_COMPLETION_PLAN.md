@@ -175,7 +175,7 @@ Per scenario bewaren: commit/JAR-hash, profiel/modversies, wereld/seed/posities,
 | Volledige pariteitsmatrix | In uitvoering |
 | Terminal-GUI-performance | OpenOS, volle 160×50 uitvoer en gekleurde achtergronden nu 60 FPS; lagere tiers/schalen/minimale modset nog open |
 | UI-vertalingen/foutfeedback | Microcontroller-titel en case NoEnergy/NoCPU hersteld; overige hosts open |
-| Robotterminal/layout | Beeld/input/snapshot-sync getest; compacte layout, beweging en volledige live OpenOS-flow open |
+| Robotterminal/layout | Beeld/input/snapshot-sync en compacte layout getest; beweging en volledige live OpenOS-flow open |
 | Lua execution persistence | Open, architectuurwerk noodzakelijk |
 | Capacitors/netwerk/energie | Open |
 | Alle overige functionele/visuele/integratie-scenario's | Te verifiëren; bestaande tests niet als volledige pariteit tellen |
@@ -203,3 +203,10 @@ Terminalglyphs gebruiken nu de bestaande bitmapatlas (`a3b10fda`); rasterfallbac
 RobotMenu deelt nu snapshot/delta-sync met TerminalMenu; interne screen/keyboard/GPU-wiring en toegangs-/afstandcontroles toegevoegd. RobotScreen rendert het scherm en stuurt invoer door. Ingame gevonden: AbstractContainerScreen slikte muisklikken in; terminalklikken nu eerst afhandelen en overige muisacties aan de inventory doorgeven. Live beeld, getypte tekst, touch-coordinaten en inventorytransfer bevestigd; gewone OpenOS-terminal/muis en volle 160x50 rode achtergrond opnieuw getest op 60 FPS. Build: 2052 unit-tests en 443 GameTests groen. Exacte hash, opstelling, screenshots, cleanup en resterende varianten: ROBOT_TERMINAL_PORT.md.
 
 Volgende robotstappen: compacte schermloze layout, menu/uitvoering bij beweging, volledige live assembler/OpenOS-flow en Lua-persistentie. Overige fasen en open matrixrijen blijven staan; deze voortgang is geen volledige portering.
+### Compacte robot en componentpersistentie
+
+Robot zonder screen gebruikt nu de bestaande 108-hoge GUI; slotposities, powercontrole, tooltips en inventorytransfer blijven uitgelijnd. Client krijgt schermstatus voordat slots worden aangemaakt. Live compact boot/power en itemtransfer gecontroleerd, plus schermrobot met tekst en touch. Screen/keyboard-drivers bewaren nu adres en componentdata via het bestaande GPU-patroon; framebuffer/viewport/kleuren/palette/depth getest met echte driver-ItemStack-roundtrips. Samen: 2055 unit-tests en 446 GameTests groen. Zie ROBOT_TERMINAL_PORT.md en SCREEN_KEYBOARD_PERSISTENCE.md.
+
+Nieuw concreet bewegingsprobleem: moveRobot maakt via NBT een nieuwe BE en Lua-runtime; iedere stap herstart de uitvoering, open menu raakt de oude BE kwijt. Bron wordt bovendien verwijderd voordat doelplaatsing is bevestigd. Volgende werkstap bewijst twee opeenvolgende stappen uit dezelfde Lua-uitvoering en behoudt de levende runtime, met gecontroleerde targetplaatsing/rollback. Een nieuwe regressie hiervoor staat klaar maar is nog niet uitgevoerd.
+
+Testprocedure vanaf gebruikerscorrectie: Minecraft op Windows-scherm 3, geen desktopinvoer tijdens parallel werk. Automatisch plaatsingsscript werd door antivirus geblokkeerd en verwijderd; plaatsing per start apart verifiëren, geen beveiliging omzeilen.

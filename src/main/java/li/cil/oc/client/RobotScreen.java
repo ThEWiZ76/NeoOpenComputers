@@ -35,7 +35,7 @@ public class RobotScreen extends TerminalScreen<RobotMenu> {
     public RobotScreen(final RobotMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
         imageWidth = IMAGE_WIDTH;
-        imageHeight = IMAGE_HEIGHT_WITH_SCREEN;
+        imageHeight = IMAGE_HEIGHT_WITH_SCREEN - menu.layoutOffset();
         titleLabelX = TITLE_TEXT_X;
         titleLabelY = TITLE_TEXT_Y;
     }
@@ -44,25 +44,26 @@ public class RobotScreen extends TerminalScreen<RobotMenu> {
     protected void renderBg(final GuiGraphics guiGraphics, final float partialTick, final int mouseX, final int mouseY) {
         final int left = leftPos;
         final int top = topPos;
-        guiGraphics.blit(ROBOT_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
+        final int controlsTop = top - menu.layoutOffset();
+        guiGraphics.blit(menu.layoutOffset() == 0 ? ROBOT_TEXTURE : ROBOT_NO_SCREEN_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
         drawScreenPanel(guiGraphics, left + SCREEN_X, top + SCREEN_Y, menu.hasScreen());
         if (menu.hasScreen()) {
             renderTerminalContents(guiGraphics);
         }
-        drawPowerBar(guiGraphics, left + POWER_BAR_X, top + POWER_BAR_Y, menu.energy(), menu.maxEnergy());
+        drawPowerBar(guiGraphics, left + POWER_BAR_X, controlsTop + POWER_BAR_Y, menu.energy(), menu.maxEnergy());
         final int tier = menu.robotTier();
         for (int slot = 0; slot < RobotMenu.robotSlotCountForTier(tier); slot++) {
             ComputerCaseScreen.drawSlot(
                 guiGraphics,
                 left + RobotMenu.robotSlotX(tier, slot) - 1,
-                top + RobotMenu.robotSlotY(tier, slot) - 1,
+                controlsTop + RobotMenu.robotSlotY(tier, slot) - 1,
                 left + RobotMenu.robotSlotX(tier, slot),
-                top + RobotMenu.robotSlotY(tier, slot),
+                controlsTop + RobotMenu.robotSlotY(tier, slot),
                 RobotMenu.robotSlotKind(tier, slot),
                 RobotMenu.robotSlotTierLimit(tier, slot),
                 menu.getSlot(slot).hasItem());
         }
-        drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, top + STATUS_CONTROL_Y, menu.robotState(), statusControlAt(mouseX, mouseY, left, top));
+        drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, controlsTop + STATUS_CONTROL_Y, menu.robotState(), statusControlAt(mouseX, mouseY, left, controlsTop));
     }
 
     @Override
@@ -74,28 +75,31 @@ public class RobotScreen extends TerminalScreen<RobotMenu> {
 
     @Override
     protected void renderLabels(final GuiGraphics guiGraphics, final int mouseX, final int mouseY) {
-        guiGraphics.drawString(font, screenTitle(), titleLabelX, titleLabelY, 0xFF404040, false);
+        if (menu.layoutOffset() == 0) {
+            guiGraphics.drawString(font, screenTitle(), titleLabelX, titleLabelY, 0xFF404040, false);
+        }
     }
 
     @Override
     public void render(final GuiGraphics guiGraphics, final int mouseX, final int mouseY, final float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        final int slot = robotSlotAt(mouseX, mouseY, leftPos, topPos, menu.robotTier());
+        final int controlsTop = topPos - menu.layoutOffset();
+        final int slot = robotSlotAt(mouseX, mouseY, leftPos, controlsTop, menu.robotTier());
         if (ComputerCaseScreen.shouldRenderSlotOverlayTooltip(slot >= 0, slot >= 0 && menu.getSlot(slot).hasItem())) {
             guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.slotTooltip(
                 RobotMenu.robotSlotKind(menu.robotTier(), slot),
                 RobotMenu.robotSlotTierLimit(menu.robotTier(), slot),
                 menu.getSlot(slot).hasItem()), mouseX, mouseY);
-        } else if (statusControlAt(mouseX, mouseY, leftPos, topPos)) {
+        } else if (statusControlAt(mouseX, mouseY, leftPos, controlsTop)) {
             guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.statusControlTooltip(menu.robotState()), mouseX, mouseY);
-        } else if (powerBarAt(mouseX, mouseY, leftPos, topPos)) {
+        } else if (powerBarAt(mouseX, mouseY, leftPos, controlsTop)) {
             guiGraphics.renderComponentTooltip(font, powerTooltip(menu.energy(), menu.maxEnergy()), mouseX, mouseY);
         }
     }
 
     @Override
     public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
-        if (button == 0 && statusControlAt((int) mouseX, (int) mouseY, leftPos, topPos)) {
+        if (button == 0 && statusControlAt((int) mouseX, (int) mouseY, leftPos, topPos - menu.layoutOffset())) {
             PacketDistributor.sendToServer(controlPayload(menu, statusControlAction(menu.robotState())));
             return true;
         }

@@ -26,3 +26,15 @@ Live tests in the same Modrinth profile/world at (108,-60,100):
 All artifacts are under build/finish-port-implementation. Fixture volume (100,-60,100)..(109,-56,109) cleared and fresh readback reports total_blocks=0. Client closed normally with all dimensions saved; pauseOnLostFocus restored true. Original robot outside the fixture area remains untouched.
 
 Remaining robot work: compact no-screen layout; menu following movement; full live OpenOS assembly/crafting, clipboard, drag/scroll and access-permission matrix; running Lua persistence. This patch does not close the complete robot parity row.
+## No-screen layout reproduction
+
+Baseline e7a3563b, installed SHA256 D3DA35C3952B32BD3693C1253F2CB6AB34A402F032D3BB1F7806D48669BE1E90, same Modrinth profile/testworld. Place an empty tier-1 robot at (108,-60,100), face south, player (108.5,-60,103.5), right-click. Current MCP framebuffer robot-no-screen-before-final.png shows a 256-high GUI with 148 unused pixels above the controls; RobotScreen verified via get_current_screen. Upstream Robot.scala/Robot container use height 108 without screen and shift slots/controls by 148. Existing robot_noscreen.png already has the compact frame; no texture edit is needed.
+
+Target layer: terminal GUI layout and its initial menu layout flag. Slot coordinates are immutable, so the opening payload must include screen presence before client slot construction. Use the same offset for menu slots, GUI controls, backgrounds and hit tests. No glyph or world transform changes. Rollback point: e7a3563b/JAR above. Capture both no-screen and screen-equipped GUI after patch, with actual item transfer and power hit test.
+## Compact layout verified
+
+Combined layout/persistence artifact A8582A212D3267D316B894CE8C0580AA31A30C931C52A76E8AA241E9183488EE: 2055 unit tests and 446 GameTests pass. Both server and client create identical 108-high no-screen layouts from the opening payload. Screen-equipped robots retain 256-high layout. Immutable slot positions are created with the same 148 offset as GUI controls/hit regions; existing textures are used unchanged.
+
+Ingame same profile/world/robot position: robot-no-screen-after.png shows the compact frame; actual mouse transfer player slot 48 -> robot cargo 4 -> player 48 verified (robot-no-screen-transfer/return.json). CPU/RAM/EEPROM robot without screen boots via the compact power button (robot-no-screen-power.png). Screen-equipped tier-3 robot regression displays Layout OK and TOUCH 7,3 (robot-layout-screen-regression.png). Later captures are on the user-requested Windows display 3, with smaller framebuffer; do not compare absolute image dimensions with earlier monitor captures.
+
+Fixture volume cleared and fresh readback total_blocks=0 (robot-layout-cleanup.json). Client saved all dimensions and exited normally; pauseOnLostFocus restored true. Remaining: movement/runtime continuity, full live assembly/OpenOS/survival flow and clipboard/drag/scroll/reload matrix. Screen and keyboard driver persistence is recorded separately in SCREEN_KEYBOARD_PERSISTENCE.md, commit eb5fc2ce.
