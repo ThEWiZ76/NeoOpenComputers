@@ -1,0 +1,11 @@
+# Robot movement and turn animation
+
+Upstream common/tileentity/Robot.scala and client/renderer/tileentity/RobotRenderer.scala define translation from old position to new, move duration max(1, floor(moveDelay*20))+2 ticks, and a quarter-turn interpolation. Previous port had instant world relocation and no animation data.
+
+Implemented transient animation start game time, duration, movement origin and turn offset in the existing restricted client update tag/packet. Success starts and broadcasts animation at the destination. Renderer translates by old-minus-new scaled by remaining time, then rotates from previous to current facing. Clockwise offset is -90 under the port renderer's yaw convention; counterclockwise +90. Render bounds extend one block around destination to include the in-flight chassis. No per-tick packets; repeated tool/status updates retain the original start time, preventing animation restart. Duration conversion saturates safely for unusually large configured delays.
+
+Evidence: robot-animation-red.log failed on missing movement origin. robot-animation-verified.log passes full test/build, 2055 unit tests and all 450 required GameTests. Existing real movement test now decodes client animation packets and checks old position, halfway, completion, repeated-packet completion, turn 90/45/0 offsets and clearing previous move animation. Interpolation uses explicitly supplied fixed game times in assertions.
+
+Built artifact D579EECC99D08C6A18E9A551DB714D6120C69346BFEE8017416FF725C4F38E37. Not installed or live-viewed. Minecraft remains closed; Modrinth profile still A8582A212D3267D316B894CE8C0580AA31A30C931C52A76E8AA241E9183488EE. These are mathematical/server-packet checks, not visual screenshot verification.
+
+Next: upstream RobotAfterimage block for old-position clicks/collision/removal and expiry; overlap/already-moving guard, swing animation, persistence/reload of animation where relevant. Upstream afterimage is invisible, reports air, schedules expiry max(floor(moveDelay*20),1)-1, locates adjacent robot by moveFrom, delegates interaction/removal/pick and transforms robot bounds. Current source becomes plain air immediately. Source lives in common/block/RobotAfterimage.scala. Do not declare full interaction/visual parity until live movement on display 3 and remaining scenarios pass.

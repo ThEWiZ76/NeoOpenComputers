@@ -221,3 +221,7 @@ Blockentity-sync voor running/tier/lampkleur/tool ingevoerd; renderer gebruikt d
 ### Energie en timing van robotbeweging
 
 Move/turn verbruiken nu de configureerbare upstream energie en vragen de bijbehorende wachttijd aan. Lege buffer verandert de wereld niet; mislukte beweging betaalt energie terug. setLightColor retourneert RGB en wacht 0,1 seconde. Full build: 2055 unit-tests en 450 GameTests groen. Zie ROBOT_ACTION_ENERGY_TIMING.md. Animatie, overige wereldacties en live verificatie blijven open.
+
+### Robotbeweging en draaien animeren
+
+Animatiestart, duur, oude positie en draaihoek worden nu meegestuurd; renderer interpoleert beweging/draaiing en omvat de vorige positie in zijn zichtbare gebied. Testdekking voor begin/midden/einde en herhaalde sync; 2055 unit-tests en 450 GameTests groen. Zie ROBOT_MOVEMENT_ANIMATION.md. Upstream afterimage/interactie, swing en ingame weergave blijven open.

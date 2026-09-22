@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
 
 public final class RobotBlockEntityRenderer implements BlockEntityRenderer<RobotBlockEntity> {
     private static final float CHASSIS_HALF = 0.40F;
@@ -43,11 +44,20 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
         final int packedOverlay
     ) {
         poseStack.pushPose();
+        final double time = robot.getLevel() == null ? 0D : robot.getLevel().getGameTime() + partialTick;
+        final var movement = robot.movementRenderOffset(time);
+        poseStack.translate(movement.x, movement.y, movement.z);
         poseStack.translate(0.5D, robot.isRunningForRendering() ? RUNNING_HOVER_OFFSET : STOPPED_Y_OFFSET, 0.5D);
-        poseStack.mulPose(Axis.YP.rotationDegrees(yawRotation(robot.getBlockState().getValue(RobotBlock.FACING))));
+        poseStack.mulPose(Axis.YP.rotationDegrees(yawRotation(robot.getBlockState().getValue(RobotBlock.FACING)) + robot.turnRenderOffset(time)));
         renderLegacyChassis(robot, poseStack, bufferSource, packedLight);
         renderSelectedStack(robot, poseStack, bufferSource, packedLight);
         poseStack.popPose();
+    }
+
+    @Override
+    public AABB getRenderBoundingBox(final RobotBlockEntity robot) {
+        // Include the old position while a step crosses the destination block boundary.
+        return new AABB(robot.getBlockPos()).inflate(1D);
     }
 
     public static float yawRotation(final Direction facing) {

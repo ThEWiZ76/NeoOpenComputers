@@ -206,6 +206,10 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private int lastSyncedLightColor;
     private int lastSyncedTier = -1;
     private ItemStack lastSyncedTool = ItemStack.EMPTY;
+    private long animationStart;
+    private int animationTicks;
+    private BlockPos moveFrom;
+    private int turnOffset;
     private String name = "Robot";
     private String ownerName = "";
     private UUID ownerUUID = NIL_UUID;
@@ -290,6 +294,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         tag.putInt(TAG_LIGHT_COLOR, lightColor);
         tag.putInt(TAG_TIER, tier);
         tag.put(TAG_TOOL, getItem(TOOL_SLOT).saveOptional(registries));
+        final CompoundTag animation = new CompoundTag();
+        animation.putLong("start", animationStart);
+        animation.putInt("ticks", animationTicks);
+        if (moveFrom != null) animation.putLong("from", moveFrom.asLong());
+        animation.putInt("turn", turnOffset);
+        tag.put("oc:animation", animation);
         return tag;
     }
 
@@ -304,6 +314,35 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         lightColor = tag.getInt(TAG_LIGHT_COLOR) & 0xFFFFFF;
         tier = normalizeTier(tag.getInt(TAG_TIER));
         items.set(TOOL_SLOT, ItemStack.parseOptional(registries, tag.getCompound(TAG_TOOL)));
+        final CompoundTag animation = tag.getCompound("oc:animation");
+        animationStart = animation.getLong("start");
+        animationTicks = animation.getInt("ticks");
+        moveFrom = animation.contains("from") ? BlockPos.of(animation.getLong("from")) : null;
+        turnOffset = animation.getInt("turn");
+    }
+
+    public Vec3 movementRenderOffset(final double gameTime) {
+        if (moveFrom == null) return Vec3.ZERO;
+        final double remaining = animationRemaining(gameTime);
+        return new Vec3(moveFrom.getX() - worldPosition.getX(), moveFrom.getY() - worldPosition.getY(),
+            moveFrom.getZ() - worldPosition.getZ()).scale(remaining);
+    }
+
+    public float turnRenderOffset(final double gameTime) {
+        return (float) (turnOffset * animationRemaining(gameTime));
+    }
+
+    private double animationRemaining(final double gameTime) {
+        return animationTicks <= 0 ? 0D : Math.clamp(1D - (gameTime - animationStart) / animationTicks, 0D, 1D);
+    }
+
+    private void startAnimation(final BlockPos from, final int turn, final double seconds) {
+        animationStart = level.getGameTime();
+        animationTicks = Math.max(1, (int) Math.min(Integer.MAX_VALUE - 2D, seconds * 20D)) + (from != null ? 2 : 0);
+        moveFrom = from;
+        turnOffset = turn;
+        final BlockState state = getBlockState();
+        level.sendBlockUpdated(worldPosition, state, state, 2);
     }
 
     @Override
@@ -668,7 +707,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Callback(doc = "function(clockwise:boolean):boolean -- Turns the robot.")
     public Object[] turn(final Context context, final Arguments arguments) {
-        final Direction newFacing = turnedFacing(facing(), arguments.checkBoolean(0));
+        final boolean clockwise = arguments.checkBoolean(0);
+        final Direction newFacing = turnedFacing(facing(), clockwise);
         if (level == null || !getBlockState().hasProperty(RobotBlock.FACING)) {
             return new Object[]{null, "no world"};
         }
@@ -681,6 +721,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             if (cost > 0D) connector.changeBuffer(cost);
             return new Object[]{null, "blocked"};
         }
+        startAnimation(null, clockwise ? -90 : 90, ModSettings.robotTurnDelay());
         if (context != null) context.pause(ModSettings.robotTurnDelay());
         setChanged();
         return new Object[]{true};
@@ -1285,6 +1326,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         Network.joinOrCreateNetwork(this);
         level.updateNeighborsAt(sourcePos, state.getBlock());
         level.updateNeighborsAt(targetPos, state.getBlock());
+        startAnimation(sourcePos, 0, ModSettings.robotMoveDelay());
         setChanged();
         NeoForge.EVENT_BUS.post(new RobotMoveEvent.Post(this, direction));
         return new Object[]{true};

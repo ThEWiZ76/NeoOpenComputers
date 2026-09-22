@@ -242,11 +242,35 @@ public final class RobotMovementPersistenceGameTests {
             helper.assertTrue(completedMoves.size() == 1 && completedMoves.getFirst().direction == Direction.SOUTH,
                 "Successful movement did not post one event for the retained robot");
             helper.assertTrue(helper.getBlockEntity(target) == robot, "Success event robot is not destination robot");
+            final CompoundTag movement = robot.getUpdateTag(helper.getLevel().registryAccess()).getCompound("oc:animation");
+            helper.assertTrue(movement.contains("from") && movement.getLong("from") == helper.absolutePos(start).asLong(),
+                "Moving robot does not send its animation origin");
+            final int moveTicks = Math.max(1, (int) (ModSettings.robotMoveDelay() * 20D)) + 2;
+            helper.assertTrue(movement.getInt("ticks") == moveTicks, "Move animation duration differs from upstream");
+            final double started = movement.getLong("start");
+            final RobotBlockEntity client = new RobotBlockEntity(robot.getBlockPos(), robot.getBlockState());
+            client.handleUpdateTag(robot.getUpdateTag(helper.getLevel().registryAccess()), helper.getLevel().registryAccess());
+            final var delta = net.minecraft.world.phys.Vec3.atLowerCornerOf(helper.absolutePos(start).subtract(helper.absolutePos(target)));
+            helper.assertTrue(client.movementRenderOffset(started).distanceToSqr(delta) < 1e-12,
+                "Move animation did not start at old position");
+            helper.assertTrue(client.movementRenderOffset(started + moveTicks / 2D).distanceToSqr(delta.scale(0.5D)) < 1e-12,
+                "Move animation did not interpolate halfway");
+            client.onDataPacket(null, robot.getUpdatePacket(), helper.getLevel().registryAccess());
+            helper.assertTrue(client.movementRenderOffset(started + moveTicks).lengthSqr() == 0D,
+                "Repeated status packet restarted or overshot movement");
             final double afterMove = beforeEnergy - ModSettings.robotMoveCost();
             helper.assertTrue(Math.abs(energy.globalBuffer() - afterMove) < 1e-6, "Move did not consume configured energy exactly once");
             final Object[] turned = ((Component) robot.node()).invoke("turn", context, true);
             helper.assertTrue(Boolean.TRUE.equals(turned[0]) && robot.getBlockState().getValue(RobotBlock.FACING) == Direction.EAST,
                 "Powered turn did not rotate robot");
+            client.onDataPacket(null, robot.getUpdatePacket(), helper.getLevel().registryAccess());
+            final CompoundTag turnAnimation = robot.getUpdateTag(helper.getLevel().registryAccess()).getCompound("oc:animation");
+            final double turnStarted = turnAnimation.getLong("start");
+            final int turnTicks = Math.max(1, (int) (ModSettings.robotTurnDelay() * 20D));
+            helper.assertTrue(client.turnRenderOffset(turnStarted) == -90F
+                && client.turnRenderOffset(turnStarted + turnTicks / 2D) == -45F
+                && client.turnRenderOffset(turnStarted + turnTicks) == 0F, "Turn interpolation is incorrect");
+            helper.assertTrue(client.movementRenderOffset(turnStarted).lengthSqr() == 0D, "Turn retained previous movement animation");
             helper.assertTrue(Math.abs(energy.globalBuffer() - (afterMove - ModSettings.robotTurnCost())) < 1e-6,
                 "Turn did not consume configured energy exactly once");
             helper.assertTrue(pauses.equals(List.of(0.4D, ModSettings.robotMoveDelay(), ModSettings.robotTurnDelay())),
