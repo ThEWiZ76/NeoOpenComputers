@@ -31,3 +31,21 @@ Second adjustment, same GUI glyph-renderer layer: obtain the glyph and width onc
 - The optional local `scripts/check-actions-disabled.ps1` is absent. Equivalent explicit checks found no workflows in working tree, HEAD or origin/develop. `git diff --check` passed.
 
 Remaining acceptance work: dense/full-screen profiling, lower tiers, multiple GUI scales, nonblack background-heavy rendering, minimal modset, and all other parity tasks. This slice resolves the severe ordinary OpenOS prompt slowdown; it does not declare the complete port finished.
+
+## Dense-output follow-up
+
+The 31-FPS fully filled terminal is the remaining reproduction. The JFR evidence above identified immutable `MapN` probing as expensive for this dense integer-key font table. Even one lookup per glyph still repeats it 8000 times on a full screen, and the fallback argument is eagerly evaluated. Keep the font data unchanged, retain a read-only HashMap for lookup and evaluate the fallback only for missing glyphs. This stays within the glyph lookup layer; no texture, transform or screen geometry changes. Verify with the existing bitmap/geometry tests and a fresh full-screen capture; do not infer performance from code alone.
+
+Follow-up JAR `731F3F1EF4E792BE9F4B88B18AEC9B3E78EE896791FAA949617D57CA94CA0372` still measured 24–26 FPS on a filled terminal (`dense-profile-before.png`, same 2048×1080 profile/layout). A confirmed live full-screen 20-second JFR (`dense2.jfr`) now shows 772 samples in BufferBuilder.beginVertex, 557 in TerminalFont.pixel, only 6 in HashMap.getNode: map probing is removed, but emitting/rasterizing per-pixel geometry dominates.
+
+Architecture decision before another patch: retain the terminal GUI glyph renderer as sole owner. Use the already-shipped, nearest-filtered world font atlas for GUI code points present in it, one textured quad per cell; retain the tested pixel fallback for other Unicode. Test every atlas bitmap against the original font masks before switching. Textures/metrics/world rendering/layout/network remain unchanged. This replaces the costly raster path rather than applying more map tuning. The earlier glyph-cache change succeeded for normal OpenOS output; full-density acceptance remains explicitly unproven until the new capture.
+
+Atlas follow-up verified: build/installed JAR `1DC44925070A869D5F992767B77DB2D078B102E3852480FC5C04F193D7469998`, 2047 unit tests and 442 GameTests green. `atlas-dense-verified.png` shows the actual 160×50 X-filled terminal at **60 FPS**. Atlas pixel equivalence test passed for every mapped glyph; wide Unicode retains the raster fallback. Capture size is now 1920×1011 after launcher restart; same number of terminal cells. Background-heavy output revealed a separate remaining bottleneck: **15 FPS** (`background-before-verified.png`).
+
+## Separate background-renderer patch evidence
+
+- Same last verified JAR, profile, world, tier/layout and renderer rollback as above. MCP screenshots confirm actual current Minecraft framebuffer pixels.
+- Reproduction: Lua `g.setBackground(0x330000)` followed by `g.fill(1,1,160,50,"X")`; screen fills correctly but FPS drops from 60 to 15.
+- Root cause: `TerminalScreen.renderCellBackgrounds` calls unmanaged `GuiGraphics.fill` once per nonblack cell: up to 8000 separate flushes. Glyph atlas already fixed; this is cell-background submission, not another glyph patch.
+- Owner: terminal GUI cell-background renderer. Use Minecraft's existing managed drawing scope around this pass so the same fill calls queue until the pass boundary. No geometry, color calculation, clipping, transforms, font or network change.
+- Verification pending: repeat same filled red-background scene, Unicode/input and powered world view; rerun focused/full gates. The captured live failure is the rendering regression test for this one-line submission change.

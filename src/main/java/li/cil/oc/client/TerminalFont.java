@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 
 final class TerminalFont {
@@ -72,6 +73,15 @@ final class TerminalFont {
     static void drawGuiCell(final GuiGraphics graphics, final String text, final int x, final int y, final int color) {
         final int codePoint = codePoint(text);
         if (codePoint == ' ') {
+            return;
+        }
+        final Integer atlasIndex = WORLD_TEXTURE_GLYPHS.get(codePoint);
+        if (atlasIndex != null) {
+            final float u0 = (atlasIndex % WORLD_ATLAS_COLUMNS) * CELL_WIDTH / (float) WORLD_ATLAS_WIDTH;
+            final float v0 = (atlasIndex / WORLD_ATLAS_COLUMNS) * CELL_HEIGHT / (float) WORLD_ATLAS_HEIGHT;
+            texturedQuad(graphics.bufferSource().getBuffer(RenderType.text(ASCII_GLYPH_TEXTURE)),
+                graphics.pose().last(), x, y, x + CELL_WIDTH, y + CELL_HEIGHT, 0, color,
+                u0, v0, u0 + CELL_WIDTH / (float) WORLD_ATLAS_WIDTH, v0 + CELL_HEIGHT / (float) WORLD_ATLAS_HEIGHT);
             return;
         }
         // GuiGraphics.fill flushes every pixel outside drawManaged. Queue the
@@ -225,14 +235,16 @@ final class TerminalFont {
     }
 
     private static Glyph glyph(final int codePoint) {
-        return GLYPHS.getOrDefault(codePoint, GLYPHS.get((int) '?'));
+        final Glyph glyph = GLYPHS.get(codePoint);
+        return glyph == null ? GLYPHS.get((int) '?') : glyph;
     }
 
     private static Map<Integer, Glyph> loadGlyphs() {
         final Map<Integer, Glyph> glyphs = new HashMap<>();
         loadHexGlyphs(glyphs);
         loadTextureGlyphs(glyphs);
-        return Map.copyOf(glyphs);
+        // Dense Unicode integer keys cause long probe chains in Map.copyOf's MapN.
+        return Collections.unmodifiableMap(glyphs);
     }
 
     private static Map<Integer, Integer> loadWorldTextureGlyphs() {
