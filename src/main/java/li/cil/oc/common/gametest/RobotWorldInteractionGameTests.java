@@ -23,6 +23,28 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
     @GameTest(template = "empty")
+    public static void robotResolvesInstalledHardwareEnvironmentsBySlot(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper, "while true do computer.pullSignal() end", true);
+        final var previous = new java.util.HashMap<Integer, li.cil.oc.api.network.Environment>();
+        for (final var node : robot.machine().node().neighbors()) {
+            final int slot = robot.componentSlot(node.address());
+            if (slot < 0) continue;
+            helper.assertTrue(robot.getComponentInSlot(slot) == node.host(), "Hardware slot does not resolve its connected environment");
+            previous.put(slot, node.host());
+        }
+        helper.assertTrue(previous.size() >= 2, "Hardware fixture must contain multiple component environments");
+        helper.assertTrue(robot.getComponentInSlot(-1) == null && robot.getComponentInSlot(Integer.MAX_VALUE) == null,
+            "Invalid component indices resolved hardware");
+        robot.machine().onHostChanged();
+        for (final var entry : previous.entrySet()) {
+            final var current = robot.getComponentInSlot(entry.getKey());
+            helper.assertTrue(current != null && current != entry.getValue(), "Hardware rebuild retained a stale environment");
+            helper.assertTrue(current.node().isNeighborOf(robot.machine().node()), "Resolved environment is no longer connected");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotAttackAwardsExperienceOnlyWhenTargetIsRemoved(final GameTestHelper helper) throws Exception {
         final RobotBlockEntity robot = robot(helper, "while true do computer.pullSignal() end", true);
         li.cil.oc.common.component.ExperienceUpgradeEnvironment upgrade = null;

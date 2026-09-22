@@ -13,6 +13,11 @@ public interface MachineHost extends EnvironmentHost {
 
     void onMachineConnect(Node node);
 
+    /** Called for an installed component, with the exact stack that created its environment. */
+    default void onMachineConnect(Node node, ItemStack stack) {
+        onMachineConnect(node);
+    }
+
     void onMachineDisconnect(Node node);
 
     default String machinePosition() {

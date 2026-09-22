@@ -198,7 +198,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
             node().connect(environment.node());
             componentEnvironments.add(environment);
-            host.onMachineConnect(environment.node());
+            host.onMachineConnect(environment.node(), stack);
         }
         maxCallBudget = callBudgetCount == 0 ? 1D : callBudgetSum / callBudgetCount;
     }

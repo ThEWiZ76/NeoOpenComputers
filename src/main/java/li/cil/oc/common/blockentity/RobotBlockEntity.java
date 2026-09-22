@@ -197,7 +197,6 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private Node robotNode;
     private final ManagedEnvironment robotRom;
-    private int pendingComponentSlot = -1;
     private volatile boolean pendingServerThreadChangeMark;
     private int tier;
     private int selectedSlot;
@@ -449,11 +448,20 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     @Override
-    public void onMachineConnect(final Node node) {
-        if (node != null && node.address() != null && pendingComponentSlot >= 0) {
-            componentSlots.put(node.address(), pendingComponentSlot);
+    public void onMachineConnect(final Node node, final ItemStack stack) {
+        if (node != null && node.address() != null) {
+            for (int slot = 0; slot < slotCount(tier); slot++) {
+                if (hardwareItems.get(slot) == stack) {
+                    componentSlots.put(node.address(), slot);
+                    break;
+                }
+            }
         }
-        pendingComponentSlot = -1;
+        onMachineConnect(node);
+    }
+
+    @Override
+    public void onMachineConnect(final Node node) {
         if (node != null && node.host() instanceof Keyboard keyboard) {
             keyboard.setUsableOverride((ignored, player) -> stillValid(player)
                 && machine.canInteract(player.getGameProfile().getName()));
@@ -698,6 +706,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public Environment getComponentInSlot(final int index) {
+        if (!isHardwareSlot(index) || machine == null || machine.node() == null) return null;
+        for (final Node node : machine.node().neighbors()) {
+            if (node.address() != null && componentSlots.getOrDefault(node.address(), -1) == index) {
+                return node.host();
+            }
+        }
         return null;
     }
 
@@ -1897,7 +1911,6 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
                 }
                 final int slot = nextSlot;
                 nextSlot = nextComponentSlot(slot + 1);
-                pendingComponentSlot = slot;
                 return hardwareItems.get(slot);
             }
         };

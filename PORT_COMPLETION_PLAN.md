@@ -285,3 +285,7 @@ Gevonden en hersteld: Agent.equipmentInventory was losse opslag en mainInventory
 ### Actie-XP na entityverwijdering
 
 Ontbrekende RobotAttackEntityEvent.Post-handler hersteld: experience-upgrades krijgen eenmaal robotActionXp wanneer een robotaanval de entity direct verwijdert. Echte hardwaretest bewijst nul voor geannuleerde aanvallen, exact een beloning bij minecartverwijdering en geen beloning voor gewone hits of de vertraagde sterfanimatie van een mob. Algemene mob-orbverzameling is geen upstreamvereiste; eerdere brede verwijzing naar ontbrekende living-kill-XP daarmee verduidelijkt. Full build: 2058 unit-tests en 483 GameTests; robot-attack-xp-verified.log. Zie ROBOT_ENTITY_ATTACKS.md. Hardware-indexmapping, verdere combat/wereldactiepariteit en live tests blijven open.
+
+### Robothardware terugvinden en juiste slots koppelen
+
+getComponentInSlot-stub vervangen door lookup van actuele aangesloten hardware. Echte hardwaretest vond bovendien foutieve dubbele slotkoppelingen door geneste enumeratie tijdens geheugencontrole. MachineHost krijgt een compatibele default-overload met exact bronitem; SimpleMachine geeft dat item door en Robot gebruikt itemidentiteit in plaats van gedeelde iteratorstatus. Test verifieert meerdere componentinstanties, ongeldige slots en volledige vernieuwing na herbouw. Full build: 2058 unit-tests en 484 GameTests; robot-component-lookup-mapping.log. Zie ROBOT_INVENTORY_VIEWS.md. Legacy gecombineerde slotnamespace, hover-hardwarecontrole, containercomponenten en mappings bij andere hosts blijven open.
