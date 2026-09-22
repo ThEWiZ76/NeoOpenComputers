@@ -444,21 +444,23 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     public void load(final CompoundTag nbt) {
         super.load(nbt);
         ContainerHelper.loadAllItems(nbt, items, world() == null ? null : world().registryAccess());
-        if (machine != null && nbt.contains(TAG_MACHINE)) {
-            machine.load(nbt.getCompound(TAG_MACHINE));
+        if (machine != null) {
+            machine.onHostChanged();
+            if (nbt.contains(TAG_MACHINE)) machine.load(nbt.getCompound(TAG_MACHINE));
         }
     }
 
     @Override
     public void save(final CompoundTag nbt) {
         super.save(nbt);
-        if (world() != null) {
-            ContainerHelper.saveAllItems(nbt, items, world().registryAccess());
-        }
         if (machine != null) {
             final CompoundTag machineTag = new CompoundTag();
             machine.save(machineTag);
             nbt.put(TAG_MACHINE, machineTag);
+        }
+        // Machine.save flushes component state (including node addresses) into items.
+        if (world() != null) {
+            ContainerHelper.saveAllItems(nbt, items, world().registryAccess());
         }
     }
 

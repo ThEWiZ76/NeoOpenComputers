@@ -221,13 +221,13 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
     @Override
     public void save(final CompoundTag nbt) {
         super.save(nbt);
-        if (world() != null) {
-            ContainerHelper.saveAllItems(nbt, items, world().registryAccess());
-        }
         if (diskEnvironment != null) {
             final CompoundTag diskTag = new CompoundTag();
             diskEnvironment.save(diskTag);
             nbt.put(TAG_DISK, diskTag);
+        }
+        if (world() != null) {
+            ContainerHelper.saveAllItems(nbt, items, world().registryAccess());
         }
     }
 

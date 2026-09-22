@@ -396,6 +396,14 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        for (int slot = 0; slot < CONTAINER_SIZE; slot++) {
+            if (mountables[slot] == null) refreshMountable(slot);
+        }
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeSideNodes();
@@ -666,6 +674,9 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     private void refreshMountable(final int slot) {
+        // Chunk NBT is read before setLevel. Keep nested data untouched until the
+        // mountables can deserialize item components using the world's registries.
+        if (level == null) return;
         removeMountable(slot, false);
         final ItemStack stack = items.get(slot);
         final DriverItem driver = Driver.driverFor(stack);
