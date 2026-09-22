@@ -111,3 +111,11 @@ SimpleMachine now follows upstream Machine.scala uptime semantics: advance one t
 uptime-ticks-red.log reproduced three focused failures against the old wall-clock implementation. Updated unit tests exercise fixed-clock jumps, sleeping/paused updates, stop/restart, repeated reloads and old seconds snapshots. nativeRackRetainsUptimeDeadlineAfterReload preserves a five-second deadline, checks elapsed ticks survived detached reload, then continues computer.pullSignal until the deadline. This proves basic native deadline continuation, not all OpenOS event timers or full-world restart.
 
 uptime-ticks-integrated.log passed all2102 unit tests with zero failures/errors, all508 required GameTests and build. Artifact SHA256 0AB8E04BCF9DCDEAE27C1310988D293E4E1163C15161CC1EDDE6E8F8DDEE5788. No client/install/push; screen3 focus coordination is still pending. Next: native VM disposal on host removal, world restart, OpenOS timers, remaining architecture/API/platform/visual requirements. Full port incomplete.
+
+## Drone cargo storage - 2026-09-22
+
+DroneEntity no longer exposes an always-empty main inventory. Capacity follows upstream Drone.computeInventorySize: sum max(1, inventoryCapacity / 4) for installed inventory drivers, capped at eight. Standard inventory upgrades therefore provide four slots each. Cargo is separate from hardware, stored with slot indices under oc:cargo; selectedSlot clamps to cargo capacity. Hardware changes recalculate capacity, preserve overlapping slots and drop only overflow when shrinking. removeItemNoUpdate now also refreshes cargo and hardware environments.
+
+DroneInventoryGameTests covers zero/one/two/three upgrades, sparse cargo in slots 2 and 8, NBT entity reload with exact item counts and selection, and removal/reinstallation with eleven overflow iron ingots dropped exactly once and three diamonds retained. Initial tests failed against zero-slot inventory (drone-cargo-red.log). Final build and all 578 GameTests pass (drone-cargo-final.log), with 2109 unit tests unchanged.
+
+This is cargo storage groundwork, not completed drone parity. DroneMenu still exposes hardware only; cargo GUI/synchronization, InventoryControl Lua callbacks, world inventory interactions, destruction/pickup semantics, native running-drone cargo continuation and real-client visuals remain open. No client launch/install, push or merge.

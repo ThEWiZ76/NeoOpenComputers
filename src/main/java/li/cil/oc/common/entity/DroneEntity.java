@@ -56,6 +56,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     private static final String TAG_MACHINE = "oc:machine";
     private static final String TAG_DRONE_NODE = "oc:droneNode";
     private static final String TAG_SELECTED_SLOT = "oc:selectedSlot";
+    private static final String TAG_CARGO = "oc:cargo";
     private static final String TAG_SELECTED_TANK = "oc:selectedTank";
     private static final String TAG_STATUS_TEXT = "oc:statusText";
     private static final String TAG_LIGHT_COLOR = "oc:lightColor";
@@ -117,7 +118,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     private final Machine machine;
     private CompoundTag removedState;
     private final Container equipmentInventory = new SimpleContainer(1);
-    private final Container mainInventory = new SimpleContainer(0);
+    private SimpleContainer mainInventory = new SimpleContainer(0);
     private final MultiTank tank = new MultiTank() {
         @Override
         public int tankCount() {
@@ -206,6 +207,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
             for (final ItemStack component : item.componentStacks(stack)) {
                 placeLoadedComponent(component.copy());
             }
+            resizeCargo();
             machine.onHostChanged();
         }
         if (player != null) {
@@ -376,7 +378,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
 
     @Override
     public void setSelectedSlot(final int index) {
-        selectedSlot = Math.clamp(index, 0, Math.max(0, getContainerSize() - 1));
+        selectedSlot = Math.clamp(index, 0, Math.max(0, mainInventory.getContainerSize() - 1));
     }
 
     @Override
@@ -565,6 +567,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         }
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
+            resizeCargo();
             machine.onHostChanged();
         }
         return removed;
@@ -572,7 +575,12 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
 
     @Override
     public ItemStack removeItemNoUpdate(final int slot) {
-        return isValidSlot(slot) ? ContainerHelper.takeItem(items, slot) : ItemStack.EMPTY;
+        final ItemStack removed = isValidSlot(slot) ? ContainerHelper.takeItem(items, slot) : ItemStack.EMPTY;
+        if (!removed.isEmpty()) {
+            resizeCargo();
+            machine.onHostChanged();
+        }
+        return removed;
     }
 
     @Override
@@ -584,6 +592,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
             stack.setCount(getMaxStackSize());
         }
+        resizeCargo();
         machine.onHostChanged();
     }
 
@@ -602,6 +611,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         for (int slot = 0; slot < items.size(); slot++) {
             items.set(slot, ItemStack.EMPTY);
         }
+        resizeCargo();
         machine.onHostChanged();
     }
 
@@ -622,6 +632,9 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
             droneNode.load(tag.getCompound(TAG_DRONE_NODE));
         }
         ContainerHelper.loadAllItems(tag, items, level().registryAccess());
+        mainInventory = new SimpleContainer(0);
+        resizeCargo();
+        ContainerHelper.loadAllItems(tag.getCompound(TAG_CARGO), mainInventory.getItems(), level().registryAccess());
         machine.onHostChanged();
         machine.load(tag.getCompound(TAG_MACHINE));
         connectMachineNode();
@@ -654,6 +667,29 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
         ContainerHelper.saveAllItems(tag, items, level().registryAccess());
+        final CompoundTag cargo = new CompoundTag();
+        ContainerHelper.saveAllItems(cargo, mainInventory.getItems(), level().registryAccess());
+        tag.put(TAG_CARGO, cargo);
+    }
+
+    private void resizeCargo() {
+        int capacity = 0;
+        for (final ItemStack stack : internalComponents()) {
+            if (Driver.driverFor(stack, Drone.class) instanceof li.cil.oc.api.driver.item.Inventory inventory) {
+                capacity += Math.max(1, inventory.inventoryCapacity(stack) / 4);
+            }
+        }
+        capacity = Math.min(8, capacity);
+        if (capacity != mainInventory.getContainerSize()) {
+            final var resized = new SimpleContainer(capacity);
+            for (int slot = 0; slot < mainInventory.getContainerSize(); slot++) {
+                final ItemStack stack = mainInventory.getItem(slot);
+                if (slot < capacity) resized.setItem(slot, stack);
+                else if (!stack.isEmpty() && !level().isClientSide) spawnAtLocation(stack);
+            }
+            mainInventory = resized;
+        }
+        setSelectedSlot(selectedSlot);
     }
 
     @Override
