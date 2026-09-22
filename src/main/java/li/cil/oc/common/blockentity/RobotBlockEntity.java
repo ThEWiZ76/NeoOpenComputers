@@ -282,6 +282,19 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return lightColor;
     }
 
+    public ItemStack createRobotDrop(final HolderLookup.Provider registries) {
+        final ItemStack stack = new ItemStack(li.cil.oc.common.ModItems.ROBOT.get());
+        final CompoundTag data = saveWithoutMetadata(registries);
+        // Runtime inventory drops separately. Hardware and its saved component data stay in the chassis.
+        data.remove("Items");
+        final CompoundTag savedMachine = data.getCompound(TAG_MACHINE);
+        savedMachine.putBoolean("running", false);
+        savedMachine.remove("signals");
+        savedMachine.remove("architecture");
+        BlockItem.setBlockEntityData(stack, ModBlockEntities.ROBOT.get(), data);
+        return stack;
+    }
+
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);

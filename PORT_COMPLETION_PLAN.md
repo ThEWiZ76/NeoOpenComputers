@@ -233,3 +233,7 @@ Interne robot-afterimage toegevoegd: oude positie blijft tijdelijk klikbaar, bot
 ### Overlap, scheduler en richtingen
 
 Te vroege tweede stap wordt zonder kosten geweigerd. Scheduler respecteert nu Context.pause binnen gesynchroniseerde callbacks; beweging wacht minimaal tot animatie-einde. Noord/zuid-actierichtingen en oost/west-renderrotatie gecorrigeerd, inclusief bijbehorend teken van draaianimatie. Vaste-kloktest, alle oriëntaties en echte tweestaps-EEPROM groen; full build met 2057 unit-tests en 453 GameTests. Zie ROBOT_MOVEMENT_SCHEDULING.md. Live verificatie en overige pariteit blijven open.
+
+### Robot afbreken en terugplaatsen
+
+Ontbrekende robotloot hersteld: hardware en componentgegevens blijven in het robotitem, losse inventaris valt apart en wordt niet gekopieerd. EEPROM-nodeadres wordt nu ook bewaard. Survival-afbraak, echte itemplaatsing, scherm/adressen en opnieuw booten van bewaarde EEPROM getest. Full build: 2057 unit-tests en 454 GameTests. Zie ROBOT_BREAK_REPLACE.md. Creative pick, verdere dropvarianten, HDD/reload en live controles blijven open.

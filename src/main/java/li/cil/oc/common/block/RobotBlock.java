@@ -9,6 +9,12 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import java.util.List;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -81,9 +87,28 @@ public class RobotBlock extends HorizontalDirectionalBlock implements EntityBloc
     protected void onRemove(final BlockState state, final Level level, final BlockPos pos, final BlockState newState, final boolean movedByPiston) {
         if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof RobotBlockEntity robot) {
             robot.machine().save(new CompoundTag());
+            robot.machine().stop();
         }
         Containers.dropContentsOnDestroy(state, newState, level, pos);
         super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    @Override
+    protected List<ItemStack> getDrops(final BlockState state, final LootParams.Builder params) {
+        return params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof RobotBlockEntity robot
+            ? List.of(robot.createRobotDrop(params.getLevel().registryAccess())) : List.of();
+    }
+
+    @Override
+    public boolean onDestroyedByPlayer(final BlockState state, final Level level, final BlockPos pos, final Player player,
+                                       final boolean harvest, final FluidState fluid) {
+        // Creative breaking skips getDrops, but upstream still returns the assembled robot.
+        final ItemStack creativeDrop = !level.isClientSide && player instanceof ServerPlayer serverPlayer
+            && serverPlayer.gameMode.isCreative() && level.getBlockEntity(pos) instanceof RobotBlockEntity robot
+            ? robot.createRobotDrop(level.registryAccess()) : ItemStack.EMPTY;
+        final boolean removed = super.onDestroyedByPlayer(state, level, pos, player, harvest, fluid);
+        if (removed && !creativeDrop.isEmpty()) popResource(level, pos, creativeDrop);
+        return removed;
     }
 
     @Override

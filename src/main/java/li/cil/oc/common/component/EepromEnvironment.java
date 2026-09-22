@@ -35,6 +35,14 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
             .withComponent("eeprom", Visibility.Neighbors)
             .withConnector()
             .create());
+        super.load(this.data);
+    }
+
+    @Override
+    public void save(final CompoundTag nbt) {
+        super.save(nbt);
+        data.put(NODE_TAG, nbt.getCompound(NODE_TAG).copy());
+        onChanged.run();
     }
 
     @Override

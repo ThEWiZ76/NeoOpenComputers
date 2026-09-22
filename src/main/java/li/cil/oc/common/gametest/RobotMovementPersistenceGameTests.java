@@ -40,6 +40,54 @@ import java.util.Map;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotMovementPersistenceGameTests {
+    @GameTest(template = "empty")
+    public static void survivalRobotDropKeepsHardwareAndDoesNotDuplicateCargo(final GameTestHelper helper) {
+        final BlockPos source = new BlockPos(1, 1, 1);
+        helper.setBlock(source, ModBlocks.ROBOT.get());
+        final RobotBlockEntity robot = helper.getBlockEntity(source);
+        installHardware(helper, robot, List.of(new ItemStack(ModItems.SCREEN_TIER1.get()), new ItemStack(ModItems.KEYBOARD.get()),
+            new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()), new ItemStack(ModItems.CPU_TIER1.get()),
+            new ItemStack(ModItems.MEMORY_TIER1.get()), eeprom("component.proxy(component.list('robot')()).setLightColor(0x2468AC); while true do computer.pullSignal() end")));
+        robot.onLoad();
+        robot.terminalScreen().setResolution(10, 3);
+        robot.terminalScreen().set(0, 0, "saved", false);
+        final var screen = robot.terminalScreen().terminalSnapshot();
+        final var componentAddresses = addresses(robot);
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.DIAMOND, 3));
+        final var player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(GameType.SURVIVAL);
+        try {
+            player.gameMode.destroyBlock(helper.absolutePos(source));
+            final var bounds = new net.minecraft.world.phys.AABB(helper.absolutePos(source)).inflate(1D);
+            final var drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, bounds);
+            final var robots = drops.stream().map(net.minecraft.world.entity.item.ItemEntity::getItem)
+                .filter(stack -> stack.is(ModItems.ROBOT.get())).toList();
+            helper.assertTrue(robots.size() == 1 && robots.getFirst().getCount() == 1, "Survival break did not drop exactly one assembled robot");
+            helper.assertTrue(drops.stream().map(net.minecraft.world.entity.item.ItemEntity::getItem).filter(stack -> stack.is(Items.DIAMOND))
+                .mapToInt(ItemStack::getCount).sum() == 3, "Robot break lost or duplicated cargo drops");
+            final ItemStack robotStack = robots.getFirst().copy();
+            drops.forEach(net.minecraft.world.entity.Entity::discard);
+            final BlockPos support = new BlockPos(3, 0, 1);
+            helper.setBlock(support, Blocks.STONE);
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, robotStack);
+            final var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(helper.absolutePos(support)),
+                Direction.UP, helper.absolutePos(support), false);
+            helper.assertTrue(robotStack.useOn(new net.minecraft.world.item.context.UseOnContext(player, net.minecraft.world.InteractionHand.MAIN_HAND, hit)).consumesAction(),
+                "Dropped robot could not be placed");
+            final RobotBlockEntity placed = helper.getBlockEntity(support.above());
+            placed.onLoad();
+            helper.assertTrue(placed.missingHardwareRequirements() == 0 && placed.hasScreenHardware(), "Replaced robot lost assembled hardware");
+            helper.assertTrue(screen.contentEquals(placed.terminalScreen().terminalSnapshot()), "Robot item lost framebuffer");
+            helper.assertTrue(componentAddresses.equals(addresses(placed)), "Robot item changed component addresses: " + componentAddresses + " -> " + addresses(placed));
+            helper.assertTrue(placed.getItem(RobotBlockEntity.CARGO_SLOT_START).isEmpty(), "Cargo duplicated inside robot item");
+            helper.assertTrue(!placed.machine().isRunning(), "Picked-up robot restarted automatically");
+            helper.assertTrue(placed.toggleMachine(), "Replaced robot could not boot its preserved EEPROM");
+            helper.succeedWhen(() -> helper.assertTrue(placed.lightColor() == 0x2468AC, "Replaced robot did not execute preserved EEPROM"));
+        } finally {
+            helper.getLevel().getServer().getPlayerList().remove(player);
+        }
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void overlappingRobotMoveDoesNotChargeOrReplaceAnimation(final GameTestHelper helper) throws Exception {
         final BlockPos source = new BlockPos(1, 1, 1);
