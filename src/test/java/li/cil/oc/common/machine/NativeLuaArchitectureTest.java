@@ -22,6 +22,17 @@ final class NativeLuaArchitectureTest {
     @Callback public void write() {}
     @Callback(direct = true) public void value() {}
 
+    @Test
+    void reportsInstalledRamWhileEnforcingNativeAllocationLimit() throws Exception {
+        exposesNativeUnicodeAndGameTime("""
+            assert(computer.totalMemory() == 512 * 1024)
+            assert(computer.freeMemory() > 0 and computer.freeMemory() <= computer.totalMemory())
+            local ok = pcall(string.rep, 'x', 8 * 1024 * 1024)
+            assert(not ok, 'native memory limit was bypassed')
+            assert(computer.totalMemory() == 512 * 1024)
+            """);
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {
         "local s = unicode.char(65, 0x1F600, 0x6C34); assert(unicode.len(s) == 3); assert(unicode.sub(s, 2, 2) == unicode.char(0x1F600)); assert(unicode.reverse(s) == unicode.char(0x6C34, 0x1F600, 65))",

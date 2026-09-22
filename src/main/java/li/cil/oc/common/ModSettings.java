@@ -66,6 +66,8 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue EXECUTION_DELAY;
     public static final ModConfigSpec.BooleanValue ALLOW_BYTECODE;
     public static final ModConfigSpec.BooleanValue ALLOW_GC;
+    public static final ModConfigSpec.DoubleValue RAM_SCALE_FOR_64_BIT;
+    public static final ModConfigSpec.IntValue MAX_TOTAL_RAM;
     public static final ModConfigSpec.IntValue INITIAL_NETWORK_PACKET_TTL;
     public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_SIZE;
     public static final ModConfigSpec.IntValue MAX_NETWORK_PACKET_PARTS;
@@ -353,6 +355,12 @@ public final class ModSettings {
             .comment("Milliseconds computers wait before resuming after an immediate yield. OpenComputers upstream default is 12.")
             .defineInRange("executionDelay", 12, 0, 50);
         builder.push("lua");
+        RAM_SCALE_FOR_64_BIT = builder
+            .comment("Internal native Lua RAM multiplier for 64-bit pointers. Reported RAM is unscaled. OpenComputers upstream default is 1.8.")
+            .defineInRange("ramScaleFor64Bit", 1.8D, 1D, Double.MAX_VALUE);
+        MAX_TOTAL_RAM = builder
+            .comment("Maximum native Lua user RAM in bytes, excluding kernel memory. OpenComputers upstream default is 67108864.")
+            .defineInRange("maxTotalRam", 64 * 1024 * 1024, 0, Integer.MAX_VALUE - 2 * 1024 * 1024);
         ALLOW_BYTECODE = builder
             .comment("Allow loading Lua bytecode directly. OpenComputers upstream default is false.")
             .define("allowBytecode", false);
@@ -1142,6 +1150,10 @@ public final class ModSettings {
     public static double computerTimeout() {
         return doubleValue(COMPUTER_TIMEOUT);
     }
+
+    public static double ramScaleFor64Bit() { return doubleValue(RAM_SCALE_FOR_64_BIT); }
+
+    public static int maxTotalRam() { return intValue(MAX_TOTAL_RAM); }
 
     public static double startupDelay() {
         return Math.max(0.05D, doubleValue(STARTUP_DELAY));

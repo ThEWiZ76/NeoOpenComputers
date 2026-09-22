@@ -119,6 +119,8 @@ final class ModSettingsTest {
         assertEquals(16, ModSettings.maxUsers());
         assertEquals(32, ModSettings.maxUsernameLength());
         assertEquals(5D, ModSettings.computerTimeout());
+        assertEquals(1.8D, ModSettings.ramScaleFor64Bit());
+        assertEquals(64 * 1024 * 1024, ModSettings.maxTotalRam());
         assertEquals(0.25D, ModSettings.startupDelay());
         assertEquals(4096, ModSettings.eepromSize());
         assertEquals(256, ModSettings.eepromDataSize());

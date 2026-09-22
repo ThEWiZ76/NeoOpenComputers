@@ -26,6 +26,7 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
     private NativeLuaPersistence persistence;
     private LuaState lua;
     private int memoryBytes;
+    private double ramScale = 1D;
     private int kernelMemory;
     private boolean pendingCall;
     private boolean pendingReturn;
@@ -46,8 +47,8 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
         for (final ItemStack stack : components) {
             if (Driver.driverFor(stack) instanceof Memory ram) memory += Math.max(0, ram.amount(stack)) * 1024;
         }
-        memoryBytes = (int) Math.min(Integer.MAX_VALUE - 2 * 1024 * 1024, memory);
-        if (lua != null && kernelMemory > 0) lua.setTotalMemory(kernelMemory + memoryBytes);
+        memoryBytes = (int) Math.min(ModSettings.maxTotalRam(), memory);
+        if (lua != null && kernelMemory > 0) lua.setTotalMemory(memoryLimit(kernelMemory));
         return memoryBytes > 0;
     }
 
@@ -57,6 +58,8 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
         try {
             owner = NativeLuaState.create(NativeLuaState.Version.LUA52, 2 * 1024 * 1024 + memoryBytes);
             lua = owner.state();
+            ramScale = lua.getPointerWidth() >= 8 ? ModSettings.ramScaleFor64Bit() : 1D;
+            lua.setTotalMemory(memoryLimit(2 * 1024 * 1024));
             // The trusted upstream kernel creates its own restricted user sandbox.
             owner.pushHostLibrary("debug"); lua.setGlobal("debug");
             installComputer();
@@ -107,7 +110,7 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
                 if (lua.status(1) != LuaState.YIELD || initialResults != 0) return stopped();
                 lua.gc(LuaState.GcAction.COLLECT, 0);
                 kernelMemory = Math.max(1, lua.getTotalMemory() - lua.getFreeMemory());
-                lua.setTotalMemory(kernelMemory + memoryBytes);
+                lua.setTotalMemory(memoryLimit(kernelMemory));
                 return new ExecutionResult.Sleep(0);
             } else {
                 final var signal = machine.popSignal();
@@ -157,6 +160,7 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
             lua.setField(-2, "stringMetatable");
             nbt.put("snapshot", persistence.save(-1));
             nbt.putInt("kernelMemory", kernelMemory);
+            nbt.putDouble("ramScale", ramScale);
             nbt.putBoolean("pendingCall", pendingCall);
             nbt.putBoolean("pendingReturn", pendingReturn);
             if (bootAddress != null) nbt.putString("bootAddress", bootAddress);
@@ -181,9 +185,10 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
         pendingReturn = nbt.getBoolean("pendingReturn");
         if (pendingCall || pendingReturn) lua.getField(1, "pending");
         lua.remove(1);
-        kernelMemory = nbt.getInt("kernelMemory");
+        final double savedScale = nbt.contains("ramScale") ? Math.max(1D, nbt.getDouble("ramScale")) : 1D;
+        kernelMemory = (int) Math.ceil(nbt.getInt("kernelMemory") / savedScale * ramScale);
         lua.gc(LuaState.GcAction.COLLECT, 0);
-        if (kernelMemory > 0) lua.setTotalMemory(kernelMemory + memoryBytes);
+        if (kernelMemory > 0) lua.setTotalMemory(memoryLimit(kernelMemory));
         bootAddress = nbt.contains("bootAddress") ? nbt.getString("bootAddress") : null;
     }
 
@@ -202,7 +207,7 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
         function("address", state -> { NativeLuaValues.push(state, machine.node().address()); return 1; });
         function("tmpAddress", state -> { NativeLuaValues.push(state, machine.tmpAddress()); return 1; });
         function("isRobot", state -> bool(machine.host() instanceof Robot));
-        function("freeMemory", state -> number(Math.max(0, lua.getFreeMemory())));
+        function("freeMemory", state -> number(Math.max(0, Math.min(memoryBytes, (int) (lua.getFreeMemory() / ramScale)))));
         function("totalMemory", state -> number(memoryBytes));
         function("energy", state -> number(machine.node() instanceof Connector node ? node.globalBuffer() : 0));
         function("maxEnergy", state -> number(machine.node() instanceof Connector node ? node.globalBufferSize() : 0));
@@ -245,4 +250,8 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
     private void function(final String name, final JavaFunction callback) { lua.pushJavaFunction(callback); lua.setField(-2, name); }
     private int bool(final boolean value) { lua.pushBoolean(value); return 1; }
     private int number(final double value) { lua.pushNumber(value); return 1; }
+
+    private int memoryLimit(final int base) {
+        return (int) Math.min(Integer.MAX_VALUE, base + Math.ceil(memoryBytes * ramScale));
+    }
 }

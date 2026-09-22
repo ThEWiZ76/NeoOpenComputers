@@ -10608,6 +10608,15 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty", timeoutTicks = 2200)
     public static void openOsTerminalRunsTypedCommand(final GameTestHelper helper) {
+        openOsTerminalRunsTypedCommand(helper, false);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 2200)
+    public static void nativeOpenOsTerminalRunsTypedCommand(final GameTestHelper helper) {
+        openOsTerminalRunsTypedCommand(helper, true);
+    }
+
+    private static void openOsTerminalRunsTypedCommand(final GameTestHelper helper, final boolean nativeLua) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
         final BlockPos keyboardPos = new BlockPos(0, 1, 2);
         final BlockPos computerPos = new BlockPos(1, 1, 1);
@@ -10623,7 +10632,12 @@ public final class NeoOpenComputersGameTests {
         final DiskDriveBlockEntity diskDrive = helper.getBlockEntity(diskDrivePos);
         diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
         computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
-        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, new ItemStack(ModItems.CPU_TIER1.get()));
+        final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
+        if (nativeLua) {
+            ((li.cil.oc.api.driver.item.MutableProcessor) Driver.driverFor(cpu)).setArchitecture(
+                cpu, li.cil.oc.common.machine.NativeLuaArchitecture.class);
+        }
+        computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, cpu);
         computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
         computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
 
@@ -10634,6 +10648,7 @@ public final class NeoOpenComputersGameTests {
         final AtomicInteger checksAfterSubmit = new AtomicInteger(0);
         helper.succeedWhen(() -> {
             final String text = screenText(screen);
+            helper.assertTrue(computer.machine().isRunning(), "OpenOS stopped: " + computer.machine().lastError() + "\n" + text);
             if (!typed.get() && text.contains("/home # ")) {
                 typed.set(true);
                 typeText(screen, command);
