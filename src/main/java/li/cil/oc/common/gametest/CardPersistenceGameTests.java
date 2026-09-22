@@ -24,6 +24,23 @@ import java.nio.charset.StandardCharsets;
 @PrefixGameTestTemplate(false)
 public final class CardPersistenceGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
+    public static void debugCardReconnectsRemoteBlockAfterCaseReload(GameTestHelper helper) {
+        final var target = new BlockPos(4, 1, 1);
+        helper.setBlock(target, ModBlocks.HOLOGRAM_TIER1.get());
+        final var absolute = helper.absolutePos(target);
+        restore(helper, new ItemStack(ModItems.DEBUG_CARD.get()), """
+            local card = component.proxy(component.list('debug')())
+            assert(card.connectToBlock(%d, %d, %d))
+            local hologram = component.proxy(component.list('hologram')())
+            hologram.set(1, 1, 1, 1)
+            """.formatted(absolute.getX(), absolute.getY(), absolute.getZ()), """
+            assert(hologram.get(1, 1, 1) == 1, 'remote hologram not reconnected')
+            hologram.set(1, 1, 1, 0)
+            assert(hologram.get(1, 1, 1) == 0, 'remote hologram cannot be changed')
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
     public static void redstoneProxyRetainsOutputsAndWakeThreshold(GameTestHelper helper) {
         restore(helper, new ItemStack(ModItems.REDSTONE_CARD.get()), """
             local card = component.proxy(component.list('redstone')())

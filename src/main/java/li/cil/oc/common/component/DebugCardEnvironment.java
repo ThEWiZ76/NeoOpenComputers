@@ -389,8 +389,21 @@ public class DebugCardEnvironment extends AbstractManagedEnvironment {
         }
     }
 
+    @Override
+    public boolean canUpdate() {
+        return remoteNodePosition != null && remoteNode == null;
+    }
+
+    @Override
+    public void update() {
+        reconnectRemoteNode();
+    }
+
     private void reconnectRemoteNode() {
-        if (remoteNodePosition == null || node() == null) {
+        // Block entities load their item environments before acquiring a world.
+        // Keep the target until its chunk is available for the first real lookup.
+        if (remoteNodePosition == null || node() == null || host == null
+            || host.world() == null || !host.world().isLoaded(remoteNodePosition)) {
             return;
         }
         final Node other = findNode(remoteNodePosition);

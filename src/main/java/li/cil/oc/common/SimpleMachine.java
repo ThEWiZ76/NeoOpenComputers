@@ -45,6 +45,7 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -620,6 +621,12 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public void update() {
+        // Item components also run while the computer is stopped or sleeping.
+        for (ManagedEnvironment environment : List.copyOf(componentEnvironments)) {
+            if (environment.canUpdate()) {
+                environment.update();
+            }
+        }
         if (!running || architecture == null) {
             return;
         }

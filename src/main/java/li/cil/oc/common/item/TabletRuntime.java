@@ -5,7 +5,6 @@ import li.cil.oc.api.internal.Keyboard;
 import li.cil.oc.api.internal.Tablet;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.Connector;
-import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.blockentity.ScreenItemEnvironment;
 import li.cil.oc.common.component.TabletEnvironment;
@@ -16,9 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 /** Server-side computer belonging to one assembled tablet. */
 public final class TabletRuntime implements Tablet {
@@ -28,7 +25,6 @@ public final class TabletRuntime implements Tablet {
     private Player player;
     private final Level world;
     private final List<ItemStack> components = new ArrayList<>();
-    private final Set<ManagedEnvironment> environments = new LinkedHashSet<>();
     private final li.cil.oc.api.machine.Machine machine;
     private final ScreenItemEnvironment screen;
     private final TabletEnvironment tablet;
@@ -115,9 +111,6 @@ public final class TabletRuntime implements Tablet {
         acceptCharge();
         if (item.tier(stack) >= 3) ((Connector) machine.node()).changeBuffer(Double.POSITIVE_INFINITY);
         machine.update();
-        for (ManagedEnvironment environment : List.copyOf(environments)) {
-            if (environment.canUpdate()) environment.update();
-        }
         screen.update();
         publish();
     }
@@ -193,10 +186,7 @@ public final class TabletRuntime implements Tablet {
         return -1;
     }
     @Override public void onMachineConnect(Node node) {
-        if (node.host() instanceof ManagedEnvironment environment) environments.add(environment);
         if (node.host() instanceof Keyboard) screen.node().connect(node);
     }
-    @Override public void onMachineDisconnect(Node node) {
-        environments.remove(node.host());
-    }
+    @Override public void onMachineDisconnect(Node node) { }
 }

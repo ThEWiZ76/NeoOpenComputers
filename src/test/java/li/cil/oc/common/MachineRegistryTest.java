@@ -808,6 +808,38 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void stoppedMachineUpdatesOnlyActiveInternalEnvironmentsOncePerTick() {
+        OpenComputersApi.initialize();
+        final int[] updates = {0};
+        final boolean[] active = {true};
+        final DriverRegistry registry = new DriverRegistry();
+        registry.add(new TestDriver() {
+            @Override
+            public ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
+                return new AbstractManagedEnvironment() {
+                    {
+                        setNode(Network.newNode(this, Visibility.Network).create());
+                    }
+                    @Override public boolean canUpdate() { return active[0]; }
+                    @Override public void update() { updates[0]++; }
+                };
+            }
+        });
+        API.driver = registry;
+        final Machine machine = API.machine.create(new TestHost());
+        machine.onHostChanged();
+        assertFalse(machine.isRunning());
+        machine.update();
+        assertEquals(1, updates[0]);
+        active[0] = false;
+        machine.update();
+        assertEquals(1, updates[0]);
+        active[0] = true;
+        machine.update();
+        assertEquals(2, updates[0]);
+    }
+
+    @Test
     void hostChangedSelectsProcessorArchitectureAndStartInitializesIt() {
         OpenComputersApi.initialize();
         DriverRegistry driverRegistry = new DriverRegistry();
