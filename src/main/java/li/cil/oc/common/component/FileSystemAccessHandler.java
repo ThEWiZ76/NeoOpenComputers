@@ -46,53 +46,33 @@ public final class FileSystemAccessHandler {
     }
 
     private static boolean recordDiskDriveAccess(final FileSystemAccessEvent.Server event, final long timestamp) {
-        final BlockEntity eventBlockEntity = event.getTileEntity();
-        if (eventBlockEntity instanceof DiskDriveBlockEntity diskDrive) {
-            return diskDrive.recordFileSystemAccess(event.getNode(), timestamp);
-        }
-        if (event.getWorld() == null) {
-            return false;
-        }
-        final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
-        return event.getWorld().getBlockEntity(pos) instanceof DiskDriveBlockEntity diskDrive
-            && diskDrive.recordFileSystemAccess(event.getNode(), timestamp);
+        final DiskDriveBlockEntity diskDrive = blockEntityFor(event, DiskDriveBlockEntity.class);
+        return diskDrive != null && diskDrive.recordFileSystemAccess(event.getNode(), timestamp);
     }
 
     private static boolean recordComputerCaseAccess(final FileSystemAccessEvent.Server event, final long timestamp) {
-        final BlockEntity eventBlockEntity = event.getTileEntity();
-        if (eventBlockEntity instanceof ComputerCaseBlockEntity computerCase) {
-            return computerCase.recordFileSystemAccess(event.getNode(), timestamp);
-        }
-        if (event.getWorld() == null) {
-            return false;
-        }
-        final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
-        return event.getWorld().getBlockEntity(pos) instanceof ComputerCaseBlockEntity computerCase
-            && computerCase.recordFileSystemAccess(event.getNode(), timestamp);
+        final ComputerCaseBlockEntity computerCase = blockEntityFor(event, ComputerCaseBlockEntity.class);
+        return computerCase != null && computerCase.recordFileSystemAccess(event.getNode(), timestamp);
     }
 
     private static boolean recordRaidAccess(final FileSystemAccessEvent.Server event, final long timestamp) {
-        final BlockEntity eventBlockEntity = event.getTileEntity();
-        if (eventBlockEntity instanceof RaidBlockEntity raid) {
-            return raid.recordFileSystemAccess(event.getNode(), timestamp);
-        }
-        if (event.getWorld() == null) {
-            return false;
-        }
-        final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
-        return event.getWorld().getBlockEntity(pos) instanceof RaidBlockEntity raid
-            && raid.recordFileSystemAccess(event.getNode(), timestamp);
+        final RaidBlockEntity raid = blockEntityFor(event, RaidBlockEntity.class);
+        return raid != null && raid.recordFileSystemAccess(event.getNode(), timestamp);
     }
 
     private static RackBlockEntity rackFor(final FileSystemAccessEvent.Server event) {
-        final BlockEntity blockEntity = event.getTileEntity();
-        if (blockEntity instanceof RackBlockEntity rack) {
-            return rack;
+        return blockEntityFor(event, RackBlockEntity.class);
+    }
+
+    private static <T extends BlockEntity> T blockEntityFor(final FileSystemAccessEvent.Server event, final Class<T> type) {
+        if (type.isInstance(event.getTileEntity())) {
+            return type.cast(event.getTileEntity());
         }
         if (event.getWorld() == null) {
             return null;
         }
         final BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
-        return event.getWorld().getBlockEntity(pos) instanceof RackBlockEntity rack ? rack : null;
+        final BlockEntity blockEntity = event.getWorld().getBlockEntity(pos);
+        return type.isInstance(blockEntity) ? type.cast(blockEntity) : null;
     }
 }
