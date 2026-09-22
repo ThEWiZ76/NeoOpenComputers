@@ -50,7 +50,7 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
         poseStack.translate(0.5D, robot.isRunningForRendering() ? RUNNING_HOVER_OFFSET : STOPPED_Y_OFFSET, 0.5D);
         poseStack.mulPose(Axis.YP.rotationDegrees(yawRotation(robot.getBlockState().getValue(RobotBlock.FACING)) + robot.turnRenderOffset(time)));
         renderLegacyChassis(robot, poseStack, bufferSource, packedLight);
-        renderSelectedStack(robot, poseStack, bufferSource, packedLight);
+        renderSelectedStack(robot, poseStack, bufferSource, packedLight, time);
         poseStack.popPose();
     }
 
@@ -109,13 +109,15 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
         final RobotBlockEntity robot,
         final PoseStack poseStack,
         final MultiBufferSource bufferSource,
-        final int packedLight) {
+        final int packedLight,
+        final double time) {
         final ItemStack stack = robot.getItem(RobotBlockEntity.TOOL_SLOT);
         if (stack.isEmpty()) {
             return;
         }
         poseStack.pushPose();
         poseStack.translate(0D, 0.22D, 0.61D);
+        poseStack.mulPose(Axis.XP.rotationDegrees(robot.swingRenderOffset(time)));
         poseStack.scale(0.45F, 0.45F, 0.45F);
         itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, packedLight, OverlayTexture.NO_OVERLAY, poseStack, bufferSource, robot.getLevel(), 0);
         poseStack.popPose();

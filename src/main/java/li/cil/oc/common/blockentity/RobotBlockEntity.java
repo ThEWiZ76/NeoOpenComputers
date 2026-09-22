@@ -210,6 +210,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private int animationTicks;
     private BlockPos moveFrom;
     private int turnOffset;
+    private boolean swingingTool;
     private static final java.util.concurrent.atomic.AtomicInteger NEXT_BREAKER_ID = new java.util.concurrent.atomic.AtomicInteger(-1);
     private final int breakerId = NEXT_BREAKER_ID.getAndDecrement();
     private DigTask digTask;
@@ -319,6 +320,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         animation.putInt("ticks", animationTicks);
         if (moveFrom != null) animation.putLong("from", moveFrom.asLong());
         animation.putInt("turn", turnOffset);
+        animation.putBoolean("swing", swingingTool);
         tag.put("oc:animation", animation);
         return tag;
     }
@@ -339,6 +341,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         animationTicks = animation.getInt("ticks");
         moveFrom = animation.contains("from") ? BlockPos.of(animation.getLong("from")) : null;
         turnOffset = animation.getInt("turn");
+        swingingTool = animation.getBoolean("swing");
     }
 
     public Vec3 movementRenderOffset(final double gameTime) {
@@ -356,15 +359,24 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return (float) (turnOffset * animationRemaining(gameTime));
     }
 
+    public float swingRenderOffset(final double gameTime) {
+        if (!swingingTool || animationTicks <= 0) return 0F;
+        final int cycles = Math.max(animationTicks / 10, 1);
+        final int ticksPerCycle = animationTicks / cycles;
+        final double remaining = animationRemaining(gameTime) * animationTicks / ticksPerCycle;
+        return (float) (Math.sin((remaining - Math.floor(remaining)) * Math.PI) * 45D);
+    }
+
     private double animationRemaining(final double gameTime) {
         return animationTicks <= 0 ? 0D : Math.clamp(1D - (gameTime - animationStart) / animationTicks, 0D, 1D);
     }
 
-    private void startAnimation(final BlockPos from, final int turn, final double seconds) {
+    private void startAnimation(final BlockPos from, final int turn, final double seconds, final boolean swing) {
         animationStart = level.getGameTime();
-        animationTicks = Math.max(1, (int) Math.min(Integer.MAX_VALUE - 2D, seconds * 20D)) + (from != null ? 2 : 0);
+        animationTicks = Math.max(swing ? 5 : 1, (int) Math.min(Integer.MAX_VALUE - 2D, seconds * 20D)) + (from != null ? 2 : 0);
         moveFrom = from;
         turnOffset = turn;
+        swingingTool = swing;
         final BlockState state = getBlockState();
         level.sendBlockUpdated(worldPosition, state, state, 2);
     }
@@ -749,7 +761,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             if (cost > 0D) connector.changeBuffer(cost);
             return new Object[]{null, "blocked"};
         }
-        startAnimation(null, clockwise ? 90 : -90, ModSettings.robotTurnDelay());
+        startAnimation(null, clockwise ? 90 : -90, ModSettings.robotTurnDelay(), false);
         if (context != null) context.pause(ModSettings.robotTurnDelay());
         setChanged();
         return new Object[]{true};
@@ -931,6 +943,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
                 Math.max(1, (int) Math.min(Integer.MAX_VALUE, adjustedSeconds * 20D)));
             digTicks = 0;
             digStage = -1;
+            if (!before.isEmpty()) startAnimation(null, 0, adjustedSeconds, true);
             if (context != null) context.pause(adjustedSeconds);
             return new Object[]{true, "block"};
         } finally {
@@ -946,7 +959,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (!machine.isRunning() || isRemoved() || !worldPosition.equals(task.origin())
             || !level.isLoaded(task.target()) || !level.getBlockState(task.target()).equals(task.state())
             || !ItemStack.matches(getItem(TOOL_SLOT), task.tool())) {
-            cancelDig();
+            clearDig(true);
             return;
         }
         if (++digTicks < task.ticks()) {
@@ -957,7 +970,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             }
             return;
         }
-        cancelDig();
+        clearDig(false);
         if (!(player() instanceof net.minecraft.server.level.ServerPlayer player)) return;
         final ItemStack previousHand = player.getMainHandItem();
         final var previousGameMode = player.gameMode.getGameModeForPlayer();
@@ -986,12 +999,20 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
     }
 
-    private void cancelDig() {
+    private void clearDig(final boolean cancelled) {
         if (digTask != null && level != null && !level.isClientSide) {
             level.destroyBlockProgress(breakerId, digTask.target(), -1);
         }
         digTask = null;
         digStage = -1;
+        if (cancelled && swingingTool) {
+            swingingTool = false;
+            animationTicks = 0;
+            if (level != null && !level.isClientSide) {
+                final BlockState state = getBlockState();
+                level.sendBlockUpdated(worldPosition, state, state, 2);
+            }
+        }
     }
 
     @Callback(doc = "function(side:number):boolean,string -- Uses the selected item on the specified side.")
@@ -1187,14 +1208,14 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public void onChunkUnloaded() {
-        cancelDig();
+        clearDig(true);
         super.onChunkUnloaded();
         removeMachineNode();
     }
 
     @Override
     public void setRemoved() {
-        cancelDig();
+        clearDig(true);
         super.setRemoved();
         if (!relocating) {
             removeMachineNode();
@@ -1434,7 +1455,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         Network.joinOrCreateNetwork(this);
         level.updateNeighborsAt(sourcePos, state.getBlock());
         level.updateNeighborsAt(targetPos, state.getBlock());
-        startAnimation(sourcePos, 0, ModSettings.robotMoveDelay());
+        startAnimation(sourcePos, 0, ModSettings.robotMoveDelay(), false);
         setChanged();
         NeoForge.EVENT_BUS.post(new RobotMoveEvent.Post(this, direction));
         return new Object[]{true};

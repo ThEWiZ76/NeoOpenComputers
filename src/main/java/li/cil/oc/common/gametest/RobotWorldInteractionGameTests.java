@@ -22,6 +22,63 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
+    @GameTest(template = "empty")
+    public static void robotDigSynchronizesSwingAnimationAndCancellation(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        helper.setBlock(target, Blocks.STONE);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        final Object timing = new Object() {
+            @SubscribeEvent
+            public void onDig(final li.cil.oc.api.event.RobotBreakBlockEvent.Pre event) {
+                if (event.agent == robot) event.setBreakTime(1D);
+            }
+        };
+        NeoForge.EVENT_BUS.register(timing);
+        try {
+            helper.assertTrue(Boolean.TRUE.equals(((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3)[0]), "Animated dig did not start");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(timing);
+        }
+        final var registries = helper.getLevel().registryAccess();
+        final var packet = robot.getUpdateTag(registries);
+        final var animation = packet.getCompound("oc:animation");
+        helper.assertTrue(animation.getBoolean("swing") && animation.getInt("ticks") == 20, "Dig did not synchronize swing and duration");
+        final RobotBlockEntity client = new RobotBlockEntity(robot.getBlockPos(), robot.getBlockState());
+        client.handleUpdateTag(packet, registries);
+        helper.assertTrue(client.getItem(RobotBlockEntity.TOOL_SLOT).is(Items.IRON_PICKAXE), "Swing packet lost equipped tool");
+        final long start = animation.getLong("start");
+        helper.assertTrue(Math.abs(client.swingRenderOffset(start)) < 1e-5
+            && Math.abs(client.swingRenderOffset(start + 5D) - 45F) < 1e-5
+            && Math.abs(client.swingRenderOffset(start + 10D)) < 1e-5
+            && Math.abs(client.swingRenderOffset(start + 15D) - 45F) < 1e-5
+            && client.swingRenderOffset(start + 20D) == 0F, "Swing did not follow upstream repeated arc");
+        client.handleUpdateTag(packet, registries);
+        helper.assertTrue(Math.abs(client.swingRenderOffset(start + 15D) - 45F) < 1e-5, "Repeated packet restarted swing");
+        robot.machine().stop();
+        tickRobot(robot, 1);
+        client.handleUpdateTag(robot.getUpdateTag(registries), registries);
+        helper.assertTrue(!client.getUpdateTag(registries).getCompound("oc:animation").getBoolean("swing"), "Canceled dig retained client swing animation");
+        helper.assertTrue(client.swingRenderOffset(start + 5D) == 0F, "Canceled swing still renders");
+
+        helper.assertTrue(robot.toggleMachine(), "Short-swing fixture did not restart");
+        final double ratio = ModSettings.robotHarvestRatio();
+        try {
+            ModSettings.ROBOT_HARVEST_RATIO.set(0D);
+            helper.assertTrue(Boolean.TRUE.equals(((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3)[0]), "Short dig did not start");
+        } finally {
+            ModSettings.ROBOT_HARVEST_RATIO.set(ratio);
+        }
+        final var shortAnimation = robot.getUpdateTag(registries).getCompound("oc:animation");
+        helper.assertTrue(shortAnimation.getInt("ticks") == 5, "Short swing lost upstream minimum duration");
+        tickRobot(robot, 1);
+        helper.assertTrue(helper.getBlockState(target).isAir(), "Short dig did not complete");
+        client.handleUpdateTag(robot.getUpdateTag(registries), registries);
+        helper.assertTrue(Math.abs(client.swingRenderOffset(shortAnimation.getLong("start") + 2.5D) - 45F) < 1e-5,
+            "Successful short dig ended swing before five ticks");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void robotLuaResumesAfterBlockDigCompletes(final GameTestHelper helper) {
         final RobotBlockEntity robot = robot(helper, """

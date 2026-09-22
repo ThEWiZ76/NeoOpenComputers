@@ -253,3 +253,7 @@ robot.itemDamageRate toegevoegd met upstream default 0.1 en bereik 0..1. Swing g
 ### Graaftijd en Lua-wereldlezingen
 
 Robotgraaftaken lopen nu over serverticks op basis van hardness, grounded gereedschapssnelheid, harvestRatio en Pre-event. Voortgang/annulering toegevoegd; doel, tool, positie en machinestatus worden bewaakt. Echte Lua-test vond daarnaast een deadlock in direct detect; detect/compare lezen de wereld nu op de serverthread. Vaste tickgrenzen en Lua compare/swing/detect groen. Full build: 2058 unit-tests en 461 GameTests; robot-dig-threading-final.log. Zie ROBOT_TIMED_DIGGING.md. Swing-animatie, overige wereldactiepariteit en live controle blijven open.
+
+### Gereedschapsanimatie tijdens graven
+
+Swingstatus opgenomen in bestaande client-sync; renderer roteert alleen het gereedschap volgens upstream herhaalde sinusboog, met minimaal vijf ticks. Annulering stopt de animatie; succesvolle korte actie mag de boog afmaken. Vaste-tijdcurve, packet-roundtrip en annulerings/minimumduurtests groen. Full build: 2058 unit-tests en 462 GameTests; robot-swing-animation-final.log. Zie ROBOT_TIMED_DIGGING.md. Visuele bevestiging op scherm 3 en overige wereldacties blijven open.
