@@ -217,3 +217,7 @@ Dezelfde BE/machine/componenten blijven nu bestaan tijdens een stap. Twee opeenv
 ### Robotstatus in de client
 
 Blockentity-sync voor running/tier/lampkleur/tool ingevoerd; renderer gebruikt de gesynchroniseerde status en het echte toolslot. RED op ontbrekende status; daarna 2055 unit-tests en 449 GameTests groen. Zie ROBOT_VISUAL_SYNCHRONIZATION.md. Nieuwe JAR nog niet ingame bekeken; beweging/draai/swing-animatie en upstream actie-energie/timing blijven open.
+
+### Energie en timing van robotbeweging
+
+Move/turn verbruiken nu de configureerbare upstream energie en vragen de bijbehorende wachttijd aan. Lege buffer verandert de wereld niet; mislukte beweging betaalt energie terug. setLightColor retourneert RGB en wacht 0,1 seconde. Full build: 2055 unit-tests en 450 GameTests groen. Zie ROBOT_ACTION_ENERGY_TIMING.md. Animatie, overige wereldacties en live verificatie blijven open.

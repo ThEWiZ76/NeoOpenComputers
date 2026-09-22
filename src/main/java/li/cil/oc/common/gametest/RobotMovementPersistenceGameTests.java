@@ -9,6 +9,7 @@ import li.cil.oc.api.event.RobotMoveEvent;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.block.RobotBlock;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
 import li.cil.oc.common.blockentity.PowerConverterBlockEntity;
@@ -39,6 +40,26 @@ import java.util.Map;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotMovementPersistenceGameTests {
+    @GameTest(template = "empty")
+    public static void robotCannotMoveOrTurnWithoutEnergy(final GameTestHelper helper) throws Exception {
+        final BlockPos start = new BlockPos(1, 1, 1);
+        helper.setBlock(start, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.NORTH));
+        helper.setBlock(start.south(), Blocks.AIR);
+        final RobotBlockEntity robot = helper.getBlockEntity(start);
+        robot.onLoad();
+        final Connector energy = (Connector) robot.machine().node();
+        energy.changeBuffer(-energy.globalBuffer());
+        helper.assertTrue(energy.globalBuffer() == 0D, "Fixture did not drain initial machine buffer");
+        final Component component = (Component) robot.node();
+        final Object[] turn = component.invoke("turn", null, true);
+        helper.assertTrue(turn[0] == null && "not enough energy".equals(turn[1]), "Unpowered robot turned");
+        helper.assertTrue(robot.getBlockState().getValue(RobotBlock.FACING) == Direction.NORTH, "Unpowered turn changed facing");
+        final Object[] move = component.invoke("move", null, 3);
+        helper.assertTrue(move[0] == null && "not enough energy".equals(move[1]), "Unpowered robot moved");
+        helper.assertTrue(helper.getBlockEntity(start) == robot && helper.getBlockState(start.south()).isAir(), "Unpowered move changed world");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void robotSendsVisualStateWithoutPrivateMachineData(final GameTestHelper helper) {
         final BlockPos pos = new BlockPos(1, 1, 1);
@@ -172,6 +193,19 @@ public final class RobotMovementPersistenceGameTests {
         robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.DIAMOND, 3));
         final var machine = robot.machine();
         final var address = robot.node().address();
+        final Connector energy = (Connector) machine.node();
+        energy.changeBuffer(1000D);
+        final double beforeEnergy = energy.globalBuffer();
+        final List<Double> pauses = new java.util.ArrayList<>();
+        final li.cil.oc.api.machine.Context context = (li.cil.oc.api.machine.Context) java.lang.reflect.Proxy.newProxyInstance(
+            RobotMovementPersistenceGameTests.class.getClassLoader(), new Class<?>[]{li.cil.oc.api.machine.Context.class},
+            (proxy, method, args) -> {
+                if (method.getName().equals("pause")) {
+                    pauses.add((Double) args[0]);
+                    return true;
+                }
+                throw new AssertionError("Unexpected callback context method: " + method.getName());
+            });
         final var blockDestination = new java.util.concurrent.atomic.AtomicBoolean(true);
         final var completedMoves = new java.util.ArrayList<RobotMoveEvent.Post>();
         final Object listener = new Object() {
@@ -191,8 +225,10 @@ public final class RobotMovementPersistenceGameTests {
         };
         NeoForge.EVENT_BUS.register(listener);
         try {
-            final Object[] result = ((Component) robot.node()).invoke("move", null, 3);
-            helper.assertTrue(Boolean.FALSE.equals(result[0]), "Occupied destination was accepted");
+            final Object[] result = ((Component) robot.node()).invoke("move", context, 3);
+            helper.assertTrue(result[0] == null, "Occupied destination was accepted");
+            helper.assertTrue(Math.abs(energy.globalBuffer() - beforeEnergy) < 1e-6, "Blocked move consumed energy");
+            helper.assertTrue(pauses.equals(List.of(0.4D)), "Blocked move did not enforce failure delay");
             helper.assertTrue(helper.getBlockState(target).is(Blocks.STONE), "Move overwrote event-placed block");
             helper.assertTrue(helper.getBlockEntity(start) == robot && !robot.isRemoved(), "Blocked movement removed source robot");
             helper.assertTrue(robot.machine() == machine && address.equals(robot.node().address()), "Blocked movement replaced runtime");
@@ -201,11 +237,23 @@ public final class RobotMovementPersistenceGameTests {
             helper.assertTrue(completedMoves.isEmpty(), "Blocked movement posted success event");
             blockDestination.set(false);
             helper.setBlock(target, Blocks.AIR);
-            final Object[] moved = ((Component) robot.node()).invoke("move", null, 3);
+            final Object[] moved = ((Component) robot.node()).invoke("move", context, 3);
             helper.assertTrue(Boolean.TRUE.equals(moved[0]), "Robot could not move after destination cleared");
             helper.assertTrue(completedMoves.size() == 1 && completedMoves.getFirst().direction == Direction.SOUTH,
                 "Successful movement did not post one event for the retained robot");
             helper.assertTrue(helper.getBlockEntity(target) == robot, "Success event robot is not destination robot");
+            final double afterMove = beforeEnergy - ModSettings.robotMoveCost();
+            helper.assertTrue(Math.abs(energy.globalBuffer() - afterMove) < 1e-6, "Move did not consume configured energy exactly once");
+            final Object[] turned = ((Component) robot.node()).invoke("turn", context, true);
+            helper.assertTrue(Boolean.TRUE.equals(turned[0]) && robot.getBlockState().getValue(RobotBlock.FACING) == Direction.EAST,
+                "Powered turn did not rotate robot");
+            helper.assertTrue(Math.abs(energy.globalBuffer() - (afterMove - ModSettings.robotTurnCost())) < 1e-6,
+                "Turn did not consume configured energy exactly once");
+            helper.assertTrue(pauses.equals(List.of(0.4D, ModSettings.robotMoveDelay(), ModSettings.robotTurnDelay())),
+                "Move/turn did not request configured delays");
+            final Object[] color = ((Component) robot.node()).invoke("setLightColor", context, 0xFF123456);
+            helper.assertTrue(Integer.valueOf(0x123456).equals(color[0]) && pauses.getLast() == 0.1D,
+                "setLightColor must return masked RGB and pause for 0.1 seconds");
         } finally {
             NeoForge.EVENT_BUS.unregister(listener);
         }

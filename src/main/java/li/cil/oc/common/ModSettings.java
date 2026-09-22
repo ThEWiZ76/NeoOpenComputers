@@ -118,6 +118,10 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> HOLOGRAM_MAX_TRANSLATION;
     public static final ModConfigSpec.DoubleValue HOLOGRAM_SET_RAW_DELAY;
     public static final ModConfigSpec.BooleanValue IGNORE_POWER;
+    public static final ModConfigSpec.DoubleValue ROBOT_MOVE_COST;
+    public static final ModConfigSpec.DoubleValue ROBOT_TURN_COST;
+    public static final ModConfigSpec.DoubleValue ROBOT_MOVE_DELAY;
+    public static final ModConfigSpec.DoubleValue ROBOT_TURN_DELAY;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.DoubleValue CHUNKLOADER_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
@@ -353,6 +357,12 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("robot");
+        builder.push("delays");
+        ROBOT_MOVE_DELAY = builder.comment("Robot movement delay in seconds, before upstream 0.06-second scheduling adjustment.")
+            .defineInRange("move", 0.4D, 0D, Double.MAX_VALUE);
+        ROBOT_TURN_DELAY = builder.comment("Robot turn delay in seconds, before upstream 0.06-second scheduling adjustment.")
+            .defineInRange("turn", 0.4D, 0D, Double.MAX_VALUE);
+        builder.pop();
         LIMIT_FLIGHT_HEIGHT = builder
             .comment("Limit robot flight height. Set to -1 to disable. OpenComputers upstream default is 8.")
             .defineInRange("limitFlightHeight", 8, -1, Integer.MAX_VALUE);
@@ -573,6 +583,10 @@ public final class ModSettings {
             .defineInRange("nanomachines", 100_000D, 0D, Double.MAX_VALUE);
         builder.pop();
         builder.push("cost");
+        ROBOT_MOVE_COST = builder.comment("Energy consumed per successful robot move. Upstream default is 15.")
+            .defineInRange("robotMove", 15D, 0D, Double.MAX_VALUE);
+        ROBOT_TURN_COST = builder.comment("Energy consumed per successful robot turn. Upstream default is 2.5.")
+            .defineInRange("robotTurn", 2.5D, 0D, Double.MAX_VALUE);
         WIRELESS_COST_PER_RANGE = builder
             .comment("Wireless card energy cost per block of signal strength for tier one and tier two. OpenComputers upstream default is [0.05, 0.05].")
             .defineList("wirelessCostPerRange", DEFAULT_WIRELESS_COST_PER_RANGE, value -> value instanceof Double && (Double) value >= 0D);
@@ -917,6 +931,22 @@ public final class ModSettings {
 
     public static double robotActionXp() {
         return Math.max(0D, doubleValue(ROBOT_ACTION_XP));
+    }
+
+    public static double robotMoveCost() {
+        return Math.max(0D, doubleValue(ROBOT_MOVE_COST));
+    }
+
+    public static double robotTurnCost() {
+        return Math.max(0D, doubleValue(ROBOT_TURN_COST));
+    }
+
+    public static double robotMoveDelay() {
+        return Math.max(0.05D, doubleValue(ROBOT_MOVE_DELAY) - 0.06D);
+    }
+
+    public static double robotTurnDelay() {
+        return Math.max(0.05D, doubleValue(ROBOT_TURN_DELAY) - 0.06D);
     }
 
     public static double robotExhaustionXpRate() {

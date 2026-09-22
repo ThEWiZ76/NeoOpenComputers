@@ -521,11 +521,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new Object[]{lightColor};
     }
 
-    @Callback(doc = "function(value:number):boolean -- Sets robot light color.")
+    @Callback(doc = "function(value:number):number -- Sets robot light color and returns the new RGB value.")
     public Object[] setLightColor(final Context context, final Arguments arguments) {
         lightColor = arguments.checkInteger(0) & 0xFFFFFF;
         setChanged();
-        return new Object[]{true};
+        if (context != null) context.pause(0.1D);
+        return new Object[]{lightColor};
     }
 
     @Override
@@ -642,15 +643,45 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     @Callback(doc = "function(side:number):boolean,string -- Moves the robot.")
     public Object[] move(final Context context, final Arguments arguments) {
         final Direction direction = movementDirection(facing(), arguments.checkInteger(0));
-        return moveRobot(direction);
+        if (level == null || !level.isLoaded(worldPosition.relative(direction)) || !level.isEmptyBlock(worldPosition.relative(direction))) {
+            final Object[] failure = moveRobot(direction);
+            failure[0] = null;
+            if (context != null) context.pause(0.4D);
+            return failure;
+        }
+        final Connector connector = connectorNode();
+        final double cost = ModSettings.ignorePower() ? 0D : ModSettings.robotMoveCost();
+        if (cost > 0D && (connector == null || !connector.tryChangeBuffer(-cost))) {
+            return new Object[]{null, "not enough energy"};
+        }
+        boolean moved = false;
+        try {
+            final Object[] result = moveRobot(direction);
+            moved = Boolean.TRUE.equals(result[0]);
+            if (!moved) result[0] = null;
+            if (context != null) context.pause(moved ? ModSettings.robotMoveDelay() : 0.4D);
+            return result;
+        } finally {
+            if (!moved && cost > 0D) connector.changeBuffer(cost);
+        }
     }
 
     @Callback(doc = "function(clockwise:boolean):boolean -- Turns the robot.")
     public Object[] turn(final Context context, final Arguments arguments) {
         final Direction newFacing = turnedFacing(facing(), arguments.checkBoolean(0));
-        if (level != null && getBlockState().hasProperty(RobotBlock.FACING)) {
-            level.setBlock(worldPosition, getBlockState().setValue(RobotBlock.FACING, newFacing), 3);
+        if (level == null || !getBlockState().hasProperty(RobotBlock.FACING)) {
+            return new Object[]{null, "no world"};
         }
+        final Connector connector = connectorNode();
+        final double cost = ModSettings.ignorePower() ? 0D : ModSettings.robotTurnCost();
+        if (cost > 0D && (connector == null || !connector.tryChangeBuffer(-cost))) {
+            return new Object[]{null, "not enough energy"};
+        }
+        if (!level.setBlock(worldPosition, getBlockState().setValue(RobotBlock.FACING, newFacing), 3)) {
+            if (cost > 0D) connector.changeBuffer(cost);
+            return new Object[]{null, "blocked"};
+        }
+        if (context != null) context.pause(ModSettings.robotTurnDelay());
         setChanged();
         return new Object[]{true};
     }
