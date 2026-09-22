@@ -416,3 +416,7 @@ Upstream common/item/Tablet.scala caches wrappers, saves components, retains exe
 The earlier tablet gap section is historical: runtime, item use, terminal, analysis, cache, save/drop/death/container/dimension handling, full BIOS/OpenOS shell continuation and the one-slot expansion editor are now implemented with server-side regression coverage. The editor follows upstream container slot type/tier limits and locks the held tablet. Final tablet-editor-final.log: build,2108units,all544GameTests pass. See [[../04 ai-context/Tablet runtime]] for exact scope and evidence.
 
 Still required: writable OpenOS installation through the complete player flow, actual full process restart, external automation paths and real-client visual/input acceptance on display3. Existing wider parity, platform, multiplayer/survival and release gates remain in scope; this checkpoint is not full-port completion.
+
+## Tablet writable installation checkpoint - 2026-09-22
+
+The writable OpenOS installation gate now has an actual installer regression: insert bundled media through the editor, boot BIOS/OpenOS, run install --noreboot and confirm, remove media through the editor, boot installed HDD, then write/read a home file through shell commands. No preinstalled filesystem fixture. Final tablet-install-final.log: build/2108units/all545GameTests pass. This supersedes the writable-installation item above for this native tablet setup. Real assembler GUI/survival flow, actual process restart, wider variants and client visual acceptance remain required.

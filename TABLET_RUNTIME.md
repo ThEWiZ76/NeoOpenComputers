@@ -12,7 +12,7 @@ Latest OpenOS coverage: TabletOpenOsGameTests boots the shipped Lua BIOS and rea
 
 This exposed a production gap: FloppyItem returned unbacked environments for read-only loot media. Machine.save called environment.save, but its node identity and handles never reached the item; restoring the internal OpenOS disk assigned another address. The red tablet-openos-verified.log showed `no such component` when the restored shell tried executing echo. Read-only floppy paths now load driver state and use the same StackBackedEnvironment persistence wrapper as writable floppies, including legacy loot path/factory formats. Filesystem contents remain read-only. The modern OpenOS format is directly exercised by this new lifecycle test; legacy full-shell lifecycle variants were not added.
 
-Final tablet-openos-fixed.log: build, 2108 units and all541 GameTests passed. Still open: writable OpenOS installation, actual process restart, external automation, wider port parity and real-client visual acceptance. Tier2 editor implementation is described below. No client/install/push/merge.
+Final tablet-openos-fixed.log: build, 2108 units and all541 GameTests passed. Still open: actual process restart, external automation, wider port parity and real-client visual acceptance. Tier2 editor and writable installation coverage are described below. No client/install/push/merge.
 
 TabletItem now ticks a server-cached runtime from inventoryTick. A short use/release starts the computer and opens TabletTerminalMenu through the existing TerminalScreen/TerminalNetworking transport. Sneak short-use stops it and opens the expansion editor on tier2/creative tablets. Holding a block target for ten ticks then releasing sends analysis through the live component network and queues tablet_use. The null-player analyzeBlock utility retains its existing fixture path; actual player use no longer constructs a temporary analysis VM.
 
@@ -24,7 +24,13 @@ SimpleMachine.popSignal now applies registered converters when consuming a signa
 
 TabletUseGameTests exercises LuaJ and native short-use/menu creation, real inventory/held-item processing through ServerPlayer.doTick (embedded mock connections do not call it), screen keyboard delivery, current EEPROM data in actual player serialization, native snapshots, long-use sign scans, sneak-stop, logout disposal, replacement-stack rebinding, copy isolation, invalid menus after removal, idle eviction and actual Q-drop preserving data modified after the prior save. The final tablet-use-lifecycle-verified.log passed build, all 2108 unit tests and all 533 GameTests. No client install, push or merge.
 
-Remaining: actual server-restart lifecycle coverage and non-menu automation transfers, writable OpenOS installation, and live visual/input acceptance on display3. Death/keepInventory respawn, dimension coverage and the component editor are described below. The rack timing diagnosis is recorded above. Do not equate this tested subset with complete tablet or complete port acceptance.
+Remaining: actual server-restart lifecycle coverage and non-menu automation transfers, and live visual/input acceptance on display3. Death/keepInventory respawn, dimension coverage, writable installation and the component editor are described below. The rack timing diagnosis is recorded above. Do not equate this tested subset with complete tablet or complete port acceptance.
+
+## Writable OpenOS installation - 2026-09-22
+
+TabletInstallGameTests uses a native CPU tier2, two tier2 memory sticks, BIOS, GPU/keyboard and internal HDD tier1 in an assembled tablet with a disk-drive expansion container. It inserts the actual OpenOS floppy through TabletMenu shift-click, opens the terminal via item use, pastes `install --noreboot`, and confirms the shipped installer's own prompt. After installation it stops the tablet, removes the floppy through the editor, checks that only HDD and tmp filesystems remain, and starts again from the installed HDD.
+
+The installed shell must show its writable home, execute `echo installed > /home/install-proof`, then produce the standalone installed line immediately after `cat /home/install-proof`. The output check is scoped to cat so earlier terminal text cannot satisfy readback. This exercises the real bundled installer, filesystem copy, media removal, reboot and write/read path; it does not prepopulate an installed disk. The tablet is assembled through the item assembly API rather than the assembler GUI. Charging uses the normal item API to keep the long fixture powered. No production change was needed for this test. Final tablet-install-final.log: build, 2108 unit tests and all545 GameTests passed. Actual process restart, full assembler-to-client survival flow and visual acceptance remain open. No client install, push or merge.
 
 ## Expansion editor - 2026-09-22
 
@@ -34,7 +40,7 @@ TabletRuntime supplies a one-item expansion inventory; changes rebuild the stopp
 
 TabletEditorGameTests covers tier2 editor opening/stopping, one-slot exposure, wrong-type/higher-tier/screen/blacklisted wired-card rejection, allowed wireless-card shift insertion with exact item counts and live modem attachment, removal/persistence/disconnection, unchanged fixed CPU, main-hand pickup/shift lock, offhand swap lock and invalidation after tablet removal. Tier1 only stops and a tablet without a container rejects expansion items. Embedded connections explicitly advertise advanced_open_screen in these fixtures and the earlier sneak-stop fixture; they do not perform a real NeoForge handshake. An initial test incorrectly chose the intentionally blacklisted wired card, so the fixture was corrected rather than relaxing tablet rules.
 
-Final tablet-editor-final.log: build, 2108 unit tests and all544 GameTests pass. Use: hold a tier2 or creative tablet and briefly sneak-right-click; release before the ten-tick block-analysis threshold. No client/install/push/merge. Writable OpenOS installation, actual process restart and full visual acceptance remain open.
+Final tablet-editor-final.log: build, 2108 unit tests and all544 GameTests pass. Use: hold a tier2 or creative tablet and briefly sneak-right-click; release before the ten-tick block-analysis threshold. No client/install/push/merge. Actual process restart and full visual acceptance remain open; writable OpenOS installation is covered above.
 
 ## Container transfers - 2026-09-22
 

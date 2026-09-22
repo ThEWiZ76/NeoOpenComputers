@@ -86,7 +86,7 @@ public final class TabletOpenOsGameTests {
             }).thenSucceed();
     }
 
-    private static void openTerminal(GameTestHelper helper, ServerPlayer player) {
+    static void openTerminal(GameTestHelper helper, ServerPlayer player) {
         ModItems.TABLET.get().use(player.level(), player, InteractionHand.MAIN_HAND);
         player.releaseUsingItem();
         helper.assertTrue(player.containerMenu instanceof TerminalMenu menu && menu.acceptsInput(player), "Tablet terminal unavailable");
@@ -96,12 +96,12 @@ public final class TabletOpenOsGameTests {
         for (char c : text.toCharArray()) key(player, runtime, c, NeoOpenComputersGameTests.keyCode(c));
     }
 
-    private static void key(ServerPlayer player, TabletRuntime runtime, char character, int code) {
+    static void key(ServerPlayer player, TabletRuntime runtime, char character, int code) {
         runtime.screen().keyDown(character, code, player);
         runtime.screen().keyUp(character, code, player);
     }
 
-    private static String text(TabletRuntime runtime) {
+    static String text(TabletRuntime runtime) {
         final var snapshot = runtime.screen().terminalSnapshot();
         final StringBuilder text = new StringBuilder();
         for (int row = 0; row < runtime.screen().getHeight(); row++) text.append(snapshot.line(row)).append('\n');
