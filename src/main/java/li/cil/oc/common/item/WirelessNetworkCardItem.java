@@ -32,7 +32,14 @@ public class WirelessNetworkCardItem extends Item implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new WirelessNetworkCardEnvironment(host, tier);
+        final var environment = new WirelessNetworkCardEnvironment(host, tier) {
+            @Override public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override
