@@ -23,6 +23,25 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
     @GameTest(template = "empty")
+    public static void robotRuntimeSlotsFollowInstalledContainerTypesAndTiers(final GameTestHelper helper) {
+        final RobotBlockEntity robot = robot(helper);
+        robot.setTier(2);
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, java.util.List.of(
+            new ItemStack(li.cil.oc.common.ModItems.CARD_CONTAINER_TIER2.get()),
+            new ItemStack(li.cil.oc.common.ModItems.UPGRADE_CONTAINER_TIER1.get())));
+        helper.assertTrue(robot.canPlaceItem(1, new ItemStack(li.cil.oc.common.ModItems.NETWORK_CARD.get())), "Installed card container rejected a supported card");
+        helper.assertTrue(!robot.canPlaceItem(1, new ItemStack(li.cil.oc.common.ModItems.GRAPHICS_CARD_TIER3.get())), "Container accepted card above its provided tier");
+        helper.assertTrue(!robot.canPlaceItem(1, new ItemStack(li.cil.oc.common.ModItems.HOVER_UPGRADE_TIER1.get())), "Card container accepted an upgrade");
+        helper.assertTrue(robot.canPlaceItem(2, new ItemStack(li.cil.oc.common.ModItems.HOVER_UPGRADE_TIER1.get())), "Upgrade container rejected matching upgrade");
+        helper.assertTrue(!robot.canPlaceItem(2, new ItemStack(li.cil.oc.common.ModItems.SCREEN_TIER1.get()))
+            && !robot.canPlaceItem(2, new ItemStack(li.cil.oc.common.ModItems.KEYBOARD.get())), "Runtime container accepted assembler-only screen or keyboard");
+        helper.assertTrue(!robot.canPlaceItem(3, new ItemStack(Items.DIRT)), "Missing container exposed an arbitrary storage slot");
+        helper.assertTrue(robot.canPlaceItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(li.cil.oc.common.ModItems.CPU_TIER1.get()))
+            && robot.canPlaceItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(li.cil.oc.common.ModItems.CPU_TIER1.get())), "Tool/cargo rejected ordinary stored hardware items");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotInstalledHoverUpgradeExtendsFlightHeight(final GameTestHelper helper) throws Exception {
         verifyHoverFlight(helper, 0, 3, true);
     }

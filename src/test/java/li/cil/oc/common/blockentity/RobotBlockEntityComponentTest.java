@@ -201,16 +201,6 @@ final class RobotBlockEntityComponentTest {
     }
 
     @Test
-    void directRobotInventoryRejectsAssemblerOnlyHardware() throws Exception {
-        final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
-
-        assertTrue(source.contains("Slot.CPU.equals(slot)"));
-        assertTrue(source.contains("Slot.Memory.equals(slot)"));
-        assertTrue(source.contains("SLOT_TYPE_EEPROM.equals(slot)"));
-        assertTrue(source.contains("return false; // Assembler-only hardware."));
-    }
-
-    @Test
     void tankViewExposesInternalFluidTankEnvironmentsBySlot() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java"));
 

@@ -297,3 +297,7 @@ Hovercontrole scant nu echte internalComponents in plaats van ongeldige gecombin
 ### Slotkoppeling voor alle overige machinehosts
 
 De bij Robot gevonden geneste-iteratorfout ook gereproduceerd en hersteld in computerkast, microcontroller, drone en rackserver. Alle vier koppelen aangesloten environments nu via het exacte bronitem; rack-busregistratie behouden. Vier concrete hosttests installeren CPU/RAM/EEPROM en controleren unieke volledige slotmapping na twee herbouwcycli. Full build: 2058 unit-tests en 492 GameTests; host-component-mapping-final.log. Zie COMPONENT_SLOT_MAPPING.md. Runtime robotcontainers, gecombineerde API-slotsemantiek en verdere portpariteit blijven open.
+
+### Toelatingsregels voor verwisselbare robotcomponenten
+
+Runtime slots 1..3 volgen nu het type en de tier van hun ingebouwde container; ontbrekende containers sluiten het slot, scherm/toetsenbord blijven uitgesloten. Tool/cargo mogen hardwareitems als gewone spullen bevatten, zoals upstream. Echte robottoets voor type/tier/missing container en cargo; oude tegenstrijdige source-stringtest verwijderd. Full build: 2057 unit-tests en 493 GameTests; robot-container-rules-verified.log. Zie ROBOT_RUNTIME_CONTAINERS.md. Dit is alleen toelating: live component-aanmaak/verwijdering zonder Lua-reboot, state-persistence en clientslotweergave blijven open.

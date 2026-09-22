@@ -4901,7 +4901,7 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(RobotMenu.missingRequirementsFor(robot) == 0, "Placed robot did not load assembled CPU, memory, and EEPROM");
         helper.assertFalse(robot.hasScreenHardware(), "GPU-only robot incorrectly reported an installed screen");
-        helper.assertFalse(robot.canPlaceItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(ModItems.CPU_TIER1.get())), "Robot allowed direct CPU insertion into runtime inventory");
+        helper.assertTrue(robot.canPlaceItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(ModItems.CPU_TIER1.get())), "Robot rejected a CPU stored as ordinary cargo");
         helper.succeed();
     }
 

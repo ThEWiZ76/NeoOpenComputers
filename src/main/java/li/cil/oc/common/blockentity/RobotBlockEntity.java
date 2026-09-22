@@ -1404,9 +1404,6 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (!isRuntimeMutableSlot(slot) || stack.isEmpty()) {
             return false;
         }
-        if (isAssemblerOnlyHardware(stack)) {
-            return false; // Assembler-only hardware.
-        }
         return true;
     }
 
@@ -1475,7 +1472,19 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public boolean canPlaceItem(final int slot, final ItemStack stack) {
-        return mutableSlotAcceptsStack(tier, slot, stack);
+        if (!mutableSlotAcceptsStack(tier, slot, stack)) return false;
+        if (slot >= CONTAINER_RUNTIME_SLOT_START && slot < CARGO_SLOT_START) {
+            final ItemStack containerStack = hardwareItems.get(slot - CONTAINER_RUNTIME_SLOT_START);
+            final DriverItem containerDriver = Driver.driverFor(containerStack, Robot.class);
+            final DriverItem driver = Driver.driverFor(stack, Robot.class);
+            return containerDriver instanceof li.cil.oc.api.driver.item.Container container
+                && driver != null
+                && !(driver instanceof li.cil.oc.common.driver.ScreenItemDriver)
+                && !(driver instanceof li.cil.oc.common.driver.KeyboardItemDriver)
+                && container.providedSlot(containerStack).equals(driver.slot(stack))
+                && driver.tier(stack) <= container.providedTier(containerStack);
+        }
+        return true;
     }
 
     @Override
@@ -1946,21 +1955,6 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return driver != null
             && slotType(tier, slot).equals(driver.slot(stack))
             && driver.tier(stack) <= slotTier(tier, slot);
-    }
-
-    private static boolean isAssemblerOnlyHardware(final ItemStack stack) {
-        final DriverItem driver = Driver.driverFor(stack, Robot.class);
-        if (driver == null) {
-            return false;
-        }
-        final String slot = driver.slot(stack);
-        return Slot.Container.equals(slot)
-            || Slot.Upgrade.equals(slot)
-            || Slot.Card.equals(slot)
-            || Slot.CPU.equals(slot)
-            || Slot.Memory.equals(slot)
-            || Slot.HDD.equals(slot)
-            || SLOT_TYPE_EEPROM.equals(slot);
     }
 
     public static ListTag saveHardwareItems(final NonNullList<ItemStack> hardwareItems) {
