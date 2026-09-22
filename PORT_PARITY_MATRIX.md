@@ -259,3 +259,11 @@ Added drone compare(side[, fuzzy]) and shared its implementation with robots in 
 AgentBlockComparisonGameTests covers both hosts: selected versus other slot, empty/matching/different block, rotated oak log, fuzzy argument, redstone wire with a supporting block, non-block diamond, inventory/selection conservation and invalid side on an empty slot. Initial failures proved missing drone compare and robot invalid-side acceptance (agent-compare-red.log). A later fixture needed a support block for redstone; final build/all602 GameTests pass (agent-compare-final.log).
 
 World item insertion/extraction, actual protection-mod interoperability, native continuation of these world callbacks and client acceptance remain open. No client launch/install, push or merge.
+
+## Shared robot/drone drop - 2026-09-22
+
+Added drone drop and replaced the robot's unconditional world-item spawn with shared AgentInventoryWorldControl.drop. It validates local/global sides before mutation, clamps requested count0..64, rejects unloaded targets, inserts through the opposing sided block item capability or an adjacent entity automation capability, and retains partial/full remainders. Inventory permission checks post RightClickBlock/EntityInteract; denied access falls back to world tossing as upstream does. ItemTossEvent cancellation or rejected entity insertion retains cargo. World toss position/motion/pickup delay follow upstream. Config robot.delays.drop defaults0.5 with the0.06 scheduling adjustment.
+
+AgentDropGameTests verifies robot and drone with actual chests: exact requested insertion, partial one-item capacity, full rejection, zero world drop, canceled toss conservation, one successful two-diamond world drop and unchanged selected slot. Build/all604 GameTests pass (agent-drop.log).
+
+Entity inventory insertion and inventory interaction denial are implemented but not exercised by these two cases; actual protection mods and sided custom inventories remain integration gates. Suck remains to be ported for drones/corrected for robots. No client launch/install, push or merge.

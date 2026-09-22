@@ -17,14 +17,17 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 public final class AgentWorldControl {
     private AgentWorldControl() { }
 
-    private static BlockPos target(Agent agent, Arguments args) {
+    static Direction side(Agent agent, Arguments args) {
         final int side = args.checkInteger(0);
         if (side < 0 || side > 5 || agent instanceof Robot && side != 0 && side != 1 && side != 3) {
             throw new IllegalArgumentException("invalid side");
         }
         final var direction = Direction.from3DDataValue(side);
-        return BlockPos.containing(agent.xPosition(), agent.yPosition(), agent.zPosition())
-            .relative(agent instanceof Robot robot ? robot.toGlobal(direction) : direction);
+        return agent instanceof Robot robot ? robot.toGlobal(direction) : direction;
+    }
+
+    private static BlockPos target(Agent agent, Arguments args) {
+        return BlockPos.containing(agent.xPosition(), agent.yPosition(), agent.zPosition()).relative(side(agent, args));
     }
 
     public static Object[] compare(Agent agent, Arguments args) {

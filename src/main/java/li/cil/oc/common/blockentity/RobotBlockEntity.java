@@ -881,23 +881,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Callback(doc = "function(side:number[, count:number]):boolean,string -- Drops items from the selected slot.")
     public Object[] drop(final Context context, final Arguments arguments) {
-        if (level == null) {
-            return new Object[]{false, "no world"};
-        }
-        final ItemStack source = selectedItem(selectedSlot);
-        if (source.isEmpty()) {
-            return new Object[]{false, "empty"};
-        }
-        final int amount = Math.min(source.getCount(), Math.max(1, arguments.count() > 1 ? arguments.checkInteger(1) : source.getCount()));
-        final ItemStack dropped = removeSelectedItem(selectedSlot, amount);
-        if (dropped.isEmpty()) {
-            return new Object[]{false, "empty"};
-        }
-        final BlockPos target = targetPos(arguments.checkInteger(0));
-        final ItemEntity entity = new ItemEntity(level, target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, dropped);
-        level.addFreshEntity(entity);
-        setChanged();
-        return new Object[]{true};
+        return li.cil.oc.common.component.AgentInventoryWorldControl.drop(this, context, arguments);
     }
 
     @Callback(doc = "function(side:number):boolean,string -- Sucks a nearby item stack into the robot inventory.")

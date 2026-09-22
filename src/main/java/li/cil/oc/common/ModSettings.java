@@ -130,6 +130,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_COST;
     public static final ModConfigSpec.DoubleValue ROBOT_MOVE_DELAY;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_DELAY;
+    public static final ModConfigSpec.DoubleValue ROBOT_DROP_DELAY;
     public static final ModConfigSpec.DoubleValue MFU_RELAY_COST;
     public static final ModConfigSpec.DoubleValue CHUNKLOADER_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> WIRELESS_COST_PER_RANGE;
@@ -388,6 +389,8 @@ public final class ModSettings {
             .defineInRange("move", 0.4D, 0D, Double.MAX_VALUE);
         ROBOT_TURN_DELAY = builder.comment("Robot turn delay in seconds, before upstream 0.06-second scheduling adjustment.")
             .defineInRange("turn", 0.4D, 0D, Double.MAX_VALUE);
+        ROBOT_DROP_DELAY = builder.comment("Item drop delay before upstream 0.06-second scheduling adjustment.")
+            .defineInRange("drop", 0.5D, 0D, Double.MAX_VALUE);
         builder.pop();
         LIMIT_FLIGHT_HEIGHT = builder
             .comment("Limit robot flight height. Set to -1 to disable. OpenComputers upstream default is 8.")
@@ -997,6 +1000,10 @@ public final class ModSettings {
 
     public static double robotTurnDelay() {
         return Math.max(0.05D, doubleValue(ROBOT_TURN_DELAY) - 0.06D);
+    }
+
+    public static double robotDropDelay() {
+        return Math.max(0D, doubleValue(ROBOT_DROP_DELAY) - 0.06D);
     }
 
     public static double robotExhaustionXpRate() {
