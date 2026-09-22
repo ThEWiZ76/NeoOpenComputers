@@ -1360,34 +1360,53 @@ final class MachineRegistryTest {
     }
 
     @Test
-    void uptimeUsesElapsedSecondsSinceStart() {
+    void uptimeCountsUpdatesIncludingSleepAndPauseInsteadOfWallClock() {
         MutableClock clock = new MutableClock();
-        SimpleMachine machine = new SimpleMachine(null, clock);
+        SimpleMachine machine = uptimeMachine(clock);
 
         clock.nanos = 1_000_000_000L;
         assertTrue(machine.start());
         clock.nanos = 3_500_000_000L;
-
+        assertEquals(0D, machine.upTime());
+        for (int tick = 0; tick < 40; tick++) machine.update();
+        assertEquals(2D, machine.upTime());
+        assertTrue(machine.pause(10));
+        for (int tick = 0; tick < 10; tick++) machine.update();
         assertEquals(2.5D, machine.upTime(), 0.000_001D);
         assertTrue(machine.stop());
+        machine.update();
         assertEquals(0D, machine.upTime(), 0.000_001D);
+        machine.node().remove();
+    }
+
+    private static SimpleMachine uptimeMachine(final MutableClock clock) {
+        OpenComputersApi.initialize();
+        final DriverRegistry drivers = new DriverRegistry();
+        drivers.add(new TestProcessorDriver());
+        API.driver = drivers;
+        final SimpleMachine machine = new SimpleMachine(new TestHost(), clock);
+        machine.onHostChanged();
+        return machine;
     }
 
     @Test
     void uptimeSurvivesReloadWithDifferentClockEpochAndResetsOnRestart() {
         final MutableClock before = new MutableClock();
         before.nanos = 1_000_000_000L;
-        final SimpleMachine original = new SimpleMachine(null, before);
+        final SimpleMachine original = uptimeMachine(before);
         assertTrue(original.start());
         before.nanos = 3_500_000_000L;
+        for (int tick = 0; tick < 50; tick++) original.update();
         final CompoundTag saved = new CompoundTag();
         original.save(saved);
         original.node().remove();
         final MutableClock after = new MutableClock();
-        final SimpleMachine loaded = new SimpleMachine(null, after);
+        final SimpleMachine loaded = uptimeMachine(after);
         loaded.load(saved);
         assertEquals(2.5D, loaded.upTime(), 0.000_001D);
         after.nanos = 500_000_000L;
+        assertEquals(2.5D, loaded.upTime());
+        for (int tick = 0; tick < 10; tick++) loaded.update();
         assertEquals(3D, loaded.upTime(), 0.000_001D);
         loaded.save(saved);
         after.nanos = 1_000_000_000_000L;
@@ -1398,6 +1417,19 @@ final class MachineRegistryTest {
         assertTrue(loaded.start());
         assertEquals(0D, loaded.upTime());
         loaded.node().remove();
+    }
+
+    @Test
+    void uptimeReadsPreviousSecondsSnapshotWithoutCountingOfflineTime() {
+        final SimpleMachine machine = uptimeMachine(new MutableClock());
+        final CompoundTag saved = new CompoundTag();
+        saved.putBoolean("running", true);
+        saved.putDouble("uptimeSeconds", 2.5D);
+        machine.load(saved);
+        assertEquals(2.5D, machine.upTime());
+        machine.save(saved);
+        assertEquals(50L, saved.getLong("uptime"));
+        machine.node().remove();
     }
 
     @Test

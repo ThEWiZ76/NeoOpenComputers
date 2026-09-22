@@ -69,6 +69,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private static final String TMP_TAG = "tmp";
     private static final String CPU_TIME_NANOS_TAG = "cpuTimeNanos";
     private static final String UPTIME_SECONDS_TAG = "uptimeSeconds";
+    private static final String UPTIME_TAG = "uptime";
     private static final String CHECKED_SIGNAL_MESSAGE = "computer.checked_signal";
     private static final String COMPUTER_SIGNAL_MESSAGE = "computer.signal";
     private static final String COMPUTER_START_MESSAGE = "computer.start";
@@ -92,8 +93,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private double maxCallBudget = 1D;
     private double callBudget;
     private boolean inSynchronizedCall;
-    private long startedAtNanos = -1L;
-    private double uptimeBeforeLoad;
+    private long uptimeTicks;
     private long sleepUntilNanos = -1L;
     private long sleepUntilWorldTime = -1L;
     private long pauseUntilNanos = -1L;
@@ -156,7 +156,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         }
         running = false;
         paused = false;
-        startedAtNanos = -1L;
+        uptimeTicks = 0L;
         sleepUntilNanos = -1L;
         sleepUntilWorldTime = -1L;
         pauseUntilNanos = -1L;
@@ -371,10 +371,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public double upTime() {
-        if ((!running && !paused) || startedAtNanos < 0) {
-            return 0;
-        }
-        return uptimeBeforeLoad + Math.max(0, nanoTime.getAsLong() - startedAtNanos) / NANOS_PER_SECOND;
+        return running || paused ? uptimeTicks / 20D : 0D;
     }
 
     @Override
@@ -441,7 +438,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             architecture.close();
         }
         signals.clear();
-        startedAtNanos = -1L;
+        uptimeTicks = 0L;
         sleepUntilNanos = -1L;
         sleepUntilWorldTime = -1L;
         pauseUntilNanos = -1L;
@@ -625,6 +622,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (!running || architecture == null) {
             return;
         }
+        // Match upstream game-time uptime, including sleeping and paused ticks.
+        uptimeTicks++;
         if (!consumeRunningEnergy()) {
             return;
         }
@@ -746,8 +745,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         sleepUntilNanos = -1L;
         sleepUntilWorldTime = -1L;
         if (!wasRunning) {
-            uptimeBeforeLoad = 0D;
-            startedAtNanos = nanoTime.getAsLong();
+            uptimeTicks = 0L;
             sendLifecycleMessage(COMPUTER_STARTED_MESSAGE);
         }
         return true;
@@ -779,7 +777,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             architecture.close();
         }
         signals.clear();
-        startedAtNanos = -1L;
+        uptimeTicks = 0L;
         sleepUntilNanos = -1L;
         sleepUntilWorldTime = -1L;
         pauseUntilNanos = -1L;
@@ -827,8 +825,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         connectTemporaryFileSystem();
         running = nbt.getBoolean(RUNNING_TAG);
         final double savedUptime = nbt.getDouble(UPTIME_SECONDS_TAG);
-        uptimeBeforeLoad = running && Double.isFinite(savedUptime) ? Math.max(0D, savedUptime) : 0D;
-        startedAtNanos = running ? nanoTime.getAsLong() : -1L;
+        uptimeTicks = !running ? 0L : nbt.contains(UPTIME_TAG, CompoundTag.TAG_LONG)
+            ? Math.max(0L, nbt.getLong(UPTIME_TAG))
+            : Double.isFinite(savedUptime) ? Math.max(0L, (long) (savedUptime * 20D)) : 0L;
         cpuTimeNanos = nbt.getLong(CPU_TIME_NANOS_TAG);
         lastError = nbt.contains(LAST_ERROR_TAG) ? nbt.getString(LAST_ERROR_TAG) : null;
         users.clear();
@@ -866,7 +865,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         }
         nbt.putBoolean(RUNNING_TAG, running);
         nbt.putLong(CPU_TIME_NANOS_TAG, cpuTimeNanos);
-        nbt.putDouble(UPTIME_SECONDS_TAG, upTime());
+        nbt.putLong(UPTIME_TAG, uptimeTicks);
+        nbt.remove(UPTIME_SECONDS_TAG);
         if (lastError != null) {
             nbt.putString(LAST_ERROR_TAG, lastError);
         }

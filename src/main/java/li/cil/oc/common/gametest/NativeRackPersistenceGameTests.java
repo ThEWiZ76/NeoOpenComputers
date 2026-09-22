@@ -46,6 +46,23 @@ public final class NativeRackPersistenceGameTests {
         resumesOpenFileAfterReload(helper, true);
     }
 
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void nativeRackRetainsUptimeDeadlineAfterReload(GameTestHelper helper) {
+        resumesAfterReload(helper, """
+            local eeprom = component.proxy(component.list("eeprom")())
+            assert(eeprom.getData() == "", "program restarted instead of resuming")
+            local started = computer.uptime()
+            local deadline = started + 5
+            eeprom.setData("waiting")
+            repeat local signal = computer.pullSignal() until signal == "continue_probe"
+            assert(computer.uptime() >= started + 2.5, "uptime lost before reload")
+            assert(computer.uptime() < deadline, "deadline passed while offline")
+            repeat computer.pullSignal(deadline - computer.uptime()) until computer.uptime() >= deadline
+            eeprom.setData("restored")
+            while true do computer.pullSignal() end
+            """);
+    }
+
     private static void resumesOpenFileAfterReload(GameTestHelper helper, boolean temporary) {
         resumesAfterReload(helper, """
             local eeprom = component.proxy(component.list("eeprom")())
