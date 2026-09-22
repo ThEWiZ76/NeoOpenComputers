@@ -317,3 +317,7 @@ LuaArchitecture leest bij initialisatie de actuele EEPROM opnieuw. Echte robotre
 ### Verwisselbare tanks bereikbaar en leeg betrouwbaar opgeslagen
 
 Robot-tankview bevat nu runtime tanks in equipment-volgorde voor vaste hardware. Test bewijst stabiele volgorde/count, directe verdwijning na verwijderen, exact1000mB behoud na terugplaatsen en blijvend nul na leegmaken/terugplaatsen. Runtime save schrijft naar bestaande driverdata zodat velden gewist kunnen worden; lege tanks verwijderen oude fluid/amount-velden. Full build: 2059 unit-tests en 498 GameTests; robot-runtime-tank-final.log. Zie ROBOT_RUNTIME_CONTAINERS.md. Tankcontroller-Lua en overige upgradeflows, clientmetadata en bredere portpariteit blijven open.
+
+### Herstart vanuit Lua met zelfgeschreven EEPROM
+
+Echte robot herschrijft via Lua zijn EEPROM, bewaart een marker, voert computer.shutdown(true) uit en start de nieuwe code. Oude code mag niet verderlopen of opnieuw starten; vervangende code bevestigt marker en blijft draaien. Test groen zonder aanvullende productiefix bovenop EEPROM-refresh. Full build: 2059 unit-tests en 499 GameTests; eeprom-lua-reboot.log. Zie EEPROM_COLD_BOOT.md. Volledige coroutinepersistence, overige upgradeflows en live verificatie blijven open.

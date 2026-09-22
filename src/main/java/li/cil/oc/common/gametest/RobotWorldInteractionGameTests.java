@@ -22,6 +22,29 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void robotLuaRebootRunsNewEepromAndStopsOldExecution(final GameTestHelper helper) {
+        final String code = """
+            local eeprom = component.proxy(component.list("eeprom")())
+            assert(eeprom.getData() ~= "rebooting", "reboot reused old code")
+            eeprom.setData("rebooting")
+            eeprom.set([[
+              local eeprom = component.proxy(component.list("eeprom")())
+              assert(eeprom.getData() == "rebooting")
+              eeprom.setData("rebooted")
+              component.proxy(component.list("robot")()).setLightColor(0x330002)
+              while true do computer.pullSignal() end
+            ]])
+            computer.shutdown(true)
+            error("old Lua execution resumed after shutdown")
+            """;
+        final RobotBlockEntity robot = robot(helper, code);
+        helper.succeedWhen(() -> {
+            helper.assertTrue(robot.lightColor() == 0x330002, "Lua reboot did not execute new EEPROM: " + robot.machine().lastError());
+            helper.assertTrue(robot.machine().isRunning(), "Rebooted robot stopped unexpectedly");
+        });
+    }
+
     @GameTest(template = "empty")
     public static void robotRuntimeTankRetainsFluidAndDoesNotRestoreDrainedContents(final GameTestHelper helper) {
         final RobotBlockEntity robot = robot(helper);
