@@ -211,6 +211,46 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void temporaryFilesystemSurvivesSaveAndRepeatedLoadWithOpenHandle() throws Exception {
+        OpenComputersApi.initialize();
+        final Machine machine = API.machine.create(null);
+        final String address = machine.tmpAddress();
+        writeTemporaryFile(machine, "continued.bin", "abcd");
+        final Object handle = machine.invoke(address, "open", new Object[]{"continued.bin", "r"})[0];
+        assertArrayEquals("a".getBytes(StandardCharsets.UTF_8),
+            (byte[]) machine.invoke(address, "read", new Object[]{handle, 1})[0]);
+        final CompoundTag saved = new CompoundTag();
+        machine.save(saved);
+
+        for (int reload = 0; reload < 2; reload++) {
+            machine.load(saved);
+            assertEquals(address, machine.tmpAddress());
+            assertEquals("filesystem", machine.components().get(address));
+            assertArrayEquals("bcd".getBytes(StandardCharsets.UTF_8),
+                (byte[]) machine.invoke(address, "read", new Object[]{handle, 3})[0]);
+            assertNull(machine.invoke(address, "read", new Object[]{handle, 1})[0]);
+        }
+        machine.invoke(address, "close", new Object[]{handle});
+        machine.node().remove();
+    }
+
+    @Test
+    void loadingLegacyMachineWithoutTmpDoesNotKeepUnrelatedTemporaryFiles() throws Exception {
+        OpenComputersApi.initialize();
+        final Machine machine = API.machine.create(null);
+        writeTemporaryFile(machine, "unrelated.txt", "old");
+        final String oldAddress = machine.tmpAddress();
+        final Node oldNode = machine.node().network().node(oldAddress);
+        final CompoundTag legacy = new CompoundTag();
+        machine.save(legacy);
+        legacy.remove("tmp");
+        machine.load(legacy);
+        assertNull(oldNode.network());
+        assertArrayEquals(new Object[]{false}, machine.invoke(machine.tmpAddress(), "exists", new Object[]{"unrelated.txt"}));
+        machine.node().remove();
+    }
+
+    @Test
     void registersArchitecturesInOrder() {
         MachineRegistry registry = new MachineRegistry();
 

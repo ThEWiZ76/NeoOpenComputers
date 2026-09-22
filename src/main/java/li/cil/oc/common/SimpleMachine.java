@@ -66,6 +66,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private static final String SIGNAL_ARG_VALUE_TAG = "value";
     private static final String SIGNAL_ARG_KEY_TAG = "key";
     private static final String ARCHITECTURE_TAG = "architecture";
+    private static final String TMP_TAG = "tmp";
     private static final String CPU_TIME_NANOS_TAG = "cpuTimeNanos";
     private static final String CHECKED_SIGNAL_MESSAGE = "computer.checked_signal";
     private static final String COMPUTER_SIGNAL_MESSAGE = "computer.signal";
@@ -813,7 +814,14 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public void load(final CompoundTag nbt) {
+        // Dispose values against their old filesystems before restoring handle IDs.
+        if (architecture != null) architecture.close();
+        resetTemporaryFileSystem();
         super.load(nbt);
+        if (temporaryFileSystemEnvironment != null && nbt.contains(TMP_TAG, CompoundTag.TAG_COMPOUND)) {
+            temporaryFileSystemEnvironment.load(nbt.getCompound(TMP_TAG));
+        }
+        connectTemporaryFileSystem();
         running = nbt.getBoolean(RUNNING_TAG);
         startedAtNanos = running ? nanoTime.getAsLong() : -1L;
         cpuTimeNanos = nbt.getLong(CPU_TIME_NANOS_TAG);
@@ -843,6 +851,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     @Override
     public void save(final CompoundTag nbt) {
         super.save(nbt);
+        if (temporaryFileSystemEnvironment != null) {
+            final CompoundTag temporary = new CompoundTag();
+            temporaryFileSystemEnvironment.save(temporary);
+            nbt.put(TMP_TAG, temporary);
+        }
         for (ManagedEnvironment environment : componentEnvironments) {
             saveComponentEnvironment(environment);
         }

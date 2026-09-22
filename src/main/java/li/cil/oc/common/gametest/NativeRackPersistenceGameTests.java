@@ -38,14 +38,25 @@ public final class NativeRackPersistenceGameTests {
 
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void nativeRackResumesOpenFileAtSavedOffset(GameTestHelper helper) {
+        resumesOpenFileAfterReload(helper, false);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void nativeRackResumesTmpFileAtSavedOffset(GameTestHelper helper) {
+        resumesOpenFileAfterReload(helper, true);
+    }
+
+    private static void resumesOpenFileAfterReload(GameTestHelper helper, boolean temporary) {
         resumesAfterReload(helper, """
             local eeprom = component.proxy(component.list("eeprom")())
             assert(eeprom.getData() == "", "program restarted instead of resuming")
+            local useTmp = %s
+            local tmpAddress = computer.tmpAddress()
             local fs
             for address in component.list('filesystem') do
-              if address ~= computer.tmpAddress() then fs = component.proxy(address); break end
+              if (address == tmpAddress) == useTmp then fs = component.proxy(address); break end
             end
-            assert(fs, 'missing HDD')
+            assert(fs, 'missing test filesystem')
             local file = assert(fs.open('native-continuation.bin', 'w'))
             assert(fs.write(file, 'a' .. string.char(0, 255) .. 'z'))
             fs.close(file)
@@ -54,13 +65,14 @@ public final class NativeRackPersistenceGameTests {
             local alias = file
             eeprom.setData("waiting")
             repeat local signal = computer.pullSignal() until signal == "continue_probe"
+            if useTmp then assert(fs.address == computer.tmpAddress(), 'tmp address changed') end
             assert(file == alias, 'file proxy identity lost')
             assert(fs.read(file, 3) == string.char(0, 255) .. 'z', 'open file position or contents lost')
             assert(fs.read(file, 1) == nil, 'expected EOF')
             fs.close(file)
             eeprom.setData("restored")
             while true do computer.pullSignal() end
-            """);
+            """.formatted(temporary));
     }
 
     private static void resumesAfterReload(GameTestHelper helper, String program) {
