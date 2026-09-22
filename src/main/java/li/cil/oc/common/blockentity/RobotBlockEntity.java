@@ -210,6 +210,13 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private int animationTicks;
     private BlockPos moveFrom;
     private int turnOffset;
+    private static final java.util.concurrent.atomic.AtomicInteger NEXT_BREAKER_ID = new java.util.concurrent.atomic.AtomicInteger(-1);
+    private final int breakerId = NEXT_BREAKER_ID.getAndDecrement();
+    private DigTask digTask;
+    private int digTicks;
+    private int digStage = -1;
+
+    private record DigTask(BlockPos origin, BlockPos target, BlockState state, ItemStack tool, int ticks) {}
     private String name = "Robot";
     private String ownerName = "";
     private UUID ownerUUID = NIL_UUID;
@@ -748,7 +755,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new Object[]{true};
     }
 
-    @Callback(direct = true, doc = "function(side:number):boolean,string -- Detects block state on the specified side.")
+    @Callback(doc = "function(side:number):boolean,string -- Detects block state on the specified side.")
     public Object[] detect(final Context context, final Arguments arguments) {
         if (level == null) {
             return new Object[]{false, "no world"};
@@ -770,7 +777,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new Object[]{true, "solid"};
     }
 
-    @Callback(direct = true, doc = "function(side:number):boolean -- Compares selected stack with block on the specified side.")
+    @Callback(doc = "function(side:number):boolean -- Compares selected stack with block on the specified side.")
     public Object[] compare(final Context context, final Arguments arguments) {
         if (level == null) {
             return new Object[]{false};
@@ -880,6 +887,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (level == null) {
             return new Object[]{false, "no world"};
         }
+        if (digTask != null) return new Object[]{false, "already swinging"};
+        if (!machine.isRunning()) return new Object[]{false, "not running"};
         final BlockPos target = targetPos(arguments.checkInteger(0));
         if (!level.isLoaded(target)) {
             return new Object[]{false, "target not loaded"};
@@ -897,6 +906,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
         final ItemStack previousHand = player.getMainHandItem();
         final var previousGameMode = player.gameMode.getGameModeForPlayer();
+        final boolean wasOnGround = player.onGround();
         final ItemStack before = getItem(TOOL_SLOT).copy();
         player.setItemInHand(InteractionHand.MAIN_HAND, before.copy());
         player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
@@ -904,15 +914,60 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             if (!state.canHarvestBlock(level, target, player)) {
                 return new Object[]{false, "cannot harvest"};
             }
-            final RobotBreakBlockEvent.Pre pre = new RobotBreakBlockEvent.Pre(this, level, target, Math.max(0.05D, hardness));
+            // Upstream robot players mine as grounded players, including while hovering.
+            player.setOnGround(true);
+            final double strength = player.getDigSpeed(state, target);
+            if (!(strength > 0D)) return new Object[]{false, "cannot break"};
+            final double seconds = hardness * 1.5D / strength * ModSettings.robotHarvestRatio();
+            if (!Double.isFinite(seconds)) return new Object[]{false, "cannot break"};
+            final RobotBreakBlockEvent.Pre pre = new RobotBreakBlockEvent.Pre(this, level, target, Math.max(0.05D, seconds));
             NeoForge.EVENT_BUS.post(pre);
             if (pre.isCanceled()) {
                 return new Object[]{false, "blocked"};
             }
-            // The player path applies block protection, harvest rules, loot and tool wear.
-            if (!player.gameMode.destroyBlock(target)) {
-                return new Object[]{false, "cannot break"};
+            final double adjustedSeconds = Math.max(0.05D, pre.getBreakTime());
+            if (!Double.isFinite(adjustedSeconds)) return new Object[]{false, "cannot break"};
+            digTask = new DigTask(worldPosition.immutable(), target.immutable(), state, before,
+                Math.max(1, (int) Math.min(Integer.MAX_VALUE, adjustedSeconds * 20D)));
+            digTicks = 0;
+            digStage = -1;
+            if (context != null) context.pause(adjustedSeconds);
+            return new Object[]{true, "block"};
+        } finally {
+            player.setItemInHand(InteractionHand.MAIN_HAND, previousHand);
+            player.setGameMode(previousGameMode);
+            player.setOnGround(wasOnGround);
+        }
+    }
+
+    private void tickDig() {
+        final DigTask task = digTask;
+        if (task == null) return;
+        if (!machine.isRunning() || isRemoved() || !worldPosition.equals(task.origin())
+            || !level.isLoaded(task.target()) || !level.getBlockState(task.target()).equals(task.state())
+            || !ItemStack.matches(getItem(TOOL_SLOT), task.tool())) {
+            cancelDig();
+            return;
+        }
+        if (++digTicks < task.ticks()) {
+            final int stage = (int) (10L * digTicks / task.ticks());
+            if (stage != digStage) {
+                digStage = stage;
+                level.destroyBlockProgress(breakerId, task.target(), stage);
             }
+            return;
+        }
+        cancelDig();
+        if (!(player() instanceof net.minecraft.server.level.ServerPlayer player)) return;
+        final ItemStack previousHand = player.getMainHandItem();
+        final var previousGameMode = player.gameMode.getGameModeForPlayer();
+        final ItemStack before = getItem(TOOL_SLOT).copy();
+        player.setItemInHand(InteractionHand.MAIN_HAND, before.copy());
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        try {
+            if (!task.state().canHarvestBlock(level, task.target(), player)) return;
+            // Re-check ordinary block protection at completion, before producing loot.
+            if (!player.gameMode.destroyBlock(task.target())) return;
             final ItemStack after = player.getMainHandItem().copy();
             if (!before.isEmpty() && !after.isEmpty() && before.is(after.getItem())) {
                 final RobotUsedToolEvent.ComputeDamageRate damageRate = new RobotUsedToolEvent.ComputeDamageRate(this, before, after, ModSettings.robotItemDamageRate());
@@ -920,13 +975,23 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
                 NeoForge.EVENT_BUS.post(new RobotUsedToolEvent.ApplyDamageRate(this, before, after, damageRate.getDamageRate()));
             }
             setItem(TOOL_SLOT, after);
-            NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(this, 0D));
+            // GameMode can report success even when a block refuses removal.
+            if (!level.getBlockState(task.target()).equals(task.state())) {
+                NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(this, 0D));
+            }
             setChanged();
-            return new Object[]{true, "block"};
         } finally {
             player.setItemInHand(InteractionHand.MAIN_HAND, previousHand);
             player.setGameMode(previousGameMode);
         }
+    }
+
+    private void cancelDig() {
+        if (digTask != null && level != null && !level.isClientSide) {
+            level.destroyBlockProgress(breakerId, digTask.target(), -1);
+        }
+        digTask = null;
+        digStage = -1;
     }
 
     @Callback(doc = "function(side:number):boolean,string -- Uses the selected item on the specified side.")
@@ -1122,12 +1187,14 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public void onChunkUnloaded() {
+        cancelDig();
         super.onChunkUnloaded();
         removeMachineNode();
     }
 
     @Override
     public void setRemoved() {
+        cancelDig();
         super.setRemoved();
         if (!relocating) {
             removeMachineNode();
@@ -1188,6 +1255,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     private void tickServer() {
+        tickDig();
         if (machine.canUpdate()) {
             machine.update();
         }

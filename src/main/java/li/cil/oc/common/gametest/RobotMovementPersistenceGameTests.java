@@ -493,7 +493,7 @@ public final class RobotMovementPersistenceGameTests {
             : "no robot";
     }
 
-    private static ItemStack eeprom(final String code) {
+    static ItemStack eeprom(final String code) {
         final ItemStack stack = new ItemStack(ModItems.EEPROM.get());
         final CompoundTag data = new CompoundTag();
         data.putByteArray(ItemRegistry.EEPROM_CODE_TAG, code.getBytes(StandardCharsets.UTF_8));
@@ -503,7 +503,7 @@ public final class RobotMovementPersistenceGameTests {
         return stack;
     }
 
-    private static void installHardware(final GameTestHelper helper, final RobotBlockEntity robot, final List<ItemStack> parts) {
+    static void installHardware(final GameTestHelper helper, final RobotBlockEntity robot, final List<ItemStack> parts) {
         final NonNullList<ItemStack> hardware = NonNullList.withSize(RobotBlockEntity.slotCount(0), ItemStack.EMPTY);
         for (final ItemStack part : parts) {
             final var driver = li.cil.oc.api.Driver.driverFor(part, li.cil.oc.api.internal.Robot.class);

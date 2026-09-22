@@ -249,3 +249,7 @@ Volledige OpenOS-image start opnieuw na robot-drop en echte itemplaatsing, leest
 ### Configureerbare robotslijtage
 
 robot.itemDamageRate toegevoegd met upstream default 0.1 en bereik 0..1. Swing gebruikt deze basis voor de bestaande upgrade-/damage-events. Tests bewijzen geen slijtage bij nul, normale slijtage bij een en aanpasbare werkelijke schade via events. Full build: 2058 unit-tests en 457 GameTests; robot-wear-final.log. Zie ROBOT_BLOCK_SWING.md. Overige swing- en wereldactiepariteit en live verificatie blijven open.
+
+### Graaftijd en Lua-wereldlezingen
+
+Robotgraaftaken lopen nu over serverticks op basis van hardness, grounded gereedschapssnelheid, harvestRatio en Pre-event. Voortgang/annulering toegevoegd; doel, tool, positie en machinestatus worden bewaakt. Echte Lua-test vond daarnaast een deadlock in direct detect; detect/compare lezen de wereld nu op de serverthread. Vaste tickgrenzen en Lua compare/swing/detect groen. Full build: 2058 unit-tests en 461 GameTests; robot-dig-threading-final.log. Zie ROBOT_TIMED_DIGGING.md. Swing-animatie, overige wereldactiepariteit en live controle blijven open.

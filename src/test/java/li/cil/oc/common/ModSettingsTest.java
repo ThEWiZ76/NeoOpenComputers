@@ -21,6 +21,8 @@ final class ModSettingsTest {
     void robotToolWearUsesUpstreamSettingAndDefault() {
         assertEquals(List.of("robot", "itemDamageRate"), ModSettings.ROBOT_ITEM_DAMAGE_RATE.getPath());
         assertEquals(0.1D, ModSettings.robotItemDamageRate());
+        assertEquals(List.of("robot", "delays", "harvestRatio"), ModSettings.ROBOT_HARVEST_RATIO.getPath());
+        assertEquals(1D, ModSettings.robotHarvestRatio());
     }
 
     @Test

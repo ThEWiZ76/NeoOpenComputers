@@ -120,6 +120,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue IGNORE_POWER;
     public static final ModConfigSpec.DoubleValue ROBOT_MOVE_COST;
     public static final ModConfigSpec.DoubleValue ROBOT_ITEM_DAMAGE_RATE;
+    public static final ModConfigSpec.DoubleValue ROBOT_HARVEST_RATIO;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_COST;
     public static final ModConfigSpec.DoubleValue ROBOT_MOVE_DELAY;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_DELAY;
@@ -361,6 +362,8 @@ public final class ModSettings {
         ROBOT_ITEM_DAMAGE_RATE = builder.comment("Damage rate for tools equipped by robots. OpenComputers upstream default is 0.1; zero prevents wear and one keeps normal wear.")
             .defineInRange("itemDamageRate", 0.1D, 0D, 1D);
         builder.push("delays");
+        ROBOT_HARVEST_RATIO = builder.comment("Multiplier for robot dig time derived from block hardness and equipped tool speed. Upstream default is 1.")
+            .defineInRange("harvestRatio", 1D, 0D, Double.MAX_VALUE);
         ROBOT_MOVE_DELAY = builder.comment("Robot movement delay in seconds, before upstream 0.06-second scheduling adjustment.")
             .defineInRange("move", 0.4D, 0D, Double.MAX_VALUE);
         ROBOT_TURN_DELAY = builder.comment("Robot turn delay in seconds, before upstream 0.06-second scheduling adjustment.")
@@ -942,6 +945,10 @@ public final class ModSettings {
 
     public static double robotItemDamageRate() {
         return Math.max(0D, Math.min(1D, doubleValue(ROBOT_ITEM_DAMAGE_RATE)));
+    }
+
+    public static double robotHarvestRatio() {
+        return Math.max(0D, doubleValue(ROBOT_HARVEST_RATIO));
     }
 
     public static double robotTurnCost() {

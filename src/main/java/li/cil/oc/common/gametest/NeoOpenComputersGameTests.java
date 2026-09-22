@@ -6152,10 +6152,11 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty")
     public static void robotComponentSwingBreaksTargetBlock(final GameTestHelper helper) {
-        final RobotBlockEntity robot = placeRobot(helper, new BlockPos(1, 1, 1));
+        final RobotBlockEntity robot = RobotWorldInteractionGameTests.robot(helper);
         helper.setBlock(new BlockPos(1, 1, 2), Blocks.DIRT);
 
         final Object[] swing = robot.swing(null, new GameTestArguments(3));
+        RobotWorldInteractionGameTests.tickRobot(robot, 100);
 
         helper.assertTrue(Boolean.TRUE.equals(swing[0]), "Robot swing did not report success");
         helper.assertTrue(helper.getBlockState(new BlockPos(1, 1, 2)).isAir(), "Robot swing did not break target block");
