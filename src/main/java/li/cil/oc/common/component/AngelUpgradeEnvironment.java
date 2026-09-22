@@ -8,7 +8,7 @@ import li.cil.oc.common.ModSettings;
 
 import java.util.Map;
 
-public final class AngelUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public class AngelUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     public AngelUpgradeEnvironment() {
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {

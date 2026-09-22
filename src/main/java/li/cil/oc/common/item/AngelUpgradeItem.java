@@ -3,6 +3,7 @@ package li.cil.oc.common.item;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.AngelUpgradeEnvironment;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
 public class AngelUpgradeItem extends BasicUpgradeItem {
@@ -15,6 +16,14 @@ public class AngelUpgradeItem extends BasicUpgradeItem {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new AngelUpgradeEnvironment();
+        final var environment = new AngelUpgradeEnvironment() {
+            @Override
+            public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 }

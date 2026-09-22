@@ -3,6 +3,7 @@ package li.cil.oc.common.item;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.BarcodeReaderUpgradeEnvironment;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
 public class BarcodeReaderUpgradeItem extends BasicUpgradeItem {
@@ -12,6 +13,14 @@ public class BarcodeReaderUpgradeItem extends BasicUpgradeItem {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return new BarcodeReaderUpgradeEnvironment(host);
+        final var environment = new BarcodeReaderUpgradeEnvironment(host) {
+            @Override
+            public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 }

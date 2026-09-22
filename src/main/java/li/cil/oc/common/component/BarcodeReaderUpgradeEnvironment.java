@@ -22,7 +22,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.Map;
 
-public final class BarcodeReaderUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public class BarcodeReaderUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "barcode_reader";
     private static final Map<String, String> DEVICE_INFO = Map.of(
         DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
