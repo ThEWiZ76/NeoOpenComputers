@@ -120,6 +120,26 @@ final class ComputerCaseBootValidationTest {
     }
 
     @Test
+    void runtimeErrorKeysBecomeReadableTranslatableMessages() {
+        assertEquals("Computer error: Not enough energy.",
+            ComputerCaseBlockEntity.machineErrorMessage("gui.Error.NoEnergy\ntrace").getString());
+        assertEquals("Computer error: No CPU is installed in the computer.",
+            ComputerCaseBlockEntity.machineErrorMessage("gui.Error.NoCPU").getString());
+        final var message = ComputerCaseBlockEntity.machineErrorMessage("gui.Error.NoEnergy");
+        final var contents = (net.minecraft.network.chat.contents.TranslatableContents) message.getContents();
+        assertEquals("gui.neoopencomputers.computer_case.error", contents.getKey());
+        final var reason = (net.minecraft.network.chat.Component) contents.getArgs()[0];
+        assertEquals("oc:gui.Error.NoEnergy",
+            ((net.minecraft.network.chat.contents.TranslatableContents) reason.getContents()).getKey());
+    }
+
+    @Test
+    void unknownRuntimeKeysAndLuaTextRemainLiteralAndOnlyUseFirstLine() {
+        assertEquals("Computer error: gui.Error.Custom %s",
+            ComputerCaseBlockEntity.machineErrorMessage("gui.Error.Custom %s\r\ntrace").getString());
+    }
+
+    @Test
     void reportsDelayedBootCrashAfterMachineWasRunning() {
         assertTrue(ComputerCaseBlockEntity.shouldReportMachineError(true, false, "boot:60 no bootable medium found"));
         assertEquals(

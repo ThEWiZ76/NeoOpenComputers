@@ -75,7 +75,7 @@ Geen parallelle Gradle-processen. Nieuwe tests gebruiken vaste waarden, een geï
 
 **Bestanden:** `client/MicrocontrollerScreen.java`, `client/ComputerCaseScreen.java`, `common/blockentity/ComputerCaseBlockEntity.java`, `common/SimpleMachine.java`, `assets/neoopencomputers/lang/en_us.json`; bestaande taal-/boot-/GUI-tests.
 
-- [ ] Ontbrekende microcontroller-titel toevoegen.
+- [x] Ontbrekende microcontroller-titel toevoegen. Ingame `Microcontroller` zichtbaar op 2026-09-22.
 - [ ] Bekende runtimefouten via vertaalbare componenten aan de speler tonen; vrije Lua-fouttekst en eerste-regelgedrag behouden. Ook server/rack/robot/drone-foutpaden controleren.
 - [ ] Slot-watermarks met lege én bezette slots vóór/na vergelijken. Blend-state alleen wijzigen als live bewijs de oorzaak bevestigt; kleur-/blend-state herstellen voor volgende widgets.
 - [ ] Blok- én itemtint van alle computertiers, tooltips en taalwissel controleren.
@@ -189,3 +189,7 @@ Startregister: `PORT_PARITY_MATRIX.md`. Aanvullende bronvergelijking vond onder 
 Eerste runtimewijziging: GUI-pixels bundelen en glyphlookup eenmaal per letter uitvoeren. Build + 2041 tests + 440 GameTests groen; OpenOS-boot, invoer, Unicode en blokweergave ingame gecontroleerd. Zie `TERMINAL_GUI_PERFORMANCE.md` voor reproduceerbare opstelling, hashes, profileresultaten, screenshots en beperkingen. Tijdelijke testopstelling verwijderd en lege ruimte teruggelezen; client netjes afgesloten.
 
 Eerstvolgend: volle terminal/achtergrondbelasting verder profileren, vervolgens fase 1B (titel/foutfeedback) en fase 1C (robotterminal), naast het verder invullen van de volledige pariteitsmatrix. UI-vertalingen en robot/runtime-persistentie zijn nog niet geïmplementeerd in deze uitvoeringsronde. Lange invoerbursts apart onderzoeken; korte ingame commando's werkten.
+
+### Doorlopende uitvoering — titel en foutfeedback
+
+Microcontroller-titel hersteld. Computer-case NoEnergy/NoCPU gebruiken nu vertaalbare componenten met leesbare fallback; vrije Lua-fouttekst blijft letterlijk en alleen de eerste regel wordt getoond. Gerichte tests faalden eerst op ontbrekende titel en ruwe foutkey, daarna alle 26 groen; volledige build en 442 GameTests groen in deze ronde. Ingame titel screenshot: `build/finish-port-implementation/microcontroller-title-verified.png`. Clientlog bevestigt `Computer error: Not enough energy.` met geïnstalleerde JAR `731F3F1EF4E792BE9F4B88B18AEC9B3E78EE896791FAA949617D57CA94CA0372`. Foutfeedback van andere hosts en overige fase-1B-visuele controles blijven open.

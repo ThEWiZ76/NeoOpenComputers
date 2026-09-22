@@ -467,7 +467,13 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     static Component machineErrorMessage(final String lastError) {
-        return Component.literal("Computer error: " + firstErrorLine(lastError));
+        final String firstLine = firstErrorLine(lastError);
+        final Component reason = switch (firstLine) {
+            case "gui.Error.NoEnergy" -> Component.translatableWithFallback("oc:gui.Error.NoEnergy", "Not enough energy.");
+            case "gui.Error.NoCPU" -> Component.translatableWithFallback("oc:gui.Error.NoCPU", "No CPU is installed in the computer.");
+            default -> Component.literal(firstLine);
+        };
+        return Component.translatableWithFallback("gui.neoopencomputers.computer_case.error", "Computer error: %s", reason);
     }
 
     public static void activateMachineFromBlockUse(final Machine machine) {

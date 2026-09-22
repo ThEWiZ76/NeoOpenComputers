@@ -62,6 +62,10 @@ final class LanguageResourceTest {
         JsonObject translations = readJson(EN_US);
         List<String> keys = List.of(
             "oc:container.server",
+            "gui.neoopencomputers.microcontroller.title",
+            "gui.neoopencomputers.computer_case.error",
+            "oc:gui.Error.NoEnergy",
+            "oc:gui.Error.NoCPU",
             "gui.neoopencomputers.server_rack",
             "gui.neoopencomputers.server_rack.slot.card",
             "gui.neoopencomputers.server_rack.slot.component_bus",
