@@ -121,6 +121,8 @@ public final class NativeLuaPersistence implements AutoCloseable {
         }
     }
 
+    String persistenceKey() { return persistenceKey; }
+
     private void configure(final String key) {
         // Do not execute a program-supplied __persist metamethod during a world save.
         pushErisFunction("settings");
