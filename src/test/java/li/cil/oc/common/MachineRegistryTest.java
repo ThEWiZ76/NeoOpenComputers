@@ -1223,6 +1223,30 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void queuedSignalsKeepSleepingMachineRunnableUntilDrained() {
+        OpenComputersApi.initialize();
+        final MutableClock clock = new MutableClock();
+        final DriverRegistry drivers = new DriverRegistry();
+        drivers.add(new SleepyProcessorDriver());
+        API.driver = drivers;
+        final SimpleMachine machine = new SimpleMachine(new TestHost(), clock);
+        machine.onHostChanged();
+        final SleepyArchitecture architecture = (SleepyArchitecture) machine.architecture();
+        final List<String> received = new ArrayList<>();
+        ((TrackingArchitecture) architecture).synchronizedAction = () -> received.add(machine.popSignal().name());
+        assertTrue(machine.start());
+        assertTrue(machine.signal("first"));
+        assertTrue(machine.signal("second"));
+        machine.update();
+        machine.update();
+        assertEquals(List.of("first", "second"), received);
+        machine.update();
+        assertEquals(2, architecture.threadedRuns, "Empty queue must still honor sleep");
+        machine.stop();
+        machine.node().remove();
+    }
+
+    @Test
     void zeroTickYieldsHonorConfiguredExecutionDelay() throws Exception {
         OpenComputersApi.initialize();
         MutableClock clock = new MutableClock();

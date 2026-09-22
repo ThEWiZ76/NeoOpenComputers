@@ -642,10 +642,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         }
         final SynchronizedCallAware synchronizedCallAware = architecture instanceof SynchronizedCallAware aware ? aware : null;
         final boolean hasPendingSynchronizedCall = hasPendingSynchronizedCall(synchronizedCallAware);
-        if (sleepUntilWorldTime >= 0 && host != null && host.world() != null && host.world().getGameTime() < sleepUntilWorldTime && !hasPendingSynchronizedCall) {
+        if (signals.isEmpty() && sleepUntilWorldTime >= 0 && host != null && host.world() != null && host.world().getGameTime() < sleepUntilWorldTime && !hasPendingSynchronizedCall) {
             return;
         }
-        if (sleepUntilWorldTime < 0 && sleepUntilNanos > updateStartedAt && !hasPendingSynchronizedCall) {
+        if (signals.isEmpty() && sleepUntilWorldTime < 0 && sleepUntilNanos > updateStartedAt && !hasPendingSynchronizedCall) {
             return;
         }
         sleepUntilNanos = -1L;

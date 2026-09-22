@@ -88,6 +88,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     };
 
     private final Machine machine;
+    private CompoundTag unloadedState;
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private final int tier;
@@ -460,6 +461,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
+            if (unloadedState != null) loadAdditional(unloadedState, level.registryAccess());
             Network.joinOrCreateNetwork(this);
         }
     }
@@ -479,6 +481,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        unloadedState = null;
         wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
         loadRedstoneOutputs(tag);
         ContainerHelper.loadAllItems(tag, items, registries);
@@ -489,6 +492,10 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     @Override
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
+        if (unloadedState != null) {
+            tag.merge(unloadedState.copy());
+            return;
+        }
         tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_REDSTONE_OUTPUTS, redstoneOutputs);
         tag.putIntArray(TAG_BUNDLED_REDSTONE_OUTPUTS, saveBundledRedstoneOutputs());
@@ -524,9 +531,16 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     }
 
     private void removeMachineNode() {
+        if (level != null && !level.isClientSide && unloadedState == null) {
+            // Preserve inventory and continuation even if serialization follows unload.
+            final CompoundTag saved = new CompoundTag();
+            saveAdditional(saved, level.registryAccess());
+            unloadedState = saved;
+        }
         if (machine.node() != null) {
             machine.node().remove();
         }
+        if (unloadedState != null) machine.stop();
     }
 
     private void loadRedstoneOutputs(final CompoundTag tag) {

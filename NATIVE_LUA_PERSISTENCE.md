@@ -180,3 +180,11 @@ RackBlockEntity.removeMountable now stops discarded Server machines after saveMo
 ComputerCaseBlockEntity now caches complete inventory/machine save data before disposing the old VM. Saves after unload reuse a copy, repeated removal preserves the original snapshot, and onLoad restores same-instance reattachments. Three native OpenOS tests verify disposal and continued shell variable/command behavior with save-before-remove, unload-before-save and same-instance reload. They initially failed because the VM remained initialized.
 
 The first disposal fix blanked screens: machine.stop broadcast computer.stopped while still connected. Correct order is snapshot, disconnect, then stop; RackBlockEntity now also explicitly disconnects its machine node before stopping. native-case-disposal-isolated.log passed2102 units, all511 GameTests and build. No client/install/push. Robot/microcontroller/drone lifecycle, external filesystem ordering, full-world restart and remaining full-port requirements stay open.
+
+## Microcontroller lifecycle and queued signals: 2026-09-22
+
+MicrocontrollerBlockEntity now snapshots before disconnect/stop, preserves save-after-unload and same-instance reattachment. Three NativeMicrocontrollerPersistenceGameTests assert VM closure plus retained local state, tmp identity and binary open-file position. With disposal disabled, all three failed for a retained VM (native-micro-disposal-verified-red.log).
+
+An intermittent resume hang exposed a shared scheduler bug: after consuming one event, SimpleMachine could sleep with more signals queued. World-time and fallback sleep gates now require signals.isEmpty(), matching upstream. A fixed-clock regression failed with only first received instead of first and second, and verifies sleeping resumes after the queue drains. No timeout increase or extra wakeup signal was used to hide the hang.
+
+native-micro-queue-integrated.log passed2103 units, all514 GameTests and build. No client/install/push. Robot and drone lifecycle, external filesystem ordering, full-world restart and remaining full-port gates are still open.
