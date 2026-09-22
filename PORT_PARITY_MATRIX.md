@@ -221,3 +221,11 @@ New nativeRobotResumesWorldFluidTransfers test fills a source above the robot, s
 robotProperties now uses forceSolidOn alongside its existing dynamicShape/noOcclusion, preserving the partial collision/render shape while preventing FlowingFluid.canHoldFluid from washing the robot away through the blocksMotion check. Final build,2106 units/all595 GameTests pass (native-fluid-final.log). Red evidence: native-fluid-continuation.log and native-fluid-diagnostic.log.
 
 The test proves ordinary robot NBT replacement/native continuation while water flows around it; full JVM restart, moving robots/afterimages in fluids and rendered client acceptance remain additional gates. No client launch/install, push or merge.
+
+## Drone below-world lifecycle - 2026-09-22
+
+DroneEntity.onBelowWorld now reuses the stopped/disconnected item-packing and cargo-drop path on the server, matching upstream outOfWorld instead of inheriting Entity.discard with no drops. Client removal remains vanilla. tick returns for already removed entities and after baseTick removes one, preventing further machine/physics work after removal.
+
+DronePickupGameTests moves an assembled inventory drone below minBuildHeight-64, ticks twice and verifies exactly one packed drone and seven cargo diamonds. Red run lost the packed drone (drone-void-red.log). Final build,2106 units/all596 GameTests pass (drone-void-verified.log).
+
+This verifies the immediate upstream drop lifecycle; items spawned below the world may themselves be removed by normal Minecraft void handling on later ticks. It does not provide a new recovery/teleport mechanic. Dimension target offsets and visual/client acceptance remain open. No client launch/install, push or merge.

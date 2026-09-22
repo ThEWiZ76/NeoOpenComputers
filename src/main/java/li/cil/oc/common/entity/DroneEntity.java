@@ -229,9 +229,17 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     }
 
     @Override
+    protected void onBelowWorld() {
+        if (isRemoved()) return;
+        if (level().isClientSide) super.onBelowWorld();
+        else dropAsItem();
+    }
+
+    @Override
     public void tick() {
+        if (isRemoved()) return;
         super.tick();
-        if (level().isClientSide) return;
+        if (level().isClientSide || isRemoved()) return;
         if (isEyeInFluid(net.minecraft.tags.FluidTags.WATER) || isEyeInFluid(net.minecraft.tags.FluidTags.LAVA)) {
             machine.stop();
         }

@@ -21,6 +21,26 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class DronePickupGameTests {
     @GameTest(template = "empty")
+    public static void fallingBelowWorldPacksDroneOnlyOnce(GameTestHelper helper) {
+        final var drone = new DroneEntity(helper.getLevel());
+        final var pos = helper.absolutePos(new BlockPos(1, 1, 1));
+        drone.moveTo(pos.getX() + 0.5, helper.getLevel().getMinBuildHeight() - 65, pos.getZ() + 0.5, 0, 0);
+        drone.loadFromItemStack(((DroneItem) ModItems.DRONE.get()).assembleFromCase(
+            new ItemStack(ModItems.DRONE_CASE_TIER1.get()), new ItemStack(ModItems.INVENTORY_UPGRADE.get())), null);
+        drone.mainInventory().setItem(0, new ItemStack(Items.DIAMOND, 7));
+        final var bounds = drone.getBoundingBox().inflate(1);
+        drone.tick();
+        helper.assertTrue(drone.isRemoved(), "Void drone was not removed");
+        drone.tick();
+        final var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, bounds);
+        helper.assertTrue(drops.stream().filter(entity -> entity.getItem().is(ModItems.DRONE.get())).count() == 1,
+            "Void removal lost or duplicated packed drone");
+        helper.assertTrue(drops.stream().filter(entity -> entity.getItem().is(Items.DIAMOND))
+            .mapToInt(entity -> entity.getItem().getCount()).sum() == 7, "Void removal lost or duplicated cargo");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void wrenchPickupConservesHardwareCargoAndEnergy(GameTestHelper helper) throws Exception {
         final var drone = new DroneEntity(helper.getLevel());
         final var pos = helper.absolutePos(new BlockPos(1, 1, 1));
