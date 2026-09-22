@@ -8,6 +8,7 @@
     "BaseSpawnerAccessor",
     "BeaconBlockEntityAccessor",
     "BeaconBlockEntityMixin",
+    "BlockEntityPositionAccessor",
     "BrewingStandBlockEntityAccessor"
   ],
   "injectors": {

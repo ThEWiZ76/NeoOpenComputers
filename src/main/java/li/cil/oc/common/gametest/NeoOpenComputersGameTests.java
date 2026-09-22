@@ -1107,7 +1107,7 @@ public final class NeoOpenComputersGameTests {
         NeoForge.EVENT_BUS.register(listener);
         try {
             final Object[] liquidResult = invokeComponent(helper, component, "scanContentsAt", water.getX(), water.getY(), water.getZ());
-            helper.assertTrue(sawBreakEvent.get(), "Debug scanContentsAt did not post break event for liquid");
+            helper.assertTrue(sawBreakEvent.get(), "Debug scanContentsAt did not post break event for liquid: " + java.util.Arrays.toString(liquidResult));
             helper.assertTrue(liquidResult.length == 3 && Boolean.TRUE.equals(liquidResult[0]) && "liquid".equals(liquidResult[1]) && convertedBlockName(liquidResult[2]).equals("minecraft:water"), "Debug scanContentsAt did not report protected liquid block");
         } finally {
             NeoForge.EVENT_BUS.unregister(listener);
@@ -11236,9 +11236,9 @@ public final class NeoOpenComputersGameTests {
         helper.setBlock(keyboardPos, ModBlocks.KEYBOARD.get());
 
         final KeyboardBlockEntity keyboard = helper.getBlockEntity(keyboardPos);
-        final net.minecraft.server.level.ServerPlayer nearPlayer = helper.makeMockServerPlayerInLevel();
+        final Player nearPlayer = helper.makeMockPlayer(GameType.SURVIVAL);
         nearPlayer.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(keyboardPos.relative(Direction.EAST))));
-        final net.minecraft.server.level.ServerPlayer farPlayer = helper.makeMockServerPlayerInLevel();
+        final Player farPlayer = helper.makeMockPlayer(GameType.SURVIVAL);
         farPlayer.moveTo(Vec3.atBottomCenterOf(helper.absolutePos(keyboardPos.relative(Direction.EAST, 9))));
 
         helper.assertTrue(keyboard.isUsableByPlayer(nearPlayer), "Nearby player could not use keyboard");

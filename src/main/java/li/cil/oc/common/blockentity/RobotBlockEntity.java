@@ -33,6 +33,7 @@ import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.RobotBlock;
 import li.cil.oc.common.menu.RobotMenu;
+import li.cil.oc.mixin.BlockEntityPositionAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -170,6 +171,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private static final int MUTABLE_SLOT_COUNT = CARGO_SLOT_START + CARGO_SLOT_COUNT;
     private static final int MAX_HARDWARE_SLOT_COUNT = slotCount(2);
     private final Machine machine;
+    private boolean relocating;
     private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, this::energyThroughput);
     private final MultiTank internalTanks = new MultiTank() {
         @Override
@@ -970,7 +972,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     @Override
     public void setRemoved() {
         super.setRemoved();
-        removeMachineNode();
+        if (!relocating) {
+            removeMachineNode();
+        }
     }
 
     @Override
@@ -1141,24 +1145,56 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
         final RobotMoveEvent.Pre pre = new RobotMoveEvent.Pre(this, direction);
         NeoForge.EVENT_BUS.post(pre);
-        if (pre.isCanceled()) {
+        if (pre.isCanceled() || !level.isEmptyBlock(targetPos)
+            || level.getBlockEntity(worldPosition) != this || !level.getWorldBorder().isWithinBounds(targetPos)) {
             return new Object[]{false, "blocked"};
         }
-        final CompoundTag saved = saveWithFullMetadata(level.registryAccess());
-        saved.putInt("x", targetPos.getX());
-        saved.putInt("y", targetPos.getY());
-        saved.putInt("z", targetPos.getZ());
+        final BlockPos sourcePos = worldPosition;
         final BlockState state = getBlockState();
-        level.removeBlockEntity(worldPosition);
-        level.setBlock(targetPos, state, 3);
-        RobotBlockEntity eventRobot = this;
-        if (level.getBlockEntity(targetPos) instanceof RobotBlockEntity movedRobot) {
-            movedRobot.loadWithComponents(saved, level.registryAccess());
-            movedRobot.connectMachineNode();
-            eventRobot = movedRobot;
+        final BlockState previousTarget = level.getBlockState(targetPos);
+        // Stage the destination before touching the live robot or its inventory.
+        if (!level.setBlock(targetPos, state, 2)) {
+            return new Object[]{false, "blocked"};
         }
-        level.setBlock(worldPosition, Blocks.AIR.defaultBlockState(), 3);
-        NeoForge.EVENT_BUS.post(new RobotMoveEvent.Post(eventRobot, direction));
+        if (!(level.getBlockEntity(targetPos) instanceof RobotBlockEntity)) {
+            level.setBlock(targetPos, previousTarget, 3);
+            return new Object[]{false, "blocked"};
+        }
+        boolean moved = false;
+        relocating = true;
+        try {
+            level.removeBlockEntity(sourcePos);
+            if (!level.setBlock(sourcePos, Blocks.AIR.defaultBlockState(), 2)) {
+                return new Object[]{false, "blocked"};
+            }
+            ((BlockEntityPositionAccessor) this).neoopencomputers$setWorldPosition(targetPos.immutable());
+            level.setBlockEntity(this);
+            moved = level.getBlockEntity(targetPos) == this;
+            if (!moved) {
+                return new Object[]{false, "blocked"};
+            }
+        } finally {
+            if (!moved) {
+                ((BlockEntityPositionAccessor) this).neoopencomputers$setWorldPosition(sourcePos);
+                level.setBlock(sourcePos, state, 2);
+                level.setBlockEntity(this);
+                level.setBlock(targetPos, previousTarget, 3);
+            }
+            relocating = false;
+        }
+        // Keep the internal computer/ROM graph alive; only world adjacency changes.
+        final List<Node> oldNeighbors = new ArrayList<>();
+        robotNode.neighbors().forEach(oldNeighbors::add);
+        for (final Node neighbor : oldNeighbors) {
+            if (neighbor != machine.node() && (robotRom == null || neighbor != robotRom.node())) {
+                robotNode.disconnect(neighbor);
+            }
+        }
+        Network.joinOrCreateNetwork(this);
+        level.updateNeighborsAt(sourcePos, state.getBlock());
+        level.updateNeighborsAt(targetPos, state.getBlock());
+        setChanged();
+        NeoForge.EVENT_BUS.post(new RobotMoveEvent.Post(this, direction));
         return new Object[]{true};
     }
 

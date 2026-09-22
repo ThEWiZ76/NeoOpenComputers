@@ -96,7 +96,6 @@ final class RobotBlockEntityComponentTest {
         assertTrue(source.contains("connectMachineNode"));
         assertTrue(source.contains("robotNode.save"));
         assertTrue(source.contains("robotNode.load"));
-        assertTrue(source.contains("new RobotMoveEvent.Post(eventRobot, direction)"));
     }
 
     @Test
