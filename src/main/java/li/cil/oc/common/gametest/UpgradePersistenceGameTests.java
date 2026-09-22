@@ -23,6 +23,55 @@ import java.util.List;
 @PrefixGameTestTemplate(false)
 public final class UpgradePersistenceGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
+    public static void robotGeneratorRetainsFuelAcrossReload(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.GENERATOR_UPGRADE.get()), """
+            local upgrade = component.proxy(component.list('generator')())
+            robot.select(1)
+            assert(upgrade.insert(3))
+            repeat computer.pullSignal(0.05) until upgrade.count() == 2
+            """, """
+            assert(upgrade.count() == 2, 'generator queue lost or consumed twice')
+            """);
+    }
+
+    @GameTest(template = "empty")
+    public static void removingGeneratorDoesNotRetainDroppedFuel(GameTestHelper helper) throws Exception {
+        final var pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.ROBOT.get());
+        final RobotBlockEntity robot = helper.getBlockEntity(pos);
+        robot.setTier(2);
+        RobotMovementPersistenceGameTests.installHardware(helper, robot,
+            List.of(new ItemStack(ModItems.UPGRADE_CONTAINER_TIER2.get())));
+        robot.onLoad();
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(net.minecraft.world.item.Items.COAL, 3));
+        final int slot = 1; // First mutable expansion slot; slot zero holds the tool.
+        robot.setItem(slot, new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        final var generator = generator(robot);
+        helper.assertTrue(Boolean.TRUE.equals(generator.invoke("insert", robot.machine(), 3)[0]), "Generator did not accept fuel");
+        final var removed = robot.removeItemNoUpdate(slot);
+        helper.assertTrue(droppedCoal(helper, robot) == 3, "Generator removal did not drop exactly three coal");
+        robot.setItem(slot, removed);
+        helper.assertTrue(((Number) generator(robot).invoke("count", robot.machine())[0]).intValue() == 0,
+            "Reinserted generator duplicated dropped fuel");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START).isEmpty(), "Generator insertion left duplicate cargo");
+        helper.succeed();
+    }
+
+    private static li.cil.oc.api.network.Component generator(RobotBlockEntity robot) {
+        for (var node : robot.machine().node().reachableNodes()) {
+            if (node instanceof li.cil.oc.api.network.Component component && component.name().equals("generator")) return component;
+        }
+        throw new AssertionError("Generator component missing");
+    }
+
+    private static int droppedCoal(GameTestHelper helper, RobotBlockEntity robot) {
+        return helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+            new net.minecraft.world.phys.AABB(robot.getBlockPos()).inflate(0.5)).stream()
+            .filter(entity -> entity.getItem().is(net.minecraft.world.item.Items.COAL))
+            .mapToInt(entity -> entity.getItem().getCount()).sum();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
     public static void robotNavigationProxyRetainsMap(GameTestHelper helper) {
         final var upgrade = new ItemStack(ModItems.NAVIGATION_UPGRADE.get());
         final var origin = helper.absolutePos(new BlockPos(1, 1, 1));
@@ -54,6 +103,7 @@ public final class UpgradePersistenceGameTests {
 
     private static void restore(GameTestHelper helper, ItemStack upgrade, String setup, String verify) {
         final boolean chunkloader = upgrade.is(ModItems.CHUNKLOADER_UPGRADE.get());
+        final boolean generator = upgrade.is(ModItems.GENERATOR_UPGRADE.get());
         final var pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.ROBOT.get());
         final RobotBlockEntity original = helper.getBlockEntity(pos);
@@ -73,6 +123,7 @@ public final class UpgradePersistenceGameTests {
                 while true do computer.pullSignal() end
                 """)));
         original.onLoad();
+        if (generator) original.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(net.minecraft.world.item.Items.COAL, 3));
         helper.assertTrue(original.toggleMachine(), "Upgrade test robot did not start");
         final RobotBlockEntity[] active = {original};
         helper.startSequence()
@@ -93,6 +144,10 @@ public final class UpgradePersistenceGameTests {
             .thenWaitUntil(() -> helper.assertTrue(color(active[0]) == 0x123456, "Upgrade continuation failed: " + active[0].machine().lastError()))
             .thenExecute(() -> {
                 if (chunkloader) assertTickets(helper, active[0], false);
+                if (generator) {
+                    helper.assertTrue(droppedCoal(helper, active[0]) == 0, "Reload duplicated generator fuel as drops");
+                    helper.assertTrue(active[0].getItem(RobotBlockEntity.CARGO_SLOT_START).isEmpty(), "Reload duplicated generator fuel in cargo");
+                }
             })
             .thenSucceed();
     }
@@ -101,6 +156,6 @@ public final class UpgradePersistenceGameTests {
 
     private static void assertTickets(GameTestHelper helper, RobotBlockEntity robot, boolean expected) {
         NeoOpenComputersGameTests.assertModForcedTickingChunksAround(helper,
-            new net.minecraft.world.level.ChunkPos(robot.getBlockPos()), expected);
+            robot.getBlockPos(), expected);
     }
 }

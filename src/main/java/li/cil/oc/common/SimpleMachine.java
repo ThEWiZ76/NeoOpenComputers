@@ -142,9 +142,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         }
         for (ManagedEnvironment environment : componentEnvironments) {
             if (environment.node() != null) {
-                saveComponentEnvironment(environment);
                 host.onMachineDisconnect(environment.node());
                 environment.node().remove();
+                saveComponentEnvironment(environment);
             }
         }
         componentEnvironments.clear();

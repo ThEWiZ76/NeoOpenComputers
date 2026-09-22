@@ -1496,13 +1496,14 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         final int index = slot - CONTAINER_RUNTIME_SLOT_START;
         if (index < 0 || index >= runtimeComponents.length || runtimeComponents[index] == null) return;
         final RuntimeComponent component = runtimeComponents[index];
-        saveRuntimeComponent(component);
         runtimeComponents[index] = null;
         final Node node = component.environment().node();
         if (node != null) {
             onMachineDisconnect(node);
             node.remove();
         }
+        // Persist after disconnect callbacks eject fuel and close open handles.
+        saveRuntimeComponent(component);
     }
 
     private void syncRuntimeComponents() {

@@ -776,7 +776,7 @@ final class MachineRegistryTest {
     }
 
     @Test
-    void hostChangedSavesComponentEnvironmentsBeforeRemovingThem() {
+    void hostChangedSavesComponentEnvironmentsAfterRemovingThem() {
         OpenComputersApi.initialize();
         SavingDriver driver = new SavingDriver();
         DriverRegistry driverRegistry = new DriverRegistry();
@@ -789,6 +789,7 @@ final class MachineRegistryTest {
         machine.onHostChanged();
 
         assertEquals(1, firstEnvironment.saves);
+        assertTrue(firstEnvironment.savedAfterDisconnect);
     }
 
     @Test
@@ -2394,6 +2395,8 @@ final class MachineRegistryTest {
 
     private static final class SavingEnvironment extends AbstractManagedEnvironment {
         private int saves;
+        private boolean disconnected;
+        private boolean savedAfterDisconnect;
 
         private SavingEnvironment() {
             setNode(Network.newNode(this, Visibility.Network)
@@ -2405,6 +2408,12 @@ final class MachineRegistryTest {
         public void save(final CompoundTag nbt) {
             super.save(nbt);
             saves++;
+            savedAfterDisconnect = disconnected;
+        }
+
+        @Override
+        public void onDisconnect(Node node) {
+            if (node == node()) disconnected = true;
         }
     }
 

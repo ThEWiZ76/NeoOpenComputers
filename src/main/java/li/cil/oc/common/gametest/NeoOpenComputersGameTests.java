@@ -1,7 +1,6 @@
 package li.cil.oc.common.gametest;
 
 import li.cil.oc.NeoOpenComputers;
-import it.unimi.dsi.fastutil.longs.LongSet;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DeviceInfo;
@@ -5786,10 +5785,10 @@ public final class NeoOpenComputersGameTests {
         final ComponentConnector component = (ComponentConnector) environment.node();
 
         component.invoke("setActive", null, true);
-        assertModForcedTickingChunksAround(helper, ownerChunk, true);
+        assertModForcedTickingChunksAround(helper, BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()), true);
 
         component.invoke("setActive", null, false);
-        assertModForcedTickingChunksAround(helper, ownerChunk, false);
+        assertModForcedTickingChunksAround(helper, BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()), false);
         helper.succeed();
     }
 
@@ -12034,24 +12033,34 @@ public final class NeoOpenComputersGameTests {
         }
     }
 
-    private static boolean hasModForcedTickingChunk(final GameTestHelper helper, final long chunk) {
+    private static boolean hasModForcedTickingChunk(final GameTestHelper helper, final BlockPos owner, final long chunk) {
         final ForcedChunksSavedData data = helper.getLevel().getDataStorage().computeIfAbsent(ForcedChunksSavedData.factory(), ForcedChunksSavedData.FILE_ID);
-        for (final LongSet chunks : data.getBlockForcedChunks().getTickingChunks().values()) {
-            if (chunks.contains(chunk)) {
-                return true;
+        final var saved = data.save(new CompoundTag(), helper.getLevel().registryAccess());
+        for (var entry : saved.getList("ModForced", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            final var controller = (CompoundTag) entry;
+            if (!controller.getString("Controller").equals(NeoOpenComputers.MODID + ":chunkloader_upgrade")) continue;
+            for (var chunkEntry : controller.getList("ModForced", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+                final var ticket = (CompoundTag) chunkEntry;
+                if (ticket.getLong("Chunk") != chunk) continue;
+                for (var blockEntry : ticket.getList("TickingBlocks", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+                    final var block = (CompoundTag) blockEntry;
+                    if (block.getInt("X") == owner.getX() && block.getInt("Y") == owner.getY()
+                        && block.getInt("Z") == owner.getZ()) return true;
+                }
             }
         }
         return false;
     }
 
-    static void assertModForcedTickingChunksAround(final GameTestHelper helper, final ChunkPos center, final boolean expected) {
+    static void assertModForcedTickingChunksAround(final GameTestHelper helper, final BlockPos owner, final boolean expected) {
+        final var center = new ChunkPos(owner);
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
                 final ChunkPos chunk = new ChunkPos(center.x + x, center.z + z);
                 if (expected) {
-                    helper.assertTrue(hasModForcedTickingChunk(helper, chunk.toLong()), "Chunkloader did not add forced chunk ticket for " + chunk);
+                    helper.assertTrue(hasModForcedTickingChunk(helper, owner, chunk.toLong()), "Chunkloader did not add forced chunk ticket for " + chunk);
                 } else {
-                    helper.assertFalse(hasModForcedTickingChunk(helper, chunk.toLong()), "Chunkloader did not remove forced chunk ticket for " + chunk);
+                    helper.assertFalse(hasModForcedTickingChunk(helper, owner, chunk.toLong()), "Chunkloader did not remove forced chunk ticket for " + chunk);
                 }
             }
         }

@@ -30,7 +30,16 @@ public class GeneratorUpgradeItem extends Item implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return host instanceof Agent agent ? new GeneratorUpgradeEnvironment(agent) : null;
+        if (!(host instanceof Agent agent)) return null;
+        final var environment = new GeneratorUpgradeEnvironment(agent) {
+            @Override
+            public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override

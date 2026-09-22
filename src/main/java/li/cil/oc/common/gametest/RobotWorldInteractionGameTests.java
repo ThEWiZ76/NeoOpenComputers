@@ -184,7 +184,8 @@ public final class RobotWorldInteractionGameTests {
             assert(state.value == 732)
             robot.setLightColor(0x110003)
             assert(waitFor("component_added") == address)
-            assert(component.proxy(address).isOpen(123))
+            assert(not component.proxy(address).isOpen(123))
+            assert(component.proxy(address).open(123))
             state.value = state.value + 1
             assert(state.value == 733)
             robot.setLightColor(0x110004)
@@ -210,7 +211,7 @@ public final class RobotWorldInteractionGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void robotHotSwapsNetworkCardWithoutRebootAndPreservesPorts(final GameTestHelper helper) throws Exception {
+    public static void robotHotSwapsNetworkCardWithoutRebootAndClosesPorts(final GameTestHelper helper) throws Exception {
         final RobotBlockEntity robot = robot(helper);
         robot.machine().stop();
         RobotMovementPersistenceGameTests.installHardware(helper, robot, java.util.List.of(
@@ -245,7 +246,8 @@ public final class RobotWorldInteractionGameTests {
             if (node instanceof li.cil.oc.api.network.Component component && "modem".equals(component.name())) restored = component;
         }
         helper.assertTrue(restored != null && restored != modem && address.equals(restored.address()), "Reinserted card lost identity or reused removed environment");
-        helper.assertTrue(Boolean.TRUE.equals(restored.invoke("isOpen", null, 123)[0]), "Reinserted modem lost its open port");
+        helper.assertTrue(Boolean.FALSE.equals(restored.invoke("isOpen", null, 123)[0]), "Removed modem retained its open port");
+        helper.assertTrue(Boolean.TRUE.equals(restored.invoke("open", null, 123)[0]), "Reinserted modem could not reopen its port");
         helper.assertTrue(robot.machine().isRunning() && robot.machine().architecture() == architecture, "Hot insertion rebooted the robot");
         final var saved = robot.saveWithFullMetadata(helper.getLevel().registryAccess());
         robot.loadWithComponents(saved, helper.getLevel().registryAccess());
