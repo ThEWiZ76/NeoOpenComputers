@@ -127,3 +127,11 @@ Drone now exposes inventorySize, select, count, space, compareTo and transferTo.
 InventoryControlGameTests invokes registered callbacks on actual robot/drone components. It checks slot numbering, empty source rejection, merge conservation at a full stack, full destination rejection, self/zero transfer, partial incompatible rejection, full swap, default/strict custom-name comparison, count/space and invalid index. Red run failed robot empty equality and missing drone inventorySize. Three old RobotBlockEntity source-string tests were removed in favor of these behavioral checks; one had falsely passed because unrelated methods contained matching strings. Final build, 2106 remaining unit tests and all 580 GameTests pass (inventory-api-final.log).
 
 Native Lua continuation with drone cargo, cargo menu/client synchronization, world interactions, pickup/destruction and visual acceptance remain open. No client launch/install, push or merge.
+
+## Native drone cargo continuation - 2026-09-22
+
+DroneCargoPersistenceGameTests runs native Lua on a tier-2 drone with inventory, inventory controller and tractor upgrades. Lua splits eleven diamonds into eight/three, selects slot two and waits. The test saves/removes/recreates the entity, resumes the same program and proxies, checks local marker731 and selection, reads retained cargo through the controller, picks up five newly spawned iron ingots using the tractor, and merges diamonds back. Java independently verifies final cargo types/counts. Final build and all581 GameTests pass (drone-cargo-native-final.log); 2106 unit tests remain green.
+
+Initial fixture attempts omitted upgrades because loadFromItemStack assigns components to the first compatible empty slot. Correct fixture order is tractor tier2, controller tier1, inventory tier0. The generic loader's order sensitivity remains a follow-up; this run did not alter tier restrictions or production behavior. This is native entity-NBT continuation, not full JVM restart or visual acceptance.
+
+Upstream common/container/Drone.scala exposes eight cargo slots (four columns, two rows) with unavailable slots disabled, not editable hardware slots. Current DroneMenu/DroneScreen still expose hardware; correct cargo GUI and synchronization remain the next parity task. No client launch/install, push or merge.
