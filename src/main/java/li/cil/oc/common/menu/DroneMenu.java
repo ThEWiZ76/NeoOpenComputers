@@ -17,15 +17,16 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 public class DroneMenu extends AbstractContainerMenu {
-    public static final int MIN_DRONE_SLOT_COUNT = DroneEntity.slotCount(0);
-    public static final int MAX_DRONE_SLOT_COUNT = DroneEntity.slotCount(2);
+    public static final int MIN_DRONE_SLOT_COUNT = 0;
+    public static final int MAX_DRONE_SLOT_COUNT = 8;
     public static final int PLAYER_SLOT_COUNT = 36;
     public static final int DRONE_STATUS_INDEX = 0;
     public static final int DRONE_MISSING_REQUIREMENTS_INDEX = 1;
     public static final int DRONE_COMPONENT_COUNT_INDEX = 2;
     public static final int DRONE_MAX_COMPONENTS_INDEX = 3;
     public static final int DRONE_TIER_INDEX = 4;
-    public static final int DRONE_DATA_COUNT = 5;
+    public static final int DRONE_CARGO_SIZE_INDEX = 5;
+    public static final int DRONE_DATA_COUNT = 6;
     public static final int STATE_EMPTY = ComputerCaseMenu.STATE_EMPTY;
     public static final int STATE_READY = ComputerCaseMenu.STATE_READY;
     public static final int STATE_RUNNING = ComputerCaseMenu.STATE_RUNNING;
@@ -38,8 +39,8 @@ public class DroneMenu extends AbstractContainerMenu {
     private static final int PLAYER_INVENTORY_Y = 84;
     private static final int PLAYER_HOTBAR_Y = 142;
     private static final int[][] DRONE_SLOT_POSITIONS = {
-        {8, 16}, {26, 16}, {44, 16}, {62, 16}, {80, 16}, {98, 16}, {116, 16}, {134, 16},
-        {8, 34}, {26, 34}, {44, 34}, {62, 34}, {80, 34}, {98, 34}, {116, 34}, {134, 34}
+        {98, 18}, {116, 18}, {134, 18}, {152, 18},
+        {98, 36}, {116, 36}, {134, 36}, {152, 36}
     };
 
     private final Container droneInventory;
@@ -66,10 +67,10 @@ public class DroneMenu extends AbstractContainerMenu {
         droneSlotCount = droneSlotCountForTier(droneTier());
         droneInventory.startOpen(playerInventory.player);
         addDataSlots(droneData);
-
+        final Container cargo = droneInventory instanceof DroneEntity drone ? new CargoInventory(drone) : droneInventory;
         for (int slot = 0; slot < droneSlotCount; slot++) {
             final int[] position = slotPosition(slot);
-            addSlot(new DroneSlot(droneInventory, slot, position[0], position[1]));
+            addSlot(new DroneSlot(cargo, slot, position[0], position[1]));
         }
         addPlayerInventory(playerInventory);
     }
@@ -83,15 +84,19 @@ public class DroneMenu extends AbstractContainerMenu {
     }
 
     public static int droneSlotCountForTier(final int tier) {
-        return DroneEntity.slotCount(tier);
+        return MAX_DRONE_SLOT_COUNT;
     }
 
     public static String droneSlotKind(final int tier, final int slot) {
-        return DroneEntity.slotType(tier, slot);
+        return li.cil.oc.api.driver.item.Slot.Any;
     }
 
     public static int droneSlotTierLimit(final int tier, final int slot) {
-        return DroneEntity.slotTier(tier, slot);
+        return Integer.MAX_VALUE;
+    }
+
+    public int cargoSize() {
+        return Math.clamp(droneData.get(DRONE_CARGO_SIZE_INDEX), 0, MAX_DRONE_SLOT_COUNT);
     }
 
     public int droneTier() {
@@ -120,9 +125,10 @@ public class DroneMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(final Player player, final int index) {
+        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         ItemStack moved = ItemStack.EMPTY;
         final Slot slot = slots.get(index);
-        if (slot != null && slot.hasItem()) {
+        if (slot != null && slot.isActive() && slot.hasItem()) {
             final ItemStack stack = slot.getItem();
             moved = stack.copy();
             if (index < droneSlotCount) {
@@ -221,6 +227,7 @@ public class DroneMenu extends AbstractContainerMenu {
         final SimpleContainerData data = new SimpleContainerData(DRONE_DATA_COUNT);
         if (extraData != null) {
             data.set(DRONE_TIER_INDEX, extraData.readVarInt());
+            data.set(DRONE_CARGO_SIZE_INDEX, extraData.readVarInt());
         }
         return data;
     }
@@ -241,15 +248,33 @@ public class DroneMenu extends AbstractContainerMenu {
         }
     }
 
-    static final class DroneSlot extends Slot {
+    final class DroneSlot extends Slot {
         DroneSlot(final Container container, final int slot, final int x, final int y) {
             super(container, slot, x, y);
         }
 
         @Override
         public boolean mayPlace(final ItemStack stack) {
-            return container.canPlaceItem(getSlotIndex(), stack);
+            return isActive() && container.canPlaceItem(getSlotIndex(), stack);
         }
+
+        @Override public boolean isActive() { return getSlotIndex() < cargoSize(); }
+        @Override public boolean mayPickup(final Player player) { return isActive(); }
+    }
+
+    /** Resolves the current cargo container, which can change when hardware capacity changes. */
+    private record CargoInventory(DroneEntity drone) implements Container {
+        private boolean valid(int slot) { return slot >= 0 && slot < drone.mainInventory().getContainerSize(); }
+        @Override public int getContainerSize() { return MAX_DRONE_SLOT_COUNT; }
+        @Override public boolean isEmpty() { return drone.mainInventory().isEmpty(); }
+        @Override public ItemStack getItem(int slot) { return valid(slot) ? drone.mainInventory().getItem(slot) : ItemStack.EMPTY; }
+        @Override public ItemStack removeItem(int slot, int amount) { return valid(slot) ? drone.mainInventory().removeItem(slot, amount) : ItemStack.EMPTY; }
+        @Override public ItemStack removeItemNoUpdate(int slot) { return valid(slot) ? drone.mainInventory().removeItemNoUpdate(slot) : ItemStack.EMPTY; }
+        @Override public void setItem(int slot, ItemStack stack) { if (valid(slot)) drone.mainInventory().setItem(slot, stack); }
+        @Override public void setChanged() { drone.mainInventory().setChanged(); }
+        @Override public boolean stillValid(Player player) { return drone.stillValid(player); }
+        @Override public boolean canPlaceItem(int slot, ItemStack stack) { return valid(slot); }
+        @Override public void clearContent() { drone.mainInventory().clearContent(); }
     }
 
     static final class ServerDroneData implements ContainerData {
@@ -267,6 +292,7 @@ public class DroneMenu extends AbstractContainerMenu {
                 case DRONE_COMPONENT_COUNT_INDEX -> componentCountFor(droneInventory);
                 case DRONE_MAX_COMPONENTS_INDEX -> maxComponentsFor(droneInventory);
                 case DRONE_TIER_INDEX -> droneTierFor(droneInventory);
+                case DRONE_CARGO_SIZE_INDEX -> droneInventory instanceof DroneEntity drone ? drone.mainInventory().getContainerSize() : 0;
                 default -> 0;
             };
         }

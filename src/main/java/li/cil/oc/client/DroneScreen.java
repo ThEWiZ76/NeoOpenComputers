@@ -48,7 +48,7 @@ public class DroneScreen extends AbstractContainerScreen<DroneMenu> {
                 left + DroneMenu.droneSlotX(tier, slot),
                 top + DroneMenu.droneSlotY(tier, slot),
                 DroneMenu.droneSlotKind(tier, slot),
-                DroneMenu.droneSlotTierLimit(tier, slot),
+                menu.getSlot(slot).isActive() ? Integer.MAX_VALUE : -1,
                 menu.getSlot(slot).hasItem());
         }
         drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, top + STATUS_CONTROL_Y, menu.droneState(), statusControlAt(mouseX, mouseY, left, top));
@@ -65,13 +65,7 @@ public class DroneScreen extends AbstractContainerScreen<DroneMenu> {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
-        final int slot = droneSlotAt(mouseX, mouseY, leftPos, topPos, menu.droneTier());
-        if (ComputerCaseScreen.shouldRenderSlotOverlayTooltip(slot >= 0, slot >= 0 && menu.getSlot(slot).hasItem())) {
-            guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.slotTooltip(
-                DroneMenu.droneSlotKind(menu.droneTier(), slot),
-                DroneMenu.droneSlotTierLimit(menu.droneTier(), slot),
-                menu.getSlot(slot).hasItem()), mouseX, mouseY);
-        } else if (statusControlAt(mouseX, mouseY, leftPos, topPos)) {
+        if (statusControlAt(mouseX, mouseY, leftPos, topPos)) {
             guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.statusControlTooltip(menu.droneState()), mouseX, mouseY);
         } else if (mouseX >= leftPos + 8 && mouseX < leftPos + 168 && mouseY >= topPos + 60 && mouseY < topPos + 72) {
             guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.statusTooltip(menu.droneState(), menu.missingRequirements(), menu.componentCount(), menu.maxComponents()), mouseX, mouseY);

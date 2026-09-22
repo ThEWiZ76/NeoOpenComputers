@@ -494,6 +494,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     @Override
     public void writeClientSideData(final AbstractContainerMenu menu, final RegistryFriendlyByteBuf buffer) {
         buffer.writeVarInt(tier);
+        buffer.writeVarInt(mainInventory.getContainerSize());
     }
 
     @Callback(direct = true, doc = "function():string -- Get the status text currently being displayed in the GUI.")

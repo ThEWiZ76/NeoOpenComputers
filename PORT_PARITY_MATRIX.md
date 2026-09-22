@@ -135,3 +135,11 @@ DroneCargoPersistenceGameTests runs native Lua on a tier-2 drone with inventory,
 Initial fixture attempts omitted upgrades because loadFromItemStack assigns components to the first compatible empty slot. Correct fixture order is tractor tier2, controller tier1, inventory tier0. The generic loader's order sensitivity remains a follow-up; this run did not alter tier restrictions or production behavior. This is native entity-NBT continuation, not full JVM restart or visual acceptance.
 
 Upstream common/container/Drone.scala exposes eight cargo slots (four columns, two rows) with unavailable slots disabled, not editable hardware slots. Current DroneMenu/DroneScreen still expose hardware; correct cargo GUI and synchronization remain the next parity task. No client launch/install, push or merge.
+
+## Drone cargo menu - 2026-09-22
+
+DroneMenu now exposes eight cargo slots in four columns/two rows rather than editable internal hardware. The hardware host reference remains available for machine status and power controls. CargoInventory resolves the current mainInventory on each operation, avoiding stale references when capacity changes. Unavailable slots reject insertion/pickup and are inactive; shift transfers operate only on cargo. Opening data includes cargo capacity, and an added ContainerData field synchronizes later changes. DroneScreen renders ordinary cargo slots and unavailable-slot overlays instead of hardware tier/type hints. Layout uses the existing panel with cargo at x98..152, y18/36; real-client visual acceptance is still pending.
+
+DroneMenuGameTests failed against the old hardware menu, then passed: eight cargo plus36 player slots, four-slot gating, shift-in/out conservation of11 diamonds without changing the inventory upgrade, live expansion to8 and writing slot8 after the underlying container changes. It also roundtrips writeClientSideData into the client constructor and applies capacity updates to4 and0, checking slot activation/insertion restrictions. Final build,2106 unit tests and all582 GameTests pass (drone-menu-final.log).
+
+Not a full rendered-client or network-transport acceptance test. Screen3 client testing, drone status text/energy display, world actions, pickup/destruction and component-order-sensitive loading remain open. No client launch/install, push or merge.
