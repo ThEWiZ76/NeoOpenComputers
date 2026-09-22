@@ -38,7 +38,14 @@ public class BatteryUpgradeItem extends Item implements HostAware, Chargeable {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new BatteryUpgradeEnvironment(tier(stack));
+        final var environment = new BatteryUpgradeEnvironment(tier(stack)) {
+            @Override public void save(final CompoundTag data) {
+                super.save(data);
+                writeData(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override
@@ -75,7 +82,7 @@ public class BatteryUpgradeItem extends Item implements HostAware, Chargeable {
     }
 
     public double chargeStored(final ItemStack stack) {
-        return Math.max(0D, Math.min(readData(stack).getDouble(CHARGE_TAG), maxCharge()));
+        return Math.max(0D, Math.min(readData(stack).getCompound("node").getDouble("buffer"), maxCharge()));
     }
 
     public double maxCharge() {
@@ -90,15 +97,29 @@ public class BatteryUpgradeItem extends Item implements HostAware, Chargeable {
         if (customData == null) {
             return new CompoundTag();
         }
-        return customData.copyTag().getCompound(DATA_TAG);
+        final CompoundTag data = customData.copyTag().getCompound(DATA_TAG);
+        final CompoundTag node = data.getCompound("node");
+        // Earlier port builds stored item charge separately from connector state.
+        if (!node.contains("buffer") && data.contains(CHARGE_TAG)) {
+            node.putDouble("buffer", data.getDouble(CHARGE_TAG));
+            data.put("node", node);
+        }
+        data.remove(CHARGE_TAG);
+        return data;
     }
 
     private static void writeCharge(final ItemStack stack, final double value) {
+        final CompoundTag data = readData(stack);
+        final CompoundTag node = data.getCompound("node");
+        node.putDouble("buffer", value);
+        data.put("node", node);
+        writeData(stack, data);
+    }
+
+    private static void writeData(final ItemStack stack, final CompoundTag data) {
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         final CompoundTag root = customData == null ? new CompoundTag() : customData.copyTag();
-        final CompoundTag data = root.getCompound(DATA_TAG);
-        data.putDouble(CHARGE_TAG, value);
-        root.put(DATA_TAG, data);
+        root.put(DATA_TAG, data.copy());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 }
