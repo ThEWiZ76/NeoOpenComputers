@@ -34,7 +34,15 @@ public class NavigationUpgradeItem extends Item implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new NavigationUpgradeEnvironment(host, mapData(stack, host == null ? null : host.world()));
+        final var environment = new NavigationUpgradeEnvironment(host, mapData(stack, host == null ? null : host.world())) {
+            @Override
+            public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override

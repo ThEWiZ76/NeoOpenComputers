@@ -12044,7 +12044,7 @@ public final class NeoOpenComputersGameTests {
         return false;
     }
 
-    private static void assertModForcedTickingChunksAround(final GameTestHelper helper, final ChunkPos center, final boolean expected) {
+    static void assertModForcedTickingChunksAround(final GameTestHelper helper, final ChunkPos center, final boolean expected) {
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
                 final ChunkPos chunk = new ChunkPos(center.x + x, center.z + z);

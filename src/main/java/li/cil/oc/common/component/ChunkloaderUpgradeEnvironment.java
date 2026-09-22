@@ -5,6 +5,7 @@ import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
@@ -24,7 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "chunkloader";
     private static final String ACTIVE_TAG = "active";
     private static final TicketController TICKETS = new TicketController(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "chunkloader_upgrade"));
@@ -61,6 +62,7 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
     @Override
     public void update() {
         super.update();
+        updateChunkTicket();
         if (host == null || host.world() == null || host.world().getGameTime() % ModSettings.mfuTickFrequency() == 0) {
             tickPowerCost();
         }
@@ -94,7 +96,8 @@ public final class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironm
     @Override
     public void onDisconnect(final li.cil.oc.api.network.Node node) {
         super.onDisconnect(node);
-        if (node == node()) {
+        if (node == node() || host instanceof MachineHost machineHost && machineHost.machine() != null
+            && node == machineHost.machine().node()) {
             setActive(false);
         }
     }

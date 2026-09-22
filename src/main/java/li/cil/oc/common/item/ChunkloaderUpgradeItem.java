@@ -4,6 +4,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.ChunkloaderUpgradeEnvironment;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
 
 public class ChunkloaderUpgradeItem extends BasicUpgradeItem {
     public ChunkloaderUpgradeItem(final Properties properties) {
@@ -15,6 +16,14 @@ public class ChunkloaderUpgradeItem extends BasicUpgradeItem {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new ChunkloaderUpgradeEnvironment(host);
+        final var environment = new ChunkloaderUpgradeEnvironment(host) {
+            @Override
+            public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 }
