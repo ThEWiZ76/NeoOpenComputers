@@ -2,6 +2,7 @@ package li.cil.oc.common.blockentity;
 
 import com.mojang.authlib.GameProfile;
 import li.cil.oc.api.Driver;
+import li.cil.oc.api.FileSystem;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.event.RobotBreakBlockEvent;
 import li.cil.oc.api.event.RobotMoveEvent;
@@ -20,6 +21,7 @@ import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.util.StateAware;
@@ -89,6 +91,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     public static final String SLOT_TYPE_TOOL = "tool";
     private static final String TAG_MACHINE = "oc:machine";
     private static final String TAG_ROBOT_NODE = "oc:robotNode";
+    private static final String TAG_ROBOT_ROM = "oc:romRobot";
     private static final String TAG_SELECTED_SLOT = "oc:selectedSlot";
     private static final String TAG_SELECTED_TANK = "oc:selectedTank";
     private static final String TAG_NAME = "oc:name";
@@ -185,6 +188,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private final Container equipmentInventory = new SimpleContainer(1);
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private Node robotNode;
+    private final ManagedEnvironment robotRom;
     private int pendingComponentSlot = -1;
     private volatile boolean pendingServerThreadChangeMark;
     private int tier;
@@ -200,6 +204,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         OpenComputersApi.initialize();
         machine = li.cil.oc.api.Machine.create(this);
         robotNode = createRobotNode();
+        robotRom = FileSystem.asManagedEnvironment(FileSystem.fromClass(
+            RobotBlockEntity.class, "neoopencomputers", "lua/component/robot"), "robot");
     }
 
     public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final RobotBlockEntity blockEntity) {
@@ -287,10 +293,17 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public void onConnect(final Node node) {
+        if (node == robotNode && robotRom != null) {
+            ((li.cil.oc.api.network.Component) robotRom.node()).setVisibility(Visibility.Network);
+            node.connect(robotRom.node());
+        }
     }
 
     @Override
     public void onDisconnect(final Node node) {
+        if (node == robotNode && robotRom != null) {
+            robotRom.node().remove();
+        }
     }
 
     @Override
@@ -955,6 +968,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (robotNode != null) {
             robotNode.load(tag.getCompound(TAG_ROBOT_NODE));
         }
+        if (robotRom != null) {
+            robotRom.load(tag.getCompound(TAG_ROBOT_ROM));
+        }
         items = NonNullList.withSize(MUTABLE_SLOT_COUNT, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(tag, items, registries);
         hardwareItems = NonNullList.withSize(MAX_HARDWARE_SLOT_COUNT, ItemStack.EMPTY);
@@ -981,6 +997,11 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             tag.put(TAG_ROBOT_NODE, robotNodeTag);
         }
         final CompoundTag machineTag = new CompoundTag();
+        if (robotRom != null) {
+            final CompoundTag romTag = new CompoundTag();
+            robotRom.save(romTag);
+            tag.put(TAG_ROBOT_ROM, romTag);
+        }
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
         ContainerHelper.saveAllItems(tag, items, registries);

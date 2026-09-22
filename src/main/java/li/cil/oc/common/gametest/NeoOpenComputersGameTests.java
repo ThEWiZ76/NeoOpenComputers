@@ -11599,6 +11599,47 @@ public final class NeoOpenComputersGameTests {
         return stack;
     }
 
+    @GameTest(template = "empty", timeoutTicks = 2200)
+    public static void robotBootsOpenOsAndRunsBundledGoFromAutomaticallyMountedRom(final GameTestHelper helper) throws Exception {
+        final ItemStack disk = openOsHardDiskStack(helper);
+        final ManagedEnvironment storage = Driver.driverFor(disk).createEnvironment(disk, null);
+        chargeConnector(helper, storage.node(), 1024D);
+        final li.cil.oc.api.network.Component filesystem = (li.cil.oc.api.network.Component) storage.node();
+        // Keep the shell intact: OpenOS also uses it to run filesystem autoruns.
+        // Replace only init's final interactive loop, after the complete boot phase.
+        final String init;
+        try (final var stream = NeoOpenComputersGameTests.class.getResourceAsStream("/assets/neoopencomputers/loot/openos/init.lua")) {
+            helper.assertTrue(stream != null, "Bundled OpenOS init.lua missing");
+            init = new String(stream.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n", "\n");
+        }
+        final int interactiveLoop = init.indexOf("\nwhile true do");
+        helper.assertTrue(interactiveLoop > 0, "OpenOS init no longer has the expected interactive loop");
+        final String testInit = init.substring(0, interactiveLoop) + "\n" + """
+            local robot = require("robot")
+            assert(require("filesystem").exists("/bin/go.lua"))
+            assert(require("shell").execute("go left 1"))
+            robot.setLightColor(0x123456)
+            while true do require("event").pull() end
+            """;
+        final Object handle = filesystem.invoke("open", null, "init.lua", "w")[0];
+        filesystem.invoke("write", null, handle, testInit.getBytes(StandardCharsets.UTF_8));
+        filesystem.invoke("close", null, handle);
+        storage.save(new CompoundTag());
+        final ItemStack assembled = assembleRobot(helper, new BlockPos(1, 1, 1),
+            new ItemStack(ModItems.COMPUTER_CASE_TIER1.get()), List.of(), List.of(),
+            List.of(new ItemStack(ModItems.CPU_TIER1.get()), new ItemStack(ModItems.MEMORY_TIER1.get()), luaBiosEepromStack(), disk));
+        final RobotBlockEntity robot = placeRobotStack(helper, assembled, new BlockPos(3, 1, 1));
+        robot.onLoad();
+        chargeConnector(helper, robot.machine().node(), 10000D);
+        final Direction facing = robot.facing();
+        helper.assertTrue(robot.toggleMachine(), "OpenOS robot did not start");
+        helper.succeedWhen(() -> {
+            helper.assertTrue(Integer.valueOf(0x123456).equals(robot.getLightColor(null, null)[0]),
+                "OpenOS did not load robot ROM and run go: " + robot.machine().lastError());
+            helper.assertTrue(robot.facing() == facing.getCounterClockWise(), "Bundled go did not turn robot left");
+        });
+    }
+
     private static ItemStack openOsHardDiskStack(final GameTestHelper helper) {
         final Callable<li.cil.oc.api.fs.FileSystem> openOsFactory = ((ItemRegistry) API.items).floppyFactory(openOsFloppyStack());
         helper.assertTrue(openOsFactory != null, "OpenOS floppy has no registered filesystem factory");
