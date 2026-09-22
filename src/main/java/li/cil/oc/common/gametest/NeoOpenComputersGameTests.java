@@ -11864,7 +11864,7 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static RobotBlockEntity placeRobot(final GameTestHelper helper, final BlockPos pos) {
-        helper.setBlock(pos, ModBlocks.ROBOT.get().defaultBlockState());
+        helper.setBlock(pos, ModBlocks.ROBOT.get().defaultBlockState().setValue(li.cil.oc.common.block.RobotBlock.FACING, Direction.SOUTH));
         final RobotBlockEntity robot = helper.getBlockEntity(pos);
         robot.setTier(0);
         robot.setSelectedSlot(0);

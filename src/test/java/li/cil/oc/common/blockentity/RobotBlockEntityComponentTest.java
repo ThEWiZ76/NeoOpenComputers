@@ -110,14 +110,14 @@ final class RobotBlockEntityComponentTest {
 
     @Test
     void localMovementSidesMapThroughRobotFacing() {
-        assertEquals(Direction.SOUTH, RobotBlockEntity.movementDirection(Direction.NORTH, 3));
-        assertEquals(Direction.NORTH, RobotBlockEntity.movementDirection(Direction.NORTH, 2));
-        assertEquals(Direction.EAST, RobotBlockEntity.movementDirection(Direction.NORTH, 5));
-        assertEquals(Direction.WEST, RobotBlockEntity.movementDirection(Direction.NORTH, 4));
-        assertEquals(Direction.EAST, RobotBlockEntity.movementDirection(Direction.EAST, 3));
-        assertEquals(Direction.NORTH, RobotBlockEntity.movementDirection(Direction.EAST, 5));
-        assertEquals(Direction.UP, RobotBlockEntity.movementDirection(Direction.WEST, 1));
-        assertEquals(Direction.DOWN, RobotBlockEntity.movementDirection(Direction.WEST, 0));
+        for (final Direction facing : Direction.Plane.HORIZONTAL) {
+            assertEquals(facing, RobotBlockEntity.movementDirection(facing, 3), "forward for " + facing);
+            assertEquals(facing.getOpposite(), RobotBlockEntity.movementDirection(facing, 2), "back for " + facing);
+            assertEquals(facing.getCounterClockWise(), RobotBlockEntity.movementDirection(facing, 5), "left for " + facing);
+            assertEquals(facing.getClockWise(), RobotBlockEntity.movementDirection(facing, 4), "right for " + facing);
+            assertEquals(Direction.UP, RobotBlockEntity.movementDirection(facing, 1));
+            assertEquals(Direction.DOWN, RobotBlockEntity.movementDirection(facing, 0));
+        }
     }
 
     @Test

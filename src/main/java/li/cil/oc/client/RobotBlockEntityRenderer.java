@@ -62,9 +62,9 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
 
     public static float yawRotation(final Direction facing) {
         return switch (facing) {
-            case WEST -> 90F;
+            case WEST -> -90F;
             case NORTH -> 180F;
-            case EAST -> -90F;
+            case EAST -> 90F;
             default -> 0F;
         };
     }

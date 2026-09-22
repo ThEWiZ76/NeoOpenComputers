@@ -686,6 +686,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     @Callback(doc = "function(side:number):boolean,string -- Moves the robot.")
     public Object[] move(final Context context, final Arguments arguments) {
         final Direction direction = movementDirection(facing(), arguments.checkInteger(0));
+        if (level != null && moveFrom != null && animationRemaining(level.getGameTime()) > 0D) {
+            return new Object[]{null, "already moving"};
+        }
         if (level == null || !level.isLoaded(worldPosition.relative(direction)) || !level.isEmptyBlock(worldPosition.relative(direction))) {
             final Object[] failure = moveRobot(direction);
             failure[0] = null;
@@ -702,7 +705,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             final Object[] result = moveRobot(direction);
             moved = Boolean.TRUE.equals(result[0]);
             if (!moved) result[0] = null;
-            if (context != null) context.pause(moved ? ModSettings.robotMoveDelay() : 0.4D);
+            // This scheduler can resume sooner than upstream's; never resume within the movement animation.
+            if (context != null) context.pause(moved ? Math.max(ModSettings.robotMoveDelay(), animationTicks / 20D) : 0.4D);
             return result;
         } finally {
             if (!moved && cost > 0D) connector.changeBuffer(cost);
@@ -725,7 +729,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             if (cost > 0D) connector.changeBuffer(cost);
             return new Object[]{null, "blocked"};
         }
-        startAnimation(null, clockwise ? -90 : 90, ModSettings.robotTurnDelay());
+        startAnimation(null, clockwise ? 90 : -90, ModSettings.robotTurnDelay());
         if (context != null) context.pause(ModSettings.robotTurnDelay());
         setChanged();
         return new Object[]{true};
@@ -1609,7 +1613,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private static int horizontalSteps(final Direction facing) {
         return switch (facing) {
             case WEST -> 1;
-            case SOUTH -> 2;
+            case NORTH -> 2;
             case EAST -> 3;
             default -> 0;
         };

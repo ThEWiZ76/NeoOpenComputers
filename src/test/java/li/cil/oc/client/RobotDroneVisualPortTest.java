@@ -11,6 +11,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class RobotDroneVisualPortTest {
     @Test
+    void robotRenderedFrontMatchesEveryWorldFacing() {
+        for (final net.minecraft.core.Direction facing : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+            final var front = new org.joml.Vector3f(0F, 0F, 1F)
+                .rotate(com.mojang.math.Axis.YP.rotationDegrees(RobotBlockEntityRenderer.yawRotation(facing)));
+            org.junit.jupiter.api.Assertions.assertEquals(facing.getStepX(), front.x, 1e-6, "front X for " + facing);
+            org.junit.jupiter.api.Assertions.assertEquals(facing.getStepZ(), front.z, 1e-6, "front Z for " + facing);
+        }
+    }
+
+    @Test
     void clientRegistersRobotAndDroneModelLayers() throws Exception {
         final Method method = NeoOpenComputersClient.class.getDeclaredMethod(
             "registerLayerDefinitions",

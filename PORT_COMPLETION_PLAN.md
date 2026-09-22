@@ -229,3 +229,7 @@ Animatiestart, duur, oude positie en draaihoek worden nu meegestuurd; renderer i
 ### Tijdelijke robotpositie en interactie
 
 Interne robot-afterimage toegevoegd: oude positie blijft tijdelijk klikbaar, botsingsvorm volgt de robot, doelbeveiliging blijft gelden en vervalt automatisch. Tests voor menu, beschermde afbraak en precies eenmaal cargo-drops; full build met 2055 unit-tests en 452 GameTests groen. Zie ROBOT_AFTERIMAGE_INTERACTION.md. Live weergave/interactie, overlappende acties, swing, chunkgrenzen en reload blijven open.
+
+### Overlap, scheduler en richtingen
+
+Te vroege tweede stap wordt zonder kosten geweigerd. Scheduler respecteert nu Context.pause binnen gesynchroniseerde callbacks; beweging wacht minimaal tot animatie-einde. Noord/zuid-actierichtingen en oost/west-renderrotatie gecorrigeerd, inclusief bijbehorend teken van draaianimatie. Vaste-kloktest, alle oriëntaties en echte tweestaps-EEPROM groen; full build met 2057 unit-tests en 453 GameTests. Zie ROBOT_MOVEMENT_SCHEDULING.md. Live verificatie en overige pariteit blijven open.

@@ -1248,6 +1248,33 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void synchronizedCallbackPausePreventsImmediateLuaResume() {
+        OpenComputersApi.initialize();
+        final MutableClock clock = new MutableClock();
+        final DriverRegistry drivers = new DriverRegistry();
+        drivers.add(new TestProcessorDriver());
+        API.driver = drivers;
+        final SimpleMachine machine = new SimpleMachine(new TestHost(), clock);
+        machine.onHostChanged();
+        final TrackingArchitecture architecture = (TrackingArchitecture) machine.architecture();
+        architecture.synchronizedAction = () -> {
+            architecture.synchronizedAction = null;
+            machine.pause(0.1D);
+        };
+        assertTrue(machine.start());
+        machine.update();
+        assertTrue(machine.isPaused());
+        assertEquals(0, architecture.threadedRuns, "Callback pause must take effect before Lua continues");
+        clock.nanos = 99_000_000L;
+        machine.update();
+        assertEquals(0, architecture.threadedRuns);
+        clock.nanos = 100_000_000L;
+        machine.update();
+        assertFalse(machine.isPaused());
+        assertEquals(1, architecture.threadedRuns);
+    }
+
+    @Test
     void startAndStopNotifyReachableComponents() {
         OpenComputersApi.initialize();
         Machine machine = API.machine.create(null);
@@ -1813,6 +1840,7 @@ final class MachineRegistryTest {
     }
 
     public static class TrackingArchitecture implements Architecture {
+        private Runnable synchronizedAction;
         private boolean initialized;
         private int signalCount;
         protected int synchronizedRuns;
@@ -1842,6 +1870,7 @@ final class MachineRegistryTest {
         @Override
         public void runSynchronized() {
             synchronizedRuns++;
+            if (synchronizedAction != null) synchronizedAction.run();
         }
 
         @Override

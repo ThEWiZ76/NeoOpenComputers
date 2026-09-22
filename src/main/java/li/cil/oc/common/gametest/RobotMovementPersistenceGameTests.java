@@ -40,11 +40,43 @@ import java.util.Map;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotMovementPersistenceGameTests {
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void overlappingRobotMoveDoesNotChargeOrReplaceAnimation(final GameTestHelper helper) throws Exception {
+        final BlockPos source = new BlockPos(1, 1, 1);
+        final BlockPos destination = source.south();
+        helper.setBlock(source, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.SOUTH));
+        helper.setBlock(destination, Blocks.AIR);
+        helper.setBlock(destination.south(), Blocks.AIR);
+        final RobotBlockEntity robot = helper.getBlockEntity(source);
+        robot.onLoad();
+        final Component component = (Component) robot.node();
+        helper.assertTrue(Boolean.TRUE.equals(component.invoke("move", null, 3)[0]), "Overlap fixture did not move");
+        final Connector energy = (Connector) robot.machine().node();
+        final double before = energy.globalBuffer();
+        final CompoundTag animation = robot.getUpdateTag(helper.getLevel().registryAccess()).getCompound("oc:animation");
+        final Object[] overlap = component.invoke("move", null, 3);
+        helper.assertTrue(overlap[0] == null && "already moving".equals(overlap[1]), "Overlapping move was accepted");
+        helper.assertTrue(energy.globalBuffer() == before, "Rejected overlap consumed energy");
+        helper.assertTrue(helper.getBlockEntity(destination) == robot && helper.getBlockState(destination.south()).is(Blocks.AIR),
+            "Rejected overlap changed world position");
+        helper.assertTrue(animation.equals(robot.getUpdateTag(helper.getLevel().registryAccess()).getCompound("oc:animation")),
+            "Rejected overlap replaced animation");
+        helper.runAfterDelay(animation.getInt("ticks") + 1, () -> {
+            try {
+                helper.assertTrue(Boolean.TRUE.equals(component.invoke("move", null, 3)[0]), "Robot remained blocked after animation ended");
+                helper.assertTrue(helper.getBlockEntity(destination.south()) == robot, "Follow-up move did not reach destination");
+                helper.succeed();
+            } catch (final Exception error) {
+                throw new AssertionError(error);
+            }
+        });
+    }
+
     @GameTest(template = "empty")
     public static void breakingRobotProxyRemovesRobotAndDropsCargoOnce(final GameTestHelper helper) throws Exception {
         final BlockPos source = new BlockPos(1, 1, 1);
         final BlockPos destination = source.south();
-        helper.setBlock(source, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.NORTH));
+        helper.setBlock(source, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.SOUTH));
         helper.setBlock(destination, Blocks.AIR);
         final RobotBlockEntity robot = helper.getBlockEntity(source);
         robot.onLoad();
@@ -71,7 +103,7 @@ public final class RobotMovementPersistenceGameTests {
     public static void movingRobotLeavesTemporaryInteractionProxy(final GameTestHelper helper) throws Exception {
         final BlockPos source = new BlockPos(1, 1, 1);
         final BlockPos destination = source.south();
-        helper.setBlock(source, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.NORTH));
+        helper.setBlock(source, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.SOUTH));
         helper.setBlock(destination, Blocks.AIR);
         final RobotBlockEntity robot = helper.getBlockEntity(source);
         robot.onLoad();
@@ -123,7 +155,7 @@ public final class RobotMovementPersistenceGameTests {
     @GameTest(template = "empty")
     public static void robotCannotMoveOrTurnWithoutEnergy(final GameTestHelper helper) throws Exception {
         final BlockPos start = new BlockPos(1, 1, 1);
-        helper.setBlock(start, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.NORTH));
+        helper.setBlock(start, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.SOUTH));
         helper.setBlock(start.south(), Blocks.AIR);
         final RobotBlockEntity robot = helper.getBlockEntity(start);
         robot.onLoad();
@@ -133,7 +165,7 @@ public final class RobotMovementPersistenceGameTests {
         final Component component = (Component) robot.node();
         final Object[] turn = component.invoke("turn", null, true);
         helper.assertTrue(turn[0] == null && "not enough energy".equals(turn[1]), "Unpowered robot turned");
-        helper.assertTrue(robot.getBlockState().getValue(RobotBlock.FACING) == Direction.NORTH, "Unpowered turn changed facing");
+        helper.assertTrue(robot.getBlockState().getValue(RobotBlock.FACING) == Direction.SOUTH, "Unpowered turn changed facing");
         final Object[] move = component.invoke("move", null, 3);
         helper.assertTrue(move[0] == null && "not enough energy".equals(move[1]), "Unpowered robot moved");
         helper.assertTrue(helper.getBlockEntity(start) == robot && helper.getBlockState(start.south()).isAir(), "Unpowered move changed world");
@@ -191,7 +223,7 @@ public final class RobotMovementPersistenceGameTests {
             helper.setBlock(new BlockPos(1, 0, z), Blocks.STONE);
             helper.setBlock(new BlockPos(1, 1, z), Blocks.AIR);
         }
-        helper.setBlock(start, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.NORTH));
+        helper.setBlock(start, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.SOUTH));
         final RobotBlockEntity robot = helper.getBlockEntity(start);
         final ItemStack eeprom = eeprom("""
             local robot = component.proxy(component.list("robot")())
@@ -267,7 +299,7 @@ public final class RobotMovementPersistenceGameTests {
         helper.setBlock(start.below(), Blocks.STONE);
         helper.setBlock(target.below(), Blocks.STONE);
         helper.setBlock(target, Blocks.AIR);
-        helper.setBlock(start, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.NORTH));
+        helper.setBlock(start, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.SOUTH));
         final RobotBlockEntity robot = helper.getBlockEntity(start);
         robot.onLoad();
         robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.DIAMOND, 3));
@@ -341,19 +373,19 @@ public final class RobotMovementPersistenceGameTests {
             final double afterMove = beforeEnergy - ModSettings.robotMoveCost();
             helper.assertTrue(Math.abs(energy.globalBuffer() - afterMove) < 1e-6, "Move did not consume configured energy exactly once");
             final Object[] turned = ((Component) robot.node()).invoke("turn", context, true);
-            helper.assertTrue(Boolean.TRUE.equals(turned[0]) && robot.getBlockState().getValue(RobotBlock.FACING) == Direction.EAST,
+            helper.assertTrue(Boolean.TRUE.equals(turned[0]) && robot.getBlockState().getValue(RobotBlock.FACING) == Direction.WEST,
                 "Powered turn did not rotate robot");
             client.onDataPacket(null, robot.getUpdatePacket(), helper.getLevel().registryAccess());
             final CompoundTag turnAnimation = robot.getUpdateTag(helper.getLevel().registryAccess()).getCompound("oc:animation");
             final double turnStarted = turnAnimation.getLong("start");
             final int turnTicks = Math.max(1, (int) (ModSettings.robotTurnDelay() * 20D));
-            helper.assertTrue(client.turnRenderOffset(turnStarted) == -90F
-                && client.turnRenderOffset(turnStarted + turnTicks / 2D) == -45F
+            helper.assertTrue(client.turnRenderOffset(turnStarted) == 90F
+                && client.turnRenderOffset(turnStarted + turnTicks / 2D) == 45F
                 && client.turnRenderOffset(turnStarted + turnTicks) == 0F, "Turn interpolation is incorrect");
             helper.assertTrue(client.movementRenderOffset(turnStarted).lengthSqr() == 0D, "Turn retained previous movement animation");
             helper.assertTrue(Math.abs(energy.globalBuffer() - (afterMove - ModSettings.robotTurnCost())) < 1e-6,
                 "Turn did not consume configured energy exactly once");
-            helper.assertTrue(pauses.equals(List.of(0.4D, ModSettings.robotMoveDelay(), ModSettings.robotTurnDelay())),
+            helper.assertTrue(pauses.equals(List.of(0.4D, Math.max(ModSettings.robotMoveDelay(), moveTicks / 20D), ModSettings.robotTurnDelay())),
                 "Move/turn did not request configured delays");
             final Object[] color = ((Component) robot.node()).invoke("setLightColor", context, 0xFF123456);
             helper.assertTrue(Integer.valueOf(0x123456).equals(color[0]) && pauses.getLast() == 0.1D,

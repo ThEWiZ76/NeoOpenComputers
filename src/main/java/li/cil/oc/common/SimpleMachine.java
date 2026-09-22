@@ -651,7 +651,9 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             ExecutionResult result;
             int synchronizedCalls = 0;
             do {
+                if (paused || !running) return;
                 runArchitectureSynchronized();
+                if (paused || !running) return;
                 final boolean isSynchronizedReturn = synchronizedCallAware != null && synchronizedCallAware.hasSynchronizedReturn();
                 result = architecture.runThreaded(isSynchronizedReturn);
                 if (!(result instanceof ExecutionResult.Sleep) || !hasPendingSynchronizedCall(synchronizedCallAware)) {

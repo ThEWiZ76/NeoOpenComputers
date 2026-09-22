@@ -1,0 +1,13 @@
+# Robot movement scheduling and facing
+
+Three concrete defects found during overlap validation:
+
+- A second move during an unfinished animation was accepted, replacing origin/animation and consuming more energy. Robot now returns nil/already moving before mutation/charge. GameTest verifies unchanged energy/world/animation and successful next step after expiry.
+- SimpleMachine.update checked paused only at entry, then drained synchronized callbacks and resumed Lua even when a callback had called Context.pause. It now stops before/after each synchronized invocation when paused or stopped, preserving pending Lua return data until resume. Frozen-clock regression fails before fix and confirms no threaded execution at 0/99 ms, resumption at 100 ms. Real two-step EEPROM succeeds with overlap guard. Move pause covers both configured effective delay and full animation duration; default is max(.34,8/20)=.4 seconds. Merely increasing delay did not fix ignored pauses; robot-movement-direction-verified.log records that intermediate failure.
+- Robot horizontalSteps treated NORTH as unrotated SOUTH and SOUTH as reversed. North/south forward/back/left/right were wrong. Correct base is SOUTH, with WEST=1, NORTH=2, EAST=3 clockwise steps. Renderer independently mirrored EAST/WEST; yaw now EAST=+90 and WEST=-90, matching upstream and existing screen renderer. Turn interpolation sign updated: clockwise +90, counterclockwise -90. Unit test rotates actual front vector with the renderer quaternion and checks all four facings; movement test checks six sides for each horizontal facing. Existing south-target action fixtures now explicitly face SOUTH instead of codifying the old bug.
+
+RED logs: robot-overlap-red.log, robot-direction-red.log, robot-render-direction-red.log, synchronized-pause-red.log. GREEN: robot-scheduler-direction-final.log, full test/build plus 2057 unit tests (zero failures/errors), all 453 required GameTests pass, including real running EEPROM, OpenOS, afterimage/protection/cargo, and directional detect/suck/place/swing/use tests.
+
+Built JAR D7363896602C4ADE2FAE006F516789D9994868D6887F7E2399E68C3E3831E75D. Not installed/live-viewed. Test Minecraft still closed, profile A8582A212D3267D316B894CE8C0580AA31A30C931C52A76E8AA241E9183488EE. Live display-3 checks remain required. Older animation notes with clockwise -90 and earlier effective-only movement-pause descriptions are superseded.
+
+Next: live display-3 motion/menu/tool/light/shape confirmation; swing animation and broader blockContent/action parity (replaceable blocks, liquids/entities, failure reasons/particles); chunk boundary and unload/reload; Lua execution persistence and remaining port matrix. No full parity claim.
