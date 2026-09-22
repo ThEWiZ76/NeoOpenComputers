@@ -18,9 +18,11 @@ public final class NativeLuaState implements AutoCloseable {
     private static final EnumSet<Version> LOADED = EnumSet.noneOf(Version.class);
     private static final String HOST_LIBRARY_PREFIX = "neoopencomputers.host.";
     private final LuaState lua;
+    private final Version version;
 
-    private NativeLuaState(final LuaState lua) {
+    private NativeLuaState(final LuaState lua, final Version version) {
         this.lua = lua;
+        this.version = version;
     }
 
     public static NativeLuaState create(final Version version, final int memoryLimitBytes) throws IOException {
@@ -55,11 +57,15 @@ public final class NativeLuaState implements AutoCloseable {
                 end
                 """, "=native-sandbox");
             lua.call(0, 0);
-            return new NativeLuaState(lua);
+            return new NativeLuaState(lua, version);
         } catch (RuntimeException | Error failure) {
             lua.close();
             throw failure;
         }
+    }
+
+    public Version version() {
+        return version;
     }
 
     public LuaState state() {
