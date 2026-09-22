@@ -14,6 +14,38 @@ final class NativeLuaPersistenceTest {
 
     @ParameterizedTest
     @EnumSource(NativeLuaState.Version.class)
+    void restoreSuspendsGcUntilObjectGraphIsCompleteAndPreservesPriorState(final NativeLuaState.Version version) throws Exception {
+        try (final var state = NativeLuaState.create(version, 4 * 1024 * 1024);
+             final var persistence = new NativeLuaPersistence(state, TEST_KEY)) {
+            final var lua = state.state();
+            execute(lua, """
+                return setmetatable({}, {__oc_persist_test_fixed = function()
+                  return function()
+                    assert(not collectgarbage('isrunning'), 'GC active during partial graph restore')
+                    return {value = 731}
+                  end
+                end})
+                """, 1);
+            final CompoundTag saved = persistence.save(-1);
+            lua.pop(1);
+            for (final boolean running : new boolean[]{true, false}) {
+                lua.gc(running ? LuaState.GcAction.RESTART : LuaState.GcAction.STOP, 0);
+                persistence.restore(saved);
+                assertEquals(running, lua.gc(LuaState.GcAction.ISRUNNING, 0) != 0);
+                lua.getField(-1, "value");
+                assertEquals(731, lua.toInteger(-1));
+                lua.pop(2);
+                final CompoundTag bad = saved.copy();
+                bad.putByteArray("data", new byte[]{1, 2, 3});
+                assertThrows(RuntimeException.class, () -> persistence.restore(bad));
+                assertEquals(running, lua.gc(LuaState.GcAction.ISRUNNING, 0) != 0);
+            }
+            lua.gc(LuaState.GcAction.RESTART, 0);
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(NativeLuaState.Version.class)
     void restoresGlobalsClosuresNestedThreadsCyclesAndFreshCallbacks(final NativeLuaState.Version version) throws Exception {
         final AtomicInteger firstCalls = new AtomicInteger();
         final CompoundTag saved;

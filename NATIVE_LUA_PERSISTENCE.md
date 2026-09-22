@@ -1,4 +1,14 @@
-# Native Lua persistence feasibility
+# Native Lua runtime and persistence
+
+## Current verified state - 2026-09-22
+
+Lua 5.2 (native) is now registered and selectable alongside Lua (LuaJ). CPU defaults remain LuaJ; native is not silently forced onto existing computers. computer.getArchitectures/getArchitecture/setArchitecture work in the native runtime, and changing architectures reboots into the selected class in both directions. Native execution-state persistence is tested for cases, racks, microcontrollers, drones and robots. This does not establish full-world restart, external filesystem unload ordering, all host APIs or client/platform acceptance.
+
+Lua API selection: require('computer').setArchitecture('Lua 5.2 (native)'); switching back uses 'Lua'. A change reboots immediately; selecting the current architecture does not, and an unknown name returns nil plus 'unknown architecture'. No new artifact has been installed in the Modrinth client.
+
+During selection validation, one robot resume hung and a later run crashed in native lua_gc during NativeLuaArchitecture.load (run/gameTestServer/hs_err_pid66948.log). Eris issue https://github.com/fnuecke/eris/issues/27 describes GC collecting incomplete objects during restoration. NativeLuaPersistence.restore now stops GC during graph reconstruction and restores the previous GC state in finally, including failures. Three versioned regressions first failed because GC was running inside the restore hook. This is an evidence-backed mitigation; two subsequent full GameTest runs passed without that crash/hang, not proof against every native failure.
+
+native-restore-gc-integrated.log and architecture-selection-final.log passed all522 GameTests; full2106 unit tests/build green. Earlier sections below are historical implementation checkpoints and may describe capabilities that have since been implemented.
 
 2026-09-22. Related: [[../Project]], [[../02 plans/Complete portering]], [[../04 ai-context/Rack detached loading]], [[../05 memory/OpenComputers Memory]].
 

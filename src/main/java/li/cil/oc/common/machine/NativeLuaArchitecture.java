@@ -2,6 +2,8 @@ package li.cil.oc.common.machine;
 
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.item.Memory;
+import li.cil.oc.api.driver.item.Processor;
+import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
@@ -17,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.LongSupplier;
 
-/** Native architecture integration. Not registered as a selectable/default CPU yet. */
+/** Selectable native Lua 5.2 architecture with persistent execution state. */
 @Architecture.Name("Lua 5.2 (native)")
 public final class NativeLuaArchitecture implements Architecture, MachineBoundArchitecture, SynchronizedCallAware {
     private final LongSupplier nanoTime;
@@ -217,7 +219,39 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
         function("pushSignal", state -> bool(machine.signal(state.checkString(1), NativeLuaValues.arguments(state, 2))));
         function("getBootAddress", state -> { NativeLuaValues.push(state, bootAddress); return 1; });
         function("setBootAddress", state -> { bootAddress = state.isNoneOrNil(1) ? null : state.checkString(1); return 0; });
-        function("getArchitecture", state -> { state.pushString("Lua 5.2 (native)"); return 1; });
+        function("getArchitectures", state -> {
+            final ProcessorCandidate candidate = processor();
+            state.newTable();
+            if (candidate != null) {
+                final var available = candidate.driver() instanceof MutableProcessor mutable ? mutable.allArchitectures()
+                    : java.util.List.of(candidate.driver().architecture(candidate.stack()));
+                int index = 1;
+                for (final var architecture : available) {
+                    state.pushString(li.cil.oc.api.Machine.getArchitectureName(architecture));
+                    state.rawSet(-2, index++);
+                }
+            }
+            return 1;
+        });
+        function("getArchitecture", state -> {
+            final ProcessorCandidate candidate = processor();
+            if (candidate == null) return 0;
+            state.pushString(li.cil.oc.api.Machine.getArchitectureName(candidate.driver().architecture(candidate.stack())));
+            return 1;
+        });
+        function("setArchitecture", state -> {
+            final String requested = state.checkString(1);
+            final ProcessorCandidate candidate = processor();
+            if (candidate == null || !(candidate.driver() instanceof MutableProcessor mutable)) return 0;
+            for (final var architecture : mutable.allArchitectures()) {
+                if (requested.equals(li.cil.oc.api.Machine.getArchitectureName(architecture))) {
+                    if (architecture == mutable.architecture(candidate.stack())) return bool(false);
+                    mutable.setArchitecture(candidate.stack(), architecture);
+                    return bool(true); // The upstream Lua kernel yields a reboot.
+                }
+            }
+            state.pushNil(); state.pushString("unknown architecture"); return 2;
+        });
         lua.setGlobal("computer");
     }
 
@@ -248,6 +282,16 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
     }
 
     private void function(final String name, final JavaFunction callback) { lua.pushJavaFunction(callback); lua.setField(-2, name); }
+    private ProcessorCandidate processor() {
+        if (machine.host() != null) {
+            for (final ItemStack stack : machine.host().internalComponents()) {
+                if (Driver.driverFor(stack) instanceof Processor driver) return new ProcessorCandidate(stack, driver);
+            }
+        }
+        return null;
+    }
+
+    private record ProcessorCandidate(ItemStack stack, Processor driver) {}
     private int bool(final boolean value) { lua.pushBoolean(value); return 1; }
     private int number(final double value) { lua.pushNumber(value); return 1; }
 

@@ -108,6 +108,10 @@ public final class NativeLuaPersistence implements AutoCloseable {
         final byte[] data = tag.getByteArray("data");
         if (data.length == 0) throw new IllegalArgumentException("Empty native Lua snapshot");
         final int top = lua.getTop();
+        // Eris temporarily holds incomplete closures/prototypes outside Lua roots.
+        // GC during reconstruction can free them (fnuecke/eris issue #27).
+        final boolean gcRunning = lua.gc(LuaState.GcAction.ISRUNNING, 0) != 0;
+        lua.gc(LuaState.GcAction.STOP, 0);
         try {
             configure(key);
             pushErisFunction("unpersist");
@@ -118,6 +122,8 @@ public final class NativeLuaPersistence implements AutoCloseable {
         } catch (RuntimeException | Error failure) {
             lua.setTop(top);
             throw failure;
+        } finally {
+            if (gcRunning) lua.gc(LuaState.GcAction.RESTART, 0);
         }
     }
 

@@ -1236,10 +1236,10 @@ final class LuaArchitectureTest {
         architecture.bind(machine);
 
         assertTrue(architecture.initialize());
-        assertInstanceOf(ExecutionResult.Sleep.class, architecture.runThreaded(false));
+        assertTrue(assertInstanceOf(ExecutionResult.Shutdown.class, architecture.runThreaded(false)).reboot);
 
-        assertEquals(true, architecture.globalBoolean("changed"));
-        assertEquals(true, architecture.globalBoolean("continued"));
+        assertEquals(false, architecture.globalBoolean("changed"));
+        assertEquals(false, architecture.globalBoolean("continued"));
         assertEquals(SecondArchitecture.class, processor.architecture(null));
     }
 
