@@ -237,3 +237,7 @@ Te vroege tweede stap wordt zonder kosten geweigerd. Scheduler respecteert nu Co
 ### Robot afbreken en terugplaatsen
 
 Ontbrekende robotloot hersteld: hardware en componentgegevens blijven in het robotitem, losse inventaris valt apart en wordt niet gekopieerd. EEPROM-nodeadres wordt nu ook bewaard. Survival-afbraak, echte itemplaatsing, scherm/adressen en opnieuw booten van bewaarde EEPROM getest. Full build: 2057 unit-tests en 454 GameTests. Zie ROBOT_BREAK_REPLACE.md. Creative pick, verdere dropvarianten, HDD/reload en live controles blijven open.
+
+### Robot-HDD na afbreken en plaatsen
+
+Bestaande survival-roundtrip uitgebreid: HDD-adres/label, map en exacte binaire inhoud blijven bewaard; EEPROM voert na terugplaatsen init.lua vanaf dezelfde schijf uit. Adresvergelijking houdt nu alle filesystem-componenten bij. Geen extra productiepatch nodig. Full build: 2057 unit-tests en 454 GameTests groen; robot-hdd-final.log. Zie ROBOT_BREAK_REPLACE.md. Volledig geinstalleerd OpenOS, unmanaged-sectoren, chunk/reload en live controles blijven open.

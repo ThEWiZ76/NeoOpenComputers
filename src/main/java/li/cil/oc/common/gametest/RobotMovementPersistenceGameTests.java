@@ -41,14 +41,44 @@ import java.util.Map;
 @PrefixGameTestTemplate(false)
 public final class RobotMovementPersistenceGameTests {
     @GameTest(template = "empty")
-    public static void survivalRobotDropKeepsHardwareAndDoesNotDuplicateCargo(final GameTestHelper helper) {
+    public static void survivalRobotDropKeepsHardwareAndDoesNotDuplicateCargo(final GameTestHelper helper) throws Exception {
         final BlockPos source = new BlockPos(1, 1, 1);
         helper.setBlock(source, ModBlocks.ROBOT.get());
         final RobotBlockEntity robot = helper.getBlockEntity(source);
+        final ItemStack disk = new ItemStack(ModItems.HDD_TIER1.get());
+        final var diskEnvironment = li.cil.oc.api.Driver.driverFor(disk).createEnvironment(disk, null);
+        ((Component) diskEnvironment.node()).invoke("setLabel", null, "robot-disk");
+        diskEnvironment.save(new CompoundTag());
         installHardware(helper, robot, List.of(new ItemStack(ModItems.SCREEN_TIER1.get()), new ItemStack(ModItems.KEYBOARD.get()),
             new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()), new ItemStack(ModItems.CPU_TIER1.get()),
-            new ItemStack(ModItems.MEMORY_TIER1.get()), eeprom("component.proxy(component.list('robot')()).setLightColor(0x2468AC); while true do computer.pullSignal() end")));
+            new ItemStack(ModItems.MEMORY_TIER1.get()), disk, eeprom("""
+                for address in component.list('filesystem') do
+                  local fs = component.proxy(address)
+                  if fs.getLabel() == 'robot-disk' then
+                    local handle = assert(fs.open('/init.lua', 'r'))
+                    local program = assert(fs.read(handle, math.huge))
+                    fs.close(handle)
+                    assert(load(program))()
+                  end
+                end
+                while true do computer.pullSignal() end
+                """)));
         robot.onLoad();
+        String diskAddress = null;
+        for (final Node node : robot.machine().node().reachableNodes()) {
+            if (node instanceof Component component && component.name().equals("filesystem")
+                && "robot-disk".equals(component.invoke("getLabel", robot.machine())[0])) {
+                diskAddress = node.address();
+                break;
+            }
+        }
+        helper.assertTrue(diskAddress != null, "Robot fixture has no labeled HDD");
+        ((Connector) robot.machine().node()).changeBuffer(10000D);
+        robot.machine().invoke(diskAddress, "makeDirectory", new Object[]{"home"});
+        final byte[] contents = new byte[]{0, 1, 127, (byte) 128, (byte) 255, 10};
+        writeRobotFile(robot, diskAddress, "home/data.bin", contents);
+        writeRobotFile(robot, diskAddress, "init.lua",
+            "component.proxy(component.list('robot')()).setLightColor(0x2468AC)".getBytes(StandardCharsets.UTF_8));
         robot.terminalScreen().setResolution(10, 3);
         robot.terminalScreen().set(0, 0, "saved", false);
         final var screen = robot.terminalScreen().terminalSnapshot();
@@ -81,11 +111,23 @@ public final class RobotMovementPersistenceGameTests {
             helper.assertTrue(componentAddresses.equals(addresses(placed)), "Robot item changed component addresses: " + componentAddresses + " -> " + addresses(placed));
             helper.assertTrue(placed.getItem(RobotBlockEntity.CARGO_SLOT_START).isEmpty(), "Cargo duplicated inside robot item");
             helper.assertTrue(!placed.machine().isRunning(), "Picked-up robot restarted automatically");
+            helper.assertTrue("robot-disk".equals(placed.machine().invoke(diskAddress, "getLabel", new Object[0])[0]),
+                "Robot item changed HDD address or label");
+            final Object handle = placed.machine().invoke(diskAddress, "open", new Object[]{"home/data.bin", "r"})[0];
+            final byte[] restored = (byte[]) placed.machine().invoke(diskAddress, "read", new Object[]{handle, contents.length + 1})[0];
+            placed.machine().invoke(diskAddress, "close", new Object[]{handle});
+            helper.assertTrue(java.util.Arrays.equals(contents, restored), "Robot item lost or changed binary HDD contents");
             helper.assertTrue(placed.toggleMachine(), "Replaced robot could not boot its preserved EEPROM");
-            helper.succeedWhen(() -> helper.assertTrue(placed.lightColor() == 0x2468AC, "Replaced robot did not execute preserved EEPROM"));
+            helper.succeedWhen(() -> helper.assertTrue(placed.lightColor() == 0x2468AC, "Replaced robot did not execute the program on its preserved HDD"));
         } finally {
             helper.getLevel().getServer().getPlayerList().remove(player);
         }
+    }
+
+    private static void writeRobotFile(final RobotBlockEntity robot, final String address, final String path, final byte[] contents) throws Exception {
+        final Object handle = robot.machine().invoke(address, "open", new Object[]{path, "w"})[0];
+        robot.machine().invoke(address, "write", new Object[]{handle, contents});
+        robot.machine().invoke(address, "close", new Object[]{handle});
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)
@@ -488,7 +530,7 @@ public final class RobotMovementPersistenceGameTests {
         result.put("robot", robot.node().address());
         for (final Node node : robot.machine().node().reachableNodes()) {
             if (node instanceof Component component) {
-                result.put(component.name(), node.address());
+                result.put("component/" + node.address(), component.name());
             }
         }
         return result;

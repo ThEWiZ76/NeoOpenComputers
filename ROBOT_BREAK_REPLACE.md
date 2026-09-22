@@ -11,3 +11,11 @@ Evidence: robot-drop-red.log fails because no assembled item drops. robot-drop-a
 Artifact SHA256 85477F1AB18C6294F43302AE3EABAF34D7C11574283B46F5E861897216606EAC. Not installed/live-viewed. Client remains closed; Modrinth profile still A8582A212D3267D316B894CE8C0580AA31A30C931C52A76E8AA241E9183488EE.
 
 Remaining: live pickup/replacement in addition to motion/render/menu checks on display 3; creative pick-block copy semantics; explicit creative chassis-count/automation/explosion variants; full OpenOS HDD and filesystem state roundtrip; chunk unload/reload and Lua execution persistence; swing and other open parity matrix items. A stopped robot item is not proof of suspended Lua continuation persistence.
+
+## HDD roundtrip verification
+
+Extended the same survival break and real item-placement test with a managed HDD. It writes init.lua plus home/data.bin containing NUL and high bytes through the installed robot filesystem, then verifies the original filesystem address, disk label and exact bytes after replacement. Preserved EEPROM reads and executes init.lua from the restored disk; its light-color effect proves execution. Component identity comparison now retains every address instead of overwriting filesystems that share a component name.
+
+No production change was needed for this HDD path. The first fixture used a 17-character label and failed discovery because ItemDiskLabel correctly truncates to 16; corrected fixture label robot-disk. This was a test setup issue, not an HDD persistence defect.
+
+Evidence: build/finish-port-implementation/robot-hdd-final.log, test build runGameTestServer successful, 2057 unit tests (zero failures/errors), all 454 required GameTests. Artifact SHA256 0F00E34B5A9FB5FA008B03382787CBB2C71DDD7F2C02F383B5AB90DBDF0B2E83. Not installed/live-tested; Minecraft stays closed. This covers managed disk data and a disk-loaded program, not full installed OpenOS roundtrip, unmanaged sectors, chunk reload or suspended Lua state.
