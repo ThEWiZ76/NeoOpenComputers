@@ -22,6 +22,7 @@ public class TankUpgradeEnvironment extends AbstractManagedEnvironment implement
 
     private static final String FLUID_TAG = "fluid";
     private static final String AMOUNT_TAG = "amount";
+    private static final String STACK_TAG = "fluidStack";
 
     private final EnvironmentHost owner;
     private final FluidTank tank = new FluidTank(CAPACITY);
@@ -48,11 +49,17 @@ public class TankUpgradeEnvironment extends AbstractManagedEnvironment implement
     @Override
     public void load(final CompoundTag nbt) {
         super.load(nbt);
-        final String fluidId = nbt.getString(FLUID_TAG);
-        final int amount = nbt.getInt(AMOUNT_TAG);
-        if (!fluidId.isEmpty() && amount > 0) {
-            final var fluid = BuiltInRegistries.FLUID.get(ResourceLocation.parse(fluidId));
-            tank.setFluid(new FluidStack(fluid, Math.min(amount, CAPACITY)));
+        tank.setFluid(FluidStack.EMPTY);
+        if (nbt.contains(STACK_TAG, net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            final var restored = FluidStack.parseOptional(registries(), nbt.getCompound(STACK_TAG));
+            if (!restored.isEmpty()) tank.setFluid(restored.copyWithAmount(Math.min(restored.getAmount(), CAPACITY)));
+        } else {
+            final var fluidId = ResourceLocation.tryParse(nbt.getString(FLUID_TAG));
+            final int amount = nbt.getInt(AMOUNT_TAG);
+            if (fluidId != null && amount > 0) {
+                final var fluid = BuiltInRegistries.FLUID.getOptional(fluidId).orElse(Fluids.EMPTY);
+                tank.setFluid(new FluidStack(fluid, Math.min(amount, CAPACITY)));
+            }
         }
     }
 
@@ -60,13 +67,17 @@ public class TankUpgradeEnvironment extends AbstractManagedEnvironment implement
     public void save(final CompoundTag nbt) {
         super.save(nbt);
         final FluidStack fluid = tank.getFluid();
-        if (!fluid.isEmpty()) {
-            nbt.putString(FLUID_TAG, BuiltInRegistries.FLUID.getKey(fluid.getFluid()).toString());
-            nbt.putInt(AMOUNT_TAG, fluid.getAmount());
-        } else {
-            nbt.remove(FLUID_TAG);
-            nbt.remove(AMOUNT_TAG);
-        }
+        nbt.put(STACK_TAG, fluid.isEmpty() ? new CompoundTag() : fluid.save(registries()));
+        nbt.remove(FLUID_TAG);
+        nbt.remove(AMOUNT_TAG);
+    }
+
+    private net.minecraft.core.HolderLookup.Provider registries() {
+        if (owner != null && owner.world() != null) return owner.world().registryAccess();
+        // Block entities load their components before the world is attached.
+        final var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
+        return server != null ? server.registryAccess()
+            : net.minecraft.core.RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
     }
 
     @Override

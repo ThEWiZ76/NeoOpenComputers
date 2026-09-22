@@ -205,3 +205,11 @@ Added opt-in TestFluidCapabilities, enabled only by runGameTestServer via neoope
 The existing robot/drone TankWorldControl tests now exercise actual world capability lookup against two external FluidTanks (lava1000, water1200/2000): any/explicit comparison,800mB partial insertion, full-destination rejection without loss,600mB typed extraction from the second reservoir, preservation of the first lava reservoir, and full-internal-tank rejection. Build,2106 unit tests and all592 GameTests pass (tank-capability-verified.log). No production fluid algorithm change was needed for these cases.
 
 This verifies NeoForge capability interoperability with a controlled test provider, not a separately installed third-party tank mod. Remaining fluid gates include data-component persistence, zero/empty edge cases, protection events, flowing/waterlogged blocks, Nether evaporation and native continuation. No client launch/install, push or merge.
+
+## Tank fluid data components and empty-state loading - 2026-09-22
+
+TankUpgradeEnvironment now stores a complete registry-aware FluidStack under fluidStack instead of only fluid id/amount. Loads support the legacy fluid/amount fields and clamp to capacity; saves remove legacy fields and write an explicit empty compound for drained tanks. Loading always clears old contents first. Registry access comes from the host world, or the current server during detached block-entity loading, with built-in registries as a no-server fallback.
+
+TankDataPersistenceGameTests proves731 water with custom batch/concentration data survives a real robot block-entity replacement, and exercises legacy231 water migration, loading empty data into a previously filled environment, migration reload and reuse of a snapshot after fully draining. Red failures: lost data components and stale contents on empty load (tank-data-red.log). Final build,2106 units/all594 GameTests pass (tank-data-verified.log).
+
+Direct data-component proof uses vanilla custom_data; arbitrary third-party component codecs and full process restart remain additional gates. No client launch/install, push or merge.
