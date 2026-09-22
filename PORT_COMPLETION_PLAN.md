@@ -402,3 +402,11 @@ SimpleMachine now follows upstream Machine.scala uptime semantics: advance one t
 uptime-ticks-red.log reproduced three focused failures against the old wall-clock implementation. Updated unit tests exercise fixed-clock jumps, sleeping/paused updates, stop/restart, repeated reloads and old seconds snapshots. nativeRackRetainsUptimeDeadlineAfterReload preserves a five-second deadline, checks elapsed ticks survived detached reload, then continues computer.pullSignal until the deadline. This proves basic native deadline continuation, not all OpenOS event timers or full-world restart.
 
 uptime-ticks-integrated.log passed all2102 unit tests with zero failures/errors, all508 required GameTests and build. Artifact SHA256 0AB8E04BCF9DCDEAE27C1310988D293E4E1163C15161CC1EDDE6E8F8DDEE5788. No client/install/push; screen3 focus coordination is still pending. Next: native VM disposal on host removal, world restart, OpenOS timers, remaining architecture/API/platform/visual requirements. Full port incomplete.
+
+## Tablet runtime gap - 2026-09-22
+
+Inspection found only TabletItem assembly/charge data plus a temporary TabletAnalysisHost. There is no persistent tablet VM, inventory tick integration or terminal menu. Existing tablet tests prove data/driver contracts, not the player flow.
+
+Implement in order: a Tablet machine host with stable decoded components, built-in 80x25/four-bit screen, tablet component, keyboard connections, energy and save/dispose behavior; a server cache and inventory/use integration; terminal input/output through existing TerminalMenu; tier-dependent component editing and delayed block analysis; lifecycle and full OpenOS/native regression tests; live client acceptance on display3. Reuse SimpleMachine and existing screen/networking rather than a second VM or UI transport.
+
+Upstream common/item/Tablet.scala caches wrappers, saves components, retains execution for dimension changes, but clears running state on ordinary cache eviction. Verify these distinct semantics rather than promising universal resume after logout/dropping. Full-world/server lifecycle coverage remains required. No additional plan approval is needed under the user's instruction to execute the complete port.

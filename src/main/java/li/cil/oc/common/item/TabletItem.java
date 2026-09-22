@@ -357,7 +357,7 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
         writeData(stack, data);
     }
 
-    private static CompoundTag readData(final ItemStack stack) {
+    static CompoundTag readData(final ItemStack stack) {
         if (stack == null) {
             return new CompoundTag();
         }
@@ -368,7 +368,7 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
         return customData.copyTag().getCompound(DATA_TAG);
     }
 
-    private static void writeData(final ItemStack stack, final CompoundTag data) {
+    static void writeData(final ItemStack stack, final CompoundTag data) {
         if (stack == null) {
             return;
         }
