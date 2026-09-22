@@ -305,3 +305,7 @@ Runtime slots 1..3 volgen nu het type en de tier van hun ingebouwde container; o
 ### Verwisselbare robotcomponenten verbinden en bewaren
 
 Runtime slots krijgen een aparte lifecycle: laden/verbinden, tick-updates, data opslaan voor verwijderen, loskoppelen en opnieuw verbinden zonder machineherbouw. Robot-save/load en inventory-clear meegenomen; componentmenuslots beperkt tot een item, direct geinjecteerde grotere stacks blijven intact maar inactief. Echte modemtest bewijst poort/adresbehoud bij hot-swap en reload, ongewijzigde draaiende architecture en geen oude verbindingen. Full build: 2057 unit-tests en 494 GameTests; robot-hot-swap-verified.log. Zie ROBOT_RUNTIME_CONTAINERS.md. Echte Lua-continuiteit/signalen, andere upgrades, runtime tanks en clientslotweergave blijven open.
+
+### Lua-continuiteit en verwijdermeldingen bij hot-swap
+
+Echte EEPROM/Lua-test houdt lokale tabeltoestand vast, ontvangt add/remove/add voor hetzelfde modemadres, controleert component.list en geopende poort, en detecteert onverwachte reboot via EEPROM-data. Vond ontbrekende component_removed voor neighbor-only nodes: zichtbaarheid is na edge-verwijdering al weg. SimpleMachine bewaart eerdere zichtbaarheid voor die melding; twee units bewaken precies een zichtbare verwijdermelding en geen verborgen componentmelding. Full build: 2059 unit-tests en 495 GameTests; robot-hot-swap-lua-signals.log. Zie ROBOT_RUNTIME_CONTAINERS.md. Wereldreload van Lua-coroutines, cached EEPROM-bootbron, runtime tanks en overige pariteit blijven open.

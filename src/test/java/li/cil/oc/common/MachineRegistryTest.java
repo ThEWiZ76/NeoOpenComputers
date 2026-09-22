@@ -1248,6 +1248,37 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void remembersNeighborOnlyVisibilityAfterRemoval() {
+        Machine machine = startedMachineWithArchitecture();
+        TestEnvironment environment = new TestEnvironment();
+        assertInstanceOf(li.cil.oc.api.network.Component.class, environment.node()).setVisibility(Visibility.Neighbors);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(environment.node());
+        machine.popSignal();
+        environment.node().remove();
+        Signal signal = machine.popSignal();
+        assertNotNull(signal);
+        assertEquals("component_removed", signal.name());
+        assertArrayEquals(new Object[]{environment.node().address(), "test_component"}, signal.args());
+        assertNull(machine.popSignal());
+    }
+
+    @Test
+    void doesNotAnnounceRemovalOfUnseenNeighborOnlyComponent() {
+        Machine machine = startedMachineWithArchitecture();
+        TestEnvironment bridge = new TestEnvironment();
+        TestEnvironment environment = new TestEnvironment();
+        assertInstanceOf(li.cil.oc.api.network.Component.class, environment.node()).setVisibility(Visibility.Neighbors);
+        Network.joinNewNetwork(machine.node());
+        machine.node().connect(bridge.node());
+        machine.popSignal();
+        bridge.node().connect(environment.node());
+        assertNull(machine.popSignal());
+        environment.node().remove();
+        assertNull(machine.popSignal());
+    }
+
+    @Test
     void synchronizedCallbackPausePreventsImmediateLuaResume() {
         OpenComputersApi.initialize();
         final MutableClock clock = new MutableClock();

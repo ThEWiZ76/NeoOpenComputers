@@ -25,3 +25,15 @@ Real running robot test: insert modem, open port123, remove and reinsert it with
 Remaining: real Lua coroutine-local continuity and event delivery, other managed upgrade types/tick behavior, runtime tank access and hardware namespace, client type/tier display, direct API oversized insertion handling, multiplayer and live visuals. Tests here prove the modem lifecycle and architecture identity, not full runtime component parity or serialized Lua execution.
 
 Verification: robot-hot-swap-verified.log full test/build/GameTest success; 2057 unit tests zero failures/errors and all 494 required GameTests. Artifact SHA256 99EB43556627CF26AA1B2F34919B9E4264DD9148A5BF248034A657D8A5FBA87F. git diff --check clean. Not installed/live-tested; Minecraft remains closed.
+
+## Real Lua hot-swap continuity and component signals
+
+Added a real EEPROM/Lua GameTest, beyond Java architecture identity checks. EEPROM data records first boot and rejects any reboot. A local Lua table starts at731 and is checked after removal and reinsertion. The script consumes component_added, opens modem port123, consumes component_removed for the exact address, confirms the modem disappears from component.list, then consumes component_added for the same address and verifies the port is still open and the local value reaches733.
+
+The test harness waits for explicit Lua phase colors before each inventory change; no guessed sleep durations or wall-clock assertions. This checks actual VM execution, signal delivery and runtime proxy visibility during a complete remove/reinsert cycle. It does not test saving a live Lua coroutine across world reload, which remains a separate requirement.
+
+The initial test fixture reused a previously booted robot and saved its old architecture boot source before replacing EEPROM hardware, so it kept executing the previous waiting program. The test now constructs an unbooted robot and installs the intended EEPROM before first start. Cached EEPROM source refresh after stopped-machine reload/reprogramming remains a separate issue to investigate.
+
+The corrected fixture then exposed a real failure: Lua received component_added but never component_removed for the modem (robot-hot-swap-lua-fresh.log). NetworkRegistry removes the edge before invoking onDisconnect, so Component visibility Neighbors is already false when SimpleMachine checked it. SimpleMachine now remembers visible component identities from connection notifications and uses that prior visibility for removal, clearing entries on disconnect. Two focused unit tests cover exactly one removal notification for a directly visible neighbor-only component and no notification for an unseen component beyond a bridge.
+
+Verification: robot-hot-swap-lua-signals.log full test/build/GameTest success; 2059 unit tests zero failures/errors and all 495 required GameTests. Real Lua reaches the final733 sentinel with no reboot and preserved modem port/address. Artifact SHA256 63ECD8DF84A6E8E5BDA78480C4EF2AB773BE78928044BC22E7BCE1751930828E. git diff --check clean. Not installed/live-tested; Minecraft client remains closed.

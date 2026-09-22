@@ -22,6 +22,59 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void robotLuaSurvivesRuntimeCardChangesAndReceivesComponentSignals(final GameTestHelper helper) {
+        final BlockPos position = new BlockPos(1, 1, 1);
+        helper.setBlock(position, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.SOUTH));
+        final RobotBlockEntity robot = helper.getBlockEntity(position);
+        final String code = """
+            local robot = component.proxy(component.list("robot")())
+            local eeprom = component.proxy(component.list("eeprom")())
+            assert(eeprom.getData() ~= "booted", "unexpected reboot during hot swap")
+            eeprom.setData("booted")
+            local state = {value = 731}
+            local function waitFor(kind)
+              while true do
+                local name, address, componentType = computer.pullSignal()
+                if name == kind and componentType == "modem" then return address end
+              end
+            end
+            robot.setLightColor(0x110001)
+            local address = waitFor("component_added")
+            local modem = component.proxy(address)
+            assert(modem.open(123))
+            state.value = state.value + 1
+            robot.setLightColor(0x110002)
+            assert(waitFor("component_removed") == address)
+            assert(component.list("modem")() == nil)
+            assert(state.value == 732)
+            robot.setLightColor(0x110003)
+            assert(waitFor("component_added") == address)
+            assert(component.proxy(address).isOpen(123))
+            state.value = state.value + 1
+            assert(state.value == 733)
+            robot.setLightColor(0x110004)
+            while true do computer.pullSignal() end
+            """;
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, java.util.List.of(
+            new ItemStack(li.cil.oc.common.ModItems.CARD_CONTAINER_TIER1.get()),
+            new ItemStack(li.cil.oc.common.ModItems.CPU_TIER1.get()),
+            new ItemStack(li.cil.oc.common.ModItems.MEMORY_TIER1.get()), RobotMovementPersistenceGameTests.eeprom(code)));
+        robot.onLoad();
+        ((li.cil.oc.api.network.Connector) robot.machine().node()).changeBuffer(10000D);
+        helper.assertTrue(robot.toggleMachine(), "Lua hot-swap fixture did not start");
+        final ItemStack[] removed = {ItemStack.EMPTY};
+        helper.startSequence()
+            .thenWaitUntil(() -> helper.assertTrue(robot.lightColor() == 0x110001, "Lua did not boot: " + robot.machine().lastError()))
+            .thenExecute(() -> robot.setItem(1, new ItemStack(li.cil.oc.common.ModItems.NETWORK_CARD.get())))
+            .thenWaitUntil(() -> helper.assertTrue(robot.lightColor() == 0x110002, "Lua did not handle modem addition: " + robot.machine().lastError()))
+            .thenExecute(() -> removed[0] = robot.removeItem(1, 1))
+            .thenWaitUntil(() -> helper.assertTrue(robot.lightColor() == 0x110003, "Lua did not handle modem removal: " + robot.machine().lastError()))
+            .thenExecute(() -> robot.setItem(1, removed[0]))
+            .thenWaitUntil(() -> helper.assertTrue(robot.lightColor() == 0x110004, "Lua state or modem state was lost: " + robot.machine().lastError()))
+            .thenSucceed();
+    }
+
     @GameTest(template = "empty")
     public static void robotHotSwapsNetworkCardWithoutRebootAndPreservesPorts(final GameTestHelper helper) throws Exception {
         final RobotBlockEntity robot = robot(helper);

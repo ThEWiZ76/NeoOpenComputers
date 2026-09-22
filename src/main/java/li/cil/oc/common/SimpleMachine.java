@@ -79,6 +79,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
     private final Set<String> users = new LinkedHashSet<>();
     private final Set<ManagedEnvironment> componentEnvironments = new LinkedHashSet<>();
+    private final Set<Node> visibleComponents = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
     private ManagedEnvironment temporaryFileSystemEnvironment;
     private Architecture architecture;
     private boolean running;
@@ -1077,10 +1078,16 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     private void queueComponentChangeSignal(final String name, final Node changedNode) {
         if (changedNode == node()) {
+            if ("component_removed".equals(name)) visibleComponents.clear();
             return;
         }
-        if (changedNode instanceof Component component && component.canBeSeenFrom(node())) {
-            signal(name, component.address(), component.name());
+        if (changedNode instanceof Component component) {
+            // Disconnect callbacks run after the edge is removed, so neighbor visibility is already false.
+            final boolean wasVisible = "component_removed".equals(name) && visibleComponents.remove(changedNode);
+            if (component.canBeSeenFrom(node()) || wasVisible) {
+                if ("component_added".equals(name)) visibleComponents.add(changedNode);
+                signal(name, component.address(), component.name());
+            }
         }
     }
 
