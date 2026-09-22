@@ -22,6 +22,66 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class DroneDimensionGameTests {
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void nativeDroneContinuesAfterDimensionRoundtrip(GameTestHelper helper) {
+        final var original = new DroneEntity(helper.getLevel());
+        final var pos = helper.absolutePos(new BlockPos(1, 4, 1));
+        original.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0, 0);
+        final var origin = original.position();
+        final var cpu = new ItemStack(ModItems.CPU_TIER1.get());
+        ((MutableProcessor) Driver.driverFor(cpu)).setArchitecture(cpu, NativeLuaArchitecture.class);
+        original.loadFromItemStack(((DroneItem) ModItems.DRONE.get()).assembleFromCase(
+            new ItemStack(ModItems.DRONE_CASE_TIER1.get()), cpu, new ItemStack(ModItems.MEMORY_TIER1.get()),
+            new ItemStack(ModItems.INVENTORY_UPGRADE.get()), RobotMovementPersistenceGameTests.eeprom("""
+                local drone = component.proxy(component.list('drone')())
+                assert(drone.getStatusText() == '', 'unexpected reboot')
+                local marker = 731
+                drone.select(3)
+                drone.setStatusText('waiting')
+                repeat until computer.pullSignal() == 'dimension_return'
+                assert(marker == 731, 'Lua local lost')
+                assert(drone.select() == 3 and drone.count() == 7, 'selected cargo lost')
+                assert(drone.transferTo(1, 2), 'old drone proxy cannot transfer cargo')
+                assert(drone.count() == 5 and drone.count(1) == 2)
+                drone.setStatusText('returned')
+                while true do computer.pullSignal() end
+                """)), null);
+        original.mainInventory().setItem(2, new ItemStack(Items.DIAMOND, 7));
+        helper.assertTrue(helper.getLevel().addFreshEntity(original), "Drone did not spawn");
+        helper.assertTrue(original.toggleMachine(), "Drone did not start");
+        final DroneEntity[] active = {original};
+        helper.startSequence()
+            .thenWaitUntil(() -> helper.assertTrue("waiting".equals(original.getStatusText(null, null)[0]),
+                "Drone setup failed: " + original.machine().lastError()))
+            .thenExecute(() -> {
+                final var nether = helper.getLevel().getServer().getLevel(Level.NETHER);
+                helper.assertTrue(nether != null, "Nether missing");
+                try {
+                    for (int step = 0; step < 2; step++) {
+                        final var previous = active[0];
+                        active[0] = (DroneEntity) previous.changeDimension(new DimensionTransition(
+                            step == 0 ? nether : helper.getLevel(), step == 0 ? new Vec3(0.5, 200, 0.5) : origin,
+                            Vec3.ZERO, 0, 0, DimensionTransition.DO_NOTHING));
+                        helper.assertTrue(active[0] != null && active[0] != previous, "Dimension transfer failed");
+                        helper.assertTrue(!previous.machine().architecture().isInitialized(), "Old VM retained");
+                    }
+                    helper.assertTrue(active[0].machine().signal("dimension_return"), "Resume signal rejected");
+                } catch (RuntimeException | Error failure) {
+                    if (active[0] != null) active[0].discard();
+                    throw failure;
+                }
+            })
+            .thenWaitUntil(() -> helper.assertTrue("returned".equals(active[0].getStatusText(null, null)[0]),
+                "Drone continuation failed: " + active[0].machine().lastError()))
+            .thenExecute(() -> {
+                helper.assertTrue(active[0].mainInventory().getItem(0).is(Items.DIAMOND)
+                    && active[0].mainInventory().getItem(0).getCount() == 2
+                    && active[0].mainInventory().getItem(2).getCount() == 5, "Resumed program did not update cargo");
+                active[0].discard();
+            })
+            .thenSucceed();
+    }
+
     @GameTest(template = "empty")
     public static void droneDimensionRoundtripPreservesRelativeTargetAndCargo(GameTestHelper helper) throws Exception {
         final var original = new DroneEntity(helper.getLevel());

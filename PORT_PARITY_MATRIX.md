@@ -237,3 +237,9 @@ DroneEntity.changeDimension now preserves target minus position across a success
 DroneDimensionGameTests performs a real Overworld/Nether round trip with a native Lua machine and seven cargo diamonds. It verifies relative flight target, cargo, component address and disposal of the old VM. Red runs reproduced both the absolute-target bug (drone-dimension-red.log) and the retained old VM (drone-dimension-verified.log). Final build, 2106 unit tests and all 597 GameTests pass (drone-dimension-final.log).
 
 This test starts a native machine but does not demonstrate resumed Lua heap execution after transfer. Full process restart, portal gameplay and rendered client acceptance remain open. No client launch/install, push or merge.
+
+## Native drone continuation across dimensions - 2026-09-22
+
+nativeDroneContinuesAfterDimensionRoundtrip now runs an actual native Lua EEPROM until it waits for a signal, transfers the drone to the Nether and back, and resumes that same program. A local marker731, selected slot3, original component proxy and seven diamonds survive; the resumed proxy transfers two diamonds into slot1 and leaves five in slot3. Both replaced VMs are closed.
+
+Build and all598 GameTests pass (drone-dimension-continuation.log); the existing unit suite remains green. The intermediate Nether entity is transferred back immediately, so sustained execution in the destination dimension, portal input, rendering and full JVM restart are separate acceptance gates. No client launch/install, push or merge.
