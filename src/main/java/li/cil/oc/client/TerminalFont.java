@@ -74,10 +74,27 @@ final class TerminalFont {
         if (codePoint == ' ') {
             return;
         }
+        // GuiGraphics.fill flushes every pixel outside drawManaged. Queue the
+        // same quads; TerminalScreen's scissor boundary flushes the whole text.
+        final VertexConsumer consumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        final PoseStack.Pose pose = graphics.pose().last();
+        drawGuiGlyph(consumer, pose, codePoint, x, y, color);
+    }
+
+    static void drawGuiGlyph(final VertexConsumer consumer, final PoseStack.Pose pose,
+                             final int codePoint, final int x, final int y, final int color) {
+        final Glyph glyph = glyph(codePoint);
+        if (glyph == null) {
+            return;
+        }
+        final int width = targetWidth(glyph);
         for (int py = 0; py < CELL_HEIGHT; py++) {
-            for (int px = 0; px < glyphCellWidth(codePoint); px++) {
-                if (pixel(codePoint, px, py)) {
-                    graphics.fill(x + px, y + py, x + px + 1, y + py + 1, color);
+            for (int px = 0; px < width; px++) {
+                if (pixel(glyph, px, py)) {
+                    consumer.addVertex(pose, x + px + 1, y + py + 1, 0).setColor(color);
+                    consumer.addVertex(pose, x + px + 1, y + py, 0).setColor(color);
+                    consumer.addVertex(pose, x + px, y + py, 0).setColor(color);
+                    consumer.addVertex(pose, x + px, y + py + 1, 0).setColor(color);
                 }
             }
         }
@@ -170,7 +187,10 @@ final class TerminalFont {
     }
 
     private static boolean pixel(final int codePoint, final int x, final int y) {
-        final Glyph glyph = glyph(codePoint);
+        return pixel(glyph(codePoint), x, y);
+    }
+
+    private static boolean pixel(final Glyph glyph, final int x, final int y) {
         if (glyph == null) {
             return false;
         }

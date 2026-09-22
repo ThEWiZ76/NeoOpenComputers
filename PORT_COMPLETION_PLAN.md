@@ -62,10 +62,10 @@ Geen parallelle Gradle-processen. Nieuwe tests gebruiken vaste waarden, een geï
 
 **Bestanden:** `src/main/java/li/cil/oc/client/TerminalFont.java`, gerichte tests onder `src/test/java/li/cil/oc/client`; alleen wanneer nodig `TerminalScreen.java`.
 
-- [ ] Baseline vastleggen: dezelfde OpenOS-uitvoer en 160×50 terminal, GUI versus actieve wereldweergave. Huidige audit: 4–7 FPS versus 60 FPS.
-- [ ] Renderpad meten/profileren; nagaan of de per-pixel `GuiGraphics.fill`-aanroepen afzonderlijk flushen.
-- [ ] Alleen de GUI-glyphrenderer aanpassen: bestaande atlas gebruiken waar het glyph overeenkomt; Unicode/fallback en exacte 8×16/16×16 maten behouden. Geen wijziging aan wereldgeometrie, projectie, netwerksync of multiblockberekening.
-- [ ] Gerichte test voor atlas-/glyphgelijkheid en ontbrekende Unicode/fallback; geen test die slechts de nieuwe methode letterlijk nadoet.
+- [x] Baseline vastleggen: OpenOS en 160×50 terminal, GUI versus actieve wereldweergave. Audit: 4–7 FPS versus 60 FPS; concrete vóórmeting 6 FPS. Exacte captureverschillen staan in `TERMINAL_GUI_PERFORMANCE.md`.
+- [x] Renderpad meten/profileren; per-pixel flush en herhaalde glyph-maplookups bevestigd met Minecraft-bron en JFR.
+- [ ] Alleen de GUI-glyphrenderer aanpassen: pixelquads bundelen; Unicode/fallback en exacte 8×16/16×16 maten behouden. De bestaande atlas is een mogelijke latere optimalisatie als batching onvoldoende blijkt. Geen wijziging aan wereldgeometrie, projectie, netwerksync of multiblockberekening.
+- [ ] Gerichte test voor bitmap-/glyphgelijkheid, kleur, transformatie en Unicode/fallback; geen test die slechts de nieuwe methode letterlijk nadoet.
 - [ ] Gerichte en volledige gates; nieuwe client-JAR en vóór/na-screenshots, OpenOS-invoer, kleur, box-drawing en wide glyphs controleren.
 - [ ] Ook volle 160×50 uitvoer, lagere tiers en GUI-schalen meten. Acceptatie: duidelijke verbetering, geen grote terugval tegenover de wereldbaseline, correcte glyphs en invoer. Resultaten apart voor het bestaande modprofiel en een minimale ondersteunde setup registreren.
 
@@ -173,7 +173,7 @@ Per scenario bewaren: commit/JAR-hash, profiel/modversies, wereld/seed/posities,
 | --- | --- |
 | Baseline-audit | Gereed: 2040 tests, 440 GameTests; zie `PORT_AUDIT_2026-09-22.md` |
 | Volledige pariteitsmatrix | In uitvoering |
-| Terminal-GUI-performance | Eerstvolgende implementatie |
+| Terminal-GUI-performance | Eerste fix getest: OpenOS 6 → 60 FPS; vol scherm 31 FPS, aanvullende varianten open |
 | UI-vertalingen/foutfeedback | Gepland in eerste uitvoeringsronde |
 | Robotterminal/layout | Open |
 | Lua execution persistence | Open, architectuurwerk noodzakelijk |
@@ -181,3 +181,11 @@ Per scenario bewaren: commit/JAR-hash, profiel/modversies, wereld/seed/posities,
 | Alle overige functionele/visuele/integratie-scenario's | Te verifiëren; bestaande tests niet als volledige pariteit tellen |
 
 Resultaten hieronder tijdens uitvoering aanvullen met commit en bewijs. Alleen afvinken wat daadwerkelijk is aangetoond.
+
+Startregister: `PORT_PARITY_MATRIX.md`. Aanvullende bronvergelijking vond onder meer robot-ROM, kabelkleuren/-geometrie, hover boots, debugger, presents en Lua-geheugenrapportage. Deze vallen onder de bovenstaande werkpakketten en blijven open totdat ze zijn uitgevoerd en getest.
+
+### Uitvoering 2026-09-22
+
+Eerste runtimewijziging: GUI-pixels bundelen en glyphlookup eenmaal per letter uitvoeren. Build + 2041 tests + 440 GameTests groen; OpenOS-boot, invoer, Unicode en blokweergave ingame gecontroleerd. Zie `TERMINAL_GUI_PERFORMANCE.md` voor reproduceerbare opstelling, hashes, profileresultaten, screenshots en beperkingen. Tijdelijke testopstelling verwijderd en lege ruimte teruggelezen; client netjes afgesloten.
+
+Eerstvolgend: volle terminal/achtergrondbelasting verder profileren, vervolgens fase 1B (titel/foutfeedback) en fase 1C (robotterminal), naast het verder invullen van de volledige pariteitsmatrix. UI-vertalingen en robot/runtime-persistentie zijn nog niet geïmplementeerd in deze uitvoeringsronde. Lange invoerbursts apart onderzoeken; korte ingame commando's werkten.
