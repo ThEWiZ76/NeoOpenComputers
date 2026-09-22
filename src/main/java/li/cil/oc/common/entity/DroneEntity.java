@@ -121,12 +121,13 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     private final MultiTank tank = new MultiTank() {
         @Override
         public int tankCount() {
-            return 0;
+            return internalFluidTanks().size();
         }
 
         @Override
         public IFluidTank getFluidTank(final int index) {
-            return null;
+            final var tanks = internalFluidTanks();
+            return index >= 0 && index < tanks.size() ? tanks.get(index) : null;
         }
     };
     private final Map<String, Integer> componentSlots = new HashMap<>();
@@ -330,6 +331,37 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     @Override
     public Container mainInventory() {
         return mainInventory;
+    }
+
+
+    @Callback(doc = "function():number -- Gets the number of installed tanks.")
+    public Object[] tankCount(final Context context, final Arguments args) {
+        return new Object[]{tank().tankCount()};
+    }
+
+    @Callback(doc = "function([index:number]):number -- Selects a tank or gets the selected tank.")
+    public Object[] selectTank(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.select(this, args);
+    }
+
+    @Callback(direct = true, doc = "function([index:number]):number -- Gets the fluid amount.")
+    public Object[] tankLevel(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.level(this, args);
+    }
+
+    @Callback(direct = true, doc = "function([index:number]):number -- Gets remaining tank capacity.")
+    public Object[] tankSpace(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.space(this, args);
+    }
+
+    @Callback(doc = "function(index:number):boolean -- Compares fluids with the selected tank.")
+    public Object[] compareFluidTo(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.compare(this, args);
+    }
+
+    @Callback(doc = "function(index:number[, count:number=1000]):boolean -- Transfers fluid between tanks.")
+    public Object[] transferFluidTo(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.transfer(this, args);
     }
 
     @Override
@@ -670,6 +702,17 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
             }
         }
         return -1;
+    }
+
+    private java.util.List<IFluidTank> internalFluidTanks() {
+        final var tanks = new java.util.TreeMap<Integer, IFluidTank>();
+        if (machine != null && machine.node() != null) {
+            for (var node : machine.node().neighbors()) {
+                final int slot = componentSlot(node.address());
+                if (slot >= 0 && node.host() instanceof IFluidTank fluidTank) tanks.put(slot, fluidTank);
+            }
+        }
+        return new java.util.ArrayList<>(tanks.values());
     }
 
     private void connectMachineNode() {

@@ -29,7 +29,15 @@ public class TankUpgradeItem extends Item implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new TankUpgradeEnvironment(host);
+        final var environment = new TankUpgradeEnvironment(host) {
+            @Override
+            public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override

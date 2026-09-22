@@ -23,6 +23,15 @@ import java.util.List;
 @PrefixGameTestTemplate(false)
 public final class UpgradePersistenceGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
+    public static void robotTankRetainsWaterAcrossReload(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), """
+            assert(robot.tankLevel(1) == 1000, 'tank fixture not filled')
+            """, """
+            assert(robot.tankLevel(1) == 1000, 'stored water lost on reload')
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
     public static void robotGeneratorRetainsFuelAcrossReload(GameTestHelper helper) {
         restore(helper, new ItemStack(ModItems.GENERATOR_UPGRADE.get()), """
             local upgrade = component.proxy(component.list('generator')())
@@ -104,6 +113,7 @@ public final class UpgradePersistenceGameTests {
     private static void restore(GameTestHelper helper, ItemStack upgrade, String setup, String verify) {
         final boolean chunkloader = upgrade.is(ModItems.CHUNKLOADER_UPGRADE.get());
         final boolean generator = upgrade.is(ModItems.GENERATOR_UPGRADE.get());
+        final boolean tank = upgrade.is(ModItems.TANK_UPGRADE.get());
         final var pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.ROBOT.get());
         final RobotBlockEntity original = helper.getBlockEntity(pos);
@@ -123,6 +133,11 @@ public final class UpgradePersistenceGameTests {
                 while true do computer.pullSignal() end
                 """)));
         original.onLoad();
+        if (tank) {
+            final var water = new net.neoforged.neoforge.fluids.FluidStack(net.minecraft.world.level.material.Fluids.WATER, 1000);
+            helper.assertTrue(original.tank().getFluidTank(0).fill(water,
+                net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE) == 1000, "Tank fixture rejected water");
+        }
         if (generator) original.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(net.minecraft.world.item.Items.COAL, 3));
         helper.assertTrue(original.toggleMachine(), "Upgrade test robot did not start");
         final RobotBlockEntity[] active = {original};

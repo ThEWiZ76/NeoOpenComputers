@@ -621,6 +621,37 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
     }
 
+
+    @Callback(doc = "function():number -- Gets the number of installed tanks.")
+    public Object[] tankCount(final Context context, final Arguments args) {
+        return new Object[]{tank().tankCount()};
+    }
+
+    @Callback(doc = "function([index:number]):number -- Selects a tank or gets the selected tank.")
+    public Object[] selectTank(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.select(this, args);
+    }
+
+    @Callback(direct = true, doc = "function([index:number]):number -- Gets the fluid amount.")
+    public Object[] tankLevel(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.level(this, args);
+    }
+
+    @Callback(direct = true, doc = "function([index:number]):number -- Gets remaining tank capacity.")
+    public Object[] tankSpace(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.space(this, args);
+    }
+
+    @Callback(doc = "function(index:number):boolean -- Compares fluids with the selected tank.")
+    public Object[] compareFluidTo(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.compare(this, args);
+    }
+
+    @Callback(doc = "function(index:number[, count:number=1000]):boolean -- Transfers fluid between tanks.")
+    public Object[] transferFluidTo(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankControl.transfer(this, args);
+    }
+
     @Override
     public MultiTank tank() {
         return internalTanks;
