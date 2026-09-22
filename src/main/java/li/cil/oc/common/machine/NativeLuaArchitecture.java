@@ -63,11 +63,8 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
             installComputer();
             installComponent();
             lua.newTable(); lua.setGlobal("userdata");
-            lua.newTable(); lua.setGlobal("unicode");
-            lua.newTable();
-            function("clock", state -> number(machine.cpuTime()));
-            function("time", state -> number((machine.worldTime() + 6000D) * 3.6D));
-            lua.setGlobal("os");
+            NativeLuaLibraries.installUnicode(lua);
+            NativeLuaLibraries.installOs(lua, machine);
             lua.newTable();
             function("timeout", state -> number(ModSettings.computerTimeout()));
             function("allowBytecode", state -> bool(false));

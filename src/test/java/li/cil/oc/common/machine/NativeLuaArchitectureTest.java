@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.Proxy;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,6 +19,41 @@ import static org.junit.jupiter.api.Assertions.*;
 final class NativeLuaArchitectureTest {
     @Callback(direct = true) public void get() {}
     @Callback public void write() {}
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "local s = unicode.char(65, 0x1F600, 0x6C34); assert(unicode.len(s) == 3); assert(unicode.sub(s, 2, 2) == unicode.char(0x1F600)); assert(unicode.reverse(s) == unicode.char(0x6C34, 0x1F600, 65))",
+        "assert(unicode.sub('abc', -2, -1) == 'bc'); assert(unicode.sub('abc', 0, 2) == 'ab'); assert(unicode.sub('abc', 99) == ''); assert(unicode.sub('abc', -99, -99) == '')",
+        "assert(unicode.charWidth(unicode.char(0x231A)) == 2); assert(not unicode.isWide(unicode.char(0x2E9A))); assert(unicode.wlen('ab' .. unicode.char(0x6C34)) == 4); assert(unicode.wtrunc('ab' .. unicode.char(0x6C34) .. 'c', 4) == 'ab')",
+        "assert(not pcall(unicode.charWidth, '')); assert(not pcall(unicode.isWide, '')); assert(not pcall(unicode.wtrunc, 'abc', 10)); assert(not pcall(unicode.char, 0x110000))",
+        "assert(os.clock() == 0); assert(os.time() == 21600); assert(os.date('%F %T', 86400) == '1970-01-02 00:00:00'); assert(os.date('!%F %T', 86400) == os.date('%F %T', 86400)); assert(os.difftime(8, 3) == 5)",
+        "local d = os.date('!*t', 86400); assert(d.year == 1970 and d.month == 1 and d.day == 2 and d.hour == 0 and d.wday == 6 and d.yday == 2); assert(os.time(d) == 86400)",
+        "assert(os.time({year=1970,month=1,day=1}) == 43200); assert(os.time({year=1970,month=13,day=1,hour=0}) == 31536000); assert(not pcall(os.time, {})); assert(not pcall(os.time, 5))",
+        "assert(os.date(false, 86400) == '02/01/70 00:00:00'); assert(os.date('%T', 'soon') == '06:00:00'); assert(os.date('%Q%z%U%W', 86400) == '')"
+    })
+    void exposesNativeUnicodeAndGameTime(final String program) throws Exception {
+        final var architecture = architecture(program + "; computer.shutdown()", new AtomicInteger());
+        try {
+            assertTrue(architecture.initialize());
+            architecture.runThreaded(false);
+            final var result = architecture.runThreaded(false);
+            assertInstanceOf(ExecutionResult.Shutdown.class, result,
+                result instanceof ExecutionResult.Error error ? error.message : "Expected normal shutdown");
+        } finally { architecture.close(); }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"tr-TR", "en-US"})
+    void unicodeCaseMappingUsesServerLocale(final String locale) throws Exception {
+        final Locale previous = Locale.getDefault();
+        final String program = locale.equals("tr-TR")
+            ? "assert(unicode.lower('I') == unicode.char(0x131)); assert(unicode.upper('i') == unicode.char(0x130))"
+            : "assert(unicode.lower('I') == 'i'); assert(unicode.upper('i') == 'I')";
+        try {
+            Locale.setDefault(Locale.forLanguageTag(locale));
+            exposesNativeUnicodeAndGameTime(program);
+        } finally { Locale.setDefault(previous); }
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {
@@ -64,9 +100,13 @@ final class NativeLuaArchitectureTest {
         final String program = """
             local retained = {value = 731}
             retained.self = retained
+            local char, date = unicode.char, os.date
+            local text = char(0x1F600, 0x6C34)
             local result = component.invoke("eeprom", "write")
             assert(result == 42 and retained.value == 731 and retained.self == retained)
             assert(("").find == string.find, "string metatable was not restored")
+            assert(text == char(0x1F600, 0x6C34) and unicode.len(text) == 2)
+            assert(date('%F', 86400) == '1970-01-02')
             computer.shutdown()
             """;
         final AtomicInteger calls = new AtomicInteger();
@@ -109,6 +149,7 @@ final class NativeLuaArchitectureTest {
                 case "methods" -> callbacks;
                 case "popSignal" -> null;
                 case "upTime", "cpuTime" -> 0D;
+                case "worldTime" -> 0L;
                 case "invoke" -> {
                     if (args[1].equals("get")) yield new Object[]{program};
                     if (args[1].equals("write")) { writes.incrementAndGet(); yield new Object[]{42}; }
