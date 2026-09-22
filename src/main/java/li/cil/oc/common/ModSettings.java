@@ -124,6 +124,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue ROBOT_SWING_RANGE;
     public static final ModConfigSpec.DoubleValue ROBOT_SWING_DELAY;
     public static final ModConfigSpec.BooleanValue ROBOT_NOT_AFRAID_OF_SPIDERS;
+    public static final ModConfigSpec.BooleanValue ROBOT_CAN_ATTACK_PLAYERS;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_COST;
     public static final ModConfigSpec.DoubleValue ROBOT_MOVE_DELAY;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_DELAY;
@@ -362,6 +363,8 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("robot");
+        ROBOT_CAN_ATTACK_PLAYERS = builder.comment("Allow robots to attack players, including other fake players. Upstream default is false.")
+            .define("canAttackPlayers", false);
         ROBOT_NOT_AFRAID_OF_SPIDERS = builder.comment("Allow robots to clear cobwebs quickly with any equipped tool. Upstream default is true.")
             .define("notAfraidOfSpiders", true);
         ROBOT_SWING_RANGE = builder.comment("Distance from the adjacent block center used to calibrate robot swing rays. Upstream default is 0.49.")
@@ -970,6 +973,10 @@ public final class ModSettings {
 
     public static boolean robotNotAfraidOfSpiders() {
         return booleanValue(ROBOT_NOT_AFRAID_OF_SPIDERS);
+    }
+
+    public static boolean robotCanAttackPlayers() {
+        return booleanValue(ROBOT_CAN_ATTACK_PLAYERS);
     }
 
     public static double robotTurnCost() {

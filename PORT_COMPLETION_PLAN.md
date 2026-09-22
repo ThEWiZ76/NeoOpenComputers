@@ -273,3 +273,7 @@ Exacte afbraak onderschept aangepaste BlockDropsEvent-XP bij aanwezige experienc
 ### Vuur, spinnenwebben en fallback bij halve blokken
 
 Robot swing dooft gewoon en soul fire met beveiligingscontrole, correcte fire-uitkomst, pauze en zonder slijtage. Upstream notAfraidOfSpiders en swing-delayconfig toegevoegd; cobwebs met mining pick verdwijnen na configureerbare tijd zonder onterechte loot. Gecorrigeerd: upstream probeert na gemiste kalibratiestralen alsnog het aanwezige blok, dus halve blokken blijven breekbaar. Full build: 2058 unit-tests en 474 GameTests; robot-fire-web-final.log. Zie ROBOT_LEFT_CLICK.md. Client gesloten; entities, overige wereldacties, persistence en live tests blijven open.
+
+### Entityselectie en robotaanvallen
+
+Robot swing selecteert nu nabije living entities, minecarts en drones tegenover de afstand tot het geraakte blok. Normale aanval gebruikt gereedschapsattributen, RobotAttackEntityEvent en NeoForge-beveiliging; geleende spelerstatus wordt hersteld. Speleraanvallen standaard uit via canAttackPlayers. Minecarts krijgen de upstream herhaalde pogingen en hun drop gaat naar cargo. Zes GameTests bewijzen schade, beide beveiligingslagen, attribuutherstel, spelerconfig-hookgating, blokkering door een nabijer blok en exact een minecartdrop. Full build: 2058 unit-tests en 480 GameTests; robot-entity-final.log. Zie ROBOT_ENTITY_ATTACKS.md. Exacte combat/cooldown/enchantmentpariteit, living-kill XP, echte PvP-regels en live tests blijven open.

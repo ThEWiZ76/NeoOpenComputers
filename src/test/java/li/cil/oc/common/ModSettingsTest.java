@@ -19,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 final class ModSettingsTest {
     @Test
     void robotActionSettingsUseUpstreamPathsAndDefaults() {
+        assertEquals(List.of("robot", "canAttackPlayers"), ModSettings.ROBOT_CAN_ATTACK_PLAYERS.getPath());
+        assertFalse(ModSettings.robotCanAttackPlayers());
         assertEquals(List.of("robot", "itemDamageRate"), ModSettings.ROBOT_ITEM_DAMAGE_RATE.getPath());
         assertEquals(0.1D, ModSettings.robotItemDamageRate());
         assertEquals(List.of("robot", "delays", "harvestRatio"), ModSettings.ROBOT_HARVEST_RATIO.getPath());

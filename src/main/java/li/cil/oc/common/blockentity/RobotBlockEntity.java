@@ -923,8 +923,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (!(player() instanceof net.minecraft.server.level.ServerPlayer player)) {
             return new Object[]{false, "no server"};
         }
-        final BlockHitResult hit = swingHit(player, direction, calibrated);
-        if (hit == null) return new Object[]{false, "air"};
+        final var picked = swingHit(player, direction, calibrated);
+        if (picked == null) return new Object[]{false, "air"};
+        if (picked instanceof net.minecraft.world.phys.EntityHitResult entityHit) {
+            return attackEntity(context, player, entityHit.getEntity(), sneaky);
+        }
+        final BlockHitResult hit = (BlockHitResult) picked;
         final BlockPos target = hit.getBlockPos();
         final BlockState state = level.getBlockState(target);
         if (state.isAir()) {
@@ -1015,7 +1019,63 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new Object[]{true, "fire"};
     }
 
-    private BlockHitResult swingHit(final Player player, final Direction direction, final Direction calibrated) {
+    private Object[] attackEntity(final Context context, final net.minecraft.server.level.ServerPlayer player,
+                                  final net.minecraft.world.entity.Entity target, final boolean sneaky) {
+        final ItemStack previousHand = player.getMainHandItem();
+        final var previousGameMode = player.gameMode.getGameModeForPlayer();
+        final boolean wasSneaking = player.isShiftKeyDown();
+        final boolean wasOnGround = player.onGround();
+        final ItemStack before = getItem(TOOL_SLOT).copy();
+        final Set<ItemEntity> dropsBefore = new HashSet<>(nearbyDrops());
+        final List<Runnable> restoreAttributes = new ArrayList<>();
+        player.setItemInHand(InteractionHand.MAIN_HAND, before.copy());
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        player.setShiftKeyDown(sneaky);
+        player.setOnGround(true);
+        try {
+            // Borrowed fake players do not tick equipment; apply tool attributes for this action only.
+            before.forEachModifier(net.minecraft.world.entity.EquipmentSlot.MAINHAND, (attribute, modifier) -> {
+                final var instance = player.getAttribute(attribute);
+                if (instance == null) return;
+                final var previous = instance.getModifier(modifier.id());
+                instance.addOrUpdateTransientModifier(modifier);
+                restoreAttributes.add(() -> {
+                    if (previous == null) instance.removeModifier(modifier.id());
+                    else instance.addOrUpdateTransientModifier(previous);
+                });
+            });
+            if (!(target instanceof Player) || ModSettings.robotCanAttackPlayers()) {
+                final int attempts = target instanceof net.minecraft.world.entity.vehicle.AbstractMinecart ? 11 : 1;
+                for (int i = 0; i < attempts && !target.isRemoved(); i++) {
+                    final var event = new li.cil.oc.api.event.RobotAttackEntityEvent.Pre(this, target);
+                    NeoForge.EVENT_BUS.post(event);
+                    if (!event.isCanceled()) {
+                        player.attack(target);
+                        NeoForge.EVENT_BUS.post(new li.cil.oc.api.event.RobotAttackEntityEvent.Post(this, target));
+                    }
+                }
+            }
+            if (!before.isEmpty()) startAnimation(null, 0, ModSettings.robotSwingDelay(), true);
+            if (context != null) context.pause(ModSettings.robotSwingDelay());
+            return new Object[]{true, "entity"};
+        } finally {
+            final ItemStack after = player.getMainHandItem().copy();
+            if (!before.isEmpty() && !after.isEmpty() && before.is(after.getItem())) {
+                final var rate = new RobotUsedToolEvent.ComputeDamageRate(this, before, after, ModSettings.robotItemDamageRate());
+                NeoForge.EVENT_BUS.post(rate);
+                NeoForge.EVENT_BUS.post(new RobotUsedToolEvent.ApplyDamageRate(this, before, after, rate.getDamageRate()));
+            }
+            setItem(TOOL_SLOT, after);
+            for (int i = restoreAttributes.size() - 1; i >= 0; i--) restoreAttributes.get(i).run();
+            player.setItemInHand(InteractionHand.MAIN_HAND, previousHand);
+            player.setGameMode(previousGameMode);
+            player.setShiftKeyDown(wasSneaking);
+            player.setOnGround(wasOnGround);
+            collectNewDrops(player, dropsBefore);
+        }
+    }
+
+    private net.minecraft.world.phys.HitResult swingHit(final Player player, final Direction direction, final Direction calibrated) {
         final Vec3 step = Vec3.atLowerCornerOf(direction.getNormal());
         final Vec3 origin = Vec3.atCenterOf(worldPosition).add(step.scale(0.5D));
         final Vec3 center = origin.add(step.scale(0.51D));
@@ -1031,7 +1091,22 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             if (!level.isLoaded(BlockPos.containing(end))) continue;
             final BlockHitResult hit = level.clip(new net.minecraft.world.level.ClipContext(origin, end,
                 net.minecraft.world.level.ClipContext.Block.OUTLINE, net.minecraft.world.level.ClipContext.Fluid.NONE, player));
+            final var entities = level.getEntities(player, new AABB(worldPosition.relative(direction)), entity -> entity.isAlive() && !entity.isSpectator());
+            entities.sort(java.util.Comparator.comparingDouble(entity -> entity.distanceToSqr(player)));
+            if (!entities.isEmpty()) {
+                final var closest = entities.getFirst();
+                if ((closest instanceof net.minecraft.world.entity.LivingEntity
+                    || closest instanceof net.minecraft.world.entity.vehicle.AbstractMinecart
+                    || closest instanceof li.cil.oc.common.entity.DroneEntity)
+                    && (hit.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK
+                        || player.position().distanceToSqr(hit.getLocation()) > closest.distanceToSqr(player))) {
+                    return new net.minecraft.world.phys.EntityHitResult(closest);
+                }
+            }
             if (hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) return hit;
+            for (final var entity : entities) {
+                if (entity instanceof net.minecraft.world.entity.LivingEntity) return new net.minecraft.world.phys.EntityHitResult(entity);
+            }
         }
         // Upstream retries an adjacent non-replaceable block even when its outline was missed.
         final BlockPos target = worldPosition.relative(direction);

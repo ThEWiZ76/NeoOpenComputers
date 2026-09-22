@@ -23,6 +23,146 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
     @GameTest(template = "empty")
+    public static void robotSwingBreaksMinecartAndCollectsItsDrop(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final var target = helper.spawn(net.minecraft.world.entity.EntityType.MINECART, new BlockPos(1, 1, 2));
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_SWORD));
+        final Object[] result = ((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3);
+        helper.assertTrue(Boolean.TRUE.equals(result[0]) && "entity".equals(result[1]), "Robot did not target minecart");
+        helper.assertTrue(target.isRemoved(), "Repeated attack did not break the minecart");
+        helper.assertTrue(cargoCount(robot, Items.MINECART) == 1, "Minecart drop did not enter cargo exactly once");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotAttackRespectsNeoForgeProtection(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final var target = helper.spawn(net.minecraft.world.entity.EntityType.COW, new BlockPos(1, 1, 2));
+        target.setNoAi(true);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_SWORD));
+        final double originalDamage = robot.player().getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
+        final int[] attacks = {0};
+        final Object protection = new Object() {
+            @SubscribeEvent
+            public void attack(final net.neoforged.neoforge.event.entity.player.AttackEntityEvent event) {
+                if (event.getTarget() != target) return;
+                attacks[0]++;
+                helper.assertTrue(event.getEntity().getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE) > originalDamage,
+                    "Equipped sword attributes were not applied to attack");
+                event.setCanceled(true);
+            }
+        };
+        NeoForge.EVENT_BUS.register(protection);
+        try {
+            final float health = target.getHealth();
+            ((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3);
+            helper.assertTrue(attacks[0] == 1 && target.getHealth() == health, "Robot bypassed NeoForge attack protection");
+            helper.assertTrue(robot.getItem(RobotBlockEntity.TOOL_SLOT).getDamageValue() == 0, "Canceled attack wore out the sword");
+            helper.assertTrue(robot.player().getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE) == originalDamage,
+                "Sword attributes leaked into borrowed player");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(protection);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotCannotAttackPlayersByDefault(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final var target = helper.makeMockServerPlayerInLevel();
+        final var position = helper.absolutePos(new BlockPos(1, 1, 2));
+        target.moveTo(position.getX() + 0.5D, position.getY(), position.getZ() + 0.5D, 0, 0);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_SWORD));
+        final int[] attacks = {0};
+        final Object listener = new Object() {
+            @SubscribeEvent
+            public void attack(final li.cil.oc.api.event.RobotAttackEntityEvent.Pre event) {
+                if (event.target == target) { attacks[0]++; event.setCanceled(true); }
+            }
+        };
+        final boolean previous = ModSettings.ROBOT_CAN_ATTACK_PLAYERS.get();
+        NeoForge.EVENT_BUS.register(listener);
+        try {
+            ModSettings.ROBOT_CAN_ATTACK_PLAYERS.set(false);
+            final Object[] result = ((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3);
+            helper.assertTrue(Boolean.TRUE.equals(result[0]) && "entity".equals(result[1]) && attacks[0] == 0, "Player protection did not suppress the attack");
+            ModSettings.ROBOT_CAN_ATTACK_PLAYERS.set(true);
+            ((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3);
+            helper.assertTrue(attacks[0] == 1, "Enabled player attack did not reach cancellable protection hook");
+        } finally {
+            ModSettings.ROBOT_CAN_ATTACK_PLAYERS.set(previous);
+            NeoForge.EVENT_BUS.unregister(listener);
+            target.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotDoesNotAttackThroughAdjacentBlock(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final var target = helper.spawn(net.minecraft.world.entity.EntityType.COW, new BlockPos(1, 1, 2));
+        target.setNoAi(true);
+        helper.setBlock(new BlockPos(1, 1, 2), Blocks.STONE);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        final float health = target.getHealth();
+        final Object[] result = ((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3);
+        helper.assertTrue(Boolean.TRUE.equals(result[0]) && "block".equals(result[1]) && target.getHealth() == health,
+            "Robot attacked an entity behind the nearer block face");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotSwingAttacksAdjacentEntityWithEquippedTool(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final var target = helper.spawn(net.minecraft.world.entity.EntityType.COW, new BlockPos(1, 1, 2));
+        target.setNoAi(true);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_SWORD));
+        final float health = target.getHealth();
+        final Object[] result = ((li.cil.oc.api.network.Component) robot.node()).invoke("swing", robot.machine(), 3);
+        helper.assertTrue(Boolean.TRUE.equals(result[0]) && "entity".equals(result[1]), "Robot did not target the adjacent entity");
+        helper.assertTrue(target.getHealth() < health, "Robot attack dealt no damage");
+        helper.assertTrue(robot.machine().isPaused(), "Entity swing did not pause the robot");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotAttackRespectsCancellationAndRestoresBorrowedPlayer(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final var target = helper.spawn(net.minecraft.world.entity.EntityType.COW, new BlockPos(1, 1, 2));
+        target.setNoAi(true);
+        final var player = robot.player();
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(Items.APPLE));
+        player.setShiftKeyDown(false);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_SWORD));
+        final int[] events = {0, 0};
+        final Object protection = new Object() {
+            @SubscribeEvent
+            public void pre(final li.cil.oc.api.event.RobotAttackEntityEvent.Pre event) {
+                if (event.target != target) return;
+                events[0]++;
+                helper.assertTrue(player.getMainHandItem().is(Items.IRON_SWORD) && player.isShiftKeyDown(), "Attack did not expose tool and sneak state");
+                event.setCanceled(true);
+            }
+            @SubscribeEvent
+            public void post(final li.cil.oc.api.event.RobotAttackEntityEvent.Post event) {
+                if (event.target == target) events[1]++;
+            }
+        };
+        NeoForge.EVENT_BUS.register(protection);
+        try {
+            final float health = target.getHealth();
+            final Object[] result = ((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3, 3, true);
+            helper.assertTrue(Boolean.TRUE.equals(result[0]) && "entity".equals(result[1]), "Canceled attack should still report the targeted entity, as upstream does");
+            helper.assertTrue(target.getHealth() == health && events[0] == 1 && events[1] == 0, "Attack bypassed robot protection");
+            helper.assertTrue(player.getMainHandItem().is(Items.APPLE) && !player.isShiftKeyDown(), "Attack leaked borrowed player state");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(protection);
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotHarvestStoresOreExperienceWithoutDuplicateOrbs(final GameTestHelper helper) throws Exception {
         verifyHarvestExperience(helper, true, false);
     }
