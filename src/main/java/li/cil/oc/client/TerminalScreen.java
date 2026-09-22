@@ -60,7 +60,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         }
         final TerminalScreenSnapshot snapshot = menu.snapshot();
         final double scale = terminalScale(snapshot, imageWidth, imageHeight);
-        renderCellBackgrounds(guiGraphics, snapshot, left, top, scale);
+        guiGraphics.drawManaged(() -> renderCellBackgrounds(guiGraphics, snapshot, left, top, scale));
         guiGraphics.enableScissor(left + TEXT_LEFT, top + TEXT_TOP, left + imageWidth - TEXT_RIGHT_MARGIN, top + imageHeight - TEXT_BOTTOM_MARGIN);
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(left + TEXT_LEFT, top + TEXT_TOP, 0);

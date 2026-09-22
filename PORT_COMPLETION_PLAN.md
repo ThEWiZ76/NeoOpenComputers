@@ -173,7 +173,7 @@ Per scenario bewaren: commit/JAR-hash, profiel/modversies, wereld/seed/posities,
 | --- | --- |
 | Baseline-audit | Gereed: 2040 tests, 440 GameTests; zie `PORT_AUDIT_2026-09-22.md` |
 | Volledige pariteitsmatrix | In uitvoering |
-| Terminal-GUI-performance | Eerste fix getest: OpenOS 6 → 60 FPS; vol scherm 31 FPS, aanvullende varianten open |
+| Terminal-GUI-performance | OpenOS, volle 160×50 uitvoer en gekleurde achtergronden nu 60 FPS; lagere tiers/schalen/minimale modset nog open |
 | UI-vertalingen/foutfeedback | Gepland in eerste uitvoeringsronde |
 | Robotterminal/layout | Open |
 | Lua execution persistence | Open, architectuurwerk noodzakelijk |
@@ -193,3 +193,7 @@ Eerstvolgend: volle terminal/achtergrondbelasting verder profileren, vervolgens 
 ### Doorlopende uitvoering — titel en foutfeedback
 
 Microcontroller-titel hersteld. Computer-case NoEnergy/NoCPU gebruiken nu vertaalbare componenten met leesbare fallback; vrije Lua-fouttekst blijft letterlijk en alleen de eerste regel wordt getoond. Gerichte tests faalden eerst op ontbrekende titel en ruwe foutkey, daarna alle 26 groen; volledige build en 442 GameTests groen in deze ronde. Ingame titel screenshot: `build/finish-port-implementation/microcontroller-title-verified.png`. Clientlog bevestigt `Computer error: Not enough energy.` met geïnstalleerde JAR `731F3F1EF4E792BE9F4B88B18AEC9B3E78EE896791FAA949617D57CA94CA0372`. Foutfeedback van andere hosts en overige fase-1B-visuele controles blijven open.
+
+Robot-ROM hersteld in `fedefc2f5`: vier originele upstream Lua-bestanden, filesystem-mount en behoud/opruiming van het ROM-adres. Echte OpenOS-boottest via assembler en HDD bewijst automatische autorun, `require("robot")` en `go left 1` met fysieke draaiing. Lifecycle-GameTest bewijst readonly, discovery en save/load/unload. De robot-GUI is daarmee nog niet klaar.
+
+Terminalglyphs gebruiken nu de bestaande bitmapatlas (`a3b10fda`); rasterfallback voor andere Unicode blijft behouden. Aparte fix bundelt gekleurde achtergrondcellen. Live volle terminal en gekleurde achtergrond nu beide 60 FPS; Unicode/kleuren/input en wereldbeeld opnieuw gecontroleerd. Volledige gates: 2047 unit tests en 442 GameTests. Details en exacte hashes: `TERMINAL_GUI_PERFORMANCE.md`.
