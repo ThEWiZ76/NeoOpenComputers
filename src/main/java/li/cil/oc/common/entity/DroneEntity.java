@@ -163,10 +163,43 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
 
     @Override
     public InteractionResult interact(final Player player, final InteractionHand hand) {
+        if (isRemoved()) return InteractionResult.PASS;
         if (!level().isClientSide) {
-            player.openMenu(this);
+            if (player.isShiftKeyDown()) {
+                if (li.cil.oc.common.WrenchTools.isWrench(player.getMainHandItem())) {
+                    dropAsItem();
+                } else if (!machine.isRunning() && !machine.isPaused()) {
+                    toggleMachine();
+                }
+            } else {
+                player.openMenu(this);
+            }
         }
         return InteractionResult.sidedSuccess(level().isClientSide);
+    }
+
+    private void dropAsItem() {
+        machine.stop();
+        final var hardware = items;
+        items = NonNullList.withSize(MAX_SLOT_COUNT, ItemStack.EMPTY);
+        // Disconnect before saving: components must release resources and persist that final state.
+        machine.onHostChanged();
+        final var caseItem = switch (tier) {
+            case 1 -> li.cil.oc.common.ModItems.DRONE_CASE_TIER2.get();
+            case 2 -> li.cil.oc.common.ModItems.DRONE_CASE_CREATIVE.get();
+            default -> li.cil.oc.common.ModItems.DRONE_CASE_TIER1.get();
+        };
+        final var droneItem = li.cil.oc.common.ModItems.DRONE.get();
+        final var packed = droneItem.assembleFromCase(new ItemStack(caseItem), hardware.toArray(ItemStack[]::new));
+        if (machine.node() instanceof li.cil.oc.api.network.Connector connector) {
+            droneItem.storeEnergy(packed, connector.localBuffer());
+        }
+        spawnAtLocation(packed);
+        for (int slot = 0; slot < mainInventory.getContainerSize(); slot++) {
+            final var cargo = mainInventory.removeItemNoUpdate(slot);
+            if (!cargo.isEmpty()) spawnAtLocation(cargo);
+        }
+        discard();
     }
 
     @Override
@@ -204,6 +237,9 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         if (stack.getItem() instanceof li.cil.oc.common.item.DroneItem item) {
             tier = normalizeTier(item.tier(stack));
             clearContent();
+            if (machine.node() instanceof li.cil.oc.api.network.Connector connector) {
+                connector.changeBuffer(item.storedEnergy(stack, connector.localBuffer()) - connector.localBuffer());
+            }
             final var components = item.componentStacks(stack);
             components.sort(java.util.Comparator.comparingInt((ItemStack component) -> {
                 final var driver = Driver.driverFor(component, Drone.class);

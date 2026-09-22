@@ -66,6 +66,17 @@ public class DroneItem extends Item implements Tiered {
         return readData(stack).getList(COMPONENTS_TAG, Tag.TAG_COMPOUND);
     }
 
+    public double storedEnergy(final ItemStack stack, final double fallback) {
+        final var data = readData(stack);
+        return data.contains("storedEnergy", Tag.TAG_ANY_NUMERIC) ? data.getDouble("storedEnergy") : fallback;
+    }
+
+    public void storeEnergy(final ItemStack stack, final double energy) {
+        final var data = readData(stack);
+        data.putDouble("storedEnergy", Math.max(0, energy));
+        writeData(stack, data);
+    }
+
     public List<ItemStack> componentStacks(final ItemStack stack) {
         final List<ItemStack> result = new ArrayList<>();
         final ListTag components = components(stack);
