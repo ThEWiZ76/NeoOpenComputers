@@ -24,6 +24,15 @@ import java.nio.charset.StandardCharsets;
 public final class NativeRackPersistenceGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void nativeRackResumesLocalStateAfterDetachedReload(GameTestHelper helper) {
+        resumesLocalState(helper, false);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void nativeRackReleasesVmOnChunkUnloadAndResumesSavedState(GameTestHelper helper) {
+        resumesLocalState(helper, true);
+    }
+
+    private static void resumesLocalState(GameTestHelper helper, boolean unloadBeforeSave) {
         resumesAfterReload(helper, """
             local eeprom = component.proxy(component.list("eeprom")())
             assert(eeprom.getData() == "", "program restarted instead of resuming")
@@ -33,7 +42,7 @@ public final class NativeRackPersistenceGameTests {
             assert(retained.value == 731)
             eeprom.setData("restored")
             while true do computer.pullSignal() end
-            """);
+            """, unloadBeforeSave);
     }
 
     @GameTest(template = "empty", timeoutTicks = 400)
@@ -93,6 +102,10 @@ public final class NativeRackPersistenceGameTests {
     }
 
     private static void resumesAfterReload(GameTestHelper helper, String program) {
+        resumesAfterReload(helper, program, false);
+    }
+
+    private static void resumesAfterReload(GameTestHelper helper, String program, boolean unloadBeforeSave) {
         BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.RACK.get());
         RackBlockEntity rack = helper.getBlockEntity(pos);
@@ -114,8 +127,11 @@ public final class NativeRackPersistenceGameTests {
             .thenIdle(50)
             .thenExecute(() -> {
                 var registries = helper.getLevel().registryAccess();
+                if (unloadBeforeSave) rack.onChunkUnloaded();
                 var saved = rack.saveWithFullMetadata(registries);
                 rack.setRemoved();
+                helper.assertTrue(!original.machine().architecture().isInitialized(), "Removed rack retained its native Lua VM");
+                helper.assertTrue(!original.machine().isRunning(), "Removed rack retained a running machine");
                 var restored = BlockEntity.loadStatic(rack.getBlockPos(), rack.getBlockState(), saved, registries);
                 helper.assertTrue(restored instanceof RackBlockEntity, "Saved rack was discarded");
                 RackBlockEntity replacement = (RackBlockEntity) restored;
