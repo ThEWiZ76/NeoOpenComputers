@@ -451,7 +451,8 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
     @Override
     public Signal popSignal() {
-        return signals.pollFirst();
+        final Signal signal = signals.pollFirst();
+        return signal == null ? null : new SimpleSignal(signal.name(), OpenComputersApi.convert(signal.args()));
     }
 
     @Override
@@ -1016,6 +1017,10 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
                 tag.putString(SIGNAL_ARG_TYPE_TAG, "bytes");
                 tag.putByteArray(SIGNAL_ARG_VALUE_TAG, typedValue);
             }
+            case CompoundTag typedValue -> {
+                tag.putString(SIGNAL_ARG_TYPE_TAG, "compound");
+                tag.put(SIGNAL_ARG_VALUE_TAG, typedValue.copy());
+            }
             case Map<?, ?> typedValue -> {
                 tag.putString(SIGNAL_ARG_TYPE_TAG, "map");
                 final ListTag entries = new ListTag();
@@ -1045,6 +1050,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             case "double" -> tag.getDouble(SIGNAL_ARG_VALUE_TAG);
             case "string" -> tag.getString(SIGNAL_ARG_VALUE_TAG);
             case "bytes" -> tag.getByteArray(SIGNAL_ARG_VALUE_TAG);
+            case "compound" -> tag.getCompound(SIGNAL_ARG_VALUE_TAG).copy();
             case "map" -> {
                 final ListTag entries = tag.getList(SIGNAL_ARG_VALUE_TAG, CompoundTag.TAG_COMPOUND);
                 final Map<String, String> map = new LinkedHashMap<>();

@@ -24,8 +24,8 @@ import java.util.Set;
 public final class TabletRuntime implements Tablet {
     private static final String RUNTIME_TAG = "runtime";
     private final TabletItem item;
-    private final ItemStack stack;
-    private final Player player;
+    private ItemStack stack;
+    private Player player;
     private final Level world;
     private final List<ItemStack> components = new ArrayList<>();
     private final Set<ManagedEnvironment> environments = new LinkedHashSet<>();
@@ -34,6 +34,7 @@ public final class TabletRuntime implements Tablet {
     private final TabletEnvironment tablet;
     private double publishedCharge;
     private boolean closed;
+    private net.minecraft.world.phys.BlockHitResult analysisTarget;
 
     public TabletRuntime(final ItemStack stack, final Player player) {
         if (!(stack.getItem() instanceof TabletItem tabletItem) || !tabletItem.hasData(stack)
@@ -71,6 +72,26 @@ public final class TabletRuntime implements Tablet {
         final boolean started = machine.start();
         publish();
         return started;
+    }
+
+    public void stop() {
+        if (closed) return;
+        machine.stop();
+        save();
+    }
+
+    void rebind(final ItemStack stack, final Player player) {
+        if (closed || stack.getItem() != item || player.level() != world) throw new IllegalArgumentException("Invalid tablet handoff");
+        this.stack = stack;
+        this.player = player;
+        publish();
+    }
+
+    void setAnalysisTarget(net.minecraft.world.phys.BlockHitResult target) { analysisTarget = target; }
+    net.minecraft.world.phys.BlockHitResult takeAnalysisTarget() {
+        final var target = analysisTarget;
+        analysisTarget = null;
+        return target;
     }
 
     public void tick() {

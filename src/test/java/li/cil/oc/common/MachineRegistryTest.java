@@ -1246,6 +1246,37 @@ final class MachineRegistryTest {
         machine.node().remove();
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void nbtSignalsConvertWhenConsumedAndSurviveReload(boolean reload) {
+        OpenComputersApi.initialize();
+        final DriverRegistry registry = new DriverRegistry();
+        registry.add(li.cil.oc.common.driver.MinecraftConverters.NBT);
+        API.driver = registry;
+        Machine machine = API.machine.create(null);
+        assertTrue(machine.start());
+        final CompoundTag payload = new CompoundTag();
+        payload.putString("signText", "tablet\nscan");
+        final CompoundTag nested = new CompoundTag();
+        nested.putInt("value", 731);
+        payload.put("nested", nested);
+        assertTrue(machine.signal("tablet_use", payload));
+        if (reload) {
+            final CompoundTag saved = new CompoundTag();
+            machine.save(saved);
+            machine.stop();
+            machine = API.machine.create(null);
+            machine.load(saved);
+        }
+        try {
+            final Signal signal = machine.popSignal();
+            assertEquals("tablet_use", signal.name());
+            final Map<?, ?> converted = assertInstanceOf(Map.class, signal.args()[0]);
+            assertEquals("tablet\nscan", converted.get("signText"));
+            assertEquals(731, assertInstanceOf(Map.class, converted.get("nested")).get("value"));
+        } finally { machine.stop(); }
+    }
+
     @Test
     void zeroTickYieldsHonorConfiguredExecutionDelay() throws Exception {
         OpenComputersApi.initialize();

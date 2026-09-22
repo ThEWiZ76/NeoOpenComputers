@@ -2,7 +2,21 @@
 
 2026-09-22. Related: [[../02 plans/Complete portering]], [[Native Lua persistence]], [[../05 memory/OpenComputers Memory]].
 
-## Implemented foundation
+## Current player integration - 2026-09-22
+
+TabletItem now ticks a server-cached runtime from inventoryTick. A short use/release starts the computer and opens TabletTerminalMenu through the existing TerminalScreen/TerminalNetworking transport. Sneak short-use stops it. Holding a block target for ten ticks then releasing sends analysis through the live component network and queues tablet_use. The null-player analyzeBlock utility retains its existing fixture path; actual player use no longer constructs a temporary analysis VM.
+
+TabletRuntimeRegistry uses per-item UUIDs, rebinds an existing runtime when a carried item object is replaced, separates simultaneously carried copies, expires inactive runtimes after 200 server ticks, and closes on logout/world unload/server stop. World changes take the snapshot handoff path; actual dimension transition acceptance remains open. TabletTerminalMenu checks holder identity, item possession, world, runtime lifetime and machine permissions; keyboard input also requires an attached keyboard.
+
+PlayerTabletSaveMixin flushes active tablet state at the head of Player.addAdditionalSaveData, before Inventory NBT is encoded. Local NeoForge/Minecraft sources confirm PlayerList.remove fires PlayerLoggedOutEvent before saving the player. ItemTossEvent rebinds the runtime to the real dropped stack, saves the newest components and stops it. Inventory.split leaves a zero-count source object: isCarried must reject empty stacks even if their object reference remains in a slot. tablet-drop-red.log failed on the retained runtime before this fix.
+
+SimpleMachine.popSignal now applies registered converters when consuming a signal, matching upstream Machine.Signal.convert. CompoundTag arguments remain raw in the queue and are saved/restored as compound NBT, so nested tablet scan data survives a save without being flattened into strings or lost. Both cases of nbtSignalsConvertWhenConsumedAndSurviveReload failed before the fix (tablet-signal-nbt-red.log).
+
+TabletUseGameTests exercises LuaJ and native short-use/menu creation, real inventory/held-item processing through ServerPlayer.doTick (embedded mock connections do not call it), screen keyboard delivery, current EEPROM data in actual player serialization, native snapshots, long-use sign scans, sneak-stop, logout disposal, replacement-stack rebinding, copy isolation, invalid menus after removal, idle eviction and actual Q-drop preserving data modified after the prior save. The final tablet-use-lifecycle-verified.log passed build, all 2108 unit tests and all 533 GameTests. No client install, push or merge.
+
+Remaining: tier-dependent component editing, container/chest transfer snapshots and actual dimension/death/server-restart lifecycle coverage, full tablet OpenOS boot, and live visual/input acceptance on display3. The intermittent rack deadline timeout from the prior step remains a separate open investigation. Do not equate this tested subset with complete tablet or complete port acceptance.
+
+## Original runtime foundation (historical)
 
 TabletRuntime hosts a real SimpleMachine with stable decoded item components, a separate tablet component, integrated 80x25 four-bit ScreenItemEnvironment, keyboard connection, player-relative rotation/position, item charging reconciliation and explicit save/disposal. TabletItem exposes its existing data read/write helpers within its package; assembly data format stays intact. Runtime snapshots live inside oc:tablet/runtime and contain machine, screen and tablet state. Machine.save saves component environments before components are encoded back into the item.
 
@@ -16,7 +30,7 @@ TabletRuntimeGameTests runs native EEPROM code, binds a GPU to the integrated sc
 
 Final tablet-runtime-verified.log: build/test succeeded, 2106 unit tests and all 530 GameTests passed. No client/install/push/merge. These are runtime GameTests, not live client or player lifecycle acceptance.
 
-## Remaining tablet work
+## Original follow-up list (superseded by current integration)
 
 - Server cache with correct item identity/rebinding, duplicate handling and expiry; inventory ticking and item-use start/stop.
 - TerminalMenu integration using existing itemScreen and TerminalNetworking; tier-dependent component editing and delayed block analysis using the live runtime instead of temporary TabletAnalysisHost.

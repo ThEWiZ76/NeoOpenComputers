@@ -22,6 +22,11 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -239,6 +244,15 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
             return data;
         }
 
+        if (player != null) {
+            final var runtime = TabletRuntimeRegistry.get(stack, player);
+            if (runtime.machine().isRunning()) {
+                runtime.machine().node().sendToReachable("tablet.use", data, stack, player, pos, side, hitX, hitY, hitZ);
+                if (!data.isEmpty()) runtime.machine().signal("tablet_use", data);
+            }
+            return data;
+        }
+
         final TabletAnalysisHost host = new TabletAnalysisHost(stack, level, player, pos, side);
         final li.cil.oc.api.machine.Machine machine = host.machine();
         if (machine == null || machine.node() == null) {
@@ -262,18 +276,57 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
 
     @Override
     public InteractionResult useOn(final UseOnContext context) {
-        final BlockPos pos = context.getClickedPos();
-        final Vec3 hit = context.getClickLocation();
-        final CompoundTag data = analyzeBlock(
-            context.getItemInHand(),
-            context.getLevel(),
-            context.getPlayer(),
-            pos,
-            context.getClickedFace(),
-            (float) (hit.x - pos.getX()),
-            (float) (hit.y - pos.getY()),
-            (float) (hit.z - pos.getZ()));
-        return data.isEmpty() ? InteractionResult.PASS : InteractionResult.CONSUME;
+        final Player player = context.getPlayer();
+        if (player == null || !hasData(context.getItemInHand())) return InteractionResult.PASS;
+        if (!context.getLevel().isClientSide) {
+            TabletRuntimeRegistry.get(context.getItemInHand(), player).setAnalysisTarget(
+                new net.minecraft.world.phys.BlockHitResult(context.getClickLocation(), context.getClickedFace(), context.getClickedPos(), false));
+        }
+        player.startUsingItem(context.getHand());
+        return InteractionResult.CONSUME;
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        final ItemStack stack = player.getItemInHand(hand);
+        if (!hasData(stack)) return InteractionResultHolder.pass(stack);
+        if (!level.isClientSide) TabletRuntimeRegistry.get(stack, player).setAnalysisTarget(null);
+        player.startUsingItem(hand);
+        return InteractionResultHolder.consume(stack);
+    }
+
+    @Override public int getUseDuration(ItemStack stack, LivingEntity entity) { return 72000; }
+
+    @Override
+    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int remaining) {
+        if (level.isClientSide || !(entity instanceof Player player) || !hasData(stack)) return;
+        final var runtime = TabletRuntimeRegistry.get(stack, player);
+        final var target = runtime.takeAnalysisTarget();
+        if (getUseDuration(stack, entity) - remaining >= 10) {
+            if (target != null) {
+                final BlockPos pos = target.getBlockPos();
+                final Vec3 hit = target.getLocation();
+                analyzeBlock(stack, level, player, pos, target.getDirection(),
+                    (float) (hit.x - pos.getX()), (float) (hit.y - pos.getY()), (float) (hit.z - pos.getZ()));
+            }
+        } else if (player.isShiftKeyDown()) {
+            runtime.stop();
+        } else {
+            if (!runtime.machine().canInteract(player.getGameProfile().getName())) return;
+            runtime.start();
+            final var opened = player.openMenu(new SimpleMenuProvider(
+                (id, inventory, viewer) -> new li.cil.oc.common.menu.TabletTerminalMenu(id, inventory, runtime),
+                net.minecraft.network.chat.Component.translatable("item.neoopencomputers.tablet")));
+            if (opened.isPresent() && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                li.cil.oc.common.network.TerminalNetworking.sendToPlayerIfSupported(serverPlayer,
+                    new li.cil.oc.common.network.TerminalScreenSnapshotPayload(opened.getAsInt(), runtime.screen().terminalSnapshot()));
+            }
+        }
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
+        if (!level.isClientSide && entity instanceof Player player && hasData(stack)) TabletRuntimeRegistry.tick(stack, player);
     }
 
     public void setTier(final ItemStack stack, final int tier) {
