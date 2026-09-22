@@ -5,13 +5,12 @@ import li.cil.oc.common.menu.RobotMenu;
 import li.cil.oc.common.network.RackControlPayload;
 import li.cil.oc.common.network.RobotControlPayload;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
+public class RobotScreen extends TerminalScreen<RobotMenu> {
     public static final ResourceLocation ROBOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/robot.png");
     public static final ResourceLocation ROBOT_NO_SCREEN_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/robot_noscreen.png");
 
@@ -47,6 +46,9 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
         final int top = topPos;
         guiGraphics.blit(ROBOT_TEXTURE, left, top, 0, 0, imageWidth, imageHeight);
         drawScreenPanel(guiGraphics, left + SCREEN_X, top + SCREEN_Y, menu.hasScreen());
+        if (menu.hasScreen()) {
+            renderTerminalContents(guiGraphics);
+        }
         drawPowerBar(guiGraphics, left + POWER_BAR_X, top + POWER_BAR_Y, menu.energy(), menu.maxEnergy());
         final int tier = menu.robotTier();
         for (int slot = 0; slot < RobotMenu.robotSlotCountForTier(tier); slot++) {
@@ -64,15 +66,20 @@ public class RobotScreen extends AbstractContainerScreen<RobotMenu> {
     }
 
     @Override
+    protected TerminalFrame terminalFrame() {
+        return new TerminalFrame(leftPos + SCREEN_X - TEXT_LEFT, topPos + SCREEN_Y + 1 - TEXT_TOP,
+            SCREEN_WIDTH + TEXT_LEFT + TEXT_RIGHT_MARGIN,
+            SCREEN_HEIGHT - 2 + TEXT_TOP + TEXT_BOTTOM_MARGIN);
+    }
+
+    @Override
     protected void renderLabels(final GuiGraphics guiGraphics, final int mouseX, final int mouseY) {
         guiGraphics.drawString(font, screenTitle(), titleLabelX, titleLabelY, 0xFF404040, false);
     }
 
     @Override
     public void render(final GuiGraphics guiGraphics, final int mouseX, final int mouseY, final float partialTick) {
-        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        renderTooltip(guiGraphics, mouseX, mouseY);
         final int slot = robotSlotAt(mouseX, mouseY, leftPos, topPos, menu.robotTier());
         if (ComputerCaseScreen.shouldRenderSlotOverlayTooltip(slot >= 0, slot >= 0 && menu.getSlot(slot).hasItem())) {
             guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.slotTooltip(

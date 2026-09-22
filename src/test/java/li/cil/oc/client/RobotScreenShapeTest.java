@@ -1,6 +1,9 @@
 package li.cil.oc.client;
 
 import li.cil.oc.common.menu.RobotMenu;
+import li.cil.oc.common.menu.TerminalMenu;
+import li.cil.oc.common.component.TerminalScreenSnapshot;
+import li.cil.oc.common.network.TerminalMousePayload;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -9,6 +12,8 @@ import net.minecraft.world.entity.player.Inventory;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import sun.misc.Unsafe;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -25,6 +30,7 @@ final class RobotScreenShapeTest {
             Component.class);
 
         assertTrue(AbstractContainerScreen.class.isAssignableFrom(RobotScreen.class));
+        assertTrue(TerminalScreen.class.isAssignableFrom(RobotScreen.class), "Robot must render and forward input through the terminal screen");
         assertArrayEquals(new Class<?>[]{RobotMenu.class, Inventory.class, Component.class}, constructor.getParameterTypes());
     }
 
@@ -64,11 +70,43 @@ final class RobotScreenShapeTest {
     }
 
     @Test
-    void robotScreenUsesGpuScreenFlagForUpperPanel() throws Exception {
+    void robotScreenUsesInstalledScreenFlagForUpperPanel() throws Exception {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/client/RobotScreen.java"));
 
         assertTrue(source.contains("menu.hasScreen()"));
         assertTrue(source.contains("drawScreenPanel"));
+    }
+
+    @Test
+    void robotTerminalMouseCoordinatesMatchItsScaledUpperPanel() throws Exception {
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final Unsafe unsafe = (Unsafe) unsafeField.get(null);
+        final RobotScreen screen = (RobotScreen) unsafe.allocateInstance(RobotScreen.class);
+        for (final String name : new String[]{"leftPos", "topPos"}) {
+            final Field field = AbstractContainerScreen.class.getDeclaredField(name);
+            field.setAccessible(true);
+            field.setInt(screen, name.equals("leftPos") ? 100 : 40);
+        }
+        final TerminalMenu menu = (TerminalMenu) unsafe.allocateInstance(TerminalMenu.class);
+        final TerminalScreenSnapshot snapshot = new TerminalScreenSnapshot(80, 25, new String[25]);
+        final TerminalScreen.TerminalFrame frame = screen.terminalFrame();
+        final double scale = TerminalScreen.terminalScale(snapshot, frame.width(), frame.height());
+        assertEquals(0.32D, scale, 1.0E-9);
+        final TerminalMousePayload input = TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN,
+            108 + 10 * 8 * scale, 59 + 4 * 16 * scale, 0,
+            frame.left(), frame.top(), snapshot, frame.width(), frame.height());
+        assertEquals(10, input.x(), 1.0E-9);
+        assertEquals(4, input.y(), 1.0E-9);
+        assertTrue(TerminalScreen.terminalContains(snapshot, frame, 108, 59));
+        assertEquals(false, TerminalScreen.terminalContains(snapshot, frame, 107, 59));
+        assertEquals(false, TerminalScreen.terminalContains(snapshot, frame, 108, 187));
+        assertEquals(false, TerminalScreen.terminalContains(snapshot, frame, 110, 194));
+        // Power controls and the inventory must not generate terminal clicks.
+        assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN,
+            110, 194, 0, frame.left(), frame.top(), snapshot, frame.width(), frame.height()));
+        assertEquals(null, TerminalScreen.mousePayload(menu, TerminalMousePayload.MOUSE_DOWN,
+            107, 60, 0, frame.left(), frame.top(), snapshot, frame.width(), frame.height()));
     }
 
     @Test

@@ -13,6 +13,8 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.MultiTank;
 import li.cil.oc.api.internal.Robot;
+import li.cil.oc.api.internal.Keyboard;
+import li.cil.oc.common.component.GraphicsCardEnvironment;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -30,8 +32,6 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.RobotBlock;
-import li.cil.oc.common.item.ApuItem;
-import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.menu.RobotMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -329,6 +329,21 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             componentSlots.put(node.address(), pendingComponentSlot);
         }
         pendingComponentSlot = -1;
+        if (node != null && node.host() instanceof Keyboard keyboard) {
+            keyboard.setUsableOverride((ignored, player) -> stillValid(player)
+                && machine.canInteract(player.getGameProfile().getName()));
+        }
+        if (node == null || machine == null || machine.node() == null) {
+            return;
+        }
+        for (final Node neighbor : machine.node().neighbors()) {
+            if (node.host() instanceof ScreenItemEnvironment
+                && (neighbor.host() instanceof Keyboard || neighbor.host() instanceof GraphicsCardEnvironment)
+                || neighbor.host() instanceof ScreenItemEnvironment
+                && (node.host() instanceof Keyboard || node.host() instanceof GraphicsCardEnvironment)) {
+                node.connect(neighbor);
+            }
+        }
     }
 
     @Override
@@ -899,7 +914,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public boolean stillValid(final Player player) {
-        return !isRemoved();
+        return player != null && level != null && player.level() == level && !isRemoved()
+            && level.getBlockEntity(worldPosition) == this
+            && player.distanceToSqr(xPosition(), yPosition(), zPosition()) <= 64D;
     }
 
     @Override
@@ -1058,12 +1075,18 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     public boolean hasScreenHardware() {
-        for (final ItemStack stack : hardwareItems) {
-            if (stack.getItem() instanceof GraphicsCardItem || stack.getItem() instanceof ApuItem) {
-                return true;
+        return terminalScreen() != null;
+    }
+
+    public ScreenItemEnvironment terminalScreen() {
+        if (machine != null && machine.node() != null) {
+            for (final Node node : machine.node().neighbors()) {
+                if (node.host() instanceof ScreenItemEnvironment screen) {
+                    return screen;
+                }
             }
         }
-        return false;
+        return null;
     }
 
     private boolean canStartMachineFromHardware() {

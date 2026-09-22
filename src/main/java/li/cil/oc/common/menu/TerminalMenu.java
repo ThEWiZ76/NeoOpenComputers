@@ -2,6 +2,7 @@ package li.cil.oc.common.menu;
 
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
+import li.cil.oc.common.blockentity.ScreenItemEnvironment;
 import li.cil.oc.common.component.TerminalScreenDelta;
 import li.cil.oc.common.component.TerminalScreenSnapshot;
 import li.cil.oc.common.component.TerminalServerRegistry;
@@ -14,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 
 public class TerminalMenu extends AbstractContainerMenu {
@@ -26,6 +28,25 @@ public class TerminalMenu extends AbstractContainerMenu {
     private final String terminalKey;
     private final Player player;
     private Boolean supportsMouseInput;
+    private Boolean sentMouseInputSupport;
+
+    protected TerminalMenu(final MenuType<?> type, final int containerId, final Inventory inventory) {
+        super(type, containerId);
+        snapshot = new TerminalScreenSnapshot(0, 0, new String[0]);
+        terminalServer = null;
+        physicalScreen = null;
+        terminalKey = null;
+        player = inventory == null ? null : inventory.player;
+        supportsMouseInput = false;
+    }
+
+    public ScreenItemEnvironment itemScreen() {
+        return null;
+    }
+
+    public boolean acceptsInput(final Player player) {
+        return stillValid(player);
+    }
 
     public TerminalMenu(final int containerId, final Inventory playerInventory) {
         this(containerId, playerInventory, new TerminalScreenSnapshot(0, 0, new String[0]));
@@ -110,6 +131,11 @@ public class TerminalMenu extends AbstractContainerMenu {
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
+        if (player instanceof ServerPlayer serverPlayer && (sentMouseInputSupport == null || sentMouseInputSupport != supportsMouseInput())) {
+            sentMouseInputSupport = supportsMouseInput();
+            TerminalNetworking.sendToPlayerIfSupported(serverPlayer,
+                new li.cil.oc.common.network.TerminalMouseInputSupportPayload(containerId, sentMouseInputSupport));
+        }
         final CustomPacketPayload payload = changedScreenPayload();
         if (payload != null && player instanceof ServerPlayer serverPlayer) {
             TerminalNetworking.sendToPlayerIfSupported(serverPlayer, payload);
@@ -170,7 +196,10 @@ public class TerminalMenu extends AbstractContainerMenu {
         return !physicalScreen.isRemoved() && physicalScreen.hasKeyboard(player);
     }
 
-    private TerminalScreenSnapshot currentScreenSnapshot() {
+    protected TerminalScreenSnapshot currentScreenSnapshot() {
+        if (itemScreen() != null) {
+            return itemScreen().terminalSnapshot();
+        }
         if (terminalServer != null) {
             return terminalServer.screenSnapshot();
         }

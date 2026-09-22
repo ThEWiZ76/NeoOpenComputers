@@ -23,6 +23,38 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class RobotBlockEntityComponentTest {
     @Test
+    void internalScreenWiresKeyboardAndGpuRegardlessOfInstallationOrder() throws Exception {
+        li.cil.oc.common.OpenComputersApi.initialize();
+        for (final boolean screenFirst : new boolean[]{true, false}) {
+            final RobotBlockEntity robot = allocateRobot();
+            final var machine = li.cil.oc.api.Machine.create(null);
+            setField(robot, "machine", machine);
+            setField(robot, "componentSlots", new java.util.HashMap<String, Integer>());
+            final ScreenItemEnvironment screen = new ScreenItemEnvironment(null, 0);
+            final var keyboard = new li.cil.oc.common.component.KeyboardItemEnvironment();
+            final var gpu = new li.cil.oc.common.component.GraphicsCardEnvironment(0);
+            li.cil.oc.api.Network.joinNewNetwork(machine.node());
+            final Node[] nodes = screenFirst
+                ? new Node[]{screen.node(), keyboard.node(), gpu.node()}
+                : new Node[]{gpu.node(), keyboard.node(), screen.node()};
+            for (final Node node : nodes) {
+                machine.node().connect(node);
+                robot.onMachineConnect(node);
+            }
+            assertEquals(screen, robot.terminalScreen());
+            assertTrue(robot.hasScreenHardware());
+            assertTrue(screen.hasKeyboard());
+            assertTrue(screen.node().isNeighborOf(keyboard.node()));
+            assertTrue(screen.node().isNeighborOf(gpu.node()));
+            screen.node().remove();
+            assertFalse(robot.hasScreenHardware(), "GPU alone is not a screen");
+            machine.node().remove();
+            keyboard.node().remove();
+            gpu.node().remove();
+        }
+    }
+
+    @Test
     void robotComponentCallbacksAreExposed() throws NoSuchMethodException {
         assertCallback("name");
         assertCallback("getLightColor");

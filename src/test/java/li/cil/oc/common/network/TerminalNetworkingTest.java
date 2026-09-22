@@ -16,6 +16,64 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class TerminalNetworkingTest {
     @Test
+    void routesItemScreenInputThroughRealKeyboardAndRejectsInvalidMenuOrMouseTier() throws Exception {
+        li.cil.oc.common.OpenComputersApi.initialize();
+        final var screen = new li.cil.oc.common.blockentity.ScreenItemEnvironment(null, 1);
+        final var keyboard = new li.cil.oc.common.component.KeyboardItemEnvironment();
+        final InputSink sink = new InputSink();
+        li.cil.oc.api.Network.joinNewNetwork(screen.node());
+        screen.node().connect(keyboard.node());
+        screen.node().connect(sink.node());
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final ItemScreenMenu menu = (ItemScreenMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(ItemScreenMenu.class);
+        menu.screen = screen;
+        menu.allowed = true;
+        menu.mouse = true;
+        TerminalNetworking.applyTerminalKey(menu, new TerminalKeyPayload(0, true, 'a', 30), null);
+        TerminalNetworking.applyTerminalKey(menu, new TerminalKeyPayload(0, false, 'a', 30), null);
+        TerminalNetworking.applyTerminalClipboard(menu, new TerminalClipboardPayload(0, "paste"), null);
+        TerminalNetworking.applyTerminalMouse(menu, new TerminalMousePayload(0, TerminalMousePayload.MOUSE_DOWN, 1, 2, 0), null);
+        assertEquals(java.util.List.of("key_down", "key_up", "clipboard", "touch"), sink.signals);
+        menu.allowed = false;
+        TerminalNetworking.applyTerminalKey(menu, new TerminalKeyPayload(0, true, 'b', 48), null);
+        TerminalNetworking.applyTerminalClipboard(menu, new TerminalClipboardPayload(0, "blocked"), null);
+        menu.allowed = true;
+        TerminalNetworking.applyTerminalKey(menu, new TerminalKeyPayload(1, true, 'b', 48), null);
+        menu.mouse = false;
+        TerminalNetworking.applyTerminalMouse(menu, new TerminalMousePayload(0, TerminalMousePayload.MOUSE_DOWN, 1, 2, 0), null);
+        menu.mouse = true;
+        TerminalNetworking.applyTerminalMouse(menu, new TerminalMousePayload(0, TerminalMousePayload.MOUSE_DOWN, 999, 2, 0), null);
+        assertEquals(4, sink.signals.size());
+        screen.node().remove();
+        keyboard.node().remove();
+        sink.node().remove();
+    }
+
+    private static final class ItemScreenMenu extends TerminalMenu {
+        private li.cil.oc.common.blockentity.ScreenItemEnvironment screen;
+        private boolean allowed;
+        private boolean mouse;
+
+        private ItemScreenMenu() { super(null, 0, null); }
+        @Override public li.cil.oc.common.blockentity.ScreenItemEnvironment itemScreen() { return screen; }
+        @Override public boolean acceptsInput(final net.minecraft.world.entity.player.Player player) { return allowed; }
+        @Override public boolean supportsMouseInput() { return mouse; }
+    }
+
+    private static final class InputSink extends li.cil.oc.api.prefab.AbstractManagedEnvironment {
+        private final java.util.List<String> signals = new java.util.ArrayList<>();
+        private InputSink() {
+            setNode(li.cil.oc.api.Network.newNode(this, li.cil.oc.api.network.Visibility.Network).create());
+        }
+        @Override public void onMessage(final li.cil.oc.api.network.Message message) {
+            if (message.name().equals("computer.checked_signal")) {
+                signals.add(String.valueOf(message.data()[1]));
+            }
+        }
+    }
+
+    @Test
     void appliesSnapshotPayloadToMatchingTerminalMenu() throws ReflectiveOperationException {
         final TerminalMenu menu = allocateMenu(3, new TerminalScreenSnapshot(1, 1, new String[]{"old"}));
         final TerminalScreenSnapshotPayload payload = new TerminalScreenSnapshotPayload(

@@ -12,6 +12,7 @@ import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.TabletItem;
+import li.cil.oc.common.menu.TerminalMenu;
 import li.cil.oc.common.network.DebugClipboardState;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.Minecraft;
@@ -105,7 +106,7 @@ public final class NeoOpenComputersClient {
         event.register(ModMenus.ROBOT.get(), RobotScreen::new);
         event.register(ModMenus.SERVER_RACK.get(), ServerRackScreen::new);
         event.register(ModMenus.RELAY.get(), RelayScreen::new);
-        event.register(ModMenus.TERMINAL.get(), TerminalScreen::new);
+        event.<TerminalMenu, TerminalScreen<TerminalMenu>>register(ModMenus.TERMINAL.get(), TerminalScreen::new);
         event.register(ModMenus.WAYPOINT.get(), WaypointScreen::new);
     }
 

@@ -5,12 +5,12 @@ Dit is een startregister van onderzochte verschillen, geen claim dat iedere call
 
 | Onderdeel | Bron / huidige toestand | Werk en bewijs voor acceptatie |
 | --- | --- | --- |
-| Terminal GUI | `java/li/cil/oc/client/TerminalFont.java`: per-pixel flush bevestigd | Batch pixelgeometrie; vergelijk live FPS, ASCII, box drawing, brede Unicode, kleuren, input en schalen. Zie `TERMINAL_GUI_PERFORMANCE.md`. |
-| Microcontroller-titel | `client/MicrocontrollerScreen.java` gebruikt ontbrekende taalsleutel | Engelse fallback toevoegen; GUI en taalresources controleren. |
-| Computerfouten | `common/blockentity/ComputerCaseBlockEntity.java`: runtimekey wordt letterlijk getoond | Bekende fouten vertalen, vrije Lua-fouttekst behouden; geen energie/CPU en bootfailure live testen. |
+| Terminal GUI | Glyph- en achtergrondbatches ingevoerd; volle 160x50 uitvoer en kleuren 60 FPS | ASCII, box drawing, Unicode, kleuren, input en wereldbeeld getest; lagere tiers/schalen/minimale modset nog open. Zie `TERMINAL_GUI_PERFORMANCE.md`. |
+| Microcontroller-titel | Titel hersteld in b3791190 | Unit-test en live GUI bevestigd. |
+| Computerfouten | Case NoEnergy/NoCPU vertaald; vrije Lua-fouttekst behouden | Unit-tests groen; NoEnergy live bevestigd. Overige hosts en bootfouten blijven open. |
 | Slots en tiers | Case-watermarks visueel afwijkend; bloktints deels live gecontroleerd | Oorzaak eerst bewijzen; lege/volle slots, alle item-/bloktints, rotaties, licht en GUI-schalen controleren. |
-| Robotterminal | `client/RobotScreen.java` tekent leeg vlak; menu heeft geen gedeelde terminalflow | Snapshot/input aansluiten, schermloze layout; assembler → boot → typen → rijden → reload. |
-| Robot OpenOS-ROM | Upstream `resources/assets/opencomputers/lua/component/robot/`; port mist deze component-ROM | ROM, mount en lifecycle porten; `require("robot")`, `go`, world actions en reload testen. Plan9k's robotlibrary is geen vervanger. |
+| Robotterminal | Gedeelde snapshot/delta/input ingevoerd; live beeld, typen, touch en inventory transfer getest | Zie ROBOT_TERMINAL_PORT.md. Schermloze layout, beweging/menu, clipboard/drag/scroll en volledige live assemblage/OpenOS/reload blijven open. |
+| Robot OpenOS-ROM | Originele robot-ROM hersteld in fedefc2f5 | Echte assembler/OpenOS GameTest bevestigt automatische mount, require(robot) en go left 1; readonly/adres/save/load/unload getest. Overige wereldacties en live persistence blijven open. |
 | Lua hervatten | `common/machine/LuaArchitecture.java`: geen heap/coroutine-save | Runtimekeuze en werkelijke persistence; sentinel, coroutine, timer, open bestand en proxy na chunk unload/herstart. |
 | Lua geheugen | `LuaArchitecture` rapporteert `freeMemory` als helft van geïnstalleerd geheugen | Meting en limieten vergelijken; RAM-uitbreiding, allocatie/GC en OOM afvangen. Afwezigheid van alle limieten is nog niet bewezen. |
 | Lua architecturen | Upstream `server/machine/LuaStateFactory.scala`; port registreert LuaJ | Versie-/architectuurkeuze, semantiek en packaging uitwerken met persistence; bestaande Lua-programma's testen. |

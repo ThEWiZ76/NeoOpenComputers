@@ -17,15 +17,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
+public class TerminalScreen<M extends TerminalMenu> extends AbstractContainerScreen<M> {
     private static final int DEFAULT_IMAGE_WIDTH = 248;
     private static final int DEFAULT_IMAGE_HEIGHT = 166;
     private static final int LINE_HEIGHT = TerminalFont.cellHeight();
     private static final int CELL_WIDTH = TerminalFont.cellWidth();
-    private static final int TEXT_LEFT = 12;
-    private static final int TEXT_TOP = 22;
-    private static final int TEXT_RIGHT_MARGIN = 12;
-    private static final int TEXT_BOTTOM_MARGIN = 12;
+    protected static final int TEXT_LEFT = 12;
+    protected static final int TEXT_TOP = 22;
+    protected static final int TEXT_RIGHT_MARGIN = 12;
+    protected static final int TEXT_BOTTOM_MARGIN = 12;
     private static final int CLIPBOARD_CHUNK_SIZE = 16 * 1024;
     private static final int CLIPBOARD_MAX_LENGTH = 64 * 1024;
     private final Map<Integer, Character> pressedKeys = new HashMap<>();
@@ -37,7 +37,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     record TextCell(int column, String text, int color) {
     }
 
-    public TerminalScreen(final TerminalMenu menu, final Inventory playerInventory, final Component title) {
+    public TerminalScreen(final M menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
         imageWidth = imageWidth(menu.snapshot());
         imageHeight = imageHeight(menu.snapshot());
@@ -53,6 +53,22 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         final int top = topPos;
         guiGraphics.fill(left, top, left + imageWidth, top + imageHeight, 0xFF101820);
         guiGraphics.fill(left + 8, top + 18, left + imageWidth - 8, top + imageHeight - 8, 0xFF05080C);
+        renderTerminalContents(guiGraphics);
+    }
+
+    protected record TerminalFrame(int left, int top, int width, int height) {
+    }
+
+    protected TerminalFrame terminalFrame() {
+        return new TerminalFrame(leftPos, topPos, imageWidth, imageHeight);
+    }
+
+    protected final void renderTerminalContents(final GuiGraphics guiGraphics) {
+        final TerminalFrame frame = terminalFrame();
+        final int left = frame.left();
+        final int top = frame.top();
+        final int imageWidth = frame.width();
+        final int imageHeight = frame.height();
         final Component status = statusLabel(menu.snapshot());
         if (status != null) {
             guiGraphics.drawString(font, status, left + TEXT_LEFT, top + TEXT_TOP, 0xFF6F7F8F, false);
@@ -60,7 +76,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         }
         final TerminalScreenSnapshot snapshot = menu.snapshot();
         final double scale = terminalScale(snapshot, imageWidth, imageHeight);
-        guiGraphics.drawManaged(() -> renderCellBackgrounds(guiGraphics, snapshot, left, top, scale));
+        guiGraphics.drawManaged(() -> renderCellBackgrounds(guiGraphics, snapshot, frame, scale));
         guiGraphics.enableScissor(left + TEXT_LEFT, top + TEXT_TOP, left + imageWidth - TEXT_RIGHT_MARGIN, top + imageHeight - TEXT_BOTTOM_MARGIN);
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(left + TEXT_LEFT, top + TEXT_TOP, 0);
@@ -153,24 +169,24 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     @Override
     public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
-        if (super.mouseClicked(mouseX, mouseY, button)) {
-            return true;
-        }
-        if (shouldPasteClipboardForMouseButton(button) && minecraft != null) {
+        if (shouldPasteClipboardForMouseButton(button) && minecraft != null
+            && terminalContains(menu.snapshot(), terminalFrame(), mouseX, mouseY)) {
             sendClipboardInput(minecraft.keyboardHandler.getClipboard());
             return true;
         }
-        if (!shouldForwardTerminalMouseButton(button)) {
-            return false;
+        if (shouldForwardTerminalMouseButton(button)) {
+            didMouseClick = sendMouseInput(TerminalMousePayload.MOUSE_DOWN, mouseX, mouseY, button);
+            if (didMouseClick) {
+                return true;
+            }
         }
-        didMouseClick = sendMouseInput(TerminalMousePayload.MOUSE_DOWN, mouseX, mouseY, button);
-        return didMouseClick;
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseDragged(final double mouseX, final double mouseY, final int button, final double dragX, final double dragY) {
         if (!didMouseClick || !shouldForwardTerminalMouseButton(button)) {
-            return false;
+            return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
         return sendMouseInput(TerminalMousePayload.MOUSE_DRAG, mouseX, mouseY, button);
     }
@@ -179,7 +195,7 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     public boolean mouseReleased(final double mouseX, final double mouseY, final int button) {
         try {
             if (!didMouseClick || !shouldForwardTerminalMouseButton(button)) {
-                return false;
+                return super.mouseReleased(mouseX, mouseY, button);
             }
             return sendMouseInput(TerminalMousePayload.MOUSE_UP, mouseX, mouseY, button);
         } finally {
@@ -275,6 +291,16 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
 
     static boolean shouldPasteClipboardForMouseButton(final int button) {
         return button == 2;
+    }
+
+    static boolean terminalContains(final TerminalScreenSnapshot snapshot, final TerminalFrame frame, final double mouseX, final double mouseY) {
+        if (!acceptsInput(snapshot)) {
+            return false;
+        }
+        final double scale = terminalScale(snapshot, frame.width(), frame.height());
+        final double x = mouseX - frame.left() - TEXT_LEFT;
+        final double y = mouseY - frame.top() - TEXT_TOP;
+        return x >= 0 && y >= 0 && x < snapshot.width() * CELL_WIDTH * scale && y < snapshot.height() * LINE_HEIGHT * scale;
     }
 
     static boolean shouldForwardTerminalMouseButton(final int button) {
@@ -485,7 +511,8 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
     }
 
     private boolean sendMouseInput(final int kind, final double mouseX, final double mouseY, final int buttonOrDelta) {
-        final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, leftPos, topPos, menu.snapshot(), imageWidth, imageHeight);
+        final TerminalFrame frame = terminalFrame();
+        final TerminalMousePayload payload = mousePayload(menu, kind, mouseX, mouseY, buttonOrDelta, frame.left(), frame.top(), menu.snapshot(), frame.width(), frame.height());
         if (payload != null) {
             PacketDistributor.sendToServer(payload);
             return true;
@@ -493,9 +520,11 @@ public class TerminalScreen extends AbstractContainerScreen<TerminalMenu> {
         return false;
     }
 
-    private void renderCellBackgrounds(final GuiGraphics guiGraphics, final TerminalScreenSnapshot snapshot, final int left, final int top, final double scale) {
-        final int rows = visibleRows(snapshot, imageHeight);
-        final int columns = visibleColumns(snapshot, imageWidth);
+    private void renderCellBackgrounds(final GuiGraphics guiGraphics, final TerminalScreenSnapshot snapshot, final TerminalFrame frame, final double scale) {
+        final int left = frame.left();
+        final int top = frame.top();
+        final int rows = visibleRows(snapshot, frame.height());
+        final int columns = visibleColumns(snapshot, frame.width());
         for (int row = 0; row < rows; row++) {
             final int y = top + TEXT_TOP + (int) Math.floor(row * LINE_HEIGHT * scale);
             final int nextY = top + TEXT_TOP + (int) Math.ceil((row + 1) * LINE_HEIGHT * scale);

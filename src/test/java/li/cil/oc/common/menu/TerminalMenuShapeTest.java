@@ -20,6 +20,37 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class TerminalMenuShapeTest {
     @Test
+    void itemScreenSendsInitialSnapshotThenDeltaAndClearsRemovedScreen() throws Exception {
+        li.cil.oc.common.OpenComputersApi.initialize();
+        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        final ItemScreenMenu menu = (ItemScreenMenu) ((Unsafe) unsafeField.get(null)).allocateInstance(ItemScreenMenu.class);
+        menu.screen = new li.cil.oc.common.blockentity.ScreenItemEnvironment(null, 0);
+        menu.screen.setResolution(3, 1);
+        menu.screen.setViewport(3, 1);
+        menu.updateSnapshot(new TerminalScreenSnapshot(0, 0, new String[0]));
+        menu.screen.set(0, 0, "one", false);
+        assertTrue(menu.changedScreenPayload() instanceof TerminalScreenSnapshotPayload);
+        assertEquals("one", menu.snapshot().line(0));
+        assertEquals(null, menu.changedScreenPayload());
+        menu.screen.set(0, 0, "two", false);
+        assertTrue(menu.changedScreenPayload() instanceof li.cil.oc.common.network.TerminalScreenDeltaPayload);
+        assertEquals("two", menu.snapshot().line(0));
+        menu.screen = null;
+        assertTrue(menu.changedScreenPayload() instanceof TerminalScreenSnapshotPayload);
+        assertEquals(0, menu.snapshot().width());
+    }
+
+    private static final class ItemScreenMenu extends TerminalMenu {
+        private li.cil.oc.common.blockentity.ScreenItemEnvironment screen;
+        private ItemScreenMenu() { super(null, 0, null); }
+        @Override public li.cil.oc.common.blockentity.ScreenItemEnvironment itemScreen() { return screen; }
+        @Override protected TerminalScreenSnapshot currentScreenSnapshot() {
+            return screen == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : super.currentScreenSnapshot();
+        }
+    }
+
+    @Test
     void terminalMenuHasClientConstructor() throws NoSuchMethodException {
         final Constructor<TerminalMenu> clientConstructor = TerminalMenu.class.getConstructor(int.class, Inventory.class);
         final Constructor<TerminalMenu> serverConstructor = TerminalMenu.class.getConstructor(int.class, Inventory.class, TerminalScreenSnapshot.class);

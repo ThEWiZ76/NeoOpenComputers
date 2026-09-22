@@ -3,18 +3,19 @@ package li.cil.oc.common.menu;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
+import li.cil.oc.common.blockentity.ScreenItemEnvironment;
+import li.cil.oc.common.component.TerminalScreenSnapshot;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class RobotMenu extends AbstractContainerMenu {
+public class RobotMenu extends TerminalMenu {
     public static final int MIN_ROBOT_SLOT_COUNT = RobotBlockEntity.mutableSlotCount();
     public static final int MAX_ROBOT_SLOT_COUNT = RobotBlockEntity.mutableSlotCount();
     public static final int PLAYER_SLOT_COUNT = 36;
@@ -63,7 +64,7 @@ public class RobotMenu extends AbstractContainerMenu {
     }
 
     public RobotMenu(final int containerId, final Inventory playerInventory, final Container robotInventory, final ContainerData robotData) {
-        super(ModMenus.ROBOT.get(), containerId);
+        super(ModMenus.ROBOT.get(), containerId, playerInventory);
         checkContainerSize(robotInventory, MIN_ROBOT_SLOT_COUNT);
         this.robotInventory = robotInventory;
         this.robotData = robotData;
@@ -132,6 +133,30 @@ public class RobotMenu extends AbstractContainerMenu {
 
     public Container robotInventory() {
         return robotInventory;
+    }
+
+    @Override
+    public ScreenItemEnvironment itemScreen() {
+        return robotInventory instanceof RobotBlockEntity robot ? robot.terminalScreen() : null;
+    }
+
+    @Override
+    public boolean supportsMouseInput() {
+        return robotInventory instanceof RobotBlockEntity
+            ? itemScreen() != null && itemScreen().tier() > 0
+            : super.supportsMouseInput();
+    }
+
+    @Override
+    public boolean acceptsInput(final Player player) {
+        return stillValid(player) && robotInventory instanceof RobotBlockEntity robot
+            && itemScreen() != null && itemScreen().hasKeyboard()
+            && player != null && robot.machine().canInteract(player.getGameProfile().getName());
+    }
+
+    @Override
+    protected TerminalScreenSnapshot currentScreenSnapshot() {
+        return itemScreen() == null ? new TerminalScreenSnapshot(0, 0, new String[0]) : itemScreen().terminalSnapshot();
     }
 
     @Override

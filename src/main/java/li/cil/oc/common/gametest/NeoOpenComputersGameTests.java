@@ -4900,7 +4900,7 @@ public final class NeoOpenComputersGameTests {
         final RobotBlockEntity robot = placeRobotStack(helper, output, new BlockPos(3, 1, 1));
 
         helper.assertTrue(RobotMenu.missingRequirementsFor(robot) == 0, "Placed robot did not load assembled CPU, memory, and EEPROM");
-        helper.assertTrue(robot.hasScreenHardware(), "Placed robot did not report assembled graphics hardware");
+        helper.assertFalse(robot.hasScreenHardware(), "GPU-only robot incorrectly reported an installed screen");
         helper.assertFalse(robot.canPlaceItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(ModItems.CPU_TIER1.get())), "Robot allowed direct CPU insertion into runtime inventory");
         helper.succeed();
     }
@@ -11597,6 +11597,42 @@ public final class NeoOpenComputersGameTests {
             helper.fail("Failed to prepare bootable hard disk: " + e.getMessage());
         }
         return stack;
+    }
+
+    @GameTest(template = "empty")
+    public static void robotTerminalRequiresInstalledScreenKeyboardNearbyAuthorizedPlayer(final GameTestHelper helper) throws Exception {
+        final ItemStack assembled = assembleRobot(helper, new BlockPos(1, 1, 1),
+            new ItemStack(ModItems.COMPUTER_CASE_TIER1.get()), List.of(),
+            List.of(new ItemStack(ModItems.SCREEN_TIER1.get()), new ItemStack(ModItems.KEYBOARD.get())),
+            List.of(new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()), new ItemStack(ModItems.CPU_TIER1.get()),
+                new ItemStack(ModItems.MEMORY_TIER1.get()), luaBiosEepromStack()));
+        final RobotBlockEntity robot = placeRobotStack(helper, assembled, new BlockPos(3, 1, 1));
+        robot.onLoad();
+        final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.moveTo(robot.xPosition(), robot.yPosition(), robot.zPosition());
+        final RobotMenu menu = new RobotMenu(91, player.getInventory(), robot);
+        helper.assertTrue(menu.itemScreen() != null && menu.itemScreen().hasKeyboard(), "Assembled robot has no connected screen and keyboard");
+        helper.assertTrue(menu.stillValid(player) && menu.acceptsInput(player), "Nearby player cannot use robot terminal");
+        helper.assertFalse(menu.supportsMouseInput(), "Tier one screen accepted mouse input");
+        robot.machine().addUser("other-owner");
+        helper.assertFalse(menu.acceptsInput(player), "Robot accepted input from a non-owner");
+        robot.machine().removeUser("other-owner");
+        helper.assertTrue(menu.acceptsInput(player), "Unowned robot did not allow input again");
+        player.moveTo(robot.xPosition() + 9, robot.yPosition(), robot.zPosition());
+        helper.assertFalse(menu.stillValid(player) || menu.acceptsInput(player), "Distant player can still use robot");
+        player.moveTo(robot.xPosition(), robot.yPosition(), robot.zPosition());
+        final List<Node> neighbors = new ArrayList<>();
+        menu.itemScreen().node().neighbors().forEach(neighbors::add);
+        for (final Node node : neighbors) {
+            if (node.host() instanceof li.cil.oc.api.internal.Keyboard) {
+                node.remove();
+            }
+        }
+        helper.assertTrue(menu.stillValid(player), "Missing keyboard unexpectedly blocks robot inventory");
+        helper.assertFalse(menu.acceptsInput(player), "Robot without keyboard accepted terminal input");
+        robot.setRemoved();
+        helper.assertFalse(menu.stillValid(player), "Removed robot left its menu valid");
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 2200)

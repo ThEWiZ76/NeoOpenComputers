@@ -20,6 +20,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class ScreenItemEnvironmentTest {
     @Test
+    void terminalSnapshotUsesViewportAndPreservesUnicodeAndColors() {
+        OpenComputersApi.initialize();
+        final ScreenItemEnvironment screen = new ScreenItemEnvironment(null, 2);
+        screen.setResolution(5, 3);
+        screen.setViewport(3, 2);
+        screen.setForegroundColor(0x33AAFF);
+        screen.setBackgroundColor(0x112233);
+        screen.set(0, 0, "AéZ", false);
+        final var snapshot = screen.terminalSnapshot();
+        assertEquals(3, snapshot.width());
+        assertEquals(2, snapshot.height());
+        assertEquals("AéZ", snapshot.line(0));
+        assertEquals(screen.getForegroundColor(1, 0), snapshot.foregroundColor(1, 0));
+        assertEquals(screen.getBackgroundColor(1, 0), snapshot.backgroundColor(1, 0));
+        screen.set(0, 0, "B", false);
+        assertEquals("AéZ", snapshot.line(0));
+    }
+
+    @Test
     void usesConfiguredScreenResolutionTiers() throws Exception {
         OpenComputersApi.initialize();
 

@@ -14,6 +14,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.ScreenEnvironment;
 import li.cil.oc.common.component.ScreenInputDispatcher;
+import li.cil.oc.common.component.TerminalScreenSnapshot;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
@@ -69,6 +70,33 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
     @Override
     public int tier() {
         return tier;
+    }
+
+    public TerminalScreenSnapshot terminalSnapshot() {
+        final String[] lines = new String[viewportHeight];
+        final int[][] foreground = new int[viewportHeight][viewportWidth];
+        final int[][] background = new int[viewportHeight][viewportWidth];
+        for (int row = 0; row < viewportHeight; row++) {
+            final StringBuilder line = new StringBuilder(viewportWidth);
+            for (int column = 0; column < viewportWidth; column++) {
+                line.appendCodePoint(getCodePoint(column, row));
+                foreground[row][column] = getForegroundColor(column, row);
+                background[row][column] = getBackgroundColor(column, row);
+            }
+            lines[row] = line.toString();
+        }
+        return new TerminalScreenSnapshot(viewportWidth, viewportHeight, lines, foreground, background);
+    }
+
+    public boolean hasKeyboard() {
+        if (node() != null) {
+            for (final Node neighbor : node().neighbors()) {
+                if (neighbor.host() instanceof Keyboard) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override

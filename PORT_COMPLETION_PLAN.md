@@ -174,8 +174,8 @@ Per scenario bewaren: commit/JAR-hash, profiel/modversies, wereld/seed/posities,
 | Baseline-audit | Gereed: 2040 tests, 440 GameTests; zie `PORT_AUDIT_2026-09-22.md` |
 | Volledige pariteitsmatrix | In uitvoering |
 | Terminal-GUI-performance | OpenOS, volle 160×50 uitvoer en gekleurde achtergronden nu 60 FPS; lagere tiers/schalen/minimale modset nog open |
-| UI-vertalingen/foutfeedback | Gepland in eerste uitvoeringsronde |
-| Robotterminal/layout | Open |
+| UI-vertalingen/foutfeedback | Microcontroller-titel en case NoEnergy/NoCPU hersteld; overige hosts open |
+| Robotterminal/layout | Beeld/input/snapshot-sync getest; compacte layout, beweging en volledige live OpenOS-flow open |
 | Lua execution persistence | Open, architectuurwerk noodzakelijk |
 | Capacitors/netwerk/energie | Open |
 | Alle overige functionele/visuele/integratie-scenario's | Te verifiëren; bestaande tests niet als volledige pariteit tellen |
@@ -188,7 +188,7 @@ Startregister: `PORT_PARITY_MATRIX.md`. Aanvullende bronvergelijking vond onder 
 
 Eerste runtimewijziging: GUI-pixels bundelen en glyphlookup eenmaal per letter uitvoeren. Build + 2041 tests + 440 GameTests groen; OpenOS-boot, invoer, Unicode en blokweergave ingame gecontroleerd. Zie `TERMINAL_GUI_PERFORMANCE.md` voor reproduceerbare opstelling, hashes, profileresultaten, screenshots en beperkingen. Tijdelijke testopstelling verwijderd en lege ruimte teruggelezen; client netjes afgesloten.
 
-Eerstvolgend: volle terminal/achtergrondbelasting verder profileren, vervolgens fase 1B (titel/foutfeedback) en fase 1C (robotterminal), naast het verder invullen van de volledige pariteitsmatrix. UI-vertalingen en robot/runtime-persistentie zijn nog niet geïmplementeerd in deze uitvoeringsronde. Lange invoerbursts apart onderzoeken; korte ingame commando's werkten.
+De bovenstaande eerste ronde is inmiddels opgevolgd door de resultaten hieronder. Runtime-persistentie en brede pariteitsdekking blijven open. Lange invoerbursts apart onderzoeken; korte ingame commando's werkten.
 
 ### Doorlopende uitvoering — titel en foutfeedback
 
@@ -197,3 +197,9 @@ Microcontroller-titel hersteld. Computer-case NoEnergy/NoCPU gebruiken nu vertaa
 Robot-ROM hersteld in `fedefc2f5`: vier originele upstream Lua-bestanden, filesystem-mount en behoud/opruiming van het ROM-adres. Echte OpenOS-boottest via assembler en HDD bewijst automatische autorun, `require("robot")` en `go left 1` met fysieke draaiing. Lifecycle-GameTest bewijst readonly, discovery en save/load/unload. De robot-GUI is daarmee nog niet klaar.
 
 Terminalglyphs gebruiken nu de bestaande bitmapatlas (`a3b10fda`); rasterfallback voor andere Unicode blijft behouden. Aparte fix bundelt gekleurde achtergrondcellen. Live volle terminal en gekleurde achtergrond nu beide 60 FPS; Unicode/kleuren/input en wereldbeeld opnieuw gecontroleerd. Volledige gates: 2047 unit tests en 442 GameTests. Details en exacte hashes: `TERMINAL_GUI_PERFORMANCE.md`.
+
+### Robotterminal en muisinvoer
+
+RobotMenu deelt nu snapshot/delta-sync met TerminalMenu; interne screen/keyboard/GPU-wiring en toegangs-/afstandcontroles toegevoegd. RobotScreen rendert het scherm en stuurt invoer door. Ingame gevonden: AbstractContainerScreen slikte muisklikken in; terminalklikken nu eerst afhandelen en overige muisacties aan de inventory doorgeven. Live beeld, getypte tekst, touch-coordinaten en inventorytransfer bevestigd; gewone OpenOS-terminal/muis en volle 160x50 rode achtergrond opnieuw getest op 60 FPS. Build: 2052 unit-tests en 443 GameTests groen. Exacte hash, opstelling, screenshots, cleanup en resterende varianten: ROBOT_TERMINAL_PORT.md.
+
+Volgende robotstappen: compacte schermloze layout, menu/uitvoering bij beweging, volledige live assembler/OpenOS-flow en Lua-persistentie. Overige fasen en open matrixrijen blijven staan; deze voortgang is geen volledige portering.
