@@ -167,3 +167,11 @@ DroneEntity previously inherited Entity.isPickable=false, so normal entity ray s
 DroneInteractionGameTests uses ProjectileUtil with the normal pickable/non-spectator predicate, then Player.attack against an actual running drone. It checks selected entity, hit name/direction/argument count, immediate velocity and stopped/removed behavior. Initial run failed normal targeting (drone-hit-red.log). Final build,2106 unit tests and all586 GameTests pass (drone-hit-verified.log).
 
 This proves targeting and attack entry points, not rendered crosshair/client networking or displacement over subsequent ticks. Current DroneEntity.tick still uses simplified target-step movement which overwrites velocity; upstream inertia/gravity/drag and sustained knockback need a separate movement parity pass. Void behavior, dimension targets and visual acceptance also remain open. No client launch/install, push or merge.
+
+## Drone server movement physics - 2026-09-22
+
+DroneEntity.tick now uses the upstream acceleration/inertia model instead of overwriting velocity with a constant target step: add target acceleration to existing velocity, clamp per axis to0.4, move through vanilla collision handling and apply0.8 drag. Close-to-target settling follows upstream thresholds. Stopped drones apply0.05 gravity (honoring modern NoGravity), ground friction and vertical damping/bounce. Physics runs on the server; client position tracking remains the normal entity mechanism.
+
+DroneMovementGameTests manually ticks real drones in fixed conditions: first0.1 movement/0.08 velocity, cumulative0.28 after the second tick with0.144 velocity, retained lateral0.2 motion, stopped0.05 fall/0.04 falling velocity and NoGravity suspension. Before the fix tests failed absent falling and absent drag (drone-movement-red.log). Final build,2106 unit tests and all588 GameTests pass (drone-movement-verified.log), including existing native drone reload, cargo, leash and pickup tests.
+
+This is focused server physics coverage. Water/lava shutdown, void handling, dimension target offsets, long-path/collision convergence, client interpolation/animations and rendered flight acceptance remain open. Upstream also cancels motion at an exactly equal target; no broader knockback claim is made for that case. No client launch/install, push or merge.

@@ -231,18 +231,30 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     @Override
     public void tick() {
         super.tick();
-        if (!level().isClientSide && machine.canUpdate()) {
-            machine.update();
-        }
+        if (level().isClientSide) return;
+        if (machine.canUpdate()) machine.update();
         if (machine.isRunning()) {
             final Vec3 offset = target.subtract(position());
-            if (offset.lengthSqr() > 0.000025D) {
-                final Vec3 step = offset.normalize().scale(Math.min(MAX_VELOCITY, Math.min(acceleration, offset.length())));
-                setDeltaMovement(step);
-                move(net.minecraft.world.entity.MoverType.SELF, step);
+            final double distance = offset.length();
+            if (distance > 0 && (distance > 0.005 || getDeltaMovement().lengthSqr() > 0.005)) {
+                final Vec3 velocity = getDeltaMovement().add(offset.scale(Math.min(acceleration, distance) / distance));
+                setDeltaMovement(Math.clamp(velocity.x, -MAX_VELOCITY, MAX_VELOCITY),
+                    Math.clamp(velocity.y, -MAX_VELOCITY, MAX_VELOCITY), Math.clamp(velocity.z, -MAX_VELOCITY, MAX_VELOCITY));
             } else {
                 setDeltaMovement(Vec3.ZERO);
+                setPos(target);
             }
+        } else if (!isNoGravity()) {
+            setDeltaMovement(getDeltaMovement().add(0, -0.05, 0));
+        }
+        move(net.minecraft.world.entity.MoverType.SELF, getDeltaMovement());
+        if (machine.isRunning()) {
+            setDeltaMovement(getDeltaMovement().scale(0.8));
+        } else {
+            final var ground = blockPosition().below();
+            final double groundDrag = level().getBlockState(ground).getFriction(level(), ground, this) * 0.8;
+            final var velocity = getDeltaMovement();
+            setDeltaMovement(velocity.x * groundDrag, velocity.y * 0.8 * (onGround() ? -0.5 : 1), velocity.z * groundDrag);
         }
     }
 
