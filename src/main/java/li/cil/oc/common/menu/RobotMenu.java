@@ -47,6 +47,10 @@ public class RobotMenu extends TerminalMenu {
         {170, 210}, {188, 210}, {206, 210}, {224, 210}
     };
 
+    // Assembled containers cannot be changed through the running robot inventory.
+    private final RobotBlockEntity.RuntimeSlot[] runtimeSlots = {
+        RobotBlockEntity.RuntimeSlot.NONE, RobotBlockEntity.RuntimeSlot.NONE, RobotBlockEntity.RuntimeSlot.NONE
+    };
     private final Container robotInventory;
     private final ContainerData robotData;
     private final int robotSlotCount;
@@ -58,6 +62,11 @@ public class RobotMenu extends TerminalMenu {
 
     public RobotMenu(final int containerId, final Inventory playerInventory, final RegistryFriendlyByteBuf extraData) {
         this(containerId, playerInventory, new SimpleContainer(MAX_ROBOT_SLOT_COUNT), clientRobotData(extraData));
+        if (extraData != null) {
+            for (int i = 0; i < runtimeSlots.length; i++) {
+                runtimeSlots[i] = new RobotBlockEntity.RuntimeSlot(extraData.readUtf(), extraData.readVarInt());
+            }
+        }
     }
 
     public RobotMenu(final int containerId, final Inventory playerInventory, final RobotBlockEntity robot) {
@@ -99,6 +108,20 @@ public class RobotMenu extends TerminalMenu {
 
     public static int robotSlotTierLimit(final int tier, final int slot) {
         return RobotBlockEntity.mutableSlotTier(slot);
+    }
+
+    private RobotBlockEntity.RuntimeSlot runtimeSlot(final int slot) {
+        return robotInventory instanceof RobotBlockEntity robot ? robot.runtimeSlot(slot) : runtimeSlots[slot - 1];
+    }
+
+    public String robotSlotKind(final int slot) {
+        return slot > RobotBlockEntity.TOOL_SLOT && slot < RobotBlockEntity.CARGO_SLOT_START
+            ? runtimeSlot(slot).kind() : robotSlotKind(robotTier(), slot);
+    }
+
+    public int robotSlotTierLimit(final int slot) {
+        return slot > RobotBlockEntity.TOOL_SLOT && slot < RobotBlockEntity.CARGO_SLOT_START
+            ? runtimeSlot(slot).tier() : robotSlotTierLimit(robotTier(), slot);
     }
 
     public int robotTier() {
@@ -297,14 +320,16 @@ public class RobotMenu extends TerminalMenu {
         }
     }
 
-    static final class RobotSlot extends Slot {
+    final class RobotSlot extends Slot {
         RobotSlot(final Container container, final int slot, final int x, final int y) {
             super(container, slot, x, y);
         }
 
         @Override
         public boolean mayPlace(final ItemStack stack) {
-            return container.canPlaceItem(getSlotIndex(), stack);
+            return container.canPlaceItem(getSlotIndex(), stack)
+                && (getSlotIndex() <= RobotBlockEntity.TOOL_SLOT || getSlotIndex() >= RobotBlockEntity.CARGO_SLOT_START
+                    || runtimeSlot(getSlotIndex()).accepts(stack));
         }
 
         @Override

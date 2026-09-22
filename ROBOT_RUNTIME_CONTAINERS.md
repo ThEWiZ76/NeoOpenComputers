@@ -47,3 +47,16 @@ Runtime environment persistence now passes the driver's existing data tag to env
 Real robot test installs one assembled tank plus one runtime tank, verifies tank count/order and removal, fills exactly1000mB water, removes/reinserts with exact content preserved, drains all1000mB, then removes/reinserts again expecting zero. robot-runtime-tank-red.log reproduced missing runtime tank access. Existing modem hot-swap/reload tests also cover the changed runtime save path.
 
 Verification: robot-runtime-tank-final.log full test/build/GameTest success; 2059 unit tests zero failures/errors and all 498 required GameTests. Artifact SHA256 578200B62F1770E60138AF76C9342E4E4A19740ECE36AA6AF227AB35359D918D. git diff --check clean. Not installed/live-tested; client remains closed.
+
+
+## 2026-09-22 client container metadata
+
+Robot menu opening data now includes the three assembled container type strings and full VarInt tiers. These containers are fixed during normal robot use, so metadata is sent when opening; runtime contents continue using vanilla slot synchronization. Arbitrary driver slot names and Integer.MAX_VALUE tiers are preserved without short truncation. No assembled inventory contents are exposed.
+
+RobotBlockEntity.RuntimeSlot shares the existing acceptance rules with the client menu. RobotScreen uses per-instance descriptors for overlays and tooltips: missing containers use none/-1 (the existing unavailable icon), installed containers use their actual type/tier. Client prediction rejects wrong type/tier and screen/keyboard; server remains authoritative. Existing invalid items remain removable. Live changes to assembled hardware via external commands while a menu is open are not synchronized; reopen the menu after such changes.
+
+The new real-world GameTest serializes the actual opening buffer into a client menu for card/upgrade/missing containers and a floppy container with unlimited tier. It verifies expected metadata, client/server placement parity across seven item types, cargo access, one-item cap, and complete payload consumption.
+
+Verification: robot-client-containers-final.log, full test/build/runGameTestServer success, 2059 unit tests and 500 required GameTests. Artifact SHA256 CA494386F1E59AD80FEA13FF7F0DC2264E630B39B6017C6C65FBCB680CCD7AA3. Not installed or visually tested; Minecraft remains closed pending safe screen3 placement.
+
+Separate observed defect: test-server chunk loading logs Failed to load data for block entity neoopencomputers:rack. ServerRackMountableEnvironment.load:446 invokes ContainerHelper.loadAllItems with a null registry provider while RackBlockEntity.loadAdditional creates mountables before the rack has a level. This survives a green GameTest summary and needs a dedicated reproduction/fix next; no complete-port claim.

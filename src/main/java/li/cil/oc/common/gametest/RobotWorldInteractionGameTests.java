@@ -22,6 +22,53 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
+    @GameTest(template = "empty")
+    public static void robotClientReceivesContainerTypesAndPlacementRules(final GameTestHelper helper) {
+        final RobotBlockEntity robot = robot(helper);
+        robot.setTier(2);
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, java.util.List.of(
+            new ItemStack(li.cil.oc.common.ModItems.CARD_CONTAINER_TIER2.get()),
+            new ItemStack(li.cil.oc.common.ModItems.UPGRADE_CONTAINER_TIER1.get())));
+        verifyClientContainerSlots(helper, robot, new String[]{"card", "upgrade", "none"}, new int[]{1, 0, -1});
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, java.util.List.of(
+            new ItemStack(li.cil.oc.common.ModItems.DISK_DRIVE.get())));
+        verifyClientContainerSlots(helper, robot, new String[]{"floppy", "none", "none"}, new int[]{Integer.MAX_VALUE, -1, -1});
+        helper.succeed();
+    }
+
+    private static void verifyClientContainerSlots(final GameTestHelper helper, final RobotBlockEntity robot,
+                                                   final String[] kinds, final int[] tiers) {
+        final var inventory = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL).getInventory();
+        final var server = new li.cil.oc.common.menu.RobotMenu(92, inventory, robot);
+        final var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), helper.getLevel().registryAccess());
+        try {
+            robot.writeClientSideData(server, buffer);
+            final var client = new li.cil.oc.common.menu.RobotMenu(92, inventory, buffer);
+            helper.assertTrue(!buffer.isReadable(), "Robot opening payload was not fully consumed");
+            final ItemStack[] candidates = {
+                new ItemStack(li.cil.oc.common.ModItems.NETWORK_CARD.get()),
+                new ItemStack(li.cil.oc.common.ModItems.GRAPHICS_CARD_TIER3.get()),
+                new ItemStack(li.cil.oc.common.ModItems.HOVER_UPGRADE_TIER1.get()),
+                new ItemStack(li.cil.oc.common.ModItems.SCREEN_TIER1.get()),
+                new ItemStack(li.cil.oc.common.ModItems.KEYBOARD.get()),
+                new ItemStack(li.cil.oc.common.ModItems.FLOPPY.get()),
+                new ItemStack(Items.DIRT)
+            };
+            for (int slot = 1; slot < 4; slot++) {
+                helper.assertTrue(client.robotSlotKind(slot).equals(kinds[slot - 1]), "Client displayed wrong container type");
+                helper.assertTrue(client.robotSlotTierLimit(slot) == tiers[slot - 1], "Client lost container tier");
+                for (final ItemStack stack : candidates) {
+                    helper.assertTrue(client.getSlot(slot).mayPlace(stack) == robot.canPlaceItem(slot, stack),
+                        "Client/server placement mismatch in slot " + slot + " for " + stack);
+                }
+            }
+            helper.assertTrue(client.getSlot(4).mayPlace(new ItemStack(Items.DIRT)), "Cargo was incorrectly disabled");
+            helper.assertTrue(client.getSlot(1).getMaxStackSize() == 1, "Runtime slot lost single-item limit");
+        } finally {
+            buffer.release();
+        }
+    }
+
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void robotLuaRebootRunsNewEepromAndStopsOldExecution(final GameTestHelper helper) {
         final String code = """

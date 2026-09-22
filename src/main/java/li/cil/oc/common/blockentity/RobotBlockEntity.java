@@ -278,6 +278,11 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     public void writeClientSideData(final AbstractContainerMenu menu, final RegistryFriendlyByteBuf buffer) {
         buffer.writeVarInt(tier);
         buffer.writeBoolean(hasScreenHardware());
+        for (int slot = CONTAINER_RUNTIME_SLOT_START; slot < CARGO_SLOT_START; slot++) {
+            final RuntimeSlot descriptor = runtimeSlot(slot);
+            buffer.writeUtf(descriptor.kind());
+            buffer.writeVarInt(descriptor.tier());
+        }
     }
 
     @Override
@@ -1536,17 +1541,30 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     public boolean canPlaceItem(final int slot, final ItemStack stack) {
         if (!mutableSlotAcceptsStack(tier, slot, stack)) return false;
         if (slot >= CONTAINER_RUNTIME_SLOT_START && slot < CARGO_SLOT_START) {
-            final ItemStack containerStack = hardwareItems.get(slot - CONTAINER_RUNTIME_SLOT_START);
-            final DriverItem containerDriver = Driver.driverFor(containerStack, Robot.class);
-            final DriverItem driver = Driver.driverFor(stack, Robot.class);
-            return containerDriver instanceof li.cil.oc.api.driver.item.Container container
-                && driver != null
-                && !(driver instanceof li.cil.oc.common.driver.ScreenItemDriver)
-                && !(driver instanceof li.cil.oc.common.driver.KeyboardItemDriver)
-                && container.providedSlot(containerStack).equals(driver.slot(stack))
-                && driver.tier(stack) <= container.providedTier(containerStack);
+            return runtimeSlot(slot).accepts(stack);
         }
         return true;
+    }
+
+    public RuntimeSlot runtimeSlot(final int slot) {
+        if (slot < CONTAINER_RUNTIME_SLOT_START || slot >= CARGO_SLOT_START) return RuntimeSlot.NONE;
+        final ItemStack stack = hardwareItems.get(slot - CONTAINER_RUNTIME_SLOT_START);
+        final DriverItem driver = Driver.driverFor(stack, Robot.class);
+        return driver instanceof li.cil.oc.api.driver.item.Container container
+            ? new RuntimeSlot(container.providedSlot(stack), container.providedTier(stack)) : RuntimeSlot.NONE;
+    }
+
+    public record RuntimeSlot(String kind, int tier) {
+        public static final RuntimeSlot NONE = new RuntimeSlot(Slot.None, -1);
+
+        public boolean accepts(final ItemStack stack) {
+            if (stack.isEmpty() || Slot.None.equals(kind)) return false;
+            final DriverItem driver = Driver.driverFor(stack, Robot.class);
+            return driver != null
+                && !(driver instanceof li.cil.oc.common.driver.ScreenItemDriver)
+                && !(driver instanceof li.cil.oc.common.driver.KeyboardItemDriver)
+                && kind.equals(driver.slot(stack)) && driver.tier(stack) <= tier;
+        }
     }
 
     @Override

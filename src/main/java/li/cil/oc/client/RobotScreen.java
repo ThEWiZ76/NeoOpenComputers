@@ -59,8 +59,8 @@ public class RobotScreen extends TerminalScreen<RobotMenu> {
                 controlsTop + RobotMenu.robotSlotY(tier, slot) - 1,
                 left + RobotMenu.robotSlotX(tier, slot),
                 controlsTop + RobotMenu.robotSlotY(tier, slot),
-                RobotMenu.robotSlotKind(tier, slot),
-                RobotMenu.robotSlotTierLimit(tier, slot),
+                menu.robotSlotKind(slot),
+                menu.robotSlotTierLimit(slot),
                 menu.getSlot(slot).hasItem());
         }
         drawStatusControl(guiGraphics, left + STATUS_CONTROL_X, controlsTop + STATUS_CONTROL_Y, menu.robotState(), statusControlAt(mouseX, mouseY, left, controlsTop));
@@ -87,8 +87,8 @@ public class RobotScreen extends TerminalScreen<RobotMenu> {
         final int slot = robotSlotAt(mouseX, mouseY, leftPos, controlsTop, menu.robotTier());
         if (ComputerCaseScreen.shouldRenderSlotOverlayTooltip(slot >= 0, slot >= 0 && menu.getSlot(slot).hasItem())) {
             guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.slotTooltip(
-                RobotMenu.robotSlotKind(menu.robotTier(), slot),
-                RobotMenu.robotSlotTierLimit(menu.robotTier(), slot),
+                menu.robotSlotKind(slot),
+                menu.robotSlotTierLimit(slot),
                 menu.getSlot(slot).hasItem()), mouseX, mouseY);
         } else if (statusControlAt(mouseX, mouseY, leftPos, controlsTop)) {
             guiGraphics.renderComponentTooltip(font, ComputerCaseScreen.statusControlTooltip(menu.robotState()), mouseX, mouseY);
