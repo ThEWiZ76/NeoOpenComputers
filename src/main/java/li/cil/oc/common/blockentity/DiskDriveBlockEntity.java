@@ -312,8 +312,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         ContainerHelper.loadAllItems(tag, items, registries);
-        load(tag);
-        refreshDiskEnvironment();
+        refreshDiskEnvironment(tag);
     }
 
     @Override
@@ -366,16 +365,23 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     private void refreshDiskEnvironment() {
+        refreshDiskEnvironment(null);
+    }
+
+    private void refreshDiskEnvironment(final CompoundTag savedState) {
         if (diskEnvironment != null && diskEnvironment.node() != null) {
             diskEnvironment.node().remove();
         }
         diskEnvironment = null;
         final ItemStack stack = items.get(SLOT_FLOPPY);
         final DriverItem driver = Driver.driverFor(stack);
-        if (driver == null || !acceptsDriverSlot(driver.slot(stack))) {
-            return;
+        if (driver != null && acceptsDriverSlot(driver.slot(stack))) {
+            diskEnvironment = driver.createEnvironment(stack, this);
         }
-        diskEnvironment = driver.createEnvironment(stack, this);
+        // Restore addresses and open files before publishing nodes to the network.
+        if (savedState != null) {
+            load(savedState);
+        }
         connectDiskEnvironment();
     }
 
