@@ -321,3 +321,8 @@ Robot-tankview bevat nu runtime tanks in equipment-volgorde voor vaste hardware.
 ### Herstart vanuit Lua met zelfgeschreven EEPROM
 
 Echte robot herschrijft via Lua zijn EEPROM, bewaart een marker, voert computer.shutdown(true) uit en start de nieuwe code. Oude code mag niet verderlopen of opnieuw starten; vervangende code bevestigt marker en blijft draaien. Test groen zonder aanvullende productiefix bovenop EEPROM-refresh. Full build: 2059 unit-tests en 499 GameTests; eeprom-lua-reboot.log. Zie EEPROM_COLD_BOOT.md. Volledige coroutinepersistence, overige upgradeflows en live verificatie blijven open.
+
+
+## 2026-09-22 robot client container metadata
+
+Opening payload bevat type/tier van alle drie vaste containers, inclusief onbeperkte floppy-tier. Clientplaatsing en schermoverlays volgen dezelfde descriptor als de server; ontbrekende containers tonen unavailable. Echte opening-buffer/clientmenu-test met zeven itemtypes, cargo en stacklimiet. Full test/build groen: 2059 unit-tests, 500 GameTests; robot-client-containers-final.log. Zie ROBOT_RUNTIME_CONTAINERS.md. Live visuele toets blijft open. Nieuwe prioriteit uit logs: rack-laadfout bij ontbrekende registry provider in ServerRackMountableEnvironment.load; green tests dekken dit nog niet.
