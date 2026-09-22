@@ -6,7 +6,7 @@
 
 TabletItem now ticks a server-cached runtime from inventoryTick. A short use/release starts the computer and opens TabletTerminalMenu through the existing TerminalScreen/TerminalNetworking transport. Sneak short-use stops it. Holding a block target for ten ticks then releasing sends analysis through the live component network and queues tablet_use. The null-player analyzeBlock utility retains its existing fixture path; actual player use no longer constructs a temporary analysis VM.
 
-TabletRuntimeRegistry uses per-item UUIDs, rebinds an existing runtime when a carried item object is replaced, separates simultaneously carried copies, expires inactive runtimes after 200 server ticks, and closes on logout/world unload/server stop. World changes take the snapshot handoff path; actual dimension transition acceptance remains open. TabletTerminalMenu checks holder identity, item possession, world, runtime lifetime and machine permissions; keyboard input also requires an attached keyboard.
+TabletRuntimeRegistry uses per-item UUIDs, rebinds an existing runtime when a carried item object is replaced, separates simultaneously carried copies, expires inactive runtimes after 200 server ticks, and closes on logout/world unload/server stop. World changes take the snapshot handoff path; an actual ServerPlayer dimension round trip is covered below. TabletTerminalMenu checks holder identity, item possession, world, runtime lifetime and machine permissions; keyboard input also requires an attached keyboard.
 
 PlayerTabletSaveMixin flushes active tablet state at the head of Player.addAdditionalSaveData, before Inventory NBT is encoded. Local NeoForge/Minecraft sources confirm PlayerList.remove fires PlayerLoggedOutEvent before saving the player. ItemTossEvent rebinds the runtime to the real dropped stack, saves the newest components and stops it. Inventory.split leaves a zero-count source object: isCarried must reject empty stacks even if their object reference remains in a slot. tablet-drop-red.log failed on the retained runtime before this fix.
 
@@ -14,7 +14,7 @@ SimpleMachine.popSignal now applies registered converters when consuming a signa
 
 TabletUseGameTests exercises LuaJ and native short-use/menu creation, real inventory/held-item processing through ServerPlayer.doTick (embedded mock connections do not call it), screen keyboard delivery, current EEPROM data in actual player serialization, native snapshots, long-use sign scans, sneak-stop, logout disposal, replacement-stack rebinding, copy isolation, invalid menus after removal, idle eviction and actual Q-drop preserving data modified after the prior save. The final tablet-use-lifecycle-verified.log passed build, all 2108 unit tests and all 533 GameTests. No client install, push or merge.
 
-Remaining: tier-dependent component editing, actual dimension/server-restart lifecycle coverage and non-menu automation transfers, full tablet OpenOS boot, and live visual/input acceptance on display3. Death/keepInventory respawn coverage is described below. The intermittent rack deadline timeout from the prior step remains a separate open investigation. Do not equate this tested subset with complete tablet or complete port acceptance.
+Remaining: tier-dependent component editing, actual server-restart lifecycle coverage and non-menu automation transfers, full tablet OpenOS boot, and live visual/input acceptance on display3. Death/keepInventory respawn and dimension coverage are described below. The intermittent rack deadline timeout from the prior step remains a separate open investigation. Do not equate this tested subset with complete tablet or complete port acceptance.
 
 ## Container transfers - 2026-09-22
 
@@ -22,7 +22,7 @@ TabletContainerTransferMixin wraps the server-side AbstractContainerMenu.clicked
 
 TabletContainerGameTests uses real ChestMenu clicks and a native EEPROM that writes data after the item was originally assembled. The shift-click and cursor cases first failed with a retained stored VM / lost cursor binding (tablet-container-red.log). Final tests prove same runtime on the cursor, closed old VM in storage, newest component data in chest NBT and a reconstructed chest, stopped fresh runtime after retrieval, and no shutdown/replacement when the chest is full. Full tablet-container-integrated.log: build, 2108 unit tests and all 536 GameTests passed.
 
-This covers normal menu clicks, not every possible external mod or automation extraction path. Remaining: actual dimension/server restart, tier-dependent editing, complete tablet OpenOS flow, automation outside menu clicks, and client visual acceptance. The earlier intermittent rack deadline symptom remains open. No client/install/push/merge.
+This covers normal menu clicks, not every possible external mod or automation extraction path. Remaining: actual server restart, tier-dependent editing, complete tablet OpenOS flow, automation outside menu clicks, and client visual acceptance. The earlier intermittent rack deadline symptom remains open. No client/install/push/merge.
 
 ## Death drops and keepInventory respawn - 2026-09-22
 
@@ -30,7 +30,13 @@ Minecraft Inventory.dropAll uses Player.drop(stack, true, false), bypassing Item
 
 TabletDeathGameTests runs native firmware which changes EEPROM data after boot. The ordinary death test failed before the fix with 'Death drop retained live tablet VM' (tablet-death-red.log). It now verifies the actual ServerPlayer.die drop, immediate VM disposal, stopped item state, newest EEPROM data and item NBT roundtrip. The second test uses actual PlayerList.respawn under keepInventory, verifies the same VM is rebound to the new player, and resumes Lua with retained local value 731. The gamerule is restored in a finally block in the same synchronous action. This does not claim coverage for external mods that replace death drops or inventory retention rules.
 
-Full tablet-death-verified.log: build, 2108 unit tests and all 538 GameTests passed. No client/install/push/merge. Dimension transition, server restart, tier2 editing, full tablet OpenOS and visual acceptance remain open, as does the earlier intermittent native rack deadline symptom.
+Full tablet-death-verified.log: build, 2108 unit tests and all 538 GameTests passed. No client/install/push/merge. Server restart, tier2 editing, full tablet OpenOS and visual acceptance remain open, as does the earlier intermittent native rack deadline symptom.
+
+## Actual dimension round trip - 2026-09-22
+
+TabletDimensionGameTests moves the mock ServerPlayer through ServerPlayer.changeDimension into the Nether and back. ServerPlayer.doTick drives the actual inventory hook; the test checks the old VM is disposed before looking up the new cached runtime. Both handoffs retain machine/screen addresses and correct network indexing, keyboard connection, screen contents, native Lua locals, tmp-filesystem identity and the advancing read offset of an open binary file. The restored GPU proxy writes the final result; logout then closes the final VM. No production change was required.
+
+The first test script incorrectly passed both component.list iterator return values (address and type) to gpu.bind; assigning the address first fixed that fixture error. That same run reproduced the separate nativeRackRetainsUptimeDeadlineAfterReload failure at 18:17:04 with marker=waiting, error=null (tablet-dimension-verified.log). Its helper asserts completion after a fixed 60 ticks; whether real-clock executionDelay contributes remains unproven. The final tablet-dimension-final.log passed build, 2108 unit tests and all 539 GameTests, which does not resolve that intermittent failure. This is server runtime acceptance, not a client portal animation or screen3 visual test.
 
 ## Original runtime foundation (historical)
 
