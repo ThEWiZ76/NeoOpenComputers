@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import java.nio.charset.StandardCharsets;
+import java.util.function.LongSupplier;
 
 /** Required native architecture continuation test; default LuaJ remains separate. */
 @GameTestHolder(NeoOpenComputers.MODID)
@@ -61,15 +62,17 @@ public final class NativeRackPersistenceGameTests {
             local eeprom = component.proxy(component.list("eeprom")())
             assert(eeprom.getData() == "", "program restarted instead of resuming")
             local started = computer.uptime()
-            local deadline = started + 5
+            -- A fractional tick deliberately exercises the final Sleep(0) execution delay.
+            local deadline = started + 5.01
             eeprom.setData("waiting")
             repeat local signal = computer.pullSignal() until signal == "continue_probe"
             assert(computer.uptime() >= started + 2.5, "uptime lost before reload")
             assert(computer.uptime() < deadline, "deadline passed while offline")
+            eeprom.setData("deadline")
             repeat computer.pullSignal(deadline - computer.uptime()) until computer.uptime() >= deadline
             eeprom.setData("restored")
             while true do computer.pullSignal() end
-            """);
+            """, false, true);
     }
 
     private static void resumesOpenFileAfterReload(GameTestHelper helper, boolean temporary) {
@@ -106,6 +109,10 @@ public final class NativeRackPersistenceGameTests {
     }
 
     private static void resumesAfterReload(GameTestHelper helper, String program, boolean unloadBeforeSave) {
+        resumesAfterReload(helper, program, unloadBeforeSave, false);
+    }
+
+    private static void resumesAfterReload(GameTestHelper helper, String program, boolean unloadBeforeSave, boolean controlledClock) {
         BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.RACK.get());
         RackBlockEntity rack = helper.getBlockEntity(pos);
@@ -138,13 +145,30 @@ public final class NativeRackPersistenceGameTests {
                 helper.getLevel().setBlockEntity(replacement);
                 replacement.onLoad();
                 loaded[0] = (Server) replacement.getMountable(0);
+                if (controlledClock) useGameTickClock(loaded[0].machine(), helper);
                 helper.assertTrue(loaded[0].machine().isRunning(), "Running flag was lost");
                 loaded[0].machine().signal("continue_probe");
             })
             .thenIdle(60)
             .thenExecute(() -> helper.assertTrue(marker(loaded[0]).equals("restored") && loaded[0].machine().isRunning(),
-                "Lua continuation lost: " + loaded[0].machine().lastError() + ", marker=" + marker(loaded[0])))
+                "Lua continuation lost: " + loaded[0].machine().lastError() + ", marker=" + marker(loaded[0]) + diagnostics(loaded[0].machine())))
             .thenSucceed();
+    }
+
+    private static void useGameTickClock(li.cil.oc.api.machine.Machine machine, GameTestHelper helper) {
+        try {
+            final long origin = System.nanoTime();
+            final long worldOrigin = helper.getLevel().getGameTime();
+            final var clock = machine.getClass().getDeclaredField("nanoTime");
+            clock.setAccessible(true);
+            // GameTests accelerate ticks. Keep the 12ms execution delay on the same
+            // controlled timeline instead of racing the host's wall-clock speed.
+            clock.set(machine, (LongSupplier) () -> origin + (helper.getLevel().getGameTime() - worldOrigin) * 50_000_000L);
+        } catch (ReflectiveOperationException e) { throw new AssertionError("Could not control rack execution clock", e); }
+    }
+
+    private static String diagnostics(li.cil.oc.api.machine.Machine machine) {
+        return ", uptime=" + machine.upTime() + ", paused=" + machine.isPaused() + ", running=" + machine.isRunning();
     }
 
     private static String marker(Server server) {

@@ -2,6 +2,10 @@
 
 2026-09-22. Related: [[../02 plans/Complete portering]], [[Native Lua persistence]], [[../05 memory/OpenComputers Memory]].
 
+## Rack timing investigation resolved - 2026-09-22
+
+The earlier rack deadline symptom mentioned below is now diagnosed as a test clock mismatch; those open-investigation notes are historical. A controlled fractional-deadline reproducer reached the restored Lua timer loop, then waited on a 12ms monotonic execution delay while accelerated game uptime had reached 5.6 seconds. NativeRackPersistenceGameTests now advances its injected scheduler clock by 50ms per world tick and deliberately exercises a fractional deadline. The original 60-tick assertion is unchanged. Final native-rack-clock-verified.log passed build, 2108 unit tests and all 539 GameTests. See [[Native Lua persistence]] for evidence and limits. This is not a claim that all native runtime or full-port acceptance is complete.
+
 ## Current player integration - 2026-09-22
 
 TabletItem now ticks a server-cached runtime from inventoryTick. A short use/release starts the computer and opens TabletTerminalMenu through the existing TerminalScreen/TerminalNetworking transport. Sneak short-use stops it. Holding a block target for ten ticks then releasing sends analysis through the live component network and queues tablet_use. The null-player analyzeBlock utility retains its existing fixture path; actual player use no longer constructs a temporary analysis VM.
