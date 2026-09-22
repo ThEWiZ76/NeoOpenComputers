@@ -213,3 +213,7 @@ Testprocedure vanaf gebruikerscorrectie: Minecraft op Windows-scherm 3, geen des
 ### Robotuitvoering tijdens beweging
 
 Dezelfde BE/machine/componenten blijven nu bestaan tijdens een stap. Twee opeenvolgende stappen vanuit een echte EEPROM-coroutine, behoud van menu/scherm/inventaris/adressen, oude/nieuwe stroomverbinding en een door pre-event geblokkeerd doel zijn getest. Full build: 2055 unit-tests en 448 GameTests groen. Zie ROBOT_MOVEMENT_PERSISTENCE.md. Nieuwe JAR nog niet ingame getest/geinstalleerd; client-sync/animatie, chunkgrenzen en save/reload blijven open. Ook een testisolatiefout verholpen: een toetsenbord-afstandstest liet spelers achter in de naastgelegen debugkaarttest.
+
+### Robotstatus in de client
+
+Blockentity-sync voor running/tier/lampkleur/tool ingevoerd; renderer gebruikt de gesynchroniseerde status en het echte toolslot. RED op ontbrekende status; daarna 2055 unit-tests en 449 GameTests groen. Zie ROBOT_VISUAL_SYNCHRONIZATION.md. Nieuwe JAR nog niet ingame bekeken; beweging/draai/swing-animatie en upstream actie-energie/timing blijven open.

@@ -39,6 +39,49 @@ import java.util.Map;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotMovementPersistenceGameTests {
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void robotSendsVisualStateWithoutPrivateMachineData(final GameTestHelper helper) {
+        final BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.ROBOT.get());
+        final RobotBlockEntity robot = helper.getBlockEntity(pos);
+        installHardware(helper, robot, List.of(new ItemStack(ModItems.CPU_TIER1.get()),
+            new ItemStack(ModItems.MEMORY_TIER1.get()), eeprom("""
+                component.proxy(component.list("robot")()).setLightColor(0x123456)
+                while true do computer.pullSignal() end
+                """)));
+        robot.onLoad();
+        final ItemStack tool = new ItemStack(Items.DIAMOND_PICKAXE);
+        tool.setDamageValue(7);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, tool);
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.DIAMOND, 3));
+        final Connector connector = (Connector) robot.machine().node();
+        connector.changeBuffer(connector.localBufferSize());
+        helper.assertTrue(robot.toggleMachine(), "Visual state fixture did not start");
+        helper.succeedWhen(() -> {
+            final CompoundTag tag = robot.getUpdateTag(helper.getLevel().registryAccess());
+            helper.assertTrue(tag.getBoolean("oc:running"), "Robot update does not contain running state");
+            helper.assertTrue(tag.getInt("oc:lightColor") == 0x123456, "Robot update does not contain Lua light color");
+            final ItemStack receivedTool = ItemStack.parseOptional(helper.getLevel().registryAccess(), tag.getCompound("oc:tool"));
+            helper.assertTrue(ItemStack.matches(tool, receivedTool), "Robot update lost tool or durability");
+            helper.assertTrue(!tag.contains("oc:machine") && !tag.contains(RobotBlockEntity.TAG_HARDWARE)
+                && !tag.contains("Items") && !tag.contains("oc:ownerUUID"), "Visual update leaked private machine/inventory data");
+            helper.assertTrue(robot.getUpdatePacket() != null, "Robot has no blockentity update packet");
+            final RobotBlockEntity client = new RobotBlockEntity(robot.getBlockPos(), robot.getBlockState());
+            client.handleUpdateTag(tag, helper.getLevel().registryAccess());
+            helper.assertTrue(client.isRunningForRendering() && !client.machine().isRunning(),
+                "Client rendering depends on running a second Lua machine");
+            helper.assertTrue(client.lightColor() == 0x123456 && ItemStack.matches(tool, client.getItem(RobotBlockEntity.TOOL_SLOT)),
+                "Client did not apply light/tool state");
+            helper.assertTrue(client.getItem(RobotBlockEntity.CARGO_SLOT_START).isEmpty(), "Client received robot cargo");
+            robot.setItem(RobotBlockEntity.TOOL_SLOT, ItemStack.EMPTY);
+            client.onDataPacket(null, robot.getUpdatePacket(), helper.getLevel().registryAccess());
+            helper.assertTrue(client.getItem(RobotBlockEntity.TOOL_SLOT).isEmpty(), "Removing tool left ghost item on client");
+            tag.putBoolean("oc:running", false);
+            client.handleUpdateTag(tag, helper.getLevel().registryAccess());
+            helper.assertTrue(!client.isRunningForRendering(), "Stopped state did not clear client running light");
+        });
+    }
+
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void runningRobotMovesTwiceWithoutRebootAndKeepsItsOpenTerminal(final GameTestHelper helper) {
         final BlockPos start = new BlockPos(1, 1, 1);

@@ -43,6 +43,8 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -97,6 +99,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private static final String TAG_SELECTED_TANK = "oc:selectedTank";
     private static final String TAG_NAME = "oc:name";
     private static final String TAG_LIGHT_COLOR = "oc:lightColor";
+    private static final String TAG_RUNNING = "oc:running";
+    private static final String TAG_TOOL = "oc:tool";
     private static final String TAG_OWNER_NAME = "oc:ownerName";
     private static final String TAG_OWNER_UUID = "oc:ownerUUID";
     private static final UUID NIL_UUID = new UUID(0L, 0L);
@@ -196,7 +200,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private int tier;
     private int selectedSlot;
     private int selectedTank;
-    private int lightColor;
+    private int lightColor = 0xF23030;
+    private boolean clientRunning;
+    private boolean lastSyncedRunning;
+    private int lastSyncedLightColor;
+    private int lastSyncedTier = -1;
+    private ItemStack lastSyncedTool = ItemStack.EMPTY;
     private String name = "Robot";
     private String ownerName = "";
     private UUID ownerUUID = NIL_UUID;
@@ -259,6 +268,42 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     @Override
     public Machine machine() {
         return machine;
+    }
+
+    public boolean isRunningForRendering() {
+        return level == null || level.isClientSide ? clientRunning : machine.isRunning() || machine.isPaused();
+    }
+
+    public int lightColor() {
+        return lightColor;
+    }
+
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final CompoundTag tag = new CompoundTag();
+        tag.putBoolean(TAG_RUNNING, isRunningForRendering());
+        tag.putInt(TAG_LIGHT_COLOR, lightColor);
+        tag.putInt(TAG_TIER, tier);
+        tag.put(TAG_TOOL, getItem(TOOL_SLOT).saveOptional(registries));
+        return tag;
+    }
+
+    @Override
+    public void onDataPacket(final Connection connection, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        clientRunning = tag.getBoolean(TAG_RUNNING);
+        lightColor = tag.getInt(TAG_LIGHT_COLOR) & 0xFFFFFF;
+        tier = normalizeTier(tag.getInt(TAG_TIER));
+        items.set(TOOL_SLOT, ItemStack.parseOptional(registries, tag.getCompound(TAG_TOOL)));
     }
 
     @Override
@@ -983,7 +1028,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         tier = normalizeTier(tag.getInt(TAG_TIER));
         selectedSlot = tag.getInt(TAG_SELECTED_SLOT);
         selectedTank = tag.getInt(TAG_SELECTED_TANK);
-        lightColor = tag.getInt(TAG_LIGHT_COLOR);
+        lightColor = tag.contains(TAG_LIGHT_COLOR) ? tag.getInt(TAG_LIGHT_COLOR) : 0xF23030;
         name = tag.getString(TAG_NAME).isBlank() ? "Robot" : tag.getString(TAG_NAME);
         ownerName = tag.getString(TAG_OWNER_NAME);
         ownerUUID = tag.hasUUID(TAG_OWNER_UUID) ? tag.getUUID(TAG_OWNER_UUID) : NIL_UUID;
@@ -1034,6 +1079,22 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (machine.canUpdate()) {
             machine.update();
         }
+        syncVisualState();
+    }
+
+    private void syncVisualState() {
+        final boolean running = isRunningForRendering();
+        final ItemStack tool = getItem(TOOL_SLOT);
+        if (running == lastSyncedRunning && lightColor == lastSyncedLightColor && tier == lastSyncedTier
+            && ItemStack.matches(tool, lastSyncedTool)) {
+            return;
+        }
+        lastSyncedRunning = running;
+        lastSyncedLightColor = lightColor;
+        lastSyncedTier = tier;
+        lastSyncedTool = tool.copy();
+        final BlockState state = getBlockState();
+        level.sendBlockUpdated(worldPosition, state, state, 2);
     }
 
     private void removeMachineNode() {

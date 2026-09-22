@@ -24,7 +24,6 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
     private static final float TOP_APEX_Y = 0.96F;
     private static final float BOTTOM_APEX_Y = 0.04F;
     private static final int COLOR_CHASSIS = 0xFF555555;
-    private static final int COLOR_RUNNING_LIGHT = 0xAA30F230;
     private static final double STOPPED_Y_OFFSET = -0.03D;
     private static final double RUNNING_HOVER_OFFSET = 0.03D;
 
@@ -44,7 +43,7 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
         final int packedOverlay
     ) {
         poseStack.pushPose();
-        poseStack.translate(0.5D, robot.machine().isRunning() ? RUNNING_HOVER_OFFSET : STOPPED_Y_OFFSET, 0.5D);
+        poseStack.translate(0.5D, robot.isRunningForRendering() ? RUNNING_HOVER_OFFSET : STOPPED_Y_OFFSET, 0.5D);
         poseStack.mulPose(Axis.YP.rotationDegrees(yawRotation(robot.getBlockState().getValue(RobotBlock.FACING))));
         renderLegacyChassis(robot, poseStack, bufferSource, packedLight);
         renderSelectedStack(robot, poseStack, bufferSource, packedLight);
@@ -69,8 +68,8 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
         final PoseStack.Pose pose = poseStack.last();
         renderBottomChassis(pose, buffer, packedLight);
         renderTopChassis(pose, buffer, packedLight);
-        if (robot.machine().isRunning()) {
-            renderRunningLight(pose, buffer, packedLight);
+        if (robot.isRunningForRendering()) {
+            renderRunningLight(pose, buffer, packedLight, 0xFF000000 | robot.lightColor());
         }
     }
 
@@ -90,10 +89,10 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
         quad(consumer, pose, CHASSIS_MIN, BOTTOM_SEAM_Y, CHASSIS_MIN, CHASSIS_MIN, BOTTOM_SEAM_Y, CHASSIS_MAX, CHASSIS_MAX, BOTTOM_SEAM_Y, CHASSIS_MAX, CHASSIS_MAX, BOTTOM_SEAM_Y, CHASSIS_MIN, COLOR_CHASSIS, 0F, -1F, 0F, packedLight, 0F, 0.5F, 0F, 1F, 0.5F, 1F, 0.5F, 0.5F);
     }
 
-    private static void renderRunningLight(final PoseStack.Pose pose, final VertexConsumer consumer, final int packedLight) {
+    private static void renderRunningLight(final PoseStack.Pose pose, final VertexConsumer consumer, final int packedLight, final int color) {
         final float inset = 0.30F;
-        quad(consumer, pose, -CHASSIS_HALF, TOP_SEAM_Y, -CHASSIS_HALF, -CHASSIS_HALF, BOTTOM_SEAM_Y, -CHASSIS_HALF, -CHASSIS_HALF, BOTTOM_SEAM_Y, inset, -CHASSIS_HALF, TOP_SEAM_Y, inset, COLOR_RUNNING_LIGHT, -1F, 0F, 0F, packedLight, 0.5F, 0.5F, 1F, 0.5F, 1F, 0.53125F, 0.5F, 0.53125F);
-        quad(consumer, pose, -CHASSIS_HALF, TOP_SEAM_Y, CHASSIS_HALF, -CHASSIS_HALF, BOTTOM_SEAM_Y, CHASSIS_HALF, CHASSIS_HALF, BOTTOM_SEAM_Y, CHASSIS_HALF, CHASSIS_HALF, TOP_SEAM_Y, CHASSIS_HALF, COLOR_RUNNING_LIGHT, 0F, 0F, 1F, packedLight, 0.5F, 0.5F, 1F, 0.5F, 1F, 0.53125F, 0.5F, 0.53125F);
+        quad(consumer, pose, -CHASSIS_HALF, TOP_SEAM_Y, -CHASSIS_HALF, -CHASSIS_HALF, BOTTOM_SEAM_Y, -CHASSIS_HALF, -CHASSIS_HALF, BOTTOM_SEAM_Y, inset, -CHASSIS_HALF, TOP_SEAM_Y, inset, color, -1F, 0F, 0F, packedLight, 0.5F, 0.5F, 1F, 0.5F, 1F, 0.53125F, 0.5F, 0.53125F);
+        quad(consumer, pose, -CHASSIS_HALF, TOP_SEAM_Y, CHASSIS_HALF, -CHASSIS_HALF, BOTTOM_SEAM_Y, CHASSIS_HALF, CHASSIS_HALF, BOTTOM_SEAM_Y, CHASSIS_HALF, CHASSIS_HALF, TOP_SEAM_Y, CHASSIS_HALF, color, 0F, 0F, 1F, packedLight, 0.5F, 0.5F, 1F, 0.5F, 1F, 0.53125F, 0.5F, 0.53125F);
     }
 
     private void renderSelectedStack(
@@ -101,11 +100,7 @@ public final class RobotBlockEntityRenderer implements BlockEntityRenderer<Robot
         final PoseStack poseStack,
         final MultiBufferSource bufferSource,
         final int packedLight) {
-        final int slot = robot.selectedSlot();
-        if (slot < 0 || slot >= robot.getContainerSize()) {
-            return;
-        }
-        final ItemStack stack = robot.getItem(slot);
+        final ItemStack stack = robot.getItem(RobotBlockEntity.TOOL_SLOT);
         if (stack.isEmpty()) {
             return;
         }
