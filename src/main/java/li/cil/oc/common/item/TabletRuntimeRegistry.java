@@ -2,6 +2,7 @@ package li.cil.oc.common.item;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
@@ -91,14 +92,62 @@ public final class TabletRuntimeRegistry {
     public static void savePlayer(final Player player) {
         if (player.level().isClientSide) return;
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
-            final ItemStack stack = player.getInventory().getItem(slot);
-            if (!(stack.getItem() instanceof TabletItem)) continue;
-            final var data = TabletItem.readData(stack);
-            if (data.hasUUID("id") && runtimes.containsKey(data.getUUID("id"))) get(stack, player).save();
+            saveIfCached(player.getInventory().getItem(slot), player);
         }
     }
 
+    private static void saveIfCached(ItemStack stack, Player player) {
+        if (!(stack.getItem() instanceof TabletItem)) return;
+        final var data = TabletItem.readData(stack);
+        if (data.hasUUID("id") && runtimes.containsKey(data.getUUID("id"))) get(stack, player).save();
+    }
+
+    public static void beforeContainerClick(AbstractContainerMenu menu, Player player) {
+        if (player.level().isClientSide) return;
+        savePlayer(player);
+        saveIfCached(menu.getCarried(), player);
+    }
+
+    public static void afterContainerClick(AbstractContainerMenu menu, Player player) {
+        if (player.level().isClientSide) return;
+        for (var entry : List.copyOf(runtimes.entrySet())) {
+            final TabletRuntime runtime = entry.getValue().runtime;
+            if (runtime.player() != player || isCarried(player, runtime.stack())) continue;
+            final ItemStack target = findInMenu(menu, entry.getKey());
+            if (target.isEmpty()) {
+                runtime.close(false);
+                runtimes.remove(entry.getKey());
+            } else {
+                final TabletRuntime moved = get(target, player);
+                if (!isCarried(player, target)) {
+                    moved.close(false);
+                    runtimes.remove(entry.getKey());
+                    for (var slot : menu.slots) if (slot.getItem() == target) slot.setChanged();
+                }
+            }
+        }
+        // A creative middle-click copy on the cursor gets its own identity now.
+        final ItemStack carried = menu.getCarried();
+        if (carried.getItem() instanceof TabletItem) {
+            final var data = TabletItem.readData(carried);
+            if (data.hasUUID("id") && runtimes.containsKey(data.getUUID("id"))) get(carried, player);
+        }
+    }
+
+    private static ItemStack findInMenu(AbstractContainerMenu menu, UUID id) {
+        if (hasId(menu.getCarried(), id)) return menu.getCarried();
+        for (var slot : menu.slots) if (hasId(slot.getItem(), id)) return slot.getItem();
+        return ItemStack.EMPTY;
+    }
+
+    private static boolean hasId(ItemStack stack, UUID id) {
+        if (!(stack.getItem() instanceof TabletItem)) return false;
+        final var data = TabletItem.readData(stack);
+        return data.hasUUID("id") && data.getUUID("id").equals(id);
+    }
+
     public static void closePlayer(final Player player) {
+        if (player.level().isClientSide) return;
         for (var entry : List.copyOf(runtimes.entrySet())) {
             if (entry.getValue().runtime.player() == player) {
                 entry.getValue().runtime.close(false);
@@ -117,6 +166,7 @@ public final class TabletRuntimeRegistry {
     }
     private static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) { closePlayer(event.getEntity()); }
     private static void onToss(ItemTossEvent event) {
+        if (event.getPlayer().level().isClientSide) return;
         final ItemStack dropped = event.getEntity().getItem();
         if (!(dropped.getItem() instanceof TabletItem)) return;
         final var data = TabletItem.readData(dropped);
@@ -131,6 +181,7 @@ public final class TabletRuntimeRegistry {
         }
     }
     private static void onWorldUnload(LevelEvent.Unload event) {
+        if (event.getLevel().isClientSide()) return;
         for (var entry : List.copyOf(runtimes.entrySet())) {
             if (entry.getValue().runtime.world() == event.getLevel()) {
                 entry.getValue().runtime.close(false);

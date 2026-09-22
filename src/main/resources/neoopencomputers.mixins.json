@@ -10,7 +10,8 @@
     "BeaconBlockEntityMixin",
     "BlockEntityPositionAccessor",
     "BrewingStandBlockEntityAccessor",
-    "PlayerTabletSaveMixin"
+    "PlayerTabletSaveMixin",
+    "TabletContainerTransferMixin"
   ],
   "injectors": {
     "defaultRequire": 1
