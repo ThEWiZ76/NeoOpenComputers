@@ -34,10 +34,26 @@ public class SignUpgradeItem extends Item implements HostAware {
         if (host == null) {
             return null;
         }
+        final SignUpgradeEnvironment environment;
         if (host instanceof Adapter) {
-            return new SignUpgradeEnvironment(host, true);
+            environment = new SignUpgradeEnvironment(host, true) {
+                @Override
+                public void save(final CompoundTag data) {
+                    super.save(data);
+                    ItemDriverData.writeDataTag(stack, data);
+                }
+            };
+        } else {
+            environment = new SignUpgradeEnvironment(host, host instanceof Rotatable rotatable ? rotatable : null) {
+                @Override
+                public void save(final CompoundTag data) {
+                    super.save(data);
+                    ItemDriverData.writeDataTag(stack, data);
+                }
+            };
         }
-        return host instanceof Rotatable rotatable ? new SignUpgradeEnvironment(host, rotatable) : new SignUpgradeEnvironment(host);
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override

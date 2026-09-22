@@ -23,6 +23,18 @@ import java.util.List;
 @PrefixGameTestTemplate(false)
 public final class UpgradePersistenceGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
+    public static void robotSignProxyReadsAndWritesAfterReload(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.SIGN_UPGRADE.get()), """
+            local upgrade = component.proxy(component.list('sign')())
+            assert(upgrade.setValue('before') == 'before\\n\\n\\n')
+            """, """
+            assert(upgrade.getValue() == 'before\\n\\n\\n', 'sign text lost')
+            assert(upgrade.setValue('after') == 'after\\n\\n\\n', 'restored sign proxy cannot write')
+            assert(upgrade.getValue() == 'after\\n\\n\\n')
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
     public static void robotTractorProxyCollectsItemsAfterReload(GameTestHelper helper) {
         restore(helper, new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()), """
             local upgrade = component.proxy(component.list('tractor_beam')())
@@ -166,6 +178,10 @@ public final class UpgradePersistenceGameTests {
                 while true do computer.pullSignal() end
                 """)));
         original.onLoad();
+        if (upgrade.is(ModItems.SIGN_UPGRADE.get())) {
+            helper.getLevel().setBlockAndUpdate(original.getBlockPos().relative(original.facing()),
+                net.minecraft.world.level.block.Blocks.OAK_WALL_SIGN.defaultBlockState());
+        }
         if (upgrade.is(ModItems.INVENTORY_CONTROLLER_UPGRADE.get())) {
             original.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(net.minecraft.world.item.Items.DIAMOND, 3));
         }
