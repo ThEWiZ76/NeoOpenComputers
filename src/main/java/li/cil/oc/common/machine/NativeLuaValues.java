@@ -1,8 +1,11 @@
 package li.cil.oc.common.machine;
 
 import li.cil.repack.com.naef.jnlua.LuaState;
+import li.cil.oc.api.machine.Value;
+import li.cil.oc.api.machine.LimitReachedException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /** Binary-safe values for the native component/signal boundary. */
 final class NativeLuaValues {
@@ -13,6 +16,7 @@ final class NativeLuaValues {
     private static void push(final LuaState lua, final Object value, final int depth) {
         if (depth > 64) throw new IllegalArgumentException("component value nesting too deep");
         if (value == null) lua.pushNil();
+        else if (value instanceof Value object) lua.pushJavaObjectRaw(object);
         else if (value instanceof Boolean bool) lua.pushBoolean(bool);
         else if (value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long) lua.pushInteger(((Number) value).longValue());
         else if (value instanceof Number number) lua.pushNumber(number.doubleValue());
@@ -43,6 +47,7 @@ final class NativeLuaValues {
     private static Object read(final LuaState lua, final int index, final int depth) {
         if (depth > 64) throw new IllegalArgumentException("argument nesting too deep");
         if (lua.isNil(index)) return null;
+        if (lua.isJavaObjectRaw(index) && lua.toJavaObjectRaw(index) instanceof Value value) return value;
         if (lua.isBoolean(index)) return lua.toBoolean(index);
         if (lua.isNumber(index) && !lua.isString(index)) return lua.isInteger(index) ? (Object) lua.toInteger(index) : lua.toNumber(index);
         // Lua's isString also accepts numbers; inspect the actual type.
@@ -64,5 +69,24 @@ final class NativeLuaValues {
             return map;
         }
         throw new IllegalArgumentException("Unsupported native Lua argument: " + lua.typeName(index));
+    }
+
+    /** Upstream invocation protocol: no results means retry synchronously after a budget limit. */
+    static int invoke(final LuaState lua, final Callable<Object[]> callback) {
+        final int top = lua.getTop();
+        try {
+            final Object[] results = callback.call();
+            lua.pushBoolean(true);
+            if (results != null) for (final Object result : results) push(lua, result);
+            return 1 + (results == null ? 0 : results.length);
+        } catch (LimitReachedException limit) { lua.setTop(top); return 0; }
+        catch (Exception failure) {
+            lua.setTop(top);
+            final boolean soft = !(failure instanceof IllegalArgumentException);
+            lua.pushBoolean(soft);
+            if (soft) lua.pushNil();
+            lua.pushString(failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage());
+            return soft ? 3 : 2;
+        }
     }
 }

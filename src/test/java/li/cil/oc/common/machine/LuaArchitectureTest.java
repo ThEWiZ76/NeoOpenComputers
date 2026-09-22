@@ -4939,11 +4939,8 @@ final class LuaArchitectureTest {
         return null;
     }
 
-    private static Arguments luaArguments(final Object... values) throws Exception {
-        final Class<?> argumentsClass = Class.forName("li.cil.oc.common.machine.LuaArchitecture$LuaArguments");
-        final java.lang.reflect.Constructor<?> constructor = argumentsClass.getDeclaredConstructor(Object[].class);
-        constructor.setAccessible(true);
-        return (Arguments) constructor.newInstance((Object) values);
+    private static Arguments luaArguments(final Object... values) {
+        return new LuaArguments(values);
     }
 
     private static Callback callback(final String name) {

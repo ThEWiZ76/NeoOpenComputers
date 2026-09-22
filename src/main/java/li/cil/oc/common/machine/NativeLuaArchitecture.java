@@ -5,7 +5,6 @@ import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
-import li.cil.oc.api.machine.LimitReachedException;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModSettings;
@@ -62,7 +61,7 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
             owner.pushHostLibrary("debug"); lua.setGlobal("debug");
             installComputer();
             installComponent();
-            lua.newTable(); lua.setGlobal("userdata");
+            NativeLuaUserdata.install(lua, machine);
             NativeLuaLibraries.installUnicode(lua);
             NativeLuaLibraries.installOs(lua, machine);
             lua.newTable();
@@ -238,22 +237,8 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
             final var method = machine.methods(state.checkString(1)).get(state.checkString(2));
             NativeLuaValues.push(state, method == null ? null : method.doc()); return 1;
         });
-        function("invoke", state -> {
-            final int top = state.getTop();
-            try {
-                final Object[] results = machine.invoke(state.checkString(1), state.checkString(2), NativeLuaValues.arguments(state, 3));
-                state.pushBoolean(true);
-                if (results != null) for (final Object result : results) NativeLuaValues.push(state, result);
-                return 1 + (results == null ? 0 : results.length);
-            } catch (LimitReachedException limit) { state.setTop(top); return 0; }
-            catch (Exception failure) {
-                state.setTop(top);
-                state.pushBoolean(!(failure instanceof IllegalArgumentException));
-                if (!(failure instanceof IllegalArgumentException)) state.pushNil();
-                state.pushString(failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage());
-                return failure instanceof IllegalArgumentException ? 2 : 3;
-            }
-        });
+        function("invoke", state -> NativeLuaValues.invoke(state, () ->
+            machine.invoke(state.checkString(1), state.checkString(2), NativeLuaValues.arguments(state, 3))));
         lua.setGlobal("component");
     }
 

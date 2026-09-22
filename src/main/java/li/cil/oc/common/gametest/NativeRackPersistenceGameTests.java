@@ -24,6 +24,46 @@ import java.nio.charset.StandardCharsets;
 public final class NativeRackPersistenceGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void nativeRackResumesLocalStateAfterDetachedReload(GameTestHelper helper) {
+        resumesAfterReload(helper, """
+            local eeprom = component.proxy(component.list("eeprom")())
+            assert(eeprom.getData() == "", "program restarted instead of resuming")
+            local retained = {value = 731}
+            eeprom.setData("waiting")
+            repeat local signal = computer.pullSignal() until signal == "continue_probe"
+            assert(retained.value == 731)
+            eeprom.setData("restored")
+            while true do computer.pullSignal() end
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void nativeRackResumesOpenFileAtSavedOffset(GameTestHelper helper) {
+        resumesAfterReload(helper, """
+            local eeprom = component.proxy(component.list("eeprom")())
+            assert(eeprom.getData() == "", "program restarted instead of resuming")
+            local fs
+            for address in component.list('filesystem') do
+              if address ~= computer.tmpAddress() then fs = component.proxy(address); break end
+            end
+            assert(fs, 'missing HDD')
+            local file = assert(fs.open('native-continuation.bin', 'w'))
+            assert(fs.write(file, 'a' .. string.char(0, 255) .. 'z'))
+            fs.close(file)
+            file = assert(fs.open('native-continuation.bin', 'r'))
+            assert(fs.read(file, 1) == 'a')
+            local alias = file
+            eeprom.setData("waiting")
+            repeat local signal = computer.pullSignal() until signal == "continue_probe"
+            assert(file == alias, 'file proxy identity lost')
+            assert(fs.read(file, 3) == string.char(0, 255) .. 'z', 'open file position or contents lost')
+            assert(fs.read(file, 1) == nil, 'expected EOF')
+            fs.close(file)
+            eeprom.setData("restored")
+            while true do computer.pullSignal() end
+            """);
+    }
+
+    private static void resumesAfterReload(GameTestHelper helper, String program) {
         BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.RACK.get());
         RackBlockEntity rack = helper.getBlockEntity(pos);
@@ -35,16 +75,8 @@ public final class NativeRackPersistenceGameTests {
             cpu, li.cil.oc.common.machine.NativeLuaArchitecture.class);
         items.setItem(2, cpu);
         items.setItem(4, new ItemStack(ModItems.MEMORY_TIER1.get()));
-        items.setItem(8, RobotMovementPersistenceGameTests.eeprom("""
-            local eeprom = component.proxy(component.list("eeprom")())
-            assert(eeprom.getData() == "", "program restarted instead of resuming")
-            local retained = {value = 731}
-            eeprom.setData("waiting")
-            repeat local signal = computer.pullSignal() until signal == "continue_probe"
-            assert(retained.value == 731)
-            eeprom.setData("restored")
-            while true do computer.pullSignal() end
-            """));
+        items.setItem(6, new ItemStack(ModItems.HDD_TIER1.get()));
+        items.setItem(8, RobotMovementPersistenceGameTests.eeprom(program));
         ((Connector) original.machine().node()).changeBuffer(10000);
         helper.assertTrue(original.machine().start(), "Initial rack did not start");
         Server[] loaded = new Server[1];

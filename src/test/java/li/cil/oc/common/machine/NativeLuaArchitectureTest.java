@@ -3,6 +3,7 @@ package li.cil.oc.common.machine;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.machine.Value;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 final class NativeLuaArchitectureTest {
     @Callback(direct = true) public void get() {}
     @Callback public void write() {}
+    @Callback(direct = true) public void value() {}
 
     @ParameterizedTest
     @ValueSource(strings = {
@@ -135,6 +137,10 @@ final class NativeLuaArchitectureTest {
     }
 
     private static NativeLuaArchitecture architecture(final String program, final AtomicInteger writes) throws Exception {
+        return architecture(program, writes, null);
+    }
+
+    static NativeLuaArchitecture architecture(final String program, final AtomicInteger writes, final Value value) throws Exception {
         final AtomicLong clock = new AtomicLong();
         final var architecture = new NativeLuaArchitecture(() -> clock.getAndAdd(100_000_000L));
         final var memory = NativeLuaArchitecture.class.getDeclaredField("memoryBytes");
@@ -142,16 +148,31 @@ final class NativeLuaArchitectureTest {
         memory.setInt(architecture, 512 * 1024);
         final Map<String, Callback> callbacks = Map.of(
             "get", NativeLuaArchitectureTest.class.getMethod("get").getAnnotation(Callback.class),
+            "value", NativeLuaArchitectureTest.class.getMethod("value").getAnnotation(Callback.class),
             "write", NativeLuaArchitectureTest.class.getMethod("write").getAnnotation(Callback.class));
         architecture.bind((Machine) Proxy.newProxyInstance(Machine.class.getClassLoader(), new Class<?>[]{Machine.class},
             (proxy, method, args) -> switch (method.getName()) {
                 case "components" -> Map.of("eeprom", "eeprom");
-                case "methods" -> callbacks;
+                case "methods" -> {
+                    if (args[0] instanceof Value object) {
+                        final Map<String, Callback> methods = new java.util.LinkedHashMap<>();
+                        for (final var callback : object.getClass().getMethods()) {
+                            if (callback.isAnnotationPresent(Callback.class)) methods.put(callback.getName(), callback.getAnnotation(Callback.class));
+                        }
+                        yield methods;
+                    }
+                    yield callbacks;
+                }
                 case "popSignal" -> null;
                 case "upTime", "cpuTime" -> 0D;
                 case "worldTime" -> 0L;
                 case "invoke" -> {
+                    if (args[0] instanceof Value object) {
+                        yield object.getClass().getMethod((String) args[1], li.cil.oc.api.machine.Context.class,
+                            li.cil.oc.api.machine.Arguments.class).invoke(object, proxy, new LuaArguments((Object[]) args[2]));
+                    }
                     if (args[1].equals("get")) yield new Object[]{program};
+                    if (args[1].equals("value")) yield new Object[]{value, value};
                     if (args[1].equals("write")) { writes.incrementAndGet(); yield new Object[]{42}; }
                     throw new AssertionError("Unexpected callback " + args[1]);
                 }
