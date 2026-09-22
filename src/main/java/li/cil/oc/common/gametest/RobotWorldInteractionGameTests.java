@@ -23,6 +23,50 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
     @GameTest(template = "empty")
+    public static void robotInventoryControllerEquipsActualToolFromSelectedCargo(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final var controller = new li.cil.oc.common.component.InventoryControllerEnvironment.RobotInventoryControllerEnvironment(robot);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START + 15, new ItemStack(Items.IRON_SWORD));
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.DIAMOND, 3));
+        robot.setSelectedSlot(15);
+        helper.assertTrue(Boolean.TRUE.equals(controller.equip(null, null)[0]), "Inventory-controller equip failed");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.TOOL_SLOT).is(Items.IRON_SWORD), "Equip did not change the actual tool slot");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START + 15).is(Items.IRON_PICKAXE), "Equip did not return old tool to selected cargo");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START).getCount() == 3, "Equip changed unrelated cargo");
+        controller.equip(null, null);
+        helper.assertTrue(robot.getItem(RobotBlockEntity.TOOL_SLOT).is(Items.IRON_PICKAXE)
+            && robot.getItem(RobotBlockEntity.CARGO_SLOT_START + 15).is(Items.IRON_SWORD), "Second equip lost or duplicated tools");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotAgentInventoriesExposeSeparateLiveSlotRanges(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final var cargo = robot.mainInventory();
+        final var equipment = robot.equipmentInventory();
+        helper.assertTrue(cargo.getContainerSize() == 16 && equipment.getContainerSize() == 4, "Agent views expose the wrong inventory sizes");
+        equipment.setItem(0, new ItemStack(Items.IRON_PICKAXE));
+        equipment.setItem(3, new ItemStack(Items.EMERALD));
+        cargo.setItem(0, new ItemStack(Items.DIAMOND, 3));
+        cargo.setItem(15, new ItemStack(Items.GOLD_INGOT, 2));
+        helper.assertTrue(robot.getItem(0).is(Items.IRON_PICKAXE) && robot.getItem(3).is(Items.EMERALD)
+            && robot.getItem(RobotBlockEntity.CARGO_SLOT_START).is(Items.DIAMOND)
+            && robot.getItem(RobotBlockEntity.CARGO_SLOT_START + 15).is(Items.GOLD_INGOT), "Agent views use stale or shifted storage");
+        helper.assertTrue(cargo.removeItem(0, 1).getCount() == 1 && robot.getItem(RobotBlockEntity.CARGO_SLOT_START).getCount() == 2, "Cargo removal did not mutate real storage");
+        helper.assertTrue(equipment.removeItemNoUpdate(3).is(Items.EMERALD) && robot.getItem(3).isEmpty(), "Equipment removal did not mutate real storage");
+        cargo.setItem(-1, new ItemStack(Items.DIRT));
+        equipment.setItem(4, new ItemStack(Items.DIRT));
+        helper.assertTrue(cargo.getItem(-1).isEmpty() && equipment.getItem(4).isEmpty()
+            && robot.getItem(3).isEmpty() && cargo.getItem(0).is(Items.DIAMOND), "Invalid view index crossed inventory boundaries");
+        cargo.clearContent();
+        helper.assertTrue(cargo.isEmpty() && !equipment.isEmpty() && robot.getItem(0).is(Items.IRON_PICKAXE), "Clearing cargo erased equipment");
+        equipment.clearContent();
+        helper.assertTrue(equipment.isEmpty() && robot.isEmpty(), "Clearing equipment did not clear real slots");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotSwingBreaksMinecartAndCollectsItsDrop(final GameTestHelper helper) throws Exception {
         final RobotBlockEntity robot = robot(helper);
         final var target = helper.spawn(net.minecraft.world.entity.EntityType.MINECART, new BlockPos(1, 1, 2));

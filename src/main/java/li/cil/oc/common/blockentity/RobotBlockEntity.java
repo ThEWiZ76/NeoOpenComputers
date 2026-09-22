@@ -52,7 +52,6 @@ import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -193,7 +192,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     };
     private NonNullList<ItemStack> items = NonNullList.withSize(MUTABLE_SLOT_COUNT, ItemStack.EMPTY);
     private NonNullList<ItemStack> hardwareItems = NonNullList.withSize(MAX_HARDWARE_SLOT_COUNT, ItemStack.EMPTY);
-    private final Container equipmentInventory = new SimpleContainer(1);
+    private final Container equipmentInventory = new InventoryView(0, CARGO_SLOT_START);
+    private final Container mainInventory = new InventoryView(CARGO_SLOT_START, CARGO_SLOT_COUNT);
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private Node robotNode;
     private final ManagedEnvironment robotRom;
@@ -537,7 +537,72 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public Container mainInventory() {
-        return this;
+        return mainInventory;
+    }
+
+    /** Agent APIs use indices relative to equipment or cargo, while menus use combined indices. */
+    private final class InventoryView implements Container {
+        private final int offset;
+        private final int size;
+
+        private InventoryView(final int offset, final int size) {
+            this.offset = offset;
+            this.size = size;
+        }
+
+        private boolean valid(final int slot) {
+            return slot >= 0 && slot < size;
+        }
+
+        @Override
+        public int getContainerSize() { return size; }
+
+        @Override
+        public boolean isEmpty() {
+            for (int slot = 0; slot < size; slot++) {
+                if (!getItem(slot).isEmpty()) return false;
+            }
+            return true;
+        }
+
+        @Override
+        public ItemStack getItem(final int slot) {
+            return valid(slot) ? RobotBlockEntity.this.getItem(offset + slot) : ItemStack.EMPTY;
+        }
+
+        @Override
+        public ItemStack removeItem(final int slot, final int amount) {
+            return valid(slot) ? RobotBlockEntity.this.removeItem(offset + slot, amount) : ItemStack.EMPTY;
+        }
+
+        @Override
+        public ItemStack removeItemNoUpdate(final int slot) {
+            return valid(slot) ? RobotBlockEntity.this.removeItemNoUpdate(offset + slot) : ItemStack.EMPTY;
+        }
+
+        @Override
+        public void setItem(final int slot, final ItemStack stack) {
+            if (valid(slot)) RobotBlockEntity.this.setItem(offset + slot, stack);
+        }
+
+        @Override
+        public void setChanged() { RobotBlockEntity.this.setChanged(); }
+
+        @Override
+        public boolean stillValid(final Player player) { return RobotBlockEntity.this.stillValid(player); }
+
+        @Override
+        public boolean canPlaceItem(final int slot, final ItemStack stack) {
+            return valid(slot) && RobotBlockEntity.this.canPlaceItem(offset + slot, stack);
+        }
+
+        @Override
+        public int getMaxStackSize() { return RobotBlockEntity.this.getMaxStackSize(); }
+
+        @Override
+        public void clearContent() {
+            for (int slot = 0; slot < size; slot++) setItem(slot, ItemStack.EMPTY);
+        }
     }
 
     @Override

@@ -277,3 +277,7 @@ Robot swing dooft gewoon en soul fire met beveiligingscontrole, correcte fire-ui
 ### Entityselectie en robotaanvallen
 
 Robot swing selecteert nu nabije living entities, minecarts en drones tegenover de afstand tot het geraakte blok. Normale aanval gebruikt gereedschapsattributen, RobotAttackEntityEvent en NeoForge-beveiliging; geleende spelerstatus wordt hersteld. Speleraanvallen standaard uit via canAttackPlayers. Minecarts krijgen de upstream herhaalde pogingen en hun drop gaat naar cargo. Zes GameTests bewijzen schade, beide beveiligingslagen, attribuutherstel, spelerconfig-hookgating, blokkering door een nabijer blok en exact een minecartdrop. Full build: 2058 unit-tests en 480 GameTests; robot-entity-final.log. Zie ROBOT_ENTITY_ATTACKS.md. Exacte combat/cooldown/enchantmentpariteit, living-kill XP, echte PvP-regels en live tests blijven open.
+
+### Echte equipment- en cargoinventaris voor upgrades
+
+Gevonden en hersteld: Agent.equipmentInventory was losse opslag en mainInventory gebruikte menu-indexen in plaats van cargo-indexen. Twee live views koppelen upgrades nu aan de echte vier equipment-slots en zestien cargo-slots. Echte robot/controller-tests bewijzen equip in beide richtingen via cargo 16, behoud van andere items, removals, grenscontrole en gescheiden clear. Full build: 2058 unit-tests en 482 GameTests; robot-inventory-views-final.log. Zie ROBOT_INVENTORY_VIEWS.md. getComponentInSlot/hardware-indexmapping, attack-XP, overige pariteit en live tests blijven open.
