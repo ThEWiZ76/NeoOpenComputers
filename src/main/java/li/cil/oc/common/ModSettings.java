@@ -121,6 +121,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue ROBOT_MOVE_COST;
     public static final ModConfigSpec.DoubleValue ROBOT_ITEM_DAMAGE_RATE;
     public static final ModConfigSpec.DoubleValue ROBOT_HARVEST_RATIO;
+    public static final ModConfigSpec.DoubleValue ROBOT_SWING_RANGE;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_COST;
     public static final ModConfigSpec.DoubleValue ROBOT_MOVE_DELAY;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_DELAY;
@@ -359,6 +360,8 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("robot");
+        ROBOT_SWING_RANGE = builder.comment("Distance from the adjacent block center used to calibrate robot swing rays. Upstream default is 0.49.")
+            .defineInRange("swingRange", 0.49D, 0D, Double.MAX_VALUE);
         ROBOT_ITEM_DAMAGE_RATE = builder.comment("Damage rate for tools equipped by robots. OpenComputers upstream default is 0.1; zero prevents wear and one keeps normal wear.")
             .defineInRange("itemDamageRate", 0.1D, 0D, 1D);
         builder.push("delays");
@@ -949,6 +952,10 @@ public final class ModSettings {
 
     public static double robotHarvestRatio() {
         return Math.max(0D, doubleValue(ROBOT_HARVEST_RATIO));
+    }
+
+    public static double robotSwingRange() {
+        return Math.max(0D, doubleValue(ROBOT_SWING_RANGE));
     }
 
     public static double robotTurnCost() {

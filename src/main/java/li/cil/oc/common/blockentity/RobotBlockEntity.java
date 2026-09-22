@@ -217,7 +217,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private int digTicks;
     private int digStage = -1;
 
-    private record DigTask(BlockPos origin, BlockPos target, BlockState state, ItemStack tool, int ticks) {}
+    private record DigTask(BlockPos origin, BlockPos target, BlockState state, ItemStack tool, int ticks, boolean sneaky) {}
     private String name = "Robot";
     private String ownerName = "";
     private UUID ownerUUID = NIL_UUID;
@@ -894,17 +894,36 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new Object[]{true};
     }
 
-    @Callback(doc = "function(side:number):boolean,string -- Breaks the block on the specified side.")
+    @Callback(doc = "function(side:number[, face:number=side[, sneaky:boolean=false]]):boolean,string -- Left-clicks towards a side, optionally calibrating the hit and sneaking.")
     public Object[] swing(final Context context, final Arguments arguments) {
         if (level == null) {
             return new Object[]{false, "no world"};
         }
         if (digTask != null) return new Object[]{false, "already swinging"};
         if (!machine.isRunning()) return new Object[]{false, "not running"};
-        final BlockPos target = targetPos(arguments.checkInteger(0));
-        if (!level.isLoaded(target)) {
+        final int side = arguments.checkInteger(0);
+        if (side != 0 && side != 1 && side != 3) throw new IllegalArgumentException("invalid side");
+        final Direction direction = movementDirection(facing(), side);
+        final Direction calibrated;
+        if (arguments.isInteger(1)) {
+            final int face = arguments.checkInteger(1);
+            if (face < 0 || face > 5 || Direction.from3DDataValue(face) == Direction.from3DDataValue(side).getOpposite()) {
+                throw new IllegalArgumentException("invalid side");
+            }
+            calibrated = movementDirection(facing(), face);
+        } else {
+            calibrated = null;
+        }
+        final boolean sneaky = arguments.isBoolean(2) && arguments.checkBoolean(2);
+        if (!level.isLoaded(worldPosition.relative(direction))) {
             return new Object[]{false, "target not loaded"};
         }
+        if (!(player() instanceof net.minecraft.server.level.ServerPlayer player)) {
+            return new Object[]{false, "no server"};
+        }
+        final BlockHitResult hit = swingHit(player, direction, calibrated);
+        if (hit == null) return new Object[]{false, "air"};
+        final BlockPos target = hit.getBlockPos();
         final BlockState state = level.getBlockState(target);
         if (state.isAir()) {
             return new Object[]{false, "air"};
@@ -913,16 +932,18 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (hardness < 0F) {
             return new Object[]{false, "unbreakable"};
         }
-        if (!(player() instanceof net.minecraft.server.level.ServerPlayer player)) {
-            return new Object[]{false, "no server"};
-        }
         final ItemStack previousHand = player.getMainHandItem();
         final var previousGameMode = player.gameMode.getGameModeForPlayer();
         final boolean wasOnGround = player.onGround();
+        final boolean wasSneaking = player.isShiftKeyDown();
         final ItemStack before = getItem(TOOL_SLOT).copy();
         player.setItemInHand(InteractionHand.MAIN_HAND, before.copy());
         player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        player.setShiftKeyDown(sneaky);
         try {
+            if (!level.mayInteract(player, target) || player.blockActionRestricted(level, target, net.minecraft.world.level.GameType.SURVIVAL)) {
+                return new Object[]{false, "blocked"};
+            }
             if (!state.canHarvestBlock(level, target, player)) {
                 return new Object[]{false, "cannot harvest"};
             }
@@ -937,10 +958,22 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             if (pre.isCanceled()) {
                 return new Object[]{false, "blocked"};
             }
+            final var click = net.neoforged.neoforge.common.CommonHooks.onLeftClickBlock(player, target, hit.getDirection(),
+                net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK);
+            if (click.isCanceled() || click.getUseItem() == net.neoforged.neoforge.common.util.TriState.FALSE) {
+                return new Object[]{false, "blocked"};
+            }
+            if (click.getUseBlock() != net.neoforged.neoforge.common.util.TriState.FALSE) state.attack(level, target, player);
+            final BlockState attackedState = level.getBlockState(target);
+            if (attackedState.isAir()) {
+                if (!before.isEmpty()) startAnimation(null, 0, 0.05D, true);
+                if (context != null) context.pause(0.05D);
+                return new Object[]{true, "block"};
+            }
             final double adjustedSeconds = Math.max(0.05D, pre.getBreakTime());
             if (!Double.isFinite(adjustedSeconds)) return new Object[]{false, "cannot break"};
-            digTask = new DigTask(worldPosition.immutable(), target.immutable(), state, before,
-                Math.max(1, (int) Math.min(Integer.MAX_VALUE, adjustedSeconds * 20D)));
+            digTask = new DigTask(worldPosition.immutable(), target.immutable(), attackedState, before,
+                Math.max(1, (int) Math.min(Integer.MAX_VALUE, adjustedSeconds * 20D)), sneaky);
             digTicks = 0;
             digStage = -1;
             if (!before.isEmpty()) startAnimation(null, 0, adjustedSeconds, true);
@@ -950,7 +983,29 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             player.setItemInHand(InteractionHand.MAIN_HAND, previousHand);
             player.setGameMode(previousGameMode);
             player.setOnGround(wasOnGround);
+            player.setShiftKeyDown(wasSneaking);
         }
+    }
+
+    private BlockHitResult swingHit(final Player player, final Direction direction, final Direction calibrated) {
+        final Vec3 step = Vec3.atLowerCornerOf(direction.getNormal());
+        final Vec3 origin = Vec3.atCenterOf(worldPosition).add(step.scale(0.5D));
+        final Vec3 center = origin.add(step.scale(0.51D));
+        final List<Direction> sides = new ArrayList<>();
+        sides.add(calibrated == null ? direction : calibrated);
+        if (calibrated == null) {
+            for (final Direction side : Direction.values()) {
+                if (side != direction && side != direction.getOpposite()) sides.add(side);
+            }
+        }
+        for (final Direction side : sides) {
+            final Vec3 end = center.add(Vec3.atLowerCornerOf(side.getNormal()).scale(ModSettings.robotSwingRange()));
+            if (!level.isLoaded(BlockPos.containing(end))) continue;
+            final BlockHitResult hit = level.clip(new net.minecraft.world.level.ClipContext(origin, end,
+                net.minecraft.world.level.ClipContext.Block.OUTLINE, net.minecraft.world.level.ClipContext.Fluid.NONE, player));
+            if (hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) return hit;
+        }
+        return null;
     }
 
     private void tickDig() {
@@ -974,9 +1029,11 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (!(player() instanceof net.minecraft.server.level.ServerPlayer player)) return;
         final ItemStack previousHand = player.getMainHandItem();
         final var previousGameMode = player.gameMode.getGameModeForPlayer();
+        final boolean wasSneaking = player.isShiftKeyDown();
         final ItemStack before = getItem(TOOL_SLOT).copy();
         player.setItemInHand(InteractionHand.MAIN_HAND, before.copy());
         player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        player.setShiftKeyDown(task.sneaky());
         try {
             if (!task.state().canHarvestBlock(level, task.target(), player)) return;
             // Re-check ordinary block protection at completion, before producing loot.
@@ -996,6 +1053,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         } finally {
             player.setItemInHand(InteractionHand.MAIN_HAND, previousHand);
             player.setGameMode(previousGameMode);
+            player.setShiftKeyDown(wasSneaking);
         }
     }
 

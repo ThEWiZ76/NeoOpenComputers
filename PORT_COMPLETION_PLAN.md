@@ -257,3 +257,7 @@ Robotgraaftaken lopen nu over serverticks op basis van hardness, grounded gereed
 ### Gereedschapsanimatie tijdens graven
 
 Swingstatus opgenomen in bestaande client-sync; renderer roteert alleen het gereedschap volgens upstream herhaalde sinusboog, met minimaal vijf ticks. Annulering stopt de animatie; succesvolle korte actie mag de boog afmaken. Vaste-tijdcurve, packet-roundtrip en annulerings/minimumduurtests groen. Full build: 2058 unit-tests en 462 GameTests; robot-swing-animation-final.log. Zie ROBOT_TIMED_DIGGING.md. Visuele bevestiging op scherm 3 en overige wereldacties blijven open.
+
+### Linkermuisklik en gerichte robotinteractie
+
+Swing valideert upstream actie-/kalibratiezijden, gebruikt de echte ray-hit en respecteert LeftClickBlock-cancel/useItem/useBlock, wereldrechten en sneak-status. Blok-attack uitgevoerd waar toegestaan; toestand na attack bewaard voor vertraagd graven. Tests voor halve blokken, verboden zijden, ore-attack en delayed sneak. Full build: 2058 unit-tests en 466 GameTests; robot-left-click-final.log. Zie ROBOT_LEFT_CLICK.md. Entities/fire/drop/XP, verdere eventdetails, place/use en live verificatie blijven open.

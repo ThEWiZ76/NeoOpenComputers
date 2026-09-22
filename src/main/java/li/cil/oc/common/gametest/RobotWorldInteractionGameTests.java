@@ -23,6 +23,112 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
     @GameTest(template = "empty")
+    public static void robotSwingUsesCalibratedRayForPartialBlocks(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        helper.setBlock(target, Blocks.STONE_SLAB);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        final var component = (li.cil.oc.api.network.Component) robot.node();
+        helper.assertTrue(Boolean.FALSE.equals(component.invoke("swing", null, 3, 1)[0]), "Upward calibrated ray hit empty half above bottom slab");
+        helper.assertTrue(Boolean.TRUE.equals(component.invoke("swing", null, 3, 0)[0]), "Downward calibrated ray missed bottom slab");
+        tickRobot(robot, 100);
+        helper.assertTrue(helper.getBlockState(target).isAir(), "Calibrated slab dig did not finish");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotSwingHonorsSeparateBlockAndItemClickDenials(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        helper.setBlock(target, Blocks.REDSTONE_ORE);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        final int[] mode = {0};
+        final boolean[] sneakyHarvest = {false};
+        final Object listener = new Object() {
+            @SubscribeEvent
+            public void onClick(final net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock event) {
+                if (event.getLevel() != helper.getLevel() || !event.getPos().equals(helper.absolutePos(target))) return;
+                if (mode[0] == 0) event.setUseItem(net.neoforged.neoforge.common.util.TriState.FALSE);
+                if (mode[0] == 1) event.setUseBlock(net.neoforged.neoforge.common.util.TriState.FALSE);
+            }
+            @SubscribeEvent
+            public void onHarvest(final BlockEvent.BreakEvent event) {
+                if (event.getLevel() == helper.getLevel() && event.getPos().equals(helper.absolutePos(target))) {
+                    sneakyHarvest[0] = event.getPlayer().isShiftKeyDown();
+                }
+            }
+        };
+        final var component = (li.cil.oc.api.network.Component) robot.node();
+        NeoForge.EVENT_BUS.register(listener);
+        try {
+            helper.assertTrue(Boolean.FALSE.equals(component.invoke("swing", null, 3)[0]), "Use-item denial started a dig");
+            helper.assertTrue(!helper.getBlockState(target).getValue(net.minecraft.world.level.block.RedStoneOreBlock.LIT), "Denied click still attacked ore");
+            mode[0] = 1;
+            helper.assertTrue(Boolean.TRUE.equals(component.invoke("swing", null, 3, 3, true)[0]), "Use-block denial incorrectly blocked item mining");
+            helper.assertTrue(!helper.getBlockState(target).getValue(net.minecraft.world.level.block.RedStoneOreBlock.LIT), "Use-block denial still attacked ore");
+            tickRobot(robot, 100);
+            helper.assertTrue(helper.getBlockState(target).isAir() && sneakyHarvest[0], "Delayed harvest lost sneak state or did not finish");
+            helper.assertTrue(!robot.player().isShiftKeyDown(), "Harvest leaked sneak state");
+            mode[0] = 2;
+            helper.setBlock(target, Blocks.REDSTONE_ORE);
+            helper.assertTrue(Boolean.TRUE.equals(component.invoke("swing", null, 3)[0]), "Normal ore click failed");
+            helper.assertTrue(helper.getBlockState(target).getValue(net.minecraft.world.level.block.RedStoneOreBlock.LIT), "Normal click omitted block attack behavior");
+            tickRobot(robot, 100);
+            helper.assertTrue(helper.getBlockState(target).isAir(), "Block attack state change canceled valid dig");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(listener);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotSwingRejectsUnsupportedSidesAndOppositeCalibration(final GameTestHelper helper) throws Exception {
+        final var component = (li.cil.oc.api.network.Component) robot(helper).node();
+        for (final Object[] arguments : new Object[][]{{2}, {4}, {5}, {-1}, {6}, {3, 2}, {0, 1}, {1, 0}, {3, 6}}) {
+            try {
+                component.invoke("swing", null, arguments);
+                helper.fail("Swing accepted invalid side arguments " + java.util.Arrays.toString(arguments));
+            } catch (final IllegalArgumentException expected) {
+                helper.assertTrue("invalid side".equals(expected.getMessage()), "Unexpected side validation error");
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotSwingRespectsLeftClickProtectionAndSneaking(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        helper.setBlock(target, Blocks.STONE);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        final boolean[] observed = {false};
+        final Object protection = new Object() {
+            @SubscribeEvent
+            public void onClick(final net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock event) {
+                if (event.getLevel() != helper.getLevel() || !event.getPos().equals(helper.absolutePos(target))) return;
+                observed[0] = true;
+                helper.assertTrue(event.getEntity().isShiftKeyDown(), "Robot omitted sneak modifier from left click");
+                helper.assertTrue(event.getEntity().getMainHandItem().is(Items.IRON_PICKAXE), "Left click did not use equipped tool");
+                helper.assertTrue(event.getFace() == Direction.NORTH, "Left click did not use actual hit face");
+                event.setCanceled(true);
+            }
+        };
+        NeoForge.EVENT_BUS.register(protection);
+        try {
+            final Object[] result = ((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3, 1, true);
+            helper.assertTrue(observed[0], "Robot skipped left-click event");
+            helper.assertTrue(Boolean.FALSE.equals(result[0]), "Robot ignored canceled left click");
+            tickRobot(robot, 100);
+            helper.assertTrue(helper.getBlockState(target).is(Blocks.STONE), "Canceled left click still broke block");
+            helper.assertTrue(robot.getItem(RobotBlockEntity.TOOL_SLOT).getDamageValue() == 0, "Canceled left click wore tool");
+            helper.assertTrue(!robot.player().isShiftKeyDown(), "Robot leaked sneak state into next interaction");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(protection);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotDigSynchronizesSwingAnimationAndCancellation(final GameTestHelper helper) throws Exception {
         final RobotBlockEntity robot = robot(helper);
         final BlockPos target = new BlockPos(1, 1, 2);

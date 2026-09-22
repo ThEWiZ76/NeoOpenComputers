@@ -23,6 +23,8 @@ final class ModSettingsTest {
         assertEquals(0.1D, ModSettings.robotItemDamageRate());
         assertEquals(List.of("robot", "delays", "harvestRatio"), ModSettings.ROBOT_HARVEST_RATIO.getPath());
         assertEquals(1D, ModSettings.robotHarvestRatio());
+        assertEquals(List.of("robot", "swingRange"), ModSettings.ROBOT_SWING_RANGE.getPath());
+        assertEquals(0.49D, ModSettings.robotSwingRange());
     }
 
     @Test
