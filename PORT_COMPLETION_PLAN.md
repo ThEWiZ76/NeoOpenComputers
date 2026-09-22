@@ -420,3 +420,7 @@ Still required: writable OpenOS installation through the complete player flow, a
 ## Tablet writable installation checkpoint - 2026-09-22
 
 The writable OpenOS installation gate now has an actual installer regression: insert bundled media through the editor, boot BIOS/OpenOS, run install --noreboot and confirm, remove media through the editor, boot installed HDD, then write/read a home file through shell commands. No preinstalled filesystem fixture. Final tablet-install-final.log: build/2108units/all545GameTests pass. This supersedes the writable-installation item above for this native tablet setup. Real assembler GUI/survival flow, actual process restart, wider variants and client visual acceptance remain required.
+
+## Actual process restart checkpoint - 2026-09-22
+
+Opt-in ProcessRestartGameTests now spans two GameTestServer JVMs and normal shutdown/world/player saves. A native computer retains Lua locals and an external floppy open-file offset; the dedicated player's tablet reloads newest component data in stopped state after orderly logout. Verified separate PIDs67064/64320, both546 tests, build/2108units green in verify. See [[../03 manuals/Process restart test]] for repeatable commands and preserved logs/world. First attempt exposed only insufficient fixture power before the verification batch; power now starts on the first world tick. Broader host restart, crash recovery, world settings, migration, survival and client/visual gates remain in scope.

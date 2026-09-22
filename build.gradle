@@ -109,6 +109,16 @@ runs {
     }
     gameTestServer {
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        if (project.hasProperty('neoopencomputers.restartPhase')) {
+            def phase = project.property('neoopencomputers.restartPhase').toString()
+            def world = project.findProperty('neoopencomputers.restartWorld')?.toString()
+            if (!(phase in ['prepare', 'verify']) || world == null || !(world ==~ /oc-restart-[a-zA-Z0-9_-]+/)) {
+                throw new GradleException('Restart probe requires phase prepare/verify and a separate oc-restart-* world name.')
+            }
+            systemProperty 'neoopencomputers.restartPhase', phase
+            argument '--world'
+            argument world
+        }
     }
 
     data {

@@ -2,6 +2,10 @@
 
 2026-09-22. Related: [[../02 plans/Complete portering]], [[Native Lua persistence]], [[../05 memory/OpenComputers Memory]].
 
+## Actual process restart coverage - 2026-09-22
+
+ProcessRestartGameTests now verifies the tablet through two real GameTestServer JVMs and the on-disk player inventory. The first process keeps a native tablet running until normal server shutdown; the second uses the same fixed test-player profile through actual login loading and requires the newest EEPROM data with a stopped runtime, matching ordinary logout semantics. The same probe verifies native computer/external-floppy continuation from saved chunks. Prepare PID67064 and verify PID64320 in the isolated oc-restart-20260922-1858 world both passed546 tests; the verify build/2108 units passed. See [[../03 manuals/Process restart test]]. This supersedes the missing-process-test notes below for this specific setup; it does not cover every host, abrupt crashes, full survival/assembler/client flow or visual acceptance.
+
 ## Rack timing investigation resolved - 2026-09-22
 
 The earlier rack deadline symptom mentioned below is now diagnosed as a test clock mismatch; those open-investigation notes are historical. A controlled fractional-deadline reproducer reached the restored Lua timer loop, then waited on a 12ms monotonic execution delay while accelerated game uptime had reached 5.6 seconds. NativeRackPersistenceGameTests now advances its injected scheduler clock by 50ms per world tick and deliberately exercises a fractional deadline. The original 60-tick assertion is unchanged. Final native-rack-clock-verified.log passed build, 2108 unit tests and all 539 GameTests. See [[Native Lua persistence]] for evidence and limits. This is not a claim that all native runtime or full-port acceptance is complete.
