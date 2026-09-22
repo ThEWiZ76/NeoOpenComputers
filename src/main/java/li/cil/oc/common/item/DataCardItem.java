@@ -27,7 +27,15 @@ public class DataCardItem extends Item implements DriverItem {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new DataCardEnvironment(tier(stack));
+        final var environment = new DataCardEnvironment(tier(stack)) {
+            @Override
+            public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override
