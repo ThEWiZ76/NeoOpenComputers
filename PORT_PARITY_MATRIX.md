@@ -213,3 +213,11 @@ TankUpgradeEnvironment now stores a complete registry-aware FluidStack under flu
 TankDataPersistenceGameTests proves731 water with custom batch/concentration data survives a real robot block-entity replacement, and exercises legacy231 water migration, loading empty data into a previously filled environment, migration reload and reuse of a snapshot after fully draining. Red failures: lost data components and stale contents on empty load (tank-data-red.log). Final build,2106 units/all594 GameTests pass (tank-data-verified.log).
 
 Direct data-component proof uses vanilla custom_data; arbitrary third-party component codecs and full process restart remain additional gates. No client launch/install, push or merge.
+
+## Native fluid continuation and robot washout fix - 2026-09-22
+
+New nativeRobotResumesWorldFluidTransfers test fills a source above the robot, saves/replaces the robot with its internal tank empty, resumes the same Lua proxy/local variable, drains the source back into the tank and rejects a999mB placement without losing water. This initially timed out without a Lua error. Expanded shared helper diagnostics proved the restored robot was removed and its block replaced by flowing water(level8), rather than a VM continuation failure.
+
+robotProperties now uses forceSolidOn alongside its existing dynamicShape/noOcclusion, preserving the partial collision/render shape while preventing FlowingFluid.canHoldFluid from washing the robot away through the blocksMotion check. Final build,2106 units/all595 GameTests pass (native-fluid-final.log). Red evidence: native-fluid-continuation.log and native-fluid-diagnostic.log.
+
+The test proves ordinary robot NBT replacement/native continuation while water flows around it; full JVM restart, moving robots/afterimages in fluids and rendered client acceptance remain additional gates. No client launch/install, push or merge.

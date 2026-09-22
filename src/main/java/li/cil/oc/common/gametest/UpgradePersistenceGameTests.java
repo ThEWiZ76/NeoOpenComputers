@@ -76,6 +76,26 @@ public final class UpgradePersistenceGameTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 400)
+    public static void nativeRobotResumesWorldFluidTransfers(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), """
+            assert(robot.tankLevel(1) == 1000)
+            local ok, amount = robot.fill(1)
+            assert(ok and amount == 1000, 'could not place source above robot')
+            assert(robot.tankLevel(1) == 0)
+            local retained = 731
+            """, """
+            assert(retained == 731, 'Lua state lost')
+            assert(robot.tankLevel(1) == 0, 'empty tank resurrected old fluid')
+            local ok, amount = robot.drain(1)
+            assert(ok and amount == 1000, 'restored proxy could not drain world source')
+            assert(robot.tankLevel(1) == 1000)
+            local placed, reason = robot.fill(1, 999)
+            assert(placed == nil and type(reason) == 'string')
+            assert(robot.tankLevel(1) == 1000, 'rejected transfer consumed water')
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
     public static void robotGeneratorRetainsFuelAcrossReload(GameTestHelper helper) {
         restore(helper, new ItemStack(ModItems.GENERATOR_UPGRADE.get()), """
             local upgrade = component.proxy(component.list('generator')())
@@ -220,7 +240,9 @@ public final class UpgradePersistenceGameTests {
                 }
             })
             .thenExecute(() -> helper.assertTrue(active[0].machine().signal("continue_upgrade"), "Restored robot rejected signal"))
-            .thenWaitUntil(() -> helper.assertTrue(color(active[0]) == 0x123456, "Upgrade continuation failed: " + active[0].machine().lastError()))
+            .thenWaitUntil(() -> helper.assertTrue(color(active[0]) == 0x123456, "Upgrade continuation failed: " + active[0].machine().lastError()
+                + ", running=" + active[0].machine().isRunning() + ", removed=" + active[0].isRemoved()
+                + ", block=" + helper.getLevel().getBlockState(active[0].getBlockPos()) + ", color=" + color(active[0])))
             .thenExecute(() -> {
                 if (chunkloader) assertTickets(helper, active[0], false);
                 if (tractor) {
