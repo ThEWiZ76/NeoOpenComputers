@@ -243,3 +243,11 @@ This test starts a native machine but does not demonstrate resumed Lua heap exec
 nativeDroneContinuesAfterDimensionRoundtrip now runs an actual native Lua EEPROM until it waits for a signal, transfers the drone to the Nether and back, and resumes that same program. A local marker731, selected slot3, original component proxy and seven diamonds survive; the resumed proxy transfers two diamonds into slot1 and leaves five in slot3. Both replaced VMs are closed.
 
 Build and all598 GameTests pass (drone-dimension-continuation.log); the existing unit suite remains green. The intermediate Nether entity is transferred back immediately, so sustained execution in the destination dimension, portal input, rendering and full JVM restart are separate acceptance gates. No client launch/install, push or merge.
+
+## Shared robot/drone detection - 2026-09-22
+
+Added the previously missing drone detect callback and shared AgentWorldControl.detect with robots. Side handling follows robot local down/up/front versus all six drone global directions. Classification follows upstream WorldAware: nearest living entity/minecart, air, fluid block, replaceable, non-colliding passable block, solid. Fluid/replaceable detection posts a BlockEvent.BreakEvent and reports cancellation as the blocked boolean. Waterlogged solid blocks are not misclassified as liquid.
+
+AgentDetectionGameTests exercises both component callbacks against air, stone, waterlogged slab, water, short grass, torch and a sheep; a position-scoped event listener checks protected water/grass, unregisters in finally, and verifies unprotected grass afterward. Invalid side6 is rejected. Build and all600 GameTests pass (agent-detection.log).
+
+This restores detection only; drone item world interactions such as suck/drop and actual third-party protection integration remain open. The tests use a controlled NeoForge listener, not an installed protection mod. No client launch/install, push or merge.

@@ -871,24 +871,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Callback(doc = "function(side:number):boolean,string -- Detects block state on the specified side.")
     public Object[] detect(final Context context, final Arguments arguments) {
-        if (level == null) {
-            return new Object[]{false, "no world"};
-        }
-        final BlockPos target = targetPos(arguments.checkInteger(0));
-        if (!level.isLoaded(target)) {
-            return new Object[]{false, "target not loaded"};
-        }
-        final BlockState state = level.getBlockState(target);
-        if (state.isAir()) {
-            return new Object[]{false, "air"};
-        }
-        if (!state.getFluidState().isEmpty()) {
-            return new Object[]{true, "liquid"};
-        }
-        if (state.canBeReplaced()) {
-            return new Object[]{false, "replaceable"};
-        }
-        return new Object[]{true, "solid"};
+        return li.cil.oc.common.component.AgentWorldControl.detect(this, arguments);
     }
 
     @Callback(doc = "function(side:number):boolean -- Compares selected stack with block on the specified side.")
