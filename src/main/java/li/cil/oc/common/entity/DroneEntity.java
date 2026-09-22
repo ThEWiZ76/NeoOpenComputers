@@ -131,7 +131,6 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private NonNullList<ItemStack> items = NonNullList.withSize(MAX_SLOT_COUNT, ItemStack.EMPTY);
     private Node droneNode;
-    private int pendingComponentSlot = -1;
     private int tier;
     private int selectedSlot;
     private int selectedTank;
@@ -247,7 +246,6 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
                 }
                 final int slot = nextSlot;
                 nextSlot = nextComponentSlot(slot + 1);
-                pendingComponentSlot = slot;
                 return items.get(slot);
             }
         };
@@ -259,11 +257,20 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
     }
 
     @Override
-    public void onMachineConnect(final Node node) {
-        if (node != null && node.address() != null && pendingComponentSlot >= 0) {
-            componentSlots.put(node.address(), pendingComponentSlot);
+    public void onMachineConnect(final Node node, final ItemStack stack) {
+        if (node != null && node.address() != null) {
+            for (int slot = 0; slot < getContainerSize(); slot++) {
+                if (items.get(slot) == stack) {
+                    componentSlots.put(node.address(), slot);
+                    break;
+                }
+            }
         }
-        pendingComponentSlot = -1;
+        onMachineConnect(node);
+    }
+
+    @Override
+    public void onMachineConnect(final Node node) {
     }
 
     @Override

@@ -293,3 +293,7 @@ getComponentInSlot-stub vervangen door lookup van actuele aangesloten hardware. 
 ### Geinstalleerde hover-upgrades en vlieghoogte
 
 Hovercontrole scant nu echte internalComponents in plaats van ongeldige gecombineerde inventarisindexen. Passieve hoverhardware heeft geen componentenvironment en werd daardoor gemist. Vier echte bewegingsproeven bewijzen beide tiers, tierbegrenzing, geen effect van een upgrade alleen in cargo en exacte energie/positie bij toegestane of geblokkeerde beweging. Full build: 2058 unit-tests en 488 GameTests; robot-hover-hardware-final.log. Zie ROBOT_INVENTORY_VIEWS.md. Overige hostmappings, gecombineerde API-slotnamespace, runtime containers en verdere portering blijven open.
+
+### Slotkoppeling voor alle overige machinehosts
+
+De bij Robot gevonden geneste-iteratorfout ook gereproduceerd en hersteld in computerkast, microcontroller, drone en rackserver. Alle vier koppelen aangesloten environments nu via het exacte bronitem; rack-busregistratie behouden. Vier concrete hosttests installeren CPU/RAM/EEPROM en controleren unieke volledige slotmapping na twee herbouwcycli. Full build: 2058 unit-tests en 492 GameTests; host-component-mapping-final.log. Zie COMPONENT_SLOT_MAPPING.md. Runtime robotcontainers, gecombineerde API-slotsemantiek en verdere portpariteit blijven open.

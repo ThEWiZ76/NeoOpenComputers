@@ -111,7 +111,6 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private volatile boolean pendingServerThreadChangeMark;
-    private int pendingComponentSlot = -1;
     private int tier;
     private int color;
     private int wakeThreshold;
@@ -251,7 +250,6 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
                 }
                 final int slot = nextSlot;
                 nextSlot = nextComponentSlot(items, tier, slot + 1);
-                pendingComponentSlot = slot;
                 return items.get(slot);
             }
         };
@@ -263,9 +261,20 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     @Override
+    public void onMachineConnect(final Node node, final ItemStack stack) {
+        if (node != null && node.address() != null) {
+            for (int slot = 0; slot < getContainerSize(); slot++) {
+                if (items.get(slot) == stack) {
+                    componentSlots.put(node.address(), slot);
+                    break;
+                }
+            }
+        }
+        onMachineConnect(node);
+    }
+
+    @Override
     public void onMachineConnect(final Node node) {
-        recordComponentSlot(componentSlots, node, pendingComponentSlot);
-        pendingComponentSlot = -1;
     }
 
     @Override

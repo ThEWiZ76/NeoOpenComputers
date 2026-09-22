@@ -91,7 +91,6 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private final int tier;
-    private int pendingComponentSlot = -1;
     private volatile boolean pendingServerThreadChangeMark;
     private int wakeThreshold;
     private final int[] redstoneOutputs = new int[6];
@@ -217,7 +216,6 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
                 }
                 final int slot = nextSlot;
                 nextSlot = nextComponentSlot(slot + 1);
-                pendingComponentSlot = slot;
                 return items.get(slot);
             }
         };
@@ -232,11 +230,20 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     }
 
     @Override
-    public void onMachineConnect(final Node node) {
-        if (node != null && node.address() != null && pendingComponentSlot >= 0) {
-            componentSlots.put(node.address(), pendingComponentSlot);
+    public void onMachineConnect(final Node node, final ItemStack stack) {
+        if (node != null && node.address() != null) {
+            for (int slot = 0; slot < getContainerSize(); slot++) {
+                if (items.get(slot) == stack) {
+                    componentSlots.put(node.address(), slot);
+                    break;
+                }
+            }
         }
-        pendingComponentSlot = -1;
+        onMachineConnect(node);
+    }
+
+    @Override
+    public void onMachineConnect(final Node node) {
     }
 
     @Override

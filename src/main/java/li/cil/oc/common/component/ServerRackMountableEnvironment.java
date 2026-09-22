@@ -107,7 +107,6 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private final List<RackBusConnectable> busConnectables = new ArrayList<>();
-    private int pendingComponentSlot = -1;
     private boolean wasWorking;
     private boolean hadErrored;
     private long lastFileSystemAccess;
@@ -186,7 +185,6 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
                 }
                 final int result = nextSlot;
                 nextSlot = nextComponentSlot(result + 1);
-                pendingComponentSlot = result;
                 return items.get(result);
             }
         };
@@ -214,14 +212,23 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     }
 
     @Override
-    public void onMachineConnect(final Node node) {
-        if (node != null && node.address() != null && pendingComponentSlot >= 0) {
-            componentSlots.put(node.address(), pendingComponentSlot);
+    public void onMachineConnect(final Node node, final ItemStack stack) {
+        if (node != null && node.address() != null) {
+            for (int slot = 0; slot < getContainerSize(); slot++) {
+                if (items.get(slot) == stack) {
+                    componentSlots.put(node.address(), slot);
+                    break;
+                }
+            }
         }
+        onMachineConnect(node);
+    }
+
+    @Override
+    public void onMachineConnect(final Node node) {
         if (node != null && node.host() instanceof RackBusConnectable connectable && !busConnectables.contains(connectable)) {
             busConnectables.add(connectable);
         }
-        pendingComponentSlot = -1;
     }
 
     @Override
