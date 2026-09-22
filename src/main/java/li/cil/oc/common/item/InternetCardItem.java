@@ -24,7 +24,15 @@ public class InternetCardItem extends Item implements DriverItem {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new InternetCardEnvironment();
+        final var environment = new InternetCardEnvironment() {
+            @Override
+            public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override

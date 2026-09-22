@@ -89,7 +89,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class DebugCardEnvironment extends AbstractManagedEnvironment {
+public class DebugCardEnvironment extends AbstractManagedEnvironment {
     private static final String COMPONENT_NAME = "debug";
     private static final String DATA_TAG = "oc:data";
     private static final String PLAYER_TAG = "oc:player";

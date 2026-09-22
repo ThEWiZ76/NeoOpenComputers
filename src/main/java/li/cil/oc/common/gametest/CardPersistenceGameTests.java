@@ -24,6 +24,42 @@ import java.nio.charset.StandardCharsets;
 @PrefixGameTestTemplate(false)
 public final class CardPersistenceGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
+    public static void redstoneProxyRetainsOutputsAndWakeThreshold(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.REDSTONE_CARD.get()), """
+            local card = component.proxy(component.list('redstone')())
+            card.setOutput(1, 7)
+            card.setWakeThreshold(11)
+            assert(card.getOutput(1) == 7)
+            """, """
+            assert(card.getOutput(1) == 7, 'redstone output lost')
+            assert(card.getWakeThreshold() == 11, 'redstone wake threshold lost')
+            card.setOutput(1, 3)
+            assert(card.getOutput(1) == 3, 'old redstone proxy cannot change output')
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void internetProxySurvivesReload(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.INTERNET_CARD.get()), """
+            local card = component.proxy(component.list('internet')())
+            local http, tcp = card.isHttpEnabled(), card.isTcpEnabled()
+            """, """
+            assert(card.isHttpEnabled() == http, 'old HTTP capability proxy failed')
+            assert(card.isTcpEnabled() == tcp, 'old TCP capability proxy failed')
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void debugProxySurvivesReload(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.DEBUG_CARD.get()), """
+            local card = component.proxy(component.list('debug')())
+            assert(card.isModLoaded('minecraft'))
+            """, """
+            assert(card.isModLoaded('minecraft'), 'old debug proxy failed')
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
     public static void dataTier1ProxySurvivesReload(GameTestHelper helper) { data(helper, 0); }
 
     @GameTest(template = "empty", timeoutTicks = 400)

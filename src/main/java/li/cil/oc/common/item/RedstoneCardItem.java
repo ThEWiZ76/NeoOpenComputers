@@ -29,7 +29,15 @@ public class RedstoneCardItem extends Item implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new RedstoneCardEnvironment(host);
+        final var environment = new RedstoneCardEnvironment(host) {
+            @Override
+            public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override

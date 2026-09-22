@@ -260,3 +260,11 @@ DataCardItem (all three tiers) and LinkedCardItem created environments without r
 CardPersistenceGameTests saves and replaces a tier3 computer running native EEPROM Lua. After restoration the same proxy and local data must still work: all data tiers perform base64 encode/decode through the old proxy; the linked card reads its original persistence-probe channel and resume-linked/fuzzy wake settings. Before the fix, all four cases failed: data callbacks reported no such method and linked reported no such component (card-persistence-red.log). With the fix, build/2108 unit tests/all552 GameTests pass (card-persistence-verified.log).
 
 Coverage is case NBT reload and native proxy continuation, not all crypto operations, key-value persistence, linked packet delivery, other hosts or visual acceptance. RedstoneCardItem, InternetCardItem and DebugCardItem also have unbacked constructors and are next audit candidates; no behavior claim until reproduced. Full port gates remain open. No client launch/install/push/merge.
+
+## Redstone, internet and debug card identity - 2026-09-22
+
+Added item-backed load/save to RedstoneCardItem, InternetCardItem and DebugCardItem. DebugCardEnvironment is no longer final so its item can supply the same save hook while retaining the actual environment type. No changes to permission checks or network connection semantics.
+
+Three native CardPersistenceGameTests save/replace the running tier3 case and call the old Lua proxy. Before the fix all three failed with no such component (remaining-cards-red.log). Redstone now retains output7 and wake threshold11, then accepts output3 through that proxy. Internet capability callbacks and debug isModLoaded also survive. Final remaining-cards-final.log: build/2108 units/all555 GameTests passed. The first implementation compile failed on DebugCardEnvironment being final; resolved by allowing the save-hook subclass.
+
+Coverage does not prove open HTTP/TCP handle behavior, debug remote-node reconnection or all access-context lifecycle paths. Debug reconnectRemoteNode clears its pending position if findNode fails, including a detached host; this needs a targeted reload regression next. Upgrade drivers also still need persistence auditing. No client launch/install/push/merge; visual and complete-port acceptance remain open.
