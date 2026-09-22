@@ -176,6 +176,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private static final int MUTABLE_SLOT_COUNT = CARGO_SLOT_START + CARGO_SLOT_COUNT;
     private static final int MAX_HARDWARE_SLOT_COUNT = slotCount(2);
     private final Machine machine;
+    private CompoundTag unloadedState;
     private boolean relocating;
     private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, this::energyThroughput);
     private final MultiTank internalTanks = new MultiTank() {
@@ -1599,6 +1600,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
+            if (unloadedState != null) loadAdditional(unloadedState, level.registryAccess());
             Network.joinOrCreateNetwork(this);
             connectMachineNode();
             syncRuntimeComponents();
@@ -1623,6 +1625,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
+        unloadedState = null;
         for (int slot = CONTAINER_RUNTIME_SLOT_START; slot < CARGO_SLOT_START; slot++) detachRuntimeComponent(slot);
         super.loadAdditional(tag, registries);
         tier = normalizeTier(tag.getInt(TAG_TIER));
@@ -1652,6 +1655,10 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     @Override
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
+        if (unloadedState != null) {
+            tag.merge(unloadedState.copy());
+            return;
+        }
         for (final RuntimeComponent component : runtimeComponents) {
             if (component != null) saveRuntimeComponent(component);
         }
@@ -1707,6 +1714,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     private void removeMachineNode() {
+        if (level != null && !level.isClientSide && unloadedState == null) {
+            // Movement skips this path; only disposal snapshots and stops the VM.
+            final CompoundTag saved = new CompoundTag();
+            saveAdditional(saved, level.registryAccess());
+            unloadedState = saved;
+        }
         for (int slot = CONTAINER_RUNTIME_SLOT_START; slot < CARGO_SLOT_START; slot++) detachRuntimeComponent(slot);
         if (machine.node() != null) {
             machine.node().remove();
@@ -1714,6 +1727,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (robotNode != null) {
             robotNode.remove();
         }
+        if (unloadedState != null) machine.stop();
     }
 
     private boolean canStartMachine() {

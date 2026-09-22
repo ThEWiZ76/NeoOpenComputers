@@ -194,3 +194,9 @@ native-micro-queue-integrated.log passed2103 units, all514 GameTests and build. 
 DroneEntity snapshots additional save data before disconnect/stop and reuses it if serialization follows removal. readAdditionalSaveData now rebuilds CPU/components before restoring machine state. Two NativeDronePersistenceGameTests spawn real entities, preserve local731/tmp identity/status, remove the old entity, assert VM closure and resume a freshly loaded entity without reboot. Save-before-removal and save-after-removal both failed retained-VM checks before correction. Entity removal and replacement are separated by two ticks for UUID registration cleanup.
 
 native-drone-disposal-integrated.log passed2103 units, all516 GameTests and build. No client/install/push. Robot lifecycle, external filesystem ordering/full-world restart, platform/client coverage and remaining full-port requirements are still open.
+
+## Robot disposal versus movement: 2026-09-22
+
+RobotBlockEntity snapshots complete hardware/inventory/runtime state before disposal and restores same-instance onLoad. The existing relocating guard keeps the live VM intact during movement. Three NativeRobotPersistenceGameTests first failed retained-VM assertions and now verify disposal plus local731/tmp identity/open binary file offset/cargo3 continuation with save-before-remove, unload-before-save and same-instance reload.
+
+The existing two-step physical movement fixture now has a native variant, retaining the same machine/architecture, component addresses, screen and viewport, cargo, open terminal/menu and correct new power adjacency. Both LuaJ and native movement variants pass. native-robot-disposal-integrated.log passed2103 units, all520 GameTests and build. No client/install/push. Basic host disposal is covered; full-world/external filesystem ordering, architecture selection/registration, wider APIs/platform/client checks and full-port requirements remain open.

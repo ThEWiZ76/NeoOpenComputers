@@ -307,6 +307,15 @@ public final class RobotMovementPersistenceGameTests {
 
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void runningRobotMovesTwiceWithoutRebootAndKeepsItsOpenTerminal(final GameTestHelper helper) {
+        runningRobotMovesTwice(helper, false);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void nativeRobotMovesTwiceWithoutReplacingVm(final GameTestHelper helper) {
+        runningRobotMovesTwice(helper, true);
+    }
+
+    private static void runningRobotMovesTwice(final GameTestHelper helper, final boolean nativeLua) {
         final BlockPos start = new BlockPos(1, 1, 1);
         final BlockPos finish = start.south(2);
         for (int z = 1; z <= 4; z++) {
@@ -332,9 +341,12 @@ public final class RobotMovementPersistenceGameTests {
             robot.setLightColor(0x123456)
             while true do computer.pullSignal() end
             """);
+        final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
+        if (nativeLua) ((li.cil.oc.api.driver.item.MutableProcessor) li.cil.oc.api.Driver.driverFor(cpu))
+            .setArchitecture(cpu, li.cil.oc.common.machine.NativeLuaArchitecture.class);
         installHardware(helper, robot, List.of(new ItemStack(ModItems.SCREEN_TIER1.get()),
             new ItemStack(ModItems.KEYBOARD.get()), new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()),
-            new ItemStack(ModItems.CPU_TIER1.get()), new ItemStack(ModItems.MEMORY_TIER1.get()), eeprom));
+            cpu, new ItemStack(ModItems.MEMORY_TIER1.get()), eeprom));
         robot.onLoad();
         helper.setBlock(start.west(), ModBlocks.POWER_CONVERTER.get());
         helper.setBlock(finish.east(), ModBlocks.POWER_CONVERTER.get());
