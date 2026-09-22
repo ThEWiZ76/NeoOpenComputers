@@ -265,3 +265,7 @@ Swing valideert upstream actie-/kalibratiezijden, gebruikt de echte ray-hit en r
 ### Drops naar robotinventaris
 
 Nieuwe drops van block-attack en harvest gaan nu naar cargo; bestaande items blijven liggen en overschot blijft behouden. Pickup-beveiliging, eigenaar en pre/post-events worden gerespecteerd. Tests bevestigen exacte aantallen bij vrije ruimte, gedeeltelijk volle stacks en geweigerde pickup. Full build: 2058 unit-tests en 468 GameTests; robot-harvest-drops-verified.log. Zie ROBOT_HARVEST_DROPS.md. Ore-XP naar experience-upgrade, overige wereldacties en live tests blijven open.
+
+### Ore-XP naar experience-upgrade
+
+Exacte afbraak onderschept aangepaste BlockDropsEvent-XP bij aanwezige experience-upgrade, zonder dubbele wereldorbs. Zonder upgrade blijft normale XP-drop; annulering levert geen ore-XP op. Echte T3-hardware en drie vaste-XP-scenarios getest. Full build: 2058 unit-tests en 471 GameTests; robot-harvest-xp-final.log. Zie ROBOT_HARVEST_DROPS.md. Entities/fire/cobweb, verdere modinteracties, andere wereldacties en live tests blijven open.

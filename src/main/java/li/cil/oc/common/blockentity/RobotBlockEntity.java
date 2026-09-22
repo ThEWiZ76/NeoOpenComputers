@@ -1039,6 +1039,27 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         player.setItemInHand(InteractionHand.MAIN_HAND, before.copy());
         player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
         player.setShiftKeyDown(task.sneaky());
+        final boolean captureExperience = hasExperienceUpgrade();
+        final var experience = new Object() {
+            private final Map<net.neoforged.neoforge.event.level.BlockDropsEvent, Integer> captured = new java.util.IdentityHashMap<>();
+
+            @net.neoforged.bus.api.SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
+            public void onDrops(final net.neoforged.neoforge.event.level.BlockDropsEvent event) {
+                if (event.getLevel() == level && event.getPos().equals(task.target()) && event.getBreaker() == player) {
+                    captured.put(event, event.getDroppedExperience());
+                    event.setDroppedExperience(0);
+                }
+            }
+
+            double collected() {
+                // Recheck final event state: canceled loot grants no XP, and an override restoring
+                // world XP must not also receive the captured amount in the upgrade.
+                return captured.entrySet().stream()
+                    .filter(entry -> !entry.getKey().isCanceled() && entry.getKey().getDroppedExperience() == 0)
+                    .mapToDouble(Map.Entry::getValue).sum();
+            }
+        };
+        if (captureExperience) NeoForge.EVENT_BUS.register(experience);
         try {
             if (!task.state().canHarvestBlock(level, task.target(), player)) return;
             // Re-check ordinary block protection at completion, before producing loot.
@@ -1052,15 +1073,24 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             setItem(TOOL_SLOT, after);
             // GameMode can report success even when a block refuses removal.
             if (!level.getBlockState(task.target()).equals(task.state())) {
-                NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(this, 0D));
+                NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(this, experience.collected()));
             }
             setChanged();
         } finally {
+            if (captureExperience) NeoForge.EVENT_BUS.unregister(experience);
             player.setItemInHand(InteractionHand.MAIN_HAND, previousHand);
             player.setGameMode(previousGameMode);
             player.setShiftKeyDown(wasSneaking);
             collectNewDrops(player, dropsBefore);
         }
+    }
+
+    private boolean hasExperienceUpgrade() {
+        for (final Node node : machine.node().reachableNodes()) {
+            if (node.host() instanceof li.cil.oc.common.component.ExperienceUpgradeEnvironment
+                && node.canBeReachedFrom(machine.node())) return true;
+        }
+        return false;
     }
 
     private List<ItemEntity> nearbyDrops() {

@@ -23,6 +23,62 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
     @GameTest(template = "empty")
+    public static void robotHarvestStoresOreExperienceWithoutDuplicateOrbs(final GameTestHelper helper) throws Exception {
+        verifyHarvestExperience(helper, true, false);
+    }
+
+    @GameTest(template = "empty")
+    public static void robotHarvestWithoutUpgradeLeavesExperienceOrbs(final GameTestHelper helper) throws Exception {
+        verifyHarvestExperience(helper, false, false);
+    }
+
+    @GameTest(template = "empty")
+    public static void robotHarvestCanceledLootDoesNotAwardOreExperience(final GameTestHelper helper) throws Exception {
+        verifyHarvestExperience(helper, true, true);
+    }
+
+    private static void verifyHarvestExperience(final GameTestHelper helper, final boolean upgraded, final boolean cancelLoot) throws Exception {
+        final RobotBlockEntity robot = robot(helper, "while true do computer.pullSignal() end", upgraded);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        helper.setBlock(target, Blocks.DIAMOND_ORE);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        li.cil.oc.common.component.ExperienceUpgradeEnvironment upgrade = null;
+        for (final var node : robot.machine().node().reachableNodes()) {
+            if (node.host() instanceof li.cil.oc.common.component.ExperienceUpgradeEnvironment found) upgrade = found;
+        }
+        helper.assertTrue(!upgraded || upgrade != null, "Tier-three robot fixture has no installed experience upgrade");
+        final Object modifier = new Object() {
+            @SubscribeEvent
+            public void onDrops(final net.neoforged.neoforge.event.level.BlockDropsEvent event) {
+                if (event.getLevel() == helper.getLevel() && event.getPos().equals(helper.absolutePos(target))) {
+                    event.setDroppedExperience(7);
+                    if (cancelLoot) event.setCanceled(true);
+                }
+            }
+        };
+        NeoForge.EVENT_BUS.register(modifier);
+        try {
+            helper.assertTrue(Boolean.TRUE.equals(((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3)[0]), "Experience harvest did not start");
+            tickRobot(robot, 100);
+            helper.assertTrue(helper.getBlockState(target).isAir(), "Experience harvest did not remove ore");
+            if (upgrade != null) {
+                final var saved = new net.minecraft.nbt.CompoundTag();
+                upgrade.save(saved);
+                final double expected = ModSettings.robotActionXp() + (cancelLoot ? 0D : 7D * ModSettings.robotOreXpRate());
+                helper.assertTrue(Math.abs(saved.getDouble("oc:xp") - expected) < 1e-9, "Experience upgrade lost, duplicated or ignored modified ore XP");
+            }
+            final int groundExperience = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class,
+                new net.minecraft.world.phys.AABB(helper.absolutePos(target)).inflate(1D)).stream()
+                .mapToInt(net.minecraft.world.entity.ExperienceOrb::getValue).sum();
+            helper.assertTrue(groundExperience == (upgraded || cancelLoot ? 0 : 7), "Harvest duplicated or lost ground XP");
+            helper.assertTrue(cargoCount(robot, Items.DIAMOND) == (cancelLoot ? 0 : 1), "XP handling changed ore drops");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(modifier);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotSwingUsesCalibratedRayForPartialBlocks(final GameTestHelper helper) throws Exception {
         final RobotBlockEntity robot = robot(helper);
         final BlockPos target = new BlockPos(1, 1, 2);
@@ -468,12 +524,21 @@ public final class RobotWorldInteractionGameTests {
     }
 
     private static RobotBlockEntity robot(final GameTestHelper helper, final String code) {
+        return robot(helper, code, false);
+    }
+
+    private static RobotBlockEntity robot(final GameTestHelper helper, final String code, final boolean experience) {
         final BlockPos pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.SOUTH));
         final RobotBlockEntity robot = helper.getBlockEntity(pos);
-        RobotMovementPersistenceGameTests.installHardware(helper, robot, java.util.List.of(
+        final var parts = new java.util.ArrayList<>(java.util.List.of(
             new ItemStack(li.cil.oc.common.ModItems.CPU_TIER1.get()), new ItemStack(li.cil.oc.common.ModItems.MEMORY_TIER1.get()),
             RobotMovementPersistenceGameTests.eeprom(code)));
+        if (experience) {
+            robot.setTier(2);
+            parts.add(new ItemStack(li.cil.oc.common.ModItems.EXPERIENCE_UPGRADE.get()));
+        }
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, parts);
         robot.onLoad();
         ((li.cil.oc.api.network.Connector) robot.machine().node()).changeBuffer(10000D);
         helper.assertTrue(robot.toggleMachine(), "Interaction fixture did not start");

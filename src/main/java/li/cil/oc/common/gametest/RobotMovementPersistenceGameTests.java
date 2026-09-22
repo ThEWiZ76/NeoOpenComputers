@@ -504,14 +504,15 @@ public final class RobotMovementPersistenceGameTests {
     }
 
     static void installHardware(final GameTestHelper helper, final RobotBlockEntity robot, final List<ItemStack> parts) {
-        final NonNullList<ItemStack> hardware = NonNullList.withSize(RobotBlockEntity.slotCount(0), ItemStack.EMPTY);
+        final int tier = robot.tier();
+        final NonNullList<ItemStack> hardware = NonNullList.withSize(RobotBlockEntity.slotCount(tier), ItemStack.EMPTY);
         for (final ItemStack part : parts) {
             final var driver = li.cil.oc.api.Driver.driverFor(part, li.cil.oc.api.internal.Robot.class);
             helper.assertTrue(driver != null, "Movement fixture has no driver for " + part);
             boolean placed = false;
             for (int slot = 0; slot < hardware.size(); slot++) {
-                if (hardware.get(slot).isEmpty() && RobotBlockEntity.slotType(0, slot).equals(driver.slot(part))
-                    && driver.tier(part) <= RobotBlockEntity.slotTier(0, slot)) {
+                if (hardware.get(slot).isEmpty() && RobotBlockEntity.slotType(tier, slot).equals(driver.slot(part))
+                    && driver.tier(part) <= RobotBlockEntity.slotTier(tier, slot)) {
                     hardware.set(slot, part);
                     placed = true;
                     break;
