@@ -30,6 +30,14 @@ final class ModPackagingTest {
         try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.modJar"))) {
             assertContains(jar, "META-INF/LICENSE-neoopencomputers.txt");
             assertContains(jar, "META-INF/LICENSE-luaj.txt");
+            assertContains(jar, "li/cil/repack/com/naef/jnlua/LuaState.class");
+            assertContains(jar, "META-INF/LICENSE-jnlua.txt");
+            assertContains(jar, "META-INF/LICENSE-eris.txt");
+            for (final String version : new String[]{"52", "53", "54"}) {
+                assertContains(jar, "assets/neoopencomputers/lib/libjnlua" + version + "-windows-x86_64.dll");
+                assertContains(jar, "assets/neoopencomputers/lib/libjnlua" + version + "-linux-x86_64.so");
+                assertContains(jar, "assets/neoopencomputers/lib/libjnlua" + version + "-darwin-aarch64.dylib");
+            }
             assertContains(jar, "META-INF/LICENSE-typesafe-config.txt");
             assertContains(jar, "META-INF/neoforge.mods.toml");
             assertContains(jar, "neoopencomputers.mixins.json");

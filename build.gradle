@@ -19,6 +19,13 @@ sourceSets.main.resources {
 
 repositories {
     mavenCentral()
+    ivy {
+        name = 'OpenComputersNativeLua'
+        url = 'https://asie.pl/javadeps/'
+        patternLayout { artifact '[module]-[revision].[ext]' }
+        metadataSources { artifact() }
+        content { includeModule 'li.cil.oc', 'OC-JNLua'; includeModule 'li.cil.oc', 'OC-JNLua-Natives' }
+    }
 }
 
 base {
@@ -34,6 +41,14 @@ tasks.named('jar', Jar).configure {
     from(rootProject.file('LICENSE-luaj')) {
         into 'META-INF'
         rename { 'LICENSE-luaj.txt' }
+    }
+    from(rootProject.file('LICENSE-jnlua')) {
+        into 'META-INF'
+        rename { 'LICENSE-jnlua.txt' }
+    }
+    from(rootProject.file('LICENSE-eris')) {
+        into 'META-INF'
+        rename { 'LICENSE-eris.txt' }
     }
     from(rootProject.file('LICENSE-typesafe')) {
         into 'META-INF'
@@ -135,7 +150,14 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
 tasks.named('generateEmptyGameTestStructure') {
     mustRunAfter tasks.named('syncGameTestStructures')
 }
+configurations {
+    nativeLuaArtifacts
+}
+
 dependencies {
+    nativeLuaArtifacts 'li.cil.oc:OC-JNLua:20230530.0'
+    nativeLuaArtifacts 'li.cil.oc:OC-JNLua-Natives:20220928.1'
+    compileOnly 'li.cil.oc:OC-JNLua:20230530.0'
     implementation "net.neoforged:neoforge:${neo_version}"
     api 'com.typesafe:config:1.4.3'
     jarJar('com.typesafe:config:1.4.3') {
@@ -234,3 +256,37 @@ idea {
         downloadJavadoc = true
     }
 }
+
+// Pin the upstream JNI artifacts before compiling or packaging native code.
+tasks.register('verifyNativeLuaArtifacts') {
+    inputs.files(configurations.nativeLuaArtifacts)
+    doLast {
+        def expected = [
+            'OC-JNLua-20230530.0.jar': '41abce30160a8014abd34e885f0f073fb35c8d9e2f78d230b7b9e64a79ccedbb',
+            'OC-JNLua-Natives-20220928.1.jar': '43979d288fe06a8323fdf89e05bfec0448c64f026762b43ea1fa65bda3768a17'
+        ]
+        inputs.files.each { artifact ->
+            def digest = java.security.MessageDigest.getInstance('SHA-256').digest(artifact.bytes).encodeHex().toString()
+            if (digest != expected[artifact.name]) throw new GradleException("Native Lua artifact hash mismatch: ${artifact.name}")
+        }
+    }
+}
+tasks.named('compileJava') { dependsOn tasks.named('verifyNativeLuaArtifacts') }
+tasks.named('processResources') {
+    dependsOn tasks.named('verifyNativeLuaArtifacts')
+    from(configurations.nativeLuaArtifacts.collect { zipTree(it) }) {
+        include 'assets/opencomputers/lib/**'
+        eachFile { path = path.replace('assets/opencomputers/', 'assets/neoopencomputers/') }
+        includeEmptyDirs = false
+    }
+}
+
+// JNI classes must be in the mod's class directories in dev runs as well as its JAR.
+def extractNativeLuaClasses = tasks.register('extractNativeLuaClasses', Sync) {
+    dependsOn tasks.named('verifyNativeLuaArtifacts')
+    from(configurations.nativeLuaArtifacts.collect { zipTree(it) }) {
+        include 'li/cil/repack/com/naef/jnlua/**'
+    }
+    into layout.buildDirectory.dir('classes/nativeLua')
+}
+sourceSets.main.output.classesDirs.from(extractNativeLuaClasses)
