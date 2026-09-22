@@ -630,6 +630,14 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         callBudget = maxCallBudget;
         final long updateStartedAt = nanoTime.getAsLong();
         if (paused) {
+            if (pauseUntilWorldTime < 0 && pauseUntilNanos >= 0 && host != null && host.world() != null) {
+                // Detached loads have no world clock yet. Once attached, count the
+                // remaining startup pause in game ticks like other world pauses.
+                final long remainingNanos = Math.max(0L, pauseUntilNanos - updateStartedAt);
+                final long remainingTicks = (long) Math.ceil((double) remainingNanos / NANOS_PER_TICK);
+                pauseUntilWorldTime = host.world().getGameTime() + remainingTicks;
+                pauseUntilNanos = -1L;
+            }
             if (pauseUntilWorldTime >= 0 && host != null && host.world() != null && host.world().getGameTime() < pauseUntilWorldTime) {
                 return;
             }
