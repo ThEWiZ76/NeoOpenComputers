@@ -10618,14 +10618,27 @@ public final class NeoOpenComputersGameTests {
 
     @GameTest(template = "empty", timeoutTicks = 2200)
     public static void nativeOpenOsShellEnvironmentSurvivesDetachedReload(final GameTestHelper helper) {
-        openOsTerminalRunsTypedCommand(helper, true, true);
+        openOsTerminalRunsTypedCommand(helper, true, CaseReload.DETACHED);
     }
+
+    @GameTest(template = "empty", timeoutTicks = 2200)
+    public static void nativeOpenOsCaseCanSaveAfterChunkUnload(final GameTestHelper helper) {
+        openOsTerminalRunsTypedCommand(helper, true, CaseReload.UNLOAD_BEFORE_SAVE);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 2200)
+    public static void nativeOpenOsCaseCanReloadSameBlockEntity(final GameTestHelper helper) {
+        openOsTerminalRunsTypedCommand(helper, true, CaseReload.SAME_INSTANCE);
+    }
+
+    private enum CaseReload { NONE, DETACHED, UNLOAD_BEFORE_SAVE, SAME_INSTANCE }
 
     private static void openOsTerminalRunsTypedCommand(final GameTestHelper helper, final boolean nativeLua) {
-        openOsTerminalRunsTypedCommand(helper, nativeLua, false);
+        openOsTerminalRunsTypedCommand(helper, nativeLua, CaseReload.NONE);
     }
 
-    private static void openOsTerminalRunsTypedCommand(final GameTestHelper helper, final boolean nativeLua, final boolean reload) {
+    private static void openOsTerminalRunsTypedCommand(final GameTestHelper helper, final boolean nativeLua, final CaseReload reloadMode) {
+        final boolean reload = reloadMode != CaseReload.NONE;
         final BlockPos screenPos = new BlockPos(0, 1, 1);
         final BlockPos keyboardPos = new BlockPos(0, 1, 2);
         final BlockPos computerPos = new BlockPos(1, 1, 1);
@@ -10687,12 +10700,19 @@ public final class NeoOpenComputersGameTests {
             if (reload && !restored.get() && submitted.get() && countOccurrences(text, "/home # ") >= 2) {
                 final double energyBeforeReload = ((Connector) active[0].machine().node()).globalBuffer();
                 final var registries = helper.getLevel().registryAccess();
+                if (reloadMode != CaseReload.DETACHED) active[0].onChunkUnloaded();
                 final CompoundTag saved = active[0].saveWithFullMetadata(registries);
                 active[0].setRemoved();
-                final var replacement = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(
-                    active[0].getBlockPos(), active[0].getBlockState(), saved, registries);
-                helper.assertTrue(replacement instanceof ComputerCaseBlockEntity, "Saved native computer was discarded");
-                active[0] = (ComputerCaseBlockEntity) replacement;
+                helper.assertTrue(!active[0].machine().architecture().isInitialized(), "Removed case retained native Lua VM");
+                helper.assertTrue(!active[0].machine().isRunning(), "Removed case retained running machine");
+                if (reloadMode == CaseReload.SAME_INSTANCE) {
+                    active[0].clearRemoved();
+                } else {
+                    final var replacement = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(
+                        active[0].getBlockPos(), active[0].getBlockState(), saved, registries);
+                    helper.assertTrue(replacement instanceof ComputerCaseBlockEntity, "Saved native computer was discarded");
+                    active[0] = (ComputerCaseBlockEntity) replacement;
+                }
                 helper.getLevel().setBlockEntity(active[0]);
                 active[0].onLoad();
                 helper.assertTrue(((Connector) active[0].machine().node()).globalBuffer() >= energyBeforeReload,

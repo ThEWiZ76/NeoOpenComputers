@@ -713,12 +713,14 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         if (mountable instanceof TerminalServerRackMountableEnvironment terminalServer) {
             terminalServer.removeVirtualNodes();
         }
-        // The continuation was saved above; release the discarded VM only afterward.
-        if (mountable instanceof Server server && server.machine() != null) {
-            server.machine().stop();
-        }
         if (mountable != null && mountable.node() != null) {
             mountable.node().remove();
+        }
+        // Save first, disconnect next, then dispose without broadcasting shutdown
+        // to screens and filesystems that remain loaded.
+        if (mountable instanceof Server server && server.machine() != null) {
+            server.machine().node().remove();
+            server.machine().stop();
         }
         mountables[slot] = null;
     }

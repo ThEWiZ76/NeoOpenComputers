@@ -107,6 +107,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     };
 
     private final Machine machine;
+    private CompoundTag unloadedState;
     private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, this::energyThroughput);
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
@@ -682,6 +683,9 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
+            if (unloadedState != null) {
+                loadAdditional(unloadedState, level.registryAccess());
+            }
             Network.joinOrCreateNetwork(this);
         }
     }
@@ -703,6 +707,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        unloadedState = null;
         color = tag.getInt(TAG_COLOR);
         wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
         loadRedstoneOutputs(tag);
@@ -717,6 +722,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
+        if (unloadedState != null) {
+            tag.merge(unloadedState.copy());
+            return;
+        }
         tag.putInt(TAG_COLOR, color);
         tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_REDSTONE_OUTPUTS, redstoneOutputs);
@@ -776,9 +785,18 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     private void removeMachineNode() {
+        if (level != null && !level.isClientSide && unloadedState == null) {
+            // Chunk serialization may follow disposal. Keep the pre-stop inventory
+            // and continuation, also for reattaching this same block entity.
+            final CompoundTag saved = new CompoundTag();
+            saveAdditional(saved, level.registryAccess());
+            unloadedState = saved;
+        }
         if (machine.node() != null) {
             machine.node().remove();
         }
+        // Disposal must not broadcast a shutdown to surviving screens/filesystems.
+        if (unloadedState != null) machine.stop();
     }
 
     private ItemStack floppyStack() {

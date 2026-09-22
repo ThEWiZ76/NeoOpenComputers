@@ -174,3 +174,9 @@ uptime-ticks-integrated.log passed all2102 unit tests with zero failures/errors,
 ## Rack VM disposal: 2026-09-22
 
 RackBlockEntity.removeMountable now stops discarded Server machines after saveMountableData and before removing the node. Five native rack tests first failed because the old Lua VM remained initialized. They now assert disposal before restoring local variables, HDD/tmp open handles and deadlines. A new chunk-unload-before-save case verifies cached continuation survives this ordering and repeated removal notification. native-rack-disposal-integrated.log passed2102 units, all509 GameTests and build. No client/install/push. Case/robot/microcontroller/drone lifecycle coverage, full-world restart and full-port gates remain open.
+
+## Case disposal and isolated shutdown: 2026-09-22
+
+ComputerCaseBlockEntity now caches complete inventory/machine save data before disposing the old VM. Saves after unload reuse a copy, repeated removal preserves the original snapshot, and onLoad restores same-instance reattachments. Three native OpenOS tests verify disposal and continued shell variable/command behavior with save-before-remove, unload-before-save and same-instance reload. They initially failed because the VM remained initialized.
+
+The first disposal fix blanked screens: machine.stop broadcast computer.stopped while still connected. Correct order is snapshot, disconnect, then stop; RackBlockEntity now also explicitly disconnects its machine node before stopping. native-case-disposal-isolated.log passed2102 units, all511 GameTests and build. No client/install/push. Robot/microcontroller/drone lifecycle, external filesystem ordering, full-world restart and remaining full-port requirements stay open.
