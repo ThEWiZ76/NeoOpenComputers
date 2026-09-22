@@ -20,6 +20,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class ScreenItemEnvironmentTest {
     @Test
+    void itemSaveCallbackRoundtripKeepsAddressBufferPaletteAndViewport() {
+        OpenComputersApi.initialize();
+        final var saved = new java.util.concurrent.atomic.AtomicReference<net.minecraft.nbt.CompoundTag>();
+        final ScreenItemEnvironment original = new ScreenItemEnvironment(null, 2, null, saved::set);
+        li.cil.oc.api.Network.joinNewNetwork(original.node());
+        final String address = original.node().address();
+        original.setResolution(9, 4);
+        original.setViewport(7, 3);
+        original.setPaletteColor(2, 0xAABBCC);
+        original.setForegroundColor(2, true);
+        original.setBackgroundColor(0x112233);
+        original.set(0, 0, "saved é", false);
+        original.setColorDepth(TextBuffer.ColorDepth.FourBit);
+        final var snapshot = original.terminalSnapshot();
+        original.save(new net.minecraft.nbt.CompoundTag());
+        original.node().remove();
+        final ScreenItemEnvironment restored = new ScreenItemEnvironment(null, 2, saved.get(), null);
+        li.cil.oc.api.Network.joinNewNetwork(restored.node());
+        assertEquals(address, restored.node().address());
+        assertEquals(true, snapshot.contentEquals(restored.terminalSnapshot()));
+        assertEquals(0xAABBCC, restored.getPaletteColor(2));
+        assertEquals(true, restored.isForegroundFromPalette());
+        assertEquals(TextBuffer.ColorDepth.FourBit, restored.getColorDepth());
+        restored.node().remove();
+    }
+
+    @Test
     void terminalSnapshotUsesViewportAndPreservesUnicodeAndColors() {
         OpenComputersApi.initialize();
         final ScreenItemEnvironment screen = new ScreenItemEnvironment(null, 2);

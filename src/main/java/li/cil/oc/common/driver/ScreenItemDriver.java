@@ -31,7 +31,7 @@ public final class ScreenItemDriver implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return new ScreenItemEnvironment(host, tier);
+        return new ScreenItemEnvironment(host, tier, dataTag(stack), saved -> ItemDriverData.writeDataTag(stack, saved));
     }
 
     @Override

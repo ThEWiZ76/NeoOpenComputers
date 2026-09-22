@@ -23,7 +23,7 @@ public final class KeyboardItemDriver implements HostAware {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return new KeyboardItemEnvironment();
+        return new KeyboardItemEnvironment(dataTag(stack), saved -> ItemDriverData.writeDataTag(stack, saved));
     }
 
     @Override

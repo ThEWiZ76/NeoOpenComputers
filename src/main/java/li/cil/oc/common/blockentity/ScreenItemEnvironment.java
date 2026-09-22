@@ -20,11 +20,13 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class ScreenItemEnvironment extends AbstractManagedEnvironment implements TextBuffer, DeviceInfo, Tiered {
     private static final String TAG_BUFFER = "buffer";
 
     private final EnvironmentHost host;
+    private final Consumer<CompoundTag> saveData;
     private final int tier;
     private final int[] palette = new int[16];
     private final ScreenInputDispatcher inputDispatcher = new ScreenInputDispatcher();
@@ -52,7 +54,12 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
     private boolean renderingEnabled = true;
 
     public ScreenItemEnvironment(final EnvironmentHost host, final int tier) {
+        this(host, tier, null, null);
+    }
+
+    public ScreenItemEnvironment(final EnvironmentHost host, final int tier, final CompoundTag data, final Consumer<CompoundTag> saveData) {
         this.host = host;
+        this.saveData = saveData;
         this.tier = Math.clamp(tier, 0, ModSettings.screenWidthsByTier().size() - 1);
         maximumWidth = ModSettings.screenWidthByTier(this.tier);
         maximumHeight = ModSettings.screenHeightByTier(this.tier);
@@ -65,6 +72,9 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
         viewportHeight = height;
         buffer = new TextBufferState(width, height);
         setNode(ScreenEnvironment.createNode(this));
+        if (data != null && !data.isEmpty()) {
+            load(data);
+        }
     }
 
     @Override
@@ -527,12 +537,19 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
         super.load(nbt);
         powered = !nbt.contains("powered") || nbt.getBoolean("powered");
         hasPower = !nbt.contains("hasPower") || nbt.getBoolean("hasPower");
-        width = Math.clamp(nbt.getInt("width"), 1, maximumWidth);
-        height = Math.clamp(nbt.getInt("height"), 1, maximumHeight);
-        viewportWidth = Math.clamp(nbt.getInt("viewportWidth"), 1, width);
-        viewportHeight = Math.clamp(nbt.getInt("viewportHeight"), 1, height);
+        width = nbt.contains("width") ? Math.clamp(nbt.getInt("width"), 1, maximumWidth) : maximumWidth;
+        height = nbt.contains("height") ? Math.clamp(nbt.getInt("height"), 1, maximumHeight) : maximumHeight;
+        viewportWidth = nbt.contains("viewportWidth") ? Math.clamp(nbt.getInt("viewportWidth"), 1, width) : width;
+        viewportHeight = nbt.contains("viewportHeight") ? Math.clamp(nbt.getInt("viewportHeight"), 1, height) : height;
         foregroundColor = nbt.contains("foreground") ? nbt.getInt("foreground") : 0xFFFFFF;
         backgroundColor = nbt.getInt("background");
+        foregroundFromPalette = nbt.getBoolean("foregroundFromPalette");
+        backgroundFromPalette = nbt.getBoolean("backgroundFromPalette");
+        final int[] savedPalette = nbt.getIntArray("palette");
+        System.arraycopy(savedPalette, 0, palette, 0, Math.min(savedPalette.length, palette.length));
+        colorDepth = nbt.contains("colorDepth")
+            ? ColorDepth.values()[Math.clamp(nbt.getInt("colorDepth"), 0, maximumColorDepth.ordinal())]
+            : maximumColorDepth;
         precisionMode = nbt.getBoolean("precisionMode");
         touchModeInverted = nbt.getBoolean("touchModeInverted");
         renderingEnabled = !nbt.contains("renderingEnabled") || nbt.getBoolean("renderingEnabled");
@@ -553,12 +570,19 @@ public final class ScreenItemEnvironment extends AbstractManagedEnvironment impl
         nbt.putInt("viewportHeight", viewportHeight);
         nbt.putInt("foreground", foregroundColor);
         nbt.putInt("background", backgroundColor);
+        nbt.putBoolean("foregroundFromPalette", foregroundFromPalette);
+        nbt.putBoolean("backgroundFromPalette", backgroundFromPalette);
+        nbt.putIntArray("palette", palette);
+        nbt.putInt("colorDepth", colorDepth.ordinal());
         nbt.putBoolean("precisionMode", precisionMode);
         nbt.putBoolean("touchModeInverted", touchModeInverted);
         nbt.putBoolean("renderingEnabled", renderingEnabled);
         final CompoundTag bufferTag = new CompoundTag();
         buffer.save(bufferTag);
         nbt.put(TAG_BUFFER, bufferTag);
+        if (saveData != null) {
+            saveData.accept(nbt.copy());
+        }
     }
 
     private void markChanged() {
