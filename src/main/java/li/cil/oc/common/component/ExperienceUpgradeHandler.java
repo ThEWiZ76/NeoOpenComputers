@@ -1,11 +1,13 @@
 package li.cil.oc.common.component;
 
 import li.cil.oc.api.event.RobotBreakBlockEvent;
+import li.cil.oc.api.event.RobotAttackEntityEvent;
 import li.cil.oc.api.event.RobotExhaustionEvent;
 import li.cil.oc.api.event.RobotMoveEvent;
 import li.cil.oc.api.event.RobotPlaceBlockEvent;
 import li.cil.oc.api.event.RobotUsedToolEvent;
 import li.cil.oc.api.internal.Agent;
+import li.cil.oc.api.internal.Robot;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.ModSettings;
@@ -19,6 +21,7 @@ public final class ExperienceUpgradeHandler {
         NeoForge.EVENT_BUS.addListener(ExperienceUpgradeHandler::onRobotComputeDamageRate);
         NeoForge.EVENT_BUS.addListener(ExperienceUpgradeHandler::onRobotBreakBlockPre);
         NeoForge.EVENT_BUS.addListener(ExperienceUpgradeHandler::onRobotBreakBlockPost);
+        NeoForge.EVENT_BUS.addListener(ExperienceUpgradeHandler::onRobotAttackEntityPost);
         NeoForge.EVENT_BUS.addListener(ExperienceUpgradeHandler::onRobotPlaceBlockPost);
         NeoForge.EVENT_BUS.addListener(ExperienceUpgradeHandler::onRobotMovePost);
         NeoForge.EVENT_BUS.addListener(ExperienceUpgradeHandler::onRobotExhaustion);
@@ -34,6 +37,14 @@ public final class ExperienceUpgradeHandler {
 
     static void onRobotBreakBlockPost(final RobotBreakBlockEvent.Post event) {
         addExperience(event.agent, event.experience * ModSettings.robotOreXpRate() + ModSettings.robotActionXp());
+    }
+
+    static void onRobotAttackEntityPost(final RobotAttackEntityEvent.Post event) {
+        // Legacy Entity.isDead means removed, not merely zero health during a death animation.
+        // Modern Container slots are non-null, including an unequipped ItemStack.EMPTY.
+        if (event.agent instanceof Robot && event.target.isRemoved()) {
+            addExperience(event.agent, ModSettings.robotActionXp());
+        }
     }
 
     static void onRobotPlaceBlockPost(final RobotPlaceBlockEvent.Post event) {

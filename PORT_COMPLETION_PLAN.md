@@ -281,3 +281,7 @@ Robot swing selecteert nu nabije living entities, minecarts en drones tegenover 
 ### Echte equipment- en cargoinventaris voor upgrades
 
 Gevonden en hersteld: Agent.equipmentInventory was losse opslag en mainInventory gebruikte menu-indexen in plaats van cargo-indexen. Twee live views koppelen upgrades nu aan de echte vier equipment-slots en zestien cargo-slots. Echte robot/controller-tests bewijzen equip in beide richtingen via cargo 16, behoud van andere items, removals, grenscontrole en gescheiden clear. Full build: 2058 unit-tests en 482 GameTests; robot-inventory-views-final.log. Zie ROBOT_INVENTORY_VIEWS.md. getComponentInSlot/hardware-indexmapping, attack-XP, overige pariteit en live tests blijven open.
+
+### Actie-XP na entityverwijdering
+
+Ontbrekende RobotAttackEntityEvent.Post-handler hersteld: experience-upgrades krijgen eenmaal robotActionXp wanneer een robotaanval de entity direct verwijdert. Echte hardwaretest bewijst nul voor geannuleerde aanvallen, exact een beloning bij minecartverwijdering en geen beloning voor gewone hits of de vertraagde sterfanimatie van een mob. Algemene mob-orbverzameling is geen upstreamvereiste; eerdere brede verwijzing naar ontbrekende living-kill-XP daarmee verduidelijkt. Full build: 2058 unit-tests en 483 GameTests; robot-attack-xp-verified.log. Zie ROBOT_ENTITY_ATTACKS.md. Hardware-indexmapping, verdere combat/wereldactiepariteit en live tests blijven open.

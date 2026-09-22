@@ -11,3 +11,13 @@ Remaining entity parity: living-kill XP and experience-upgrade handling, exact r
 Forge 1.12 FakePlayer source consulted to distinguish upstream inherited behavior: https://raw.githubusercontent.com/MinecraftForge/MinecraftForge/1.12.x/src/main/java/net/minecraftforge/common/util/FakePlayer.java (no ticking update and no custom cooldown override). Current NeoForge source inspected from local sourcesAndCompiledWithNeoForge artifact.
 
 Verification: robot-entity-final.log test build runGameTestServer successful, 2058 unit tests with zero failures/errors and all 480 required GameTests. git diff --check clean. Main artifact SHA256 B2D5155633D1D69F77F82A71210E5C5F4EC9D6933657B6D54085440A1E1FF733. Not installed or live-tested; client stays closed because display-3 placement is not automatic.
+
+## Attack action XP
+
+Restored ExperienceUpgradeHandler registration for RobotAttackEntityEvent.Post. Upstream awards robotActionXp only to Robot agents whose target is already marked isDead after the attack. That old flag corresponds to entity removal in modern Minecraft, not a living target merely reaching zero health during its death animation. Modern Container slots are non-null even when empty, so the legacy tool null-check does not imply a new requirement that a nonempty tool be equipped.
+
+The new handler adds the configured action reward to reachable experience upgrades when the target is removed. It leaves living-target XP orbs under normal Minecraft handling; the source has no general mob-orb capture equivalent to the separate ore-XP path. Existing minecart retry loop ends at removal, yielding one action reward rather than one per hit.
+
+Real tier-three robot with installed experience upgrade: canceled minecart attacks earn zero; allowed minecart destruction earns exactly one configured action reward; nonfatal living attacks and a lethal hit entering the normal delayed death animation earn no immediate-removal reward. RED robot-attack-xp-red.log reproduced the absent minecart reward. This replaces the earlier broad suggestion that arbitrary living-kill XP capture was missing: such capture is not an upstream requirement.
+
+Verification: robot-attack-xp-verified.log full test/build/GameTest success, 2058 unit tests zero failures/errors and all 483 required GameTests. Main artifact SHA256 A3E69E8F7EADAFD4B528D19DF99C232F8ABA09A86B27A9EB3B50CD90B36DB020. git diff --check clean; not installed/live-tested; client remains closed.

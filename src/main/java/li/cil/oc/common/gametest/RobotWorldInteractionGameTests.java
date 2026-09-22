@@ -23,6 +23,53 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
     @GameTest(template = "empty")
+    public static void robotAttackAwardsExperienceOnlyWhenTargetIsRemoved(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper, "while true do computer.pullSignal() end", true);
+        li.cil.oc.common.component.ExperienceUpgradeEnvironment upgrade = null;
+        for (final var node : robot.machine().node().reachableNodes()) {
+            if (node.host() instanceof li.cil.oc.common.component.ExperienceUpgradeEnvironment found) upgrade = found;
+        }
+        helper.assertTrue(upgrade != null, "Robot fixture has no experience upgrade");
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_SWORD));
+        final var target = helper.spawn(net.minecraft.world.entity.EntityType.MINECART, new BlockPos(1, 1, 2));
+        final var component = (li.cil.oc.api.network.Component) robot.node();
+        final Object protection = new Object() {
+            @SubscribeEvent
+            public void attack(final li.cil.oc.api.event.RobotAttackEntityEvent.Pre event) {
+                if (event.target == target) event.setCanceled(true);
+            }
+        };
+        final var saved = new net.minecraft.nbt.CompoundTag();
+        NeoForge.EVENT_BUS.register(protection);
+        try {
+            component.invoke("swing", null, 3);
+            upgrade.save(saved);
+            helper.assertTrue(!target.isRemoved() && saved.getDouble("oc:xp") == 0D, "Canceled attacks awarded experience");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(protection);
+        }
+        component.invoke("swing", null, 3);
+        upgrade.save(saved);
+        helper.assertTrue(target.isRemoved(), "Allowed attack did not remove minecart");
+        helper.assertTrue(Math.abs(saved.getDouble("oc:xp") - ModSettings.robotActionXp()) < 1e-9,
+            "Removing a minecart did not award exactly one action reward");
+        final var living = helper.spawn(net.minecraft.world.entity.EntityType.COW, new BlockPos(1, 1, 2));
+        living.setNoAi(true);
+        component.invoke("swing", null, 3);
+        upgrade.save(saved);
+        helper.assertTrue(living.isAlive() && Math.abs(saved.getDouble("oc:xp") - ModSettings.robotActionXp()) < 1e-9,
+            "Nonfatal attack awarded removal experience");
+        living.invulnerableTime = 0;
+        living.setHealth(0.01F);
+        component.invoke("swing", null, 3);
+        upgrade.save(saved);
+        helper.assertTrue(living.isDeadOrDying() && !living.isRemoved(), "Fixture did not enter normal delayed death");
+        helper.assertTrue(Math.abs(saved.getDouble("oc:xp") - ModSettings.robotActionXp()) < 1e-9,
+            "Death animation was incorrectly treated as immediate entity removal");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotInventoryControllerEquipsActualToolFromSelectedCargo(final GameTestHelper helper) throws Exception {
         final RobotBlockEntity robot = robot(helper);
         final var controller = new li.cil.oc.common.component.InventoryControllerEnvironment.RobotInventoryControllerEnvironment(robot);
