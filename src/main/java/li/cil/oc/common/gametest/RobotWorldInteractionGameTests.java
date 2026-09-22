@@ -23,6 +23,58 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
     @GameTest(template = "empty")
+    public static void robotHotSwapsNetworkCardWithoutRebootAndPreservesPorts(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        robot.machine().stop();
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, java.util.List.of(
+            new ItemStack(li.cil.oc.common.ModItems.CARD_CONTAINER_TIER1.get()),
+            new ItemStack(li.cil.oc.common.ModItems.CPU_TIER1.get()),
+            new ItemStack(li.cil.oc.common.ModItems.MEMORY_TIER1.get()),
+            RobotMovementPersistenceGameTests.eeprom("while true do computer.pullSignal() end")));
+        helper.assertTrue(robot.toggleMachine(), "Hot-swap fixture did not start");
+        final var architecture = robot.machine().architecture();
+        final var menu = new li.cil.oc.common.menu.RobotMenu(0, robot.player().getInventory(), robot);
+        helper.assertTrue(menu.getSlot(1).getMaxStackSize() == 1, "Runtime component menu slot allows stacked devices");
+        robot.setItem(1, new ItemStack(li.cil.oc.common.ModItems.NETWORK_CARD.get(), 2));
+        helper.assertTrue(robot.machine().node().neighbors().iterator().hasNext(), "Fixture has no hardware network");
+        for (final var node : robot.machine().node().neighbors()) {
+            helper.assertTrue(!(node instanceof li.cil.oc.api.network.Component component) || !"modem".equals(component.name()),
+                "Oversized component stack acquired a shared device identity");
+        }
+        robot.setItem(1, new ItemStack(li.cil.oc.common.ModItems.NETWORK_CARD.get()));
+        li.cil.oc.api.network.Component modem = null;
+        for (final var node : robot.machine().node().neighbors()) {
+            if (node instanceof li.cil.oc.api.network.Component component && "modem".equals(component.name())) modem = component;
+        }
+        helper.assertTrue(modem != null, "Inserted runtime card did not connect its modem");
+        modem.invoke("open", null, 123);
+        final String address = modem.address();
+        final ItemStack removed = robot.removeItem(1, 1);
+        helper.assertTrue(!modem.isNeighborOf(robot.machine().node()), "Removed card stayed connected");
+        helper.assertTrue(robot.machine().isRunning() && robot.machine().architecture() == architecture, "Hot removal rebooted the robot");
+        robot.setItem(1, removed);
+        li.cil.oc.api.network.Component restored = null;
+        for (final var node : robot.machine().node().neighbors()) {
+            if (node instanceof li.cil.oc.api.network.Component component && "modem".equals(component.name())) restored = component;
+        }
+        helper.assertTrue(restored != null && restored != modem && address.equals(restored.address()), "Reinserted card lost identity or reused removed environment");
+        helper.assertTrue(Boolean.TRUE.equals(restored.invoke("isOpen", null, 123)[0]), "Reinserted modem lost its open port");
+        helper.assertTrue(robot.machine().isRunning() && robot.machine().architecture() == architecture, "Hot insertion rebooted the robot");
+        final var saved = robot.saveWithFullMetadata(helper.getLevel().registryAccess());
+        robot.loadWithComponents(saved, helper.getLevel().registryAccess());
+        helper.assertTrue(!restored.isNeighborOf(robot.machine().node()), "Reload retained the previous runtime environment");
+        li.cil.oc.api.network.Component loaded = null;
+        for (final var node : robot.machine().node().neighbors()) {
+            if (node instanceof li.cil.oc.api.network.Component component && "modem".equals(component.name())) loaded = component;
+        }
+        helper.assertTrue(loaded != null && address.equals(loaded.address()) && Boolean.TRUE.equals(loaded.invoke("isOpen", null, 123)[0]),
+            "Robot reload lost runtime modem state");
+        robot.clearContent();
+        helper.assertTrue(!loaded.isNeighborOf(robot.machine().node()), "Clearing inventory retained runtime components");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotRuntimeSlotsFollowInstalledContainerTypesAndTiers(final GameTestHelper helper) {
         final RobotBlockEntity robot = robot(helper);
         robot.setTier(2);

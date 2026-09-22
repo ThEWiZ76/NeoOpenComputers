@@ -194,6 +194,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private NonNullList<ItemStack> hardwareItems = NonNullList.withSize(MAX_HARDWARE_SLOT_COUNT, ItemStack.EMPTY);
     private final Container equipmentInventory = new InventoryView(0, CARGO_SLOT_START);
     private final Container mainInventory = new InventoryView(CARGO_SLOT_START, CARGO_SLOT_COUNT);
+    private final RuntimeComponent[] runtimeComponents = new RuntimeComponent[CONTAINER_RUNTIME_SLOT_COUNT];
+    private record RuntimeComponent(ItemStack stack, ManagedEnvironment environment) {}
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private Node robotNode;
     private final ManagedEnvironment robotRom;
@@ -706,6 +708,11 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public Environment getComponentInSlot(final int index) {
+        final int runtimeIndex = index - MAX_HARDWARE_SLOT_COUNT;
+        if (runtimeIndex >= 0 && runtimeIndex < runtimeComponents.length) {
+            final RuntimeComponent component = runtimeComponents[runtimeIndex];
+            return component == null ? null : component.environment();
+        }
         if (!isHardwareSlot(index) || machine == null || machine.node() == null) return null;
         for (final Node node : machine.node().neighbors()) {
             if (node.address() != null && componentSlots.getOrDefault(node.address(), -1) == index) {
@@ -1432,10 +1439,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (!isValidSlot(slot)) {
             return ItemStack.EMPTY;
         }
+        if (amount > 0) detachRuntimeComponent(slot);
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             setChanged();
         }
+        syncRuntimeComponents();
         return removed;
     }
 
@@ -1444,10 +1453,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (!isValidSlot(slot)) {
             return ItemStack.EMPTY;
         }
+        detachRuntimeComponent(slot);
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             setChanged();
         }
+        syncRuntimeComponents();
         return removed;
     }
 
@@ -1456,11 +1467,64 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (!isValidSlot(slot)) {
             return;
         }
+        if (items.get(slot) != stack) detachRuntimeComponent(slot);
         items.set(slot, stack);
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
             stack.setCount(getMaxStackSize());
         }
         setChanged();
+        syncRuntimeComponents();
+    }
+
+    private void saveRuntimeComponent(final RuntimeComponent component) {
+        final CompoundTag saved = new CompoundTag();
+        component.environment().save(saved);
+        final DriverItem driver = Driver.driverFor(component.stack(), Robot.class);
+        if (driver != null) {
+            driver.dataTag(component.stack()).merge(saved);
+            final var data = component.stack().get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+            if (data != null) component.stack().set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.of(data.copyTag()));
+        }
+    }
+
+    private void detachRuntimeComponent(final int slot) {
+        final int index = slot - CONTAINER_RUNTIME_SLOT_START;
+        if (index < 0 || index >= runtimeComponents.length || runtimeComponents[index] == null) return;
+        final RuntimeComponent component = runtimeComponents[index];
+        saveRuntimeComponent(component);
+        runtimeComponents[index] = null;
+        final Node node = component.environment().node();
+        if (node != null) {
+            onMachineDisconnect(node);
+            node.remove();
+        }
+    }
+
+    private void syncRuntimeComponents() {
+        if (level == null || level.isClientSide || machine.node() == null) return;
+        for (int index = 0; index < runtimeComponents.length; index++) {
+            final int slot = index + CONTAINER_RUNTIME_SLOT_START;
+            final ItemStack stack = getItem(slot);
+            final boolean valid = stack.getCount() == 1 && canPlaceItem(slot, stack);
+            final RuntimeComponent current = runtimeComponents[index];
+            if (current != null && (current.stack() != stack || !valid)) detachRuntimeComponent(slot);
+            if (runtimeComponents[index] == null && valid) {
+                final DriverItem driver = Driver.driverFor(stack, Robot.class);
+                final ManagedEnvironment environment = driver.createEnvironment(stack, this);
+                if (environment == null) continue;
+                environment.load(driver.dataTag(stack).copy());
+                runtimeComponents[index] = new RuntimeComponent(stack, environment);
+                if (environment.node() != null) {
+                    machine.node().connect(environment.node());
+                    componentSlots.put(environment.node().address(), MAX_HARDWARE_SLOT_COUNT + index);
+                    onMachineConnect(environment.node());
+                }
+            } else if (runtimeComponents[index] != null && runtimeComponents[index].environment().node() != null
+                && !runtimeComponents[index].environment().node().isNeighborOf(machine.node())) {
+                machine.node().connect(runtimeComponents[index].environment().node());
+            }
+        }
     }
 
     @Override
@@ -1489,6 +1553,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public void clearContent() {
+        for (int slot = CONTAINER_RUNTIME_SLOT_START; slot < CARGO_SLOT_START; slot++) detachRuntimeComponent(slot);
         for (int slot = 0; slot < items.size(); slot++) {
             items.set(slot, ItemStack.EMPTY);
         }
@@ -1520,6 +1585,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         if (level != null && !level.isClientSide) {
             Network.joinOrCreateNetwork(this);
             connectMachineNode();
+            syncRuntimeComponents();
         }
     }
 
@@ -1541,6 +1607,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
+        for (int slot = CONTAINER_RUNTIME_SLOT_START; slot < CARGO_SLOT_START; slot++) detachRuntimeComponent(slot);
         super.loadAdditional(tag, registries);
         tier = normalizeTier(tag.getInt(TAG_TIER));
         selectedSlot = tag.getInt(TAG_SELECTED_SLOT);
@@ -1563,11 +1630,15 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
         notifyHardwareChanged(machine);
         machine.load(tag.getCompound(TAG_MACHINE));
+        syncRuntimeComponents();
     }
 
     @Override
     protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
+        for (final RuntimeComponent component : runtimeComponents) {
+            if (component != null) saveRuntimeComponent(component);
+        }
         tag.putInt(TAG_TIER, tier);
         tag.putInt(TAG_SELECTED_SLOT, selectedSlot);
         tag.putInt(TAG_SELECTED_TANK, selectedTank);
@@ -1593,6 +1664,10 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     private void tickServer() {
+        syncRuntimeComponents();
+        for (final RuntimeComponent component : runtimeComponents) {
+            if (component != null && component.environment().canUpdate()) component.environment().update();
+        }
         tickDig();
         if (machine.canUpdate()) {
             machine.update();
@@ -1616,6 +1691,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     private void removeMachineNode() {
+        for (int slot = CONTAINER_RUNTIME_SLOT_START; slot < CARGO_SLOT_START; slot++) detachRuntimeComponent(slot);
         if (machine.node() != null) {
             machine.node().remove();
         }

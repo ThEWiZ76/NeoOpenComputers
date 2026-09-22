@@ -306,6 +306,12 @@ public class RobotMenu extends TerminalMenu {
         public boolean mayPlace(final ItemStack stack) {
             return container.canPlaceItem(getSlotIndex(), stack);
         }
+
+        @Override
+        public int getMaxStackSize() {
+            return getSlotIndex() > RobotBlockEntity.TOOL_SLOT && getSlotIndex() < RobotBlockEntity.CARGO_SLOT_START
+                ? 1 : super.getMaxStackSize();
+        }
     }
 
     static final class ServerRobotData implements ContainerData {

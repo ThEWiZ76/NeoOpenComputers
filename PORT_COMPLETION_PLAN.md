@@ -301,3 +301,7 @@ De bij Robot gevonden geneste-iteratorfout ook gereproduceerd en hersteld in com
 ### Toelatingsregels voor verwisselbare robotcomponenten
 
 Runtime slots 1..3 volgen nu het type en de tier van hun ingebouwde container; ontbrekende containers sluiten het slot, scherm/toetsenbord blijven uitgesloten. Tool/cargo mogen hardwareitems als gewone spullen bevatten, zoals upstream. Echte robottoets voor type/tier/missing container en cargo; oude tegenstrijdige source-stringtest verwijderd. Full build: 2057 unit-tests en 493 GameTests; robot-container-rules-verified.log. Zie ROBOT_RUNTIME_CONTAINERS.md. Dit is alleen toelating: live component-aanmaak/verwijdering zonder Lua-reboot, state-persistence en clientslotweergave blijven open.
+
+### Verwisselbare robotcomponenten verbinden en bewaren
+
+Runtime slots krijgen een aparte lifecycle: laden/verbinden, tick-updates, data opslaan voor verwijderen, loskoppelen en opnieuw verbinden zonder machineherbouw. Robot-save/load en inventory-clear meegenomen; componentmenuslots beperkt tot een item, direct geinjecteerde grotere stacks blijven intact maar inactief. Echte modemtest bewijst poort/adresbehoud bij hot-swap en reload, ongewijzigde draaiende architecture en geen oude verbindingen. Full build: 2057 unit-tests en 494 GameTests; robot-hot-swap-verified.log. Zie ROBOT_RUNTIME_CONTAINERS.md. Echte Lua-continuiteit/signalen, andere upgrades, runtime tanks en clientslotweergave blijven open.
