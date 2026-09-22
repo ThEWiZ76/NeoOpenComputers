@@ -83,27 +83,25 @@ public class FloppyItem extends Item implements DriverItem {
         }
         final CompoundTag rootData = rootData(stack);
         if (rootData.contains(LEGACY_LOOT_PATH_TAG)) {
-            final li.cil.oc.api.fs.FileSystem fileSystem = ModLootDisks.bundledFileSystem(rootData.getString(LEGACY_LOOT_PATH_TAG));
-            final String label = rootData.getString(LEGACY_LABEL_TAG);
-            return FileSystem.asManagedEnvironment(fileSystem, label.isEmpty() ? null : label, host, ModSounds.FLOPPY_ACCESS_ID);
+            return createReadOnlyEnvironment(() -> ModLootDisks.bundledFileSystem(rootData.getString(LEGACY_LOOT_PATH_TAG)), stack, rootData, host);
         }
         if (rootData.contains(LEGACY_LOOT_FACTORY_TAG)) {
             if (!(API.items instanceof ItemRegistry registry)) {
                 return null;
             }
-            return createReadOnlyEnvironment(registry.floppyFactory(rootData.getString(LEGACY_LOOT_FACTORY_TAG)), rootData, host);
+            return createReadOnlyEnvironment(registry.floppyFactory(rootData.getString(LEGACY_LOOT_FACTORY_TAG)), stack, rootData, host);
         }
         if (rootData.contains(ItemRegistry.FLOPPY_FACTORY_ID_TAG)) {
             if (!(API.items instanceof ItemRegistry registry)) {
                 return null;
             }
-            return createReadOnlyEnvironment(registry.floppyFactory(stack), rootData, host);
+            return createReadOnlyEnvironment(registry.floppyFactory(stack), stack, rootData, host);
         }
 
         return createWritableEnvironment(dataTag(stack), saved -> writeDataTag(stack, saved), rootData, host);
     }
 
-    private static ManagedEnvironment createReadOnlyEnvironment(final Callable<li.cil.oc.api.fs.FileSystem> factory, final CompoundTag rootData, final EnvironmentHost host) {
+    private ManagedEnvironment createReadOnlyEnvironment(final Callable<li.cil.oc.api.fs.FileSystem> factory, final ItemStack stack, final CompoundTag rootData, final EnvironmentHost host) {
         if (factory == null) {
             return null;
         }
@@ -117,7 +115,10 @@ public class FloppyItem extends Item implements DriverItem {
             if (environment != null && environment.node() instanceof li.cil.oc.api.network.Component component) {
                 component.setVisibility(Visibility.Network);
             }
-            return environment;
+            if (environment == null) return null;
+            // Read-only contents still have persistent node identity and open file handles.
+            environment.load(dataTag(stack));
+            return new StackBackedEnvironment(environment, saved -> writeDataTag(stack, saved));
         } catch (Exception e) {
             return null;
         }

@@ -13305,7 +13305,7 @@ public final class NeoOpenComputersGameTests {
         }
     }
 
-    private static int keyCode(final char character) {
+    static int keyCode(final char character) {
         return switch (character) {
             case ' ' -> 0x39;
             case 'c' -> 0x2E;
