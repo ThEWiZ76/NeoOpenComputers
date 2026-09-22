@@ -1374,6 +1374,33 @@ final class MachineRegistryTest {
     }
 
     @Test
+    void uptimeSurvivesReloadWithDifferentClockEpochAndResetsOnRestart() {
+        final MutableClock before = new MutableClock();
+        before.nanos = 1_000_000_000L;
+        final SimpleMachine original = new SimpleMachine(null, before);
+        assertTrue(original.start());
+        before.nanos = 3_500_000_000L;
+        final CompoundTag saved = new CompoundTag();
+        original.save(saved);
+        original.node().remove();
+        final MutableClock after = new MutableClock();
+        final SimpleMachine loaded = new SimpleMachine(null, after);
+        loaded.load(saved);
+        assertEquals(2.5D, loaded.upTime(), 0.000_001D);
+        after.nanos = 500_000_000L;
+        assertEquals(3D, loaded.upTime(), 0.000_001D);
+        loaded.save(saved);
+        after.nanos = 1_000_000_000_000L;
+        loaded.load(saved);
+        assertEquals(3D, loaded.upTime(), 0.000_001D);
+        loaded.stop();
+        assertEquals(0D, loaded.upTime());
+        assertTrue(loaded.start());
+        assertEquals(0D, loaded.upTime());
+        loaded.node().remove();
+    }
+
+    @Test
     void cpuTimeAccumulatesArchitectureUpdateDuration() {
         OpenComputersApi.initialize();
         MutableClock clock = new MutableClock();

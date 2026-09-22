@@ -10616,7 +10616,16 @@ public final class NeoOpenComputersGameTests {
         openOsTerminalRunsTypedCommand(helper, true);
     }
 
+    @GameTest(template = "empty", timeoutTicks = 2200)
+    public static void nativeOpenOsShellEnvironmentSurvivesDetachedReload(final GameTestHelper helper) {
+        openOsTerminalRunsTypedCommand(helper, true, true);
+    }
+
     private static void openOsTerminalRunsTypedCommand(final GameTestHelper helper, final boolean nativeLua) {
+        openOsTerminalRunsTypedCommand(helper, nativeLua, false);
+    }
+
+    private static void openOsTerminalRunsTypedCommand(final GameTestHelper helper, final boolean nativeLua, final boolean reload) {
         final BlockPos screenPos = new BlockPos(0, 1, 1);
         final BlockPos keyboardPos = new BlockPos(0, 1, 2);
         final BlockPos computerPos = new BlockPos(1, 1, 1);
@@ -10641,14 +10650,26 @@ public final class NeoOpenComputersGameTests {
         computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
         computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, luaBiosEepromStack());
 
-        final String command = "echo ocok";
         helper.assertTrue(computer.toggleMachine(), "Computer case did not start with OpenOS terminal command setup");
+        // A reload scenario outlives the case's initial 500 OC energy charge.
+        final PowerConverterBlockEntity power;
+        if (reload) {
+            final BlockPos powerPos = new BlockPos(1, 1, 0);
+            helper.setBlock(powerPos, ModBlocks.POWER_CONVERTER.get());
+            power = helper.getBlockEntity(powerPos);
+        } else {
+            power = null;
+        }
+        final ComputerCaseBlockEntity[] active = {computer};
+        final AtomicBoolean restored = new AtomicBoolean(false);
         final AtomicBoolean typed = new AtomicBoolean(false);
         final AtomicBoolean submitted = new AtomicBoolean(false);
         final AtomicInteger checksAfterSubmit = new AtomicInteger(0);
         helper.succeedWhen(() -> {
+            if (power != null) power.energyStorage(Direction.UP).receiveEnergy(10000, false);
             final String text = screenText(screen);
-            helper.assertTrue(computer.machine().isRunning(), "OpenOS stopped: " + computer.machine().lastError() + "\n" + text);
+            final String command = !reload ? "echo ocok" : restored.get() ? "echo $ocresume" : "set ocresume=731";
+            helper.assertTrue(active[0].machine().isRunning(), "OpenOS stopped (restored=" + restored.get() + "): " + active[0].machine().lastError() + "\n" + text);
             if (!typed.get() && text.contains("/home # ")) {
                 typed.set(true);
                 typeText(screen, command);
@@ -10663,7 +10684,27 @@ public final class NeoOpenComputersGameTests {
                 final int checks = checksAfterSubmit.incrementAndGet();
                 helper.assertTrue(checks >= 20, "OpenOS terminal command output not checked until terminal has advanced:\n" + text);
             }
-            helper.assertTrue(countOccurrences(text, "ocok") >= 2, "OpenOS terminal did not run typed echo command:\n" + text);
+            if (reload && !restored.get() && submitted.get() && countOccurrences(text, "/home # ") >= 2) {
+                final double energyBeforeReload = ((Connector) active[0].machine().node()).globalBuffer();
+                final var registries = helper.getLevel().registryAccess();
+                final CompoundTag saved = active[0].saveWithFullMetadata(registries);
+                active[0].setRemoved();
+                final var replacement = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(
+                    active[0].getBlockPos(), active[0].getBlockState(), saved, registries);
+                helper.assertTrue(replacement instanceof ComputerCaseBlockEntity, "Saved native computer was discarded");
+                active[0] = (ComputerCaseBlockEntity) replacement;
+                helper.getLevel().setBlockEntity(active[0]);
+                active[0].onLoad();
+                helper.assertTrue(((Connector) active[0].machine().node()).globalBuffer() >= energyBeforeReload,
+                    "OpenOS lost energy during reload: before=" + energyBeforeReload + ", after=" +
+                        ((Connector) active[0].machine().node()).globalBuffer());
+                restored.set(true); typed.set(false); submitted.set(false); checksAfterSubmit.set(0);
+                helper.assertTrue(false, "Native OpenOS loaded; waiting to use restored shell");
+            }
+            if (reload) {
+                helper.assertTrue(restored.get() && java.util.regex.Pattern.compile("(?m)^731\\s*$").matcher(text).find(),
+                    "OpenOS shell environment did not survive reload:\n" + text);
+            } else helper.assertTrue(countOccurrences(text, "ocok") >= 2, "OpenOS terminal did not run typed echo command:\n" + text);
         });
     }
 
@@ -13252,6 +13293,18 @@ public final class NeoOpenComputersGameTests {
             case 'h' -> 0x23;
             case 'k' -> 0x25;
             case 'o' -> 0x18;
+            case 'x' -> 0x2D;
+            case 'p' -> 0x19;
+            case 'r' -> 0x13;
+            case 't' -> 0x14;
+            case 's' -> 0x1F;
+            case 'u' -> 0x16;
+            case 'm' -> 0x32;
+            case '=' -> 0x0D;
+            case '7' -> 0x08;
+            case '3' -> 0x04;
+            case '1' -> 0x02;
+            case '$' -> 0x05;
             default -> throw new IllegalArgumentException("No test key code for " + character);
         };
     }
