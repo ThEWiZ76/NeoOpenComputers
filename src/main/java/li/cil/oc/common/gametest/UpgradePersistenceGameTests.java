@@ -23,6 +23,15 @@ import java.util.List;
 @PrefixGameTestTemplate(false)
 public final class UpgradePersistenceGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
+    public static void robotTractorProxyCollectsItemsAfterReload(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.TRACTOR_BEAM_UPGRADE.get()), """
+            local upgrade = component.proxy(component.list('tractor_beam')())
+            """, """
+            assert(upgrade.suck(), 'restored tractor did not collect item')
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
     public static void robotInventoryControllerProxySurvivesReload(GameTestHelper helper) {
         restore(helper, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get()), """
             local upgrade = component.proxy(component.list('inventory_controller')())
@@ -137,6 +146,7 @@ public final class UpgradePersistenceGameTests {
         final boolean chunkloader = upgrade.is(ModItems.CHUNKLOADER_UPGRADE.get());
         final boolean generator = upgrade.is(ModItems.GENERATOR_UPGRADE.get());
         final boolean tank = upgrade.is(ModItems.TANK_UPGRADE.get());
+        final boolean tractor = upgrade.is(ModItems.TRACTOR_BEAM_UPGRADE.get());
         final var pos = new BlockPos(1, 1, 1);
         helper.setBlock(pos, ModBlocks.ROBOT.get());
         final RobotBlockEntity original = helper.getBlockEntity(pos);
@@ -184,10 +194,23 @@ public final class UpgradePersistenceGameTests {
             .thenWaitUntil(() -> {
                 if (chunkloader) assertTickets(helper, active[0], true);
             })
+            .thenExecute(() -> {
+                if (tractor) {
+                    final var robot = active[0];
+                    final var item = new net.minecraft.world.entity.item.ItemEntity(helper.getLevel(), robot.xPosition(), robot.yPosition() + 0.5,
+                        robot.zPosition(), new ItemStack(net.minecraft.world.item.Items.DIAMOND, 3));
+                    item.setNoPickUpDelay();
+                    helper.getLevel().addFreshEntity(item);
+                }
+            })
             .thenExecute(() -> helper.assertTrue(active[0].machine().signal("continue_upgrade"), "Restored robot rejected signal"))
             .thenWaitUntil(() -> helper.assertTrue(color(active[0]) == 0x123456, "Upgrade continuation failed: " + active[0].machine().lastError()))
             .thenExecute(() -> {
                 if (chunkloader) assertTickets(helper, active[0], false);
+                if (tractor) {
+                    final var cargo = active[0].getItem(RobotBlockEntity.CARGO_SLOT_START);
+                    helper.assertTrue(cargo.is(net.minecraft.world.item.Items.DIAMOND) && cargo.getCount() == 3, "Tractor pickup lost items");
+                }
                 if (generator) {
                     helper.assertTrue(droppedCoal(helper, active[0]) == 0, "Reload duplicated generator fuel as drops");
                     helper.assertTrue(active[0].getItem(RobotBlockEntity.CARGO_SLOT_START).isEmpty(), "Reload duplicated generator fuel in cargo");

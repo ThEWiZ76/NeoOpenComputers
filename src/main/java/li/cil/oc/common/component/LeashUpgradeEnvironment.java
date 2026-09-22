@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public final class LeashUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public class LeashUpgradeEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String COMPONENT_NAME = "leash";
     private static final int MAX_LEASHED_ENTITIES = 8;
     private static final String TAG_LEASHED_ENTITIES = "leashedEntities";
@@ -158,13 +158,16 @@ public final class LeashUpgradeEnvironment extends AbstractManagedEnvironment im
     }
 
     private Entity leashHolder() {
+        if (host instanceof Entity entity) {
+            return entity;
+        }
         if (host instanceof Agent agent) {
             return agent.player();
         }
         if (host instanceof Tablet tablet) {
             return tablet.player();
         }
-        return host instanceof Entity entity ? entity : null;
+        return null;
     }
 
     private static Direction checkSide(final Arguments arguments, final int index) {

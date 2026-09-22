@@ -7,6 +7,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.TractorBeamUpgradeEnvironment;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
 
 public class TractorBeamUpgradeItem extends BasicUpgradeItem {
     public TractorBeamUpgradeItem(final Properties properties) {
@@ -18,15 +19,25 @@ public class TractorBeamUpgradeItem extends BasicUpgradeItem {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        if (host instanceof Robot robot) {
-            return new TractorBeamUpgradeEnvironment(robot);
+        final TractorBeamUpgradeEnvironment environment;
+        if (host instanceof Robot || host instanceof Drone) {
+            environment = new TractorBeamUpgradeEnvironment((li.cil.oc.api.internal.Agent) host) {
+                @Override public void save(final CompoundTag data) {
+                    super.save(data);
+                    ItemDriverData.writeDataTag(stack, data);
+                }
+            };
+        } else if (host instanceof Tablet tablet) {
+            environment = new TractorBeamUpgradeEnvironment(tablet) {
+                @Override public void save(final CompoundTag data) {
+                    super.save(data);
+                    ItemDriverData.writeDataTag(stack, data);
+                }
+            };
+        } else {
+            return null;
         }
-        if (host instanceof Drone drone) {
-            return new TractorBeamUpgradeEnvironment(drone);
-        }
-        if (host instanceof Tablet tablet) {
-            return new TractorBeamUpgradeEnvironment(tablet);
-        }
-        return null;
+        environment.load(dataTag(stack));
+        return environment;
     }
 }

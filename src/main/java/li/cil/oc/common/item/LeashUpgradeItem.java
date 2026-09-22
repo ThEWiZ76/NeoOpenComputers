@@ -4,6 +4,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.LeashUpgradeEnvironment;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
 
 public class LeashUpgradeItem extends BasicUpgradeItem {
     public LeashUpgradeItem(final Properties properties) {
@@ -15,6 +16,13 @@ public class LeashUpgradeItem extends BasicUpgradeItem {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new LeashUpgradeEnvironment(host);
+        final var environment = new LeashUpgradeEnvironment(host) {
+            @Override public void save(final CompoundTag data) {
+                super.save(data);
+                ItemDriverData.writeDataTag(stack, data);
+            }
+        };
+        environment.load(dataTag(stack));
+        return environment;
     }
 }
