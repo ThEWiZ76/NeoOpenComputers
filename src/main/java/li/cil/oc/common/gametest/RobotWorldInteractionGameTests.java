@@ -22,6 +22,32 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
+    @GameTest(template = "empty")
+    public static void robotRuntimeTankRetainsFluidAndDoesNotRestoreDrainedContents(final GameTestHelper helper) {
+        final RobotBlockEntity robot = robot(helper);
+        robot.machine().stop();
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, java.util.List.of(
+            new ItemStack(li.cil.oc.common.ModItems.UPGRADE_CONTAINER_TIER1.get()),
+            new ItemStack(li.cil.oc.common.ModItems.TANK_UPGRADE.get())));
+        helper.assertTrue(robot.tank().tankCount() == 1, "Assembled tank fixture is missing");
+        final var assembled = robot.tank().getFluidTank(0);
+        robot.setItem(1, new ItemStack(li.cil.oc.common.ModItems.TANK_UPGRADE.get()));
+        helper.assertTrue(robot.tank().tankCount() == 2, "Runtime tank was excluded from robot tank access");
+        helper.assertTrue(robot.tank().getFluidTank(1) == assembled, "Runtime tank must precede assembled tanks like equipment slots upstream");
+        final var action = net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE;
+        helper.assertTrue(robot.tank().getFluidTank(0).fill(new net.neoforged.neoforge.fluids.FluidStack(
+            net.minecraft.world.level.material.Fluids.WATER, 1000), action) == 1000, "Runtime tank could not be filled");
+        final ItemStack filled = robot.removeItem(1, 1);
+        helper.assertTrue(robot.tank().tankCount() == 1 && robot.tank().getFluidTank(0) == assembled, "Removed tank remained accessible");
+        robot.setItem(1, filled);
+        helper.assertTrue(robot.tank().getFluidTank(0).getFluidAmount() == 1000, "Reinserted tank lost fluid");
+        helper.assertTrue(robot.tank().getFluidTank(0).drain(1000, action).getAmount() == 1000, "Tank did not drain");
+        final ItemStack empty = robot.removeItemNoUpdate(1);
+        robot.setItem(1, empty);
+        helper.assertTrue(robot.tank().getFluidTank(0).getFluidAmount() == 0, "Saved empty tank resurrected previously drained fluid");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty", timeoutTicks = 300)
     public static void robotRebootExecutesReprogrammedEeprom(final GameTestHelper helper) {
         verifyReprogrammedEeprom(helper, false);

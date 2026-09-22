@@ -63,6 +63,9 @@ public class TankUpgradeEnvironment extends AbstractManagedEnvironment implement
         if (!fluid.isEmpty()) {
             nbt.putString(FLUID_TAG, BuiltInRegistries.FLUID.getKey(fluid.getFluid()).toString());
             nbt.putInt(AMOUNT_TAG, fluid.getAmount());
+        } else {
+            nbt.remove(FLUID_TAG);
+            nbt.remove(AMOUNT_TAG);
         }
     }
 

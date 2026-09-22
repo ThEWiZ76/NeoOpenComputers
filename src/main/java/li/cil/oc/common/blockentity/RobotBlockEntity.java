@@ -1477,11 +1477,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     private void saveRuntimeComponent(final RuntimeComponent component) {
-        final CompoundTag saved = new CompoundTag();
-        component.environment().save(saved);
         final DriverItem driver = Driver.driverFor(component.stack(), Robot.class);
         if (driver != null) {
-            driver.dataTag(component.stack()).merge(saved);
+            component.environment().save(driver.dataTag(component.stack()));
             final var data = component.stack().get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
             if (data != null) component.stack().set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
                 net.minecraft.world.item.component.CustomData.of(data.copyTag()));
@@ -1929,6 +1927,13 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
 
         final List<InternalTank> tanks = new ArrayList<>();
+        for (int index = 0; index < runtimeComponents.length; index++) {
+            final RuntimeComponent component = runtimeComponents[index];
+            if (component != null && component.environment() instanceof IFluidTank tank
+                && component.environment().node() != null && component.environment().node().isNeighborOf(machine.node())) {
+                tanks.add(new InternalTank(index, tank));
+            }
+        }
         for (final Node node : machine.node().neighbors()) {
             if (node == null || node.address() == null || !(node.host() instanceof IFluidTank tank)) {
                 continue;
@@ -1937,7 +1942,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             if (!isHardwareSlot(slot) || !Slot.Upgrade.equals(slotType(tier, slot))) {
                 continue;
             }
-            tanks.add(new InternalTank(slot, tank));
+            tanks.add(new InternalTank(runtimeComponents.length + slot, tank));
         }
 
         tanks.sort(Comparator.comparingInt(InternalTank::slot));

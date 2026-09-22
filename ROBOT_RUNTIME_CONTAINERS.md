@@ -37,3 +37,13 @@ The initial test fixture reused a previously booted robot and saved its old arch
 The corrected fixture then exposed a real failure: Lua received component_added but never component_removed for the modem (robot-hot-swap-lua-fresh.log). NetworkRegistry removes the edge before invoking onDisconnect, so Component visibility Neighbors is already false when SimpleMachine checked it. SimpleMachine now remembers visible component identities from connection notifications and uses that prior visibility for removal, clearing entries on disconnect. Two focused unit tests cover exactly one removal notification for a directly visible neighbor-only component and no notification for an unseen component beyond a bridge.
 
 Verification: robot-hot-swap-lua-signals.log full test/build/GameTest success; 2059 unit tests zero failures/errors and all 495 required GameTests. Real Lua reaches the final733 sentinel with no reboot and preserved modem port/address. Artifact SHA256 63ECD8DF84A6E8E5BDA78480C4EF2AB773BE78928044BC22E7BCE1751930828E. git diff --check clean. Not installed/live-tested; Minecraft client remains closed.
+
+## Runtime tank access and emptied-tank persistence
+
+The robot tank view previously filtered only raw assembled-hardware slot numbers. Added connected runtime IFluidTank environments in equipment-slot order before the assembled tanks, matching upstream component-array enumeration. Removed runtime tanks disappear immediately and assembled tank order remains stable.
+
+Runtime environment persistence now passes the driver's existing data tag to environment.save rather than merging a fresh tag afterwards. This lets an environment explicitly remove obsolete keys. TankUpgradeEnvironment.save removes fluid/amount keys when empty, preventing an emptied, previously saved tank from resurrecting old fluid on reinsertion. Other item-data keys remain intact.
+
+Real robot test installs one assembled tank plus one runtime tank, verifies tank count/order and removal, fills exactly1000mB water, removes/reinserts with exact content preserved, drains all1000mB, then removes/reinserts again expecting zero. robot-runtime-tank-red.log reproduced missing runtime tank access. Existing modem hot-swap/reload tests also cover the changed runtime save path.
+
+Verification: robot-runtime-tank-final.log full test/build/GameTest success; 2059 unit tests zero failures/errors and all 498 required GameTests. Artifact SHA256 578200B62F1770E60138AF76C9342E4E4A19740ECE36AA6AF227AB35359D918D. git diff --check clean. Not installed/live-tested; client remains closed.
