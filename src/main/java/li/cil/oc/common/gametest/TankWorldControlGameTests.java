@@ -69,5 +69,23 @@ public final class TankWorldControlGameTests {
         helper.getLevel().setBlockAndUpdate(target, Blocks.STONE.defaultBlockState());
         helper.assertTrue(Boolean.FALSE.equals(component.invoke("compareFluid", agent.machine(), side)[0]), "Solid block compared equal to fluid");
         helper.assertTrue(agent.tank().getFluidTank(0).getFluidAmount() == 1000, "Comparison changed internal fluid");
+        final var tank = agent.tank().getFluidTank(0);
+        helper.assertTrue(component.invoke("fill", agent.machine(), side)[0] == null, "Fluid placement replaced solid block");
+        helper.assertTrue(tank.getFluidAmount() == 1000, "Rejected placement consumed fluid");
+        helper.getLevel().setBlockAndUpdate(target, Blocks.AIR.defaultBlockState());
+        helper.assertTrue(component.invoke("fill", agent.machine(), side, 999)[0] == null, "Partial bucket placed a source");
+        helper.assertTrue(tank.getFluidAmount() == 1000 && helper.getLevel().isEmptyBlock(target), "Partial placement changed tank/world");
+        final var filled = component.invoke("fill", agent.machine(), side);
+        helper.assertTrue(Boolean.TRUE.equals(filled[0]) && ((Number) filled[1]).intValue() == 1000, "Bucket placement failed");
+        helper.assertTrue(tank.getFluidAmount() == 0 && helper.getLevel().getFluidState(target).isSource(), "Placed source did not conserve water");
+        final var partial = component.invoke("drain", agent.machine(), side, 999);
+        helper.assertTrue(!Boolean.TRUE.equals(partial[0]) && tank.getFluidAmount() == 0
+            && helper.getLevel().getFluidState(target).isSource(), "Partial drain destroyed world source");
+        final var drained = component.invoke("drain", agent.machine(), side);
+        helper.assertTrue(Boolean.TRUE.equals(drained[0]) && ((Number) drained[1]).intValue() == 1000, "Source pickup failed");
+        helper.assertTrue(tank.getFluidAmount() == 1000 && helper.getLevel().isEmptyBlock(target), "Source pickup did not conserve water");
+        helper.getLevel().setBlockAndUpdate(target, Blocks.LAVA.defaultBlockState());
+        helper.assertTrue(component.invoke("drain", agent.machine(), side)[0] == null, "Incompatible lava entered water tank");
+        helper.assertTrue(tank.getFluidAmount() == 1000 && helper.getLevel().getFluidState(target).is(Fluids.LAVA), "Rejected drain changed fluid");
     }
 }

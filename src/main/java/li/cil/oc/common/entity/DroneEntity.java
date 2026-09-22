@@ -478,6 +478,16 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         return li.cil.oc.common.component.AgentTankWorldControl.compare(this, args);
     }
 
+    @Callback(doc = "function(side:number[, amount:number=1000]):boolean,number or string -- Drains fluid into the selected tank.")
+    public Object[] drain(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankWorldControl.drain(this, args);
+    }
+
+    @Callback(doc = "function(side:number[, amount:number=1000]):boolean,number or string -- Fills the neighboring tank or world from the selected tank.")
+    public Object[] fill(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentTankWorldControl.fill(this, args);
+    }
+
     @Callback(doc = "function(index:number[, count:number=1000]):boolean -- Transfers fluid between tanks.")
     public Object[] transferFluidTo(final Context context, final Arguments args) {
         return li.cil.oc.common.component.AgentTankControl.transfer(this, args);

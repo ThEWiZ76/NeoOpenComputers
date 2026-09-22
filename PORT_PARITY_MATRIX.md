@@ -189,3 +189,11 @@ Added compareFluid(side[, tank]) to robot and drone through AgentTankWorldContro
 TankWorldControlGameTests invokes each registered component callback and checks empty internal tank, water equality, explicit source index1, rejection of index2, lava mismatch, solid-block mismatch and preserved1000 internal water. Robot rejects backward action side. Before implementation both lacked compareFluid; final build,2106 units/all592 GameTests pass (tank-world-compare-verified.log).
 
 Direct proof currently covers source blocks, not external modded multi-tank capabilities. drain/fill and conservation across world sources/capability handlers remain the next TankWorldControl work. FluidUtils upstream reference includes source-block wrappers and whole-bucket world transfers; NeoForge FluidUtil provides BucketPickupHandlerWrapper and tryPlaceFluid for adaptation. No client launch/install, push or merge.
+
+## World fluid drain and fill - 2026-09-22
+
+Robot and drone expose drain/fill via AgentTankWorldControl, retaining the compareFluid action-side restrictions. Drain simulates extraction and internal acceptance before executing a matching fluid extraction; it uses sided block capabilities or NeoForge BucketPickupHandlerWrapper for source blocks. Fill uses a neighboring capability when present; otherwise a temporary1000mB FluidTank is passed to FluidUtil.tryPlaceFluid and internal fluid is consumed only on successful placement. Existing source blocks and partial bucket placements are rejected. Missing/full/empty tank cases return upstream-style errors.
+
+TankWorldControlGameTests now also runs a source-water roundtrip through both host APIs: solid destination rejection,999mB placement/pickup rejection without mutation,1000mB placement and pickup conservation, and lava rejection by a water-filled tank. Red run lacked fill; final build,2106 units and all592 GameTests pass (tank-transfer-verified.log). The existing two host tests were expanded, so the GameTest count did not increase.
+
+External modded capability handlers, full/zero/empty return-value edge cases, flowing/waterlogged blocks, protected locations, Nether evaporation and native Lua continuation remain additional gates. This completes the basic callbacks but does not certify the full fluid interoperability matrix. No client launch/install, push or merge.
