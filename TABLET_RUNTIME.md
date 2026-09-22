@@ -14,7 +14,7 @@ SimpleMachine.popSignal now applies registered converters when consuming a signa
 
 TabletUseGameTests exercises LuaJ and native short-use/menu creation, real inventory/held-item processing through ServerPlayer.doTick (embedded mock connections do not call it), screen keyboard delivery, current EEPROM data in actual player serialization, native snapshots, long-use sign scans, sneak-stop, logout disposal, replacement-stack rebinding, copy isolation, invalid menus after removal, idle eviction and actual Q-drop preserving data modified after the prior save. The final tablet-use-lifecycle-verified.log passed build, all 2108 unit tests and all 533 GameTests. No client install, push or merge.
 
-Remaining: tier-dependent component editing, actual dimension/death/server-restart lifecycle coverage and non-menu automation transfers, full tablet OpenOS boot, and live visual/input acceptance on display3. The intermittent rack deadline timeout from the prior step remains a separate open investigation. Do not equate this tested subset with complete tablet or complete port acceptance.
+Remaining: tier-dependent component editing, actual dimension/server-restart lifecycle coverage and non-menu automation transfers, full tablet OpenOS boot, and live visual/input acceptance on display3. Death/keepInventory respawn coverage is described below. The intermittent rack deadline timeout from the prior step remains a separate open investigation. Do not equate this tested subset with complete tablet or complete port acceptance.
 
 ## Container transfers - 2026-09-22
 
@@ -22,7 +22,16 @@ TabletContainerTransferMixin wraps the server-side AbstractContainerMenu.clicked
 
 TabletContainerGameTests uses real ChestMenu clicks and a native EEPROM that writes data after the item was originally assembled. The shift-click and cursor cases first failed with a retained stored VM / lost cursor binding (tablet-container-red.log). Final tests prove same runtime on the cursor, closed old VM in storage, newest component data in chest NBT and a reconstructed chest, stopped fresh runtime after retrieval, and no shutdown/replacement when the chest is full. Full tablet-container-integrated.log: build, 2108 unit tests and all 536 GameTests passed.
 
-This covers normal menu clicks, not every possible external mod or automation extraction path. Remaining: actual dimension/death/server restart, tier-dependent editing, complete tablet OpenOS flow, automation outside menu clicks, and client visual acceptance. The earlier intermittent rack deadline symptom remains open. No client/install/push/merge.
+This covers normal menu clicks, not every possible external mod or automation extraction path. Remaining: actual dimension/server restart, tier-dependent editing, complete tablet OpenOS flow, automation outside menu clicks, and client visual acceptance. The earlier intermittent rack deadline symptom remains open. No client/install/push/merge.
+
+## Death drops and keepInventory respawn - 2026-09-22
+
+Minecraft Inventory.dropAll uses Player.drop(stack, true, false), bypassing ItemTossEvent. PlayerTabletSaveMixin now closes and saves cached tablets at Player.dropEquipment HEAD when keepInventory is false, before equipment can be dropped or removed by vanishing. This prevents the dropped item retaining a live VM and stale component data until cache expiry. With keepInventory true, the existing runtime remains available for rebinding to the respawned player.
+
+TabletDeathGameTests runs native firmware which changes EEPROM data after boot. The ordinary death test failed before the fix with 'Death drop retained live tablet VM' (tablet-death-red.log). It now verifies the actual ServerPlayer.die drop, immediate VM disposal, stopped item state, newest EEPROM data and item NBT roundtrip. The second test uses actual PlayerList.respawn under keepInventory, verifies the same VM is rebound to the new player, and resumes Lua with retained local value 731. The gamerule is restored in a finally block in the same synchronous action. This does not claim coverage for external mods that replace death drops or inventory retention rules.
+
+Full tablet-death-verified.log: build, 2108 unit tests and all 538 GameTests passed. No client/install/push/merge. Dimension transition, server restart, tier2 editing, full tablet OpenOS and visual acceptance remain open, as does the earlier intermittent native rack deadline symptom.
+
 ## Original runtime foundation (historical)
 
 TabletRuntime hosts a real SimpleMachine with stable decoded item components, a separate tablet component, integrated 80x25 four-bit ScreenItemEnvironment, keyboard connection, player-relative rotation/position, item charging reconciliation and explicit save/disposal. TabletItem exposes its existing data read/write helpers within its package; assembly data format stays intact. Runtime snapshots live inside oc:tablet/runtime and contain machine, screen and tablet state. Machine.save saves component environments before components are encoded back into the item.
