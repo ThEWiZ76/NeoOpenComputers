@@ -1,0 +1,11 @@
+# Robot harvest drop collection
+
+Upstream server/agent/Player.scala callUsingItemInSlot snapshots nearby ItemEntity instances before a tool action and collects only newly spawned entities afterward via fake-player pickup. The port left all block harvest items on the ground.
+
+RobotBlockEntity now snapshots nearby drops before block attack and before delayed harvest completion, then attempts only new entities in the same two-block-expanded robot bounds. Existing cargo insertion merges stacks before filling empty slots, beginning at selected slot. Full/partial leftovers remain as item entities. Item pickup Pre permission, target UUID and pickup-delay changes are respected; successful partial/full collection emits pickup Post with original/remaining stacks, take/stat/onItemPickup notifications. Snapshot uses a set for membership; collection preserves level enumeration order. This handles drops actually spawned by normal harvest, including canceled/suppressed loot behavior, rather than copying a pre-event loot list.
+
+Evidence: robot-harvest-drops-red.log reproduces uncollected stone, missing fill of one free slot and skipped pickup protection. Existing equipped-tool test now expects one cobblestone in cargo and none on ground. New tests inject a fixed three-item loot stack, leave one free stack slot and five pre-existing nearby items: cargo gains one, two overflow remain, five old items remain untouched, pickup Post reports original three/remaining two. Pickup denial leaves exactly one dropped item and no cargo insertion.
+
+Full robot-harvest-drops-verified.log: test build runGameTestServer successful, 2058 unit tests zero failures/errors, all 468 required GameTests. Artifact SHA256 80D455112CF0F1B3BDFDAE58F246F5B2124B562F8EEE0F1EF907DDD4ECDD2362. Not installed/live-tested; Minecraft client remains closed.
+
+Ore XP remains open: RobotBreakBlockEvent.Post still receives zero; upstream captures ore XP when an ExperienceUpgrade is present and avoids dropping it twice. NeoForge 1.21.1 exposes experience on BlockDropsEvent (not old BreakEvent), so the next implementation must respect final cancellation and modified XP while avoiding duplicate ground orbs. Other swing/entity/fire/cobweb/event details, place/use, persistence and broad matrix remain open.

@@ -297,8 +297,97 @@ public final class RobotWorldInteractionGameTests {
         final long drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
             new net.minecraft.world.phys.AABB(helper.absolutePos(target)).inflate(1D)).stream()
             .filter(entity -> entity.getItem().is(Items.COBBLESTONE)).mapToLong(entity -> entity.getItem().getCount()).sum();
-        helper.assertTrue(drops == 1, "Swing lost or duplicated harvested stone");
+        helper.assertTrue(drops == 0 && cargoCount(robot, Items.COBBLESTONE) == 1, "Swing did not collect harvested stone exactly once");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotHarvestCollectsOnlyNewDropsAndLeavesOverflow(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        helper.setBlock(target, Blocks.STONE);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        for (int slot = 0; slot < RobotBlockEntity.CARGO_SLOT_COUNT; slot++) {
+            robot.setItem(RobotBlockEntity.CARGO_SLOT_START + slot, new ItemStack(Items.DIRT, 64));
+        }
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.COBBLESTONE, 63));
+        final var pos = net.minecraft.world.phys.Vec3.atCenterOf(helper.absolutePos(target));
+        final var existing = new net.minecraft.world.entity.item.ItemEntity(helper.getLevel(), pos.x, pos.y, pos.z, new ItemStack(Items.COBBLESTONE, 5));
+        helper.getLevel().addFreshEntity(existing);
+        final boolean[] pickupReported = {false};
+        final Object drops = new Object() {
+            @SubscribeEvent
+            public void onDrops(final net.neoforged.neoforge.event.level.BlockDropsEvent event) {
+                if (event.getLevel() == helper.getLevel() && event.getPos().equals(helper.absolutePos(target))) {
+                    event.getDrops().getFirst().getItem().setCount(3);
+                }
+            }
+            @SubscribeEvent
+            public void onPickup(final net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent.Post event) {
+                if (event.getPlayer() == robot.player()) {
+                    helper.assertTrue(event.getOriginalStack().getCount() == 3 && event.getCurrentStack().getCount() == 2,
+                        "Partial pickup event did not report original and remaining amounts");
+                    pickupReported[0] = true;
+                }
+            }
+        };
+        NeoForge.EVENT_BUS.register(drops);
+        try {
+            helper.assertTrue(Boolean.TRUE.equals(((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3)[0]), "Overflow dig did not start");
+            tickRobot(robot, 100);
+            helper.assertTrue(cargoCount(robot, Items.COBBLESTONE) == 64, "Harvest did not fill the one free stack space");
+            helper.assertTrue(!existing.isRemoved() && existing.getItem().getCount() == 5, "Harvest stole a pre-existing item entity");
+            final int overflow = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                new net.minecraft.world.phys.AABB(helper.absolutePos(target)).inflate(1D)).stream()
+                .filter(entity -> entity != existing && entity.getItem().is(Items.COBBLESTONE))
+                .mapToInt(entity -> entity.getItem().getCount()).sum();
+            helper.assertTrue(overflow == 2, "Harvest lost or duplicated overflow");
+            helper.assertTrue(pickupReported[0], "Partial harvest omitted pickup event");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(drops);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotHarvestHonorsPickupDenial(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        helper.setBlock(target, Blocks.STONE);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        final boolean[] observed = {false};
+        final Object protection = new Object() {
+            @SubscribeEvent
+            public void onPickup(final net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent.Pre event) {
+                if (event.getPlayer() == robot.player()) {
+                    observed[0] = true;
+                    event.setCanPickup(net.neoforged.neoforge.common.util.TriState.FALSE);
+                }
+            }
+        };
+        NeoForge.EVENT_BUS.register(protection);
+        try {
+            helper.assertTrue(Boolean.TRUE.equals(((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3)[0]), "Denied-pickup dig did not start");
+            tickRobot(robot, 100);
+            helper.assertTrue(observed[0], "Harvest skipped pickup protection");
+            helper.assertTrue(cargoCount(robot, Items.COBBLESTONE) == 0, "Robot ignored pickup denial");
+            final int left = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                new net.minecraft.world.phys.AABB(helper.absolutePos(target)).inflate(1D)).stream()
+                .filter(entity -> entity.getItem().is(Items.COBBLESTONE)).mapToInt(entity -> entity.getItem().getCount()).sum();
+            helper.assertTrue(left == 1, "Denied pickup lost the item");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(protection);
+        }
+        helper.succeed();
+    }
+
+    private static int cargoCount(final RobotBlockEntity robot, final net.minecraft.world.item.Item item) {
+        int count = 0;
+        for (int slot = 0; slot < RobotBlockEntity.CARGO_SLOT_COUNT; slot++) {
+            final ItemStack stack = robot.getItem(RobotBlockEntity.CARGO_SLOT_START + slot);
+            if (stack.is(item)) count += stack.getCount();
+        }
+        return count;
     }
 
     @GameTest(template = "empty")

@@ -261,3 +261,7 @@ Swingstatus opgenomen in bestaande client-sync; renderer roteert alleen het gere
 ### Linkermuisklik en gerichte robotinteractie
 
 Swing valideert upstream actie-/kalibratiezijden, gebruikt de echte ray-hit en respecteert LeftClickBlock-cancel/useItem/useBlock, wereldrechten en sneak-status. Blok-attack uitgevoerd waar toegestaan; toestand na attack bewaard voor vertraagd graven. Tests voor halve blokken, verboden zijden, ore-attack en delayed sneak. Full build: 2058 unit-tests en 466 GameTests; robot-left-click-final.log. Zie ROBOT_LEFT_CLICK.md. Entities/fire/drop/XP, verdere eventdetails, place/use en live verificatie blijven open.
+
+### Drops naar robotinventaris
+
+Nieuwe drops van block-attack en harvest gaan nu naar cargo; bestaande items blijven liggen en overschot blijft behouden. Pickup-beveiliging, eigenaar en pre/post-events worden gerespecteerd. Tests bevestigen exacte aantallen bij vrije ruimte, gedeeltelijk volle stacks en geweigerde pickup. Full build: 2058 unit-tests en 468 GameTests; robot-harvest-drops-verified.log. Zie ROBOT_HARVEST_DROPS.md. Ore-XP naar experience-upgrade, overige wereldacties en live tests blijven open.

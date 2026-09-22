@@ -79,10 +79,12 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 
 public class RobotBlockEntity extends BlockEntity implements Robot, Container, WorldlyContainer, MenuProvider, IMenuProviderExtension, DeviceInfo, StateAware, Analyzable {
@@ -936,6 +938,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         final var previousGameMode = player.gameMode.getGameModeForPlayer();
         final boolean wasOnGround = player.onGround();
         final boolean wasSneaking = player.isShiftKeyDown();
+        final Set<ItemEntity> dropsBefore = new HashSet<>(nearbyDrops());
         final ItemStack before = getItem(TOOL_SLOT).copy();
         player.setItemInHand(InteractionHand.MAIN_HAND, before.copy());
         player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
@@ -984,6 +987,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             player.setGameMode(previousGameMode);
             player.setOnGround(wasOnGround);
             player.setShiftKeyDown(wasSneaking);
+            collectNewDrops(player, dropsBefore);
         }
     }
 
@@ -1030,6 +1034,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         final ItemStack previousHand = player.getMainHandItem();
         final var previousGameMode = player.gameMode.getGameModeForPlayer();
         final boolean wasSneaking = player.isShiftKeyDown();
+        final Set<ItemEntity> dropsBefore = new HashSet<>(nearbyDrops());
         final ItemStack before = getItem(TOOL_SLOT).copy();
         player.setItemInHand(InteractionHand.MAIN_HAND, before.copy());
         player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
@@ -1054,6 +1059,35 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             player.setItemInHand(InteractionHand.MAIN_HAND, previousHand);
             player.setGameMode(previousGameMode);
             player.setShiftKeyDown(wasSneaking);
+            collectNewDrops(player, dropsBefore);
+        }
+    }
+
+    private List<ItemEntity> nearbyDrops() {
+        return level.getEntitiesOfClass(ItemEntity.class, new AABB(worldPosition).inflate(2D));
+    }
+
+    private void collectNewDrops(final Player player, final Set<ItemEntity> dropsBefore) {
+        for (final ItemEntity drop : nearbyDrops()) {
+            if (dropsBefore.contains(drop) || drop.isRemoved()) continue;
+            // Like upstream's fake-player pickup, only collect entities spawned by this interaction.
+            drop.setNoPickUpDelay();
+            final var permission = net.neoforged.neoforge.event.EventHooks.fireItemPickupPre(drop, player).canPickup();
+            if (permission.isFalse() || drop.isRemoved()) continue;
+            if (!permission.isTrue() && (drop.hasPickUpDelay()
+                || drop.getTarget() != null && !drop.getTarget().equals(player.getUUID()))) continue;
+            final ItemStack original = drop.getItem().copy();
+            if (original.isEmpty()) continue;
+            final int remaining = insertIntoInventory(original);
+            final int collected = original.getCount() - remaining;
+            if (collected <= 0) continue;
+            drop.getItem().setCount(remaining);
+            net.neoforged.neoforge.event.EventHooks.fireItemPickupPost(drop, player, original);
+            player.take(drop, collected);
+            if (drop.getItem().isEmpty()) drop.discard();
+            player.awardStat(net.minecraft.stats.Stats.ITEM_PICKED_UP.get(original.getItem()), collected);
+            player.onItemPickup(drop);
+            setChanged();
         }
     }
 
