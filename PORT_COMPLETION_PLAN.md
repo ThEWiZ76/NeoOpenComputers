@@ -225,3 +225,7 @@ Move/turn verbruiken nu de configureerbare upstream energie en vragen de bijbeho
 ### Robotbeweging en draaien animeren
 
 Animatiestart, duur, oude positie en draaihoek worden nu meegestuurd; renderer interpoleert beweging/draaiing en omvat de vorige positie in zijn zichtbare gebied. Testdekking voor begin/midden/einde en herhaalde sync; 2055 unit-tests en 450 GameTests groen. Zie ROBOT_MOVEMENT_ANIMATION.md. Upstream afterimage/interactie, swing en ingame weergave blijven open.
+
+### Tijdelijke robotpositie en interactie
+
+Interne robot-afterimage toegevoegd: oude positie blijft tijdelijk klikbaar, botsingsvorm volgt de robot, doelbeveiliging blijft gelden en vervalt automatisch. Tests voor menu, beschermde afbraak en precies eenmaal cargo-drops; full build met 2055 unit-tests en 452 GameTests groen. Zie ROBOT_AFTERIMAGE_INTERACTION.md. Live weergave/interactie, overlappende acties, swing, chunkgrenzen en reload blijven open.

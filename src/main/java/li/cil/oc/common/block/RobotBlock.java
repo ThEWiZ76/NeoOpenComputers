@@ -44,6 +44,10 @@ public class RobotBlock extends HorizontalDirectionalBlock implements EntityBloc
 
     @Override
     protected VoxelShape getShape(final BlockState state, final BlockGetter level, final BlockPos pos, final CollisionContext context) {
+        if (level.getBlockEntity(pos) instanceof RobotBlockEntity robot && robot.getLevel() != null) {
+            final var offset = robot.movementRenderOffset(robot.getLevel().getGameTime());
+            return ROBOT_SHAPE.move(offset.x, offset.y, offset.z);
+        }
         return ROBOT_SHAPE;
     }
 

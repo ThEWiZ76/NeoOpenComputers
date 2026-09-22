@@ -24,6 +24,7 @@ import li.cil.oc.common.block.RaidBlock;
 import li.cil.oc.common.block.RedstoneIoBlock;
 import li.cil.oc.common.block.RelayBlock;
 import li.cil.oc.common.block.RobotBlock;
+import li.cil.oc.common.block.RobotAfterimageBlock;
 import li.cil.oc.common.block.ScreenBlock;
 import li.cil.oc.common.block.TransposerBlock;
 import li.cil.oc.common.block.WaypointBlock;
@@ -161,6 +162,9 @@ public final class ModBlocks {
         ModContentIds.ROBOT,
         () -> new RobotBlock(robotProperties()));
 
+    public static final DeferredBlock<Block> ROBOT_AFTERIMAGE = BLOCKS.register("robot_afterimage",
+        () -> new RobotAfterimageBlock(BlockBehaviour.Properties.of().air().noOcclusion().noLootTable().dynamicShape()));
+
     public static final DeferredBlock<Block> NET_SPLITTER = BLOCKS.register(
         ModContentIds.NET_SPLITTER,
         () -> new NetSplitterBlock(networkInfrastructureProperties()));
@@ -282,6 +286,7 @@ public final class ModBlocks {
 
     private static BlockBehaviour.Properties robotProperties() {
         return BlockBehaviour.Properties.of()
+            .dynamicShape()
             .mapColor(MapColor.METAL)
             .strength(1.5F, 4.0F)
             .noOcclusion();

@@ -41,6 +41,86 @@ import java.util.Map;
 @PrefixGameTestTemplate(false)
 public final class RobotMovementPersistenceGameTests {
     @GameTest(template = "empty")
+    public static void breakingRobotProxyRemovesRobotAndDropsCargoOnce(final GameTestHelper helper) throws Exception {
+        final BlockPos source = new BlockPos(1, 1, 1);
+        final BlockPos destination = source.south();
+        helper.setBlock(source, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.NORTH));
+        helper.setBlock(destination, Blocks.AIR);
+        final RobotBlockEntity robot = helper.getBlockEntity(source);
+        robot.onLoad();
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.DIAMOND, 3));
+        helper.assertTrue(Boolean.TRUE.equals(((Component) robot.node()).invoke("move", null, 3)[0]), "Break fixture did not move");
+        final var player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(GameType.CREATIVE);
+        try {
+            player.gameMode.destroyBlock(helper.absolutePos(source));
+            helper.assertTrue(helper.getBlockState(source).is(Blocks.AIR) && helper.getBlockState(destination).is(Blocks.AIR),
+                "Breaking proxy left original or destination robot");
+            final var bounds = new net.minecraft.world.phys.AABB(helper.absolutePos(destination)).inflate(1D);
+            final int diamonds = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, bounds)
+                .stream().map(net.minecraft.world.entity.item.ItemEntity::getItem).filter(stack -> stack.is(Items.DIAMOND))
+                .mapToInt(ItemStack::getCount).sum();
+            helper.assertTrue(diamonds == 3, "Proxy break lost or duplicated robot cargo: " + diamonds);
+        } finally {
+            helper.getLevel().getServer().getPlayerList().remove(player);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void movingRobotLeavesTemporaryInteractionProxy(final GameTestHelper helper) throws Exception {
+        final BlockPos source = new BlockPos(1, 1, 1);
+        final BlockPos destination = source.south();
+        helper.setBlock(source, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.NORTH));
+        helper.setBlock(destination, Blocks.AIR);
+        final RobotBlockEntity robot = helper.getBlockEntity(source);
+        robot.onLoad();
+        final Object[] moved = ((Component) robot.node()).invoke("move", null, 3);
+        helper.assertTrue(Boolean.TRUE.equals(moved[0]), "Proxy fixture did not move");
+        final var proxy = helper.getBlockState(source);
+        helper.assertTrue(proxy.isAir() && !proxy.is(Blocks.AIR), "Movement did not leave an air-like interaction proxy");
+        helper.assertTrue(helper.getLevel().getBlockEntity(helper.absolutePos(source)) == null, "Proxy duplicated robot inventory");
+        final BlockPos absoluteSource = helper.absolutePos(source);
+        final BlockPos absoluteDestination = helper.absolutePos(destination);
+        final var proxyShape = proxy.getCollisionShape(helper.getLevel(), absoluteSource);
+        final var robotShape = robot.getBlockState().getCollisionShape(helper.getLevel(), absoluteDestination);
+        helper.assertTrue(!proxyShape.isEmpty() && proxyShape.bounds().move(absoluteSource).equals(robotShape.bounds().move(absoluteDestination)),
+            "Proxy and moving robot collision surfaces differ");
+        final var player = helper.makeMockServerPlayerInLevel();
+        player.moveTo(net.minecraft.world.phys.Vec3.atCenterOf(absoluteSource));
+        // The embedded mock connection does not perform NeoForge's client handshake.
+        net.neoforged.neoforge.network.registration.ChannelAttributes.getOrCreateAdHocChannels(player.connection.getConnection())
+            .add(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("neoforge", "advanced_open_screen"));
+        final Object protection = new Object() {
+            @SubscribeEvent
+            public void onBreak(final net.neoforged.neoforge.event.level.BlockEvent.BreakEvent event) {
+                if (event.getPos().equals(absoluteDestination)) event.setCanceled(true);
+            }
+        };
+        NeoForge.EVENT_BUS.register(protection);
+        try {
+            final var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(absoluteSource),
+                Direction.NORTH, absoluteSource, false);
+            proxy.useWithoutItem(helper.getLevel(), player, hit);
+            helper.assertTrue(player.containerMenu instanceof RobotMenu menu && menu.robotInventory() == robot,
+                "Click at old position did not open destination robot menu");
+            helper.assertTrue(!proxy.onDestroyedByPlayer(helper.getLevel(), absoluteSource, player, false, proxy.getFluidState()),
+                "Proxy bypassed protected target break event");
+            helper.assertTrue(helper.getBlockEntity(destination) == robot && helper.getBlockState(source).getBlock() == proxy.getBlock(),
+                "Denied proxy break changed robot or proxy");
+        } finally {
+            NeoForge.EVENT_BUS.unregister(protection);
+            player.closeContainer();
+            helper.getLevel().getServer().getPlayerList().remove(player);
+        }
+        helper.runAfterDelay(Math.max(1, (int) (ModSettings.robotMoveDelay() * 20D)) + 1, () -> {
+            helper.assertTrue(helper.getBlockState(source).is(Blocks.AIR), "Movement proxy did not expire");
+            helper.assertTrue(helper.getBlockEntity(destination) == robot, "Proxy expiry removed destination robot");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty")
     public static void robotCannotMoveOrTurnWithoutEnergy(final GameTestHelper helper) throws Exception {
         final BlockPos start = new BlockPos(1, 1, 1);
         helper.setBlock(start, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.NORTH));

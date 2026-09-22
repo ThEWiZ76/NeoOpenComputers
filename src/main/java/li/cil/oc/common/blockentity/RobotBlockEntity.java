@@ -328,6 +328,10 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             moveFrom.getZ() - worldPosition.getZ()).scale(remaining);
     }
 
+    public boolean movedFrom(final BlockPos position) {
+        return position.equals(moveFrom);
+    }
+
     public float turnRenderOffset(final double gameTime) {
         return (float) (turnOffset * animationRemaining(gameTime));
     }
@@ -1297,7 +1301,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         relocating = true;
         try {
             level.removeBlockEntity(sourcePos);
-            if (!level.setBlock(sourcePos, Blocks.AIR.defaultBlockState(), 2)) {
+            if (!level.setBlock(sourcePos, li.cil.oc.common.ModBlocks.ROBOT_AFTERIMAGE.get().defaultBlockState(), 2)) {
                 return new Object[]{false, "blocked"};
             }
             ((BlockEntityPositionAccessor) this).neoopencomputers$setWorldPosition(targetPos.immutable());
