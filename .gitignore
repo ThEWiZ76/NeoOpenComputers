@@ -8,6 +8,14 @@ build/
 .worktrees
 .worktrees/
 
+### Local upstream reference checkouts ###
+/.reference/
+/.upstream-opencomputers-master-MC1.12/
+/upstream/
+
+### Local documentation ###
+/docs/
+
 ### Local Codex helper scripts ###
 scripts/
 
