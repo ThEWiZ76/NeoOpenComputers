@@ -181,3 +181,11 @@ This is focused server physics coverage. Water/lava shutdown, void handling, dim
 DroneEntity now stops the machine before its update when the drone eye position is inside water or lava, matching upstream isInsideOfMaterial behavior. DroneMovementGameTests covers both real fluids: confirmed eye submersion, stopped machine, falling motion, removal from fluid and successful dry restart. Both red cases kept running before the fix (drone-fluid-red.log). Final build,2106 unit tests and all590 GameTests pass (drone-fluid-verified.log).
 
 Coverage is synchronous server ticks and actual fluid blocks, not rendered submerged-flight acceptance. Other-mod fluids, flowing-fluid boundaries, void behavior, dimension offsets and client visuals remain separate gates. TankWorldControl callbacks compareFluid/drain/fill are also still absent from robot and drone. No client launch/install, push or merge.
+
+## World fluid comparison - 2026-09-22
+
+Added compareFluid(side[, tank]) to robot and drone through AgentTankWorldControl. Robot action sides are restricted to local down/up/front and mapped through rotation; drone accepts global0..5. Comparison checks the selected internal tank against a loaded neighbor's sided FluidHandler capability, or an in-world fluid source if no capability exists. Optional external tank indices are one based and validated. Comparing does not mutate fluid.
+
+TankWorldControlGameTests invokes each registered component callback and checks empty internal tank, water equality, explicit source index1, rejection of index2, lava mismatch, solid-block mismatch and preserved1000 internal water. Robot rejects backward action side. Before implementation both lacked compareFluid; final build,2106 units/all592 GameTests pass (tank-world-compare-verified.log).
+
+Direct proof currently covers source blocks, not external modded multi-tank capabilities. drain/fill and conservation across world sources/capability handlers remain the next TankWorldControl work. FluidUtils upstream reference includes source-block wrappers and whole-bucket world transfers; NeoForge FluidUtil provides BucketPickupHandlerWrapper and tryPlaceFluid for adaptation. No client launch/install, push or merge.
