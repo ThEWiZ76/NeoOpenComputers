@@ -23,6 +23,71 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RobotWorldInteractionGameTests {
     @GameTest(template = "empty")
+    public static void robotInstalledHoverUpgradeExtendsFlightHeight(final GameTestHelper helper) throws Exception {
+        verifyHoverFlight(helper, 0, 3, true);
+    }
+
+    @GameTest(template = "empty")
+    public static void robotSecondHoverTierUsesItsOwnFlightHeight(final GameTestHelper helper) throws Exception {
+        verifyHoverFlight(helper, 1, 5, true);
+    }
+
+    @GameTest(template = "empty")
+    public static void robotFirstHoverTierStillRespectsItsFlightLimit(final GameTestHelper helper) throws Exception {
+        verifyHoverFlight(helper, 0, 5, false);
+    }
+
+    @GameTest(template = "empty")
+    public static void robotCargoHoverUpgradeDoesNotExtendFlightHeight(final GameTestHelper helper) throws Exception {
+        verifyHoverFlight(helper, -1, 3, false);
+    }
+
+    private static void verifyHoverFlight(final GameTestHelper helper, final int upgradeTier, final int height, final boolean expected) throws Exception {
+        final BlockPos start = new BlockPos(1, 1, 1);
+        final BlockPos finish = start.south();
+        for (final Direction side : Direction.values()) {
+            helper.setBlock(start.relative(side), Blocks.AIR);
+            helper.setBlock(finish.relative(side), Blocks.AIR);
+        }
+        helper.setBlock(finish, Blocks.AIR);
+        for (int distance = 1; distance <= height; distance++) helper.setBlock(start.below(distance), Blocks.AIR);
+        helper.setBlock(start.below(height), Blocks.STONE);
+        helper.setBlock(start, ModBlocks.ROBOT.get().defaultBlockState().setValue(RobotBlock.FACING, Direction.SOUTH));
+        final RobotBlockEntity robot = helper.getBlockEntity(start);
+        robot.setTier(2);
+        final var parts = new java.util.ArrayList<>(java.util.List.of(
+            new ItemStack(li.cil.oc.common.ModItems.CPU_TIER1.get()), new ItemStack(li.cil.oc.common.ModItems.MEMORY_TIER1.get()),
+            RobotMovementPersistenceGameTests.eeprom("while true do computer.pullSignal() end")));
+        if (upgradeTier >= 0) parts.add(new ItemStack(upgradeTier == 0
+            ? li.cil.oc.common.ModItems.HOVER_UPGRADE_TIER1.get() : li.cil.oc.common.ModItems.HOVER_UPGRADE_TIER2.get()));
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, parts);
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(li.cil.oc.common.ModItems.HOVER_UPGRADE_TIER2.get()));
+        robot.onLoad();
+        final var energy = (li.cil.oc.api.network.Connector) robot.machine().node();
+        energy.changeBuffer(10000D);
+        helper.assertTrue(robot.toggleMachine(), "Hover fixture did not start");
+        final int oldLimit = ModSettings.LIMIT_FLIGHT_HEIGHT.get();
+        final var oldHeights = ModSettings.UPGRADE_FLIGHT_HEIGHTS.get();
+        try {
+            ModSettings.LIMIT_FLIGHT_HEIGHT.set(1);
+            ModSettings.UPGRADE_FLIGHT_HEIGHTS.set(java.util.List.of(3, 5));
+            final double before = energy.globalBuffer();
+            final Object[] result = ((li.cil.oc.api.network.Component) robot.node()).invoke("move", null, 3);
+            helper.assertTrue(Boolean.TRUE.equals(result[0]) == expected, "Installed hover hardware produced wrong flight permission: expected "
+                + expected + ", got " + java.util.Arrays.toString(result));
+            if (!expected) helper.assertTrue("blocked".equals(result[1]), "Negative hover test failed for an unrelated reason");
+            helper.assertTrue(helper.getLevel().getBlockEntity(helper.absolutePos(expected ? finish : start)) == robot,
+                "Hover move result does not match robot position");
+            helper.assertTrue(Math.abs(energy.globalBuffer() - (before - (expected ? ModSettings.robotMoveCost() : 0D))) < 1e-6,
+                "Hover flight consumed incorrect movement energy");
+        } finally {
+            ModSettings.LIMIT_FLIGHT_HEIGHT.set(oldLimit);
+            ModSettings.UPGRADE_FLIGHT_HEIGHTS.set(oldHeights);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void robotResolvesInstalledHardwareEnvironmentsBySlot(final GameTestHelper helper) throws Exception {
         final RobotBlockEntity robot = robot(helper, "while true do computer.pullSignal() end", true);
         final var previous = new java.util.HashMap<Integer, li.cil.oc.api.network.Environment>();

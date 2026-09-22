@@ -78,9 +78,8 @@ public final class RobotCommonHandler {
         for (int slot = 0; slot < robot.equipmentInventory().getContainerSize(); slot++) {
             result = Math.max(result, hoverFlightHeight(robot.equipmentInventory().getItem(slot)));
         }
-        final int firstComponentSlot = robot.mainInventory().getContainerSize() + robot.equipmentInventory().getContainerSize();
-        for (int slot = 0; slot < robot.componentCount(); slot++) {
-            result = Math.max(result, hoverFlightHeight(robot.getItem(firstComponentSlot + slot)));
+        for (final ItemStack stack : robot.internalComponents()) {
+            result = Math.max(result, hoverFlightHeight(stack));
         }
         return result;
     }

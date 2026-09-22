@@ -23,3 +23,13 @@ The first lookup implementation still failed the identity test (robot-component-
 MachineHost now has a backward-compatible default onMachineConnect(Node, ItemStack) overload that delegates to the original callback for existing hosts. SimpleMachine supplies the exact source stack. RobotBlockEntity resolves that stack by identity in hardwareItems, registers its address/slot, then performs the existing connection setup. Its iterator no longer mutates a shared pending-slot field. Other hosts keep their existing callback behavior; their own iterator-based mappings warrant a separate audit.
 
 Verification: robot-component-lookup-mapping.log full test/build/GameTest success; 2058 unit tests zero failures/errors and all 484 required GameTests. Artifact SHA256 7EFBF20CF7ED3F58CCFA783F8AF45E29D01127999FE0B2A5D7195584135CD878. git diff --check clean. Not installed or live-tested; client remains closed.
+
+## Installed hover hardware and real movement
+
+RobotCommonHandler.maxFlyingHeight used componentCount plus a combined-inventory offset to scan robot.getItem. The port stores assembler hardware separately, and passive HoverUpgradeItem creates no environment, so component counting could not discover the installed upgrade. The handler now scans robot.internalComponents for installed hardware, in addition to the existing four-slot equipment view. Cargo is not considered installed equipment.
+
+Four real tier-three robot movement scenarios use fixed test configuration (base height 1, upgrade tiers 3/5), controlled ground distances and energy: installed tier one moves at height three; installed tier two moves at height five; tier one is blocked at height five; a tier-two item merely in cargo remains blocked at height three. Tests verify actual source/destination block entity identity and exact energy charge/refund. Configuration is restored in finally.
+
+robot-hover-hardware-red.log reproduced blocked moves for both installed tiers. The first green attempt found a test expectation error in negative cases: component move returns nil/blocked, not Boolean.FALSE. Tests now require a non-success result with the exact blocked reason, unchanged location and no energy loss. This changes no callback behavior.
+
+Verification: robot-hover-hardware-final.log full test/build/GameTest success, 2058 unit tests zero failures/errors and all 488 required GameTests. Artifact SHA256 E18566DB9B39D298885EBE621115E268C0DEE9CEF395F79607CC47AF6AB8AA3D. git diff --check clean. Not installed/live-tested; client remains closed.

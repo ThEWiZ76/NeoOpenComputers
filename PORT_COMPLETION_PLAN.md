@@ -289,3 +289,7 @@ Ontbrekende RobotAttackEntityEvent.Post-handler hersteld: experience-upgrades kr
 ### Robothardware terugvinden en juiste slots koppelen
 
 getComponentInSlot-stub vervangen door lookup van actuele aangesloten hardware. Echte hardwaretest vond bovendien foutieve dubbele slotkoppelingen door geneste enumeratie tijdens geheugencontrole. MachineHost krijgt een compatibele default-overload met exact bronitem; SimpleMachine geeft dat item door en Robot gebruikt itemidentiteit in plaats van gedeelde iteratorstatus. Test verifieert meerdere componentinstanties, ongeldige slots en volledige vernieuwing na herbouw. Full build: 2058 unit-tests en 484 GameTests; robot-component-lookup-mapping.log. Zie ROBOT_INVENTORY_VIEWS.md. Legacy gecombineerde slotnamespace, hover-hardwarecontrole, containercomponenten en mappings bij andere hosts blijven open.
+
+### Geinstalleerde hover-upgrades en vlieghoogte
+
+Hovercontrole scant nu echte internalComponents in plaats van ongeldige gecombineerde inventarisindexen. Passieve hoverhardware heeft geen componentenvironment en werd daardoor gemist. Vier echte bewegingsproeven bewijzen beide tiers, tierbegrenzing, geen effect van een upgrade alleen in cargo en exacte energie/positie bij toegestane of geblokkeerde beweging. Full build: 2058 unit-tests en 488 GameTests; robot-hover-hardware-final.log. Zie ROBOT_INVENTORY_VIEWS.md. Overige hostmappings, gecombineerde API-slotnamespace, runtime containers en verdere portering blijven open.
