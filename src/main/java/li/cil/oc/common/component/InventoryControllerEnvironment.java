@@ -264,7 +264,7 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
         }
     }
 
-    public static final class RobotInventoryControllerEnvironment extends AgentInventoryControllerEnvironment {
+    public static class RobotInventoryControllerEnvironment extends AgentInventoryControllerEnvironment {
         private final Robot robot;
 
         public RobotInventoryControllerEnvironment(final Robot robot) {

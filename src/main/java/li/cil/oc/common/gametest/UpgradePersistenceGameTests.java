@@ -23,6 +23,29 @@ import java.util.List;
 @PrefixGameTestTemplate(false)
 public final class UpgradePersistenceGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
+    public static void robotInventoryControllerProxySurvivesReload(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.INVENTORY_CONTROLLER_UPGRADE.get()), """
+            local upgrade = component.proxy(component.list('inventory_controller')())
+            local stack = upgrade.getStackInInternalSlot(1)
+            assert(stack.name == 'minecraft:diamond' and stack.size == 3)
+            """, """
+            local stack = upgrade.getStackInInternalSlot(1)
+            assert(stack.name == 'minecraft:diamond' and stack.size == 3, 'controller lost cargo view')
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void robotTankControllerProxySurvivesReload(GameTestHelper helper) {
+        restore(helper, new ItemStack(ModItems.TANK_CONTROLLER_UPGRADE.get()), """
+            local upgrade = component.proxy(component.list('tank_controller')())
+            assert(upgrade.getTankLevelInSlot(1) == 1000)
+            """, """
+            assert(upgrade.getTankLevelInSlot(1) == 1000, 'controller lost water bucket view')
+            assert(upgrade.getTankCapacityInSlot(1) == 1000)
+            """);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
     public static void robotTankRetainsWaterAcrossReload(GameTestHelper helper) {
         restore(helper, new ItemStack(ModItems.TANK_UPGRADE.get()), """
             assert(robot.tankLevel(1) == 1000, 'tank fixture not filled')
@@ -133,6 +156,12 @@ public final class UpgradePersistenceGameTests {
                 while true do computer.pullSignal() end
                 """)));
         original.onLoad();
+        if (upgrade.is(ModItems.INVENTORY_CONTROLLER_UPGRADE.get())) {
+            original.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(net.minecraft.world.item.Items.DIAMOND, 3));
+        }
+        if (upgrade.is(ModItems.TANK_CONTROLLER_UPGRADE.get())) {
+            original.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(net.minecraft.world.item.Items.WATER_BUCKET));
+        }
         if (tank) {
             final var water = new net.neoforged.neoforge.fluids.FluidStack(net.minecraft.world.level.material.Fluids.WATER, 1000);
             helper.assertTrue(original.tank().getFluidTank(0).fill(water,

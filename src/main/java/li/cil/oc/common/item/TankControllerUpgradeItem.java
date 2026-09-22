@@ -32,16 +32,26 @@ public class TankControllerUpgradeItem extends Item implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        if (host instanceof Drone drone) {
-            return new TankControllerEnvironment.AgentTankControllerEnvironment(drone);
+        final TankControllerEnvironment environment;
+        if (host instanceof Drone || host instanceof Robot) {
+            environment = new TankControllerEnvironment.AgentTankControllerEnvironment((li.cil.oc.api.internal.Agent) host) {
+                @Override public void save(final CompoundTag data) {
+                    super.save(data);
+                    ItemDriverData.writeDataTag(stack, data);
+                }
+            };
+        } else if (host instanceof Adapter) {
+            environment = new TankControllerEnvironment(host) {
+                @Override public void save(final CompoundTag data) {
+                    super.save(data);
+                    ItemDriverData.writeDataTag(stack, data);
+                }
+            };
+        } else {
+            return null;
         }
-        if (host instanceof Robot robot) {
-            return new TankControllerEnvironment.AgentTankControllerEnvironment(robot);
-        }
-        if (host instanceof Adapter) {
-            return new TankControllerEnvironment(host);
-        }
-        return null;
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override

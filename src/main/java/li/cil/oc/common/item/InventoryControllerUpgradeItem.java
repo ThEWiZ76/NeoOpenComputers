@@ -32,16 +32,33 @@ public class InventoryControllerUpgradeItem extends Item implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
+        final InventoryControllerEnvironment environment;
         if (host instanceof Robot robot) {
-            return new InventoryControllerEnvironment.RobotInventoryControllerEnvironment(robot);
+            environment = new InventoryControllerEnvironment.RobotInventoryControllerEnvironment(robot) {
+                @Override public void save(final CompoundTag data) {
+                    super.save(data);
+                    ItemDriverData.writeDataTag(stack, data);
+                }
+            };
+        } else if (host instanceof Drone drone) {
+            environment = new InventoryControllerEnvironment.AgentInventoryControllerEnvironment(drone) {
+                @Override public void save(final CompoundTag data) {
+                    super.save(data);
+                    ItemDriverData.writeDataTag(stack, data);
+                }
+            };
+        } else if (host instanceof Adapter) {
+            environment = new InventoryControllerEnvironment(host) {
+                @Override public void save(final CompoundTag data) {
+                    super.save(data);
+                    ItemDriverData.writeDataTag(stack, data);
+                }
+            };
+        } else {
+            return null;
         }
-        if (host instanceof Drone drone) {
-            return new InventoryControllerEnvironment.AgentInventoryControllerEnvironment(drone);
-        }
-        if (host instanceof Adapter) {
-            return new InventoryControllerEnvironment(host);
-        }
-        return null;
+        environment.load(dataTag(stack));
+        return environment;
     }
 
     @Override
