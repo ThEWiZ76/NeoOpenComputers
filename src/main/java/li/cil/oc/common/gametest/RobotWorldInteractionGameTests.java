@@ -79,16 +79,95 @@ public final class RobotWorldInteractionGameTests {
     }
 
     @GameTest(template = "empty")
-    public static void robotSwingUsesCalibratedRayForPartialBlocks(final GameTestHelper helper) throws Exception {
+    public static void robotSwingFallsBackForMissedPartialBlocks(final GameTestHelper helper) throws Exception {
         final RobotBlockEntity robot = robot(helper);
         final BlockPos target = new BlockPos(1, 1, 2);
         helper.setBlock(target, Blocks.STONE_SLAB);
         robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
         final var component = (li.cil.oc.api.network.Component) robot.node();
-        helper.assertTrue(Boolean.FALSE.equals(component.invoke("swing", null, 3, 1)[0]), "Upward calibrated ray hit empty half above bottom slab");
+        helper.assertTrue(Boolean.TRUE.equals(component.invoke("swing", null, 3, 1)[0]), "Missed calibrated ray did not fall back to the adjacent partial block");
+        tickRobot(robot, 100);
+        helper.assertTrue(helper.getBlockState(target).isAir(), "Fallback slab dig did not finish");
+        helper.setBlock(target, Blocks.STONE_SLAB);
         helper.assertTrue(Boolean.TRUE.equals(component.invoke("swing", null, 3, 0)[0]), "Downward calibrated ray missed bottom slab");
         tickRobot(robot, 100);
         helper.assertTrue(helper.getBlockState(target).isAir(), "Calibrated slab dig did not finish");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotSwingExtinguishesFireWithoutToolWear(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        helper.setBlock(target.below(), Blocks.NETHERRACK);
+        helper.setBlock(target, Blocks.FIRE);
+        final ItemStack tool = new ItemStack(Items.IRON_PICKAXE);
+        tool.setDamageValue(7);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, tool);
+        final Object[] result = ((li.cil.oc.api.network.Component) robot.node()).invoke("swing", robot.machine(), 3);
+        helper.assertTrue(Boolean.TRUE.equals(result[0]) && result.length == 2 && "fire".equals(result[1]), "Fire swing did not report extinguishing");
+        helper.assertTrue(helper.getBlockState(target).isAir(), "Fire was not extinguished");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.TOOL_SLOT).getDamageValue() == 7, "Extinguishing fire damaged tool");
+        helper.assertTrue(robot.machine().isPaused(), "Fire swing did not pause the caller");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotCanClearCobwebUsingMiningPick(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        helper.setBlock(target, Blocks.COBWEB);
+        robot.setItem(RobotBlockEntity.TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        final boolean override = ModSettings.robotNotAfraidOfSpiders();
+        final double delay = ModSettings.ROBOT_SWING_DELAY.get();
+        final double ratio = ModSettings.robotHarvestRatio();
+        try {
+            ModSettings.ROBOT_NOT_AFRAID_OF_SPIDERS.set(false);
+            helper.assertTrue(Boolean.FALSE.equals(((li.cil.oc.api.network.Component) robot.node()).invoke("swing", null, 3)[0]),
+                "Disabled cobweb override still allowed wrong harvesting tool");
+            ModSettings.ROBOT_NOT_AFRAID_OF_SPIDERS.set(true);
+            ModSettings.ROBOT_SWING_DELAY.set(0.56D);
+            ModSettings.ROBOT_HARVEST_RATIO.set(1D);
+            helper.assertTrue(Boolean.TRUE.equals(((li.cil.oc.api.network.Component) robot.node()).invoke("swing", robot.machine(), 3)[0]),
+                "Robot with mining pick refused cobweb");
+            tickRobot(robot, 9);
+            helper.assertTrue(helper.getBlockState(target).is(Blocks.COBWEB), "Cobweb override ignored configured swing time");
+            tickRobot(robot, 1);
+            helper.assertTrue(helper.getBlockState(target).isAir(), "Robot did not clear cobweb after ten ticks");
+            helper.assertTrue(cargoCount(robot, Items.STRING) == 0, "Wrong cobweb tool incorrectly gained harvest drops");
+        } finally {
+            ModSettings.ROBOT_NOT_AFRAID_OF_SPIDERS.set(override);
+            ModSettings.ROBOT_SWING_DELAY.set(delay);
+            ModSettings.ROBOT_HARVEST_RATIO.set(ratio);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void robotExtinguishingRespectsProtectionForBothFireTypes(final GameTestHelper helper) throws Exception {
+        final RobotBlockEntity robot = robot(helper);
+        final BlockPos target = new BlockPos(1, 1, 2);
+        final var component = (li.cil.oc.api.network.Component) robot.node();
+        for (final var fire : new net.minecraft.world.level.block.Block[]{Blocks.FIRE, Blocks.SOUL_FIRE}) {
+            helper.setBlock(target.below(), Blocks.SOUL_SOIL);
+            helper.setBlock(target, fire);
+            final Object protection = new Object() {
+                @SubscribeEvent
+                public void onBreak(final BlockEvent.BreakEvent event) {
+                    if (event.getLevel() == helper.getLevel() && event.getPos().equals(helper.absolutePos(target))) event.setCanceled(true);
+                }
+            };
+            NeoForge.EVENT_BUS.register(protection);
+            try {
+                helper.assertTrue(Boolean.FALSE.equals(component.invoke("swing", null, 3)[0]), "Robot bypassed protected fire");
+                helper.assertTrue(helper.getBlockState(target).is(fire), "Protected fire was removed");
+            } finally {
+                NeoForge.EVENT_BUS.unregister(protection);
+            }
+            final Object[] result = component.invoke("swing", null, 3);
+            helper.assertTrue(Boolean.TRUE.equals(result[0]) && "fire".equals(result[1]) && helper.getBlockState(target).isAir(),
+                "Robot did not extinguish allowed fire");
+        }
         helper.succeed();
     }
 

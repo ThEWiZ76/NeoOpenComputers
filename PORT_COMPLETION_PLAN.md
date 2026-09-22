@@ -269,3 +269,7 @@ Nieuwe drops van block-attack en harvest gaan nu naar cargo; bestaande items bli
 ### Ore-XP naar experience-upgrade
 
 Exacte afbraak onderschept aangepaste BlockDropsEvent-XP bij aanwezige experience-upgrade, zonder dubbele wereldorbs. Zonder upgrade blijft normale XP-drop; annulering levert geen ore-XP op. Echte T3-hardware en drie vaste-XP-scenarios getest. Full build: 2058 unit-tests en 471 GameTests; robot-harvest-xp-final.log. Zie ROBOT_HARVEST_DROPS.md. Entities/fire/cobweb, verdere modinteracties, andere wereldacties en live tests blijven open.
+
+### Vuur, spinnenwebben en fallback bij halve blokken
+
+Robot swing dooft gewoon en soul fire met beveiligingscontrole, correcte fire-uitkomst, pauze en zonder slijtage. Upstream notAfraidOfSpiders en swing-delayconfig toegevoegd; cobwebs met mining pick verdwijnen na configureerbare tijd zonder onterechte loot. Gecorrigeerd: upstream probeert na gemiste kalibratiestralen alsnog het aanwezige blok, dus halve blokken blijven breekbaar. Full build: 2058 unit-tests en 474 GameTests; robot-fire-web-final.log. Zie ROBOT_LEFT_CLICK.md. Client gesloten; entities, overige wereldacties, persistence en live tests blijven open.

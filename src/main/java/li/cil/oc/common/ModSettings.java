@@ -122,6 +122,8 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue ROBOT_ITEM_DAMAGE_RATE;
     public static final ModConfigSpec.DoubleValue ROBOT_HARVEST_RATIO;
     public static final ModConfigSpec.DoubleValue ROBOT_SWING_RANGE;
+    public static final ModConfigSpec.DoubleValue ROBOT_SWING_DELAY;
+    public static final ModConfigSpec.BooleanValue ROBOT_NOT_AFRAID_OF_SPIDERS;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_COST;
     public static final ModConfigSpec.DoubleValue ROBOT_MOVE_DELAY;
     public static final ModConfigSpec.DoubleValue ROBOT_TURN_DELAY;
@@ -360,11 +362,15 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("robot");
+        ROBOT_NOT_AFRAID_OF_SPIDERS = builder.comment("Allow robots to clear cobwebs quickly with any equipped tool. Upstream default is true.")
+            .define("notAfraidOfSpiders", true);
         ROBOT_SWING_RANGE = builder.comment("Distance from the adjacent block center used to calibrate robot swing rays. Upstream default is 0.49.")
             .defineInRange("swingRange", 0.49D, 0D, Double.MAX_VALUE);
         ROBOT_ITEM_DAMAGE_RATE = builder.comment("Damage rate for tools equipped by robots. OpenComputers upstream default is 0.1; zero prevents wear and one keeps normal wear.")
             .defineInRange("itemDamageRate", 0.1D, 0D, 1D);
         builder.push("delays");
+        ROBOT_SWING_DELAY = builder.comment("Robot non-mining swing delay before upstream 0.06-second scheduling adjustment.")
+            .defineInRange("swing", 0.4D, 0D, Double.MAX_VALUE);
         ROBOT_HARVEST_RATIO = builder.comment("Multiplier for robot dig time derived from block hardness and equipped tool speed. Upstream default is 1.")
             .defineInRange("harvestRatio", 1D, 0D, Double.MAX_VALUE);
         ROBOT_MOVE_DELAY = builder.comment("Robot movement delay in seconds, before upstream 0.06-second scheduling adjustment.")
@@ -956,6 +962,14 @@ public final class ModSettings {
 
     public static double robotSwingRange() {
         return Math.max(0D, doubleValue(ROBOT_SWING_RANGE));
+    }
+
+    public static double robotSwingDelay() {
+        return Math.max(0D, doubleValue(ROBOT_SWING_DELAY) - 0.06D);
+    }
+
+    public static boolean robotNotAfraidOfSpiders() {
+        return booleanValue(ROBOT_NOT_AFRAID_OF_SPIDERS);
     }
 
     public static double robotTurnCost() {

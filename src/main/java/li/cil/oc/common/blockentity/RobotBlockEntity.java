@@ -947,14 +947,18 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             if (!level.mayInteract(player, target) || player.blockActionRestricted(level, target, net.minecraft.world.level.GameType.SURVIVAL)) {
                 return new Object[]{false, "blocked"};
             }
-            if (!state.canHarvestBlock(level, target, player)) {
+            if (state.getBlock() instanceof net.minecraft.world.level.block.BaseFireBlock) {
+                return extinguishFire(context, player, hit, before);
+            }
+            final boolean cobwebOverride = state.is(Blocks.COBWEB) && ModSettings.robotNotAfraidOfSpiders();
+            if (!cobwebOverride && !state.canHarvestBlock(level, target, player)) {
                 return new Object[]{false, "cannot harvest"};
             }
             // Upstream robot players mine as grounded players, including while hovering.
             player.setOnGround(true);
             final double strength = player.getDigSpeed(state, target);
-            if (!(strength > 0D)) return new Object[]{false, "cannot break"};
-            final double seconds = hardness * 1.5D / strength * ModSettings.robotHarvestRatio();
+            if (!cobwebOverride && !(strength > 0D)) return new Object[]{false, "cannot break"};
+            final double seconds = (cobwebOverride ? ModSettings.robotSwingDelay() : hardness * 1.5D / strength) * ModSettings.robotHarvestRatio();
             if (!Double.isFinite(seconds)) return new Object[]{false, "cannot break"};
             final RobotBreakBlockEvent.Pre pre = new RobotBreakBlockEvent.Pre(this, level, target, Math.max(0.05D, seconds));
             NeoForge.EVENT_BUS.post(pre);
@@ -991,6 +995,26 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         }
     }
 
+    private Object[] extinguishFire(final Context context, final net.minecraft.server.level.ServerPlayer player,
+                                    final BlockHitResult hit, final ItemStack tool) {
+        final BlockPos target = hit.getBlockPos();
+        final BlockState fire = level.getBlockState(target);
+        final var click = net.neoforged.neoforge.common.CommonHooks.onLeftClickBlock(player, target, hit.getDirection(),
+            net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK);
+        if (click.isCanceled() || click.getUseItem() == net.neoforged.neoforge.common.util.TriState.FALSE) {
+            return new Object[]{false, "blocked"};
+        }
+        final var breaking = net.neoforged.neoforge.common.CommonHooks.fireBlockBreak((ServerLevel) level,
+            net.minecraft.world.level.GameType.SURVIVAL, player, target, fire);
+        if (breaking.isCanceled() || !level.getBlockState(target).equals(fire) || !level.removeBlock(target, false)) {
+            return new Object[]{false, "blocked"};
+        }
+        level.levelEvent(null, 1009, target, 0);
+        if (!tool.isEmpty()) startAnimation(null, 0, ModSettings.robotSwingDelay(), true);
+        if (context != null) context.pause(ModSettings.robotSwingDelay());
+        return new Object[]{true, "fire"};
+    }
+
     private BlockHitResult swingHit(final Player player, final Direction direction, final Direction calibrated) {
         final Vec3 step = Vec3.atLowerCornerOf(direction.getNormal());
         final Vec3 origin = Vec3.atCenterOf(worldPosition).add(step.scale(0.5D));
@@ -1008,6 +1032,13 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             final BlockHitResult hit = level.clip(new net.minecraft.world.level.ClipContext(origin, end,
                 net.minecraft.world.level.ClipContext.Block.OUTLINE, net.minecraft.world.level.ClipContext.Fluid.NONE, player));
             if (hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) return hit;
+        }
+        // Upstream retries an adjacent non-replaceable block even when its outline was missed.
+        final BlockPos target = worldPosition.relative(direction);
+        final BlockState state = level.getBlockState(target);
+        if (!state.isAir() && (state.getBlock() instanceof net.minecraft.world.level.block.BaseFireBlock
+            || state.getFluidState().isEmpty() && !state.canBeReplaced())) {
+            return new BlockHitResult(Vec3.atCenterOf(target), direction, target, false);
         }
         return null;
     }
@@ -1061,7 +1092,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         };
         if (captureExperience) NeoForge.EVENT_BUS.register(experience);
         try {
-            if (!task.state().canHarvestBlock(level, task.target(), player)) return;
+            if (!(task.state().is(Blocks.COBWEB) && ModSettings.robotNotAfraidOfSpiders())
+                && !task.state().canHarvestBlock(level, task.target(), player)) return;
             // Re-check ordinary block protection at completion, before producing loot.
             if (!player.gameMode.destroyBlock(task.target())) return;
             final ItemStack after = player.getMainHandItem().copy();

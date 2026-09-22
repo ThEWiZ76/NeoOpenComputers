@@ -18,13 +18,17 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 final class ModSettingsTest {
     @Test
-    void robotToolWearUsesUpstreamSettingAndDefault() {
+    void robotActionSettingsUseUpstreamPathsAndDefaults() {
         assertEquals(List.of("robot", "itemDamageRate"), ModSettings.ROBOT_ITEM_DAMAGE_RATE.getPath());
         assertEquals(0.1D, ModSettings.robotItemDamageRate());
         assertEquals(List.of("robot", "delays", "harvestRatio"), ModSettings.ROBOT_HARVEST_RATIO.getPath());
         assertEquals(1D, ModSettings.robotHarvestRatio());
         assertEquals(List.of("robot", "swingRange"), ModSettings.ROBOT_SWING_RANGE.getPath());
         assertEquals(0.49D, ModSettings.robotSwingRange());
+        assertEquals(List.of("robot", "notAfraidOfSpiders"), ModSettings.ROBOT_NOT_AFRAID_OF_SPIDERS.getPath());
+        assertEquals(true, ModSettings.robotNotAfraidOfSpiders());
+        assertEquals(List.of("robot", "delays", "swing"), ModSettings.ROBOT_SWING_DELAY.getPath());
+        assertEquals(0.34D, ModSettings.robotSwingDelay(), 1e-12);
     }
 
     @Test

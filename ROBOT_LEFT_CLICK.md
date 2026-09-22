@@ -9,3 +9,13 @@ Evidence: robot-left-click-red.log reproduces missing LeftClickBlock event. New 
 Full robot-left-click-final.log: test build runGameTestServer successful, 2058 unit tests zero failures/errors, all 466 required GameTests. git diff --check clean. Artifact SHA256 8EF3A604DE6D3F621288A57644CBF83505DAF1F3EAE5D009B827BFBFEBE0A6C1. Not installed/live-tested; Minecraft client remains closed.
 
 Remaining swing work: entity targeting/attacks, fire/cobweb special behavior, collected drops/exact ore XP, enchantment hit hooks and START/STOP/ABORT parity details, permission changes during pending work, save/reload of pending Lua actions. Item-mutating mod block-attack callbacks and modded shape variants need compatibility tests. Generic place/use still need their own calibrated/event parity. Live motion/tool/crack checks on display 3 and the broad port matrix remain open.
+
+## Fire, cobweb and partial-block fallback correction
+
+Further comparison with upstream Agent.swing found that a missed calibrated ray still falls back to the adjacent non-replaceable block. The earlier upper-ray bottom-slab failure expectation above was incorrect and is superseded: both missed-ray fallback and direct downward hit now mine the slab successfully.
+
+Robot swing now extinguishes regular and soul fire immediately, returns true/fire, pauses using robot.delays.swing (raw default .4 minus .06), and animates an equipped tool without wear. Ordinary interaction restrictions, LeftClickBlock cancellation/useItem denial and BlockEvent protection apply. robot.notAfraidOfSpiders defaults true: cobweb removal can use a mining pick at swingDelay * harvestRatio, while ordinary harvest rules still prevent incorrect string drops. Disabling the option restores harvest requirements.
+
+robot-fire-web-red.log reproduced the three missing behaviors. robot-fire-web-final.log: test build runGameTestServer successful, 2058 unit tests with zero failures/errors and all 474 required GameTests. Tests cover both fire types with canceled/allowed protection, no fire tool wear, machine pause, exact ten-tick cobweb timing, config paths/defaults, wrong-tool behavior with override off and no wrong-tool loot. git diff --check clean. Main artifact SHA256 9E9F0BE00F3B46E28400F447923860F72E53EF2732B7E6FA4985BF9D14EE0941. Not installed or live-tested; client remains closed.
+
+Entity attacks, enchantment/event lifecycle details, generic place/use, persistence and live display-3 visual testing remain open. Harvest collection and ore XP were completed in separate checkpoints (see Robot harvest drops).
