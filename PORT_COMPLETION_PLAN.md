@@ -410,3 +410,9 @@ Inspection found only TabletItem assembly/charge data plus a temporary TabletAna
 Implement in order: a Tablet machine host with stable decoded components, built-in 80x25/four-bit screen, tablet component, keyboard connections, energy and save/dispose behavior; a server cache and inventory/use integration; terminal input/output through existing TerminalMenu; tier-dependent component editing and delayed block analysis; lifecycle and full OpenOS/native regression tests; live client acceptance on display3. Reuse SimpleMachine and existing screen/networking rather than a second VM or UI transport.
 
 Upstream common/item/Tablet.scala caches wrappers, saves components, retains execution for dimension changes, but clears running state on ordinary cache eviction. Verify these distinct semantics rather than promising universal resume after logout/dropping. Full-world/server lifecycle coverage remains required. No additional plan approval is needed under the user's instruction to execute the complete port.
+
+## Tablet implementation checkpoint - 2026-09-22
+
+The earlier tablet gap section is historical: runtime, item use, terminal, analysis, cache, save/drop/death/container/dimension handling, full BIOS/OpenOS shell continuation and the one-slot expansion editor are now implemented with server-side regression coverage. The editor follows upstream container slot type/tier limits and locks the held tablet. Final tablet-editor-final.log: build,2108units,all544GameTests pass. See [[../04 ai-context/Tablet runtime]] for exact scope and evidence.
+
+Still required: writable OpenOS installation through the complete player flow, actual full process restart, external automation paths and real-client visual/input acceptance on display3. Existing wider parity, platform, multiplayer/survival and release gates remain in scope; this checkpoint is not full-port completion.

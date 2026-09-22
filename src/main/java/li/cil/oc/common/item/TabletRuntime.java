@@ -80,6 +80,22 @@ public final class TabletRuntime implements Tablet {
         save();
     }
 
+    public net.minecraft.world.Container expansionInventory() {
+        final var inventory = new net.minecraft.world.SimpleContainer(components.get(components.size() - 1)) {
+            @Override public int getMaxStackSize() { return 1; }
+            @Override public boolean canPlaceItem(int slot, ItemStack candidate) {
+                return li.cil.oc.common.menu.TabletMenu.acceptsExpansion(stack, candidate);
+            }
+        };
+        inventory.addListener(changed -> {
+            if (closed || machine.isRunning()) return;
+            components.set(components.size() - 1, changed.getItem(0));
+            machine.onHostChanged();
+            save();
+        });
+        return inventory;
+    }
+
     void rebind(final ItemStack stack, final Player player) {
         if (closed || stack.getItem() != item || player.level() != world) throw new IllegalArgumentException("Invalid tablet handoff");
         this.stack = stack;

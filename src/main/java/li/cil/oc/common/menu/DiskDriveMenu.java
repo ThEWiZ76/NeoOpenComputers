@@ -26,7 +26,11 @@ public class DiskDriveMenu extends AbstractContainerMenu {
     }
 
     public DiskDriveMenu(final int containerId, final Inventory playerInventory, final Container diskInventory) {
-        super(ModMenus.DISK_DRIVE.get(), containerId);
+        this(ModMenus.DISK_DRIVE.get(), containerId, playerInventory, diskInventory);
+    }
+
+    protected DiskDriveMenu(final net.minecraft.world.inventory.MenuType<?> type, final int containerId, final Inventory playerInventory, final Container diskInventory) {
+        super(type, containerId);
         checkContainerSize(diskInventory, DRIVE_SLOT_COUNT);
         this.diskInventory = diskInventory;
         diskInventory.startOpen(playerInventory.player);
@@ -83,12 +87,14 @@ public class DiskDriveMenu extends AbstractContainerMenu {
     private void addPlayerInventory(final Inventory playerInventory) {
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
-                addSlot(new Slot(playerInventory, column + row * 9 + 9, PLAYER_INVENTORY_X + column * 18, PLAYER_INVENTORY_Y + row * 18));
+                addSlot(playerSlot(playerInventory, column + row * 9 + 9, PLAYER_INVENTORY_X + column * 18, PLAYER_INVENTORY_Y + row * 18));
             }
         }
 
         for (int column = 0; column < 9; column++) {
-            addSlot(new Slot(playerInventory, column, PLAYER_INVENTORY_X + column * 18, PLAYER_HOTBAR_Y));
+            addSlot(playerSlot(playerInventory, column, PLAYER_INVENTORY_X + column * 18, PLAYER_HOTBAR_Y));
         }
     }
+
+    protected Slot playerSlot(Inventory inventory, int index, int x, int y) { return new Slot(inventory, index, x, y); }
 }

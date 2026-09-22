@@ -25,6 +25,7 @@ public final class TabletUseGameTests {
 
     private static void useTerminal(GameTestHelper helper, boolean nativeLua) {
         final var player = helper.makeMockServerPlayerInLevel();
+        TabletEditorGameTests.enableMenuChannel(player);
         player.setNoGravity(true);
         final var item = ModItems.TABLET.get();
         final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());

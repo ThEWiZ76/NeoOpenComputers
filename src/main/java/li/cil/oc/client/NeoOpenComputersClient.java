@@ -96,7 +96,8 @@ public final class NeoOpenComputersClient {
         event.register(ModMenus.CHARGER.get(), ChargerScreen::new);
         event.register(ModMenus.COMPUTER_CASE.get(), ComputerCaseScreen::new);
         event.register(ModMenus.DISASSEMBLER.get(), DisassemblerScreen::new);
-        event.register(ModMenus.DISK_DRIVE.get(), DiskDriveScreen::new);
+        event.<li.cil.oc.common.menu.DiskDriveMenu, DiskDriveScreen<li.cil.oc.common.menu.DiskDriveMenu>>register(ModMenus.DISK_DRIVE.get(), DiskDriveScreen::new);
+        event.<li.cil.oc.common.menu.TabletMenu, DiskDriveScreen<li.cil.oc.common.menu.TabletMenu>>register(ModMenus.TABLET.get(), DiskDriveScreen::new);
         event.register(ModMenus.DRONE.get(), DroneScreen::new);
         event.register(ModMenus.DRIVE.get(), DriveScreen::new);
         event.register(ModMenus.MICROCONTROLLER.get(), MicrocontrollerScreen::new);

@@ -65,6 +65,9 @@ public final class ModMenus {
         ModContentIds.DRIVE_MENU,
         () -> new MenuType<>(DriveMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<li.cil.oc.common.menu.TabletMenu>> TABLET = MENUS.register(
+        "tablet", () -> IMenuTypeExtension.create(li.cil.oc.common.menu.TabletMenu::new));
+
     public static final DeferredHolder<MenuType<?>, MenuType<DisassemblerMenu>> DISASSEMBLER = MENUS.register(
         ModContentIds.DISASSEMBLER_MENU,
         () -> new MenuType<>(DisassemblerMenu::new, FeatureFlags.DEFAULT_FLAGS));

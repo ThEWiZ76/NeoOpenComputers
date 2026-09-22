@@ -310,7 +310,17 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
                     (float) (hit.x - pos.getX()), (float) (hit.y - pos.getY()), (float) (hit.z - pos.getZ()));
             }
         } else if (player.isShiftKeyDown()) {
+            if (!runtime.machine().canInteract(player.getGameProfile().getName())) return;
             runtime.stop();
+            if (tier(stack) > 0 && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                    (id, inventory, viewer) -> new li.cil.oc.common.menu.TabletMenu(id, inventory, runtime), stack.getHoverName()),
+                    data -> {
+                        data.writeVarInt(li.cil.oc.common.menu.TabletMenu.inventorySlot(player.getInventory(), stack));
+                        data.writeUtf(li.cil.oc.common.menu.TabletMenu.expansionType(stack));
+                        data.writeVarInt(li.cil.oc.common.menu.TabletMenu.expansionTier(stack));
+                    });
+            }
         } else {
             if (!runtime.machine().canInteract(player.getGameProfile().getName())) return;
             runtime.start();

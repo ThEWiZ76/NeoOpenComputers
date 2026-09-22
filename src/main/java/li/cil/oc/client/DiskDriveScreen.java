@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
-public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
+public class DiskDriveScreen<T extends DiskDriveMenu> extends AbstractContainerScreen<T> {
     public static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/background.png");
     public static final ResourceLocation SLOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "textures/gui/slot.png");
 
@@ -18,7 +18,7 @@ public class DiskDriveScreen extends AbstractContainerScreen<DiskDriveMenu> {
     private static final int INVENTORY_TEXT_X = 8;
     private static final int INVENTORY_TEXT_Y = 72;
 
-    public DiskDriveScreen(final DiskDriveMenu menu, final Inventory playerInventory, final Component title) {
+    public DiskDriveScreen(final T menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
         imageHeight = 166;
         titleLabelX = TITLE_TEXT_X;
