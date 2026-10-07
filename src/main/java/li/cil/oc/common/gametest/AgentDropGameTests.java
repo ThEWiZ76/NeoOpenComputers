@@ -14,6 +14,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -21,6 +22,7 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -84,5 +86,43 @@ public final class AgentDropGameTests {
             && items.getFirst().getItem().getCount() == 2 && items.getFirst().hasPickUpDelay(), "World drop duplicated or lost items");
         helper.assertTrue(inventory.getItem(1).getCount() == 5 && agent.selectedSlot() == 1, "World drop changed wrong cargo");
         items.forEach(ItemEntity::discard);
+
+        world.setBlockAndUpdate(target, Blocks.CHEST.defaultBlockState());
+        final var protectedChest = (ChestBlockEntity) world.getBlockEntity(target);
+        java.util.function.Consumer<PlayerInteractEvent.RightClickBlock> denyBlock = event -> {
+            if (event.getEntity() == agent.player() && event.getPos().equals(target)) event.setCanceled(true);
+        };
+        NeoForge.EVENT_BUS.addListener(denyBlock);
+        try { component.invoke("drop", agent.machine(), side, 1); }
+        finally { NeoForge.EVENT_BUS.unregister(denyBlock); }
+        helper.assertTrue(protectedChest.isEmpty() && inventory.getItem(1).getCount() == 4, "Denied chest access inserted or lost cargo");
+        final var deniedDrops = world.getEntitiesOfClass(ItemEntity.class, new AABB(origin).inflate(2));
+        helper.assertTrue(deniedDrops.size() == 1 && deniedDrops.getFirst().getItem().getCount() == 1,
+            "Denied access did not fall back to one world drop");
+        deniedDrops.forEach(ItemEntity::discard);
+        world.setBlockAndUpdate(target, Blocks.AIR.defaultBlockState());
+        final var cart = EntityType.CHEST_MINECART.create(world);
+        cart.moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 0, 0);
+        helper.assertTrue(world.addFreshEntity(cart), "Chest minecart fixture did not spawn");
+        try {
+            helper.assertTrue(Boolean.TRUE.equals(component.invoke("drop", agent.machine(), side, 2)[0]), "Minecart insertion failed");
+            helper.assertTrue(cart.getItem(0).is(Items.DIAMOND) && cart.getItem(0).getCount() == 2
+                && inventory.getItem(1).getCount() == 2, "Minecart insertion did not conserve cargo");
+            java.util.function.Consumer<PlayerInteractEvent.EntityInteract> denyEntity = event -> {
+                if (event.getEntity() == agent.player() && event.getTarget() == cart) event.setCanceled(true);
+            };
+            NeoForge.EVENT_BUS.addListener(denyEntity);
+            NeoForge.EVENT_BUS.addListener(cancel);
+            try { component.invoke("drop", agent.machine(), side, 1); }
+            finally {
+                NeoForge.EVENT_BUS.unregister(denyEntity);
+                NeoForge.EVENT_BUS.unregister(cancel);
+            }
+            helper.assertTrue(cart.getItem(0).getCount() == 2 && inventory.getItem(1).getCount() == 2,
+                "Canceled entity access/toss consumed or inserted cargo");
+        } finally {
+            cart.clearContent();
+            cart.discard();
+        }
     }
 }

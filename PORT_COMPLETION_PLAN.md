@@ -6,7 +6,9 @@
 
 **Werkplek:** `feature/finish-port`; startpunt `b05faaf8c`. Referentie: lokale upstream-checkout `.upstream-opencomputers-master-MC1.12`. Runtime: Java 21, NeoForge 21.1.234, Minecraft 1.21.1, Gradle/JUnit/GameTests en de specifieke Modrinth-testinstance.
 
-**Uitvoering:** plan gevolgd door directe uitvoering is door de gebruiker gevraagd. Geen extra plan-goedkeuringsronde. Geen automatische merge/push/publicatie. GitHub Actions blijven uit. Hoogstens één gecombineerde reviewerpass voor een grote/risicovolle implementatie; geen reviewer voor dit plan of kleine fixes.
+**Uitvoering:** plan gevolgd door directe uitvoering is door de gebruiker gevraagd. Geen extra plan-goedkeuringsronde. Tussentijdse commits pushen naar `origin/feature/finish-port` is op 2026-10-07 expliciet gevraagd; lokale en remote SHA na push vergelijken. Geen automatische merge/publicatie. GitHub Actions blijven uit. Hoogstens één gecombineerde reviewerpass voor een grote/risicovolle implementatie; geen reviewer voor dit plan of kleine fixes.
+
+**Voortgangsupdates:** de gebruiker vraagt sinds 2026-10-07 ook een tussentijdse schatting van de afstand tot een beta met alle afgesproken features geimplementeerd. Rapporteer resterende featuregroepen en acceptatiegates; geen percentage op basis van testaantallen. Voorlopige orde van grootte op die datum: 3-6 weken geconcentreerd implementatie- en testwerk, met lage betrouwbaarheid zolang de volledige pariteitsinventaris en integratiescope open zijn. Dit is een werkschatting, geen leverdatum; bij nieuw bewijs herijken.
 
 ## Wanneer is de port compleet?
 

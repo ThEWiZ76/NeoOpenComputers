@@ -267,3 +267,9 @@ Added drone drop and replaced the robot's unconditional world-item spawn with sh
 AgentDropGameTests verifies robot and drone with actual chests: exact requested insertion, partial one-item capacity, full rejection, zero world drop, canceled toss conservation, one successful two-diamond world drop and unchanged selected slot. Build/all604 GameTests pass (agent-drop.log).
 
 Entity inventory insertion and inventory interaction denial are implemented but not exercised by these two cases; actual protection mods and sided custom inventories remain integration gates. Suck remains to be ported for drones/corrected for robots. No client launch/install, push or merge.
+
+## Drop integration and beta planning - 2026-10-07
+
+Expanded both AgentDropGameTests fixtures with actual chest minecart insertion, denied block inventory access with the upstream world-toss fallback, and simultaneous denied entity access/canceled toss. Cargo and destination counts are conserved, and temporary listeners/entities are cleaned up. build/finish-port-implementation/agent-drop-integration.log reports BUILD SUCCESSFUL and all604 required GameTests passed. The RTK wrapper stayed alive after its child PowerShell exited; only that identified stale wrapper was stopped, without rerunning Gradle.
+
+The user now explicitly requests intermediate pushes and beta-distance estimates. The existing feature/finish-port branch was pushed at b664266145d2c6227864f05dee2be494eb276db3 and the remote SHA was freshly verified. The canonical plan now records push authorization and the provisional3-6-week estimate, with low confidence until the parity inventory and integration scope are complete. This estimate does not certify feature completion.
