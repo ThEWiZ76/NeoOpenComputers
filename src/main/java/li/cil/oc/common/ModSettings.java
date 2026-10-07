@@ -184,6 +184,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue PRINTS_HAVE_OPACITY;
     public static final ModConfigSpec.DoubleValue CONVERTER_BUFFER;
     public static final ModConfigSpec.DoubleValue CAPACITOR_BUFFER;
+    public static final ModConfigSpec.DoubleValue HOVER_BOOTS_BUFFER;
     public static final ModConfigSpec.DoubleValue CAPACITOR_ADJACENCY_BONUS;
     public static final ModConfigSpec.DoubleValue CARPET_SHEEP_POWER;
     public static final ModConfigSpec.DoubleValue CARPET_OCELOT_POWER;
@@ -607,6 +608,8 @@ public final class ModSettings {
         builder.push("buffer");
         CAPACITOR_BUFFER = builder.comment("Base capacitor energy capacity.")
             .defineInRange("capacitor", 1600D, 0D, Double.MAX_VALUE);
+        HOVER_BOOTS_BUFFER = builder.comment("Player hover boots energy capacity. Upstream default is 15000.")
+            .defineInRange("hoverBoots", 15000D, 1D, Double.MAX_VALUE);
         CAPACITOR_ADJACENCY_BONUS = builder.comment("Capacity bonus per adjacent capacitor; half applies at distance two.")
             .defineInRange("capacitorAdjacencyBonus", 800D, 0D, Double.MAX_VALUE);
         BATTERY_UPGRADE_BUFFERS = builder
@@ -907,6 +910,7 @@ public final class ModSettings {
     }
 
     public static double capacitorBuffer() { return Math.max(0D, doubleValue(CAPACITOR_BUFFER)); }
+    public static double hoverBootsBuffer() { return Math.max(1D, doubleValue(HOVER_BOOTS_BUFFER)); }
     public static double capacitorAdjacencyBonus() { return Math.max(0D, doubleValue(CAPACITOR_ADJACENCY_BONUS)); }
     public static double carpetSheepPower() { return Math.max(0D, doubleValue(CARPET_SHEEP_POWER)); }
     public static double carpetOcelotPower() { return Math.max(0D, doubleValue(CARPET_OCELOT_POWER)); }

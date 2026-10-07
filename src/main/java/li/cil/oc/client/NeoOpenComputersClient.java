@@ -153,6 +153,9 @@ public final class NeoOpenComputersClient {
 
     @SubscribeEvent
     static void registerItemColors(final RegisterColorHandlersEvent.Item event) {
+        event.register((stack, tintIndex) -> tintIndex == 1
+            ? net.minecraft.world.item.component.DyedItemColor.getOrDefault(stack, 0x66DD55) & 0xFFFFFF
+            : 0xFFFFFF, ModItems.HOVER_BOOTS.get());
         event.register((stack, tintIndex) -> tintIndex == 0 ? CableBlockEntity.itemColor(stack) : 0xFFFFFF, ModItems.CABLE.get());
         event.register(
             NeoOpenComputersClient::computerCaseItemColor,

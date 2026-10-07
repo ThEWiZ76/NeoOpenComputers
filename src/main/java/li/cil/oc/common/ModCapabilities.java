@@ -24,6 +24,7 @@ public final class ModCapabilities {
             ModItems.BATTERY_UPGRADE_TIER1.get(),
             ModItems.BATTERY_UPGRADE_TIER2.get(),
             ModItems.BATTERY_UPGRADE_TIER3.get(),
+            ModItems.HOVER_BOOTS.get(),
             ModItems.TABLET.get());
         event.registerBlockEntity(
             Capabilities.EnergyStorage.BLOCK,

@@ -388,6 +388,9 @@ public final class ModContentCatalog {
             registerEndstoneBlock(registry, ModBlocks.ENDSTONE.get(), ModItems.ENDSTONE.get());
             registry.register(ModContentIds.CARPETED_CAPACITOR, ModBlocks.CARPETED_CAPACITOR.get(), ModItems.CARPETED_CAPACITOR.get());
             registry.register("carpetedCapacitor", ModBlocks.CARPETED_CAPACITOR.get(), ModItems.CARPETED_CAPACITOR.get());
+            registry.register(ModContentIds.HOVER_BOOTS, null, ModItems.HOVER_BOOTS.get());
+            registry.register("hoverBoots", null, ModItems.HOVER_BOOTS.get());
+            registry.register("hoverboots", null, ModItems.HOVER_BOOTS.get());
         }
     }
 

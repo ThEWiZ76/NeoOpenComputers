@@ -3,6 +3,7 @@ package li.cil.oc.common;
 import li.cil.oc.api.driver.item.Chargeable;
 import li.cil.oc.common.item.BatteryUpgradeItem;
 import li.cil.oc.common.item.TabletItem;
+import li.cil.oc.common.item.HoverBootsItem;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
@@ -59,6 +60,7 @@ public final class ChargeableItemEnergyStorage implements IEnergyStorage {
     }
 
     private double chargeStored() {
+        if (stack.getItem() instanceof HoverBootsItem boots) return boots.getCharge(stack);
         if (stack.getItem() instanceof BatteryUpgradeItem battery) {
             return battery.chargeStored(stack);
         }
@@ -69,6 +71,7 @@ public final class ChargeableItemEnergyStorage implements IEnergyStorage {
     }
 
     private double maxCharge() {
+        if (stack.getItem() instanceof HoverBootsItem boots) return boots.maxCharge(stack);
         if (stack.getItem() instanceof BatteryUpgradeItem battery) {
             return battery.maxCharge();
         }

@@ -24,6 +24,7 @@ import li.cil.oc.common.item.GeneratorUpgradeItem;
 import li.cil.oc.common.item.GraphicsCardItem;
 import li.cil.oc.common.item.HardDiskDriveItem;
 import li.cil.oc.common.item.HoverUpgradeItem;
+import li.cil.oc.common.item.HoverBootsItem;
 import li.cil.oc.common.item.InkCartridgeItem;
 import li.cil.oc.common.item.InventoryControllerUpgradeItem;
 import li.cil.oc.common.item.InventoryUpgradeItem;
@@ -65,6 +66,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(NeoOpenComputers.MODID);
+
+    public static final DeferredItem<HoverBootsItem> HOVER_BOOTS = ITEMS.register(
+        ModContentIds.HOVER_BOOTS, () -> new HoverBootsItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
 
     public static final DeferredItem<BlockItem> ADAPTER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ADAPTER,
