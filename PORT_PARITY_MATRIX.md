@@ -14,7 +14,7 @@ Dit is een startregister van onderzochte verschillen, geen claim dat iedere call
 | Lua hervatten | `common/machine/LuaArchitecture.java`: geen heap/coroutine-save | Runtimekeuze en werkelijke persistence; sentinel, coroutine, timer, open bestand en proxy na chunk unload/herstart. |
 | Lua geheugen | `LuaArchitecture` rapporteert `freeMemory` als helft van geïnstalleerd geheugen | Meting en limieten vergelijken; RAM-uitbreiding, allocatie/GC en OOM afvangen. Afwezigheid van alle limieten is nog niet bewezen. |
 | Lua architecturen | Upstream `server/machine/LuaStateFactory.scala`; port registreert LuaJ | Versie-/architectuurkeuze, semantiek en packaging uitwerken met persistence; bestaande Lua-programma's testen. |
-| Capacitorblokken | Beide varianten geimplementeerd op 2026-10-07: opslag, adjacency, comparator, NBT, carpetrecept, diergroepen en schokcooldown | Serverbewijs in CapacitorGameTests, inclusief gemengd cluster; ticker-/chunkgrens-varianten en echte visuele/player-flowacceptatie blijven open. |
+| Capacitorblokken | Beide varianten geimplementeerd op 2026-10-07: opslag, adjacency, comparator, NBT, carpetrecept, diergroepen en schokcooldown | Serverbewijs in CapacitorGameTests, inclusief gemengd cluster en natuurlijke ticker/netwerkafname; chunkgrens-varianten en echte visuele/player-flowacceptatie blijven open. |
 | Kabelkleuren | Upstream `common/tileentity/Cable.scala`, `common/block/Cable.scala`; port zonder kleurfilter | Verven/ontkleuren, NBT en netwerkherbouw; gelijke kleuren verbinden, verschillende isoleren, standaardkleurgedrag vergelijken. |
 | Kabelgeometrie | Port kabelmodel is `cube_all` | Dunne kabel/neighborarmen, selectie/collision, itemmodel en connect/disconnect vanuit alle zijden live controleren. |
 | Bundled redstone | Port standaardinput retourneert nul | Beschikbare moderne integratie kiezen en daadwerkelijke zestien kanalen in beide richtingen testen. |
@@ -309,3 +309,9 @@ power.carpetedCapacitors.damageChance defaults0.001. A successful trial deals on
 Three GameTests cover single-versus-multiple animal groups, fixed group output, mixed cats/ocelots, full-buffer limit, ordinary/carpeted adjacency, carpeted charge/variant reload, exactly one damage at chance1, no second shock during cooldown, resumed shock after cooldown and real crafting with red carpet. Config overrides and animal fixtures are restored/removed. Final build/all612 GameTests pass; server log carpeted-capacitor-verified.log.
 
 These tests exercise generation with explicit fixed times; natural ticker cadence, physical animal movement, chunk-boundary cluster loading, protection interactions and real-client visual/survival acceptance remain further gates. No complete-port or fully accepted capacitor-flow claim.
+
+## Natural capacitor ticker and network draw - 2026-10-07
+
+carpetedCapacitorTickerSuppliesNetworkPower lets the actual ServerLevel tick the placed block for exactly20 game ticks. Two sheep are held in place with AI/physics disabled and invulnerability, isolating ticker/network behavior from animal movement. A neighboring ordinary capacitor is confirmed on the same network. Its observed global energy increases by exactly one configured sheep-group output, which it then consumes through tryChangeBuffer, restoring the baseline.
+
+Final build/all613 GameTests pass; server log capacitor-ticker-verified.log. This supersedes the open natural ticker cadence item for this setup. Physical animal behavior, chunk boundaries/load ordering, full process restart, visual/survival and protection-mod acceptance remain open. Broader beta estimate is unchanged by this focused acceptance test.

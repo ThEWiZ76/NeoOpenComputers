@@ -29,6 +29,43 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class CapacitorGameTests {
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void carpetedCapacitorTickerSuppliesNetworkPower(GameTestHelper helper) {
+        final var pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        final var world = helper.getLevel();
+        world.setBlockAndUpdate(pos, ModBlocks.CARPETED_CAPACITOR.get().defaultBlockState());
+        final var capacitor = (CapacitorBlockEntity) world.getBlockEntity(pos);
+        capacitor.onLoad();
+        final var consumer = place(helper, pos.relative(Direction.EAST));
+        final var first = animal(helper, pos.above(), EntityType.SHEEP);
+        final var second = animal(helper, pos.above(), EntityType.SHEEP);
+        // Keep the generation fixture in the target block; movement is a separate acceptance scenario.
+        for (final var sheep : List.of(first, second)) {
+            sheep.noPhysics = true;
+            sheep.setInvulnerable(true);
+            ((net.minecraft.world.entity.Mob) sheep).setNoAi(true);
+        }
+        final long[] started = {0};
+        final double[] baseline = {0};
+        helper.startSequence()
+            .thenExecute(() -> {
+                started[0] = world.getGameTime();
+                baseline[0] = consumer.node().globalBuffer();
+                helper.assertTrue(consumer.node().network() == capacitor.node().network(), "Capacitor cluster did not join a network");
+            })
+            .thenExecuteAfter(20, () -> {
+                helper.assertTrue(world.getGameTime() - started[0] == 20, "Ticker observation was not exactly twenty game ticks");
+                final double generated = ModSettings.carpetSheepPower();
+                helper.assertTrue(consumer.node().globalBuffer() == baseline[0] + generated,
+                    "Natural capacitor ticker did not generate exactly one second of power");
+                helper.assertTrue(consumer.node().tryChangeBuffer(-generated)
+                    && consumer.node().globalBuffer() == baseline[0], "Generated energy was unavailable to the neighboring node");
+                first.discard();
+                second.discard();
+            })
+            .thenSucceed();
+    }
+
     @GameTest(template = "empty")
     public static void carpetedCapacitorGeneratesFromAnimalGroups(GameTestHelper helper) {
         final var pos = helper.absolutePos(new BlockPos(1, 2, 1));
