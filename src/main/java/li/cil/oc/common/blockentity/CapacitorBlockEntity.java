@@ -9,6 +9,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
@@ -17,11 +18,19 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.animal.Cat;
+import net.minecraft.world.entity.animal.Ocelot;
+import net.minecraft.world.phys.AABB;
+import java.util.List;
 import java.util.Map;
 
 public class CapacitorBlockEntity extends BlockEntity implements Environment, SidedEnvironment, DeviceInfo {
     private final Connector node;
     private double lastBuffer = -1;
+    private long nextShockTime;
 
     public CapacitorBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CAPACITOR.get(), pos, state);
@@ -75,11 +84,44 @@ public class CapacitorBlockEntity extends BlockEntity implements Environment, Si
     }
 
     public void serverTick() {
+        if (isCarpeted() && Math.floorMod(level.getGameTime() + worldPosition.asLong(), 20) == 0) {
+            generatePower(level.getGameTime(), level.random);
+        }
         if (node.localBuffer() != lastBuffer) {
             lastBuffer = node.localBuffer();
             setChanged();
             level.updateNeighbourForOutputSignal(worldPosition, getBlockState().getBlock());
         }
+    }
+
+    private boolean isCarpeted() { return getBlockState().is(ModBlocks.CARPETED_CAPACITOR.get()); }
+
+    public void generatePower(long gameTime, RandomSource random) {
+        if (level == null || level.isClientSide || isRemoved() || !isCarpeted()) return;
+        final var animals = level.getEntitiesOfClass(LivingEntity.class, new AABB(worldPosition.above()), LivingEntity::isAlive);
+        final double sheep = powerFromGroup(animals.stream().filter(entity -> entity instanceof Sheep).toList(),
+            ModSettings.carpetSheepPower(), gameTime, random);
+        // Modern cats are the domestic branch of the old ocelot entity.
+        final double cats = powerFromGroup(animals.stream().filter(entity -> entity instanceof Cat || entity instanceof Ocelot).toList(),
+            ModSettings.carpetOcelotPower(), gameTime, random);
+        if (sheep + cats > 0) node.changeBuffer(sheep + cats);
+    }
+
+    private double powerFromGroup(List<LivingEntity> animals, double power, long gameTime, RandomSource random) {
+        if (animals.size() < 2) return 0;
+        final double chance = ModSettings.carpetDamageChance();
+        if (chance > 0 && nextShockTime < gameTime) {
+            for (final var animal : animals) {
+                if (random.nextDouble() < chance) {
+                    animal.hurt(level.damageSources().generic(), 1);
+                    animal.setLastHurtByMob(animal);
+                    animal.knockback(0, 0.25, 0);
+                    nextShockTime = gameTime + 1200;
+                    break;
+                }
+            }
+        }
+        return power;
     }
 
     public int comparatorOutput() {
@@ -113,7 +155,7 @@ public class CapacitorBlockEntity extends BlockEntity implements Environment, Si
 
     @Override public Map<String, String> getDeviceInfo() {
         return Map.of(DeviceAttribute.Class, DeviceClass.Power, DeviceAttribute.Description, "Battery",
-            DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG", DeviceAttribute.Product, "CapBank3x",
+            DeviceAttribute.Vendor, "MightyPirates GmbH & Co. KG", DeviceAttribute.Product, isCarpeted() ? "CarpetedCapBank3x" : "CapBank3x",
             DeviceAttribute.Capacity, Double.toString(maxCapacity()));
     }
 }

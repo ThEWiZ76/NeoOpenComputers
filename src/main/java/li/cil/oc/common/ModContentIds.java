@@ -23,6 +23,7 @@ public final class ModContentIds {
     public static final String CABLE_BLOCK_ENTITY = "cable";
     public static final String CARD = "card";
     public static final String CAPACITOR = "capacitor";
+    public static final String CARPETED_CAPACITOR = "carpeted_capacitor";
     public static final String CHARGER = "charger";
     public static final String CHARGER_BLOCK_ENTITY = "charger";
     public static final String CHARGER_MENU = "charger";

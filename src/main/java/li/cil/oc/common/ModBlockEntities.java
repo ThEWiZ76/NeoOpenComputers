@@ -38,7 +38,8 @@ public final class ModBlockEntities {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<li.cil.oc.common.blockentity.CapacitorBlockEntity>> CAPACITOR =
         BLOCK_ENTITY_TYPES.register(ModContentIds.CAPACITOR,
-            () -> BlockEntityType.Builder.of(li.cil.oc.common.blockentity.CapacitorBlockEntity::new, ModBlocks.CAPACITOR.get()).build(null));
+            () -> BlockEntityType.Builder.of(li.cil.oc.common.blockentity.CapacitorBlockEntity::new,
+                ModBlocks.CAPACITOR.get(), ModBlocks.CARPETED_CAPACITOR.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<AdapterBlockEntity>> ADAPTER =
         BLOCK_ENTITY_TYPES.register(

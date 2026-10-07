@@ -40,6 +40,8 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> CAPACITOR = BLOCKS.register(ModContentIds.CAPACITOR,
         () -> new li.cil.oc.common.block.CapacitorBlock(networkInfrastructureProperties()));
+    public static final DeferredBlock<Block> CARPETED_CAPACITOR = BLOCKS.register(ModContentIds.CARPETED_CAPACITOR,
+        () -> new li.cil.oc.common.block.CapacitorBlock(networkInfrastructureProperties()));
 
     public static final DeferredBlock<Block> ADAPTER = BLOCKS.register(
         ModContentIds.ADAPTER,

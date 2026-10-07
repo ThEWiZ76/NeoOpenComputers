@@ -14,7 +14,7 @@ Dit is een startregister van onderzochte verschillen, geen claim dat iedere call
 | Lua hervatten | `common/machine/LuaArchitecture.java`: geen heap/coroutine-save | Runtimekeuze en werkelijke persistence; sentinel, coroutine, timer, open bestand en proxy na chunk unload/herstart. |
 | Lua geheugen | `LuaArchitecture` rapporteert `freeMemory` als helft van geïnstalleerd geheugen | Meting en limieten vergelijken; RAM-uitbreiding, allocatie/GC en OOM afvangen. Afwezigheid van alle limieten is nog niet bewezen. |
 | Lua architecturen | Upstream `server/machine/LuaStateFactory.scala`; port registreert LuaJ | Versie-/architectuurkeuze, semantiek en packaging uitwerken met persistence; bestaande Lua-programma's testen. |
-| Capacitorblokken | Basiscapacitor als blok hersteld op 2026-10-07: opslag, adjacency, comparator, NBT en bestaande recept-/item-ID | Serverbewijs in CapacitorGameTests; carpeted variant, cluster/chunkgrens-varianten en echte visuele/player-flowacceptatie blijven open. |
+| Capacitorblokken | Beide varianten geimplementeerd op 2026-10-07: opslag, adjacency, comparator, NBT, carpetrecept, diergroepen en schokcooldown | Serverbewijs in CapacitorGameTests, inclusief gemengd cluster; ticker-/chunkgrens-varianten en echte visuele/player-flowacceptatie blijven open. |
 | Kabelkleuren | Upstream `common/tileentity/Cable.scala`, `common/block/Cable.scala`; port zonder kleurfilter | Verven/ontkleuren, NBT en netwerkherbouw; gelijke kleuren verbinden, verschillende isoleren, standaardkleurgedrag vergelijken. |
 | Kabelgeometrie | Port kabelmodel is `cube_all` | Dunne kabel/neighborarmen, selectie/collision, itemmodel en connect/disconnect vanuit alle zijden live controleren. |
 | Bundled redstone | Port standaardinput retourneert nul | Beschikbare moderne integratie kiezen en daadwerkelijke zestien kanalen in beide richtingen testen. |
@@ -299,3 +299,13 @@ Capacity follows upstream: base plus full bonus per axis neighbor at distance1, 
 CapacitorGameTests first reproduced the missing block item (capacitor-red.log). New behavioral coverage checks isolated/direct/second-degree capacities, removal on both sides, charge, rounded comparator14 at90%, detached reload with charge above base and stable node address, then clamping after removing the distant neighbor. Final build/all609 GameTests pass; server log capacitor-base-verified.log. Existing recipes/material catalog tests also pass.
 
 Carpeted generation/animal shock behavior, mixed clusters/chunk-boundary load order, full JVM restart and real-client rendering/player placement remain open. No client launch/install in this checkpoint. The base implementation is a completed slice of the capacitor feature group, not complete port acceptance.
+
+## Carpeted capacitor - 2026-10-07
+
+Registered carpeted_capacitor with a block item, upstream API alias carpetedCapacitor, existing texture/model assets, loot, pickaxe tag and shapeless capacitor+any wool carpet recipe. Both variants share the capacitor block/entity infrastructure. The server ticker generates once per20 game ticks, staggering by position. At least two sheep contribute configured sheepPower(default3); at least two cats/ocelots contribute ocelotPower(default6). Modern domestic cats and wild ocelots form the old ocelot group. Group size above two does not multiply output.
+
+power.carpetedCapacitors.damageChance defaults0.001. A successful trial deals one generic damage, sets the animal panic target and waits1200 game ticks before another possible shock. The cooldown stays transient, matching upstream. Generation uses an explicit game-time/random source helper so behavioral tests use fixed times and seeded RNG; normal ticking passes the actual world clock/random source.
+
+Three GameTests cover single-versus-multiple animal groups, fixed group output, mixed cats/ocelots, full-buffer limit, ordinary/carpeted adjacency, carpeted charge/variant reload, exactly one damage at chance1, no second shock during cooldown, resumed shock after cooldown and real crafting with red carpet. Config overrides and animal fixtures are restored/removed. Final build/all612 GameTests pass; server log carpeted-capacitor-verified.log.
+
+These tests exercise generation with explicit fixed times; natural ticker cadence, physical animal movement, chunk-boundary cluster loading, protection interactions and real-client visual/survival acceptance remain further gates. No complete-port or fully accepted capacitor-flow claim.

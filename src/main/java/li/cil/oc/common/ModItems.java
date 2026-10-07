@@ -216,6 +216,8 @@ public final class ModItems {
     public static final DeferredItem<Item> TRANSISTOR = ITEMS.registerSimpleItem(ModContentIds.TRANSISTOR, new Item.Properties());
     public static final DeferredItem<Item> CAPACITOR = ITEMS.register(ModContentIds.CAPACITOR,
         () -> new BlockItem(ModBlocks.CAPACITOR.get(), new Item.Properties()));
+    public static final DeferredItem<BlockItem> CARPETED_CAPACITOR = ITEMS.registerSimpleBlockItem(
+        ModContentIds.CARPETED_CAPACITOR, ModBlocks.CARPETED_CAPACITOR);
     public static final DeferredItem<ComponentBusItem> COMPONENT_BUS_TIER1 = ITEMS.register(
         ModContentIds.COMPONENT_BUS_TIER1,
         () -> new ComponentBusItem(new Item.Properties(), 0));

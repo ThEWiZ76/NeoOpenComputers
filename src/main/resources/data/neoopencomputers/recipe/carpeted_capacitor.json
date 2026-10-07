@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [{ "item": "neoopencomputers:capacitor" }, { "tag": "minecraft:wool_carpets" }],
+  "result": { "id": "neoopencomputers:carpeted_capacitor", "count": 1 }
+}

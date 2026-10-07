@@ -386,6 +386,8 @@ public final class ModContentCatalog {
                 ModItems.NUM_PAD.get());
             registerDiamondChip(registry, ModItems.DIAMOND_CHIP.get());
             registerEndstoneBlock(registry, ModBlocks.ENDSTONE.get(), ModItems.ENDSTONE.get());
+            registry.register(ModContentIds.CARPETED_CAPACITOR, ModBlocks.CARPETED_CAPACITOR.get(), ModItems.CARPETED_CAPACITOR.get());
+            registry.register("carpetedCapacitor", ModBlocks.CARPETED_CAPACITOR.get(), ModItems.CARPETED_CAPACITOR.get());
         }
     }
 

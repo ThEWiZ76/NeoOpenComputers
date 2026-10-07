@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "neoopencomputers:block/capacitor_side",
+    "bottom": "neoopencomputers:block/capacitor_top",
+    "top": "neoopencomputers:block/carpeted_capacitor_top"
+  }
+}

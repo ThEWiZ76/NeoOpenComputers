@@ -185,6 +185,9 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue CONVERTER_BUFFER;
     public static final ModConfigSpec.DoubleValue CAPACITOR_BUFFER;
     public static final ModConfigSpec.DoubleValue CAPACITOR_ADJACENCY_BONUS;
+    public static final ModConfigSpec.DoubleValue CARPET_SHEEP_POWER;
+    public static final ModConfigSpec.DoubleValue CARPET_OCELOT_POWER;
+    public static final ModConfigSpec.DoubleValue CARPET_DAMAGE_CHANCE;
     public static final ModConfigSpec.DoubleValue COMPUTER_BUFFER;
     public static final ModConfigSpec.DoubleValue ACCESS_POINT_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
@@ -593,6 +596,14 @@ public final class ModSettings {
         MFU_TICK_FREQUENCY = builder
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
+        builder.push("carpetedCapacitors");
+        CARPET_SHEEP_POWER = builder.comment("Energy generated per second by at least two sheep above a carpeted capacitor.")
+            .defineInRange("sheepPower", 3D, 0D, Double.MAX_VALUE);
+        CARPET_OCELOT_POWER = builder.comment("Energy generated per second by at least two cats/ocelots above a carpeted capacitor.")
+            .defineInRange("ocelotPower", 6D, 0D, Double.MAX_VALUE);
+        CARPET_DAMAGE_CHANCE = builder.comment("Per-animal shock chance, with a one-minute cooldown after a shock.")
+            .defineInRange("damageChance", 0.001D, 0D, 1D);
+        builder.pop();
         builder.push("buffer");
         CAPACITOR_BUFFER = builder.comment("Base capacitor energy capacity.")
             .defineInRange("capacitor", 1600D, 0D, Double.MAX_VALUE);
@@ -897,6 +908,9 @@ public final class ModSettings {
 
     public static double capacitorBuffer() { return Math.max(0D, doubleValue(CAPACITOR_BUFFER)); }
     public static double capacitorAdjacencyBonus() { return Math.max(0D, doubleValue(CAPACITOR_ADJACENCY_BONUS)); }
+    public static double carpetSheepPower() { return Math.max(0D, doubleValue(CARPET_SHEEP_POWER)); }
+    public static double carpetOcelotPower() { return Math.max(0D, doubleValue(CARPET_OCELOT_POWER)); }
+    public static double carpetDamageChance() { return Math.clamp(doubleValue(CARPET_DAMAGE_CHANCE), 0D, 1D); }
 
     public static double powerConverterRate() {
         return Math.max(0D, doubleValue(POWER_CONVERTER_RATE));
