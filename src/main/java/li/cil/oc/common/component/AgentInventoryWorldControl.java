@@ -102,6 +102,7 @@ public final class AgentInventoryWorldControl {
                     if (event.canPickup() == TriState.FALSE || event.canPickup() != TriState.TRUE
                         && item.getTarget() != null && !item.getTarget().equals(player.getUUID())) continue;
                 }
+                if (item.isRemoved() || item.getItem().isEmpty()) continue;
                 final var original = item.getItem().copy();
                 final var remainder = insert(agent, original.copyWithCount(Math.min(64, original.getCount())), false);
                 moved = Math.min(64, original.getCount()) - remainder.getCount();

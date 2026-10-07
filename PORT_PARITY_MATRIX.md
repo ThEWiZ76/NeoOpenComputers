@@ -281,3 +281,11 @@ Added drone suck and corrected the robot callback to return an extracted count r
 AgentSuckGameTests covers both hosts with actual chests: requested3 from11, selected-slot priority, denied extraction without mutation, partial one-item capacity, full cargo and zero inventory extraction. World items preserve delay and follow the upstream distinction: requested1 still collects five from a ground stack. Initial run reproduced missing drone callback and unsupported robot chest extraction (agent-suck-red.log). One older robot test expected a boolean and now asserts the correct count2. Final build/all606 GameTests pass; server log preserved as agent-suck-verified.log. Existing drop tests also pass after sharing source/permission helpers.
 
 Entity extraction, custom sided handlers, pickup-event/ownership variants, native continuation and real-client acceptance remain additional gates. Broad beta estimate remains provisional3-6 weeks; this completes another world callback without proving the complete port.
+
+## Pickup lifecycle and minecart extraction - 2026-10-07
+
+A new regression reproduced robot cargo duplication when an ItemEntityPickupEvent.Pre handler removes the item before collection. AgentInventoryWorldControl now rechecks removed/empty state after the handler before inserting any cargo. Initial failure is retained in agent-suck-events-red.log.
+
+The existing robot/drone fixtures also cover actual chest minecart extraction, denied EntityInteract access with unchanged source/cargo, and pickup priority: robots collect the neighboring item while drones collect their own block first. Temporary event listeners and entities are cleaned up. Final build/all607 GameTests pass (server log agent-suck-events-verified.log).
+
+Custom sided inventories, further pickup-event/ownership variants, native world-callback continuation and client acceptance remain gates. No broad port completion claim; beta estimate unchanged pending the full inventory and visual/integration work.
