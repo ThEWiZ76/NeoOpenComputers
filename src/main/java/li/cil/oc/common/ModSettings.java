@@ -183,6 +183,8 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue PRINT_COST;
     public static final ModConfigSpec.BooleanValue PRINTS_HAVE_OPACITY;
     public static final ModConfigSpec.DoubleValue CONVERTER_BUFFER;
+    public static final ModConfigSpec.DoubleValue CAPACITOR_BUFFER;
+    public static final ModConfigSpec.DoubleValue CAPACITOR_ADJACENCY_BONUS;
     public static final ModConfigSpec.DoubleValue COMPUTER_BUFFER;
     public static final ModConfigSpec.DoubleValue ACCESS_POINT_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
@@ -592,6 +594,10 @@ public final class ModSettings {
             .comment("Tick interval for periodic power costs. OpenComputers upstream default is 10.")
             .defineInRange("tickFrequency", 10, 1, Integer.MAX_VALUE);
         builder.push("buffer");
+        CAPACITOR_BUFFER = builder.comment("Base capacitor energy capacity.")
+            .defineInRange("capacitor", 1600D, 0D, Double.MAX_VALUE);
+        CAPACITOR_ADJACENCY_BONUS = builder.comment("Capacity bonus per adjacent capacitor; half applies at distance two.")
+            .defineInRange("capacitorAdjacencyBonus", 800D, 0D, Double.MAX_VALUE);
         BATTERY_UPGRADE_BUFFERS = builder
             .comment("Energy stored by battery upgrade tiers one, two, and three. OpenComputers upstream default is [10000, 15000, 20000].")
             .defineList("batteryUpgrades", DEFAULT_BATTERY_UPGRADE_BUFFERS, value -> value instanceof Double && (Double) value >= 0D);
@@ -888,6 +894,9 @@ public final class ModSettings {
     public static double converterBuffer() {
         return Math.max(0D, doubleValue(CONVERTER_BUFFER));
     }
+
+    public static double capacitorBuffer() { return Math.max(0D, doubleValue(CAPACITOR_BUFFER)); }
+    public static double capacitorAdjacencyBonus() { return Math.max(0D, doubleValue(CAPACITOR_ADJACENCY_BONUS)); }
 
     public static double powerConverterRate() {
         return Math.max(0D, doubleValue(POWER_CONVERTER_RATE));

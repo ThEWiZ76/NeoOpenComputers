@@ -424,7 +424,7 @@ public final class ModContentCatalog {
         registry.register(ModContentIds.CARD, null, cardItem);
         registry.register(ModContentIds.CHAMELIUM, null, chameliumItem);
         registry.register(ModContentIds.TRANSISTOR, null, transistorItem);
-        registry.register(ModContentIds.CAPACITOR, null, capacitorItem);
+        registry.register(ModContentIds.CAPACITOR, capacitorItem instanceof net.minecraft.world.item.BlockItem item ? item.getBlock() : null, capacitorItem);
         registry.register(ModContentIds.COMPONENT_BUS_TIER1, null, componentBusTier1Item);
         registry.register(ModContentIds.COMPONENT_BUS_TIER2, null, componentBusTier2Item);
         registry.register(ModContentIds.COMPONENT_BUS_TIER3, null, componentBusTier3Item);
@@ -452,7 +452,7 @@ public final class ModContentCatalog {
         registry.register(COMPAT_MATERIAL_CARD, null, cardItem);
         registry.register(COMPAT_CHAMELIUM, null, chameliumItem);
         registry.register(COMPAT_MATERIAL_TRANSISTOR, null, transistorItem);
-        registry.register(COMPAT_CAPACITOR, null, capacitorItem);
+        registry.register(COMPAT_CAPACITOR, capacitorItem instanceof net.minecraft.world.item.BlockItem item ? item.getBlock() : null, capacitorItem);
         registry.register(COMPAT_COMPONENT_BUS_TIER1, null, componentBusTier1Item);
         registry.register(COMPAT_COMPONENT_BUS_TIER2, null, componentBusTier2Item);
         registry.register(COMPAT_COMPONENT_BUS_TIER3, null, componentBusTier3Item);

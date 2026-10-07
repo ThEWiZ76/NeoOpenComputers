@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
+    "neoopencomputers:capacitor",
     "neoopencomputers:adapter",
     "neoopencomputers:assembler",
     "neoopencomputers:cable",

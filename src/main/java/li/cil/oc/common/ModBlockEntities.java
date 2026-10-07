@@ -36,6 +36,10 @@ public final class ModBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES =
         DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, NeoOpenComputers.MODID);
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<li.cil.oc.common.blockentity.CapacitorBlockEntity>> CAPACITOR =
+        BLOCK_ENTITY_TYPES.register(ModContentIds.CAPACITOR,
+            () -> BlockEntityType.Builder.of(li.cil.oc.common.blockentity.CapacitorBlockEntity::new, ModBlocks.CAPACITOR.get()).build(null));
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<AdapterBlockEntity>> ADAPTER =
         BLOCK_ENTITY_TYPES.register(
             ModContentIds.ADAPTER_BLOCK_ENTITY,

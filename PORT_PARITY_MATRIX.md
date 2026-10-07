@@ -14,7 +14,7 @@ Dit is een startregister van onderzochte verschillen, geen claim dat iedere call
 | Lua hervatten | `common/machine/LuaArchitecture.java`: geen heap/coroutine-save | Runtimekeuze en werkelijke persistence; sentinel, coroutine, timer, open bestand en proxy na chunk unload/herstart. |
 | Lua geheugen | `LuaArchitecture` rapporteert `freeMemory` als helft van geïnstalleerd geheugen | Meting en limieten vergelijken; RAM-uitbreiding, allocatie/GC en OOM afvangen. Afwezigheid van alle limieten is nog niet bewezen. |
 | Lua architecturen | Upstream `server/machine/LuaStateFactory.scala`; port registreert LuaJ | Versie-/architectuurkeuze, semantiek en packaging uitwerken met persistence; bestaande Lua-programma's testen. |
-| Capacitorblokken | Upstream capacitor/carpeted capacitor; port heeft alleen capacitor-materiaalitem/recept | Blokken, opslag, adjacency, carpet/kleur, models en recipes porten; energieconservering en save/load. |
+| Capacitorblokken | Basiscapacitor als blok hersteld op 2026-10-07: opslag, adjacency, comparator, NBT en bestaande recept-/item-ID | Serverbewijs in CapacitorGameTests; carpeted variant, cluster/chunkgrens-varianten en echte visuele/player-flowacceptatie blijven open. |
 | Kabelkleuren | Upstream `common/tileentity/Cable.scala`, `common/block/Cable.scala`; port zonder kleurfilter | Verven/ontkleuren, NBT en netwerkherbouw; gelijke kleuren verbinden, verschillende isoleren, standaardkleurgedrag vergelijken. |
 | Kabelgeometrie | Port kabelmodel is `cube_all` | Dunne kabel/neighborarmen, selectie/collision, itemmodel en connect/disconnect vanuit alle zijden live controleren. |
 | Bundled redstone | Port standaardinput retourneert nul | Beschikbare moderne integratie kiezen en daadwerkelijke zestien kanalen in beide richtingen testen. |
@@ -289,3 +289,13 @@ A new regression reproduced robot cargo duplication when an ItemEntityPickupEven
 The existing robot/drone fixtures also cover actual chest minecart extraction, denied EntityInteract access with unchanged source/cargo, and pickup priority: robots collect the neighboring item while drones collect their own block first. Temporary event listeners and entities are cleaned up. Final build/all607 GameTests pass (server log agent-suck-events-verified.log).
 
 Custom sided inventories, further pickup-event/ownership variants, native world-callback continuation and client acceptance remain gates. No broad port completion claim; beta estimate unchanged pending the full inventory and visual/integration work.
+
+## Base capacitor block - 2026-10-07
+
+The existing capacitor recipe already matched the upstream block recipe, but its result was registered as an ordinary item. It is now a BlockItem under the same ID, preserving recipe references and existing item identity. Added CapacitorBlock/CapacitorBlockEntity, OC network storage, comparator updates, block/item models using existing upstream textures, loot, pickaxe tag, translation and API block registration. Config power.buffer.capacitor defaults1600 and capacitorAdjacencyBonus800.
+
+Capacity follows upstream: base plus full bonus per axis neighbor at distance1, half bonus at distance2. Placement/load/removal refresh both near and second-degree capacitors. Detached load first accepts maximum theoretical capacity(base+9 bonuses), then validates actual neighbors. Reduced capacity clamps stored energy as upstream does; this is not an energy-preserving adjacency-removal redesign.
+
+CapacitorGameTests first reproduced the missing block item (capacitor-red.log). New behavioral coverage checks isolated/direct/second-degree capacities, removal on both sides, charge, rounded comparator14 at90%, detached reload with charge above base and stable node address, then clamping after removing the distant neighbor. Final build/all609 GameTests pass; server log capacitor-base-verified.log. Existing recipes/material catalog tests also pass.
+
+Carpeted generation/animal shock behavior, mixed clusters/chunk-boundary load order, full JVM restart and real-client rendering/player placement remain open. No client launch/install in this checkpoint. The base implementation is a completed slice of the capacitor feature group, not complete port acceptance.

@@ -38,6 +38,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(NeoOpenComputers.MODID);
 
+    public static final DeferredBlock<Block> CAPACITOR = BLOCKS.register(ModContentIds.CAPACITOR,
+        () -> new li.cil.oc.common.block.CapacitorBlock(networkInfrastructureProperties()));
+
     public static final DeferredBlock<Block> ADAPTER = BLOCKS.register(
         ModContentIds.ADAPTER,
         () -> new AdapterBlock(adapterProperties()));

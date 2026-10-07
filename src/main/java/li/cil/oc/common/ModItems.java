@@ -214,7 +214,8 @@ public final class ModItems {
     public static final DeferredItem<Item> CARD = ITEMS.registerSimpleItem(ModContentIds.CARD, new Item.Properties());
     public static final DeferredItem<Item> CHAMELIUM = ITEMS.registerSimpleItem(ModContentIds.CHAMELIUM, new Item.Properties());
     public static final DeferredItem<Item> TRANSISTOR = ITEMS.registerSimpleItem(ModContentIds.TRANSISTOR, new Item.Properties());
-    public static final DeferredItem<Item> CAPACITOR = ITEMS.registerSimpleItem(ModContentIds.CAPACITOR, new Item.Properties());
+    public static final DeferredItem<Item> CAPACITOR = ITEMS.register(ModContentIds.CAPACITOR,
+        () -> new BlockItem(ModBlocks.CAPACITOR.get(), new Item.Properties()));
     public static final DeferredItem<ComponentBusItem> COMPONENT_BUS_TIER1 = ITEMS.register(
         ModContentIds.COMPONENT_BUS_TIER1,
         () -> new ComponentBusItem(new Item.Properties(), 0));

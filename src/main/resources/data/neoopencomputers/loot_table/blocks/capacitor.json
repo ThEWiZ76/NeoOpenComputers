@@ -1,0 +1,5 @@
+{
+  "type": "minecraft:block",
+  "pools": [{ "rolls": 1, "entries": [{ "type": "minecraft:item", "name": "neoopencomputers:capacitor" }] }],
+  "random_sequence": "neoopencomputers:blocks/capacitor"
+}
