@@ -4,19 +4,86 @@ import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.internal.Colored;
 import li.cil.oc.common.ModBlocks;
+import li.cil.oc.common.ModItems;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class CableGameTests {
+    @GameTest(template = "empty")
+    public static void cableDyeInteractionConsumesOnlySurvivalDye(GameTestHelper helper) {
+        final var pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        final var cable = place(helper, pos);
+        final var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final var dye = new ItemStack(Items.RED_DYE, 3);
+        player.setItemInHand(InteractionHand.OFF_HAND, dye);
+        final var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
+        final var result = cable.getBlockState().useItemOn(dye, helper.getLevel(), player, InteractionHand.OFF_HAND, hit);
+        helper.assertTrue(result.consumesAction(), "Cable dye interaction was not handled");
+        helper.assertTrue(cable.getColor() == DyeColor.RED.getTextureDiffuseColor() && dye.getCount() == 2,
+            "Survival recoloring did not apply red and consume exactly one dye");
+        cable.getBlockState().useItemOn(dye, helper.getLevel(), player, InteractionHand.OFF_HAND, hit);
+        helper.assertTrue(dye.getCount() == 1, "Repeated same-color dye did not follow upstream consumption");
+        final var creative = helper.makeMockPlayer(GameType.CREATIVE);
+        // GameTest's mock overrides isCreative but does not initialize the corresponding abilities.
+        GameType.CREATIVE.updatePlayerAbilities(creative.getAbilities());
+        final var blue = new ItemStack(Items.BLUE_DYE, 3);
+        creative.setItemInHand(InteractionHand.MAIN_HAND, blue);
+        cable.getBlockState().useItemOn(blue, helper.getLevel(), creative, InteractionHand.MAIN_HAND, hit);
+        helper.assertTrue(cable.getColor() == DyeColor.BLUE.getTextureDiffuseColor() && blue.getCount() == 3,
+            "Creative recoloring consumed dye or failed to set color");
+        final var stick = new ItemStack(Items.STICK);
+        helper.assertTrue(!cable.getBlockState().useItemOn(stick, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit).consumesAction()
+            && cable.getColor() == DyeColor.BLUE.getTextureDiffuseColor(), "Non-dye item changed cable color");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void cableItemPlacementAndDropsPreserveColor(GameTestHelper helper) {
+        final var pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        final var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final var stack = new ItemStack(ModItems.CABLE.get(), 3);
+        stack.set(DataComponents.DYED_COLOR, new DyedItemColor(0x3478AB, true));
+        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+        final var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
+        final var context = new BlockPlaceContext(helper.getLevel(), player, InteractionHand.MAIN_HAND, stack, hit);
+        helper.assertTrue(((BlockItem) stack.getItem()).place(context).consumesAction(), "Colored cable placement failed");
+        final var cable = (CableBlockEntity) helper.getLevel().getBlockEntity(pos);
+        helper.assertTrue(cable != null && cable.getColor() == 0x3478AB && stack.getCount() == 2,
+            "BlockItem placement lost color or consumed the wrong count");
+        final var picked = cable.getBlockState().getBlock().getCloneItemStack(helper.getLevel(), pos, cable.getBlockState());
+        helper.assertTrue(picked.is(ModItems.CABLE.get()) && picked.getCount() == 1
+            && picked.get(DataComponents.DYED_COLOR) != null && picked.get(DataComponents.DYED_COLOR).rgb() == 0x3478AB,
+            "Pick-block lost cable color");
+        final var drops = Block.getDrops(cable.getBlockState(), helper.getLevel(), pos, cable);
+        helper.assertTrue(drops.size() == 1 && ItemStack.isSameItemSameComponents(picked, drops.getFirst())
+            && drops.getFirst().getCount() == 1, "Cable loot did not preserve exactly one colored item");
+        cable.setColor(CableBlockEntity.DEFAULT_COLOR);
+        final var plainDrops = Block.getDrops(cable.getBlockState(), helper.getLevel(), pos, cable);
+        helper.assertTrue(plainDrops.size() == 1 && !plainDrops.getFirst().has(DataComponents.DYED_COLOR),
+            "Default cable did not stack with ordinary undyed cable items");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void cableColorReloadAndIsolation(GameTestHelper helper) {
         final var pos = helper.absolutePos(new BlockPos(2, 2, 2));

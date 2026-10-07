@@ -15,7 +15,7 @@ Dit is een startregister van onderzochte verschillen, geen claim dat iedere call
 | Lua geheugen | `LuaArchitecture` rapporteert `freeMemory` als helft van geïnstalleerd geheugen | Meting en limieten vergelijken; RAM-uitbreiding, allocatie/GC en OOM afvangen. Afwezigheid van alle limieten is nog niet bewezen. |
 | Lua architecturen | Upstream `server/machine/LuaStateFactory.scala`; port registreert LuaJ | Versie-/architectuurkeuze, semantiek en packaging uitwerken met persistence; bestaande Lua-programma's testen. |
 | Capacitorblokken | Beide varianten geimplementeerd op 2026-10-07: opslag, adjacency, comparator, NBT, carpetrecept, diergroepen en schokcooldown | Serverbewijs in CapacitorGameTests, inclusief gemengd cluster en natuurlijke ticker/netwerkafname; chunkgrens-varianten en echte visuele/player-flowacceptatie blijven open. |
-| Kabelkleuren | Kleurfilter, netwerkherbouw, RGB-NBT/legacy dye metadata en client-kleurupdates geimplementeerd; lichtgrijs verbindt alle kleuren | Spelerinteractie, kleurbehoud bij plaatsen/oppakken, kleurrecepten en kabelrendering/ingame acceptatie blijven open. |
+| Kabelkleuren | Kleurfilter/netwerkherbouw, RGB-NBT/legacy metadata, client-kleurupdates, dye-interactie en kleurbehoud bij plaatsen/pick-block/drops geimplementeerd; lichtgrijs verbindt alle kleuren | Kleurrecepten en kabelrendering/ingame acceptatie blijven open. |
 | Kabelgeometrie | Port kabelmodel is `cube_all` | Dunne kabel/neighborarmen, selectie/collision, itemmodel en connect/disconnect vanuit alle zijden live controleren. |
 | Bundled redstone | Port standaardinput retourneert nul | Beschikbare moderne integratie kiezen en daadwerkelijke zestien kanalen in beide richtingen testen. |
 | Hover boots | Upstream `common/init/Items.scala`, `common/item/HoverBoots.scala`; item ontbreekt | Player-item/energie/landing/dye porten; robot-hoverupgrade telt niet als deze feature. |
@@ -323,3 +323,11 @@ CableBlockEntity now implements Colored and SidedEnvironment. Matching RGB color
 CableGameTests first reproduced the missing color interface (cable-colors-red.log). Coverage verifies red/blue separation in both joining directions, wildcard bridging/reconnection, stable address and NBT roundtrip, all six sides incompatible, legacy migration and client update tags. Final build/all615 GameTests pass; server log cable-colors-verified.log.
 
 This completes the network/persistence slice only. Dye interaction/consumption, colored item placement/drops, color recipes, cable geometry/tints and real-client acceptance remain open. No client launch/install in this checkpoint. The provisional beta estimate remains3-6 weeks of concentrated work with low confidence, rather than a feature-completion percentage inferred from tests.
+
+## Cable dye interaction and item lifecycle - 2026-10-07
+
+CableBlock now handles DyeItem interactions in either hand. Server recoloring consumes exactly one dye outside Creative, including repeated same-color interactions as upstream does. Non-dye items pass through. Item color uses the modern DYED_COLOR component; BlockItem placement restores it, pick-block and normal loot drops preserve it. Default light gray drops omit the component so they stack with plain cable items. Existing loot rules remain responsible for drop quantity and conditions.
+
+Two new GameTests first reproduced missing dye handling and lost placement color (cable-items-red.log). Final coverage includes survival/offhand and repeated consumption, creative conservation, non-dye rejection, actual BlockItem placement/count, arbitrary RGB, pick-block, exact colored loot and default-color stacking. GameTest makeMockPlayer(CREATIVE) only overrides isCreative; the fixture must also initialize abilities through GameType.CREATIVE.updatePlayerAbilities. Final build/all617 GameTests pass; cable-items-verified.log retains the server log.
+
+Color mixing/washing recipes, cable model/tints and real-client acceptance remain open. No client launch/install in this checkpoint; beta estimate unchanged pending broader integration and visual acceptance.

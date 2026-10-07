@@ -8,13 +8,17 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModItems;
 import li.cil.oc.common.OpenComputersApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -43,6 +47,19 @@ public class CableBlockEntity extends BlockEntity implements Environment, SidedE
     @Override
     public int getColor() {
         return color;
+    }
+
+    public ItemStack createItemStack() {
+        final var stack = new ItemStack(ModItems.CABLE.get());
+        if (color != DEFAULT_COLOR) {
+            stack.set(DataComponents.DYED_COLOR, new DyedItemColor(color, true));
+        }
+        return stack;
+    }
+
+    public static int itemColor(final ItemStack stack) {
+        final var dyed = stack.get(DataComponents.DYED_COLOR);
+        return dyed != null ? dyed.rgb() : DEFAULT_COLOR;
     }
 
     @Override
