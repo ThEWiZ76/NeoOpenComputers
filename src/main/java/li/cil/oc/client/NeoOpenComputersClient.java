@@ -120,6 +120,17 @@ public final class NeoOpenComputersClient {
     @SubscribeEvent
     static void registerClientExtensions(final RegisterClientExtensionsEvent event) {
         event.registerItem(new IClientItemExtensions() {
+            private HoverBootsModel<net.minecraft.world.entity.LivingEntity> model;
+
+            @Override
+            public net.minecraft.client.model.HumanoidModel<?> getHumanoidArmorModel(final net.minecraft.world.entity.LivingEntity entity,
+                    final ItemStack stack, final net.minecraft.world.entity.EquipmentSlot slot, final net.minecraft.client.model.HumanoidModel<?> original) {
+                if (slot != net.minecraft.world.entity.EquipmentSlot.FEET) return original;
+                if (model == null) model = new HoverBootsModel<>(Minecraft.getInstance().getEntityModels().bakeLayer(HoverBootsModel.BODY_LAYER));
+                return model;
+            }
+        }, ModItems.HOVER_BOOTS.get());
+        event.registerItem(new IClientItemExtensions() {
             private BlockEntityWithoutLevelRenderer renderer;
 
             @Override
@@ -277,7 +288,24 @@ public final class NeoOpenComputersClient {
 
     @SubscribeEvent
     static void registerLayerDefinitions(final EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(HoverBootsModel.BODY_LAYER, () -> HoverBootsModel.createLayer(false));
+        event.registerLayerDefinition(HoverBootsModel.LIGHT_LAYER, () -> HoverBootsModel.createLayer(true));
         event.registerLayerDefinition(RobotModel.LAYER_LOCATION, RobotModel::createBodyLayer);
         event.registerLayerDefinition(DroneModel.LAYER_LOCATION, DroneModel::createBodyLayer);
+    }
+
+    @SubscribeEvent
+    static void addHoverBootsLightLayers(final EntityRenderersEvent.AddLayers event) {
+        for (final var skin : event.getSkins()) addHoverBootsLightLayer(event.getSkin(skin), event.getEntityModels());
+        for (final var type : event.getEntityTypes()) addHoverBootsLightLayer(event.getRenderer(type), event.getEntityModels());
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void addHoverBootsLightLayer(final net.minecraft.client.renderer.entity.EntityRenderer<?> renderer,
+            final net.minecraft.client.model.geom.EntityModelSet models) {
+        if (renderer instanceof net.minecraft.client.renderer.entity.LivingEntityRenderer living
+            && living.getModel() instanceof net.minecraft.client.model.HumanoidModel) {
+            living.addLayer(new HoverBootsLightLayer(living, models));
+        }
     }
 }

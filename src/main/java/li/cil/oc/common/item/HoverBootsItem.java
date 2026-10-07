@@ -11,6 +11,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
 public final class HoverBootsItem extends ArmorItem implements Chargeable {
+    public static final net.minecraft.resources.ResourceLocation ARMOR_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+        li.cil.oc.NeoOpenComputers.MODID, "textures/model/drone.png");
     private static final String CHARGE_TAG = "oc:charge";
 
     public HoverBootsItem(final Properties properties) {
@@ -21,6 +23,12 @@ public final class HoverBootsItem extends ArmorItem implements Chargeable {
         final var stack = new ItemStack(this);
         setCharge(stack, maxCharge(stack));
         return stack;
+    }
+
+    @Override
+    public net.minecraft.resources.ResourceLocation getArmorTexture(final ItemStack stack, final net.minecraft.world.entity.Entity entity,
+            final net.minecraft.world.entity.EquipmentSlot slot, final net.minecraft.world.item.ArmorMaterial.Layer layer, final boolean innerModel) {
+        return ARMOR_TEXTURE;
     }
 
     @Override
