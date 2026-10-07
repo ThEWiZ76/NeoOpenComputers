@@ -90,6 +90,7 @@ public final class NeoOpenComputers {
         NeoForge.EVENT_BUS.addListener(ModCommands::register);
         NanomachinesRegistry.registerTickHandler();
         li.cil.oc.common.HoverBootsHandler.register();
+        NeoForge.EVENT_BUS.addListener(li.cil.oc.common.item.DebuggerItem::onServerStopped);
         li.cil.oc.common.item.TabletRuntimeRegistry.register();
         modEventBus.addListener(ChunkloaderUpgradeEnvironment::registerTicketController);
         modEventBus.addListener(ComputerCaseNetworking::register);

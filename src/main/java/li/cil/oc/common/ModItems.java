@@ -70,6 +70,9 @@ public final class ModItems {
     public static final DeferredItem<HoverBootsItem> HOVER_BOOTS = ITEMS.register(
         ModContentIds.HOVER_BOOTS, () -> new HoverBootsItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
 
+    public static final DeferredItem<li.cil.oc.common.item.DebuggerItem> DEBUGGER = ITEMS.register(
+        ModContentIds.DEBUGGER, () -> new li.cil.oc.common.item.DebuggerItem(new Item.Properties()));
+
     public static final DeferredItem<BlockItem> ADAPTER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ADAPTER,
         ModBlocks.ADAPTER);
