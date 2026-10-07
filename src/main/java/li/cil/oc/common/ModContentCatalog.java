@@ -392,6 +392,7 @@ public final class ModContentCatalog {
             registry.register("hoverBoots", null, ModItems.HOVER_BOOTS.get());
             registry.register("hoverboots", null, ModItems.HOVER_BOOTS.get());
             registry.register(ModContentIds.DEBUGGER, null, ModItems.DEBUGGER.get());
+            registry.register(ModContentIds.PRESENT, null, ModItems.PRESENT.get());
         }
     }
 

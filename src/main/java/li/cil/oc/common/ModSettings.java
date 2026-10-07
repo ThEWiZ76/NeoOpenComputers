@@ -185,6 +185,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue CONVERTER_BUFFER;
     public static final ModConfigSpec.DoubleValue CAPACITOR_BUFFER;
     public static final ModConfigSpec.DoubleValue HOVER_BOOTS_BUFFER;
+    public static final ModConfigSpec.DoubleValue PRESENT_CHANCE;
     public static final ModConfigSpec.DoubleValue HOVER_BOOT_MOVE;
     public static final ModConfigSpec.DoubleValue HOVER_BOOT_JUMP;
     public static final ModConfigSpec.DoubleValue HOVER_BOOT_ABSORB;
@@ -230,6 +231,8 @@ public final class ModSettings {
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("misc");
+        PRESENT_CHANCE = builder.comment("Chance of a present when crafting an eligible OC item on upstream celebration dates. Zero disables presents.")
+            .defineInRange("presentChance", 0.05D, 0D, 1D);
         MFU_RANGE = builder
             .comment("Radius the MFU is able to operate in.")
             .defineInRange("mfuRange", 3D, 0D, 128D);
@@ -919,6 +922,7 @@ public final class ModSettings {
     }
 
     public static double capacitorBuffer() { return Math.max(0D, doubleValue(CAPACITOR_BUFFER)); }
+    public static double presentChance() { return doubleValue(PRESENT_CHANCE); }
     public static double hoverBootsBuffer() { return Math.max(1D, doubleValue(HOVER_BOOTS_BUFFER)); }
     public static double hoverBootMove() { return Math.max(0D, doubleValue(HOVER_BOOT_MOVE)); }
     public static double hoverBootJump() { return Math.max(0D, doubleValue(HOVER_BOOT_JUMP)); }

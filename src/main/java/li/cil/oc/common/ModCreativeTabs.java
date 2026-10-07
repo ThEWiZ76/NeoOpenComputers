@@ -44,7 +44,7 @@ public final class ModCreativeTabs {
     }
 
     static void addRegisteredItems(final CreativeModeTab.Output output) {
-        ModItems.ITEMS.getEntries().forEach(item -> output.accept(item.get()));
+        ModItems.ITEMS.getEntries().stream().filter(item -> item != ModItems.PRESENT).forEach(item -> output.accept(item.get()));
     }
 
     private ModCreativeTabs() {
