@@ -6130,7 +6130,7 @@ public final class NeoOpenComputersGameTests {
 
         final Object[] suck = robot.suck(null, new GameTestArguments(3));
 
-        helper.assertTrue(Boolean.TRUE.equals(suck[0]), "Robot suck did not report success");
+        helper.assertTrue(suck[0] instanceof Number count && count.intValue() == 2, "Robot suck did not report the picked-up count");
         helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START).is(Items.DIAMOND) && robot.getItem(RobotBlockEntity.CARGO_SLOT_START).getCount() == 2, "Robot suck did not insert item into inventory");
         helper.assertTrue(drop.isRemoved() || drop.getItem().isEmpty(), "Robot suck left item in world");
         helper.succeed();

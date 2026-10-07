@@ -441,6 +441,11 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         return li.cil.oc.common.component.AgentInventoryWorldControl.drop(this, context, args);
     }
 
+    @Callback(doc = "function(side:number[, count:number=64]):number or boolean -- Picks up items from an inventory or the world.")
+    public Object[] suck(final Context context, final Arguments args) {
+        return li.cil.oc.common.component.AgentInventoryWorldControl.suck(this, context, args);
+    }
+
     @Callback(doc = "function():number -- Gets internal inventory size.")
     public Object[] inventorySize(final Context context, final Arguments args) {
         return new Object[]{mainInventory.getContainerSize()};

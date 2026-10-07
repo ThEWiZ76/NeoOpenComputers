@@ -884,33 +884,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return li.cil.oc.common.component.AgentInventoryWorldControl.drop(this, context, arguments);
     }
 
-    @Callback(doc = "function(side:number):boolean,string -- Sucks a nearby item stack into the robot inventory.")
+    @Callback(doc = "function(side:number[, count:number=64]):number or boolean -- Picks up items from an inventory or the world.")
     public Object[] suck(final Context context, final Arguments arguments) {
-        if (level == null) {
-            return new Object[]{false, "no world"};
-        }
-        final BlockPos target = targetPos(arguments.checkInteger(0));
-        final AABB bounds = new AABB(target).inflate(0.5D);
-        for (final ItemEntity entity : level.getEntitiesOfClass(ItemEntity.class, bounds)) {
-            if (entity.isRemoved() || entity.getItem().isEmpty() || entity.hasPickUpDelay()) {
-                continue;
-            }
-            final ItemStack stack = entity.getItem();
-            final int originalCount = stack.getCount();
-            final int remaining = insertIntoInventory(stack.copy());
-            if (remaining >= originalCount) {
-                continue;
-            }
-            stack.setCount(remaining);
-            if (remaining <= 0) {
-                entity.discard();
-            } else {
-                entity.setItem(stack);
-            }
-            setChanged();
-            return new Object[]{true};
-        }
-        return new Object[]{false, "nothing to suck"};
+        return li.cil.oc.common.component.AgentInventoryWorldControl.suck(this, context, arguments);
     }
 
     @Callback(doc = "function(side:number):boolean,string -- Places the selected block item on the specified side.")
