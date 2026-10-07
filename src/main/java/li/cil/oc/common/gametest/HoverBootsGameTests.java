@@ -25,6 +25,134 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class HoverBootsGameTests {
     @GameTest(template = "empty")
+    public static void hoverBootsMovementChargesOnIntervalAndRestoresOtherModifiers(GameTestHelper helper) {
+        final var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final var boots = li.cil.oc.common.ModItems.HOVER_BOOTS.get();
+        final var stack = new ItemStack(boots);
+        player.setItemSlot(EquipmentSlot.FEET, stack);
+        boots.setCharge(stack, 2);
+        player.setOnGround(true);
+        player.setDeltaMovement(0.2, 0, 0);
+        final var height = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.STEP_HEIGHT);
+        final var other = new net.minecraft.world.entity.ai.attributes.AttributeModifier(
+            ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "test_step"), 0.2,
+            net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE);
+        height.addTransientModifier(other);
+        final double original = height.getValue();
+        final var clock = (net.minecraft.world.level.storage.ServerLevelData) helper.getLevel().getLevelData();
+        final long originalTime = clock.getGameTime();
+        try {
+            clock.setGameTime(0);
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre(player));
+            helper.assertTrue(boots.getCharge(stack) == 1 && Math.abs(height.getValue() - original - 0.4) < 0.00001,
+                "Moving boots did not spend interval energy or preserve other step modifiers");
+            clock.setGameTime(1);
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre(player));
+            helper.assertTrue(boots.getCharge(stack) == 1, "Movement charged outside its interval");
+            clock.setGameTime(10);
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre(player));
+            helper.assertTrue(boots.getCharge(stack) == 0 && height.getValue() == original && height.hasModifier(other.id()),
+                "Depletion did not restore the previous step height");
+            boots.setCharge(stack, 10);
+            player.setDeltaMovement(0, 0, 0);
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre(player));
+            helper.assertTrue(boots.getCharge(stack) == 10, "Stationary boots drained energy");
+            player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre(player));
+            helper.assertTrue(height.getValue() == original && height.hasModifier(other.id()), "Removing boots changed another step modifier");
+        } finally {
+            clock.setGameTime(originalTime);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void hoverBootsActualJumpFallAndCreativeExemption(GameTestHelper helper) {
+        final var boots = li.cil.oc.common.ModItems.HOVER_BOOTS.get();
+        final var stack = new ItemStack(boots);
+        boots.setCharge(stack, 20);
+        final var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemSlot(EquipmentSlot.FEET, stack);
+        player.jumpFromGround();
+        helper.assertTrue(player.getDeltaMovement().y > 0.8 && boots.getCharge(stack) == 10,
+            "Actual Minecraft jump did not dispatch the boot boost");
+        final float health = player.getHealth();
+        player.causeFallDamage(10, 1, helper.getLevel().damageSources().fall());
+        helper.assertTrue(player.getHealth() == health && boots.getCharge(stack) == 0,
+            "Actual Minecraft fall did not dispatch absorption");
+        final var creative = helper.makeMockPlayer(GameType.CREATIVE);
+        creative.setItemSlot(EquipmentSlot.FEET, stack);
+        creative.jumpFromGround();
+        helper.assertTrue(creative.getDeltaMovement().y > 0.8 && boots.getCharge(stack) == 0,
+            "Creative jump required or consumed charge");
+        final var fake = new net.neoforged.neoforge.common.util.FakePlayer(helper.getLevel(),
+            new com.mojang.authlib.GameProfile(new java.util.UUID(0, 123), "hover_fixture"));
+        boots.setCharge(stack, 20);
+        fake.setItemSlot(EquipmentSlot.FEET, stack);
+        fake.jumpFromGround();
+        helper.assertTrue(fake.getDeltaMovement().y < 0.5 && boots.getCharge(stack) == 20, "Fake player received a hover jump");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void hoverBootsJumpAndFallUseExactEnergy(GameTestHelper helper) {
+        final var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final var stack = new ItemStack(li.cil.oc.common.ModItems.HOVER_BOOTS.get());
+        final var boots = li.cil.oc.common.ModItems.HOVER_BOOTS.get();
+        player.setItemSlot(EquipmentSlot.FEET, stack);
+        boots.setCharge(stack, 30);
+        player.setDeltaMovement(0.2, 0.42, 0.3);
+        player.setSprinting(true);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.entity.living.LivingEvent.LivingJumpEvent(player));
+        helper.assertTrue(Math.abs(player.getDeltaMovement().y - 0.82) < 0.00001
+            && Math.abs(player.getDeltaMovement().x - 0.3) < 0.00001
+            && Math.abs(player.getDeltaMovement().z - 0.45) < 0.00001 && boots.getCharge(stack) == 20,
+            "Sprint jump boost or energy cost is missing");
+        player.setShiftKeyDown(true);
+        final var fall = new net.neoforged.neoforge.event.entity.living.LivingFallEvent(player, 10, 1);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(fall);
+        helper.assertTrue(fall.getDistance() == 3 && boots.getCharge(stack) == 10, "Sneaking fall absorption did not match upstream");
+        final var before = player.getDeltaMovement();
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.entity.living.LivingEvent.LivingJumpEvent(player));
+        helper.assertTrue(player.getDeltaMovement().equals(before) && boots.getCharge(stack) == 10, "Sneaking jump spent charge or boosted");
+        player.setShiftKeyDown(false);
+        boots.setCharge(stack, 9);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.entity.living.LivingEvent.LivingJumpEvent(player));
+        final var unpaidFall = new net.neoforged.neoforge.event.entity.living.LivingFallEvent(player, 10, 1);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(unpaidFall);
+        helper.assertTrue(player.getDeltaMovement().equals(before) && unpaidFall.getDistance() == 10 && boots.getCharge(stack) == 9,
+            "Insufficient charge gave a benefit or partially consumed energy");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void hoverBootsTickRestoresStepAndSlowsEmptyBoots(GameTestHelper helper) {
+        final var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final var boots = li.cil.oc.common.ModItems.HOVER_BOOTS.get();
+        final var stack = new ItemStack(boots);
+        player.setItemSlot(EquipmentSlot.FEET, stack);
+        boots.setCharge(stack, 10);
+        player.setOnGround(false);
+        player.fallDistance = 4;
+        player.setDeltaMovement(0.2, -1, 0.3);
+        final var height = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.STEP_HEIGHT);
+        final double original = height.getValue();
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre(player));
+        helper.assertTrue(Math.abs(player.getDeltaMovement().y + 0.9) < 0.00001 && Math.abs(height.getValue() - (original + 0.4)) < 0.00001,
+            "Charged boots did not hover or raise step height");
+        player.setShiftKeyDown(true);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre(player));
+        helper.assertTrue(height.getValue() == original && Math.abs(player.getDeltaMovement().y + 0.9) < 0.00001,
+            "Sneaking did not restore step height and disable hover");
+        boots.setCharge(stack, 0);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre(player));
+        final var slowness = player.getEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
+        helper.assertTrue(slowness != null && slowness.getAmplifier() == 1 && slowness.getDuration() == 20,
+            "Empty boots did not apply upstream slowness");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void chargerTransfersEnergyIntoHoverBoots(GameTestHelper helper) {
         final var pos = helper.absolutePos(new net.minecraft.core.BlockPos(1, 2, 1));
         final var world = helper.getLevel();

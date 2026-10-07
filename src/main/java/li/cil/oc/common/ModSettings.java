@@ -185,6 +185,9 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue CONVERTER_BUFFER;
     public static final ModConfigSpec.DoubleValue CAPACITOR_BUFFER;
     public static final ModConfigSpec.DoubleValue HOVER_BOOTS_BUFFER;
+    public static final ModConfigSpec.DoubleValue HOVER_BOOT_MOVE;
+    public static final ModConfigSpec.DoubleValue HOVER_BOOT_JUMP;
+    public static final ModConfigSpec.DoubleValue HOVER_BOOT_ABSORB;
     public static final ModConfigSpec.DoubleValue CAPACITOR_ADJACENCY_BONUS;
     public static final ModConfigSpec.DoubleValue CARPET_SHEEP_POWER;
     public static final ModConfigSpec.DoubleValue CARPET_OCELOT_POWER;
@@ -635,6 +638,12 @@ public final class ModSettings {
             .defineInRange("nanomachines", 100_000D, 0D, Double.MAX_VALUE);
         builder.pop();
         builder.push("cost");
+        HOVER_BOOT_MOVE = builder.comment("Energy consumed per movement check by player hover boots.")
+            .defineInRange("hoverBootMove", 1D, 0D, Double.MAX_VALUE);
+        HOVER_BOOT_JUMP = builder.comment("Energy consumed per boosted hover boots jump.")
+            .defineInRange("hoverBootJump", 10D, 0D, Double.MAX_VALUE);
+        HOVER_BOOT_ABSORB = builder.comment("Energy consumed per absorbed hover boots fall.")
+            .defineInRange("hoverBootAbsorb", 10D, 0D, Double.MAX_VALUE);
         ROBOT_MOVE_COST = builder.comment("Energy consumed per successful robot move. Upstream default is 15.")
             .defineInRange("robotMove", 15D, 0D, Double.MAX_VALUE);
         ROBOT_TURN_COST = builder.comment("Energy consumed per successful robot turn. Upstream default is 2.5.")
@@ -911,6 +920,9 @@ public final class ModSettings {
 
     public static double capacitorBuffer() { return Math.max(0D, doubleValue(CAPACITOR_BUFFER)); }
     public static double hoverBootsBuffer() { return Math.max(1D, doubleValue(HOVER_BOOTS_BUFFER)); }
+    public static double hoverBootMove() { return Math.max(0D, doubleValue(HOVER_BOOT_MOVE)); }
+    public static double hoverBootJump() { return Math.max(0D, doubleValue(HOVER_BOOT_JUMP)); }
+    public static double hoverBootAbsorb() { return Math.max(0D, doubleValue(HOVER_BOOT_ABSORB)); }
     public static double capacitorAdjacencyBonus() { return Math.max(0D, doubleValue(CAPACITOR_ADJACENCY_BONUS)); }
     public static double carpetSheepPower() { return Math.max(0D, doubleValue(CARPET_SHEEP_POWER)); }
     public static double carpetOcelotPower() { return Math.max(0D, doubleValue(CARPET_OCELOT_POWER)); }

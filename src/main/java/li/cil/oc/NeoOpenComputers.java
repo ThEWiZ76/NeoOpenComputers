@@ -89,6 +89,7 @@ public final class NeoOpenComputers {
         WirelessNetworkCardHandler.register();
         NeoForge.EVENT_BUS.addListener(ModCommands::register);
         NanomachinesRegistry.registerTickHandler();
+        li.cil.oc.common.HoverBootsHandler.register();
         li.cil.oc.common.item.TabletRuntimeRegistry.register();
         modEventBus.addListener(ChunkloaderUpgradeEnvironment::registerTicketController);
         modEventBus.addListener(ComputerCaseNetworking::register);
