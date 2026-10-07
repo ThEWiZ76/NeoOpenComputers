@@ -1,9 +1,9 @@
 package li.cil.oc.common.recipe;
 
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.DyeColors;
 import li.cil.oc.common.ModRecipeSerializers;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
@@ -26,7 +26,7 @@ public final class CableColorizeRecipe extends CustomRecipe {
         for (final var stack : input.items()) {
             if (stack.isEmpty()) continue;
             if (stack.is(ModItems.CABLE.get())) cables++;
-            else if (DyeColor.getColor(stack) != null) dyes++;
+            else if (DyeColors.colorOf(stack) != null) dyes++;
             else return false;
         }
         return cables == 1 && dyes > 0;
@@ -40,7 +40,7 @@ public final class CableColorizeRecipe extends CustomRecipe {
         for (final var stack : input.items()) {
             if (stack.isEmpty()) continue;
             if (stack.is(ModItems.CABLE.get())) cable = stack;
-            else dyes.add(DyeItem.byColor(DyeColor.getColor(stack)));
+            else dyes.add(DyeItem.byColor(DyeColors.colorOf(stack)));
         }
         // Vanilla uses the same brightness-preserving blend, including the previous item color.
         return DyedItemColor.applyDyes(cable, dyes);

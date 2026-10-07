@@ -37,6 +37,56 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class CableGameTests {
     @GameTest(template = "empty")
+    public static void cableAcceptsTaggedDyesIncludingBlack(GameTestHelper helper) {
+        final var registry = net.minecraft.core.registries.BuiltInRegistries.ITEM;
+        final var original = new java.util.HashMap<net.minecraft.tags.TagKey<net.minecraft.world.item.Item>,
+            List<net.minecraft.core.Holder<net.minecraft.world.item.Item>>>();
+        registry.getTags().forEach(pair -> original.put(pair.getFirst(), pair.getSecond().stream().toList()));
+        final var changed = new java.util.HashMap<>(original);
+        final var cable = place(helper, helper.absolutePos(new BlockPos(1, 2, 1)));
+        final var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        final var hit = new BlockHitResult(Vec3.atCenterOf(cable.getBlockPos()), Direction.UP, cable.getBlockPos(), false);
+        final var colorRecipe = helper.getLevel().getRecipeManager()
+            .byKey(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "colorize_cable")).orElseThrow().value();
+        @SuppressWarnings("unchecked")
+        final var recipe = (net.minecraft.world.item.crafting.Recipe<CraftingInput>) colorRecipe;
+        try {
+            // Synchronous tag-only fixtures; restore the complete registry tag map before yielding a game tick.
+            for (final var color : List.of(DyeColor.RED, DyeColor.BLACK, DyeColor.LIGHT_GRAY)) {
+                final var members = new java.util.ArrayList<>(original.getOrDefault(color.getTag(), List.of()));
+                members.add(Items.DIAMOND.builtInRegistryHolder());
+                changed.put(color.getTag(), members);
+                registry.bindTags(changed);
+                final var dye = new ItemStack(Items.DIAMOND, 3);
+                player.setItemInHand(InteractionHand.MAIN_HAND, dye);
+                helper.assertTrue(cable.getBlockState().useItemOn(dye, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit).consumesAction()
+                    && cable.getColor() == (color.getTextureDiffuseColor() & 0xFFFFFF) && dye.getCount() == 2,
+                    "Tag-only " + color + " dye did not recolor cable and consume exactly one item");
+                final var input = CraftingInput.of(2, 1, List.of(new ItemStack(ModItems.CABLE.get()), dye));
+                helper.assertTrue(recipe.matches(input, helper.getLevel()), "Tag-only " + color + " dye did not match cable recipe");
+                final var result = recipe.assemble(input, helper.getLevel().registryAccess());
+                helper.assertTrue(!result.isEmpty() && result.get(DataComponents.DYED_COLOR).rgb() == (color.getTextureDiffuseColor() & 0xFFFFFF)
+                    && dye.getCount() == 2, "Tag-only dye recipe lost its color or mutated input");
+                final var peer = place(helper, cable.getBlockPos().east());
+                peer.setColor(CableBlockEntity.itemColor(result));
+                helper.assertTrue(cable.node().network() == peer.node().network(),
+                    "Interaction and recipe produced incompatible representations of the same color");
+                if (color == DyeColor.LIGHT_GRAY) {
+                    peer.setColor(DyeColor.RED.getTextureDiffuseColor());
+                    helper.assertTrue(cable.node().network() == peer.node().network(), "Normalized light gray lost wildcard connectivity");
+                }
+                helper.getLevel().removeBlock(peer.getBlockPos(), false);
+                changed.put(color.getTag(), original.getOrDefault(color.getTag(), List.of()));
+            }
+        } finally {
+            registry.bindTags(original);
+        }
+        helper.assertTrue(!new ItemStack(Items.DIAMOND).is(DyeColor.RED.getTag())
+            && !new ItemStack(Items.DIAMOND).is(DyeColor.BLACK.getTag()), "Temporary dye tags were not restored");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void cableConnectionsUseAllSixAxes(GameTestHelper helper) {
         final var world = helper.getLevel();
         final var pos = helper.absolutePos(new BlockPos(2, 2, 2));
@@ -169,7 +219,7 @@ public final class CableGameTests {
         final var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
         final var result = cable.getBlockState().useItemOn(dye, helper.getLevel(), player, InteractionHand.OFF_HAND, hit);
         helper.assertTrue(result.consumesAction(), "Cable dye interaction was not handled");
-        helper.assertTrue(cable.getColor() == DyeColor.RED.getTextureDiffuseColor() && dye.getCount() == 2,
+        helper.assertTrue(cable.getColor() == (DyeColor.RED.getTextureDiffuseColor() & 0xFFFFFF) && dye.getCount() == 2,
             "Survival recoloring did not apply red and consume exactly one dye");
         cable.getBlockState().useItemOn(dye, helper.getLevel(), player, InteractionHand.OFF_HAND, hit);
         helper.assertTrue(dye.getCount() == 1, "Repeated same-color dye did not follow upstream consumption");
@@ -179,11 +229,11 @@ public final class CableGameTests {
         final var blue = new ItemStack(Items.BLUE_DYE, 3);
         creative.setItemInHand(InteractionHand.MAIN_HAND, blue);
         cable.getBlockState().useItemOn(blue, helper.getLevel(), creative, InteractionHand.MAIN_HAND, hit);
-        helper.assertTrue(cable.getColor() == DyeColor.BLUE.getTextureDiffuseColor() && blue.getCount() == 3,
+        helper.assertTrue(cable.getColor() == (DyeColor.BLUE.getTextureDiffuseColor() & 0xFFFFFF) && blue.getCount() == 3,
             "Creative recoloring consumed dye or failed to set color");
         final var stick = new ItemStack(Items.STICK);
         helper.assertTrue(!cable.getBlockState().useItemOn(stick, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit).consumesAction()
-            && cable.getColor() == DyeColor.BLUE.getTextureDiffuseColor(), "Non-dye item changed cable color");
+            && cable.getColor() == (DyeColor.BLUE.getTextureDiffuseColor() & 0xFFFFFF), "Non-dye item changed cable color");
         helper.succeed();
     }
 
@@ -232,12 +282,12 @@ public final class CableGameTests {
         final var legacy = new CompoundTag();
         legacy.putInt("oc:renderColor", DyeColor.GREEN.getId());
         loaded.loadWithComponents(legacy, helper.getLevel().registryAccess());
-        helper.assertTrue(((Colored) loaded).getColor() == DyeColor.GREEN.getTextureDiffuseColor(), "Legacy dye metadata did not migrate");
+        helper.assertTrue(((Colored) loaded).getColor() == (DyeColor.GREEN.getTextureDiffuseColor() & 0xFFFFFF), "Legacy dye metadata did not migrate");
         legacy.putInt("oc:renderColorRGB", DyeColor.YELLOW.getTextureDiffuseColor());
         loaded.loadWithComponents(legacy, helper.getLevel().registryAccess());
-        helper.assertTrue(((Colored) loaded).getColor() == DyeColor.YELLOW.getTextureDiffuseColor(), "RGB did not override legacy color");
+        helper.assertTrue(((Colored) loaded).getColor() == (DyeColor.YELLOW.getTextureDiffuseColor() & 0xFFFFFF), "RGB did not override legacy color");
         loaded.handleUpdateTag(center.getUpdateTag(helper.getLevel().registryAccess()), helper.getLevel().registryAccess());
-        helper.assertTrue(((Colored) loaded).getColor() == DyeColor.RED.getTextureDiffuseColor(), "Client update lost cable color");
+        helper.assertTrue(((Colored) loaded).getColor() == (DyeColor.RED.getTextureDiffuseColor() & 0xFFFFFF), "Client update lost cable color");
         helper.assertTrue(!center.getUpdateTag(helper.getLevel().registryAccess()).contains("node"), "Client color update leaked server network data");
         helper.succeed();
     }

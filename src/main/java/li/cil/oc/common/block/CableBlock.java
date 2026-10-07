@@ -2,6 +2,7 @@ package li.cil.oc.common.block;
 
 import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.DyeColors;
 import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.SidedEnvironment;
@@ -12,7 +13,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.BlockGetter;
@@ -165,11 +165,12 @@ public class CableBlock extends Block implements EntityBlock {
     @Override
     protected ItemInteractionResult useItemOn(final ItemStack stack, final BlockState state, final Level level, final BlockPos pos,
                                              final Player player, final InteractionHand hand, final BlockHitResult hit) {
-        if (!(stack.getItem() instanceof DyeItem dye) || !(level.getBlockEntity(pos) instanceof CableBlockEntity cable)) {
+        final var dye = DyeColors.colorOf(stack);
+        if (dye == null || !(level.getBlockEntity(pos) instanceof CableBlockEntity cable)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
         if (!level.isClientSide) {
-            cable.setColor(dye.getDyeColor().getTextureDiffuseColor());
+            cable.setColor(dye.getTextureDiffuseColor());
             if (!player.getAbilities().instabuild) {
                 stack.shrink(1);
             }

@@ -28,7 +28,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class CableBlockEntity extends BlockEntity implements Environment, SidedEnvironment, Colored {
     private static final String TAG_NODE = "node";
     private static final String TAG_COLOR = "oc:renderColorRGB";
-    public static final int DEFAULT_COLOR = DyeColor.LIGHT_GRAY.getTextureDiffuseColor();
+    public static final int DEFAULT_COLOR = DyeColor.LIGHT_GRAY.getTextureDiffuseColor() & 0xFFFFFF;
 
     private Node node;
     private int color = DEFAULT_COLOR;
@@ -62,15 +62,16 @@ public class CableBlockEntity extends BlockEntity implements Environment, SidedE
 
     public static int itemColor(final ItemStack stack) {
         final var dyed = stack.get(DataComponents.DYED_COLOR);
-        return dyed != null ? dyed.rgb() : DEFAULT_COLOR;
+        return dyed != null ? dyed.rgb() & 0xFFFFFF : DEFAULT_COLOR;
     }
 
     @Override
     public void setColor(final int value) {
-        if (color == value) {
+        final int rgb = value & 0xFFFFFF;
+        if (color == rgb) {
             return;
         }
-        color = value;
+        color = rgb;
         setChanged();
         if (level != null && !level.isClientSide && !isRemoved()) {
             // Joining only adds edges; remove old edges before applying the new color rules.
@@ -99,7 +100,7 @@ public class CableBlockEntity extends BlockEntity implements Environment, SidedE
         }
         final var neighbor = level.getBlockEntity(worldPosition.relative(side));
         final int otherColor = neighbor instanceof Colored colored && colored.controlsConnectivity()
-            ? colored.getColor() : DEFAULT_COLOR;
+            ? colored.getColor() & 0xFFFFFF : DEFAULT_COLOR;
         return color == otherColor || color == DEFAULT_COLOR || otherColor == DEFAULT_COLOR;
     }
 
@@ -130,9 +131,9 @@ public class CableBlockEntity extends BlockEntity implements Environment, SidedE
     @Override
     protected void loadAdditional(final CompoundTag nbt, final HolderLookup.Provider registries) {
         super.loadAdditional(nbt, registries);
-        color = nbt.contains(TAG_COLOR) ? nbt.getInt(TAG_COLOR)
+        color = (nbt.contains(TAG_COLOR) ? nbt.getInt(TAG_COLOR)
             : nbt.contains("oc:renderColor") ? DyeColor.byId(nbt.getInt("oc:renderColor")).getTextureDiffuseColor()
-            : DEFAULT_COLOR;
+            : DEFAULT_COLOR) & 0xFFFFFF;
         if (nbt.contains(TAG_NODE)) {
             node().load(nbt.getCompound(TAG_NODE));
         }
@@ -161,7 +162,7 @@ public class CableBlockEntity extends BlockEntity implements Environment, SidedE
     public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
         if (!tag.contains(TAG_COLOR)) return;
         final int previous = color;
-        color = tag.getInt(TAG_COLOR);
+        color = tag.getInt(TAG_COLOR) & 0xFFFFFF;
         if (color != previous && level != null && level.isClientSide) {
             // Block entity packets do not otherwise invalidate cached tinted block meshes.
             final var state = getBlockState();
