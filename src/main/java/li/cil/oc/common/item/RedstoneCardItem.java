@@ -10,8 +10,15 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class RedstoneCardItem extends Item implements HostAware {
+    private final int tier;
+
     public RedstoneCardItem(final Properties properties) {
+        this(properties, 0);
+    }
+
+    public RedstoneCardItem(final Properties properties, final int tier) {
         super(properties);
+        this.tier = Math.clamp(tier, 0, 1);
     }
 
     @Override
@@ -29,6 +36,8 @@ public class RedstoneCardItem extends Item implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
+        if (!(host instanceof li.cil.oc.common.component.RedstoneControllerHost)) return null;
+        // Both upstream tiers use vanilla redstone when no bundled/wireless integration is available.
         final var environment = new RedstoneCardEnvironment(host) {
             @Override
             public void save(final CompoundTag data) {
@@ -47,7 +56,7 @@ public class RedstoneCardItem extends Item implements HostAware {
 
     @Override
     public int tier(final ItemStack stack) {
-        return 0;
+        return tier;
     }
 
     @Override

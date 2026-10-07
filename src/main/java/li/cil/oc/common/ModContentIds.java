@@ -7,6 +7,7 @@ public final class ModContentIds {
     public static final String ANALYZER = "analyzer";
     public static final String DEBUGGER = "debugger";
     public static final String PRESENT = "present";
+    public static final String REDSTONE_CARD_TIER2 = "redstone_card_tier2";
     public static final String ACID = "acid";
     public static final String ANGEL_UPGRADE = "angel_upgrade";
     public static final String ALU = "alu";

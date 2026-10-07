@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": ["RCE", " B "],
+  "key": {
+    "R": {"item": "minecraft:redstone_block"},
+    "C": {"item": "neoopencomputers:microchip_tier2"},
+    "E": {"tag": "c:ender_pearls"},
+    "B": {"item": "neoopencomputers:card"}
+  },
+  "result": {"id": "neoopencomputers:redstone_card_tier2", "count": 1}
+}

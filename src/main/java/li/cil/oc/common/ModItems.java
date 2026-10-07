@@ -76,6 +76,9 @@ public final class ModItems {
     public static final DeferredItem<li.cil.oc.common.item.PresentItem> PRESENT = ITEMS.register(
         ModContentIds.PRESENT, () -> new li.cil.oc.common.item.PresentItem(new Item.Properties()));
 
+    public static final DeferredItem<RedstoneCardItem> REDSTONE_CARD_TIER2 = ITEMS.register(
+        ModContentIds.REDSTONE_CARD_TIER2, () -> new RedstoneCardItem(new Item.Properties(), 1));
+
     public static final DeferredItem<BlockItem> ADAPTER = ITEMS.registerSimpleBlockItem(
         ModContentIds.ADAPTER,
         ModBlocks.ADAPTER);

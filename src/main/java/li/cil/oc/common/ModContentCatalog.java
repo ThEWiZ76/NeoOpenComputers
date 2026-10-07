@@ -393,6 +393,9 @@ public final class ModContentCatalog {
             registry.register("hoverboots", null, ModItems.HOVER_BOOTS.get());
             registry.register(ModContentIds.DEBUGGER, null, ModItems.DEBUGGER.get());
             registry.register(ModContentIds.PRESENT, null, ModItems.PRESENT.get());
+            registry.register(ModContentIds.REDSTONE_CARD_TIER2, null, ModItems.REDSTONE_CARD_TIER2.get());
+            registry.register("redstonecard2", null, ModItems.REDSTONE_CARD_TIER2.get());
+            registry.register("redstoneCard2", null, ModItems.REDSTONE_CARD_TIER2.get());
         }
     }
 

@@ -44,7 +44,8 @@ public final class ModCreativeTabs {
     }
 
     static void addRegisteredItems(final CreativeModeTab.Output output) {
-        ModItems.ITEMS.getEntries().stream().filter(item -> item != ModItems.PRESENT).forEach(item -> output.accept(item.get()));
+        // Upstream hides tier two until a bundled-redstone integration actually enables it.
+        ModItems.ITEMS.getEntries().stream().filter(item -> item != ModItems.PRESENT && item != ModItems.REDSTONE_CARD_TIER2).forEach(item -> output.accept(item.get()));
     }
 
     private ModCreativeTabs() {

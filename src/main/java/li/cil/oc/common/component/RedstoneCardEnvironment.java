@@ -17,18 +17,29 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RedstoneCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public class RedstoneCardEnvironment extends AbstractManagedEnvironment implements DeviceInfo, li.cil.oc.api.network.FilteredEnvironment {
     private static final String COMPONENT_NAME = "redstone";
     private static final int COLOR_COUNT = 16;
 
     private final EnvironmentHost host;
+    private final boolean bundled;
 
     public RedstoneCardEnvironment(final EnvironmentHost host) {
+        this(host, false);
+    }
+
+    public RedstoneCardEnvironment(final EnvironmentHost host, final boolean bundled) {
         this.host = host;
+        this.bundled = bundled;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
             setNode(builder.withComponent(COMPONENT_NAME, Visibility.Neighbors).create());
         }
+    }
+
+    @Override
+    public boolean isCallbackEnabled(final String name) {
+        return bundled || !java.util.Set.of("getBundledInput", "getBundledOutput", "setBundledOutput").contains(name);
     }
 
     @Override
