@@ -10,16 +10,19 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.block.CableBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class CableBlockEntity extends BlockEntity implements Environment, SidedEnvironment, Colored {
@@ -74,6 +77,7 @@ public class CableBlockEntity extends BlockEntity implements Environment, SidedE
             removeNode();
             Network.joinNewNetwork(node());
             Network.joinOrCreateNetwork(this);
+            CableBlock.refreshConnections(level, worldPosition);
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
     }
@@ -107,6 +111,7 @@ public class CableBlockEntity extends BlockEntity implements Environment, SidedE
                 Network.joinNewNetwork(node());
             }
             Network.joinOrCreateNetwork(this);
+            CableBlock.refreshConnections(level, worldPosition);
         }
     }
 
@@ -150,6 +155,23 @@ public class CableBlockEntity extends BlockEntity implements Environment, SidedE
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        if (!tag.contains(TAG_COLOR)) return;
+        final int previous = color;
+        color = tag.getInt(TAG_COLOR);
+        if (color != previous && level != null && level.isClientSide) {
+            // Block entity packets do not otherwise invalidate cached tinted block meshes.
+            final var state = getBlockState();
+            level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_CLIENTS);
+        }
+    }
+
+    @Override
+    public void onDataPacket(final Connection connection, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
     }
 
     @Override

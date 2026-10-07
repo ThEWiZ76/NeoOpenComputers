@@ -10,6 +10,7 @@ import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
+import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.menu.TerminalMenu;
@@ -134,6 +135,10 @@ public final class NeoOpenComputersClient {
 
     @SubscribeEvent
     static void registerBlockColors(final RegisterColorHandlersEvent.Block event) {
+        event.register((state, world, pos, tintIndex) -> tintIndex == 0
+            ? world != null && pos != null && world.getBlockEntity(pos) instanceof CableBlockEntity cable
+                ? cable.getColor() : CableBlockEntity.DEFAULT_COLOR
+            : 0xFFFFFF, ModBlocks.CABLE.get());
         event.register(
             NeoOpenComputersClient::computerCaseBlockColor,
             ModBlocks.COMPUTER_CASE_TIER1.get(),
@@ -148,6 +153,7 @@ public final class NeoOpenComputersClient {
 
     @SubscribeEvent
     static void registerItemColors(final RegisterColorHandlersEvent.Item event) {
+        event.register((stack, tintIndex) -> tintIndex == 0 ? CableBlockEntity.itemColor(stack) : 0xFFFFFF, ModItems.CABLE.get());
         event.register(
             NeoOpenComputersClient::computerCaseItemColor,
             ModBlocks.COMPUTER_CASE_TIER1.get(),

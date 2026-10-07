@@ -198,6 +198,7 @@ public final class ModBlocks {
     private static BlockBehaviour.Properties cableProperties() {
         return BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_GRAY)
+            .noOcclusion()
             .strength(0.5F, 1.0F);
     }
 

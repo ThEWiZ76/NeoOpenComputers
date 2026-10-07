@@ -24,6 +24,9 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import java.util.List;
@@ -33,6 +36,83 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class CableGameTests {
+    @GameTest(template = "empty")
+    public static void cableConnectionsUseAllSixAxes(GameTestHelper helper) {
+        final var world = helper.getLevel();
+        final var pos = helper.absolutePos(new BlockPos(2, 2, 2));
+        final var center = place(helper, pos);
+        center.setColor(DyeColor.RED.getTextureDiffuseColor());
+        for (final var side : Direction.values()) {
+            final var neighborPos = pos.relative(side);
+            final var neighbor = place(helper, neighborPos);
+            assertConnection(helper, pos, side, "cable");
+            assertConnection(helper, neighborPos, side.getOpposite(), "cable");
+            final var expected = new net.minecraft.world.phys.AABB(
+                side.getStepX() < 0 ? 0 : .375, side.getStepY() < 0 ? 0 : .375, side.getStepZ() < 0 ? 0 : .375,
+                side.getStepX() > 0 ? 1 : .625, side.getStepY() > 0 ? 1 : .625, side.getStepZ() > 0 ? 1 : .625);
+            helper.assertTrue(world.getBlockState(pos).getCollisionShape(world, pos).bounds().equals(expected),
+                "Cable collision arm has incorrect direction on " + side);
+            neighbor.setColor(DyeColor.BLUE.getTextureDiffuseColor());
+            assertConnection(helper, pos, side, "none");
+            assertConnection(helper, neighborPos, side.getOpposite(), "none");
+            neighbor.setColor(DyeColor.RED.getTextureDiffuseColor());
+            assertConnection(helper, pos, side, "cable");
+            world.removeBlock(neighborPos, false);
+            assertConnection(helper, pos, side, "none");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void cableShapeTracksCompatiblePortsAndRecoloring(GameTestHelper helper) {
+        final var world = helper.getLevel();
+        final var pos = helper.absolutePos(new BlockPos(2, 2, 2));
+        final var cable = place(helper, pos);
+        final var isolated = world.getBlockState(pos).getShape(world, pos);
+        helper.assertTrue(isolated.bounds().equals(new net.minecraft.world.phys.AABB(.375, .375, .375, .625, .625, .625)),
+            "Isolated cable is not the upstream quarter-block center");
+        helper.assertTrue(!world.getBlockState(pos).isCollisionShapeFullBlock(world, pos), "Cable still collides as a full cube");
+        helper.assertTrue(isolated.clip(Vec3.atLowerCornerOf(pos).add(-.5, .1, .1),
+            Vec3.atLowerCornerOf(pos).add(1.5, .1, .1), pos) == null, "Cable raytrace hits empty corner space");
+        final var east = place(helper, pos.east());
+        assertConnection(helper, pos, Direction.EAST, "cable");
+        assertConnection(helper, pos.east(), Direction.WEST, "cable");
+        final var connected = world.getBlockState(pos).getCollisionShape(world, pos, CollisionContext.empty());
+        helper.assertTrue(connected.bounds().equals(new net.minecraft.world.phys.AABB(.375, .375, .375, 1, .625, .625)),
+            "Cable connection did not extend collision shape to the eastern neighbor");
+        world.setBlockAndUpdate(pos.above(), ModBlocks.CAPACITOR.get().defaultBlockState());
+        assertConnection(helper, pos, Direction.UP, "device");
+        world.setBlockAndUpdate(pos.north(), Blocks.STONE.defaultBlockState());
+        assertConnection(helper, pos, Direction.NORTH, "none");
+        world.setBlockAndUpdate(pos.west(), ModBlocks.NET_SPLITTER.get().defaultBlockState());
+        assertConnection(helper, pos, Direction.WEST, "none");
+        world.setBlockAndUpdate(pos.west().above(), Blocks.REDSTONE_BLOCK.defaultBlockState());
+        assertConnection(helper, pos, Direction.WEST, "device");
+        world.removeBlock(pos.west().above(), false);
+        assertConnection(helper, pos, Direction.WEST, "none");
+        cable.setColor(DyeColor.RED.getTextureDiffuseColor());
+        east.setColor(DyeColor.BLUE.getTextureDiffuseColor());
+        assertConnection(helper, pos, Direction.EAST, "none");
+        assertConnection(helper, pos.east(), Direction.WEST, "none");
+        east.setColor(CableBlockEntity.DEFAULT_COLOR);
+        assertConnection(helper, pos, Direction.EAST, "cable");
+        assertConnection(helper, pos.east(), Direction.WEST, "cable");
+        world.removeBlock(pos.east(), false);
+        assertConnection(helper, pos, Direction.EAST, "none");
+        world.removeBlock(pos.above(), false);
+        helper.assertTrue(world.getBlockState(pos).getShape(world, pos).bounds().equals(isolated.bounds()),
+            "Removing connections did not restore the isolated cable shape");
+        helper.succeed();
+    }
+
+    private static void assertConnection(GameTestHelper helper, BlockPos pos, Direction side, String expected) {
+        final BlockState state = helper.getLevel().getBlockState(pos);
+        final var property = state.getProperties().stream().filter(value -> value.getName().equals(side.getName())).findFirst();
+        helper.assertTrue(property.isPresent(), "Cable has no synchronized connection state for " + side);
+        helper.assertTrue(state.getValue(property.orElseThrow()).toString().equalsIgnoreCase(expected),
+            "Cable connection on " + side + " was not " + expected);
+    }
+
     @GameTest(template = "empty")
     public static void cableColorRecipesMixAndWashWithoutLosingData(GameTestHelper helper) {
         final var recipes = helper.getLevel().getRecipeManager();

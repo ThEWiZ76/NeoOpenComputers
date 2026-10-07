@@ -1,5 +1,177 @@
 {
-  "variants": {
-    "": { "model": "neoopencomputers:block/cable" }
-  }
+  "multipart": [
+    {
+      "apply": {
+        "model": "neoopencomputers:block/cable"
+      }
+    },
+    {
+      "when": {
+        "down": "cable"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_down"
+      }
+    },
+    {
+      "when": {
+        "down": "device"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_device_down"
+      }
+    },
+    {
+      "when": {
+        "down": "none",
+        "north": "none",
+        "south": "none",
+        "west": "none",
+        "east": "none"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_cap_down"
+      }
+    },
+    {
+      "when": {
+        "up": "cable"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_up"
+      }
+    },
+    {
+      "when": {
+        "up": "device"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_device_up"
+      }
+    },
+    {
+      "when": {
+        "up": "none",
+        "north": "none",
+        "south": "none",
+        "west": "none",
+        "east": "none"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_cap_up"
+      }
+    },
+    {
+      "when": {
+        "north": "cable"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_north"
+      }
+    },
+    {
+      "when": {
+        "north": "device"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_device_north"
+      }
+    },
+    {
+      "when": {
+        "down": "none",
+        "up": "none",
+        "north": "none",
+        "west": "none",
+        "east": "none"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_cap_north"
+      }
+    },
+    {
+      "when": {
+        "south": "cable"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_south"
+      }
+    },
+    {
+      "when": {
+        "south": "device"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_device_south"
+      }
+    },
+    {
+      "when": {
+        "down": "none",
+        "up": "none",
+        "south": "none",
+        "west": "none",
+        "east": "none"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_cap_south"
+      }
+    },
+    {
+      "when": {
+        "west": "cable"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_west"
+      }
+    },
+    {
+      "when": {
+        "west": "device"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_device_west"
+      }
+    },
+    {
+      "when": {
+        "down": "none",
+        "up": "none",
+        "north": "none",
+        "south": "none",
+        "west": "none"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_cap_west"
+      }
+    },
+    {
+      "when": {
+        "east": "cable"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_east"
+      }
+    },
+    {
+      "when": {
+        "east": "device"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_device_east"
+      }
+    },
+    {
+      "when": {
+        "down": "none",
+        "up": "none",
+        "north": "none",
+        "south": "none",
+        "east": "none"
+      },
+      "apply": {
+        "model": "neoopencomputers:block/cable_cap_east"
+      }
+    }
+  ]
 }

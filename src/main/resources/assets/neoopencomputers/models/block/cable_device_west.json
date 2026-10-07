@@ -8,12 +8,12 @@
   "elements": [
     {
       "from": [
-        6,
+        1,
         6,
         6
       ],
       "to": [
-        10,
+        6,
         10,
         10
       ],
@@ -41,6 +41,38 @@
         "east": {
           "texture": "#cable",
           "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        0,
+        5,
+        5
+      ],
+      "to": [
+        1,
+        11,
+        11
+      ],
+      "faces": {
+        "down": {
+          "texture": "#cap"
+        },
+        "up": {
+          "texture": "#cap"
+        },
+        "north": {
+          "texture": "#cap"
+        },
+        "south": {
+          "texture": "#cap"
+        },
+        "west": {
+          "texture": "#cap"
+        },
+        "east": {
+          "texture": "#cap"
         }
       }
     }
