@@ -12,23 +12,73 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import java.util.List;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class CableGameTests {
+    @GameTest(template = "empty")
+    public static void cableColorRecipesMixAndWashWithoutLosingData(GameTestHelper helper) {
+        final var recipes = helper.getLevel().getRecipeManager();
+        final var colorHolder = recipes.byKey(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "colorize_cable"));
+        helper.assertTrue(colorHolder.isPresent(), "Cable color mixing recipe is missing");
+        final var washHolder = recipes.byKey(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "decolorize_cable"));
+        helper.assertTrue(washHolder.isPresent(), "Cable washing recipe is missing");
+        @SuppressWarnings("unchecked")
+        final var color = (net.minecraft.world.item.crafting.Recipe<CraftingInput>) colorHolder.orElseThrow().value();
+        @SuppressWarnings("unchecked")
+        final var wash = (net.minecraft.world.item.crafting.Recipe<CraftingInput>) washHolder.orElseThrow().value();
+        final var cable = new ItemStack(ModItems.CABLE.get(), 4);
+        cable.set(DataComponents.CUSTOM_NAME, Component.literal("fixture-cable"));
+        final var input = CraftingInput.of(3, 1, List.of(cable, new ItemStack(Items.RED_DYE, 2), new ItemStack(Items.BLUE_DYE)));
+        helper.assertTrue(color.matches(input, helper.getLevel()), "Valid cable and multiple dyes did not match");
+        final var mixed = color.assemble(input, helper.getLevel().registryAccess());
+        helper.assertTrue(mixed.is(ModItems.CABLE.get()) && mixed.getCount() == 1
+            && mixed.get(DataComponents.DYED_COLOR).rgb() == 0xAD5398, "Red/blue blend did not preserve upstream brightness");
+        helper.assertTrue(Component.literal("fixture-cable").equals(mixed.get(DataComponents.CUSTOM_NAME))
+            && cable.getCount() == 4 && !cable.has(DataComponents.DYED_COLOR), "Crafting changed input or lost unrelated components");
+        final var red = cable.copy();
+        red.set(DataComponents.DYED_COLOR, new DyedItemColor(DyeColor.RED.getTextureDiffuseColor(), true));
+        final var recolorInput = CraftingInput.of(2, 1, List.of(red, new ItemStack(Items.BLUE_DYE)));
+        helper.assertTrue(color.assemble(recolorInput, helper.getLevel().registryAccess()).get(DataComponents.DYED_COLOR).rgb() == 0xAD5398,
+            "Existing cable color was not included in dye blending");
+        for (final var invalid : List.of(
+            CraftingInput.of(1, 1, List.of(cable)),
+            CraftingInput.of(3, 1, List.of(cable, cable.copy(), new ItemStack(Items.RED_DYE))),
+            CraftingInput.of(2, 1, List.of(cable, new ItemStack(Items.DIAMOND))),
+            CraftingInput.of(2, 1, List.of(new ItemStack(Items.LEATHER_BOOTS), new ItemStack(Items.RED_DYE))))) {
+            helper.assertTrue(!color.matches(invalid, helper.getLevel()), "Cable color recipe accepted invalid or non-cable input");
+        }
+        final var washInput = CraftingInput.of(2, 1, List.of(mixed, new ItemStack(Items.WATER_BUCKET)));
+        helper.assertTrue(wash.matches(washInput, helper.getLevel()), "Cable and water bucket did not match wash recipe");
+        final var cleaned = wash.assemble(washInput, helper.getLevel().registryAccess());
+        helper.assertTrue(cleaned.getCount() == 1 && !cleaned.has(DataComponents.DYED_COLOR)
+            && Component.literal("fixture-cable").equals(cleaned.get(DataComponents.CUSTOM_NAME))
+            && mixed.has(DataComponents.DYED_COLOR), "Washing lost unrelated data or mutated its input");
+        final var remainder = wash.getRemainingItems(washInput);
+        helper.assertTrue(remainder.get(0).isEmpty() && remainder.get(1).is(Items.BUCKET) && remainder.get(1).getCount() == 1,
+            "Washing did not return exactly one empty bucket");
+        helper.assertTrue(!wash.matches(CraftingInput.of(2, 1, List.of(mixed, new ItemStack(Items.LAVA_BUCKET))), helper.getLevel())
+            && !wash.matches(input, helper.getLevel()), "Washing accepted a non-water ingredient");
+        helper.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void cableDyeInteractionConsumesOnlySurvivalDye(GameTestHelper helper) {
         final var pos = helper.absolutePos(new BlockPos(1, 2, 1));
