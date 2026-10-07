@@ -20,6 +20,7 @@ public final class ModCreativeTabs {
             .displayItems((parameters, output) -> {
                 addRegisteredStacks(output);
                 addRegisteredItems(output);
+                output.accept(ModItems.HOVER_BOOTS.get().createChargedStack());
             })
             .build());
 

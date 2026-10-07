@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["IHI", "LDL", "ICI"],
+  "key": {
+    "I": {"tag": "c:nuggets/iron"},
+    "H": {"item": "neoopencomputers:hover_upgrade_tier2"},
+    "L": {"tag": "c:leathers"},
+    "D": {"item": "neoopencomputers:drone_case_tier1"},
+    "C": {"item": "neoopencomputers:capacitor"}
+  },
+  "result": {"id": "neoopencomputers:hover_boots", "count": 1}
+}

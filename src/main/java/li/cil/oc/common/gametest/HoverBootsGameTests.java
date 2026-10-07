@@ -25,6 +25,87 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class HoverBootsGameTests {
     @GameTest(template = "empty")
+    public static void hoverBootsCraftAndCreativeCharge(GameTestHelper helper) {
+        final var recipes = helper.getLevel().getRecipeManager();
+        final var holder = recipes.byKey(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "hover_boots"));
+        helper.assertTrue(holder.isPresent(), "Hover boots crafting recipe is missing");
+        @SuppressWarnings("unchecked")
+        final var recipe = (net.minecraft.world.item.crafting.Recipe<net.minecraft.world.item.crafting.CraftingInput>) holder.orElseThrow().value();
+        final var grid = net.minecraft.world.item.crafting.CraftingInput.of(3, 3, java.util.List.of(
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(li.cil.oc.common.ModItems.HOVER_UPGRADE_TIER2.get()), new ItemStack(Items.IRON_NUGGET),
+            new ItemStack(Items.LEATHER), new ItemStack(li.cil.oc.common.ModItems.DRONE_CASE_TIER1.get()), new ItemStack(Items.LEATHER),
+            new ItemStack(Items.IRON_NUGGET), new ItemStack(li.cil.oc.common.ModItems.CAPACITOR.get()), new ItemStack(Items.IRON_NUGGET)));
+        helper.assertTrue(recipe.matches(grid, helper.getLevel()), "Upstream hover boots ingredients do not craft");
+        final var result = recipe.assemble(grid, helper.getLevel().registryAccess());
+        helper.assertTrue(result.is(li.cil.oc.common.ModItems.HOVER_BOOTS.get()) && result.getCount() == 1
+            && li.cil.oc.common.ModItems.HOVER_BOOTS.get().getCharge(result) == 0, "Survival recipe produced incorrect or charged boots");
+        final var wrong = new java.util.ArrayList<>(grid.items());
+        wrong.set(1, new ItemStack(li.cil.oc.common.ModItems.HOVER_UPGRADE_TIER1.get()));
+        helper.assertTrue(!recipe.matches(net.minecraft.world.item.crafting.CraftingInput.of(3, 3, wrong), helper.getLevel()), "Boot recipe accepted wrong hover upgrade tier");
+        final var tab = li.cil.oc.common.ModCreativeTabs.MAIN.get();
+        tab.buildContents(new net.minecraft.world.item.CreativeModeTab.ItemDisplayParameters(
+            helper.getLevel().enabledFeatures(), true, helper.getLevel().registryAccess()));
+        helper.assertTrue(tab.getDisplayItems().stream().anyMatch(stack -> stack.is(li.cil.oc.common.ModItems.HOVER_BOOTS.get())
+            && li.cil.oc.common.ModItems.HOVER_BOOTS.get().getCharge(stack) == ModSettings.hoverBootsBuffer()), "Creative tab lacks charged boots");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void hoverBootsColorAndWashPreserveCharge(GameTestHelper helper) {
+        final var recipes = helper.getLevel().getRecipeManager();
+        final var colorHolder = recipes.byKey(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "colorize_hover_boots"));
+        final var washHolder = recipes.byKey(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "decolorize_hover_boots"));
+        helper.assertTrue(colorHolder.isPresent() && washHolder.isPresent(), "Hover boots dye/wash recipes are missing");
+        @SuppressWarnings("unchecked")
+        final var color = (net.minecraft.world.item.crafting.Recipe<net.minecraft.world.item.crafting.CraftingInput>) colorHolder.orElseThrow().value();
+        @SuppressWarnings("unchecked")
+        final var wash = (net.minecraft.world.item.crafting.Recipe<net.minecraft.world.item.crafting.CraftingInput>) washHolder.orElseThrow().value();
+        final var boots = li.cil.oc.common.ModItems.HOVER_BOOTS.get();
+        final var stack = new ItemStack(boots);
+        boots.setCharge(stack, 123);
+        stack.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("fixture-boots"));
+        final var input = net.minecraft.world.item.crafting.CraftingInput.of(3, 1,
+            java.util.List.of(stack, new ItemStack(Items.RED_DYE), new ItemStack(Items.BLUE_DYE)));
+        helper.assertTrue(color.matches(input, helper.getLevel()), "Boots do not accept multiple dyes");
+        final var dyed = color.assemble(input, helper.getLevel().registryAccess());
+        helper.assertTrue(dyed.get(DataComponents.DYED_COLOR).rgb() == 0xAD5398 && boots.getCharge(dyed) == 123
+            && dyed.get(DataComponents.CUSTOM_NAME).equals(stack.get(DataComponents.CUSTOM_NAME)) && !stack.has(DataComponents.DYED_COLOR),
+            "Dyeing lost charge/name or mutated input");
+        final var washInput = net.minecraft.world.item.crafting.CraftingInput.of(2, 1, java.util.List.of(dyed, new ItemStack(Items.WATER_BUCKET)));
+        helper.assertTrue(wash.matches(washInput, helper.getLevel()), "Water bucket cannot wash boots");
+        final var washed = wash.assemble(washInput, helper.getLevel().registryAccess());
+        helper.assertTrue(!washed.has(DataComponents.DYED_COLOR) && boots.getCharge(washed) == 123 && dyed.has(DataComponents.DYED_COLOR)
+            && wash.getRemainingItems(washInput).get(1).is(Items.BUCKET), "Bucket washing lost charge, mutated input or consumed the bucket");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void droppedHoverBootsWashInWaterCauldron(GameTestHelper helper) {
+        final var world = helper.getLevel();
+        final var pos = helper.absolutePos(new net.minecraft.core.BlockPos(1, 2, 1));
+        final var boots = li.cil.oc.common.ModItems.HOVER_BOOTS.get();
+        final var stack = new ItemStack(boots);
+        boots.setCharge(stack, 123);
+        stack.set(DataComponents.DYED_COLOR, new net.minecraft.world.item.component.DyedItemColor(0x123456, true));
+        final var entity = new net.minecraft.world.entity.item.ItemEntity(world, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, stack);
+        world.setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.WATER_CAULDRON.defaultBlockState()
+            .setValue(net.minecraft.world.level.block.LayeredCauldronBlock.LEVEL, 1));
+        entity.tick();
+        helper.assertTrue(!entity.getItem().has(DataComponents.DYED_COLOR) && boots.getCharge(entity.getItem()) == 123
+            && world.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.CAULDRON), "Dropped boots did not wash and empty a level-one water cauldron");
+        world.setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.WATER_CAULDRON.defaultBlockState()
+            .setValue(net.minecraft.world.level.block.LayeredCauldronBlock.LEVEL, 3));
+        entity.tick();
+        helper.assertTrue(world.getBlockState(pos).getValue(net.minecraft.world.level.block.LayeredCauldronBlock.LEVEL) == 3,
+            "Uncolored boots consumed cauldron water");
+        entity.getItem().set(DataComponents.DYED_COLOR, new net.minecraft.world.item.component.DyedItemColor(0x123456, true));
+        world.setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.POWDER_SNOW_CAULDRON.defaultBlockState());
+        entity.tick();
+        helper.assertTrue(entity.getItem().has(DataComponents.DYED_COLOR), "Powder snow washed boots");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void hoverBootsMovementChargesOnIntervalAndRestoresOtherModifiers(GameTestHelper helper) {
         final var player = helper.makeMockPlayer(GameType.SURVIVAL);
         final var boots = li.cil.oc.common.ModItems.HOVER_BOOTS.get();

@@ -17,6 +17,26 @@ public final class HoverBootsItem extends ArmorItem implements Chargeable {
         super(ArmorMaterials.DIAMOND, Type.BOOTS, properties.setNoRepair().durability((int) Math.min(Integer.MAX_VALUE, ModSettings.hoverBootsBuffer())));
     }
 
+    public ItemStack createChargedStack() {
+        final var stack = new ItemStack(this);
+        setCharge(stack, maxCharge(stack));
+        return stack;
+    }
+
+    @Override
+    public boolean onEntityItemUpdate(final ItemStack stack, final net.minecraft.world.entity.item.ItemEntity entity) {
+        if (!entity.level().isClientSide && stack.has(DataComponents.DYED_COLOR)) {
+            final var pos = entity.blockPosition();
+            final var state = entity.level().getBlockState(pos);
+            if (state.is(net.minecraft.world.level.block.Blocks.WATER_CAULDRON)) {
+                stack.remove(DataComponents.DYED_COLOR);
+                net.minecraft.world.level.block.LayeredCauldronBlock.lowerFillLevel(state, entity.level(), pos);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public double maxCharge(final ItemStack stack) {
         return ModSettings.hoverBootsBuffer();
     }

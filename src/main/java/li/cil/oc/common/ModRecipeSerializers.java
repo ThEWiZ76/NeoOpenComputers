@@ -2,8 +2,8 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.recipe.LinkedCardRecipe;
-import li.cil.oc.common.recipe.CableColorizeRecipe;
-import li.cil.oc.common.recipe.CableDecolorizeRecipe;
+import li.cil.oc.common.recipe.ColorizeRecipe;
+import li.cil.oc.common.recipe.DecolorizeRecipe;
 import li.cil.oc.common.recipe.LootDiskCyclingRecipe;
 import li.cil.oc.common.recipe.LuaBiosRecipe;
 import li.cil.oc.common.recipe.NavigationUpgradeRecipe;
@@ -17,11 +17,17 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModRecipeSerializers {
     public static final DeferredRegister<RecipeSerializer<?>> SERIALIZERS = DeferredRegister.create(Registries.RECIPE_SERIALIZER, NeoOpenComputers.MODID);
 
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<CableColorizeRecipe>> COLORIZE_CABLE = SERIALIZERS.register(
-        "colorize_cable", () -> new SimpleCraftingRecipeSerializer<>(CableColorizeRecipe::new));
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<ColorizeRecipe>> COLORIZE_CABLE = SERIALIZERS.register(
+        "colorize_cable", () -> new SimpleCraftingRecipeSerializer<>(category -> new ColorizeRecipe(category, ModItems.CABLE.get(), ModRecipeSerializers.COLORIZE_CABLE.get())));
 
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<CableDecolorizeRecipe>> DECOLORIZE_CABLE = SERIALIZERS.register(
-        "decolorize_cable", () -> new SimpleCraftingRecipeSerializer<>(CableDecolorizeRecipe::new));
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<DecolorizeRecipe>> DECOLORIZE_CABLE = SERIALIZERS.register(
+        "decolorize_cable", () -> new SimpleCraftingRecipeSerializer<>(category -> new DecolorizeRecipe(category, ModItems.CABLE.get(), ModRecipeSerializers.DECOLORIZE_CABLE.get())));
+
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<ColorizeRecipe>> COLORIZE_HOVER_BOOTS = SERIALIZERS.register(
+        "colorize_hover_boots", () -> new SimpleCraftingRecipeSerializer<>(category -> new ColorizeRecipe(category, ModItems.HOVER_BOOTS.get(), ModRecipeSerializers.COLORIZE_HOVER_BOOTS.get())));
+
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<DecolorizeRecipe>> DECOLORIZE_HOVER_BOOTS = SERIALIZERS.register(
+        "decolorize_hover_boots", () -> new SimpleCraftingRecipeSerializer<>(category -> new DecolorizeRecipe(category, ModItems.HOVER_BOOTS.get(), ModRecipeSerializers.DECOLORIZE_HOVER_BOOTS.get())));
 
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<LinkedCardRecipe>> LINKED_CARD = SERIALIZERS.register(
         ModContentIds.LINKED_CARD,
