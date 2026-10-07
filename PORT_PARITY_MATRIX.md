@@ -15,7 +15,7 @@ Dit is een startregister van onderzochte verschillen, geen claim dat iedere call
 | Lua geheugen | `LuaArchitecture` rapporteert `freeMemory` als helft van geïnstalleerd geheugen | Meting en limieten vergelijken; RAM-uitbreiding, allocatie/GC en OOM afvangen. Afwezigheid van alle limieten is nog niet bewezen. |
 | Lua architecturen | Upstream `server/machine/LuaStateFactory.scala`; port registreert LuaJ | Versie-/architectuurkeuze, semantiek en packaging uitwerken met persistence; bestaande Lua-programma's testen. |
 | Capacitorblokken | Beide varianten geimplementeerd op 2026-10-07: opslag, adjacency, comparator, NBT, carpetrecept, diergroepen en schokcooldown | Serverbewijs in CapacitorGameTests, inclusief gemengd cluster en natuurlijke ticker/netwerkafname; chunkgrens-varianten en echte visuele/player-flowacceptatie blijven open. |
-| Kabelkleuren | Upstream `common/tileentity/Cable.scala`, `common/block/Cable.scala`; port zonder kleurfilter | Verven/ontkleuren, NBT en netwerkherbouw; gelijke kleuren verbinden, verschillende isoleren, standaardkleurgedrag vergelijken. |
+| Kabelkleuren | Kleurfilter, netwerkherbouw, RGB-NBT/legacy dye metadata en client-kleurupdates geimplementeerd; lichtgrijs verbindt alle kleuren | Spelerinteractie, kleurbehoud bij plaatsen/oppakken, kleurrecepten en kabelrendering/ingame acceptatie blijven open. |
 | Kabelgeometrie | Port kabelmodel is `cube_all` | Dunne kabel/neighborarmen, selectie/collision, itemmodel en connect/disconnect vanuit alle zijden live controleren. |
 | Bundled redstone | Port standaardinput retourneert nul | Beschikbare moderne integratie kiezen en daadwerkelijke zestien kanalen in beide richtingen testen. |
 | Hover boots | Upstream `common/init/Items.scala`, `common/item/HoverBoots.scala`; item ontbreekt | Player-item/energie/landing/dye porten; robot-hoverupgrade telt niet als deze feature. |
@@ -315,3 +315,11 @@ These tests exercise generation with explicit fixed times; natural ticker cadenc
 carpetedCapacitorTickerSuppliesNetworkPower lets the actual ServerLevel tick the placed block for exactly20 game ticks. Two sheep are held in place with AI/physics disabled and invulnerability, isolating ticker/network behavior from animal movement. A neighboring ordinary capacitor is confirmed on the same network. Its observed global energy increases by exactly one configured sheep-group output, which it then consumes through tryChangeBuffer, restoring the baseline.
 
 Final build/all613 GameTests pass; server log capacitor-ticker-verified.log. This supersedes the open natural ticker cadence item for this setup. Physical animal behavior, chunk boundaries/load ordering, full process restart, visual/survival and protection-mod acceptance remain open. Broader beta estimate is unchanged by this focused acceptance test.
+
+## Cable color connectivity - 2026-10-07
+
+CableBlockEntity now implements Colored and SidedEnvironment. Matching RGB colors connect, different colors isolate, and the default light gray is an upstream-compatible wildcard. Recoloring removes existing graph edges before joining compatible neighbors, retaining the node address. An isolated cable still receives its own network. On load, the stored color is applied before reconnecting. Color persists under oc:renderColorRGB; legacy oc:renderColor dye metadata migrates and RGB takes precedence. Update tags/packets synchronize only color, without server node data.
+
+CableGameTests first reproduced the missing color interface (cable-colors-red.log). Coverage verifies red/blue separation in both joining directions, wildcard bridging/reconnection, stable address and NBT roundtrip, all six sides incompatible, legacy migration and client update tags. Final build/all615 GameTests pass; server log cable-colors-verified.log.
+
+This completes the network/persistence slice only. Dye interaction/consumption, colored item placement/drops, color recipes, cable geometry/tints and real-client acceptance remain open. No client launch/install in this checkpoint. The provisional beta estimate remains3-6 weeks of concentrated work with low confidence, rather than a feature-completion percentage inferred from tests.
