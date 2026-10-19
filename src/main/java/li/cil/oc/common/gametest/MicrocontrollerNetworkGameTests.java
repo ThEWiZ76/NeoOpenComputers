@@ -37,6 +37,78 @@ import java.nio.charset.StandardCharsets;
 @GameTestHolder(NeoOpenComputers.MODID)
 @PrefixGameTestTemplate(false)
 public final class MicrocontrollerNetworkGameTests {
+    @GameTest(template = "empty", batch = "microcontrollerPower")
+    public static void microcontrollerConsumesConfiguredPowerAndHandlesExhaustion(final GameTestHelper helper) throws Exception {
+        NeoOpenComputersGameTests.withCachedConfig(ModSettings.MICROCONTROLLER_BUFFER, 64D, () ->
+            NeoOpenComputersGameTests.withCachedConfig(ModSettings.COMPUTER_COST, 9D, () ->
+                NeoOpenComputersGameTests.withCachedConfig(ModSettings.MFU_TICK_FREQUENCY, 4, () -> {
+                    for (final boolean ignorePower : List.of(false, true)) {
+                        for (final double cost : List.of(0.25D, 0D)) {
+                            NeoOpenComputersGameTests.withCachedConfig(ModSettings.IGNORE_POWER, ignorePower, () ->
+                                NeoOpenComputersGameTests.withCachedConfig(ModSettings.MICROCONTROLLER_COST, cost,
+                                    () -> configuredPower(helper, cost, ignorePower)));
+                        }
+                    }
+                })));
+        helper.succeed();
+    }
+
+    private static void configuredPower(final GameTestHelper helper, final double cost, final boolean ignorePower) {
+        // An unregistered host receives exactly the explicit updates below; no
+        // natural world tick or other test can advance this machine's power counter.
+        final var host = new MicrocontrollerBlockEntity(helper.absolutePos(new BlockPos(1, 1, 1)),
+            ModBlocks.MICROCONTROLLER_TIER1.get().defaultBlockState());
+        host.setLevel(helper.getLevel());
+        try {
+            host.onLoad();
+            host.setItem(0, nativeCpu());
+            host.setItem(1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+            host.setItem(2, RobotMovementPersistenceGameTests.eeprom("while true do computer.pullSignal() end"));
+            final var machine = host.machine();
+            final var connector = (Connector) machine.node();
+            helper.assertTrue(connector.localBufferSize() == 0 && connector.globalBufferSize() == 64 && connector.globalBuffer() == 0,
+                "Custom private capacity ignored or new host received free power");
+            helper.assertTrue(machine.getCostPerTick() == cost, "Microcontroller used generic computer cost instead of its own setting");
+            if (!ignorePower) connector.changeBuffer(64);
+            final double initial = connector.globalBuffer();
+            helper.assertTrue(machine.start(), "Configured native machine did not start");
+            final int frequency = ModSettings.mfuTickFrequency();
+            for (int tick = 0; tick < frequency * 3; tick++) machine.update();
+            final double charged = ignorePower ? 0 : cost * frequency * 3;
+            helper.assertTrue(machine.isRunning() && Math.abs(connector.globalBuffer() - (initial - charged)) < 0.000001,
+                "Wrong running consumption: cost=" + cost + ", ignore=" + ignorePower + ", buffer=" + connector.globalBuffer()
+                    + ", error=" + machine.lastError());
+            helper.assertTrue(machine.pause(1), "Could not pause running machine");
+            for (int tick = 0; tick < frequency; tick++) machine.update();
+            final double afterPause = initial - (ignorePower ? 0 : cost * frequency * 4);
+            helper.assertTrue(machine.isPaused() && Math.abs(connector.globalBuffer() - afterPause) < 0.000001,
+                "Paused machine did not retain running power policy");
+            machine.stop();
+            for (int tick = 0; tick < frequency * 2; tick++) machine.update();
+            helper.assertTrue(Math.abs(connector.globalBuffer() - afterPause) < 0.000001, "Stopped machine still consumed running energy");
+            if (!ignorePower && cost > 0) {
+                connector.changeBuffer(-connector.globalBuffer());
+                final double insufficient = cost * frequency - 0.125D;
+                connector.changeBuffer(insufficient);
+                helper.assertTrue(machine.start(), "Native machine did not restart for exhaustion probe");
+                for (int tick = 0; tick < frequency; tick++) machine.update();
+                helper.assertTrue(!machine.isRunning() && "gui.Error.NoEnergy".equals(machine.lastError())
+                    && Math.abs(connector.globalBuffer() - insufficient) < 0.000001,
+                    "Exhaustion did not stop atomically with NoEnergy");
+            }
+            if (!ignorePower) {
+                final var legacy = host.saveWithFullMetadata(helper.getLevel().registryAccess());
+                legacy.remove("oc:snooper");
+                legacy.getCompound("oc:machine").getCompound("node").putDouble("buffer", 317);
+                host.loadWithComponents(legacy, helper.getLevel().registryAccess());
+                helper.assertTrue(connector.globalBuffer() == 64 && connector.localBuffer() == 0,
+                    "Legacy energy did not honor custom private capacity");
+            }
+        } finally {
+            host.setRemoved();
+        }
+    }
+
     @GameTest(template = "empty")
     public static void microcontrollerRotationRewiresPhysicalCablesAndClosesNewFront(final GameTestHelper helper) {
         final var controller = place(helper);

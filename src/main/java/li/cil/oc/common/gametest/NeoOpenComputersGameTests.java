@@ -12513,7 +12513,7 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(Math.abs(actual - expected) < 0.0001D, name + " expected " + expected + " but got " + actual);
     }
 
-    private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
+    static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {
         final Object previous = setCachedConfig(value, override);
         try {
             action.run();
@@ -12814,7 +12814,7 @@ public final class NeoOpenComputersGameTests {
     }
 
     @FunctionalInterface
-    private interface ThrowingRunnable {
+    interface ThrowingRunnable {
         void run() throws Exception;
     }
 
