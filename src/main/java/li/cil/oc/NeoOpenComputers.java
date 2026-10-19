@@ -112,6 +112,7 @@ public final class NeoOpenComputers {
         event.enqueueWork(() -> {
             li.cil.oc.common.integration.ComputerCraftBundledRedstone.register();
             li.cil.oc.common.integration.ProjectRedBundledRedstone.register();
+            li.cil.oc.common.integration.ProjectRedScrewdriver.register();
             ModCreativeTabs.assignApiCreativeTab();
             ModContentCatalog.registerDefaults();
             ModEeproms.registerDefaults();

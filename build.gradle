@@ -116,6 +116,9 @@ runs {
         argument '--nogui'
     }
     gameTestServer {
+        if (project.hasProperty('withProjectRed') || project.hasProperty('withProjectRedCore')) {
+            systemProperty 'neoopencomputers.testProjectRedCore', 'true'
+        }
         if (project.hasProperty('withProjectRed')) {
             systemProperty 'neoopencomputers.testProjectRed', 'true'
         }
@@ -185,11 +188,13 @@ configurations {
 
 dependencies {
     compileOnly 'mrtjp:ProjectRed:1.21.1-4.23.0:api'
-    if (project.hasProperty('withProjectRed')) {
+    if (project.hasProperty('withProjectRed') || project.hasProperty('withProjectRedCore')) {
         projectRedRuntime 'mrtjp:ProjectRed:1.21.1-4.23.0:core'
-        projectRedRuntime 'mrtjp:ProjectRed:1.21.1-4.23.0:transmission'
         projectRedRuntime 'io.codechicken:CodeChickenLib:1.21.1-4.6.1.529'
         projectRedRuntime 'io.codechicken:CBMultipart:1.21.1-3.5.0.161'
+    }
+    if (project.hasProperty('withProjectRed')) {
+        projectRedRuntime 'mrtjp:ProjectRed:1.21.1-4.23.0:transmission'
     }
     compileOnly 'cc.tweaked:cc-tweaked-1.21.1-common-api:1.120.2'
     if (project.hasProperty('withComputerCraft')) {
