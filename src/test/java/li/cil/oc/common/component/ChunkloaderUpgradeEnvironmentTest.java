@@ -21,6 +21,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ChunkloaderUpgradeEnvironmentTest {
     @Test
+    void disablingClearsPreviouslySavedActivation() {
+        OpenComputersApi.initialize();
+        final var environment = new ChunkloaderUpgradeEnvironment(null);
+        final var saved = new net.minecraft.nbt.CompoundTag();
+        environment.setActive(null, new TestArguments(true));
+        environment.save(saved);
+        assertTrue(saved.getBoolean("active"));
+        environment.setActive(null, new TestArguments(false));
+        environment.save(saved);
+        assertFalse(saved.getBoolean("active"), "Saving disabled state retained a previous active flag");
+    }
+
+    @Test
     void disconnectReleasesAttachmentWithoutErasingRequestedActiveState() {
         OpenComputersApi.initialize();
         final var environment = new ChunkloaderUpgradeEnvironment(null);

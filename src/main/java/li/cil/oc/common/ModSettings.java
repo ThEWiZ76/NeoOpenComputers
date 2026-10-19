@@ -229,6 +229,8 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue INSERT_IDS_IN_CONVERTERS;
     public static final ModConfigSpec.ConfigValue<String> DEBUG_CARD_ACCESS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> DEBUG_CARD_WHITELIST;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> CHUNKLOADER_DIMENSION_WHITELIST;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> CHUNKLOADER_DIMENSION_BLACKLIST;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -334,6 +336,17 @@ public final class ModSettings {
         DEBUG_CARD_WHITELIST = builder
             .comment("Extra debug card whitelist entries as '<player> <nonce>'. Upstream-compatible file entries live in config/opencomputers/debug_card_whitelist.txt and can be managed with /oc_debugWhitelist.")
             .defineList("debugCardWhitelist", DEFAULT_DEBUG_CARD_WHITELIST, value -> value instanceof String);
+        builder.pop();
+
+        builder.push("chunkloader");
+        CHUNKLOADER_DIMENSION_WHITELIST = builder
+            .comment("Allowed dimension IDs, e.g. minecraft:overworld. Empty allows all dimensions not blacklisted. Legacy numeric IDs must be converted to namespaced IDs.")
+            .defineListAllowEmpty("dimWhitelist", List.<String>of(), value -> value instanceof String id
+                && id.contains(":") && net.minecraft.resources.ResourceLocation.tryParse(id) != null);
+        CHUNKLOADER_DIMENSION_BLACKLIST = builder
+            .comment("Forbidden dimension IDs, e.g. minecraft:the_nether. Blacklist always overrides whitelist. Empty forbids none.")
+            .defineListAllowEmpty("dimBlacklist", List.<String>of(), value -> value instanceof String id
+                && id.contains(":") && net.minecraft.resources.ResourceLocation.tryParse(id) != null);
         builder.pop();
 
         builder.push("computer");
@@ -826,6 +839,13 @@ public final class ModSettings {
 
     public static double chunkloaderCost() {
         return Math.max(0D, doubleValue(CHUNKLOADER_COST));
+    }
+
+    public static boolean isChunkloadingAllowed(final net.minecraft.resources.ResourceLocation dimension) {
+        final String id = dimension.toString();
+        final List<String> whitelist = stringListValue(CHUNKLOADER_DIMENSION_WHITELIST);
+        return (whitelist.isEmpty() || whitelist.contains(id))
+            && !stringListValue(CHUNKLOADER_DIMENSION_BLACKLIST).contains(id);
     }
 
     public static boolean ignorePower() {
