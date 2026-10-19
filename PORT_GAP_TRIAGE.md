@@ -1,6 +1,6 @@
 # Port gap triage - 2026-10-19
 
-Baseline: master-MC1.12 Git 7d9eac5584e238a890a388a0f697c27c7391caa4. Runtime source inspected at 00d88ac5c255e777f9c443b09ea568bacc96e4d7. This is a source audit and work queue; missing callback-name candidates are not runtime reproductions.
+Baseline: master-MC1.12 Git 7d9eac5584e238a890a388a0f697c27c7391caa4. Initial audit at 00d88ac5c255e777f9c443b09ea568bacc96e4d7; source enumeration refreshed at 22b295fdb3ad16b44be5936ad41fed5ab97e71f4 after the durability fix below. This is a source audit and work queue; missing callback-name candidates are not runtime reproductions.
 
 ## Corrected assumptions
 
@@ -16,7 +16,7 @@ Baseline: master-MC1.12 Git 7d9eac5584e238a890a388a0f697c27c7391caa4. Runtime so
 | High | Inventory-controller targeted world transfer: dropIntoSlot, suckFromSlot | Upstream traits/InventoryWorldControlMk2.scala and UpgradeInventoryController Drone/Robot mixins. Port InventoryControllerEnvironment has analytics/equip but neither callback. Preserve direction/fromSide, selected/insertion slots, capability simulation, entity/block protection, counts, errors and delays; reproduce on actual robot/drone components. |
 | High | Item-contained inventory control: getItemInventorySize, dropIntoItemInventory, suckFromItemInventory | Upstream traits/ItemInventoryControl.scala mixed into Drone/Robot controller. No corresponding port callbacks. Include container-item writeback, self-insertion rejection, metadata preservation and no duplication under partial acceptance. |
 | High | Microcontroller external control/side routing | Upstream Microcontroller.scala exposes start/stop/isRunning/lastError/isSideOpen/setSideOpen and external snooper/side nodes. Port node() returns the internal machine node and has no equivalent annotated callbacks or side-routing state. This requires real network separation/routing and persistence, not only adding method names. |
-| Normal | Robot durability callback | Upstream server/component/Robot.scala:75 uses ToolDurabilityProviders and exact no-tool/undamageable results. The port has the provider registry but no robot callback. Add real component/Lua invocation coverage for damaged, undamageable and custom-provider tools. |
+| Closed: 22b295fdb | Robot durability callback | Restored the missing upstream callback through ToolDurabilityProviders, with exact no-tool/undamageable results. Two GameTests reproduced the missing component callback and native Lua nil-call, then passed real component/native invocation, fixed damage fraction, save/load metadata and IMC-provider cases. Build, 2112 units and all 678 ordinary GameTests pass. Logs: robot-durability-red.log and robot-durability-verified.log under build/finish-port-implementation/. |
 | Open integration scope | Wireless redstone callbacks/provider | Upstream RedstoneWireless exposes input/output/frequency; current bridges cover CC and ProjectRed bundled transport only. Verify modern provider availability and record replacement/not-applicable decisions explicitly. |
 | Open integration scope | AE2 storage/crafting and other specific drivers | Upstream includes 171 integration source files. No appeng-specific port source/dependency was found; generic energy/item/fluid capabilities do not establish AE2 network/crafting APIs. Audit each modern integration and unavailable legacy mod separately. |
 

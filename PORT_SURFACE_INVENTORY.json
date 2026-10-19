@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "00d88ac5c255e777f9c443b09ea568bacc96e4d7",
+  "port_revision": "22b295fdb3ad16b44be5936ad41fed5ab97e71f4",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -1787,7 +1787,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 1043
+              "line": 1051
             }
           ]
         },
@@ -1797,7 +1797,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 1391
+              "line": 1399
             }
           ]
         },
@@ -1807,7 +1807,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 1004
+              "line": 1012
             }
           ]
         }
@@ -2959,7 +2959,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 834
+              "line": 842
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -2973,7 +2973,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 839
+              "line": 847
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -2987,7 +2987,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 931
+              "line": 939
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4508,7 +4508,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 834
+              "line": 842
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4522,7 +4522,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 839
+              "line": 847
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4533,7 +4533,12 @@
         {
           "name": "durability",
           "line": 75,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 828
+            }
+          ]
         },
         {
           "name": "move",
@@ -4541,7 +4546,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 931
+              "line": 939
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4555,7 +4560,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 961
+              "line": 969
             }
           ]
         }
@@ -4729,7 +4734,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 901
+              "line": 909
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4743,7 +4748,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 906
+              "line": 914
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4761,7 +4766,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 911
+              "line": 919
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GeneratorUpgradeEnvironment.java",
@@ -4779,7 +4784,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 916
+              "line": 924
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4793,7 +4798,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 921
+              "line": 929
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4807,7 +4812,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 926
+              "line": 934
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4861,7 +4866,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 989
+              "line": 997
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4875,7 +4880,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 994
+              "line": 1002
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4889,7 +4894,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 999
+              "line": 1007
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/TractorBeamUpgradeEnvironment.java",
@@ -5248,7 +5253,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 984
+              "line": 992
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -5768,7 +5773,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 911
+              "line": 919
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GeneratorUpgradeEnvironment.java",
@@ -6011,7 +6016,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 999
+              "line": 1007
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/TractorBeamUpgradeEnvironment.java",
@@ -8685,9 +8690,6 @@
     ],
     "dropIntoSlot": [
       "src/main/scala/li/cil/oc/server/component/traits/InventoryWorldControlMk2.scala:17"
-    ],
-    "durability": [
-      "src/main/scala/li/cil/oc/server/component/Robot.scala:75"
     ],
     "exportIntoSlot": [
       "src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:73"
