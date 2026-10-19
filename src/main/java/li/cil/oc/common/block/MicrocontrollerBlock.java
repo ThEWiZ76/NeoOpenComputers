@@ -7,11 +7,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.Containers;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -24,6 +29,8 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
+
+import java.util.List;
 
 @SuppressWarnings("deprecation")
 public class MicrocontrollerBlock extends HorizontalDirectionalBlock implements EntityBlock {
@@ -81,8 +88,31 @@ public class MicrocontrollerBlock extends HorizontalDirectionalBlock implements 
         if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof MicrocontrollerBlockEntity microcontroller) {
             microcontroller.machine().save(new CompoundTag());
         }
-        Containers.dropContentsOnDestroy(state, newState, level, pos);
         super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(final LevelReader level, final BlockPos pos, final BlockState state) {
+        return level.getBlockEntity(pos) instanceof MicrocontrollerBlockEntity microcontroller
+            ? microcontroller.createMicrocontrollerItem(level.registryAccess()) : new ItemStack(this);
+    }
+
+    @Override
+    protected List<ItemStack> getDrops(final BlockState state, final LootParams.Builder params) {
+        return params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof MicrocontrollerBlockEntity microcontroller
+            ? List.of(microcontroller.createMicrocontrollerItem(params.getLevel().registryAccess())) : super.getDrops(state, params);
+    }
+
+    @Override
+    public boolean onDestroyedByPlayer(final BlockState state, final Level level, final BlockPos pos, final Player player,
+                                       final boolean harvest, final FluidState fluid) {
+        // Creative skips normal loot generation; upstream still returns the assembled device.
+        final ItemStack creativeDrop = !level.isClientSide && player instanceof ServerPlayer serverPlayer
+            && serverPlayer.gameMode.isCreative() && level.getBlockEntity(pos) instanceof MicrocontrollerBlockEntity microcontroller
+            ? microcontroller.createMicrocontrollerItem(level.registryAccess()) : ItemStack.EMPTY;
+        final boolean removed = super.onDestroyedByPlayer(state, level, pos, player, harvest, fluid);
+        if (removed && !creativeDrop.isEmpty()) popResource(level, pos, creativeDrop);
+        return removed;
     }
 
     @Override

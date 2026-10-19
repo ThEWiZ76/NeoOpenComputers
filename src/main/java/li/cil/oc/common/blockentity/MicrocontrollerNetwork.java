@@ -118,10 +118,16 @@ final class MicrocontrollerNetwork {
             if (index < storedPlugs.size()) plugs[index].node.load(storedPlugs.getCompound(index));
             if (index < storedControls.size()) controls[index].load(storedControls.getCompound(index));
         }
-        if (tag.contains(SNOOPER, Tag.TAG_COMPOUND)) {
+        if (tag.contains("oc:storedEnergy", Tag.TAG_ANY_NUMERIC)) {
+            // BlockItem merges the portable payload into the freshly created
+            // block entity's default NBT, which already contains an empty snooper.
+            final CompoundTag portable = tag.getCompound(SNOOPER).copy();
+            portable.putDouble("buffer", Math.max(0, tag.getInt("oc:storedEnergy")));
+            snooper.load(portable);
+        } else if (tag.contains(SNOOPER, Tag.TAG_COMPOUND)) {
             snooper.load(tag.getCompound(SNOOPER));
         } else {
-            // Earlier port saves stored microcontroller energy on the computer node.
+            // Earlier port world saves stored energy on the computer node.
             final CompoundTag legacy = new CompoundTag();
             legacy.putDouble("buffer", tag.getCompound("oc:machine").getCompound("node").getDouble("buffer"));
             snooper.load(legacy);

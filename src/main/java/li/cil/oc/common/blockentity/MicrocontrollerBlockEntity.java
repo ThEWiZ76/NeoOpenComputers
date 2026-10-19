@@ -37,6 +37,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -198,6 +199,26 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     @Override
     public Machine machine() {
         return machine;
+    }
+
+    public ItemStack createMicrocontrollerItem(final HolderLookup.Provider registries) {
+        final var data = new CompoundTag();
+        final double energy;
+        if (unloadedState != null) {
+            data.put("Items", unloadedState.getList("Items", net.minecraft.nbt.Tag.TAG_COMPOUND).copy());
+            energy = unloadedState.getCompound("oc:snooper").getDouble("buffer");
+        } else {
+            // Flush live component state before copying hardware into the chassis.
+            machine.save(new CompoundTag());
+            ContainerHelper.saveAllItems(data, items, registries);
+            energy = network.internalConnector().localBuffer();
+        }
+        // Upstream MicrocontrollerData stores integer energy and hardware only;
+        // a portable device starts a fresh VM/network when placed again.
+        data.putInt("oc:storedEnergy", (int) Math.max(0, energy));
+        final ItemStack stack = new ItemStack(getBlockState().getBlock());
+        BlockItem.setBlockEntityData(stack, ModBlockEntities.MICROCONTROLLER.get(), data);
+        return stack;
     }
 
     @Override
