@@ -19,6 +19,10 @@ sourceSets.main.resources {
 
 repositories {
     mavenCentral()
+    maven {
+        url = 'https://maven.squiddev.cc'
+        content { includeGroup 'cc.tweaked' }
+    }
     ivy {
         name = 'OpenComputersNativeLua'
         url = 'https://asie.pl/javadeps/'
@@ -108,6 +112,9 @@ runs {
         argument '--nogui'
     }
     gameTestServer {
+        if (project.hasProperty('withComputerCraft')) {
+            systemProperty 'neoopencomputers.testComputerCraft', 'true'
+        }
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         systemProperty 'neoopencomputers.testFluidCapabilities', 'true'
         if (project.hasProperty('neoopencomputers.restartPhase')) {
@@ -163,9 +170,15 @@ tasks.named('generateEmptyGameTestStructure') {
 }
 configurations {
     nativeLuaArtifacts
+    computerCraftRuntime
+    runtimeClasspath.extendsFrom computerCraftRuntime
 }
 
 dependencies {
+    compileOnly 'cc.tweaked:cc-tweaked-1.21.1-common-api:1.120.2'
+    if (project.hasProperty('withComputerCraft')) {
+        computerCraftRuntime 'cc.tweaked:cc-tweaked-1.21.1-forge:1.120.2'
+    }
     nativeLuaArtifacts 'li.cil.oc:OC-JNLua:20230530.0'
     nativeLuaArtifacts 'li.cil.oc:OC-JNLua-Natives:20220928.1'
     compileOnly 'li.cil.oc:OC-JNLua:20230530.0'

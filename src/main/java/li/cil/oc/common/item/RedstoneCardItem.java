@@ -37,8 +37,7 @@ public class RedstoneCardItem extends Item implements HostAware {
             return null;
         }
         if (!(host instanceof li.cil.oc.common.component.RedstoneControllerHost)) return null;
-        // Both upstream tiers use vanilla redstone when no bundled/wireless integration is available.
-        final var environment = new RedstoneCardEnvironment(host) {
+        final var environment = new RedstoneCardEnvironment(host, tier > 0 && li.cil.oc.common.integration.ComputerCraftBundledRedstone.isAvailable()) {
             @Override
             public void save(final CompoundTag data) {
                 super.save(data);

@@ -152,6 +152,7 @@ final class RedstoneIoRegistrationShapeTest {
         setField(redstone, "outputs", new int[6]);
         setField(redstone, "inputs", new int[6]);
         setField(redstone, "bundledOutputs", new int[6][16]);
+        setField(redstone, "bundledInputs", new li.cil.oc.common.component.BundledRedstoneInputs());
     }
 
     private static void setField(final RedstoneIoBlockEntity redstone, final String name, final Object value) throws Exception {

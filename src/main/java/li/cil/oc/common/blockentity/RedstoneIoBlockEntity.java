@@ -42,6 +42,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     private final int[] outputs = new int[6];
     private final int[] inputs = new int[6];
     private final int[][] bundledOutputs = new int[6][COLOR_COUNT];
+    private final li.cil.oc.common.component.BundledRedstoneInputs bundledInputs = new li.cil.oc.common.component.BundledRedstoneInputs();
     private Node node;
     private int wakeThreshold;
 
@@ -131,6 +132,21 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     }
 
     @Override
+    public int bundledRedstoneInput(final Direction direction, final int color) {
+        return bundledInputs.get(direction, color);
+    }
+
+    @Override
+    public int bundledRedstoneOutput(final Direction direction, final int color) {
+        return bundledOutput(direction, color);
+    }
+
+    @Override
+    public void setBundledRedstoneOutput(final Direction direction, final int color, final int value) {
+        setBundledOutput(direction, color, value);
+    }
+
+    @Override
     public int wakeThreshold() {
         return wakeThreshold;
     }
@@ -213,14 +229,14 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     public Object[] getBundledInput(final Context context, final Arguments args) {
         final BundleKey key = bundleKey(args);
         if (key.hasColor()) {
-            return new Object[]{0};
+            return new Object[]{bundledRedstoneInput(key.side(), key.color())};
         }
         if (key.hasSide()) {
-            return new Object[]{colorsToMap(new int[COLOR_COUNT])};
+            return new Object[]{bundledInputMap(key.side())};
         }
         final Map<Integer, Map<Integer, Integer>> result = new HashMap<>();
         for (Direction direction : Direction.values()) {
-            result.put(direction.get3DDataValue(), colorsToMap(new int[COLOR_COUNT]));
+            result.put(direction.get3DDataValue(), bundledInputMap(direction));
         }
         return new Object[]{result};
     }
@@ -268,6 +284,12 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         if (level == null) {
             return;
         }
+        bundledInputs.update(this, change -> {
+            if (node() != null) {
+                node().sendToReachable("computer.signal", "redstone_changed", change.side().get3DDataValue(), change.oldValue(), change.newValue(), change.color());
+                if (change.oldValue() < wakeThreshold && change.newValue() >= wakeThreshold) node().sendToReachable("computer.start");
+            }
+        });
         for (Direction direction : Direction.values()) {
             final int index = direction.get3DDataValue();
             final int oldValue = inputs[index];
@@ -350,6 +372,10 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         if (oldValue != newValue) {
             bundledOutputs[side][color] = newValue;
             setChanged();
+            if (level != null) {
+                level.updateNeighborsAt(getBlockPos(), getBlockState().getBlock());
+                level.updateNeighborsAt(getBlockPos().relative(direction), getBlockState().getBlock());
+            }
         }
         return newValue;
     }
@@ -454,6 +480,12 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         for (int color = 0; color < COLOR_COUNT; color++) {
             result.put(color, color < values.length ? values[color] : 0);
         }
+        return result;
+    }
+
+    private Map<Integer, Integer> bundledInputMap(final Direction side) {
+        final Map<Integer, Integer> result = new HashMap<>();
+        for (int color = 0; color < COLOR_COUNT; color++) result.put(color, bundledRedstoneInput(side, color));
         return result;
     }
 

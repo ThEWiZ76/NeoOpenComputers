@@ -96,6 +96,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     private int wakeThreshold;
     private final int[] redstoneOutputs = new int[6];
     private final int[] redstoneInputs = new int[6];
+    private final li.cil.oc.common.component.BundledRedstoneInputs bundledInputs = new li.cil.oc.common.component.BundledRedstoneInputs();
     private final int[][] bundledRedstoneOutputs = new int[6][BUNDLED_COLOR_COUNT];
 
     public MicrocontrollerBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -313,6 +314,11 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         }
 
         scheduleRedstoneUpdate(direction);
+    }
+
+    @Override
+    public int bundledRedstoneInput(final Direction direction, final int color) {
+        return bundledInputs.get(direction, color);
     }
 
     @Override
@@ -620,6 +626,12 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
             return;
         }
         final String redstoneAddress = componentAddress("redstone");
+        bundledInputs.update(this, change -> {
+            if (redstoneAddress != null) {
+                machine.signal("redstone_changed", redstoneAddress, toLocal(change.side()).get3DDataValue(), change.oldValue(), change.newValue(), change.color());
+                if (change.oldValue() < wakeThreshold && change.newValue() >= wakeThreshold) machine.start();
+            }
+        });
         synchronized (redstoneInputs) {
             for (Direction direction : Direction.values()) {
                 final int index = direction.get3DDataValue();
