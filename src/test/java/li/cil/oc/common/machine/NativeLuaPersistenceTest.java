@@ -14,6 +14,29 @@ final class NativeLuaPersistenceTest {
 
     @ParameterizedTest
     @EnumSource(NativeLuaState.Version.class)
+    void rebindsNativeStringMetatableFunctionsInFreshVm(final NativeLuaState.Version version) throws Exception {
+        final CompoundTag saved;
+        try (final var owner = NativeLuaState.create(version, 4 * 1024 * 1024);
+             final var persistence = new NativeLuaPersistence(owner, TEST_KEY)) {
+            owner.pushHostLibrary("debug");
+            owner.state().getField(-1, "getmetatable");
+            owner.state().pushString("");
+            owner.state().call(1, 1);
+            saved = persistence.save(-1);
+        }
+        try (final var owner = NativeLuaState.create(version, 4 * 1024 * 1024);
+             final var persistence = new NativeLuaPersistence(owner, TEST_KEY)) {
+            persistence.restore(saved);
+            owner.state().setGlobal("restoredStringMetatable");
+            if (version == NativeLuaState.Version.LUA54) {
+                execute(owner.state(), "assert(restoredStringMetatable.__div('8', '2') == 4)", 0);
+            }
+            execute(owner.state(), "assert(restoredStringMetatable.__index.sub('abc', 2) == 'bc')", 0);
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(NativeLuaState.Version.class)
     void restoreSuspendsGcUntilObjectGraphIsCompleteAndPreservesPriorState(final NativeLuaState.Version version) throws Exception {
         try (final var state = NativeLuaState.create(version, 4 * 1024 * 1024);
              final var persistence = new NativeLuaPersistence(state, TEST_KEY)) {

@@ -3,6 +3,7 @@ package li.cil.oc.common.gametest;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.item.MutableProcessor;
+import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
@@ -10,6 +11,8 @@ import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.common.machine.LuaArchitecture;
 import li.cil.oc.common.machine.NativeLuaArchitecture;
+import li.cil.oc.common.machine.NativeLua53Architecture;
+import li.cil.oc.common.machine.NativeLua54Architecture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -28,19 +31,36 @@ public final class ArchitectureSwitchGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void nativeCanSelectAndBootLuaJArchitecture(GameTestHelper helper) { switches(helper, true); }
 
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void lua53CanSelectAndBootLua54(GameTestHelper helper) {
+        switches(helper, NativeLua53Architecture.class, NativeLua54Architecture.class);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void lua54CanSelectAndBootLua53(GameTestHelper helper) {
+        switches(helper, NativeLua54Architecture.class, NativeLua53Architecture.class);
+    }
+
     private static void switches(GameTestHelper helper, boolean fromNative) {
+        switches(helper, fromNative ? NativeLuaArchitecture.class : LuaArchitecture.class,
+            fromNative ? LuaArchitecture.class : NativeLuaArchitecture.class);
+    }
+
+    private static void switches(GameTestHelper helper, Class<? extends Architecture> from, Class<? extends Architecture> to) {
+        final String fromName = li.cil.oc.api.Machine.getArchitectureName(from);
+        final String toName = li.cil.oc.api.Machine.getArchitectureName(to);
         helper.setBlock(new BlockPos(1, 1, 1), ModBlocks.COMPUTER_CASE_TIER1.get());
         final ComputerCaseBlockEntity computer = helper.getBlockEntity(new BlockPos(1, 1, 1));
         final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
         final MutableProcessor processor = (MutableProcessor) Driver.driverFor(cpu);
-        processor.setArchitecture(cpu, fromNative ? NativeLuaArchitecture.class : LuaArchitecture.class);
+        processor.setArchitecture(cpu, from);
         computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, cpu);
         computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));
         computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, RobotMovementPersistenceGameTests.eeprom("""
             local eeprom = component.proxy(component.list('eeprom')())
             local names = {}
             for _, name in ipairs(computer.getArchitectures()) do names[name] = true end
-            assert(names['Lua'] and names['Lua 5.2 (native)'], 'missing selectable architecture')
+            assert(names['Lua'] and names['Lua 5.2 (native)'] and names['Lua 5.3'] and names['Lua 5.4'], 'missing selectable architecture')
             if eeprom.getData() == '' then
               assert(computer.getArchitecture() == '%s', 'wrong initial architecture')
               assert(not computer.setArchitecture(computer.getArchitecture()), 'same architecture changed')
@@ -54,8 +74,7 @@ public final class ArchitectureSwitchGameTests {
             assert(computer.getArchitecture() == '%s', 'new architecture did not boot')
             eeprom.setData('done')
             while true do computer.pullSignal() end
-            """.formatted(fromNative ? "Lua 5.2 (native)" : "Lua",
-                fromNative ? "Lua" : "Lua 5.2 (native)", fromNative ? "Lua" : "Lua 5.2 (native)")));
+            """.formatted(fromName, toName, toName)));
         final var oldArchitecture = computer.machine().architecture();
         helper.assertTrue(computer.toggleMachine(), "Computer did not start");
         helper.succeedWhen(() -> {
@@ -63,7 +82,7 @@ public final class ArchitectureSwitchGameTests {
             String marker = new String(ItemDriverData.dataTag(computer.getItem(ComputerCaseBlockEntity.SLOT_EEPROM))
                 .getByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG), StandardCharsets.UTF_8);
             helper.assertTrue(marker.equals("done"), "Switch not complete: " + marker);
-            helper.assertTrue(computer.machine().architecture().getClass() == (fromNative ? LuaArchitecture.class : NativeLuaArchitecture.class),
+            helper.assertTrue(computer.machine().architecture().getClass() == to,
                 "CPU metadata changed but running VM did not");
             helper.assertTrue(!oldArchitecture.isInitialized(), "Old architecture remained initialized");
         });

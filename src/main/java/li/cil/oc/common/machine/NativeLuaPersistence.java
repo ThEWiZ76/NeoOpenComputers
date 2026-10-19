@@ -62,6 +62,9 @@ public final class NativeLuaPersistence implements AutoCloseable {
                     end
                 end
                 visit("globals", _G)
+                -- Lua 5.4 keeps native arithmetic coercion functions here, outside
+                -- the global tables. They must also be rebound in a fresh VM.
+                visit("stringMetatable", debug.getmetatable(""))
                 return permanent, inverse
                 """, "=native-persistence-bindings");
             owner.pushHostLibrary("debug");

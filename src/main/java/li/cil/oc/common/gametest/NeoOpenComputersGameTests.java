@@ -10637,6 +10637,15 @@ public final class NeoOpenComputersGameTests {
     }
 
     private static void openOsTerminalRunsTypedCommand(final GameTestHelper helper, final boolean nativeLua, final CaseReload reloadMode) {
+        openOsTerminalRunsTypedCommand(helper, nativeLua ? li.cil.oc.common.machine.NativeLuaArchitecture.class : null, reloadMode);
+    }
+
+    static void nativeVersionOpenOsReload(final GameTestHelper helper, final Class<? extends li.cil.oc.api.machine.Architecture> architecture) {
+        openOsTerminalRunsTypedCommand(helper, architecture, CaseReload.UNLOAD_BEFORE_SAVE);
+    }
+
+    private static void openOsTerminalRunsTypedCommand(final GameTestHelper helper,
+        final Class<? extends li.cil.oc.api.machine.Architecture> architecture, final CaseReload reloadMode) {
         final boolean reload = reloadMode != CaseReload.NONE;
         final BlockPos screenPos = new BlockPos(0, 1, 1);
         final BlockPos keyboardPos = new BlockPos(0, 1, 2);
@@ -10654,9 +10663,9 @@ public final class NeoOpenComputersGameTests {
         diskDrive.setItem(DiskDriveBlockEntity.SLOT_FLOPPY, openOsFloppyStack());
         computer.setItem(ComputerCaseBlockEntity.SLOT_CARD_0, new ItemStack(ModItems.GRAPHICS_CARD_TIER1.get()));
         final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
-        if (nativeLua) {
+        if (architecture != null) {
             ((li.cil.oc.api.driver.item.MutableProcessor) Driver.driverFor(cpu)).setArchitecture(
-                cpu, li.cil.oc.common.machine.NativeLuaArchitecture.class);
+                cpu, architecture);
         }
         computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, cpu);
         computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER1.get()));

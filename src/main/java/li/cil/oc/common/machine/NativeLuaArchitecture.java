@@ -19,9 +19,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.LongSupplier;
 
-/** Selectable native Lua 5.2 architecture with persistent execution state. */
+/** Persistent native machine runtime; the original class remains the Lua 5.2 variant. */
 @Architecture.Name("Lua 5.2 (native)")
-public final class NativeLuaArchitecture implements Architecture, MachineBoundArchitecture, SynchronizedCallAware {
+public class NativeLuaArchitecture implements Architecture, MachineBoundArchitecture, SynchronizedCallAware {
     private final LongSupplier nanoTime;
     private Machine machine;
     private NativeLuaState owner;
@@ -36,6 +36,7 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
 
     public NativeLuaArchitecture() { this(System::nanoTime); }
     NativeLuaArchitecture(final LongSupplier nanoTime) { this.nanoTime = nanoTime; }
+    protected NativeLuaState.Version luaVersion() { return NativeLuaState.Version.LUA52; }
     @Override public void bind(final Machine machine) { this.machine = machine; }
     @Override public boolean isInitialized() { return owner != null; }
     @Override public boolean hasPendingSynchronizedCall() { return pendingCall; }
@@ -58,7 +59,7 @@ public final class NativeLuaArchitecture implements Architecture, MachineBoundAr
     public boolean initialize() {
         close();
         try {
-            owner = NativeLuaState.create(NativeLuaState.Version.LUA52, 2 * 1024 * 1024 + memoryBytes);
+            owner = NativeLuaState.create(luaVersion(), 2 * 1024 * 1024 + memoryBytes);
             lua = owner.state();
             ramScale = lua.getPointerWidth() >= 8 ? ModSettings.ramScaleFor64Bit() : 1D;
             lua.setTotalMemory(memoryLimit(2 * 1024 * 1024));

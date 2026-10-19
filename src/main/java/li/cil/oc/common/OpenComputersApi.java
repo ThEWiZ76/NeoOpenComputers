@@ -3,6 +3,8 @@ package li.cil.oc.common;
 import li.cil.oc.api.API;
 import li.cil.oc.common.machine.LuaArchitecture;
 import li.cil.oc.common.machine.NativeLuaArchitecture;
+import li.cil.oc.common.machine.NativeLua53Architecture;
+import li.cil.oc.common.machine.NativeLua54Architecture;
 import li.cil.oc.common.nanomachines.provider.NanomachineDisintegrationProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineHungryProvider;
 import li.cil.oc.common.nanomachines.provider.NanomachineMagnetProvider;
@@ -23,6 +25,12 @@ public final class OpenComputersApi {
         }
         if (!API.machine.architectures().contains(NativeLuaArchitecture.class)) {
             API.machine.add(NativeLuaArchitecture.class);
+        }
+        if (!API.machine.architectures().contains(NativeLua53Architecture.class)) {
+            API.machine.add(NativeLua53Architecture.class);
+        }
+        if (!API.machine.architectures().contains(NativeLua54Architecture.class)) {
+            API.machine.add(NativeLua54Architecture.class);
         }
         if (API.manual == null) {
             API.manual = new ManualRegistry();

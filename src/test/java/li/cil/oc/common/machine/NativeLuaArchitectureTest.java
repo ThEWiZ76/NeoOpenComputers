@@ -152,8 +152,17 @@ final class NativeLuaArchitectureTest {
     }
 
     static NativeLuaArchitecture architecture(final String program, final AtomicInteger writes, final Value value) throws Exception {
+        return architecture(program, writes, value, NativeLuaState.Version.LUA52);
+    }
+
+    static NativeLuaArchitecture architecture(final String program, final AtomicInteger writes, final Value value,
+                                             final NativeLuaState.Version version) throws Exception {
         final AtomicLong clock = new AtomicLong();
-        final var architecture = new NativeLuaArchitecture(() -> clock.getAndAdd(100_000_000L));
+        final NativeLuaArchitecture architecture = switch (version) {
+            case LUA52 -> new NativeLuaArchitecture(() -> clock.getAndAdd(100_000_000L));
+            case LUA53 -> new NativeLua53Architecture(() -> clock.getAndAdd(100_000_000L));
+            case LUA54 -> new NativeLua54Architecture(() -> clock.getAndAdd(100_000_000L));
+        };
         final var memory = NativeLuaArchitecture.class.getDeclaredField("memoryBytes");
         memory.setAccessible(true);
         memory.setInt(architecture, 512 * 1024);
