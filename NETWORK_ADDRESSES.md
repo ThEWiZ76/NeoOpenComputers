@@ -1,8 +1,22 @@
 # Network address generation
 
-Latest acceptance, 2026-10-20: checkpoint 9a1df219b10f0a58dd60e29988dd57ca8bea3d1a also fixes reproduced non-loading discovery failures in network/cable/screen/adapter paths. Build and 2125 units pass. A fresh prepare/verify pair passes 702 GameTests in both processes; the original world that hung below also passes 702 after the fix, including its retained native continuation probe. See [[Loaded chunk discovery]] for logs, exact PIDs, changes and remaining limits. The failed attempt below is historical diagnostic evidence, no longer the latest acceptance result.
+Latest acceptance, 2026-10-20: checkpoint c125614e99c802ab724818be2548433b2bef25ed passes build, 2129 unit tests, 701 ordinary GameTests and both 702-test processes of a fresh restart pair. Connected-node restoration and chunkloader lifecycle details follow below. Earlier checkpoint 9a1df219b fixed reproduced non-loading discovery failures in network/cable/screen/adapter paths and recovered the original hanging restart world; see [[Loaded chunk discovery]]. The failed attempt below remains historical diagnostic evidence.
 
 Related: [[../Project]], [[../02 plans/Complete portering]], [[Process restart test]], [[../04 ai-context/Port gap triage]].
+
+## Connected-node address restoration - 2026-10-20
+
+Runtime checkpoint c125614e99c802ab724818be2548433b2bef25ed fixes another reproduced load defect. BaseNode.load changed a connected node's address without updating its wired network's address map. Direct routing by the restored address failed, and removal could leave stale map entries. Three deterministic unit regressions failed before the change; their original report is network-connected-remap-red.xml under build/finish-port-implementation/.
+
+The network now resolves address conflicts before detaching the node, preserving an existing address owner. It removes the restoring node with normal disconnect notifications, restores its address, joins it again and reconnects its previous neighbors. This follows the upstream remove/rejoin remap model. Blank and incorrectly typed stored addresses leave the current valid identity intact. Tests verify direct routing, address lookup, collision ownership, chain topology and cleanup after removing the restored bridge.
+
+The full suite then reproduced a chunkloader lifecycle interaction: restoring the parent machine's address transiently disconnected its upgrade and cleared the restored active flag. ChunkloaderUpgradeEnvironment now separates the persisted activation choice from actual tickets: detaching releases tickets, reconnecting reacquires them, and detached upgrades cannot reacquire tickets or drain power during updates. Explicit computer stop and energy exhaustion still disable the upgrade. The strengthened server fixture attaches a real Machine node and checks all nine actual ticking tickets through detach, reconnect, address restoration and disabling. The existing native robot persistence test also passes without weakening its restored-ticket checks.
+
+Build, all 2129 unit tests and all 701 ordinary GameTests pass. Log: network-connected-remap-verified.log. The focused chunkloader red report is chunkloader-detach-active-red.xml; the first full-suite robot failure is network-connected-remap-chunkloader-red.log. Subsequent fixture failures, chunkloader-unattached-fixture-red.log and chunkloader-host-network-fixture-red.log, are retained separately: the original synthetic host had no machine, and the replacement fixture initially omitted joining its new machine node to a network.
+
+Fresh world oc-restart-remap-20261020-01 passes all 702 required GameTests in prepare PID34520 and verify PID48236, both normal shutdowns. The second process confirms native Lua locals and an external open binary-file offset, plus the saved tablet/player state through actual world/player loading. Logs: network-connected-remap-restart-prepare.log and network-connected-remap-restart-verify.log. This wider restart probe does not independently exercise every host/addon remap case.
+
+This establishes these connected-load and upgrade lifecycle paths. It does not repair duplicated legacy IDs across separate saved networks, migrate their references, or prove all addon/component cache implementations and unload orders. It is not full chunkloader parity: upstream's dimension whitelist/blacklist policy and its blocked-dimension error have no corresponding port setting yet. Microcontroller network separation remains a separate implementation task.
 
 ## Reproduced gap
 
@@ -22,7 +36,7 @@ The two-process acceptance attempt is incomplete. In world oc-restart-address-20
 
 The follow-up hypothesis was unguarded world lookups loading chunks during unload. At df9151c8c, NetworkRegistry.adjacentNode called world.getBlockEntity on adjacent positions without a loaded check. Focused reproductions subsequently proved those accesses, sided callback ordering, cable shape-update propagation and adapter scanning; the resulting changes are documented in [[Loaded chunk discovery]]. [NeoForge issue 1403](https://github.com/neoforged/NeoForge/issues/1403) reports the same unload-loop mechanism; its author traced their case to getBlockEntity without checking isLoaded. That is supporting context, not retrospective stack evidence for every lookup in our original occurrence.
 
-This prevents newly generated addresses from repeating old sequential IDs. It does not repair already duplicated legacy addresses across separate saved networks, provide a world migration tool, or establish all connected-node address-remapping behavior. Those cases remain compatibility acceptance work; do not rewrite saved addresses without preserving their references.
+This prevents newly generated addresses from repeating old sequential IDs. It does not repair already duplicated legacy addresses across separate saved networks or provide a world migration tool. Connected-node loading is now covered by the later checkpoint above; wider compatibility remains acceptance work. Do not rewrite saved addresses without preserving their references.
 
 ## How to run/use this
 

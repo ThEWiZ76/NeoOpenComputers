@@ -10,6 +10,19 @@
 
 **Voortgangsupdates:** de gebruiker vraagt sinds 2026-10-07 ook een tussentijdse schatting van de afstand tot een beta met alle afgesproken features geimplementeerd. Rapporteer resterende featuregroepen en acceptatiegates; geen percentage op basis van testaantallen. Voorlopige orde van grootte op die datum: 3-6 weken geconcentreerd implementatie- en testwerk, met lage betrouwbaarheid zolang de volledige pariteitsinventaris en integratiescope open zijn. Dit is een werkschatting, geen leverdatum; bij nieuw bewijs herijken.
 
+## Eerstvolgend werkpakket: microcontroller-netwerken
+
+Checkpoint 2026-10-20: c125614e99c802ab724818be2548433b2bef25ed is gepusht. Build, 2129 units en 701 gewone GameTests slagen; echte herstart in oc-restart-remap-20261020-01 slaagt met 702 tests in zowel prepare PID34520 als verify PID48236. Geen client-/Computer Use-actie. Beta-inschatting blijft voorlopig 3-6 geconcentreerde werkweken, lage zekerheid; dit sluit een concrete netwerk-/reloadfout, geen volledige microcontroller- of clientacceptatie.
+
+Bron: upstream Microcontroller.scala, traits/Hub.scala en util/ExtendedArguments.scala; vergeleken op 2026-10-20. De port deelt nog het interne machinenetwerk met de buitenwereld. Eerst is het gereproduceerde adresherstel bij reeds verbonden nodes hersteld in c125614e9; zie [[../03 manuals/Network addresses]]. De onderstaande microcontroller-implementatie is nog niet uitgevoerd.
+
+- [ ] Vijf externe aansluitingen, geen aansluiting op de voorkant. Elke zijde houdt een eigen netwerk; node() geeft upstream-conform geen gemeenschappelijke node terug. Interne hardware blijft op een afzonderlijk machinenetwerk met een microcontroller-component/energiebuffer.
+- [ ] Externe microcontroller-componenten bieden start, stop, isRunning, lastError, isSideOpen en setSideOpen. Start hervat geen gepauzeerde machine. Zijdeargumenten zijn wereldrichtingen: buiten 0..5 geeft invalid side, de voorkant unsupported side; setSideOpen geeft de vorige waarde terug.
+- [ ] Eén primaire ontvangst-/controlenode per extern netwerk, ook na samenvoegen/splitsen. Inkomende modem-pakketten bereiken intern de machine; interne pakketten gaan uitsluitend via geopende uitgangen. Een gesloten uitgang blijft fysiek aangesloten en ontvangt nog steeds input/control. Geen passieve doorsturing tussen externe netwerken: de microcontroller-override roept Hub.onPlugMessage niet aan, dus de gewone hubqueue/TTL-verwerking is hier niet van toepassing.
+- [ ] Voeding scheiden: interne machineconnector heeft geen eigen buffer; microcontroller-buffer en verbruik volgen de eigen upstream-instellingen (defaults 1000 en 0.1). Externe aansluitingen pompen beschikbare energie naar intern; FE-invoer gebruikt de interne buffer met case-tier-one throughput en weigert de voorkant. Test leeg/gevuld, verbruik en geen dubbele afschrijving bij gedeelde externe netwerken. Bestaande port-saves expliciet behandelen zonder stille energie-/adresverliezen.
+- [ ] Opslag, detached-load, unload-before-save en hergebruik van dezelfde instantie bewaren machinecontinuiteit, nodeadressen, uitvoerflags en energie. Front-analyse toont de interne machine; andere zijden tonen hun controlenode. Hardwareherbouw mag de interne snooperverbinding niet verliezen.
+- [ ] Echte serverregressies voor isolatie, callbacks, argumentfouten, primair gedrag bij merge/split, modemroutering en energie; native Lua-programma met geinstalleerd modem en externe computer die de microcontroller bestuurt. Bestaande native microcontroller- en redstone-tests behouden. Daarna echte client-/spelersflow op scherm3 en bredere herstartacceptatie.
+
 ## Wanneer is de port compleet?
 
 - [ ] Iedere upstream-feature staat in de pariteitsmatrix, met bronverwijzing, port-implementatie en bewijs. Geen ongemarkeerde ontbrekende blokken, callbacks of recepten.
