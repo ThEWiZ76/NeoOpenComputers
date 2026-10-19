@@ -1059,9 +1059,9 @@ final class NetworkRegistry implements NetworkAPI {
                     notifyDisconnect(baseB, baseA);
                 } else {
                     final Set<BaseNode> sideB = connectedSet(baseB);
+                    moveToNewNetwork(sideB);
                     notifyDisconnectAcross(sideA, sideB);
                     notifyDisconnectAcross(sideB, sideA);
-                    moveToNewNetwork(sideB);
                 }
                 return true;
             }
@@ -1073,13 +1073,32 @@ final class NetworkRegistry implements NetworkAPI {
             if (!(node instanceof BaseNode baseNode) || baseNode.network != this) {
                 return false;
             }
-            final Set<BaseNode> neighbors = new LinkedHashSet<>(edges.get(baseNode));
-            for (BaseNode neighbor : neighbors) {
-                disconnect(baseNode, neighbor);
-            }
+            // Finish the topology before invoking hosts, which may attach replacement
+            // components from their disconnect callbacks (e.g. microcontroller plugs).
             edges.remove(baseNode);
             nodesByAddress.remove(baseNode.address);
             baseNode.network = null;
+            for (final Set<BaseNode> neighbors : edges.values()) neighbors.remove(baseNode);
+            final Set<BaseNode> unassigned = new LinkedHashSet<>(nodesByAddress.values());
+            final List<Set<BaseNode>> groups = new ArrayList<>();
+            while (!unassigned.isEmpty()) {
+                final Set<BaseNode> group = connectedSet(unassigned.iterator().next());
+                groups.add(group);
+                unassigned.removeAll(group);
+            }
+            for (int index = 1; index < groups.size(); index++) moveToNewNetwork(groups.get(index));
+            for (int left = 0; left < groups.size(); left++) {
+                for (int right = left + 1; right < groups.size(); right++) {
+                    notifyDisconnectAcross(groups.get(left), groups.get(right));
+                    notifyDisconnectAcross(groups.get(right), groups.get(left));
+                }
+            }
+            for (final Set<BaseNode> group : groups) {
+                for (final BaseNode other : group) {
+                    notifyDisconnect(other, baseNode);
+                    notifyDisconnect(baseNode, other);
+                }
+            }
             notifyDisconnect(baseNode, baseNode);
             return true;
         }

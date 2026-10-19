@@ -4055,6 +4055,7 @@ public final class NeoOpenComputersGameTests {
         microcontroller.setItem(0, new ItemStack(ModItems.CPU_TIER1.get()));
         microcontroller.setItem(1, new ItemStack(ModItems.MEMORY_TIER1.get()));
         microcontroller.setItem(2, luaBiosEepromStack());
+        ((Connector) microcontroller.machine().node()).changeBuffer(500);
         helper.assertTrue(microcontroller.toggleMachine(), "Microcontroller did not start with CPU, memory, and programmed EEPROM");
         helper.succeed();
     }

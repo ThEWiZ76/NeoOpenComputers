@@ -7,11 +7,18 @@ import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.internal.Microcontroller;
 import li.cil.oc.api.machine.Machine;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Connector;
+import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.util.StateAware;
 import li.cil.oc.common.ModBlockEntities;
+import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.ForgeEnergyStorageView;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.block.MicrocontrollerBlock;
 import li.cil.oc.common.component.RedstoneControllerHost;
@@ -34,6 +41,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.extensions.IMenuProviderExtension;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -41,7 +49,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class MicrocontrollerBlockEntity extends BlockEntity implements Microcontroller, Container, MenuProvider, IMenuProviderExtension, DeviceInfo, RedstoneControllerHost, StateAware, Analyzable {
+public class MicrocontrollerBlockEntity extends BlockEntity implements Microcontroller, SidedEnvironment, Container, MenuProvider, IMenuProviderExtension, DeviceInfo, RedstoneControllerHost, StateAware, Analyzable {
     private static final String TAG_MACHINE = "oc:machine";
     private static final String TAG_REDSTONE_OUTPUTS = "oc:redstoneOutputs";
     private static final String TAG_BUNDLED_REDSTONE_OUTPUTS = "oc:bundledRedstoneOutputs";
@@ -88,6 +96,8 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     };
 
     private final Machine machine;
+    private final MicrocontrollerNetwork network;
+    private final IEnergyStorage energyStorage;
     private CompoundTag unloadedState;
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
@@ -107,6 +117,11 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         items = NonNullList.withSize(slotCount(tier), ItemStack.EMPTY);
         OpenComputersApi.initialize();
         machine = li.cil.oc.api.Machine.create(this);
+        ((Connector) machine.node()).setLocalBufferSize(0);
+        machine.setCostPerTick(ModSettings.microcontrollerCost());
+        network = new MicrocontrollerNetwork(this);
+        network.connectInternal();
+        energyStorage = new ForgeEnergyStorageView(network::internalConnector, () -> ModSettings.caseRate(0));
     }
 
     public static int slotCount(final int tier) {
@@ -187,7 +202,47 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     @Override
     public Node node() {
-        return machine.node();
+        return null;
+    }
+
+    @Override
+    public Node sidedNode(final Direction side) { return network.sidedNode(side); }
+
+    @Override
+    public boolean canConnect(final Direction side) { return side != null && side != facing(); }
+
+    public IEnergyStorage energyStorage(final Direction side) { return canConnect(side) ? energyStorage : null; }
+
+    @Callback(doc = "function():boolean -- Starts the microcontroller. Returns true if the state changed.")
+    public Object[] start(final Context context, final Arguments arguments) {
+        return new Object[]{!machine.isPaused() && machine.start()};
+    }
+
+    @Callback(doc = "function():boolean -- Stops the microcontroller. Returns true if the state changed.")
+    public Object[] stop(final Context context, final Arguments arguments) { return new Object[]{machine.stop()}; }
+
+    @Callback(direct = true, doc = "function():boolean -- Returns whether the microcontroller is running.")
+    public Object[] isRunning(final Context context, final Arguments arguments) { return new Object[]{machine.isRunning()}; }
+
+    @Callback(direct = true, doc = "function():string -- Returns the reason the microcontroller crashed, if applicable.")
+    public Object[] lastError(final Context context, final Arguments arguments) { return new Object[]{machine.lastError()}; }
+
+    @Callback(direct = true, doc = "function(side:number):boolean -- Gets whether network messages are sent via the specified side.")
+    public Object[] isSideOpen(final Context context, final Arguments arguments) {
+        return new Object[]{network.isSideOpen(checkNetworkSide(arguments))};
+    }
+
+    @Callback(doc = "function(side:number, open:boolean):boolean -- Sets whether network messages are sent via the specified side, returns its old value.")
+    public Object[] setSideOpen(final Context context, final Arguments arguments) {
+        return new Object[]{network.setSideOpen(checkNetworkSide(arguments), arguments.checkBoolean(1))};
+    }
+
+    private Direction checkNetworkSide(final Arguments arguments) {
+        final int value = arguments.checkInteger(0);
+        if (value < 0 || value > 5) throw new IllegalArgumentException("invalid side");
+        final Direction side = Direction.from3DDataValue(value);
+        if (side == facing()) throw new IllegalArgumentException("unsupported side");
+        return side;
     }
 
     @Override
@@ -219,11 +274,12 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     @Override
     public void onMessage(final Message message) {
+        network.onMessage(message);
     }
 
     @Override
     public Node[] onAnalyze(final Player player, final Direction side, final float hitX, final float hitY, final float hitZ) {
-        return new Node[]{machine.node()};
+        return new Node[]{side == facing() || side == null ? machine.node() : network.control(side)};
     }
 
     @Override
@@ -271,6 +327,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     @Override
     public void onMachineConnect(final Node node) {
+        if (network != null) network.connectInternal();
     }
 
     @Override
@@ -493,6 +550,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         super.onLoad();
         if (level != null && !level.isClientSide) {
             if (unloadedState != null) loadAdditional(unloadedState, level.registryAccess());
+            network.connectExternal();
             Network.joinOrCreateNetwork(this);
         }
     }
@@ -516,11 +574,17 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         try {
             bundledInputs.load(tag);
             unloadedState = null;
+            network.load(tag);
             wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
             loadRedstoneOutputs(tag);
             ContainerHelper.loadAllItems(tag, items, registries);
             notifyHardwareChanged(machine);
+            network.connectInternal();
             machine.load(tag.getCompound(TAG_MACHINE));
+            if (level != null && !level.isClientSide && !isRemoved()) {
+                network.connectExternal();
+                Network.joinOrCreateNetwork(this);
+            }
         } finally {
             loadingMachine = false;
             redstoneOutputEnabled = tag.contains("oc:redstoneOutputEnabled") && !tag.contains(TAG_MACHINE)
@@ -543,6 +607,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         final CompoundTag machineTag = new CompoundTag();
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
+        network.save(tag);
         ContainerHelper.saveAllItems(tag, items, registries);
     }
 
@@ -589,6 +654,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     }
 
     private void tickServer() {
+        if (level.getGameTime() % ModSettings.mfuTickFrequency() == 0) network.transferEnergy();
         updateRedstoneOutputEnabled();
         updateRedstoneInputs();
         if (machine.canUpdate()) {
@@ -605,6 +671,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
             unloadedState = saved;
         }
         if (machine.node() != null) {
+            network.remove();
             machine.node().remove();
         }
         if (unloadedState != null) machine.stop();

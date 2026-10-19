@@ -51,6 +51,8 @@ public final class NativeMicrocontrollerPersistenceGameTests {
             local eeprom = component.proxy(component.list('eeprom')())
             assert(eeprom.getData() == '', 'unexpected reboot')
             local retained = {value = 731}
+            local mcu = component.proxy(component.list('microcontroller')())
+            assert(mcu.setSideOpen(4, false) == true)
             local fs = component.proxy(computer.tmpAddress())
             local file = assert(fs.open('resume.bin', 'w'))
             assert(fs.write(file, 'a' .. string.char(0, 255) .. 'z'))
@@ -60,12 +62,14 @@ public final class NativeMicrocontrollerPersistenceGameTests {
             eeprom.setData('waiting')
             repeat local signal = computer.pullSignal() until signal == 'continue_probe'
             assert(retained.value == 731, 'local state lost')
+            assert(mcu.isSideOpen(4) == false, 'output flag or internal proxy lost')
             assert(fs.address == computer.tmpAddress(), 'tmp identity lost')
             assert(fs.read(file, 3) == string.char(0, 255) .. 'z', 'file continuation lost')
             fs.close(file)
             eeprom.setData('restored')
             while true do computer.pullSignal() end
             """));
+        ((li.cil.oc.api.network.Connector) original.machine().node()).changeBuffer(1000);
         helper.assertTrue(original.toggleMachine(), "Microcontroller did not start");
         MicrocontrollerBlockEntity[] restored = new MicrocontrollerBlockEntity[1];
         helper.startSequence()

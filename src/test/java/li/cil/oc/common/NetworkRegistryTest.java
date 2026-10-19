@@ -37,6 +37,57 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NetworkRegistryTest {
     @Test
+    void disconnectCallbacksObserveCompletedSplitAndCanAttachComponents() {
+        final var registry = deterministicRegistry();
+        final Node[] right = new Node[1];
+        final Node added = registry.newNode(new TestEnvironment(), Visibility.Network).create();
+        final int[] callbacks = {0};
+        final var leftHost = new TestEnvironment() {
+            @Override public void onDisconnect(final Node other) {
+                if (other == right[0]) {
+                    assertFalse(node().network() == other.network(), "Split callbacks must observe distinct networks");
+                    registry.joinNewNetwork(added);
+                    node().connect(added);
+                    callbacks[0]++;
+                }
+            }
+        };
+        final Node left = registry.newNode(leftHost, Visibility.Network).create();
+        leftHost.setNode(left);
+        right[0] = registry.newNode(new TestEnvironment(), Visibility.Network).create();
+        registry.joinNewNetwork(left);
+        left.connect(right[0]);
+        left.disconnect(right[0]);
+        assertEquals(1, callbacks[0]);
+        assertTrue(left.isNeighborOf(added));
+        assertSame(added, left.network().node(added.address()));
+        assertFalse(right[0].network() == added.network());
+    }
+
+    @Test
+    void removalCallbacksObserveDetachedNodeAndCannotReattachItAccidentally() {
+        final var registry = deterministicRegistry();
+        final Node[] removed = new Node[1];
+        final int[] callbacks = {0};
+        final var observer = new TestEnvironment() {
+            @Override public void onDisconnect(final Node other) {
+                if (other == removed[0]) {
+                    assertEquals(null, other.network(), "Removed node must already be detached during callbacks");
+                    callbacks[0]++;
+                }
+            }
+        };
+        final Node left = registry.newNode(observer, Visibility.Network).create();
+        observer.setNode(left);
+        removed[0] = registry.newNode(new TestEnvironment(), Visibility.Network).create();
+        registry.joinNewNetwork(left);
+        left.connect(removed[0]);
+        removed[0].remove();
+        assertEquals(1, callbacks[0]);
+        assertEquals(null, left.network().node(removed[0].address()));
+    }
+
+    @Test
     void loadingConnectedAddressKeepsRoutingAndChainTopologyConsistent() {
         final var registry = deterministicRegistry();
         final var leftHost = new TestEnvironment();

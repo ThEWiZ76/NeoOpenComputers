@@ -40,6 +40,10 @@ public final class ModCapabilities {
             ComputerCaseBlockEntity::energyStorage);
         event.registerBlockEntity(
             Capabilities.EnergyStorage.BLOCK,
+            ModBlockEntities.MICROCONTROLLER.get(),
+            li.cil.oc.common.blockentity.MicrocontrollerBlockEntity::energyStorage);
+        event.registerBlockEntity(
+            Capabilities.EnergyStorage.BLOCK,
             ModBlockEntities.ASSEMBLER.get(),
             AssemblerBlockEntity::energyStorage);
         event.registerBlockEntity(

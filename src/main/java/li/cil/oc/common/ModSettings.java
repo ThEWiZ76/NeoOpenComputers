@@ -145,6 +145,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue DATA_CARD_ASYMMETRIC;
     public static final ModConfigSpec.DoubleValue SCREEN_COST;
     public static final ModConfigSpec.DoubleValue COMPUTER_COST;
+    public static final ModConfigSpec.DoubleValue MICROCONTROLLER_COST;
     public static final ModConfigSpec.DoubleValue HOLOGRAM_COST;
     public static final ModConfigSpec.DoubleValue GPU_SET_COST;
     public static final ModConfigSpec.DoubleValue GPU_FILL_COST;
@@ -194,6 +195,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue CARPET_OCELOT_POWER;
     public static final ModConfigSpec.DoubleValue CARPET_DAMAGE_CHANCE;
     public static final ModConfigSpec.DoubleValue COMPUTER_BUFFER;
+    public static final ModConfigSpec.DoubleValue MICROCONTROLLER_BUFFER;
     public static final ModConfigSpec.DoubleValue ACCESS_POINT_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_BUFFER;
     public static final ModConfigSpec.DoubleValue NANOMACHINES_INPUT_COST;
@@ -633,6 +635,9 @@ public final class ModSettings {
         COMPUTER_BUFFER = builder
             .comment("Energy a computer can store. OpenComputers upstream default is 500.")
             .defineInRange("computer", 500D, 0D, Double.MAX_VALUE);
+        MICROCONTROLLER_BUFFER = builder
+            .comment("Energy a microcontroller can store on its private network. OpenComputers upstream default is 1000.")
+            .defineInRange("mcu", 1000D, 0D, Double.MAX_VALUE);
         ACCESS_POINT_BUFFER = builder
             .comment("Energy an access point can store. OpenComputers upstream default is 600.")
             .defineInRange("accessPoint", 600D, 0D, Double.MAX_VALUE);
@@ -690,6 +695,9 @@ public final class ModSettings {
         COMPUTER_COST = builder
             .comment("Energy consumed per tick by a running computer. OpenComputers upstream default is 0.5.")
             .defineInRange("computer", 0.5D, 0D, Double.MAX_VALUE);
+        MICROCONTROLLER_COST = builder
+            .comment("Energy consumed per tick by a running microcontroller. OpenComputers upstream default is 0.1.")
+            .defineInRange("microcontroller", 0.1D, 0D, Double.MAX_VALUE);
         HOLOGRAM_COST = builder
             .comment("Energy consumed per tick by a Hologram projector when every column is lit. OpenComputers upstream default is 0.2.")
             .defineInRange("hologram", 0.2D, 0D, Double.MAX_VALUE);
@@ -838,6 +846,10 @@ public final class ModSettings {
 
     public static double computerCost() {
         return Math.max(0D, doubleValue(COMPUTER_COST));
+    }
+
+    public static double microcontrollerCost() {
+        return Math.max(0D, doubleValue(MICROCONTROLLER_COST));
     }
 
     public static double assemblerTickAmount() {
@@ -994,6 +1006,10 @@ public final class ModSettings {
 
     public static double computerBuffer() {
         return Math.max(0D, doubleValue(COMPUTER_BUFFER));
+    }
+
+    public static double microcontrollerBuffer() {
+        return Math.max(0D, doubleValue(MICROCONTROLLER_BUFFER));
     }
 
     public static double accessPointBuffer() {
