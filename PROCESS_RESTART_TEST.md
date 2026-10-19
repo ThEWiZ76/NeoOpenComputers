@@ -1,5 +1,8 @@
 # Process restart regression
 
+Chunkloader policy checkpoint c27ef60642e42ff32e430d9c3a9973bcfcfec5da: the restart batch adds a fourth probe. Prepare persists nine actual Nether controller tickets; verify blocks Nether before worlds load and checks their removal without creating/updating a loader. The missing startup validation reproduced one failure in PID44064 after prepare PID21768; the corrected fresh pair in oc-restart-chunkloader-policy-20261020-01 passes all725 in prepare PID59012 and verify PID43124. Build/2132 units pass; ProjectRed+CC included, both shutdowns normal. The cached blacklist override exists only in the opt-in test process. Logs: chunkloader-policy-restart-{red-prepare,red-verify,prepare,verify}.log. See [[Chunkloader dimension policy]] for configuration, compatibility and remaining limits.
+
+
 Latest interaction checkpoint: Runtime bc17524aeb24e2c1bebcbab3f3579661754a671d: build and 2131 unit tests pass; all 718 ordinary GameTests pass with ProjectRed and ComputerCraft together. Fresh world oc-restart-microcontroller-immutable-20261020-01 passes all 721 tests in prepare PID16144 and verify PID44436, both with normal shutdown. Logs: microcontroller-immutable-verified.log and microcontroller-immutable-restart-{prepare,verify}.log under build/finish-port-implementation/. This is tested server behavior, not complete port or client acceptance.
 
 ## Latest acceptance - 2026-10-20
