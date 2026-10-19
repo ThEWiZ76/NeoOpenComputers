@@ -3,7 +3,7 @@ package li.cil.oc.common.driver;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.InventoryProvider;
-import li.cil.oc.api.internal.Database;
+import li.cil.oc.common.component.DatabaseEnvironment;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.item.DatabaseUpgradeItem;
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +27,7 @@ public final class DatabaseInventoryProvider implements InventoryProvider {
             return null;
         }
         final ManagedEnvironment environment = driver.createEnvironment(stack, null);
-        if (environment instanceof Database database) {
+        if (environment instanceof DatabaseEnvironment database) {
             return new DatabaseInventory(stack, database, environment);
         }
         return null;
@@ -35,10 +35,10 @@ public final class DatabaseInventoryProvider implements InventoryProvider {
 
     private static final class DatabaseInventory implements Container {
         private final ItemStack container;
-        private final Database database;
+        private final DatabaseEnvironment database;
         private final ManagedEnvironment environment;
 
-        private DatabaseInventory(final ItemStack container, final Database database, final ManagedEnvironment environment) {
+        private DatabaseInventory(final ItemStack container, final DatabaseEnvironment database, final ManagedEnvironment environment) {
             this.container = container;
             this.database = database;
             this.environment = environment;
@@ -51,8 +51,9 @@ public final class DatabaseInventoryProvider implements InventoryProvider {
 
         @Override
         public boolean isEmpty() {
+            if (container.getCount() != 1) return true;
             for (int slot = 0; slot < getContainerSize(); slot++) {
-                if (!database.getStackInSlot(slot).isEmpty()) {
+                if (!database.getPhysicalStackInSlot(slot).isEmpty()) {
                     return false;
                 }
             }
@@ -61,45 +62,45 @@ public final class DatabaseInventoryProvider implements InventoryProvider {
 
         @Override
         public ItemStack getItem(final int slot) {
-            return validSlot(slot) ? database.getStackInSlot(slot) : ItemStack.EMPTY;
+            return validSlot(slot) && container.getCount() == 1 ? database.getPhysicalStackInSlot(slot) : ItemStack.EMPTY;
         }
 
         @Override
         public ItemStack removeItem(final int slot, final int amount) {
-            if (!validSlot(slot) || amount <= 0) {
+            if (!validSlot(slot) || amount <= 0 || container.getCount() != 1) {
                 return ItemStack.EMPTY;
             }
-            final ItemStack stack = database.getStackInSlot(slot);
+            final ItemStack stack = database.getPhysicalStackInSlot(slot);
             if (stack.isEmpty()) {
                 return ItemStack.EMPTY;
             }
             final ItemStack removed = stack.split(amount);
-            database.setStackInSlot(slot, stack);
+            database.setPhysicalStackInSlot(slot, stack);
             setChanged();
             return removed;
         }
 
         @Override
         public ItemStack removeItemNoUpdate(final int slot) {
-            if (!validSlot(slot)) {
+            if (!validSlot(slot) || container.getCount() != 1) {
                 return ItemStack.EMPTY;
             }
-            final ItemStack stack = database.getStackInSlot(slot);
-            database.setStackInSlot(slot, ItemStack.EMPTY);
+            final ItemStack stack = database.getPhysicalStackInSlot(slot);
+            database.setPhysicalStackInSlot(slot, ItemStack.EMPTY);
             persist();
             return stack;
         }
 
         @Override
         public void setItem(final int slot, final ItemStack stack) {
-            if (!validSlot(slot)) {
+            if (!validSlot(slot) || container.getCount() != 1) {
                 return;
             }
             final ItemStack stored = stack == null ? ItemStack.EMPTY : stack.copy();
             if (!stored.isEmpty() && stored.getCount() > getMaxStackSize()) {
                 stored.setCount(getMaxStackSize());
             }
-            database.setStackInSlot(slot, stored);
+            database.setPhysicalStackInSlot(slot, stored);
             setChanged();
         }
 
@@ -115,7 +116,7 @@ public final class DatabaseInventoryProvider implements InventoryProvider {
 
         @Override
         public boolean canPlaceItem(final int slot, final ItemStack stack) {
-            return stack != container;
+            return container.getCount() == 1 && stack != container;
         }
 
         @Override
@@ -125,8 +126,9 @@ public final class DatabaseInventoryProvider implements InventoryProvider {
 
         @Override
         public void clearContent() {
+            if (container.getCount() != 1) return;
             for (int slot = 0; slot < getContainerSize(); slot++) {
-                database.setStackInSlot(slot, ItemStack.EMPTY);
+                database.setPhysicalStackInSlot(slot, ItemStack.EMPTY);
             }
             setChanged();
         }

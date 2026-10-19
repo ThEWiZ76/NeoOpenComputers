@@ -221,6 +221,21 @@ public class InventoryControllerEnvironment extends AbstractManagedEnvironment i
             return AgentInventoryWorldControl.suckFromSlot(agent, context, arguments);
         }
 
+        @Callback(doc = "function(slot:number):number -- Get the size of the item inventory in the specified internal slot.")
+        public Object[] getItemInventorySize(final Context context, final Arguments arguments) {
+            return AgentItemInventoryControl.size(agent, arguments);
+        }
+
+        @Callback(doc = "function(inventorySlot:number, slot:number[, count:number=64]):number -- Drop selected items into an item inventory slot.")
+        public Object[] dropIntoItemInventory(final Context context, final Arguments arguments) {
+            return AgentItemInventoryControl.transfer(agent, arguments, true);
+        }
+
+        @Callback(doc = "function(inventorySlot:number, slot:number[, count:number=64]):number -- Suck items from an item inventory slot.")
+        public Object[] suckFromItemInventory(final Context context, final Arguments arguments) {
+            return AgentItemInventoryControl.transfer(agent, arguments, false);
+        }
+
         @Callback(doc = "function([slot:number]):table -- Get the raw item stack in the specified internal slot or selected slot.")
         public Object[] getStackInInternalSlot(final Context context, final Arguments arguments) {
             if (!ModSettings.allowItemStackInspection()) {

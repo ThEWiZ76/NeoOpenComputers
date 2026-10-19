@@ -31,6 +31,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
     private static final String TAG_STACK = "stack";
 
     private final ItemStack[] items;
+    private final boolean[] physical;
     private final Consumer<CompoundTag> saveData;
 
     public DatabaseEnvironment(final int slots) {
@@ -39,6 +40,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
 
     public DatabaseEnvironment(final int slots, final Consumer<CompoundTag> saveData) {
         items = new ItemStack[Math.max(1, slots)];
+        physical = new boolean[items.length];
         this.saveData = saveData;
         final var builder = Network.newNode(this, Visibility.Network);
         if (builder != null) {
@@ -76,7 +78,21 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
         if (slot < 0 || slot >= items.length) {
             return;
         }
+        // Catalogue APIs copy descriptions, never ownership of physical items.
+        // An identical self-copy must not destroy an already deposited item.
+        final ItemStack stored = copyStoredStack(stack);
+        if (!ItemStack.matches(getStackInSlot(slot), stored)) physical[slot] = false;
+        items[slot] = stored;
+    }
+
+    public ItemStack getPhysicalStackInSlot(final int slot) {
+        return slot >= 0 && slot < items.length && physical[slot] ? getStackInSlot(slot) : ItemStack.EMPTY;
+    }
+
+    public void setPhysicalStackInSlot(final int slot, final ItemStack stack) {
+        if (slot < 0 || slot >= items.length) return;
         items[slot] = copyStoredStack(stack);
+        physical[slot] = stack != null && !stack.isEmpty();
     }
 
     @Override
@@ -103,6 +119,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
             final int slot = entry.getInt(TAG_SLOT);
             if (slot >= 0 && slot < items.length && entry.contains(TAG_STACK, Tag.TAG_COMPOUND)) {
                 items[slot] = ItemStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, entry.getCompound(TAG_STACK)).result().orElse(ItemStack.EMPTY);
+                physical[slot] = entry.getBoolean("physical") && !items[slot].isEmpty();
             }
         }
     }
@@ -117,6 +134,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
                 final CompoundTag entry = new CompoundTag();
                 entry.putInt(TAG_SLOT, slot);
                 entry.put(TAG_STACK, ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack).result().orElseGet(CompoundTag::new));
+                if (physical[slot]) entry.putBoolean("physical", true);
                 list.add(entry);
             }
         }
@@ -202,6 +220,7 @@ public class DatabaseEnvironment extends AbstractManagedEnvironment implements D
     private void clearAll() {
         for (int slot = 0; slot < items.length; slot++) {
             items[slot] = ItemStack.EMPTY;
+            physical[slot] = false;
         }
     }
 
