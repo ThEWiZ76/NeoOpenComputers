@@ -506,3 +506,15 @@ Four new GameTests cover all host types: powered initial sample, unload-before-s
 Final build, 2112 unit tests and all 662 required GameTests pass in the ordinary no-CC configuration. vanilla-input-persistence-verified.log retains the result. Eight conditional CC-specific bodies skip there; the prior CC run is separate evidence. No claim that running-machine Lua continuation or disk/process restart is proved by an in-process NBT test.
 
 Next acceptance work: extend the isolated two-process restart probe to redstone state and event continuity, followed by the remaining live client/multiplayer gates. No client launch, Modrinth profile change or computer use. Full port remains active; the provisional beta estimate remains 3-6 concentrated workweeks with low confidence.
+
+## Redstone acceptance across an orderly JVM restart - 2026-10-19
+
+A new opt-in RedstoneProcessRestartGameTests probe runs beside the existing native process probe when CC is installed. Prepare and verify use the same isolated world in separate JVMs. All four hosts (case, microcontroller, robot and redstone IO) retain their node identity, vanilla and bundled input history, output strengths and wake threshold. The verify phase captures raw saved chunk NBT during ChunkDataEvent.Load before ticking can replace input history; it checks the six vanilla and 96 bundled cells on disk. The callback copies NBT only and makes no world calls.
+
+Actual retained CC computers provide analog strength 15 and bundled mask 32773. After restart the IO test verifies restored network attachment, unchanged sampling without events, exactly three bundled and one vanilla falling events after source removal, and no duplicates. This is orderly state/event continuity; crash recovery, running Lua continuation on every host and client/multiplayer acceptance remain open.
+
+World oc-restart-redstone-20261019-04 passed all 664 required GameTests in prepare PID 46908 and verify PID 21220. Logs: build/finish-port-implementation/redstone-process-restart-prepare.log and redstone-process-restart-verify.log. The final ordinary no-CC build passed 2112 unit tests and all 662 registered GameTests; eight conditional CC bodies skip there. Its log is redstone-process-restart-absent-verified.log. Restart probes are not registered during an ordinary run.
+
+Failed fixture worlds 01-03 are retained for diagnosis. The source script incorrectly called boolean CC setOutput with a number; setAnalogOutput is the correct API. Earlier timing/chunk hypotheses were not established as root cause. No production change was needed for this checkpoint. PROCESS_RESTART_TEST.md documents the reproducible commands with quoted dotted Gradle properties.
+
+No client launch, Modrinth profile change or computer use. The full-port goal remains active. The provisional estimate to a fully implemented beta remains 3-6 concentrated workweeks with low confidence until the complete parity/integration inventory and real client acceptance are closed. Test counts are evidence for named behavior, not a completion percentage.

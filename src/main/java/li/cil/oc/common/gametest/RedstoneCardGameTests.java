@@ -133,12 +133,16 @@ public final class RedstoneCardGameTests {
     }
 
     static Runnable bootComputerCraft(GameTestHelper helper, BlockPos pos, String script) throws Exception {
-        return ComputerCraftFixture.boot(helper, pos, script);
+        return bootComputerCraft(helper, pos, script, false);
+    }
+
+    static Runnable bootComputerCraft(GameTestHelper helper, BlockPos pos, String script, boolean retainForRestart) throws Exception {
+        return ComputerCraftFixture.boot(helper, pos, script, retainForRestart);
     }
 
     // Keep CC-typed lambda captures off the GameTest class inspected by NeoForge when CC is absent.
     private static final class ComputerCraftFixture {
-        private static Runnable boot(GameTestHelper helper, BlockPos pos, String script) throws Exception {
+        private static Runnable boot(GameTestHelper helper, BlockPos pos, String script, boolean retainForRestart) throws Exception {
             final var world = helper.getLevel();
             world.setBlockAndUpdate(pos, BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("computercraft", "computer_normal")).defaultBlockState());
             final var cc = world.getBlockEntity(pos);
@@ -155,7 +159,7 @@ public final class RedstoneCardGameTests {
                 try { mount.delete("startup.lua"); } catch (java.io.IOException exception) { throw new RuntimeException(exception); }
                 world.removeBlock(pos, false);
             };
-            helper.runAtTickTime(210, cleanup);
+            if (!retainForRestart) helper.runAtTickTime(210, cleanup);
             return cleanup;
         }
     }
