@@ -4,6 +4,8 @@ import li.cil.oc.api.network.EnvironmentHost;
 import net.minecraft.core.Direction;
 
 public interface RedstoneControllerHost extends EnvironmentHost {
+    default boolean isRedstoneOutputEnabled() { return true; }
+
     int redstoneOutput(Direction direction);
 
     int redstoneInput(Direction direction);

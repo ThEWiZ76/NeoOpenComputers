@@ -77,6 +77,8 @@ public final class ProjectRedGameTests {
             }
             final var emitter = (li.cil.oc.common.component.RedstoneControllerHost) world.getBlockEntity(source);
             final var receiver = (li.cil.oc.common.component.RedstoneControllerHost) world.getBlockEntity(target);
+            RedstoneMachineFixture.powerOn(helper, world.getBlockEntity(source), true);
+            RedstoneMachineFixture.powerOn(helper, world.getBlockEntity(target), true);
             for (int color = 0; color < 16; color++) emitter.setBundledRedstoneOutput(Direction.EAST, color, 255 - color * 16);
             final var type = Class.forName("mrtjp.projectred.transmission.WireType");
             final var wire = type.getMethod("newPart").invoke(type.getField("FRAMED_BUNDLED_NEUTRAL").get(null));
@@ -93,11 +95,14 @@ public final class ProjectRedGameTests {
                         "OC lost unsigned ProjectRed input strength on color " + color);
                 }
             }).thenExecute(() -> {
-                for (int color = 0; color < 16; color++) emitter.setBundledRedstoneOutput(Direction.EAST, color, 0);
+                final var sourceEntity = world.getBlockEntity(source);
+                if (sourceEntity instanceof ComputerCaseBlockEntity computer) computer.machine().stop();
+                else if (sourceEntity instanceof li.cil.oc.common.blockentity.MicrocontrollerBlockEntity micro) micro.machine().stop();
+                else for (int color = 0; color < 16; color++) emitter.setBundledRedstoneOutput(Direction.EAST, color, 0);
             }).thenWaitUntil(() -> {
                 tick(helper, target);
                 for (int color = 0; color < 16; color++) helper.assertTrue(receiver.bundledRedstoneInput(Direction.WEST, color) == 0,
-                    "ProjectRed input retained stale power after output cleared");
+                    "ProjectRed input retained stale power after clearing or stopping its source");
             }).thenSucceed();
         }
 

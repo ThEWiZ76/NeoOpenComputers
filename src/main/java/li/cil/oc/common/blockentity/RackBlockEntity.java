@@ -707,6 +707,8 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         }
         saveMountableData(slot);
         final RackMountable mountable = mountables[slot];
+        // A lifecycle dirty notification during disposal must not replace the saved running snapshot.
+        mountables[slot] = null;
         if (clearMappings) {
             clearNodeMappings(slot, mountable);
         }
@@ -722,7 +724,6 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
             server.machine().node().remove();
             server.machine().stop();
         }
-        mountables[slot] = null;
     }
 
     private void clearNodeMappings(final int slot, final RackMountable mountable) {

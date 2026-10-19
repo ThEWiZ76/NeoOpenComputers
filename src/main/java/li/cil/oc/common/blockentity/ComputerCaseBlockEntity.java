@@ -112,6 +112,8 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     private final NonNullList<ItemStack> items;
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private volatile boolean pendingServerThreadChangeMark;
+    private boolean redstoneOutputEnabled;
+    private boolean loadingMachine;
     private int tier;
     private int color;
     private int wakeThreshold;
@@ -332,6 +334,29 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         synchronized (redstoneOutputs) {
             return redstoneOutputs[direction.get3DDataValue()];
         }
+    }
+
+    @Override
+    public boolean isRedstoneOutputEnabled() {
+        if (level != null && level.isClientSide) return redstoneOutputEnabled;
+        return machine != null && machine.isRunning() && items.stream().anyMatch(stack -> stack.getItem() instanceof li.cil.oc.common.item.RedstoneCardItem);
+    }
+
+    private void updateRedstoneOutputEnabled() {
+        if (level == null || level.isClientSide || loadingMachine || unloadedState != null || isRemoved()) return;
+        final boolean enabled = isRedstoneOutputEnabled();
+        if (redstoneOutputEnabled == enabled) return;
+        redstoneOutputEnabled = enabled;
+        if (!enabled) {
+            synchronized (redstoneOutputs) { java.util.Arrays.fill(redstoneOutputs, 0); }
+            synchronized (bundledRedstoneOutputs) {
+                for (int[] side : bundledRedstoneOutputs) java.util.Arrays.fill(side, 0);
+            }
+        }
+        super.setChanged();
+        level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+        for (Direction side : Direction.values()) level.updateNeighborsAt(worldPosition.relative(side), getBlockState().getBlock());
     }
 
     public int redstoneInput(final Direction direction) {
@@ -713,17 +738,24 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        bundledInputs.load(tag);
-        unloadedState = null;
-        color = tag.getInt(TAG_COLOR);
-        wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
-        loadRedstoneOutputs(tag);
-        ContainerHelper.loadAllItems(tag, items, registries);
-        notifyHardwareChanged(machine);
-        machine.load(tag.getCompound(TAG_MACHINE));
-        lastSyncedRunning = isMachineRunningForClient();
-        lastSyncedErrored = isMachineErroredForClient();
-        loadClientData(tag);
+        loadingMachine = true;
+        try {
+            bundledInputs.load(tag);
+            unloadedState = null;
+            color = tag.getInt(TAG_COLOR);
+            wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
+            loadRedstoneOutputs(tag);
+            ContainerHelper.loadAllItems(tag, items, registries);
+            notifyHardwareChanged(machine);
+            machine.load(tag.getCompound(TAG_MACHINE));
+            lastSyncedRunning = isMachineRunningForClient();
+            lastSyncedErrored = isMachineErroredForClient();
+            loadClientData(tag);
+        } finally {
+            loadingMachine = false;
+            redstoneOutputEnabled = tag.contains("oc:redstoneOutputEnabled") && !tag.contains(TAG_MACHINE)
+                ? tag.getBoolean("oc:redstoneOutputEnabled") : isRedstoneOutputEnabled();
+        }
     }
 
     @Override
@@ -768,8 +800,10 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     private void tickServer() {
+        updateRedstoneOutputEnabled();
         updateRedstoneInputs();
         tickHostedMachine(machine);
+        updateRedstoneOutputEnabled();
         syncMachineStateIfChanged();
     }
 
@@ -842,6 +876,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     private void markChangedOnServerThread() {
         pendingServerThreadChangeMark = false;
+        updateRedstoneOutputEnabled();
         super.setChanged();
     }
 
@@ -890,12 +925,14 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     }
 
     private void saveClientData(final CompoundTag tag) {
+        tag.putBoolean("oc:redstoneOutputEnabled", isRedstoneOutputEnabled());
         tag.putBoolean(TAG_RUNNING, isMachineRunningForClient());
         tag.putBoolean(TAG_HAS_ERRORED, isMachineErroredForClient());
         tag.putLong(TAG_LAST_FILE_SYSTEM_ACCESS, lastFileSystemAccess);
     }
 
     private void loadClientData(final CompoundTag tag) {
+        if (level != null && level.isClientSide) redstoneOutputEnabled = tag.getBoolean("oc:redstoneOutputEnabled");
         if (!tag.contains(TAG_RUNNING)) {
             return;
         }

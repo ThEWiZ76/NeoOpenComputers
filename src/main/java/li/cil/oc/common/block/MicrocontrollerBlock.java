@@ -91,6 +91,11 @@ public class MicrocontrollerBlock extends HorizontalDirectionalBlock implements 
     }
 
     @Override
+    public boolean canConnectRedstone(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction side) {
+        return level.getBlockEntity(pos) instanceof MicrocontrollerBlockEntity micro && micro.isRedstoneOutputEnabled();
+    }
+
+    @Override
     protected int getSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
         if (level.getBlockEntity(pos) instanceof MicrocontrollerBlockEntity microcontroller) {
             return microcontroller.redstoneOutput(direction.getOpposite());

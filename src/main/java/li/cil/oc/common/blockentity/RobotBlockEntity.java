@@ -607,6 +607,9 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return false;
     }
 
+    @Override
+    public boolean isRedstoneOutputEnabled() { return hasRedstoneCard(); }
+
     private void updateRedstoneNeighbors() {
         if (level == null || level.isClientSide) return;
         if (level.getServer() != null && !level.getServer().isSameThread()) {

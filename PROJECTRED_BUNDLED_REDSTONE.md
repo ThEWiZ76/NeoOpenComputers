@@ -28,7 +28,7 @@ Five conditional GameTests check advanced callbacks without CC and four actual f
 
 ## Remaining acceptance
 
-Connection eligibility when a machine has no card, real client cable appearance/player flow, wire chunk boundaries/restarts and multiplayer still require separate acceptance. Wireless redstone and other providers remain separate work. The basic ProjectRed screwdriver is covered by the later section below; Expansion's electric screwdriver and off-hand behavior are not covered by that acceptance. No Modrinth profile was changed or client launched for this checkpoint.
+Runtime connection eligibility now follows the host output-enabled policy; see REDSTONE_OUTPUT_LIFECYCLE.md. Case/microcontroller endpoints in cable fixtures have real installed hardware and running native machines, and their stop action must clear the signal delivered by the actual cable. Real client cable appearance/player flow, wire chunk boundaries/restarts and multiplayer still require separate acceptance. Wireless redstone and other providers remain separate work. The basic ProjectRed screwdriver is covered by the later section below; Expansion's electric screwdriver and off-hand behavior are not covered by that acceptance. No Modrinth profile was changed or client launched for this checkpoint.
 
 ## Verified 2026-10-19
 

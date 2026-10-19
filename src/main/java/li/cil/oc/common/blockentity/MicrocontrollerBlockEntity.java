@@ -93,6 +93,8 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     private final Map<String, Integer> componentSlots = new HashMap<>();
     private final int tier;
     private volatile boolean pendingServerThreadChangeMark;
+    private boolean redstoneOutputEnabled;
+    private boolean loadingMachine;
     private int wakeThreshold;
     private final int[] redstoneOutputs = new int[6];
     private final int[] redstoneInputs = {-1, -1, -1, -1, -1, -1};
@@ -123,6 +125,29 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     public int tier() {
         return tier;
+    }
+
+    @Override
+    public boolean isRedstoneOutputEnabled() {
+        if (level != null && level.isClientSide) return redstoneOutputEnabled;
+        return machine != null && machine.isRunning() && items.stream().anyMatch(stack -> stack.getItem() instanceof li.cil.oc.common.item.RedstoneCardItem);
+    }
+
+    private void updateRedstoneOutputEnabled() {
+        if (level == null || level.isClientSide || loadingMachine || unloadedState != null || isRemoved()) return;
+        final boolean enabled = isRedstoneOutputEnabled();
+        if (redstoneOutputEnabled == enabled) return;
+        redstoneOutputEnabled = enabled;
+        if (!enabled) {
+            synchronized (redstoneOutputs) { java.util.Arrays.fill(redstoneOutputs, 0); }
+            synchronized (bundledRedstoneOutputs) {
+                for (int[] side : bundledRedstoneOutputs) java.util.Arrays.fill(side, 0);
+            }
+        }
+        super.setChanged();
+        level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+        for (Direction side : Direction.values()) level.updateNeighborsAt(worldPosition.relative(side), getBlockState().getBlock());
     }
 
     public static void serverTick(final Level level, final BlockPos pos, final BlockState state, final MicrocontrollerBlockEntity blockEntity) {
@@ -487,13 +512,20 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        bundledInputs.load(tag);
-        unloadedState = null;
-        wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
-        loadRedstoneOutputs(tag);
-        ContainerHelper.loadAllItems(tag, items, registries);
-        notifyHardwareChanged(machine);
-        machine.load(tag.getCompound(TAG_MACHINE));
+        loadingMachine = true;
+        try {
+            bundledInputs.load(tag);
+            unloadedState = null;
+            wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
+            loadRedstoneOutputs(tag);
+            ContainerHelper.loadAllItems(tag, items, registries);
+            notifyHardwareChanged(machine);
+            machine.load(tag.getCompound(TAG_MACHINE));
+        } finally {
+            loadingMachine = false;
+            redstoneOutputEnabled = tag.contains("oc:redstoneOutputEnabled") && !tag.contains(TAG_MACHINE)
+                ? tag.getBoolean("oc:redstoneOutputEnabled") : isRedstoneOutputEnabled();
+        }
     }
 
     @Override
@@ -512,6 +544,30 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
         ContainerHelper.saveAllItems(tag, items, registries);
+    }
+
+    @Override
+    public net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> getUpdatePacket() {
+        return net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+        final var tag = new CompoundTag();
+        tag.putBoolean("oc:redstoneOutputEnabled", isRedstoneOutputEnabled());
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+        redstoneOutputEnabled = tag.getBoolean("oc:redstoneOutputEnabled");
+    }
+
+    @Override
+    public void onDataPacket(final net.minecraft.network.Connection connection,
+                             final net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket packet,
+                             final HolderLookup.Provider registries) {
+        handleUpdateTag(packet.getTag(), registries);
     }
 
     private boolean isValidSlot(final int slot) {
@@ -533,10 +589,12 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     }
 
     private void tickServer() {
+        updateRedstoneOutputEnabled();
         updateRedstoneInputs();
         if (machine.canUpdate()) {
             machine.update();
         }
+        updateRedstoneOutputEnabled();
     }
 
     private void removeMachineNode() {
@@ -609,6 +667,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     private void markChangedOnServerThread() {
         pendingServerThreadChangeMark = false;
+        updateRedstoneOutputEnabled();
         super.setChanged();
     }
 

@@ -91,6 +91,11 @@ public class ComputerCaseBlock extends HorizontalDirectionalBlock implements Ent
     }
 
     @Override
+    public boolean canConnectRedstone(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction side) {
+        return level.getBlockEntity(pos) instanceof ComputerCaseBlockEntity computer && computer.isRedstoneOutputEnabled();
+    }
+
+    @Override
     protected int getSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
         if (level.getBlockEntity(pos) instanceof ComputerCaseBlockEntity computerCase) {
             return computerCase.redstoneOutput(direction.getOpposite());

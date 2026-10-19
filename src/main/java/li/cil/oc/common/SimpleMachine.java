@@ -163,6 +163,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         pauseUntilNanos = -1L;
         pauseUntilWorldTime = -1L;
 
+        if (wasRunning && host != null) host.markChanged();
         if (host == null || node() == null) {
             return;
         }
@@ -447,6 +448,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (wasRunning) {
             sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }
+        if (host != null) host.markChanged();
         return true;
     }
 
@@ -771,6 +773,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (!wasRunning) {
             uptimeTicks = 0L;
             sendLifecycleMessage(COMPUTER_STARTED_MESSAGE);
+            if (host != null) host.markChanged();
         }
         return true;
     }
@@ -808,6 +811,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         pauseUntilWorldTime = -1L;
         if (wasRunning) {
             sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
+            if (host != null) host.markChanged();
         }
         return wasRunning;
     }

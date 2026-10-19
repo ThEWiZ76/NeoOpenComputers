@@ -50,7 +50,8 @@ public final class ProjectRedBundledRedstone {
 
         @Override
         public boolean canConnectBundled(Level world, BlockPos pos, Direction side) {
-            return isValidInteractionFor(world, pos, side);
+            return world.hasChunkAt(pos) && world.getBlockEntity(pos) instanceof RedstoneControllerHost host
+                && host.isRedstoneOutputEnabled();
         }
 
         @Override
