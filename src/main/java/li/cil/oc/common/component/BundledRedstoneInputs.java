@@ -1,6 +1,6 @@
 package li.cil.oc.common.component;
 
-import li.cil.oc.common.integration.ComputerCraftBundledRedstone;
+import li.cil.oc.common.integration.BundledRedstone;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 
@@ -39,10 +39,10 @@ public final class BundledRedstoneInputs {
     public synchronized void update(final RedstoneControllerHost host, final Consumer<Change> changed) {
         boolean dirty = false;
         for (Direction side : Direction.values()) {
-            final int mask = ComputerCraftBundledRedstone.input(host, side);
+            final int[] signal = BundledRedstone.input(host, side);
             for (int color = 0; color < 16; color++) {
                 final int oldValue = values[side.get3DDataValue()][color];
-                final int newValue = (mask & (1 << color)) == 0 ? 0 : 15;
+                final int newValue = signal[color];
                 values[side.get3DDataValue()][color] = newValue;
                 dirty |= oldValue != newValue;
                 // Only never-sampled cells suppress events; restored samples must report offline changes.

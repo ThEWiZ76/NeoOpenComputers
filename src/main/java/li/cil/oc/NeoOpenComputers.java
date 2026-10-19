@@ -111,6 +111,7 @@ public final class NeoOpenComputers {
     private void onCommonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
             li.cil.oc.common.integration.ComputerCraftBundledRedstone.register();
+            li.cil.oc.common.integration.ProjectRedBundledRedstone.register();
             ModCreativeTabs.assignApiCreativeTab();
             ModContentCatalog.registerDefaults();
             ModEeproms.registerDefaults();

@@ -37,7 +37,7 @@ public class RedstoneCardItem extends Item implements HostAware {
             return null;
         }
         if (!(host instanceof li.cil.oc.common.component.RedstoneControllerHost)) return null;
-        final var environment = new RedstoneCardEnvironment(host, tier > 0 && li.cil.oc.common.integration.ComputerCraftBundledRedstone.isAvailable()) {
+        final var environment = new RedstoneCardEnvironment(host, tier > 0 && li.cil.oc.common.integration.BundledRedstone.isAvailable()) {
             @Override
             public void save(final CompoundTag data) {
                 super.save(data);

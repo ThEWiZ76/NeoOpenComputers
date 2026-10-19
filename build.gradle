@@ -20,6 +20,10 @@ sourceSets.main.resources {
 repositories {
     mavenCentral()
     maven {
+        url = 'https://maven.covers1624.net/'
+        content { includeGroup 'mrtjp'; includeGroup 'io.codechicken' }
+    }
+    maven {
         url = 'https://maven.squiddev.cc'
         content { includeGroup 'cc.tweaked' }
     }
@@ -112,6 +116,9 @@ runs {
         argument '--nogui'
     }
     gameTestServer {
+        if (project.hasProperty('withProjectRed')) {
+            systemProperty 'neoopencomputers.testProjectRed', 'true'
+        }
         if (project.hasProperty('withComputerCraft')) {
             systemProperty 'neoopencomputers.testComputerCraft', 'true'
         }
@@ -170,11 +177,20 @@ tasks.named('generateEmptyGameTestStructure') {
 }
 configurations {
     nativeLuaArtifacts
+    projectRedRuntime
+    runtimeClasspath.extendsFrom projectRedRuntime
     computerCraftRuntime
     runtimeClasspath.extendsFrom computerCraftRuntime
 }
 
 dependencies {
+    compileOnly 'mrtjp:ProjectRed:1.21.1-4.23.0:api'
+    if (project.hasProperty('withProjectRed')) {
+        projectRedRuntime 'mrtjp:ProjectRed:1.21.1-4.23.0:core'
+        projectRedRuntime 'mrtjp:ProjectRed:1.21.1-4.23.0:transmission'
+        projectRedRuntime 'io.codechicken:CodeChickenLib:1.21.1-4.6.1.529'
+        projectRedRuntime 'io.codechicken:CBMultipart:1.21.1-3.5.0.161'
+    }
     compileOnly 'cc.tweaked:cc-tweaked-1.21.1-common-api:1.120.2'
     if (project.hasProperty('withComputerCraft')) {
         computerCraftRuntime 'cc.tweaked:cc-tweaked-1.21.1-forge:1.120.2'

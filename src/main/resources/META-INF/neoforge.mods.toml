@@ -19,6 +19,13 @@ OpenComputers for Minecraft 1.21.1.
 config="${mod_id}.mixins.json"
 
 [[dependencies.${mod_id}]]
+    modId="projectred_transmission"
+    type="optional"
+    versionRange="[4.23.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
     modId="computercraft"
     type="optional"
     versionRange="[1.120.2,)"

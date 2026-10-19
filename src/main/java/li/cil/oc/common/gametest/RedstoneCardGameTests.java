@@ -190,6 +190,8 @@ public final class RedstoneCardGameTests {
 
     @GameTest(template = "empty")
     public static void advancedRedstoneCardHasTierRecipeAndVanillaFallback(GameTestHelper helper) throws Exception {
+        final boolean bundledAvailable = net.neoforged.fml.ModList.get().isLoaded("computercraft")
+            || net.neoforged.fml.ModList.get().isLoaded("projectred_transmission");
         final var item = BuiltInRegistries.ITEM.getOptional(ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "redstone_card_tier2"));
         helper.assertTrue(item.isPresent(), "Tier-two redstone card is missing");
         final var stack = new ItemStack(item.orElseThrow());
@@ -208,7 +210,9 @@ public final class RedstoneCardGameTests {
         try {
             final var component = (Component) environment.node();
             final var expectedMethods = new java.util.HashSet<>(java.util.Set.of("getInput", "getOutput", "setOutput", "getComparatorInput", "getWakeThreshold", "setWakeThreshold"));
-            if (net.neoforged.fml.ModList.get().isLoaded("computercraft")) expectedMethods.addAll(java.util.Set.of("getBundledInput", "getBundledOutput", "setBundledOutput"));
+            if (bundledAvailable) {
+                expectedMethods.addAll(java.util.Set.of("getBundledInput", "getBundledOutput", "setBundledOutput"));
+            }
             helper.assertTrue(component.methods().equals(expectedMethods), "Advanced card callbacks do not match installed integrations");
             component.invoke("setOutput", null, Direction.UP.get3DDataValue(), 12);
             helper.assertTrue(advanced.redstoneOutput(Direction.UP) == 12, "Advanced fallback did not drive actual host redstone");
@@ -244,7 +248,7 @@ public final class RedstoneCardGameTests {
         helper.assertTrue(driver.createEnvironment(stack, unsupported) == null, "No-integration card created a broken component on an unsupported host");
         final var tab = li.cil.oc.common.ModCreativeTabs.MAIN.get();
         tab.buildContents(new net.minecraft.world.item.CreativeModeTab.ItemDisplayParameters(helper.getLevel().enabledFeatures(), true, helper.getLevel().registryAccess()));
-        helper.assertTrue(tab.getDisplayItems().stream().anyMatch(candidate -> candidate.getItem() == stack.getItem()) == net.neoforged.fml.ModList.get().isLoaded("computercraft"), "Advanced Creative visibility does not match bundled integration");
+        helper.assertTrue(tab.getDisplayItems().stream().anyMatch(candidate -> candidate.getItem() == stack.getItem()) == bundledAvailable, "Advanced Creative visibility does not match bundled integration");
         helper.succeed();
     }
 }
