@@ -1,5 +1,7 @@
 # Process restart regression
 
+Latest interaction checkpoint: Runtime bc17524aeb24e2c1bebcbab3f3579661754a671d: build and 2131 unit tests pass; all 718 ordinary GameTests pass with ProjectRed and ComputerCraft together. Fresh world oc-restart-microcontroller-immutable-20261020-01 passes all 721 tests in prepare PID16144 and verify PID44436, both with normal shutdown. Logs: microcontroller-immutable-verified.log and microcontroller-immutable-restart-{prepare,verify}.log under build/finish-port-implementation/. This is tested server behavior, not complete port or client acceptance.
+
 ## Latest acceptance - 2026-10-20
 
 Microcontroller rotation/restart checkpoint 156db2b6b093fea856337e6dd69b340bf196452c passes build, 2131 units and 708 ordinary GameTests. With -PwithComputerCraft, fresh world oc-restart-microcontroller-20261020-01 passes all 711 required GameTests in prepare PID58500 and verify PID56588, both normal shutdowns. The pair includes the new native microcontroller/private-network/control/modem/tmp continuation probe, the original computer/external-floppy/tablet probe and the four-host CC redstone disk-history probe. Logs: microcontroller-process-restart-prepare.log and microcontroller-process-restart-verify.log under build/finish-port-implementation/. Verify explicitly records pre-tick disk energy/flags and redstone input arrays. See [[Microcontroller networking]] for the separate physical rotation proof and remaining scope.

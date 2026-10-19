@@ -1,5 +1,7 @@
 # Loaded-chunk discovery
 
+Microcontroller follow-up bc17524ae: a real chunk-edge regression independently reproduces vanilla input sampling loading an unloaded neighbor. The sampler now checks that first-hop chunk and retains the previous vanilla sample when it is absent. Build/2131 units/718 mixed-provider GameTests and both721-test restart processes finish normally (PIDs16144/44436). The earlier interrupted suites and thread dumps remain in build/finish-port-implementation/microcontroller-immutable-suite-hang* and microcontroller-inspection-red*. This does not prove every prior unload loop had that exact cause, or constrain third-party indirect signal reads. See [[Microcontroller networking]].
+
 Related: [[../Project]], [[../02 plans/Complete portering]], [[Network addresses]], [[Process restart test]], [[../04 ai-context/Port gap triage]].
 
 ## Investigation

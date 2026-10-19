@@ -2,11 +2,27 @@
 
 Related: [[../Project]], [[../02 plans/Complete portering]], [[../04 ai-context/Port gap triage]], [[Network addresses]], [[Process restart test]].
 
-Latest acceptance, 2026-10-20: assembled-item runtime d7a8cb73490e035718b5e95c1514817212e94d1c passes build, 2131 units and all 712 ordinary GameTests with ProjectRed and ComputerCraft together. Evidence: microcontroller-item-roundtrip-verified.log under build/finish-port-implementation/. This is server acceptance for the tested paths below, not complete port or real-client acceptance.
+Previous assembled-item acceptance, 2026-10-20: runtime d7a8cb73490e035718b5e95c1514817212e94d1c passes build, 2131 units and all 712 ordinary GameTests with ProjectRed and ComputerCraft together. Evidence: microcontroller-item-roundtrip-verified.log under build/finish-port-implementation/. This is server acceptance for the tested paths below, not complete port or real-client acceptance.
 
 Previous rotation/restart production checkpoint156db2b6b passed build, 2131 units, 708 ordinary GameTests and both 711-test processes with ComputerCraft in oc-restart-microcontroller-20261020-01. Prepare PID58500 and verify PID56588 both shut down normally. Logs: microcontroller-rotation-verified.log and microcontroller-process-restart-{prepare,verify}.log. That two-JVM pair is evidence for its documented revision, not a new restart run of d7a8cb734.
 
 Earlier core implementation checkpoint be5ceb8c3babae9d39d4959388f11ea446e43961 passed build, 2131 unit tests and all 707 ordinary GameTests (microcontroller-network-verified.log).
+
+## Immutable assembly and player interactions - 2026-10-20
+
+Runtime bc17524aeb24e2c1bebcbab3f3579661754a671d: build and 2131 unit tests pass; all 718 ordinary GameTests pass with ProjectRed and ComputerCraft together. Fresh world oc-restart-microcontroller-immutable-20261020-01 passes all 721 tests in prepare PID16144 and verify PID44436, both with normal shutdown. Logs: microcontroller-immutable-verified.log and microcontroller-immutable-restart-{prepare,verify}.log under build/finish-port-implementation/. This is tested server behavior, not complete port or client acceptance.
+
+Upstream common/tileentity/Microcontroller.scala rejects normal inventory mutations; common/block/Microcontroller.scala toggles power on normal activation and changes EEPROM on sneak-held-chip activation. ComponentInventory changes only the affected environment. Three regressions reproduced editable hardware, missing normal-click power and missing sneak EEPROM swap in microcontroller-immutable-interactions-red.log.
+
+The assembled CPU/RAM/cards are now locked through Container mutation, inventory wrappers and menu pickup/shift-click. The dedicated EEPROM swap consumes one held chip and returns the old chip after flushing its latest data. SimpleMachine tracks the source stack of each environment and replaces only that EEPROM environment; the native VM, locals and unrelated modem state survive. Machine adds a default onEepromChanged hook that falls back to onHostChanged for custom machine implementations; that fallback does not promise hot-swap continuation for third-party engines.
+
+Normal click toggles power, applicable wrenches remain delegated, and sneak empty-hand opens the existing modern menu as read-only inspection. That inspection UI is an extension, not an original upstream GUI. It requires the same block entity within eight blocks. A regression reproduced distant menu access before the range fix (microcontroller-inspection-red.log). Offhand EEPROM swap with a full main inventory drops exactly one old chip with its data intact and leaves the inventory unchanged. Five new interaction tests include a real native program that continues after hot-swap and subsequently boots the replacement code on restart. These dispatch real block/menu callbacks with Survival mock players; they do not establish live packet/protection-mod or multiplayer acceptance.
+
+Existing fixtures now install immutable hardware through serialized assembly loading instead of the public Container setters. Slot-mapping fixtures still check the layout/driver contract; the separate interaction regression verifies actual mutation rejection. The old card-removal redstone fixture is now serialized assembly replacement, not player-removable hardware.
+
+A new real chunk-edge regression independently reproduced the vanilla redstone sampler loading its unloaded east neighbor (microcontroller-input-boundary-red.log). Sampling skips an unloaded first-hop neighbor and retains its last known vanilla value. The original live suite and an inspection-red run also entered an active ChunkMap.processUnloads loop; logs/thread dumps are retained. The guarded build and both restart processes finish normally. The sampler reproduction proves an unsafe lookup, not the exact cause of every prior hang, and the guard does not constrain third-party signal implementations.
+
+Still open: complete assembler GUI/energy timing, real-client GUI/analyzer/cable visuals, full Survival/protection/multiplayer flow, arbitrary configuration/reference migration, wider platforms and load/crash acceptance. Beta estimate remains 3-6 concentrated workweeks with low confidence; full semantic/config/resource/API and integration scope audits remain open. No client launch, Modrinth change, Computer Use or window movement occurred in this checkpoint.
 
 ## Assembled-item pickup and replacement - 2026-10-20
 
@@ -18,7 +34,7 @@ The first implementation exposed another real placement defect: BlockItem merges
 
 Three new tests cover a tier-one Survival player destroying and replacing an actual assembled device, tier-two pick/Creative destruction and creative-tier non-player destruction/replacement. They check exactly one assembled drop, tier/hardware/custom-name preservation, consumption of one item on real placement, portable energy, no runtime-state payload, original EEPROM/modem identities, latest binary EEPROM bytes and fresh native boot after replacement. The native program changes binary markers from seed to first to second; a copied original seed cannot pass. Survival mock-player cleanup runs on success and failure. Fixture assembly uses the real template with immediate completion; this does not establish assembler GUI/energy timing or real-client player acceptance.
 
-Still separate: immutable assembled hardware/player editing semantics and the upstream click/sneak-EEPROM interaction flow, complete assembler/survival/multiplayer/client acceptance, arbitrary reference/custom-config migration and crash/platform/load matrices. This fix does not label those remaining gates complete.
+Immutable hardware and click/sneak-EEPROM flow are covered by the newer interaction checkpoint above. Complete assembler/survival/multiplayer/client acceptance, arbitrary reference/custom-config migration and crash/platform/load matrices remain open.
 
 ## Power/config and provider acceptance - 2026-10-20
 
@@ -81,7 +97,7 @@ Six new GameTests cover separated physical side nodes/private hardware, single-p
 
 One of those six boots two real native Lua machines with installed modems. An external case discovers the control component without seeing the microcontroller's EEPROM, closes its west output, starts it, receives ready, sends ping, receives pong and stops it. Power reaches the private buffer from their external network. A west observer receives no packets. Native MicrocontrollerPersistenceGameTests additionally retain the internal microcontroller proxy and a closed output flag through all three existing continuation scenarios, along with locals, temporary binary-file offset and running state. Their fixtures now supply explicit test power; microcontroller-empty-power-fixtures-red.log preserves the three expected not-enough-energy failures before this fixture correction.
 
-Still required: real-client analyzer/GUI/cable rendering and complete assembler/survival/multiplayer interactions. The tested assembled-item break/pick/replace paths are now fixed above. Earlier actual new-topology process restart, provider regressions, focused running-power/config cases and four-state rotation have their documented revision evidence. Existing editable container/player behavior remains different from upstream immutable assembly; click/sneak EEPROM exchange is also not established. Broader addon, arbitrary live-config changes, legacy reference migration, crash recovery and platform/load matrices remain open.
+Still required: real-client analyzer/GUI/cable rendering and complete assembler/survival/multiplayer interactions. Assembled-item break/pick/replace and immutable hardware/click/sneak EEPROM callbacks have the newer server checkpoints above. Earlier new-topology process restart, provider regressions, focused running-power/config cases and four-state rotation retain their documented revision evidence. Broader addon, arbitrary live-config changes, legacy reference migration, crash recovery and platform/load matrices remain open.
 
 No Minecraft client was launched or controlled, no Modrinth profile changed, and no desktop window moved for this checkpoint.
 
