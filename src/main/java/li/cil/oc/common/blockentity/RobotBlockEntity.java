@@ -638,15 +638,18 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             }
             if (changed) updateRedstoneNeighbors();
         }
+        boolean inputDirty = false;
         synchronized (redstoneInputs) {
             for (Direction direction : Direction.values()) {
                 final int index = direction.get3DDataValue();
                 final int oldValue = redstoneInputs[index];
                 final int newValue = level.getSignal(worldPosition.relative(direction), direction);
                 redstoneInputs[index] = newValue;
+                inputDirty |= oldValue != newValue;
                 if (oldValue >= 0 && oldValue != newValue) redstoneChanged(address, direction, oldValue, newValue, -1);
             }
         }
+        if (inputDirty) markChanged();
         bundledInputs.update(this, change -> redstoneChanged(address, change.side(), change.oldValue(), change.newValue(), change.color()));
     }
 

@@ -40,7 +40,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     );
 
     private final int[] outputs = new int[6];
-    private final int[] inputs = new int[6];
+    private final int[] inputs = {-1, -1, -1, -1, -1, -1};
     private final int[][] bundledOutputs = new int[6][COLOR_COUNT];
     private final li.cil.oc.common.component.BundledRedstoneInputs bundledInputs = new li.cil.oc.common.component.BundledRedstoneInputs();
     private Node node;
@@ -119,7 +119,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
 
     @Override
     public int redstoneInput(final Direction direction) {
-        return inputs[direction.get3DDataValue()];
+        return Math.max(0, inputs[direction.get3DDataValue()]);
     }
 
     @Override
@@ -296,13 +296,15 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
                 if (change.oldValue() < wakeThreshold && change.newValue() >= wakeThreshold) node().sendToReachable("computer.start");
             }
         });
+        boolean dirty = false;
         for (Direction direction : Direction.values()) {
             final int index = direction.get3DDataValue();
             final int oldValue = inputs[index];
             final int newValue = Math.clamp(level.getSignal(getBlockPos().relative(direction), direction), 0, 15);
             if (oldValue != newValue) {
                 inputs[index] = newValue;
-                if (node() != null) {
+                dirty = true;
+                if (oldValue >= 0 && node() != null) {
                     node().sendToReachable("computer.signal", "redstone_changed", index, oldValue, newValue);
                     if (oldValue < wakeThreshold && newValue >= wakeThreshold) {
                         node().sendToReachable("computer.start");
@@ -310,6 +312,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
                 }
             }
         }
+        if (dirty) markChanged();
     }
 
     @Override
@@ -320,6 +323,8 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
             node().load(tag.getCompound(TAG_NODE));
         }
         wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
+        final int[] savedInputs = tag.getIntArray("oc:redstoneInputs");
+        for (int index = 0; index < inputs.length; index++) inputs[index] = index < savedInputs.length ? Math.clamp(savedInputs[index], -1, 15) : -1;
         final int[] saved = tag.getIntArray(TAG_OUTPUTS);
         for (int index = 0; index < outputs.length; index++) {
             outputs[index] = index < saved.length ? Math.clamp(saved[index], 0, 15) : 0;
@@ -333,6 +338,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         saveNode(tag);
         tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_OUTPUTS, outputs);
+        tag.putIntArray("oc:redstoneInputs", inputs.clone());
         tag.putIntArray(TAG_BUNDLED_OUTPUTS, saveBundledOutputs());
         bundledInputs.save(tag);
     }
@@ -478,7 +484,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     private static Map<Integer, Integer> valuesToMap(final int[] values) {
         final Map<Integer, Integer> result = new HashMap<>();
         for (Direction direction : Direction.values()) {
-            result.put(direction.get3DDataValue(), values[direction.get3DDataValue()]);
+            result.put(direction.get3DDataValue(), Math.max(0, values[direction.get3DDataValue()]));
         }
         return result;
     }

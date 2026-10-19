@@ -95,7 +95,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     private volatile boolean pendingServerThreadChangeMark;
     private int wakeThreshold;
     private final int[] redstoneOutputs = new int[6];
-    private final int[] redstoneInputs = new int[6];
+    private final int[] redstoneInputs = {-1, -1, -1, -1, -1, -1};
     private final li.cil.oc.common.component.BundledRedstoneInputs bundledInputs = new li.cil.oc.common.component.BundledRedstoneInputs();
     private final int[][] bundledRedstoneOutputs = new int[6][BUNDLED_COLOR_COUNT];
 
@@ -298,7 +298,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     @Override
     public int redstoneInput(final Direction direction) {
         synchronized (redstoneInputs) {
-            return redstoneInputs[direction.get3DDataValue()];
+            return Math.max(0, redstoneInputs[direction.get3DDataValue()]);
         }
     }
 
@@ -505,6 +505,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         }
         tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_REDSTONE_OUTPUTS, redstoneOutputs);
+        synchronized (redstoneInputs) { tag.putIntArray("oc:redstoneInputs", redstoneInputs.clone()); }
         tag.putIntArray(TAG_BUNDLED_REDSTONE_OUTPUTS, saveBundledRedstoneOutputs());
         bundledInputs.save(tag);
         final CompoundTag machineTag = new CompoundTag();
@@ -552,6 +553,10 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     }
 
     private void loadRedstoneOutputs(final CompoundTag tag) {
+        final int[] savedInputs = tag.getIntArray("oc:redstoneInputs");
+        synchronized (redstoneInputs) {
+            for (int index = 0; index < redstoneInputs.length; index++) redstoneInputs[index] = index < savedInputs.length ? Math.clamp(savedInputs[index], -1, 15) : -1;
+        }
         final int[] savedOutputs = tag.getIntArray(TAG_REDSTONE_OUTPUTS);
         for (int index = 0; index < redstoneOutputs.length; index++) {
             redstoneOutputs[index] = index < savedOutputs.length ? Math.clamp(savedOutputs[index], 0, 15) : 0;
@@ -634,13 +639,15 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
                 if (change.oldValue() < wakeThreshold && change.newValue() >= wakeThreshold) machine.start();
             }
         });
+        boolean dirty = false;
         synchronized (redstoneInputs) {
             for (Direction direction : Direction.values()) {
                 final int index = direction.get3DDataValue();
                 final int oldValue = redstoneInputs[index];
                 final int newValue = level.getSignal(worldPosition.relative(direction), direction);
                 redstoneInputs[index] = newValue;
-                if (redstoneAddress != null && oldValue != newValue) {
+                dirty |= oldValue != newValue;
+                if (redstoneAddress != null && oldValue >= 0 && oldValue != newValue) {
                     machine.signal("redstone_changed", redstoneAddress, toLocal(direction).get3DDataValue(), oldValue, newValue);
                     if (oldValue < wakeThreshold && newValue >= wakeThreshold) {
                         machine.start();
@@ -648,6 +655,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
                 }
             }
         }
+        if (dirty) markChanged();
     }
 
     private String componentAddress(final String componentName) {
