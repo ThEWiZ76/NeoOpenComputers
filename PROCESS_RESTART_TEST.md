@@ -1,8 +1,10 @@
 # Process restart regression
 
-## Latest attempt - 2026-10-20
+## Latest acceptance - 2026-10-20
 
-Address-generation checkpoint df9151c8ca0b95365262220aeeba0abb2ec0d4da passes build, 2122 units and 699 ordinary GameTests, but its new two-JVM acceptance remains open. World oc-restart-address-20261020-01: prepare PID37536 passed 700 required tests and shut down normally; verify PID59180 hung in ChunkMap.processUnloads during defaultBatch:13, before the processRestart probe. The identified owned test server was terminated after two thread dumps and a log capture. Retain the world and diagnostics; do not label this pair verified. See [[Network addresses]] for exact evidence and the loaded-chunk lookup hypothesis. Older successful pairs below remain historical evidence for their documented revisions.
+Non-loading discovery checkpoint 9a1df219b10f0a58dd60e29988dd57ca8bea3d1a passes build and 2125 units. Fresh world oc-restart-unloaded-20261020-02 passes all 702 required GameTests in prepare PID9200 and verify PID56044, both normal shutdowns. Logs: network-unloaded-restart-prepare.log and network-unloaded-restart-verify.log under build/finish-port-implementation/. The original oc-restart-address-20261020-01 checkpoint, prepared by PID37536, also verifies after the fix in PID15444 with all 702 tests passing (network-unloaded-original-world-verified.log). It was not overwritten/re-prepared to avoid the failure. See [[Loaded chunk discovery]] for reproduced causes, fixture details and limits.
+
+Historical failure: address-generation checkpoint df9151c8ca0b95365262220aeeba0abb2ec0d4da passed build, 2122 units and 699 ordinary GameTests. In oc-restart-address-20261020-01, prepare PID37536 passed 700 required tests; verify PID59180 hung in ChunkMap.processUnloads before the probe and was terminated after preserving two dumps/logs. Those diagnostics remain valid failure evidence for that revision. The newer successful verification does not rewrite that failed outcome. Failed prepare world oc-restart-unloaded-20261020-01 is diagnostic only (a boundary regression was still failing). Older successful pairs below remain evidence for their documented revisions.
 
 Related: [[../04 ai-context/Native Lua persistence]], [[../04 ai-context/Tablet runtime]], [[../02 plans/Complete portering]].
 
