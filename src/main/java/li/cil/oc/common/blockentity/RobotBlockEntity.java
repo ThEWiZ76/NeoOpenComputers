@@ -824,6 +824,14 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new Object[]{name()};
     }
 
+    @Callback(doc = "function():number -- Get the durability of the currently equipped tool.")
+    public Object[] durability(final Context context, final Arguments arguments) {
+        final ItemStack tool = equipmentInventory.getItem(0);
+        if (tool.isEmpty()) return new Object[]{null, "no tool equipped"};
+        final var durability = li.cil.oc.common.ToolDurabilityProviders.getDurability(tool);
+        return durability.isPresent() ? new Object[]{durability.getAsDouble()} : new Object[]{null, "tool cannot be damaged"};
+    }
+
     @Override
     public void setName(final String name) {
         this.name = name == null || name.isBlank() ? "Robot" : name;
