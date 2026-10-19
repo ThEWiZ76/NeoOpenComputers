@@ -1,6 +1,6 @@
 # Port source surface inventory
 
-Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `7d4cef09263e77c1798c8f38792b01941a91443f`.
+Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `df9151c8ca0b95365262220aeeba0abb2ec0d4da`.
 
 Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.
 
@@ -24,7 +24,6 @@ Java API files: 144. Missing matching port paths: 0.
 | canBreed | src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:53 |
 | canPlayerAccess | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:38 |
 | cancel | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:518 |
-| dropIntoItemInventory | src/main/scala/li/cil/oc/server/component/traits/ItemInventoryControl.scala:20 |
 | exportIntoSlot | src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:73 |
 | getAccess | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:45 |
 | getAvgPowerInjection | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:196 |
@@ -58,7 +57,6 @@ Java API files: 144. Missing matching port paths: 0.
 | getInsulationBreakdownEnergy | src/main/scala/li/cil/oc/integration/ic2/DriverEnergyConductor.java:41 |
 | getInsulationEnergyAbsorption | src/main/scala/li/cil/oc/integration/ic2/DriverEnergyConductor.java:46 |
 | getInterfaceConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverBlockInterface.scala:38; src/main/scala/li/cil/oc/integration/appeng/DriverPartInterface.scala:52 |
-| getItemInventorySize | src/main/scala/li/cil/oc/server/component/traits/ItemInventoryControl.scala:15 |
 | getItemStack | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:327 |
 | getItemsInNetwork | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:160 |
 | getMaxEnergyPerTick | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverEnergyInfo.java:41 |
@@ -102,7 +100,6 @@ Java API files: 144. Missing matching port paths: 0.
 | setSideOpen | src/main/scala/li/cil/oc/common/tileentity/Microcontroller.scala:123 |
 | setWirelessFrequency | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:83 |
 | setWirelessOutput | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:63 |
-| suckFromItemInventory | src/main/scala/li/cil/oc/server/component/traits/ItemInventoryControl.scala:29 |
 
 ## API paths requiring source review
 

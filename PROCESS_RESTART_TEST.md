@@ -1,5 +1,9 @@
 # Process restart regression
 
+## Latest attempt - 2026-10-20
+
+Address-generation checkpoint df9151c8ca0b95365262220aeeba0abb2ec0d4da passes build, 2122 units and 699 ordinary GameTests, but its new two-JVM acceptance remains open. World oc-restart-address-20261020-01: prepare PID37536 passed 700 required tests and shut down normally; verify PID59180 hung in ChunkMap.processUnloads during defaultBatch:13, before the processRestart probe. The identified owned test server was terminated after two thread dumps and a log capture. Retain the world and diagnostics; do not label this pair verified. See [[Network addresses]] for exact evidence and the loaded-chunk lookup hypothesis. Older successful pairs below remain historical evidence for their documented revisions.
+
 Related: [[../04 ai-context/Native Lua persistence]], [[../04 ai-context/Tablet runtime]], [[../02 plans/Complete portering]].
 
 Run from M:\development\OpenComputers in PowerShell. Use a fresh world name beginning with oc-restart- for each pair. Keep the same name for prepare and verify. Quote each Gradle property argument because PowerShell otherwise splits the dotted property name.
