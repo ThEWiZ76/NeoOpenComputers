@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "bdfe6f2ca2fae38ab002dc20d63ad051e69c0109",
+  "port_revision": "7d4cef09263e77c1798c8f38792b01941a91443f",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -4683,7 +4683,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/InventoryControllerEnvironment.java",
-              "line": 215
+              "line": 225
             }
           ]
         },
@@ -4693,7 +4693,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/InventoryControllerEnvironment.java",
-              "line": 224
+              "line": 234
             }
           ]
         },
@@ -4703,7 +4703,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/InventoryControllerEnvironment.java",
-              "line": 232
+              "line": 242
             }
           ]
         },
@@ -4713,7 +4713,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/InventoryControllerEnvironment.java",
-              "line": 243
+              "line": 253
             }
           ]
         }
@@ -4915,12 +4915,22 @@
         {
           "name": "dropIntoSlot",
           "line": 17,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/component/InventoryControllerEnvironment.java",
+              "line": 215
+            }
+          ]
         },
         {
           "name": "suckFromSlot",
           "line": 47,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/component/InventoryControllerEnvironment.java",
+              "line": 220
+            }
+          ]
         }
       ]
     },
@@ -5811,7 +5821,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/InventoryControllerEnvironment.java",
-              "line": 276
+              "line": 286
             }
           ]
         }
@@ -8688,9 +8698,6 @@
     "dropIntoItemInventory": [
       "src/main/scala/li/cil/oc/server/component/traits/ItemInventoryControl.scala:20"
     ],
-    "dropIntoSlot": [
-      "src/main/scala/li/cil/oc/server/component/traits/InventoryWorldControlMk2.scala:17"
-    ],
     "exportIntoSlot": [
       "src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:73"
     ],
@@ -8939,9 +8946,6 @@
     ],
     "suckFromItemInventory": [
       "src/main/scala/li/cil/oc/server/component/traits/ItemInventoryControl.scala:29"
-    ],
-    "suckFromSlot": [
-      "src/main/scala/li/cil/oc/server/component/traits/InventoryWorldControlMk2.scala:47"
     ]
   }
 }

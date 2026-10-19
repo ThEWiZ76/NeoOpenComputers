@@ -1,6 +1,6 @@
 # Port source surface inventory
 
-Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `bdfe6f2ca2fae38ab002dc20d63ad051e69c0109`.
+Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `7d4cef09263e77c1798c8f38792b01941a91443f`.
 
 Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.
 
@@ -25,7 +25,6 @@ Java API files: 144. Missing matching port paths: 0.
 | canPlayerAccess | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:38 |
 | cancel | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:518 |
 | dropIntoItemInventory | src/main/scala/li/cil/oc/server/component/traits/ItemInventoryControl.scala:20 |
-| dropIntoSlot | src/main/scala/li/cil/oc/server/component/traits/InventoryWorldControlMk2.scala:17 |
 | exportIntoSlot | src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:73 |
 | getAccess | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:45 |
 | getAvgPowerInjection | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:196 |
@@ -104,7 +103,6 @@ Java API files: 144. Missing matching port paths: 0.
 | setWirelessFrequency | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:83 |
 | setWirelessOutput | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:63 |
 | suckFromItemInventory | src/main/scala/li/cil/oc/server/component/traits/ItemInventoryControl.scala:29 |
-| suckFromSlot | src/main/scala/li/cil/oc/server/component/traits/InventoryWorldControlMk2.scala:47 |
 
 ## API paths requiring source review
 
