@@ -38,6 +38,46 @@ import java.nio.charset.StandardCharsets;
 @PrefixGameTestTemplate(false)
 public final class MicrocontrollerNetworkGameTests {
     @GameTest(template = "empty")
+    public static void microcontrollerRotationRewiresPhysicalCablesAndClosesNewFront(final GameTestHelper helper) {
+        final var controller = place(helper);
+        final var relative = new BlockPos(1, 1, 1);
+        final var cables = new java.util.EnumMap<Direction, li.cil.oc.common.blockentity.CableBlockEntity>(Direction.class);
+        for (final Direction side : Direction.values()) {
+            helper.setBlock(relative.relative(side), ModBlocks.CABLE.get());
+            final li.cil.oc.common.blockentity.CableBlockEntity cable = helper.getBlockEntity(relative.relative(side));
+            cable.onLoad();
+            Network.joinOrCreateNetwork(cable);
+            cables.put(side, cable);
+        }
+        ((Connector) controller.machine().node()).changeBuffer(731);
+        final String privateAddress = controller.machine().node().address();
+        for (final Direction front : List.of(Direction.EAST, Direction.SOUTH, Direction.WEST, Direction.NORTH)) {
+            final Node closingPlug = controller.sidedNode(front);
+            final Node closingControl = controller.onAnalyze(null, front, 0, 0, 0)[0];
+            helper.getLevel().setBlockAndUpdate(controller.getBlockPos(), controller.getBlockState()
+                .setValue(li.cil.oc.common.block.MicrocontrollerBlock.FACING, front));
+            helper.assertTrue(helper.getLevel().getBlockEntity(controller.getBlockPos()) == controller, "Rotation replaced machine host");
+            helper.assertTrue(closingPlug.network() == null && closingControl.network() == null, "Rotation retained network on new front");
+            for (final Direction side : Direction.values()) {
+                final var cable = cables.get(side);
+                if (side == front) helper.assertTrue(controls(cable.node()) == 0, "Front cable still sees control component");
+                else helper.assertTrue(cable.node().isNeighborOf(controller.sidedNode(side)) && controls(cable.node()) == 1,
+                    "Rotated face did not reconnect cable on " + side);
+                final var connection = helper.getLevel().getBlockState(cable.getBlockPos())
+                    .getValue(li.cil.oc.common.block.CableBlock.CONNECTIONS.get(side.getOpposite()));
+                helper.assertTrue(connection == (side == front ? li.cil.oc.common.block.CableBlock.Connection.NONE
+                    : li.cil.oc.common.block.CableBlock.Connection.DEVICE), "Cable connection shape disagrees with rotated port on " + side
+                        + ": " + connection + ", front=" + front);
+                helper.assertTrue((helper.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK, controller.getBlockPos(), side) == null)
+                    == (side == front), "Rotated FE input is exposed on the wrong face");
+            }
+            helper.assertTrue(privateAddress.equals(controller.machine().node().address())
+                && ((Connector) controller.machine().node()).globalBuffer() == 731, "Rotation changed private identity or energy");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void microcontrollerRoutesPacketsWithoutPassiveExternalRelay(final GameTestHelper helper) throws Exception {
         final var controller = place(helper);
         final var west = new Receiver();

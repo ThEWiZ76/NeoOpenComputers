@@ -556,6 +556,17 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     }
 
     @Override
+    public void setBlockState(final BlockState state) {
+        final Direction previousFacing = facing();
+        super.setBlockState(state);
+        if (network != null && level != null && !level.isClientSide && !isRemoved() && previousFacing != facing()) {
+            network.connectExternal();
+            Network.joinOrCreateNetwork(this);
+            level.invalidateCapabilities(worldPosition);
+        }
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeMachineNode();

@@ -49,11 +49,17 @@ final class MicrocontrollerNetwork {
     }
 
     void connectExternal() {
-        suspended = false;
+        suspended = true;
         connectInternal();
         for (final Direction side : Direction.values()) {
-            if (side != host.facing()) Network.joinNewNetwork(plugs[side.ordinal()].node);
+            if (side == host.facing()) {
+                plugs[side.ordinal()].node.remove();
+                controls[side.ordinal()].remove();
+            } else {
+                Network.joinNewNetwork(plugs[side.ordinal()].node);
+            }
         }
+        suspended = false;
         refreshControls();
     }
 
