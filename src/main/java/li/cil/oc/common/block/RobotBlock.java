@@ -58,6 +58,24 @@ public class RobotBlock extends HorizontalDirectionalBlock implements EntityBloc
     }
 
     @Override
+    protected boolean isSignalSource(final BlockState state) { return true; }
+
+    @Override
+    protected int getSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
+        return level.getBlockEntity(pos) instanceof RobotBlockEntity robot ? robot.redstoneOutput(direction.getOpposite()) : 0;
+    }
+
+    @Override
+    protected int getDirectSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
+        return getSignal(state, level, pos, direction);
+    }
+
+    @Override
+    public boolean canConnectRedstone(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction side) {
+        return level.getBlockEntity(pos) instanceof RobotBlockEntity robot && robot.hasRedstoneCard();
+    }
+
+    @Override
     public BlockEntity newBlockEntity(final BlockPos pos, final BlockState state) {
         return new RobotBlockEntity(pos, state);
     }

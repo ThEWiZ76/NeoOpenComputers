@@ -126,13 +126,13 @@ public final class RedstoneCardGameTests {
         });
     }
 
-    private static int ccProviderOutput(net.minecraft.world.level.Level world, BlockPos pos, Direction side) throws Exception {
+    static int ccProviderOutput(net.minecraft.world.level.Level world, BlockPos pos, Direction side) throws Exception {
         // Only the test inspects CC's dispatch: its public getBundledRedstoneOutput intentionally reads CC blocks alone.
         return (Integer) Class.forName("dan200.computercraft.impl.BundledRedstone")
             .getMethod("getOutput", net.minecraft.world.level.Level.class, BlockPos.class, Direction.class).invoke(null, world, pos, side);
     }
 
-    private static Runnable bootComputerCraft(GameTestHelper helper, BlockPos pos, String script) throws Exception {
+    static Runnable bootComputerCraft(GameTestHelper helper, BlockPos pos, String script) throws Exception {
         return ComputerCraftFixture.boot(helper, pos, script);
     }
 

@@ -86,7 +86,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
-public class RobotBlockEntity extends BlockEntity implements Robot, Container, WorldlyContainer, MenuProvider, IMenuProviderExtension, DeviceInfo, StateAware, Analyzable {
+public class RobotBlockEntity extends BlockEntity implements Robot, Container, WorldlyContainer, MenuProvider, IMenuProviderExtension, DeviceInfo, StateAware, Analyzable, li.cil.oc.common.component.RedstoneControllerHost {
     public static final String TAG_TIER = "oc:tier";
     public static final String TAG_HARDWARE = "oc:hardware";
     public static final int TOOL_SLOT = 0;
@@ -178,6 +178,11 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     private final Machine machine;
     private CompoundTag unloadedState;
     private boolean relocating;
+    private final int[] redstoneOutputs = new int[6]; // Local sides rotate with the robot.
+    private final int[] redstoneInputs = {-1, -1, -1, -1, -1, -1};
+    private final int[][] bundledOutputs = new int[6][16];
+    private final li.cil.oc.common.component.BundledRedstoneInputs bundledInputs = new li.cil.oc.common.component.BundledRedstoneInputs();
+    private int wakeThreshold;
     private final IEnergyStorage energyStorage = new ForgeEnergyStorageView(this::connectorNode, this::energyThroughput);
     private final MultiTank internalTanks = new MultiTank() {
         @Override
@@ -547,6 +552,105 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
     }
 
     @Override
+    public int redstoneOutput(final Direction direction) {
+        synchronized (redstoneOutputs) { return redstoneOutputs[toLocal(direction).get3DDataValue()]; }
+    }
+
+    @Override
+    public int redstoneInput(final Direction direction) {
+        synchronized (redstoneInputs) { return Math.max(0, redstoneInputs[direction.get3DDataValue()]); }
+    }
+
+    @Override
+    public void setRedstoneOutput(final Direction direction, final int value) {
+        synchronized (redstoneOutputs) {
+            final int side = toLocal(direction).get3DDataValue();
+            final int clamped = Math.clamp(value, 0, 15);
+            if (redstoneOutputs[side] == clamped) return;
+            redstoneOutputs[side] = clamped;
+        }
+        updateRedstoneNeighbors();
+    }
+
+    @Override
+    public int bundledRedstoneInput(final Direction direction, final int color) { return bundledInputs.get(direction, color); }
+
+    @Override
+    public int bundledRedstoneOutput(final Direction direction, final int color) {
+        synchronized (bundledOutputs) { return bundledOutputs[toLocal(direction).get3DDataValue()][color]; }
+    }
+
+    @Override
+    public void setBundledRedstoneOutput(final Direction direction, final int color, final int value) {
+        synchronized (bundledOutputs) {
+            final int side = toLocal(direction).get3DDataValue();
+            final int clamped = Math.clamp(value, 0, 255);
+            if (bundledOutputs[side][color] == clamped) return;
+            bundledOutputs[side][color] = clamped;
+        }
+        updateRedstoneNeighbors();
+    }
+
+    @Override
+    public int wakeThreshold() { return wakeThreshold; }
+
+    @Override
+    public void setWakeThreshold(final int value) { wakeThreshold = value; markChanged(); }
+
+    public boolean hasRedstoneCard() {
+        for (final ItemStack stack : hardwareItemsForMachine()) {
+            if (stack.getItem() instanceof li.cil.oc.common.item.RedstoneCardItem) return true;
+        }
+        for (final RuntimeComponent component : runtimeComponents) {
+            if (component != null && component.environment() instanceof li.cil.oc.common.component.RedstoneCardEnvironment) return true;
+        }
+        return false;
+    }
+
+    private void updateRedstoneNeighbors() {
+        if (level == null || level.isClientSide) return;
+        if (level.getServer() != null && !level.getServer().isSameThread()) {
+            level.getServer().execute(this::updateRedstoneNeighbors);
+            return;
+        }
+        markChanged();
+        level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+        for (Direction direction : Direction.values()) level.updateNeighborsAt(worldPosition.relative(direction), getBlockState().getBlock());
+    }
+
+    private void redstoneChanged(final String address, final Direction side, final int oldValue, final int newValue, final int color) {
+        if (address == null) return;
+        if (color < 0) machine.signal("redstone_changed", address, toLocal(side).get3DDataValue(), oldValue, newValue);
+        else machine.signal("redstone_changed", address, toLocal(side).get3DDataValue(), oldValue, newValue, color);
+        if (oldValue < wakeThreshold && newValue >= wakeThreshold) machine.start();
+    }
+
+    private void updateRedstone() {
+        final String address = machine.components().entrySet().stream().filter(entry -> entry.getValue().equals("redstone"))
+            .map(Map.Entry::getKey).findFirst().orElse(null);
+        if (!hasRedstoneCard()) {
+            boolean changed = false;
+            synchronized (redstoneOutputs) {
+                for (int index = 0; index < 6; index++) { changed |= redstoneOutputs[index] != 0; redstoneOutputs[index] = 0; }
+            }
+            synchronized (bundledOutputs) {
+                for (int[] side : bundledOutputs) for (int color = 0; color < 16; color++) { changed |= side[color] != 0; side[color] = 0; }
+            }
+            if (changed) updateRedstoneNeighbors();
+        }
+        synchronized (redstoneInputs) {
+            for (Direction direction : Direction.values()) {
+                final int index = direction.get3DDataValue();
+                final int oldValue = redstoneInputs[index];
+                final int newValue = level.getSignal(worldPosition.relative(direction), direction.getOpposite());
+                redstoneInputs[index] = newValue;
+                if (oldValue >= 0 && oldValue != newValue) redstoneChanged(address, direction, oldValue, newValue, -1);
+            }
+        }
+        bundledInputs.update(this, change -> redstoneChanged(address, change.side(), change.oldValue(), change.newValue(), change.color()));
+    }
+
+    @Override
     public Container equipmentInventory() {
         return equipmentInventory;
     }
@@ -864,6 +968,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             return new Object[]{null, "blocked"};
         }
         startAnimation(null, clockwise ? 90 : -90, ModSettings.robotTurnDelay(), false);
+        updateRedstoneNeighbors();
         if (context != null) context.pause(ModSettings.robotTurnDelay());
         setChanged();
         return new Object[]{true};
@@ -1576,6 +1681,15 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         name = tag.getString(TAG_NAME).isBlank() ? "Robot" : tag.getString(TAG_NAME);
         ownerName = tag.getString(TAG_OWNER_NAME);
         ownerUUID = tag.hasUUID(TAG_OWNER_UUID) ? tag.getUUID(TAG_OWNER_UUID) : NIL_UUID;
+        wakeThreshold = tag.getInt("oc:wakeThreshold");
+        loadRedstoneValues(tag.getIntArray("oc:redstoneOutputs"), redstoneOutputs, 15, 0);
+        loadRedstoneValues(tag.getIntArray("oc:redstoneInputs"), redstoneInputs, 15, -1);
+        final int[] bundled = tag.getIntArray("oc:bundledRedstoneOutputs");
+        synchronized (bundledOutputs) {
+            for (int side = 0; side < 6; side++) {
+                for (int color = 0; color < 16; color++) bundledOutputs[side][color] = side * 16 + color < bundled.length ? Math.clamp(bundled[side * 16 + color], 0, 255) : 0;
+            }
+        }
         if (robotNode != null) {
             robotNode.load(tag.getCompound(TAG_ROBOT_NODE));
         }
@@ -1610,6 +1724,14 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         tag.putString(TAG_NAME, name);
         tag.putString(TAG_OWNER_NAME, ownerName);
         tag.putUUID(TAG_OWNER_UUID, ownerUUID);
+        tag.putInt("oc:wakeThreshold", wakeThreshold);
+        synchronized (redstoneOutputs) { tag.putIntArray("oc:redstoneOutputs", redstoneOutputs.clone()); }
+        synchronized (redstoneInputs) { tag.putIntArray("oc:redstoneInputs", redstoneInputs.clone()); }
+        final int[] bundled = new int[96];
+        synchronized (bundledOutputs) {
+            for (int side = 0; side < 6; side++) System.arraycopy(bundledOutputs[side], 0, bundled, side * 16, 16);
+        }
+        tag.putIntArray("oc:bundledRedstoneOutputs", bundled);
         if (robotNode != null) {
             final CompoundTag robotNodeTag = new CompoundTag();
             robotNode.save(robotNodeTag);
@@ -1629,6 +1751,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     private void tickServer() {
         syncRuntimeComponents();
+        updateRedstone();
         for (final RuntimeComponent component : runtimeComponents) {
             if (component != null && component.environment().canUpdate()) component.environment().update();
         }
@@ -1637,6 +1760,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             machine.update();
         }
         syncVisualState();
+    }
+
+    private static void loadRedstoneValues(final int[] saved, final int[] target, final int max, final int fallback) {
+        synchronized (target) {
+            for (int index = 0; index < target.length; index++) target[index] = index < saved.length ? Math.clamp(saved[index], fallback, max) : fallback;
+        }
     }
 
     private void syncVisualState() {
