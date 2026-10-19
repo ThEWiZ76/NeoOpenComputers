@@ -329,6 +329,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         tag.putInt(TAG_LIGHT_COLOR, lightColor);
         tag.putInt(TAG_TIER, tier);
         tag.put(TAG_TOOL, getItem(TOOL_SLOT).saveOptional(registries));
+        tag.putString(TAG_NAME, name);
         final CompoundTag animation = new CompoundTag();
         animation.putLong("start", animationStart);
         animation.putInt("ticks", animationTicks);
@@ -350,6 +351,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         lightColor = tag.getInt(TAG_LIGHT_COLOR) & 0xFFFFFF;
         tier = normalizeTier(tag.getInt(TAG_TIER));
         items.set(TOOL_SLOT, ItemStack.parseOptional(registries, tag.getCompound(TAG_TOOL)));
+        if (tag.contains(TAG_NAME, Tag.TAG_STRING)) name = tag.getString(TAG_NAME);
         final CompoundTag animation = tag.getCompound("oc:animation");
         animationStart = animation.getLong("start");
         animationTicks = animation.getInt("ticks");
@@ -824,6 +826,35 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         return new Object[]{name()};
     }
 
+    @Callback(doc = "function():boolean -- Starts the robot. Returns true if the state changed.")
+    public Object[] start(final Context context, final Arguments arguments) {
+        return new Object[]{!machine.isPaused() && machine.start()};
+    }
+
+    @Callback(doc = "function():boolean -- Stops the robot. Returns true if the state changed.")
+    public Object[] stop(final Context context, final Arguments arguments) {
+        return new Object[]{machine.stop()};
+    }
+
+    @Callback(direct = true, doc = "function():boolean -- Returns whether the robot is running.")
+    public Object[] isRunning(final Context context, final Arguments arguments) {
+        return new Object[]{machine.isRunning()};
+    }
+
+    @Callback(doc = "function():string -- Returns the robot name.")
+    public Object[] getName(final Context context, final Arguments arguments) {
+        return new Object[]{name()};
+    }
+
+    @Callback(doc = "function(name:string):string -- Sets a new name and returns the old name. Robot must not be running.")
+    public Object[] setName(final Context context, final Arguments arguments) {
+        final String replacement = arguments.checkString(0);
+        if (machine.isRunning()) return new Object[]{null, "is running"};
+        final String previous = name();
+        setName(replacement);
+        return new Object[]{previous};
+    }
+
     @Callback(doc = "function():number -- Get the durability of the currently equipped tool.")
     public Object[] durability(final Context context, final Arguments arguments) {
         final ItemStack tool = equipmentInventory.getItem(0);
@@ -834,8 +865,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     @Override
     public void setName(final String name) {
-        this.name = name == null || name.isBlank() ? "Robot" : name;
+        this.name = name == null ? "Robot" : name;
         setChanged();
+        if (level != null && !level.isClientSide && !isRemoved()) {
+            final BlockState state = getBlockState();
+            level.sendBlockUpdated(worldPosition, state, state, 2);
+        }
     }
 
     @Callback(direct = true, doc = "function():number -- Gets robot light color.")
@@ -1693,7 +1728,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         selectedSlot = tag.getInt(TAG_SELECTED_SLOT);
         selectedTank = tag.getInt(TAG_SELECTED_TANK);
         lightColor = tag.contains(TAG_LIGHT_COLOR) ? tag.getInt(TAG_LIGHT_COLOR) : 0xF23030;
-        name = tag.getString(TAG_NAME).isBlank() ? "Robot" : tag.getString(TAG_NAME);
+        name = tag.getString(TAG_NAME).isEmpty() ? "Robot" : tag.getString(TAG_NAME);
         ownerName = tag.getString(TAG_OWNER_NAME);
         ownerUUID = tag.hasUUID(TAG_OWNER_UUID) ? tag.getUUID(TAG_OWNER_UUID) : NIL_UUID;
         wakeThreshold = tag.getInt("oc:wakeThreshold");

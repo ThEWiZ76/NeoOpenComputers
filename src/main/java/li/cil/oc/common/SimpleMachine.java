@@ -768,6 +768,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     @Override
     public boolean start() {
         final boolean wasRunning = running;
+        if (wasRunning && !paused) return false;
         if (!wasRunning && architecture != null && host != null) {
             for (ItemStack stack : host.internalComponents()) {
                 if (Driver.driverFor(stack, host.getClass()) instanceof Processor processor) {

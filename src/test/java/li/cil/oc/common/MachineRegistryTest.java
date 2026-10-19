@@ -60,6 +60,47 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class MachineRegistryTest {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void repeatedStartReportsNoChangeAndRetainsSleep(final boolean throughCallback) throws Exception {
+        OpenComputersApi.initialize();
+        final var clock = new MutableClock();
+        final var drivers = new DriverRegistry();
+        drivers.add(new SleepyProcessorDriver());
+        API.driver = drivers;
+        final var machine = new SimpleMachine(new TestHost(), clock);
+        machine.onHostChanged();
+        final var architecture = (SleepyArchitecture) machine.architecture();
+        try {
+            assertTrue(machine.start());
+            clock.nanos = 1_000_000_000L;
+            machine.update();
+            assertEquals(1, architecture.threadedRuns);
+            final boolean changed = throughCallback
+                ? (Boolean) ((Component) machine.node()).invoke("start", null)[0] : machine.start();
+            assertFalse(changed, "Already-running machine reports a start state change");
+            machine.update();
+            assertEquals(1, architecture.threadedRuns, "Repeated start bypassed scheduled sleep");
+            clock.nanos += 100_000_000L;
+            machine.update();
+            assertEquals(2, architecture.threadedRuns);
+        } finally { machine.stop(); machine.node().remove(); }
+    }
+
+    @Test
+    void directStartStillResumesPauseWhileComponentStartDoesNot() throws Exception {
+        OpenComputersApi.initialize();
+        final var machine = new SimpleMachine(null, new MutableClock());
+        try {
+            assertTrue(machine.start());
+            assertTrue(machine.pause(1));
+            assertArrayEquals(new Object[]{false}, ((Component) machine.node()).invoke("start", null));
+            assertTrue(machine.isPaused());
+            assertTrue(machine.start());
+            assertFalse(machine.isPaused());
+        } finally { machine.stop(); machine.node().remove(); }
+    }
+
     @AfterEach
     void resetApi() {
         API.machine = null;
