@@ -93,9 +93,14 @@ public class MicrocontrollerBlock extends HorizontalDirectionalBlock implements 
     @Override
     protected int getSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
         if (level.getBlockEntity(pos) instanceof MicrocontrollerBlockEntity microcontroller) {
-            return microcontroller.redstoneOutput(direction);
+            return microcontroller.redstoneOutput(direction.getOpposite());
         }
         return 0;
+    }
+
+    @Override
+    protected int getDirectSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
+        return getSignal(state, level, pos, direction);
     }
 
     @Override

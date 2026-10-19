@@ -10869,7 +10869,7 @@ public final class NeoOpenComputersGameTests {
         helper.runAtTickTime(100, () -> {
             helper.assertTrue(computer.machine().isRunning(), "Computer stopped while setting redstone output: " + computer.machine().lastError());
             assertNextSignal(helper, computer, "redstone_set", 0D, 15D);
-            helper.assertTrue(helper.getLevel().getSignal(helper.absolutePos(computerPos), Direction.EAST) == 15, "Computer case did not emit east redstone signal");
+            helper.assertTrue(helper.getLevel().getSignal(helper.absolutePos(computerPos), Direction.WEST) == 15, "Computer case did not emit east redstone signal");
             helper.succeed();
         });
     }
@@ -10927,7 +10927,7 @@ public final class NeoOpenComputersGameTests {
         helper.runAtTickTime(100, () -> {
             helper.assertTrue(computer.machine().isRunning(), "Computer stopped while mapping redstone side: " + computer.machine().lastError());
             assertNextSignal(helper, computer, "redstone_local_side", 15D, 15D);
-            helper.assertTrue(helper.getLevel().getSignal(helper.absolutePos(computerPos), Direction.EAST) == 15, "Local back side did not emit east redstone signal");
+            helper.assertTrue(helper.getLevel().getSignal(helper.absolutePos(computerPos), Direction.WEST) == 15, "Local back side did not emit east redstone signal");
             helper.succeed();
         });
     }

@@ -642,7 +642,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             for (Direction direction : Direction.values()) {
                 final int index = direction.get3DDataValue();
                 final int oldValue = redstoneInputs[index];
-                final int newValue = level.getSignal(worldPosition.relative(direction), direction.getOpposite());
+                final int newValue = level.getSignal(worldPosition.relative(direction), direction);
                 redstoneInputs[index] = newValue;
                 if (oldValue >= 0 && oldValue != newValue) redstoneChanged(address, direction, oldValue, newValue, -1);
             }

@@ -73,8 +73,13 @@ public class RedstoneIoBlock extends Block implements EntityBlock {
     @Override
     protected int getSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
         if (level.getBlockEntity(pos) instanceof RedstoneIoBlockEntity redstone) {
-            return redstone.redstoneOutput(direction);
+            return redstone.redstoneOutput(direction.getOpposite());
         }
         return 0;
+    }
+
+    @Override
+    protected int getDirectSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
+        return getSignal(state, level, pos, direction);
     }
 }

@@ -93,9 +93,14 @@ public class ComputerCaseBlock extends HorizontalDirectionalBlock implements Ent
     @Override
     protected int getSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
         if (level.getBlockEntity(pos) instanceof ComputerCaseBlockEntity computerCase) {
-            return computerCase.redstoneOutput(direction);
+            return computerCase.redstoneOutput(direction.getOpposite());
         }
         return 0;
+    }
+
+    @Override
+    protected int getDirectSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
+        return getSignal(state, level, pos, direction);
     }
 
     @Override

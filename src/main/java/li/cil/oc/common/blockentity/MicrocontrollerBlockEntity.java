@@ -636,7 +636,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
             for (Direction direction : Direction.values()) {
                 final int index = direction.get3DDataValue();
                 final int oldValue = redstoneInputs[index];
-                final int newValue = level.getSignal(worldPosition.relative(direction), direction.getOpposite());
+                final int newValue = level.getSignal(worldPosition.relative(direction), direction);
                 redstoneInputs[index] = newValue;
                 if (redstoneAddress != null && oldValue != newValue) {
                     machine.signal("redstone_changed", redstoneAddress, toLocal(direction).get3DDataValue(), oldValue, newValue);
