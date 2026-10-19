@@ -57,6 +57,12 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     }
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) Network.joinOrCreateNetwork(this);
+    }
+
+    @Override
     public Node node() {
         if (node == null) {
             node = createNode(this);
@@ -309,6 +315,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        bundledInputs.load(tag);
         if (tag.contains(TAG_NODE)) {
             node().load(tag.getCompound(TAG_NODE));
         }
@@ -327,6 +334,7 @@ public class RedstoneIoBlockEntity extends BlockEntity implements Environment, R
         tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_OUTPUTS, outputs);
         tag.putIntArray(TAG_BUNDLED_OUTPUTS, saveBundledOutputs());
+        bundledInputs.save(tag);
     }
 
     @Override

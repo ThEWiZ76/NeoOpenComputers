@@ -487,6 +487,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        bundledInputs.load(tag);
         unloadedState = null;
         wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
         loadRedstoneOutputs(tag);
@@ -505,6 +506,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         tag.putInt(TAG_WAKE_THRESHOLD, wakeThreshold);
         tag.putIntArray(TAG_REDSTONE_OUTPUTS, redstoneOutputs);
         tag.putIntArray(TAG_BUNDLED_REDSTONE_OUTPUTS, saveBundledRedstoneOutputs());
+        bundledInputs.save(tag);
         final CompoundTag machineTag = new CompoundTag();
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);

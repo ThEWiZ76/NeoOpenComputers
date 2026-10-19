@@ -1674,6 +1674,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         unloadedState = null;
         for (int slot = CONTAINER_RUNTIME_SLOT_START; slot < CARGO_SLOT_START; slot++) detachRuntimeComponent(slot);
         super.loadAdditional(tag, registries);
+        bundledInputs.load(tag);
         tier = normalizeTier(tag.getInt(TAG_TIER));
         selectedSlot = tag.getInt(TAG_SELECTED_SLOT);
         selectedTank = tag.getInt(TAG_SELECTED_TANK);
@@ -1732,6 +1733,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             for (int side = 0; side < 6; side++) System.arraycopy(bundledOutputs[side], 0, bundled, side * 16, 16);
         }
         tag.putIntArray("oc:bundledRedstoneOutputs", bundled);
+        bundledInputs.save(tag);
         if (robotNode != null) {
             final CompoundTag robotNodeTag = new CompoundTag();
             robotNode.save(robotNodeTag);
