@@ -1,6 +1,6 @@
 # Port source surface inventory
 
-Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `c125614e99c802ab724818be2548433b2bef25ed`.
+Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `be5ceb8c3babae9d39d4959388f11ea446e43961`.
 
 Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.
 
@@ -83,9 +83,7 @@ Java API files: 144. Missing matching port paths: 0.
 | isDone | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:513 |
 | isNetworkPowered | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:216 |
 | isPowered | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:53 |
-| isSideOpen | src/main/scala/li/cil/oc/common/tileentity/Microcontroller.scala:117 |
 | isWorking | src/main/scala/li/cil/oc/integration/forestry/DriverAnalyzer.scala:26 |
-| lastError | src/main/scala/li/cil/oc/common/tileentity/Microcontroller.scala:113 |
 | listAllSpecies | src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:110 |
 | producesEnergy | src/main/scala/li/cil/oc/integration/ic2/DriverReactor.java:63; src/main/scala/li/cil/oc/integration/ic2/DriverReactorChamber.java:78; src/main/scala/li/cil/oc/integration/ic2/DriverReactorRedstonePort.java:93 |
 | requesting | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:330 |
@@ -97,7 +95,6 @@ Java API files: 144. Missing matching port paths: 0.
 | setInterfaceConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverBlockInterface.scala:46; src/main/scala/li/cil/oc/integration/appeng/DriverPartInterface.scala:55 |
 | setName | src/main/scala/li/cil/oc/common/tileentity/RobotProxy.scala:126 |
 | setReading | src/main/scala/li/cil/oc/integration/tis3d/SerialInterfaceProviderAdapter.scala:63 |
-| setSideOpen | src/main/scala/li/cil/oc/common/tileentity/Microcontroller.scala:123 |
 | setWirelessFrequency | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:83 |
 | setWirelessOutput | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:63 |
 

@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "c125614e99c802ab724818be2548433b2bef25ed",
+  "port_revision": "be5ceb8c3babae9d39d4959388f11ea446e43961",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -720,6 +720,10 @@
               "line": 163
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 217
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 223
             }
@@ -1054,6 +1058,10 @@
               "line": 163
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 217
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 223
             }
@@ -1063,6 +1071,10 @@
           "name": "stop",
           "line": 105,
           "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 222
+            },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
               "line": 87
@@ -1078,6 +1090,10 @@
           "line": 109,
           "same_name_port_declarations": [
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 225
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 233
             }
@@ -1086,17 +1102,32 @@
         {
           "name": "lastError",
           "line": 113,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 228
+            }
+          ]
         },
         {
           "name": "isSideOpen",
           "line": 117,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 231
+            }
+          ]
         },
         {
           "name": "setSideOpen",
           "line": 123,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 236
+            }
+          ]
         }
       ]
     },
@@ -1503,6 +1534,10 @@
               "line": 163
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 217
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 223
             }
@@ -1512,6 +1547,10 @@
           "name": "stop",
           "line": 118,
           "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 222
+            },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
               "line": 87
@@ -1526,6 +1565,10 @@
           "name": "isRunning",
           "line": 122,
           "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 225
+            },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 233
@@ -6228,6 +6271,10 @@
               "line": 163
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 217
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 223
             }
@@ -6237,6 +6284,10 @@
           "name": "stop",
           "line": 439,
           "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 222
+            },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
               "line": 87
@@ -6251,6 +6302,10 @@
           "name": "isRunning",
           "line": 443,
           "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 225
+            },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 233
@@ -7574,6 +7629,10 @@
           "name": "stop",
           "line": 53,
           "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
+              "line": 222
+            },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
               "line": 87
@@ -8899,14 +8958,8 @@
     "isPowered": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:53"
     ],
-    "isSideOpen": [
-      "src/main/scala/li/cil/oc/common/tileentity/Microcontroller.scala:117"
-    ],
     "isWorking": [
       "src/main/scala/li/cil/oc/integration/forestry/DriverAnalyzer.scala:26"
-    ],
-    "lastError": [
-      "src/main/scala/li/cil/oc/common/tileentity/Microcontroller.scala:113"
     ],
     "listAllSpecies": [
       "src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:110"
@@ -8943,9 +8996,6 @@
     ],
     "setReading": [
       "src/main/scala/li/cil/oc/integration/tis3d/SerialInterfaceProviderAdapter.scala:63"
-    ],
-    "setSideOpen": [
-      "src/main/scala/li/cil/oc/common/tileentity/Microcontroller.scala:123"
     ],
     "setWirelessFrequency": [
       "src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:83"
