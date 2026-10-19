@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "7cd2fa09d14afb49722fe7b68a51a181cafb2654",
+  "port_revision": "d7a8cb73490e035718b5e95c1514817212e94d1c",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -721,7 +721,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 217
+              "line": 238
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
@@ -1059,7 +1059,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 217
+              "line": 238
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
@@ -1073,7 +1073,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 222
+              "line": 243
             },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
@@ -1091,7 +1091,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 225
+              "line": 246
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
@@ -1105,7 +1105,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 228
+              "line": 249
             }
           ]
         },
@@ -1115,7 +1115,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 231
+              "line": 252
             }
           ]
         },
@@ -1125,7 +1125,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 236
+              "line": 257
             }
           ]
         }
@@ -1535,7 +1535,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 217
+              "line": 238
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
@@ -1549,7 +1549,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 222
+              "line": 243
             },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
@@ -1567,7 +1567,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 225
+              "line": 246
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
@@ -6272,7 +6272,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 217
+              "line": 238
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
@@ -6286,7 +6286,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 222
+              "line": 243
             },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
@@ -6304,7 +6304,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 225
+              "line": 246
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
@@ -7631,7 +7631,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
-              "line": 222
+              "line": 243
             },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
