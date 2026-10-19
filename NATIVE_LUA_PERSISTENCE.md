@@ -1,5 +1,17 @@
 # Native Lua runtime and persistence
 
+## Selectable native versions - 2026-10-19
+
+Lua 5.3 and Lua 5.4 now reuse the persistent native machine runtime with a version-specific VM. Their selectable names match upstream. LuaJ remains the default; the existing Lua 5.2 (native) name and CPU metadata are preserved. Loader support alone was previously insufficient: the machine runtime always created Lua 5.2.
+
+Required GameTests boot real tier-1 computers in each new VM, check integer division/bit operators/integer identity (plus 5.4 const/close syntax), then unload and reconstruct a running computer. Lua locals, cyclic references and an open binary file offset must survive without reboot. Separate fixtures boot full OpenOS, set a shell variable, unload/reload and read the retained value through a typed command. Both versions pass the first integrated build: 2121 unit tests and all 682 mandatory GameTests. Log: build/finish-port-implementation/native-versions-first-verified.log.
+
+Final build and all 684 required GameTests pass, including real Lua API architecture switching 5.3 to 5.4 and back, CPU metadata/running class agreement, same-name no-op, unknown-name error and closing the old VM. Unit suite: 2121 tests, zero failures/errors. Runtime commit: bdfe6f2ca. Final log: build/finish-port-implementation/native-versions-verified.log.
+
+The first integrated run crashed while saving Lua 5.4: Eris could not persist a light C function. Enabling Eris path diagnostics identified root.stringMetatable.__div. NativeLuaPersistence now also captures native functions reachable through the initial string metatable, so fresh VMs rebind Lua 5.4's arithmetic coercion functions. A three-version regression restores the metatable in a fresh VM and invokes its string methods and 5.4 division function. Diagnostic settings were removed after locating the cause. Red log: native-versions-string-metatable-red.log.
+
+Version-specific unit tests also check pending synchronized callbacks saved before/after execution without duplicate mutations, deterministic non-yield deadlines through protected calls/coroutines, restricted host libraries/binary loading, and installed memory enforcement. These results cover Windows x64/JDK21 on the GameTest server. They do not establish every host, all 5.4 to-be-closed lifetime cases, a separate-process restart for these versions, platform compatibility or visual/client acceptance. The Modrinth profile has not been updated or launched for this checkpoint.
+
 ## Current verified state - 2026-09-22
 
 Lua 5.2 (native) is now registered and selectable alongside Lua (LuaJ). CPU defaults remain LuaJ; native is not silently forced onto existing computers. computer.getArchitectures/getArchitecture/setArchitecture work in the native runtime, and changing architectures reboots into the selected class in both directions. Native execution-state persistence is tested for cases, racks, microcontrollers, drones, robots and tablets (including actual player dimension changes). This does not establish restart for every host/setup, all external filesystem unload ordering, all host APIs or client/platform acceptance.
