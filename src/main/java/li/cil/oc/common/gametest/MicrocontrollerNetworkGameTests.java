@@ -61,9 +61,9 @@ public final class MicrocontrollerNetworkGameTests {
         host.setLevel(helper.getLevel());
         try {
             host.onLoad();
-            host.setItem(0, nativeCpu());
-            host.setItem(1, new ItemStack(ModItems.MEMORY_TIER1.get()));
-            host.setItem(2, RobotMovementPersistenceGameTests.eeprom("while true do computer.pullSignal() end"));
+            MicrocontrollerFixture.setItem(host, 0, nativeCpu());
+            MicrocontrollerFixture.setItem(host, 1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+            MicrocontrollerFixture.setItem(host, 2, RobotMovementPersistenceGameTests.eeprom("while true do computer.pullSignal() end"));
             final var machine = host.machine();
             final var connector = (Connector) machine.node();
             helper.assertTrue(connector.localBufferSize() == 0 && connector.globalBufferSize() == 64 && connector.globalBuffer() == 0,
@@ -243,10 +243,10 @@ public final class MicrocontrollerNetworkGameTests {
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void nativeComputerControlsAndExchangesPacketsWithIsolatedMicrocontroller(final GameTestHelper helper) {
         final var controller = place(helper);
-        controller.setItem(0, nativeCpu());
-        controller.setItem(1, new ItemStack(ModItems.MEMORY_TIER1.get()));
-        controller.setItem(3, new ItemStack(ModItems.NETWORK_CARD.get()));
-        controller.setItem(2, RobotMovementPersistenceGameTests.eeprom("""
+        MicrocontrollerFixture.setItem(controller, 0, nativeCpu());
+        MicrocontrollerFixture.setItem(controller, 1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        MicrocontrollerFixture.setItem(controller, 3, new ItemStack(ModItems.NETWORK_CARD.get()));
+        MicrocontrollerFixture.setItem(controller, 2, RobotMovementPersistenceGameTests.eeprom("""
             local modem = component.proxy(component.list('modem')())
             local mcu = component.proxy(component.list('microcontroller')())
             assert(not mcu.isSideOpen(4), 'external configuration missing')
@@ -357,9 +357,9 @@ public final class MicrocontrollerNetworkGameTests {
     @GameTest(template = "empty")
     public static void microcontrollerExposesExternalControlAndGlobalOutputSides(final GameTestHelper helper) throws Exception {
         final var controller = place(helper);
-        controller.setItem(0, new ItemStack(ModItems.CPU_TIER1.get()));
-        controller.setItem(1, new ItemStack(ModItems.MEMORY_TIER1.get()));
-        controller.setItem(2, RobotMovementPersistenceGameTests.eeprom("while true do computer.pullSignal() end"));
+        MicrocontrollerFixture.setItem(controller, 0, new ItemStack(ModItems.CPU_TIER1.get()));
+        MicrocontrollerFixture.setItem(controller, 1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        MicrocontrollerFixture.setItem(controller, 2, RobotMovementPersistenceGameTests.eeprom("while true do computer.pullSignal() end"));
         ((Connector) controller.machine().node()).changeBuffer(500);
         final Component control = control(helper, controller, Direction.WEST);
         for (final String name : List.of("start", "stop", "isRunning", "lastError", "isSideOpen", "setSideOpen")) {

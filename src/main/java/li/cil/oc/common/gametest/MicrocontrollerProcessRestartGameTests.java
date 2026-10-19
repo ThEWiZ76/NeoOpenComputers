@@ -84,10 +84,10 @@ public final class MicrocontrollerProcessRestartGameTests {
         if (prepare) {
             final var cpu = new ItemStack(ModItems.CPU_TIER1.get());
             ((MutableProcessor) Driver.driverFor(cpu)).setArchitecture(cpu, NativeLuaArchitecture.class);
-            host.setItem(0, cpu);
-            host.setItem(1, new ItemStack(ModItems.MEMORY_TIER1.get()));
-            host.setItem(3, new ItemStack(ModItems.NETWORK_CARD.get()));
-            host.setItem(2, RobotMovementPersistenceGameTests.eeprom("""
+            MicrocontrollerFixture.setItem(host, 0, cpu);
+            MicrocontrollerFixture.setItem(host, 1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+            MicrocontrollerFixture.setItem(host, 3, new ItemStack(ModItems.NETWORK_CARD.get()));
+            MicrocontrollerFixture.setItem(host, 2, RobotMovementPersistenceGameTests.eeprom("""
                 local eeprom = component.proxy(component.list('eeprom')())
                 assert(eeprom.getData() == '', 'unexpected reboot')
                 local mcu = component.proxy(component.list('microcontroller')())

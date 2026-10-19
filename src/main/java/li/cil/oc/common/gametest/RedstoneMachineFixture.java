@@ -40,10 +40,10 @@ final class RedstoneMachineFixture {
                 eeprom = slot;
             } else if (type.equals("card") && card < 0) {
                 stack = new ItemStack(advanced ? ModItems.REDSTONE_CARD_TIER2.get() : ModItems.REDSTONE_CARD.get());
-                if (!inventory.canPlaceItem(slot, stack)) continue;
+                if (!MicrocontrollerFixture.canPlaceItem(inventory, slot, stack)) continue;
                 card = slot;
             }
-            if (!stack.isEmpty()) inventory.setItem(slot, stack);
+            if (!stack.isEmpty()) MicrocontrollerFixture.setItem(inventory, slot, stack);
         }
         helper.assertTrue(cpu && memory && eeprom >= 0 && card >= 0, "Redstone fixture hardware does not fit the host");
         entity.onLoad();

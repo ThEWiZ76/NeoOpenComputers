@@ -45,9 +45,9 @@ public final class NativeMicrocontrollerPersistenceGameTests {
         MicrocontrollerBlockEntity original = helper.getBlockEntity(pos);
         ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
         ((MutableProcessor) Driver.driverFor(cpu)).setArchitecture(cpu, NativeLuaArchitecture.class);
-        original.setItem(0, cpu);
-        original.setItem(1, new ItemStack(ModItems.MEMORY_TIER1.get()));
-        original.setItem(2, RobotMovementPersistenceGameTests.eeprom("""
+        MicrocontrollerFixture.setItem(original, 0, cpu);
+        MicrocontrollerFixture.setItem(original, 1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        MicrocontrollerFixture.setItem(original, 2, RobotMovementPersistenceGameTests.eeprom("""
             local eeprom = component.proxy(component.list('eeprom')())
             assert(eeprom.getData() == '', 'unexpected reboot')
             local retained = {value = 731}

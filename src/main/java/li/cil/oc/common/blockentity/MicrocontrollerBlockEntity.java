@@ -497,73 +497,57 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     @Override
     public ItemStack removeItem(final int slot, final int amount) {
-        if (!isValidSlot(slot)) {
-            return ItemStack.EMPTY;
-        }
-        final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
-        if (!removed.isEmpty()) {
-            setChanged();
-            notifyHardwareChanged(machine);
-            notifyItemRemoved(machine, tier, slot);
-        }
-        return removed;
+        return ItemStack.EMPTY;
     }
 
     @Override
     public ItemStack removeItemNoUpdate(final int slot) {
-        if (!isValidSlot(slot)) {
-            return ItemStack.EMPTY;
-        }
-        final ItemStack removed = ContainerHelper.takeItem(items, slot);
-        if (!removed.isEmpty()) {
-            notifyHardwareChanged(machine);
-            notifyItemRemoved(machine, tier, slot);
-        }
-        return removed;
+        return ItemStack.EMPTY;
     }
 
     @Override
     public void setItem(final int slot, final ItemStack stack) {
-        if (!isValidSlot(slot)) {
-            return;
-        }
-        final ItemStack previous = items.get(slot).copy();
-        items.set(slot, stack);
-        if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
-            stack.setCount(getMaxStackSize());
-        }
-        setChanged();
-        notifyHardwareChanged(machine);
-        if (!previous.isEmpty() && !ItemStack.matches(previous, items.get(slot))) {
-            notifyItemRemoved(machine, tier, slot);
-        }
+        // Hardware belongs to the assembled chassis. Only changeEEPROM may swap a chip.
     }
 
     @Override
     public boolean stillValid(final Player player) {
-        return !isRemoved();
+        return !isRemoved() && level != null && level.hasChunkAt(worldPosition)
+            && level.getBlockEntity(worldPosition) == this
+            && player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
     }
 
     @Override
     public boolean canPlaceItem(final int slot, final ItemStack stack) {
-        if (!isValidSlot(slot) || stack.isEmpty()) {
-            return false;
-        }
-        final DriverItem driver = Driver.driverFor(stack, getClass());
-        return driver != null
-            && slotType(tier, slot).equals(driver.slot(stack))
-            && driver.tier(stack) <= slotTier(tier, slot);
+        return false;
     }
 
     @Override
     public void clearContent() {
-        final boolean hadCpu = hasCpuStack();
-        fillExistingSlots(items, ItemStack.EMPTY);
-        setChanged();
-        notifyHardwareChanged(machine);
-        if (hadCpu) {
-            notifyItemRemoved(machine, tier, cpuSlot(tier));
+    }
+
+    @Override
+    public int getMaxStackSize() { return 1; }
+
+    public ItemStack changeEEPROM(final ItemStack replacement) {
+        if (replacement.isEmpty() || !replacement.is(li.cil.oc.common.ModItems.EEPROM.get())) {
+            throw new IllegalArgumentException("replacement must be an EEPROM");
         }
+        for (int slot = 0; slot < items.size(); slot++) {
+            if (!SLOT_TYPE_EEPROM.equals(slotType(tier, slot))) continue;
+            final ItemStack previous = items.get(slot);
+            final ItemStack installed = replacement.copyWithCount(1);
+            items.set(slot, installed);
+            try {
+                machine.onEepromChanged(previous, installed);
+            } catch (RuntimeException exception) {
+                items.set(slot, previous);
+                throw exception;
+            }
+            markChanged();
+            return previous;
+        }
+        throw new IllegalStateException("Microcontroller has no EEPROM slot");
     }
 
     @Override
@@ -678,11 +662,6 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
             }
         }
         return -1;
-    }
-
-    private boolean hasCpuStack() {
-        final int slot = cpuSlot(tier);
-        return slot >= 0 && slot < items.size() && !items.get(slot).isEmpty();
     }
 
     private void tickServer() {
@@ -800,6 +779,8 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
         boolean dirty = false;
         synchronized (redstoneInputs) {
             for (Direction direction : Direction.values()) {
+                // Sampling must not resurrect an unloading neighbor; retain its last known input.
+                if (!level.hasChunkAt(worldPosition.relative(direction))) continue;
                 final int index = direction.get3DDataValue();
                 final int oldValue = redstoneInputs[index];
                 final int newValue = level.getSignal(worldPosition.relative(direction), direction);
@@ -827,28 +808,6 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     private static void notifyHardwareChanged(final Machine machine) {
         machine.onHostChanged();
-    }
-
-    private static void notifyItemRemoved(final Machine machine, final int tier, final int slot) {
-        if (Slot.CPU.equals(slotType(tier, slot))) {
-            machine.stop();
-        }
-    }
-
-    private static int cpuSlot(final int tier) {
-        final MicrocontrollerSlot[] layout = slotLayout(tier);
-        for (int slot = 0; slot < layout.length; slot++) {
-            if (Slot.CPU.equals(layout[slot].type())) {
-                return slot;
-            }
-        }
-        return -1;
-    }
-
-    private static <T> void fillExistingSlots(final NonNullList<T> items, final T value) {
-        for (int slot = 0; slot < items.size(); slot++) {
-            items.set(slot, value);
-        }
     }
 
     private static boolean slotAcceptsStack(final int tier, final int slot, final ItemStack stack) {

@@ -77,7 +77,7 @@ public final class RedstoneEnableGameTests {
                 "Pausing incorrectly disabled the installed card");
             // Also clear legacy bundled state when its provider has since been removed.
             fixture.host().setBundledRedstoneOutput(Direction.UP, 0, 255);
-            if (action.equals("remove")) fixture.inventory().setItem(fixture.cardSlot(), ItemStack.EMPTY);
+            if (action.equals("remove")) MicrocontrollerFixture.setItem(fixture.inventory(), fixture.cardSlot(), ItemStack.EMPTY);
             else if (action.equals("crash")) fixture.machine().crash("redstone lifecycle probe");
             else fixture.machine().stop();
             helper.assertTrue(fixture.host().redstoneOutput(Direction.UP) == 0 && fixture.host().bundledRedstoneOutput(Direction.UP, 0) == 0,

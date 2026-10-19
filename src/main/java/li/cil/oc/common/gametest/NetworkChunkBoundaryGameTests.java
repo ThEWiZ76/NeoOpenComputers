@@ -16,6 +16,27 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class NetworkChunkBoundaryGameTests {
     @GameTest(template = "empty")
+    public static void microcontrollerInputSamplingDoesNotLoadAdjacentChunk(final GameTestHelper helper) {
+        final var level = helper.getLevel();
+        final var edge = new BlockPos(1_600_015, 80, -1_596_792);
+        final var chunk = level.getChunkAt(edge);
+        helper.assertTrue(!level.hasChunkAt(edge.east()), "Microcontroller fixture requires an unloaded east chunk");
+        try {
+            chunk.setBlockState(edge, ModBlocks.MICROCONTROLLER_TIER1.get().defaultBlockState(), false);
+            final var host = (li.cil.oc.common.blockentity.MicrocontrollerBlockEntity) chunk.getBlockEntity(edge);
+            host.onLoad();
+            helper.assertTrue(!level.hasChunkAt(edge.east()), "Microcontroller lifecycle loaded adjacent chunk");
+            li.cil.oc.common.blockentity.MicrocontrollerBlockEntity.serverTick(level, edge, host.getBlockState(), host);
+            helper.assertTrue(!level.hasChunkAt(edge.east()), "Microcontroller input sampling loaded adjacent chunk");
+            host.onChunkUnloaded();
+            helper.assertTrue(!level.hasChunkAt(edge.east()), "Microcontroller teardown loaded adjacent chunk");
+        } finally {
+            chunk.setBlockState(edge, Blocks.AIR.defaultBlockState(), false);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void adapterDiscoveryDoesNotLoadAdjacentChunk(GameTestHelper helper) {
         final var level = helper.getLevel();
         final var edge = new BlockPos(1_600_015, 80, -1_598_392);

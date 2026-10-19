@@ -83,6 +83,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
     private final Set<String> users = new LinkedHashSet<>();
     private final Set<ManagedEnvironment> componentEnvironments = new LinkedHashSet<>();
+    private final Map<ItemStack, ManagedEnvironment> environmentsByStack = new java.util.IdentityHashMap<>();
     private final Set<Node> visibleComponents = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
     private ManagedEnvironment temporaryFileSystemEnvironment;
     private Architecture architecture;
@@ -148,6 +149,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             }
         }
         componentEnvironments.clear();
+        environmentsByStack.clear();
         maxComponents = 0;
         double callBudgetSum = 0D;
         int callBudgetCount = 0;
@@ -204,9 +206,32 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
 
             node().connect(environment.node());
             componentEnvironments.add(environment);
+            environmentsByStack.put(stack, environment);
             host.onMachineConnect(environment.node(), stack);
         }
         maxCallBudget = callBudgetCount == 0 ? 1D : callBudgetSum / callBudgetCount;
+    }
+
+    @Override
+    public void onEepromChanged(final ItemStack previous, final ItemStack replacement) {
+        final DriverItem driver = Driver.driverFor(replacement, host.getClass());
+        if (driver == null || !"eeprom".equals(driver.slot(replacement))) {
+            throw new IllegalArgumentException("replacement must be an EEPROM");
+        }
+        // Construct first: an invalid replacement must not detach the installed chip.
+        final ManagedEnvironment added = driver.createEnvironment(replacement, host);
+        if (added == null || added.node() == null) throw new IllegalArgumentException("EEPROM has no component");
+        final ManagedEnvironment removed = environmentsByStack.remove(previous);
+        if (removed != null) {
+            host.onMachineDisconnect(removed.node());
+            removed.node().remove();
+            saveComponentEnvironment(removed);
+            componentEnvironments.remove(removed);
+        }
+        node().connect(added.node());
+        componentEnvironments.add(added);
+        environmentsByStack.put(replacement, added);
+        host.onMachineConnect(added.node(), replacement);
     }
 
     @Override

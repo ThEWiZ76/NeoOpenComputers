@@ -158,16 +158,13 @@ public class MicrocontrollerMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(final Player player, final int index) {
+        if (index < 0 || index >= slots.size() || index < microcontrollerSlotCount) return ItemStack.EMPTY;
         ItemStack moved = ItemStack.EMPTY;
         final Slot slot = slots.get(index);
         if (slot != null && slot.hasItem()) {
             final ItemStack stack = slot.getItem();
             moved = stack.copy();
-            if (index < microcontrollerSlotCount) {
-                if (!moveItemStackTo(stack, microcontrollerSlotCount, microcontrollerSlotCount + PLAYER_SLOT_COUNT, true)) {
-                    return ItemStack.EMPTY;
-                }
-            } else if (!moveItemStackTo(stack, 0, microcontrollerSlotCount, false)) {
+            if (!moveItemStackTo(stack, 0, microcontrollerSlotCount, false)) {
                 return ItemStack.EMPTY;
             }
 
@@ -310,8 +307,11 @@ public class MicrocontrollerMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(final ItemStack stack) {
-            return container.canPlaceItem(getSlotIndex(), stack);
+            return false;
         }
+
+        @Override
+        public boolean mayPickup(final Player player) { return false; }
     }
 
     static final class ServerMicrocontrollerData implements ContainerData {

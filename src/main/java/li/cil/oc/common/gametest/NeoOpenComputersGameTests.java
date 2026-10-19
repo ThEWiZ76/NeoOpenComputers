@@ -4046,15 +4046,15 @@ public final class NeoOpenComputersGameTests {
 
         helper.assertTrue(microcontroller.tier() == 0, "Tier 1 microcontroller reported wrong tier");
         helper.assertTrue(microcontroller.getContainerSize() == 6, "Tier 1 microcontroller slot count mismatch");
-        helper.assertTrue(microcontroller.canPlaceItem(0, new ItemStack(ModItems.CPU_TIER1.get())), "Microcontroller rejected tier 1 CPU");
-        helper.assertTrue(microcontroller.canPlaceItem(1, new ItemStack(ModItems.MEMORY_TIER1.get())), "Microcontroller rejected tier 1 memory");
-        helper.assertTrue(microcontroller.canPlaceItem(2, luaBiosEepromStack()), "Microcontroller rejected EEPROM");
-        helper.assertTrue(!microcontroller.canPlaceItem(0, new ItemStack(ModItems.CPU_TIER2.get())), "Tier 1 microcontroller accepted tier 2 CPU");
-        helper.assertTrue(!microcontroller.canPlaceItem(3, new ItemStack(ModItems.HDD_TIER1.get())), "Microcontroller accepted a hard disk");
+        helper.assertTrue(MicrocontrollerFixture.canPlaceItem(microcontroller, 0, new ItemStack(ModItems.CPU_TIER1.get())), "Microcontroller rejected tier 1 CPU");
+        helper.assertTrue(MicrocontrollerFixture.canPlaceItem(microcontroller, 1, new ItemStack(ModItems.MEMORY_TIER1.get())), "Microcontroller rejected tier 1 memory");
+        helper.assertTrue(MicrocontrollerFixture.canPlaceItem(microcontroller, 2, luaBiosEepromStack()), "Microcontroller rejected EEPROM");
+        helper.assertTrue(!MicrocontrollerFixture.canPlaceItem(microcontroller, 0, new ItemStack(ModItems.CPU_TIER2.get())), "Tier 1 microcontroller accepted tier 2 CPU");
+        helper.assertTrue(!MicrocontrollerFixture.canPlaceItem(microcontroller, 3, new ItemStack(ModItems.HDD_TIER1.get())), "Microcontroller accepted a hard disk");
 
-        microcontroller.setItem(0, new ItemStack(ModItems.CPU_TIER1.get()));
-        microcontroller.setItem(1, new ItemStack(ModItems.MEMORY_TIER1.get()));
-        microcontroller.setItem(2, luaBiosEepromStack());
+        MicrocontrollerFixture.setItem(microcontroller, 0, new ItemStack(ModItems.CPU_TIER1.get()));
+        MicrocontrollerFixture.setItem(microcontroller, 1, new ItemStack(ModItems.MEMORY_TIER1.get()));
+        MicrocontrollerFixture.setItem(microcontroller, 2, luaBiosEepromStack());
         ((Connector) microcontroller.machine().node()).changeBuffer(500);
         helper.assertTrue(microcontroller.toggleMachine(), "Microcontroller did not start with CPU, memory, and programmed EEPROM");
         helper.succeed();

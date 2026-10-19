@@ -166,7 +166,15 @@ public final class MicrocontrollerItemRoundTripGameTests {
             && !tag.contains("oc:componentNodes") && !tag.contains("oc:outputs"), "Portable item leaked runtime/private network state");
     }
 
-    private static ItemStack assemble(final GameTestHelper helper, final ItemStack template) {
+    static ItemStack assemble(final GameTestHelper helper, final ItemStack template) {
+        final var eeprom = RobotMovementPersistenceGameTests.eeprom(PROGRAM);
+        final var tag = eeprom.getOrDefault(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
+        tag.getCompound(ItemRegistry.EEPROM_DATA_TAG).putByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG, binary("seed"));
+        eeprom.set(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(tag));
+        return assemble(helper, template, eeprom);
+    }
+
+    static ItemStack assemble(final GameTestHelper helper, final ItemStack template, final ItemStack eeprom) {
         final BlockPos pos = new BlockPos(0, 1, 0);
         helper.setBlock(pos, ModBlocks.ASSEMBLER.get());
         final AssemblerBlockEntity assembler = helper.getBlockEntity(pos);
@@ -175,10 +183,6 @@ public final class MicrocontrollerItemRoundTripGameTests {
         ((MutableProcessor) Driver.driverFor(cpu)).setArchitecture(cpu, NativeLuaArchitecture.class);
         final var memory = new ItemStack(ModItems.MEMORY_TIER1.get());
         memory.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("roundtrip RAM"));
-        final var eeprom = RobotMovementPersistenceGameTests.eeprom(PROGRAM);
-        final var tag = eeprom.getOrDefault(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
-        tag.getCompound(ItemRegistry.EEPROM_DATA_TAG).putByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG, binary("seed"));
-        eeprom.set(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(tag));
         final var inputs = java.util.List.of(cpu, memory, eeprom, new ItemStack(ModItems.NETWORK_CARD.get()));
         for (int index = 0; index < inputs.size(); index++) assembler.setItem(AssemblerBlockEntity.SLOT_COMPONENT_START + index, inputs.get(index));
         helper.assertTrue(assembler.canAssemble() && assembler.start(true), "Assembler rejected native microcontroller fixture");
@@ -187,7 +191,7 @@ public final class MicrocontrollerItemRoundTripGameTests {
         return output;
     }
 
-    private static MicrocontrollerBlockEntity place(final GameTestHelper helper, final ServerPlayer player, final ItemStack stack, final BlockPos support) {
+    static MicrocontrollerBlockEntity place(final GameTestHelper helper, final ServerPlayer player, final ItemStack stack, final BlockPos support) {
         helper.setBlock(support, Blocks.STONE);
         player.setItemInHand(InteractionHand.MAIN_HAND, stack);
         final var absolute = helper.absolutePos(support);

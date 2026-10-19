@@ -1,6 +1,7 @@
 package li.cil.oc.api.machine;
 
 import li.cil.oc.api.network.ManagedEnvironment;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
 
@@ -8,6 +9,11 @@ public interface Machine extends ManagedEnvironment, Context {
     MachineHost host();
 
     void onHostChanged();
+
+    /** Notify a physical EEPROM replacement. Implementations may rebuild if hot-swap is unsupported. */
+    default void onEepromChanged(final ItemStack previous, final ItemStack replacement) {
+        onHostChanged();
+    }
 
     Architecture architecture();
 

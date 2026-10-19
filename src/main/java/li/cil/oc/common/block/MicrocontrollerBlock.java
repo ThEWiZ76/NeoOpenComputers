@@ -3,10 +3,14 @@ package li.cil.oc.common.block;
 import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.blockentity.MicrocontrollerBlockEntity;
+import li.cil.oc.common.ModItems;
+import li.cil.oc.common.WrenchTools;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.player.Player;
@@ -145,18 +149,33 @@ public class MicrocontrollerBlock extends HorizontalDirectionalBlock implements 
         final BlockPos pos,
         final Player player,
         final BlockHitResult hitResult) {
-        if (level.isClientSide) {
-            return InteractionResult.SUCCESS;
-        }
+        if (WrenchTools.holdsApplicableWrench(player, pos)) return InteractionResult.PASS;
         if (level.getBlockEntity(pos) instanceof MicrocontrollerBlockEntity microcontroller) {
-            if (player.isShiftKeyDown()) {
-                microcontroller.toggleMachine();
-            } else {
-                player.openMenu(microcontroller);
+            if (player.isShiftKeyDown() && !player.getMainHandItem().isEmpty()) return InteractionResult.PASS;
+            if (!level.isClientSide) {
+                // Keep the modern inspection UI without replacing upstream's normal-click power action.
+                if (player.isShiftKeyDown()) player.openMenu(microcontroller);
+                else microcontroller.toggleMachine();
             }
-            return InteractionResult.CONSUME;
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
         return InteractionResult.PASS;
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(final ItemStack stack, final BlockState state, final Level level, final BlockPos pos,
+                                               final Player player, final InteractionHand hand, final BlockHitResult hit) {
+        if (WrenchTools.holdsApplicableWrench(player, pos)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (!player.isShiftKeyDown() || !stack.is(ModItems.EEPROM.get())
+            || !(level.getBlockEntity(pos) instanceof MicrocontrollerBlockEntity microcontroller)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+        if (!level.isClientSide) {
+            final ItemStack previous = microcontroller.changeEEPROM(stack);
+            stack.shrink(1);
+            if (!previous.isEmpty()) player.getInventory().placeItemBackInInventory(previous);
+        }
+        return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override

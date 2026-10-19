@@ -61,8 +61,8 @@ public final class ComponentSlotMappingGameTests {
             new ItemStack(ModItems.MEMORY_TIER1.get()), RobotMovementPersistenceGameTests.eeprom("while true do computer.pullSignal() end"))) {
             boolean installed = false;
             for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-                if (inventory.getItem(slot).isEmpty() && inventory.canPlaceItem(slot, stack)) {
-                    inventory.setItem(slot, stack);
+                if (inventory.getItem(slot).isEmpty() && MicrocontrollerFixture.canPlaceItem(inventory, slot, stack)) {
+                    MicrocontrollerFixture.setItem(inventory, slot, stack);
                     installedSlots.add(slot);
                     installed = true;
                     break;
