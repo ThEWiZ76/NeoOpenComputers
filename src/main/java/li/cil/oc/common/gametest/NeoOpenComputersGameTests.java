@@ -5777,18 +5777,42 @@ public final class NeoOpenComputersGameTests {
         final DriverItem driver = Driver.driverFor(stack);
         helper.assertTrue(driver != null, "No driver for chunkloader upgrade");
 
-        final AgentTestHost host = new AgentTestHost(helper);
-        final ChunkPos ownerChunk = new ChunkPos(BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()));
+        final AgentTestHost host = new AgentTestHost(helper) {
+            private final li.cil.oc.api.machine.Machine machine = li.cil.oc.api.Machine.create(this);
+
+            @Override
+            public li.cil.oc.api.machine.Machine machine() {
+                return machine;
+            }
+        };
         final ManagedEnvironment environment = driver.createEnvironment(stack, host);
         helper.assertTrue(environment != null, "Chunkloader upgrade did not create environment");
         helper.assertTrue(environment.node() instanceof ComponentConnector, "Chunkloader node is not a component connector");
         final ComponentConnector component = (ComponentConnector) environment.node();
 
         component.invoke("setActive", null, true);
+        assertModForcedTickingChunksAround(helper, BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()), false);
+        Network.joinNewNetwork(host.machine().node());
+        host.machine().node().connect(component);
+        assertModForcedTickingChunksAround(helper, BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()), true);
+
+        component.remove();
+        environment.update();
+        helper.assertTrue(Boolean.TRUE.equals(component.invoke("isActive", null)[0]), "Detach erased requested activation");
+        assertModForcedTickingChunksAround(helper, BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()), false);
+        host.machine().node().connect(component);
+        assertModForcedTickingChunksAround(helper, BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()), true);
+
+        final CompoundTag restoredAddress = new CompoundTag();
+        restoredAddress.putString("address", "chunkloader-host-remapped");
+        host.machine().node().load(restoredAddress);
+        helper.assertTrue(Boolean.TRUE.equals(component.invoke("isActive", null)[0]), "Address restore erased requested activation");
         assertModForcedTickingChunksAround(helper, BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()), true);
 
         component.invoke("setActive", null, false);
         assertModForcedTickingChunksAround(helper, BlockPos.containing(host.xPosition(), host.yPosition(), host.zPosition()), false);
+        component.remove();
+        host.machine().node().remove();
         helper.succeed();
     }
 

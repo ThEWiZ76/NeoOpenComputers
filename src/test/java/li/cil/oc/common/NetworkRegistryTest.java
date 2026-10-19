@@ -37,6 +37,68 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NetworkRegistryTest {
     @Test
+    void loadingConnectedAddressKeepsRoutingAndChainTopologyConsistent() {
+        final var registry = deterministicRegistry();
+        final var leftHost = new TestEnvironment();
+        final var middleHost = new TestEnvironment();
+        final var rightHost = new TestEnvironment();
+        final var left = registry.newNode(leftHost, Visibility.Network).create();
+        final var middle = registry.newNode(middleHost, Visibility.Network).create();
+        final var right = registry.newNode(rightHost, Visibility.Network).create();
+        leftHost.node = left; middleHost.node = middle; rightHost.node = right;
+        registry.joinNewNetwork(left); left.connect(middle); middle.connect(right);
+        final String oldAddress = middle.address();
+        final var saved = new CompoundTag(); saved.putString("address", "restored-middle");
+        middle.load(saved);
+        assertEquals("restored-middle", middle.address());
+        assertSame(middle, left.network().node("restored-middle"));
+        assertEquals(null, left.network().node(oldAddress));
+        assertTrue(left.isNeighborOf(middle) && middle.isNeighborOf(right));
+        assertFalse(left.isNeighborOf(right));
+        assertSame(left.network(), right.network());
+        left.sendToAddress("restored-middle", "after-load", 731);
+        assertEquals(List.of("after-load"), middleHost.messageNames());
+        middle.remove();
+        assertEquals(null, left.network().node("restored-middle"));
+        assertFalse(left.network() == right.network(), "Removing the readdressed bridge must split the chain");
+    }
+
+    @Test
+    void loadingDuplicateConnectedAddressPreservesTheExistingOwner() {
+        final var registry = deterministicRegistry();
+        final var firstHost = new TestEnvironment(); final var secondHost = new TestEnvironment();
+        final var first = registry.newNode(firstHost, Visibility.Network).create();
+        final var second = registry.newNode(secondHost, Visibility.Network).create();
+        firstHost.node = first; secondHost.node = second;
+        registry.joinNewNetwork(first); first.connect(second);
+        final String owner = first.address(), previous = second.address();
+        final var saved = new CompoundTag(); saved.putString("address", owner);
+        second.load(saved);
+        assertEquals(owner, first.address());
+        assertNotEquals(owner, second.address());
+        assertSame(first, first.network().node(owner));
+        assertSame(second, first.network().node(second.address()));
+        assertEquals(null, first.network().node(previous));
+        assertTrue(first.isNeighborOf(second));
+    }
+
+    @Test
+    void blankOrWrongTypeSavedAddressesDoNotInvalidateConnectedNode() {
+        final var registry = deterministicRegistry();
+        final var host = new TestEnvironment();
+        final var node = registry.newNode(host, Visibility.Network).create(); host.node = node;
+        registry.joinNewNetwork(node);
+        final String address = node.address();
+        final var blank = new CompoundTag(); blank.putString("address", "");
+        node.load(blank);
+        assertEquals(address, node.address());
+        final var wrongType = new CompoundTag(); wrongType.putInt("address", 731);
+        node.load(wrongType);
+        assertEquals(address, node.address());
+        assertSame(node, node.network().node(address));
+    }
+
+    @Test
     void networkDiscoverySkipsUnloadedNeighborsButConnectsLoadedNeighbors() {
         final var registry = deterministicRegistry();
         final var origin = new net.minecraft.core.BlockPos(15, 64, 8);

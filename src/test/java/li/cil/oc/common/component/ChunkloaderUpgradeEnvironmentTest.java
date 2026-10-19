@@ -21,6 +21,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ChunkloaderUpgradeEnvironmentTest {
     @Test
+    void disconnectReleasesAttachmentWithoutErasingRequestedActiveState() {
+        OpenComputersApi.initialize();
+        final var environment = new ChunkloaderUpgradeEnvironment(null);
+        environment.setActive(null, new TestArguments(true));
+        environment.onDisconnect(environment.node());
+        assertArrayEquals(new Object[]{true}, environment.isActive(null, new TestArguments()),
+            "A temporary network detach must not erase the saved activation choice");
+        final var saved = new net.minecraft.nbt.CompoundTag(); environment.save(saved);
+        assertTrue(saved.getBoolean("active"));
+    }
+
+    @Test
     void activeChunkloaderConsumesOwnConnectorEnergyLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         withCachedConfig(ModSettings.CHUNKLOADER_COST, 0.25D, () ->

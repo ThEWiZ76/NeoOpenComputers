@@ -472,8 +472,12 @@ final class NetworkRegistry implements NetworkAPI {
 
         @Override
         public void load(final CompoundTag nbt) {
-            if (nbt.contains("address")) {
-                address = nbt.getString("address");
+            if (nbt.contains("address", Tag.TAG_STRING)) {
+                final String restored = nbt.getString("address");
+                if (!restored.isBlank() && !restored.equals(address)) {
+                    if (network == null) address = restored;
+                    else network.remap(this, restored);
+                }
             }
         }
 
@@ -1139,6 +1143,20 @@ final class NetworkRegistry implements NetworkAPI {
                 }
             }
             deliver(source, targets, name, data);
+        }
+
+        private void remap(final BaseNode node, final String requested) {
+            if (nodesByAddress.get(node.address) != node) {
+                throw new IllegalStateException("Node address does not belong to its network");
+            }
+            // Resolve conflicts before removal splits the graph into new networks.
+            // Existing devices keep their addresses; only the restored node moves.
+            final String restored = nodesByAddress.containsKey(requested) ? nextAddress(this) : requested;
+            final Set<BaseNode> neighbors = new LinkedHashSet<>(neighborSet(node));
+            remove(node);
+            node.address = restored;
+            NetworkRegistry.this.joinNewNetwork(node);
+            for (final BaseNode neighbor : neighbors) node.connect(neighbor);
         }
 
         private void add(final BaseNode node) {

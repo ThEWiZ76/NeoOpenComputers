@@ -94,11 +94,22 @@ public class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironment im
     }
 
     @Override
+    public void onConnect(final li.cil.oc.api.network.Node node) {
+        super.onConnect(node);
+        if (node == node() || host instanceof MachineHost machineHost && machineHost.machine() != null
+            && node == machineHost.machine().node()) {
+            updateChunkTicket();
+        }
+    }
+
+    @Override
     public void onDisconnect(final li.cil.oc.api.network.Node node) {
         super.onDisconnect(node);
         if (node == node() || host instanceof MachineHost machineHost && machineHost.machine() != null
             && node == machineHost.machine().node()) {
-            setActive(false);
+            // A node can detach while restoring its address. Release tickets,
+            // but keep the saved activation choice for the subsequent reconnect.
+            releaseChunkTickets();
         }
     }
 
@@ -134,7 +145,7 @@ public class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironment im
     }
 
     void tickPowerCost() {
-        if (!active || !(node() instanceof Connector connector)) {
+        if (!active || !isAttachedToMachine() || !(node() instanceof Connector connector)) {
             return;
         }
         final double cost = ModSettings.chunkloaderCost() * ModSettings.mfuTickFrequency();
@@ -152,7 +163,7 @@ public class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironment im
         }
 
         final BlockPos owner = ownerPosition();
-        final Set<ChunkPos> desiredChunks = active ? chunksAround(new ChunkPos(owner)) : Set.of();
+        final Set<ChunkPos> desiredChunks = active && isAttachedToMachine() ? chunksAround(new ChunkPos(owner)) : Set.of();
         final BlockPos oldOwner = ticketOwner != null ? ticketOwner : owner;
         final boolean ownerChanged = ticketOwner != null && !ticketOwner.equals(owner);
 
@@ -179,6 +190,23 @@ public class ChunkloaderUpgradeEnvironment extends AbstractManagedEnvironment im
         forcedChunks.clear();
         forcedChunks.addAll(desiredChunks);
         ticketOwner = forcedChunks.isEmpty() ? null : owner;
+    }
+
+    private boolean isAttachedToMachine() {
+        return host == null || node() != null && node().network() != null
+            && (!(host instanceof MachineHost machineHost) || machineHost.machine() != null
+                && node().isNeighborOf(machineHost.machine().node()));
+    }
+
+    private void releaseChunkTickets() {
+        if (host != null && host.world() instanceof ServerLevel level) {
+            final BlockPos owner = ticketOwner != null ? ticketOwner : ownerPosition();
+            for (final ChunkPos chunk : forcedChunks) {
+                TICKETS.forceChunk(level, owner, chunk.x, chunk.z, false, true);
+            }
+        }
+        forcedChunks.clear();
+        ticketOwner = null;
     }
 
     private BlockPos ownerPosition() {
