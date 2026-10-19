@@ -37,6 +37,77 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NetworkRegistryTest {
     @Test
+    void networkDiscoverySkipsUnloadedNeighborsButConnectsLoadedNeighbors() {
+        final var registry = deterministicRegistry();
+        final var origin = new net.minecraft.core.BlockPos(15, 64, 8);
+        final var host = new NetworkBlockEntity(registry, origin);
+        final var neighbor = new NetworkBlockEntity(registry, origin.west());
+        final var world = guardedWorld(Map.of(origin, host, origin.west(), neighbor), true);
+        registry.joinOrCreateNetwork(world, origin);
+        assertTrue(host.node().isNeighborOf(neighbor.node()), "Skipping unloaded chunks must not break loaded neighbors");
+    }
+
+    @Test
+    void networkDiscoveryDoesNotLoadItsOriginChunk() {
+        final var registry = deterministicRegistry();
+        final var world = guardedWorld(Map.of(), false);
+        registry.joinOrCreateNetwork(world, new net.minecraft.core.BlockPos(15, 64, 8));
+    }
+
+    @Test
+    void networkDiscoveryDoesNotAskSidedHostsAboutUnloadedNeighbors() {
+        final var registry = deterministicRegistry();
+        final var origin = new net.minecraft.core.BlockPos(15, 64, 8);
+        final var host = new SidedNetworkBlockEntity(registry, origin);
+        final var neighbor = new NetworkBlockEntity(registry, origin.west());
+        registry.joinOrCreateNetwork(guardedWorld(Map.of(origin, host, origin.west(), neighbor), true), origin);
+        assertTrue(host.node().isNeighborOf(neighbor.node()));
+    }
+
+    private static net.minecraft.world.level.LevelReader guardedWorld(
+        Map<net.minecraft.core.BlockPos, NetworkBlockEntity> blocks, boolean originLoaded) {
+        return (net.minecraft.world.level.LevelReader) java.lang.reflect.Proxy.newProxyInstance(
+            NetworkRegistryTest.class.getClassLoader(), new Class<?>[]{net.minecraft.world.level.LevelReader.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "hasChunk" -> originLoaded && (int) args[0] == 0 && (int) args[1] == 0;
+                case "hasChunkAt" -> {
+                    final var pos = (net.minecraft.core.BlockPos) args[0];
+                    yield originLoaded && pos.getX() >> 4 == 0 && pos.getZ() >> 4 == 0;
+                }
+                case "getBlockEntity" -> {
+                    final var pos = (net.minecraft.core.BlockPos) args[0];
+                    if (!originLoaded || pos.getX() >> 4 != 0 || pos.getZ() >> 4 != 0)
+                        throw new AssertionError("Network discovery queried an unloaded chunk: " + pos);
+                    yield blocks.get(pos);
+                }
+                default -> throw new AssertionError("Unexpected world access: " + method.getName());
+            });
+    }
+
+    private static class NetworkBlockEntity extends net.minecraft.world.level.block.entity.BlockEntity implements Environment {
+        private final Node node;
+        NetworkBlockEntity(NetworkRegistry registry, net.minecraft.core.BlockPos pos) {
+            super(null, pos, null);
+            node = registry.newNode(this, Visibility.Network).create();
+        }
+        @Override public boolean isValidBlockState(net.minecraft.world.level.block.state.BlockState state) { return true; }
+        @Override public Node node() { return node; }
+        @Override public void onConnect(Node other) { }
+        @Override public void onDisconnect(Node other) { }
+        @Override public void onMessage(Message message) { }
+    }
+
+    private static final class SidedNetworkBlockEntity extends NetworkBlockEntity implements li.cil.oc.api.network.SidedEnvironment {
+        SidedNetworkBlockEntity(NetworkRegistry registry, net.minecraft.core.BlockPos pos) { super(registry, pos); }
+        @Override public Node sidedNode(net.minecraft.core.Direction side) { return node(); }
+        @Override public boolean canConnect(net.minecraft.core.Direction side) {
+            if (getBlockPos().relative(side).getX() >> 4 != 0)
+                throw new AssertionError("Sided host was asked to inspect an unloaded neighbor");
+            return true;
+        }
+    }
+
+    @Test
     void newNetworkAddressesDoNotReuseLoadedAddressesAfterRegistryRestart() {
         final var registry = deterministicRegistry();
         final var restoredHost = new TestEnvironment();

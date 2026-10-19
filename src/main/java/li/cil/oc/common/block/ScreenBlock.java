@@ -251,14 +251,15 @@ public class ScreenBlock extends Block implements EntityBlock {
         final BlockPos pos = context.getClickedPos();
         if (!context.replacingClickedOnBlock()) {
             final BlockPos clickedPos = pos.relative(context.getClickedFace().getOpposite());
-            final BlockState clickedState = context.getLevel().getBlockState(clickedPos);
-            final BlockState inherited = inheritConnectedScreenState(fallback, clickedState, pos, clickedPos);
-            if (inherited != fallback) {
-                return inherited;
+            if (context.getLevel().hasChunkAt(clickedPos)) {
+                final BlockState clickedState = context.getLevel().getBlockState(clickedPos);
+                final BlockState inherited = inheritConnectedScreenState(fallback, clickedState, pos, clickedPos);
+                if (inherited != fallback) return inherited;
             }
         }
         for (final Direction direction : Direction.values()) {
             final BlockPos neighborPos = pos.relative(direction);
+            if (!context.getLevel().hasChunkAt(neighborPos)) continue;
             final BlockState neighborState = context.getLevel().getBlockState(neighborPos);
             final BlockState inherited = inheritConnectedScreenState(fallback, neighborState, pos, neighborPos);
             if (inherited != fallback) {
@@ -319,7 +320,7 @@ public class ScreenBlock extends Block implements EntityBlock {
         pending.add(pos);
         while (!pending.isEmpty()) {
             final BlockPos current = pending.removeFirst();
-            if (!visited.add(current)) {
+            if (!visited.add(current) || !level.hasChunkAt(current)) {
                 continue;
             }
             final BlockState currentState = level.getBlockState(current);

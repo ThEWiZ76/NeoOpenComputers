@@ -98,7 +98,9 @@ public class CableBlockEntity extends BlockEntity implements Environment, SidedE
         if (level == null || isRemoved()) {
             return false;
         }
-        final var neighbor = level.getBlockEntity(worldPosition.relative(side));
+        final var target = worldPosition.relative(side);
+        if (!level.hasChunkAt(target)) return false;
+        final var neighbor = level.getBlockEntity(target);
         final int otherColor = neighbor instanceof Colored colored && colored.controlsConnectivity()
             ? colored.getColor() & 0xFFFFFF : DEFAULT_COLOR;
         return color == otherColor || color == DEFAULT_COLOR || otherColor == DEFAULT_COLOR;

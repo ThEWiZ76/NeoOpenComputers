@@ -123,7 +123,9 @@ public class CableBlock extends Block implements EntityBlock {
             }
             updated = updated.setValue(CONNECTIONS.get(side), connection);
         }
-        if (updated != state) level.setBlock(pos, updated, Block.UPDATE_CLIENTS);
+        // These are derived connection properties; surrounding cables are
+        // refreshed explicitly. Shape propagation would inspect unloaded chunks.
+        if (updated != state) level.setBlock(pos, updated, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
     }
 
     @Override

@@ -67,6 +67,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     private final String[] blockEnvironmentNames = new String[SIDE_COUNT];
     private final CompoundTag[] blockEnvironmentData = new CompoundTag[SIDE_COUNT];
     private final boolean[] openSides = new boolean[SIDE_COUNT];
+    private final boolean[] waitingForChunk = new boolean[SIDE_COUNT];
     private ManagedEnvironment itemEnvironment;
     private DriverItem itemDriver;
     private CompoundTag itemEnvironmentData;
@@ -358,7 +359,13 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         if (adapter.itemEnvironment != null && adapter.itemEnvironment.canUpdate()) {
             adapter.itemEnvironment.update();
         }
-        for (ManagedEnvironment environment : adapter.blockEnvironments) {
+        for (Direction side : Direction.values()) {
+            final int index = side.get3DDataValue();
+            final boolean loaded = level.hasChunkAt(pos.relative(side));
+            if (adapter.waitingForChunk[index] && loaded || adapter.blockEnvironments[index] != null && !loaded) {
+                adapter.refreshSide(side);
+            }
+            final ManagedEnvironment environment = adapter.blockEnvironments[index];
             if (environment != null && environment.canUpdate()) {
                 environment.update();
             }
@@ -414,12 +421,18 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         }
 
         final int index = direction.get3DDataValue();
+        waitingForChunk[index] = false;
         if (!isSideOpen(direction)) {
             removeBlockEnvironment(index);
             return;
         }
 
         final BlockPos targetPos = worldPosition.relative(direction);
+        if (!level.hasChunkAt(targetPos)) {
+            waitingForChunk[index] = true;
+            removeBlockEnvironment(index);
+            return;
+        }
         if (level.getBlockEntity(targetPos) instanceof li.cil.oc.api.network.Environment) {
             removeBlockEnvironment(index);
             return;

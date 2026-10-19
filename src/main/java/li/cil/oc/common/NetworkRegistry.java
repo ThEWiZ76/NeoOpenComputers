@@ -35,6 +35,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.item.ItemStack;
 
@@ -77,16 +78,18 @@ final class NetworkRegistry implements NetworkAPI {
         if (world == null || pos == null) {
             return;
         }
-        if (world.getBlockEntity(pos) instanceof SidedEnvironment sidedEnvironment) {
+        final BlockEntity blockEntity = blockEntityIfLoaded(world, pos);
+        if (blockEntity instanceof SidedEnvironment sidedEnvironment) {
             for (final Direction direction : Direction.values()) {
-                if (sidedEnvironment.canConnect(direction)) {
+                // canConnect may itself inspect the neighbor (cable colors, keyboards).
+                if (isBlockLoaded(world, pos.relative(direction)) && sidedEnvironment.canConnect(direction)) {
                     final Node adjacentNode = adjacentNode(world, pos, direction);
                     joinOrCreateNetwork(sidedEnvironment.sidedNode(direction), adjacentNode == null ? List.of() : List.of(adjacentNode));
                 }
             }
             return;
         }
-        if (world.getBlockEntity(pos) instanceof Environment environment) {
+        if (blockEntity instanceof Environment environment) {
             joinOrCreateNetwork(environment.node(), adjacentNodes(world, pos));
         }
     }
@@ -222,14 +225,24 @@ final class NetworkRegistry implements NetworkAPI {
     }
 
     private static Node adjacentNode(final BlockGetter world, final BlockPos pos, final Direction direction) {
-        if (world.getBlockEntity(pos.relative(direction)) instanceof SidedEnvironment sidedEnvironment) {
+        final BlockEntity neighbor = blockEntityIfLoaded(world, pos.relative(direction));
+        if (neighbor instanceof SidedEnvironment sidedEnvironment) {
             final Direction side = direction.getOpposite();
             return sidedEnvironment.canConnect(side) ? sidedEnvironment.sidedNode(side) : null;
         }
-        if (world.getBlockEntity(pos.relative(direction)) instanceof Environment environment) {
+        if (neighbor instanceof Environment environment) {
             return environment.node();
         }
         return null;
+    }
+
+    private static boolean isBlockLoaded(final BlockGetter world, final BlockPos pos) {
+        return !(world instanceof LevelReader level) || level.hasChunkAt(pos);
+    }
+
+    private static BlockEntity blockEntityIfLoaded(final BlockGetter world, final BlockPos pos) {
+        // Network discovery must never bring a chunk back while it is unloading.
+        return isBlockLoaded(world, pos) ? world.getBlockEntity(pos) : null;
     }
 
     private static double wirelessDistance(final WirelessEndpoint source, final WirelessEndpoint target) {

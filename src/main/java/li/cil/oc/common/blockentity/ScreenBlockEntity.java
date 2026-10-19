@@ -235,7 +235,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         final Direction yaw = ScreenBlock.yaw(state);
         for (final BlockPos screenPos : connectedScreens(pitch, yaw, right, up)) {
             for (final Direction side : Direction.values()) {
-                if (level.getBlockEntity(screenPos.relative(side)) instanceof KeyboardBlockEntity keyboard
+                if (level.hasChunkAt(screenPos.relative(side))
+                    && level.getBlockEntity(screenPos.relative(side)) instanceof KeyboardBlockEntity keyboard
                     && keyboard.canConnect(side.getOpposite())) {
                     return true;
                 }
@@ -330,8 +331,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         final Direction pitch = ScreenBlock.pitch(state);
         final Direction yaw = ScreenBlock.yaw(state);
         for (final BlockPos screenPos : connectedScreens(pitch, yaw, right, up)) {
-            if (level.hasNeighborSignal(screenPos)) {
-                return true;
+            for (final Direction side : Direction.values()) {
+                final BlockPos neighbor = screenPos.relative(side);
+                if (level.hasChunkAt(neighbor) && level.getSignal(neighbor, side) > 0) return true;
             }
         }
         return false;
@@ -571,7 +573,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (origin.equals(worldPosition)) {
             return this;
         }
-        return level.getBlockEntity(origin) instanceof ScreenBlockEntity screen ? screen : this;
+        return level.hasChunkAt(origin) && level.getBlockEntity(origin) instanceof ScreenBlockEntity screen ? screen : this;
     }
 
     public int renderBlockWidth() {
@@ -717,7 +719,7 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     }
 
     private void queueMatchingScreen(final ArrayDeque<BlockPos> pending, final Set<BlockPos> visited, final BlockPos pos, final Direction pitch, final Direction yaw, final int tier, final int renderColor) {
-        if (visited.contains(pos) || level == null) {
+        if (visited.contains(pos) || level == null || !level.hasChunkAt(pos)) {
             return;
         }
         final BlockState state = level.getBlockState(pos);
@@ -857,7 +859,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     }
 
     private boolean hasKeyboardOnSide(final Direction side) {
-        return side != null && level != null && level.getBlockEntity(worldPosition.relative(side)) instanceof Keyboard;
+        return side != null && level != null && level.hasChunkAt(worldPosition.relative(side))
+            && level.getBlockEntity(worldPosition.relative(side)) instanceof Keyboard;
     }
 
     private static boolean allowsNodeOnSide(final Direction facing, final Direction side, final boolean frontHasKeyboard) {
