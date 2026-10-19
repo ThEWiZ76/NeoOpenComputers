@@ -1,6 +1,6 @@
 # Port source surface inventory
 
-Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `be5ceb8c3babae9d39d4959388f11ea446e43961`.
+Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `156db2b6b093fea856337e6dd69b340bf196452c`.
 
 Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.
 
