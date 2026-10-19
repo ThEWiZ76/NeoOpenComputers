@@ -30,11 +30,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NetworkRegistryTest {
+    @Test
+    void newNetworkAddressesDoNotReuseLoadedAddressesAfterRegistryRestart() {
+        final var registry = deterministicRegistry();
+        final var restoredHost = new TestEnvironment();
+        final var restored = registry.newNode(restoredHost, Visibility.Network).create();
+        restoredHost.node = restored;
+        final var saved = new CompoundTag();
+        saved.putString("address", "node-1");
+        restored.load(saved);
+        registry.joinNewNetwork(restored);
+        final var freshHost = new TestEnvironment();
+        final var fresh = registry.newNode(freshHost, Visibility.Network).create();
+        freshHost.node = fresh;
+        registry.joinNewNetwork(fresh);
+        assertNotEquals(restored.address(), fresh.address(), "Separate loaded and new networks must not share a global device address");
+        assertEquals("node-1", restored.address(), "Existing persisted addresses must be preserved");
+    }
+
     @AfterEach
     void resetApi() {
         API.network = null;
@@ -123,7 +142,7 @@ final class NetworkRegistryTest {
 
     @Test
     void nodesJoinNetworksAndDeliverMessages() {
-        NetworkRegistry registry = new NetworkRegistry();
+        NetworkRegistry registry = deterministicRegistry();
         TestEnvironment hostA = new TestEnvironment();
         TestEnvironment hostB = new TestEnvironment();
         Node nodeA = registry.newNode(hostA, Visibility.Network).create();
@@ -135,8 +154,8 @@ final class NetworkRegistryTest {
         nodeA.connect(nodeB);
         nodeA.sendToAddress(nodeB.address(), "beep", "payload");
 
-        assertEquals("node-1", nodeA.address());
-        assertEquals("node-2", nodeB.address());
+        assertEquals("00000000-0000-0000-0000-000000000001", nodeA.address());
+        assertEquals("00000000-0000-0000-0000-000000000002", nodeB.address());
         assertSame(nodeA.network(), nodeB.network());
         assertTrue(nodeA.isNeighborOf(nodeB));
         assertTrue(nodeB.canBeReachedFrom(nodeA));
@@ -550,6 +569,11 @@ final class NetworkRegistryTest {
         public Object[] extra(final Context context, final Arguments arguments) {
             return new Object[]{"extra"};
         }
+    }
+
+    private static NetworkRegistry deterministicRegistry() {
+        final var sequence = new java.util.concurrent.atomic.AtomicLong();
+        return new NetworkRegistry(() -> new java.util.UUID(0, sequence.incrementAndGet()));
     }
 
     private static <T> void withCachedConfig(final ModConfigSpec.ConfigValue<T> value, final T override, final ThrowingRunnable action) throws Exception {

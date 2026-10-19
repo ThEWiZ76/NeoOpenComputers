@@ -8463,7 +8463,12 @@ public final class NeoOpenComputersGameTests {
         final ItemStack terminal = new ItemStack(ModItems.TERMINAL.get());
 
         helper.assertTrue(TerminalItem.bindToTerminalServer(terminal, rack, 0), "Terminal did not bind to terminal server");
+        helper.assertTrue(li.cil.oc.common.component.TerminalServerRegistry.find(terminalServer.node().address()) == terminalServer,
+            "Newly bound terminal server address is not registered to its current instance");
+        helper.assertTrue(terminalServer.allowsTerminal(terminal), "Binding key was not retained by terminal server/item");
         terminalServer.screen().set(0, 0, "menu", false);
+        helper.assertTrue(TerminalItem.findBoundTerminalServer(terminal) == terminalServer,
+            "Screen update lost registered terminal binding");
         final li.cil.oc.common.menu.TerminalMenu menu = TerminalItem.createMenuForBoundTerminal(1, null, terminal);
 
         helper.assertTrue(menu != null, "Terminal item did not create menu for bound terminal");

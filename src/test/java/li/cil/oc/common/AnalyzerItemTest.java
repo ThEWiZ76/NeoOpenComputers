@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class AnalyzerItemTest {
     @Test
     void describesEnvironmentComponentAddressAndEnergy() {
-        NetworkRegistry registry = new NetworkRegistry();
+        NetworkRegistry registry = new NetworkRegistry(() -> new java.util.UUID(0, 731));
         TestEnvironment host = new TestEnvironment();
         ComponentConnector node = registry.newNode(host, Visibility.Network)
             .withComponent("geolyzer", Visibility.Network)
@@ -36,7 +36,7 @@ final class AnalyzerItemTest {
         List<Component> lines = AnalyzerItem.describe(host);
 
         assertTrue(contains(lines, "Component: geolyzer"));
-        assertTrue(contains(lines, "Address: node-1"));
+        assertTrue(contains(lines, "Address: 00000000-0000-0000-0000-0000000002db"));
         assertTrue(contains(lines, "Stored energy: 4.00/10.00"));
     }
 

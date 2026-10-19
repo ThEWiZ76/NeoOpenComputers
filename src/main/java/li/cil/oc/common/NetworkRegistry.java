@@ -56,8 +56,14 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 final class NetworkRegistry implements NetworkAPI {
-    private int nextNodeId = 1;
+    private final java.util.function.Supplier<java.util.UUID> addresses;
     private final Set<WirelessEndpoint> wirelessEndpoints = new LinkedHashSet<>();
+
+    NetworkRegistry() { this(java.util.UUID::randomUUID); }
+
+    NetworkRegistry(final java.util.function.Supplier<java.util.UUID> addresses) {
+        this.addresses = java.util.Objects.requireNonNull(addresses);
+    }
 
     @Override
     public void joinOrCreateNetwork(final BlockEntity blockEntity) {
@@ -199,7 +205,7 @@ final class NetworkRegistry implements NetworkAPI {
     private String nextAddress(final WiredNetwork network) {
         String address;
         do {
-            address = "node-" + nextNodeId++;
+            address = addresses.get().toString();
         } while (network.nodesByAddress.containsKey(address));
         return address;
     }
