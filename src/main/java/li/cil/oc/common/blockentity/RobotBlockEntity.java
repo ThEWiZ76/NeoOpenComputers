@@ -86,7 +86,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
-public class RobotBlockEntity extends BlockEntity implements Robot, Container, WorldlyContainer, MenuProvider, IMenuProviderExtension, DeviceInfo, StateAware, Analyzable, li.cil.oc.common.component.RedstoneControllerHost {
+public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.common.inventory.ComponentInventory, WorldlyContainer, MenuProvider, IMenuProviderExtension, DeviceInfo, StateAware, Analyzable, li.cil.oc.common.component.RedstoneControllerHost {
     public static final String TAG_TIER = "oc:tier";
     public static final String TAG_HARDWARE = "oc:hardware";
     public static final int TOOL_SLOT = 0;
@@ -1585,6 +1585,12 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
             if (data != null) component.stack().set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
                 net.minecraft.world.item.component.CustomData.of(data.copyTag()));
         }
+    }
+
+    @Override
+    public void saveItemData(final int slot) {
+        final int index = slot - CONTAINER_RUNTIME_SLOT_START;
+        if (index >= 0 && index < runtimeComponents.length && runtimeComponents[index] != null) saveRuntimeComponent(runtimeComponents[index]);
     }
 
     private void detachRuntimeComponent(final int slot) {

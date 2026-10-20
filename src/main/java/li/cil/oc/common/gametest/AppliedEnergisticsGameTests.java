@@ -238,6 +238,15 @@ public final class AppliedEnergisticsGameTests {
                   catch (Exception exception) { helper.fail(exception.toString()); }
                 }).thenExecute(() -> helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(2, 1, 0)), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()))
                 .thenWaitUntil(() -> helper.assertTrue(grid[0].getCraftingService().getCpus().isEmpty(), "Removed CPU still registered"))
+                .thenWaitUntil(() -> {
+                    // Removing a grid block also rebuilds channels/storage. CPU removal alone
+                    // does not mean the asynchronous planner can see its ingredients yet.
+                    helper.assertTrue(grid[0].getStorageService().getInventory().getAvailableStacks().get(
+                        appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_LOG)) >= 4000,
+                        "Waiting for actual ingredients after CPU-removal grid rebuild");
+                    helper.assertTrue(grid[0].getCraftingService().isCraftable(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_PLANKS)),
+                        "Waiting for actual recipe after CPU-removal grid rebuild");
+                })
                 .thenExecute(() -> {
                   try { failureRequests[1] = (li.cil.oc.api.machine.Value) computer.machine().invoke(failureRecipe[0], "request", new Object[]{4})[0]; }
                   catch (Exception exception) { helper.fail(exception.toString()); }

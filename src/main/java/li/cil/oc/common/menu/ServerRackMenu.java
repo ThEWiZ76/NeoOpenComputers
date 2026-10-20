@@ -102,6 +102,7 @@ public class ServerRackMenu extends AbstractContainerMenu {
             if (isLockedSlot(index)) {
                 return ItemStack.EMPTY;
             }
+            li.cil.oc.common.inventory.ComponentInventory.saveBeforeTransfer(slot);
             final ItemStack stack = slot.getItem();
             moved = stack.copy();
             if (index < SERVER_SLOT_COUNT) {

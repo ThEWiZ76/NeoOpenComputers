@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public final class ServerRackMountableEnvironment extends AbstractManagedEnvironment implements Server, Container, DeviceInfo, Analyzable {
+public final class ServerRackMountableEnvironment extends AbstractManagedEnvironment implements Server, li.cil.oc.common.inventory.ComponentInventory, DeviceInfo, Analyzable {
     public static final int MISSING_CPU = 1;
     public static final int MISSING_MEMORY = 2;
     public static final int MISSING_EEPROM = 4;
@@ -480,6 +480,11 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
     @Override
     public ItemStack getItem(final int slot) {
         return isValidSlot(slot) ? items.get(slot) : ItemStack.EMPTY;
+    }
+
+    @Override
+    public void saveItemData(final int slot) {
+        if (isValidSlot(slot)) machine.saveComponentData(items.get(slot));
     }
 
     @Override

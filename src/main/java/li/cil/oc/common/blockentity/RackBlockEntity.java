@@ -48,7 +48,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, Analyzable, StateAware {
+public class RackBlockEntity extends BlockEntity implements Rack, li.cil.oc.common.inventory.ComponentInventory, MenuProvider, Analyzable, StateAware {
     public static final int CONTAINER_SIZE = 4;
     public static final String DATA_TAG = "oc:rack";
     private static final String NETWORK_MESSAGE = "network.message";
@@ -315,6 +315,12 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
     }
 
     @Override
+    public void saveItemData(final int slot) {
+        saveMountableData(slot);
+        if (isValidSlot(slot)) writeMountableData(items.get(slot), mountableData[slot]);
+    }
+
+    @Override
     public ItemStack removeItem(final int slot, final int amount) {
         if (!isValidSlot(slot)) {
             return ItemStack.EMPTY;
@@ -464,6 +470,8 @@ public class RackBlockEntity extends BlockEntity implements Rack, MenuProvider, 
         final DriverItem driver = Driver.driverFor(stack);
         if (driver != null && acceptsDriverSlot(driver.slot(stack))) {
             replaceContents(driver.dataTag(stack), data);
+            final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+            if (customData != null) stack.set(DataComponents.CUSTOM_DATA, CustomData.of(customData.copyTag()));
             return;
         }
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);

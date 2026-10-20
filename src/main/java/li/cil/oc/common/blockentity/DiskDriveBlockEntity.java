@@ -44,7 +44,7 @@ import li.cil.oc.common.menu.DiskDriveMenu;
 
 import java.util.Map;
 
-public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, Container, DeviceInfo, MenuProvider, Analyzable {
+public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironment, EnvironmentHost, li.cil.oc.common.inventory.ComponentInventory, DeviceInfo, MenuProvider, Analyzable {
     public static final int SLOT_FLOPPY = 0;
     public static final int CONTAINER_SIZE = 1;
 
@@ -380,6 +380,11 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     private void saveDiskToItem() {
         // Save while the original stack is still present, before split/take copies its item data.
         if (diskEnvironment != null) diskEnvironment.save(new CompoundTag());
+    }
+
+    @Override
+    public void saveItemData(final int slot) {
+        if (slot == SLOT_FLOPPY) saveDiskToItem();
     }
 
     private void refreshDiskEnvironment(final CompoundTag savedState) {

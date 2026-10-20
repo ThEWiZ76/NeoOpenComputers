@@ -77,12 +77,7 @@ public final class TabletRuntime implements Tablet {
     }
 
     public net.minecraft.world.Container expansionInventory() {
-        final var inventory = new net.minecraft.world.SimpleContainer(components.get(components.size() - 1)) {
-            @Override public int getMaxStackSize() { return 1; }
-            @Override public boolean canPlaceItem(int slot, ItemStack candidate) {
-                return li.cil.oc.common.menu.TabletMenu.acceptsExpansion(stack, candidate);
-            }
-        };
+        final var inventory = new ExpansionInventory(components.get(components.size() - 1));
         inventory.addListener(changed -> {
             if (closed || machine.isRunning()) return;
             components.set(components.size() - 1, changed.getItem(0));
@@ -90,6 +85,25 @@ public final class TabletRuntime implements Tablet {
             save();
         });
         return inventory;
+    }
+
+    private final class ExpansionInventory extends net.minecraft.world.SimpleContainer implements li.cil.oc.common.inventory.ComponentInventory {
+        ExpansionInventory(ItemStack initial) { super(initial); }
+        @Override public int getMaxStackSize() { return 1; }
+        @Override public boolean canPlaceItem(int slot, ItemStack candidate) { return li.cil.oc.common.menu.TabletMenu.acceptsExpansion(stack, candidate); }
+        @Override public void saveItemData(int slot) { if (slot == 0) machine.saveComponentData(getItem(slot)); }
+        @Override public ItemStack removeItem(int slot, int amount) {
+            if (amount > 0) saveItemData(slot);
+            return super.removeItem(slot, amount);
+        }
+        @Override public ItemStack removeItemNoUpdate(int slot) {
+            if (slot != 0) return ItemStack.EMPTY;
+            final var removed = getItem(slot);
+            if (!removed.isEmpty()) setItem(slot, ItemStack.EMPTY);
+            return removed;
+        }
+        @Override public void setItem(int slot, ItemStack replacement) { saveItemData(slot); super.setItem(slot, replacement); }
+        @Override public void clearContent() { setItem(0, ItemStack.EMPTY); }
     }
 
     void rebind(final ItemStack stack, final Player player) {

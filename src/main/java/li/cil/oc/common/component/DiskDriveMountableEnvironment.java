@@ -38,7 +38,7 @@ import net.minecraft.world.level.Level;
 import java.util.EnumSet;
 import java.util.Map;
 
-public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironment implements RackMountable, EnvironmentHost, Container, DeviceInfo, Analyzable {
+public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironment implements RackMountable, EnvironmentHost, li.cil.oc.common.inventory.ComponentInventory, DeviceInfo, Analyzable {
     private static final String TAG_LAST_ACCESS = "lastAccess";
     private static final String TAG_DISK = "disk";
     private static final Map<String, String> DEVICE_INFO = Map.of(
@@ -92,6 +92,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
 
     @Override
     public void onDisconnect(final Node node) {
+        if (node == node() && diskEnvironment != null && diskEnvironment.node() != null) diskEnvironment.node().remove();
     }
 
     @Override
@@ -333,6 +334,11 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
 
     private void saveDiskToItem() {
         if (diskEnvironment != null) diskEnvironment.save(new CompoundTag());
+    }
+
+    @Override
+    public void saveItemData(final int slot) {
+        if (slot == DiskDriveBlockEntity.SLOT_FLOPPY) saveDiskToItem();
     }
 
     private void refreshDiskEnvironment() {

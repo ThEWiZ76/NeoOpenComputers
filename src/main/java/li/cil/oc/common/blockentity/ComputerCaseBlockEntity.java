@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuProvider, IMenuProviderExtension, DeviceInfo, RedstoneControllerHost, StateAware, Analyzable {
+public class ComputerCaseBlockEntity extends BlockEntity implements Case, li.cil.oc.common.inventory.ComponentInventory, MenuProvider, IMenuProviderExtension, DeviceInfo, RedstoneControllerHost, StateAware, Analyzable {
     public static final int SLOT_CARD_0 = 0;
     public static final int SLOT_CARD_1 = 1;
     public static final int SLOT_MEMORY_0 = 2;
@@ -636,6 +636,11 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
     @Override
     public ItemStack getItem(final int slot) {
         return isValidSlotForTier(slot) ? items.get(slot) : ItemStack.EMPTY;
+    }
+
+    @Override
+    public void saveItemData(final int slot) {
+        if (isValidSlotForTier(slot)) machine.saveComponentData(items.get(slot));
     }
 
     @Override
