@@ -45,16 +45,7 @@ public class WaypointMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(final Player player) {
-        if (waypoint == null || player == null) {
-            return true;
-        }
-        if (waypoint.isRemoved() || waypoint.getLevel() == null) {
-            return false;
-        }
-        return player.distanceToSqr(
-            waypoint.getBlockPos().getX() + 0.5D,
-            waypoint.getBlockPos().getY() + 0.5D,
-            waypoint.getBlockPos().getZ() + 0.5D) <= 64.0D;
+        return waypoint == null || li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(waypoint, player);
     }
 
     public void setLabel(final String value) {

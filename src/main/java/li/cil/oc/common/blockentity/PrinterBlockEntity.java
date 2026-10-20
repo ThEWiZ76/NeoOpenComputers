@@ -447,7 +447,7 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
 
     @Override
     public boolean stillValid(final Player player) {
-        return !isRemoved();
+        return li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(this, player);
     }
 
     @Override

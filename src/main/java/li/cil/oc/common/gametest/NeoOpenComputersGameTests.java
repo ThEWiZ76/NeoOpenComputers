@@ -7232,6 +7232,7 @@ public final class NeoOpenComputersGameTests {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setShiftKeyDown(true);
         final BlockPos absoluteRackPos = helper.absolutePos(rackPos);
+        player.setPos(absoluteRackPos.getX() + 0.5D, absoluteRackPos.getY() + 0.5D, absoluteRackPos.getZ() - 1D);
         final BlockHitResult hit = new BlockHitResult(
             new Vec3(absoluteRackPos.getX() + 0.5D, absoluteRackPos.getY() + 0.875D, absoluteRackPos.getZ()),
             Direction.NORTH,
@@ -7261,6 +7262,7 @@ public final class NeoOpenComputersGameTests {
         final Player player = helper.makeMockPlayer(GameType.SURVIVAL);
         player.setShiftKeyDown(true);
         final BlockPos absoluteRackPos = helper.absolutePos(rackPos);
+        player.setPos(absoluteRackPos.getX() + 0.5D, absoluteRackPos.getY() + 0.5D, absoluteRackPos.getZ() - 1D);
         final BlockHitResult hit = new BlockHitResult(
             new Vec3(absoluteRackPos.getX() + 0.5D, absoluteRackPos.getY() + 0.875D, absoluteRackPos.getZ()),
             Direction.NORTH,
@@ -7365,10 +7367,13 @@ public final class NeoOpenComputersGameTests {
         final li.cil.oc.api.internal.Server rackServer = (li.cil.oc.api.internal.Server) rack.getMountable(0);
         final net.minecraft.world.Container serverInventory = (net.minecraft.world.Container) rackServer;
 
-        helper.assertTrue(serverInventory.stillValid(null), "Installed rack server inventory was not valid");
+        final var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        final var absolutePos = rack.getBlockPos();
+        player.setPos(absolutePos.getX() + 0.5, absolutePos.getY() + 0.5, absolutePos.getZ() + 0.5);
+        helper.assertTrue(serverInventory.stillValid(player), "Installed rack server inventory was not valid");
         rack.removeItemNoUpdate(0);
 
-        helper.assertTrue(!serverInventory.stillValid(null), "Removed rack server inventory stayed valid");
+        helper.assertTrue(!serverInventory.stillValid(player), "Removed rack server inventory stayed valid");
         helper.succeed();
     }
 

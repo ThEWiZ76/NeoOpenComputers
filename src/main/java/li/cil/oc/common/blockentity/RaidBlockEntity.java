@@ -238,9 +238,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
 
     @Override
     public boolean stillValid(final Player player) {
-        return player != null && !isRemoved() && level != null
-            && player.distanceToSqr(xPosition(), yPosition(), zPosition()) <= 64D
-            && level.hasChunkAt(worldPosition) && level.getBlockEntity(worldPosition) == this;
+        return li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(this, player);
     }
 
     @Override

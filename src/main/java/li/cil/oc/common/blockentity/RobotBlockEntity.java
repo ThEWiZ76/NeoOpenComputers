@@ -1635,9 +1635,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
 
     @Override
     public boolean stillValid(final Player player) {
-        return player != null && level != null && player.level() == level && !isRemoved()
-            && level.getBlockEntity(worldPosition) == this
-            && player.distanceToSqr(xPosition(), yPosition(), zPosition()) <= 64D;
+        return li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(this, player);
     }
 
     @Override

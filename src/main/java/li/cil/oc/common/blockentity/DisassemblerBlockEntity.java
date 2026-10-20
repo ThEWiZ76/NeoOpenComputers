@@ -243,7 +243,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     @Override
     public boolean stillValid(final Player player) {
-        return !isRemoved();
+        return li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(this, player);
     }
 
     @Override

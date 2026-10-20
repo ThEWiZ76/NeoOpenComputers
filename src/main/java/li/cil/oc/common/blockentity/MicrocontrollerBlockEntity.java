@@ -512,9 +512,7 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
 
     @Override
     public boolean stillValid(final Player player) {
-        return !isRemoved() && level != null && level.hasChunkAt(worldPosition)
-            && level.getBlockEntity(worldPosition) == this
-            && player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
+        return li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(this, player);
     }
 
     @Override

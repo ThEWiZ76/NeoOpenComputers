@@ -414,7 +414,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
 
     @Override
     public boolean stillValid(final Player player) {
-        return !isRemoved();
+        return li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(this, player);
     }
 
     @Override

@@ -266,7 +266,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     @Override
     public boolean stillValid(final Player player) {
-        return !isRemoved();
+        return li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(this, player);
     }
 
     @Override
