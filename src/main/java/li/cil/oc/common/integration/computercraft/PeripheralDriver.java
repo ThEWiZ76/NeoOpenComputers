@@ -73,6 +73,7 @@ public final class PeripheralDriver implements DriverBlock {
 
     public static final class PeripheralEnvironment extends AbstractManagedEnvironment implements ManagedPeripheral, NamedBlock {
         private static final AtomicLong TASK_IDS = new AtomicLong();
+        static long nextTaskId() { return TASK_IDS.incrementAndGet(); }
         private final ServerLevel world;
         private final BlockPos pos;
         private final Direction side;
@@ -250,7 +251,7 @@ public final class PeripheralDriver implements DriverBlock {
                 environment.node().remove();
             }
             @Override public long issueMainThreadTask(LuaTask task) throws LuaException {
-                requireAttached(); final long id = TASK_IDS.incrementAndGet();
+                requireAttached(); final long id = nextTaskId();
                 final Runnable queue = () -> { if (active) tasks.add(new PendingTask(id, world.getGameTime() + 1, this, task)); };
                 if (world.getServer().isSameThread()) queue.run(); else world.getServer().execute(queue);
                 return id;

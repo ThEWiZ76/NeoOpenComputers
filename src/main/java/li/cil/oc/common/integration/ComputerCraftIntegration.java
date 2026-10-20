@@ -13,6 +13,9 @@ public final class ComputerCraftIntegration {
         static void register(DriverRegistry registry) {
             registry.add(new li.cil.oc.common.integration.computercraft.PeripheralDriver());
             registry.add(new li.cil.oc.common.integration.computercraft.MediaDriver());
+            final var objects = new li.cil.oc.common.integration.computercraft.LuaObjectConverter();
+            registry.add(objects);
+            objects.registerEvents();
         }
     }
 }
