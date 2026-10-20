@@ -166,7 +166,7 @@ public class ManualScreen extends Screen {
             remaining = remaining.substring(part.length()).stripLeading();
             x += width;
             lineHeight = Math.max(lineHeight, height);
-            if (x >= maxWidth && !remaining.isEmpty()) {
+            if (!remaining.isEmpty()) {
                 y += lineHeight;
                 x = wrapIndent;
                 lineHeight = LINE_HEIGHT;

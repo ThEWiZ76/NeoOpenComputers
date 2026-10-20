@@ -221,6 +221,19 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenWrapsAfterPunctuationWithoutRemovingTheWordSeparator() {
+        final var document = ManualDocument.parse(List.of("[screen](block/screen1.md). Graphics cards"), href -> null);
+        final var entries = ManualScreen.layout(document, 90, text -> text.length() * 6);
+
+        assertEquals(3, entries.size());
+        assertTextEntry(".", entries.get(1));
+        assertEquals(0, entries.get(1).y());
+        assertTextEntry("Graphics cards", entries.get(2));
+        assertEquals(0, entries.get(2).x());
+        assertEquals(ManualScreen.LINE_HEIGHT, entries.get(2).y(), "A chosen wrap must not join the next word to the punctuation");
+    }
+
+    @Test
     void manualScreenWrapsTextUsingMeasuredWidth() {
         ManualDocument document = ManualDocument.parse(List.of("alpha beta"), href -> null);
 
