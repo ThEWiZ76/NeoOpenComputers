@@ -12,6 +12,13 @@ public final class FileSystem {
         return null;
     }
 
+    /**
+     * Opens a filesystem below the active world's {@code opencomputers/} directory.
+     * The root is a relative name, not an absolute host path. No files are moved from older locations.
+     * Buffered filesystems keep mutations in memory until {@link li.cil.oc.api.Persistable#save}.
+     * Closing waits for queued saves but does not commit unsaved mutations.
+     * Returns null when no server is active or the directory cannot be opened.
+     */
     public static li.cil.oc.api.fs.FileSystem fromSaveDirectory(final String root, final long capacity, final boolean buffered) {
         if (API.fileSystem != null) {
             return API.fileSystem.fromSaveDirectory(root, capacity, buffered);

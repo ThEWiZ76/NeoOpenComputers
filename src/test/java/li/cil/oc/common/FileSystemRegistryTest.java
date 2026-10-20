@@ -215,18 +215,18 @@ final class FileSystemRegistryTest {
     @Test
     void saveDirectoryFileSystemPersistsFilesOnDisk() throws IOException {
         FileSystemRegistry registry = new FileSystemRegistry(() -> tempDir);
-        FileSystem fileSystem = registry.fromSaveDirectory("drive", 128, false);
+        FileSystem fileSystem = registry.fromSaveDirectory("drive", 4096, false);
 
         assertNotNull(fileSystem);
         assertFalse(fileSystem.isReadOnly());
-        assertEquals(128, fileSystem.spaceTotal());
+        assertEquals(4096, fileSystem.spaceTotal());
         assertTrue(fileSystem.makeDirectory("tmp"));
         int outputHandle = fileSystem.open("tmp/data.txt", Mode.Write);
         fileSystem.getHandle(outputHandle).write("hello".getBytes(StandardCharsets.UTF_8));
         fileSystem.getHandle(outputHandle).close();
 
         assertEquals("hello", Files.readString(tempDir.resolve("opencomputers/drive/tmp/data.txt")));
-        FileSystem reloaded = registry.fromSaveDirectory("drive", 128, false);
+        FileSystem reloaded = registry.fromSaveDirectory("drive", 4096, false);
         int inputHandle = reloaded.open("tmp/data.txt", Mode.Read);
         byte[] buffer = new byte[5];
         assertEquals(5, reloaded.getHandle(inputHandle).read(buffer));
@@ -240,6 +240,171 @@ final class FileSystemRegistryTest {
 
         assertThrows(IllegalArgumentException.class, () -> fileSystem.exists("../outside.txt"));
         assertThrows(IllegalArgumentException.class, () -> fileSystem.open("tmp/../outside.txt", Mode.Write));
+    }
+
+    @Test
+    void memoryAndBufferedDirectoryRenameCannotOrphanItsOwnTree() throws IOException {
+        for (final boolean buffered : List.of(false, true)) {
+            final var registry = new FileSystemRegistry(() -> tempDir);
+            final var fs = buffered ? registry.fromSaveDirectory("rename-tree", 8192, true) : registry.fromMemory(8192);
+            try {
+                assertTrue(fs.makeDirectory("parent"));
+                assertTrue(fs.makeDirectory("parent/child"));
+                final int output = fs.open("parent/child/binary", Mode.Write);
+                fs.getHandle(output).write(new byte[]{1, 2, 3});
+                fs.getHandle(output).close();
+                assertFalse(fs.rename("parent", "parent/child/loop"), "Directory moved into its own descendant");
+                assertTrue(fs.exists("parent/child/binary"), "Rejected rename orphaned the tree");
+                assertTrue(fs.rename("parent", "parent"));
+                assertTrue(fs.exists("parent/child/binary"));
+            } finally { fs.close(); }
+        }
+    }
+
+    @Test
+    void memoryAndBufferedFilesRejectASecondWriterWithoutDeletingOrTruncatingTheFirst() throws IOException {
+        for (final boolean buffered : List.of(false, true)) {
+            final var registry = new FileSystemRegistry(() -> tempDir);
+            final var fs = buffered ? registry.fromSaveDirectory("one-writer", 4096, true) : registry.fromMemory(4096);
+            try {
+                final int output = fs.open("binary", Mode.Write);
+                fs.getHandle(output).write(new byte[]{1, 2, 3});
+                assertThrows(FileNotFoundException.class, () -> fs.open("binary", Mode.Write));
+                assertThrows(FileNotFoundException.class, () -> fs.open("binary", Mode.Append));
+                assertEquals(3, fs.size("binary"));
+                assertFalse(fs.delete("binary"), "A live writer lost its directory entry");
+                fs.getHandle(output).close();
+                final int append = fs.open("binary", Mode.Append);
+                assertEquals(3, fs.getHandle(append).position());
+                fs.getHandle(append).close();
+                assertTrue(fs.delete("binary"));
+            } finally { fs.close(); }
+        }
+    }
+
+    @Test
+    void saveDirectoriesChargeEntryCostsAndEnforceCapacityInBothModes() throws IOException {
+        for (final boolean buffered : List.of(false, true)) {
+            final long cost = ModSettings.fileCost();
+            final var fs = new FileSystemRegistry(() -> tempDir).fromSaveDirectory(buffered ? "buffered-quota" : "direct-quota", cost * 2 + 3, buffered);
+            try {
+                assertEquals(cost, fs.spaceUsed(), "Filesystem root must consume its entry cost");
+                final int output = fs.open("binary", Mode.Write);
+                fs.getHandle(output).write(new byte[]{1, 2, 3});
+                assertEquals(cost * 2 + 3, fs.spaceUsed());
+                assertThrows(IOException.class, () -> fs.getHandle(output).write(new byte[]{4}));
+                assertThrows(FileNotFoundException.class, () -> fs.open("second", Mode.Write));
+                assertFalse(fs.makeDirectory("folder"));
+                fs.getHandle(output).close();
+                assertTrue(fs.delete("binary"));
+                assertEquals(cost, fs.spaceUsed());
+                assertTrue(fs.makeDirectory("folder"));
+                assertEquals(cost * 2, fs.spaceUsed());
+            } finally { fs.close(); }
+        }
+    }
+
+    @Test
+    void bufferedRenameKeepsTheSourceWhenAnExternalDestinationBlocksSaving() throws IOException {
+        final var directory = tempDir.resolve("opencomputers/conflict");
+        Files.createDirectories(directory);
+        Files.write(directory.resolve("old"), new byte[]{1, 2, 3});
+        final var fs = new FileSystemRegistry(() -> tempDir).fromSaveDirectory("conflict", 4096, true);
+        assertTrue(fs.rename("old", "new"));
+        Files.createDirectories(directory.resolve("new"));
+        Files.write(directory.resolve("new/external"), new byte[]{8});
+        fs.save(new CompoundTag());
+        assertThrows(java.util.concurrent.CompletionException.class, fs::close);
+        assertArrayEquals(new byte[]{1, 2, 3}, Files.readAllBytes(directory.resolve("old")), "Failed rename save deleted its only durable source");
+        assertArrayEquals(new byte[]{8}, Files.readAllBytes(directory.resolve("new/external")));
+    }
+
+    @Test
+    void bufferedQueuedSavesAreOrderedBeforeAnotherInstanceLoadsThem() throws IOException {
+        final var registry = new FileSystemRegistry(() -> tempDir);
+        final var fs = registry.fromSaveDirectory("ordered", 4096, true);
+        final int output = fs.open("binary", Mode.Write);
+        fs.getHandle(output).write(new byte[]{1});
+        fs.save(new CompoundTag());
+        fs.getHandle(output).seek(0);
+        fs.getHandle(output).write(new byte[]{2});
+        final var latest = new CompoundTag();
+        fs.save(latest);
+        final var restored = registry.fromSaveDirectory("ordered", 4096, true);
+        try {
+            restored.load(latest);
+            assertEquals(1, restored.getHandle(output).position());
+            final int input = restored.open("binary", Mode.Read);
+            final byte[] data = new byte[1];
+            assertEquals(1, restored.getHandle(input).read(data));
+            assertArrayEquals(new byte[]{2}, data);
+        } finally { restored.close(); fs.close(); }
+    }
+
+    @Test
+    void bufferedSaveDirectoryCommitsOnlySavedBytesAndKeepsContentsOutOfHostNbt() throws Exception {
+        final var registry = new FileSystemRegistry(() -> tempDir);
+        final var path = tempDir.resolve("opencomputers/buffered/binary");
+        final var fs = registry.fromSaveDirectory("buffered", 4096, true);
+        final int output = fs.open("binary", Mode.Write);
+        fs.getHandle(output).write(new byte[]{0, 1, (byte) 255});
+        assertFalse(Files.exists(path), "buffered=true wrote file contents before a save");
+        final int input = fs.open("binary", Mode.Read);
+        fs.getHandle(input).seek(1);
+        fs.getHandle(output).seek(1);
+        final var saved = new CompoundTag();
+        final var started = new java.util.concurrent.CountDownLatch(1);
+        final var release = new java.util.concurrent.CountDownLatch(1);
+        final var blocker = BufferedFileSystem.IO.submit(() -> {
+            started.countDown();
+            if (!release.await(10, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("Snapshot fixture was not released");
+            return null;
+        });
+        try {
+            assertTrue(started.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            fs.save(saved);
+            assertFalse(saved.contains("children"), "Disk-backed files were duplicated into host NBT");
+            fs.getHandle(output).write(new byte[]{9});
+            assertFalse(Files.exists(path), "Save bypassed the serialized IO queue");
+        } finally { release.countDown(); }
+        blocker.get(5, java.util.concurrent.TimeUnit.SECONDS);
+        fs.close();
+        assertArrayEquals(new byte[]{0, 1, (byte) 255}, Files.readAllBytes(path), "Post-save mutations leaked into the queued disk snapshot");
+
+        final var restored = registry.fromSaveDirectory("buffered", 4096, true);
+        try {
+            restored.load(saved);
+            assertEquals(1, restored.getHandle(output).position());
+            assertEquals(1, restored.getHandle(input).position());
+            final byte[] data = new byte[2];
+            assertEquals(2, restored.getHandle(input).read(data));
+            assertArrayEquals(new byte[]{1, (byte) 255}, data);
+            restored.getHandle(output).write(new byte[]{7});
+        } finally { restored.close(); }
+        assertArrayEquals(new byte[]{0, 1, (byte) 255}, Files.readAllBytes(path), "Closing a filesystem committed unsaved mutations");
+    }
+
+    @Test
+    void bufferedSaveDirectoryDefersRenameAndDeletionAndPreservesUnrelatedDiskFiles() throws IOException {
+        final var directory = tempDir.resolve("opencomputers/buffered");
+        Files.createDirectories(directory.resolve("folder"));
+        Files.write(directory.resolve("folder/old"), new byte[]{1, 2});
+        Files.write(directory.resolve("remove"), new byte[]{3});
+        final var fs = new FileSystemRegistry(() -> tempDir).fromSaveDirectory("buffered", 8192, true);
+        assertTrue(fs.exists("folder/old"));
+        assertTrue(fs.rename("folder/old", "folder/new"));
+        assertTrue(fs.delete("remove"));
+        assertTrue(fs.setLastModified("folder/new", 123456000));
+        assertTrue(Files.exists(directory.resolve("folder/old")), "Buffered rename changed the host filesystem before save");
+        assertTrue(Files.exists(directory.resolve("remove")), "Buffered deletion changed the host filesystem before save");
+        Files.write(directory.resolve("external"), new byte[]{8});
+        fs.save(new CompoundTag());
+        fs.close();
+        assertFalse(Files.exists(directory.resolve("folder/old")));
+        assertFalse(Files.exists(directory.resolve("remove")));
+        assertArrayEquals(new byte[]{1, 2}, Files.readAllBytes(directory.resolve("folder/new")));
+        assertEquals(123456000, Files.getLastModifiedTime(directory.resolve("folder/new")).toMillis());
+        assertArrayEquals(new byte[]{8}, Files.readAllBytes(directory.resolve("external")));
     }
 
     @Test

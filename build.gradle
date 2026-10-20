@@ -158,6 +158,12 @@ runs {
             }
             systemProperty 'neoopencomputers.restartAddonFloppy', 'true'
         }
+        if (project.hasProperty('neoopencomputers.restartAddonSaveDirectory')) {
+            if (!project.hasProperty('neoopencomputers.restartPhase')) {
+                throw new GradleException('Addon save-directory restart requires the isolated restart phase/world properties.')
+            }
+            systemProperty 'neoopencomputers.restartAddonSaveDirectory', 'true'
+        }
         if (project.hasProperty('neoopencomputers.restartComputerCraftMedia')) {
             if (!project.hasProperty('neoopencomputers.restartPhase') || !project.hasProperty('withComputerCraft')) {
                 throw new GradleException('CC media restart requires withComputerCraft and the ordinary isolated restart phase/world properties.')

@@ -83,7 +83,7 @@ final class FileSystemRegistry implements FileSystemAPI {
         Path directory = world.toAbsolutePath().normalize().resolve("opencomputers");
         for (final String segment : segments) directory = directory.resolve(segment);
         try {
-            return new DirectoryFileSystem(directory, capacity);
+            return buffered ? new BufferedFileSystem(directory, capacity) : new DirectoryFileSystem(directory, capacity);
         } catch (IllegalArgumentException failure) {
             li.cil.oc.NeoOpenComputers.LOGGER.warn("Cannot open world-local filesystem {}", directory, failure);
             return null;
@@ -134,7 +134,7 @@ final class FileSystemRegistry implements FileSystemAPI {
         return ResourceFileSystem.fromDirectory(Path.of(resource.toURI()));
     }
 
-    private static String[] pathSegments(final String path) {
+    static String[] pathSegments(final String path) {
         if (path == null || path.isEmpty()) {
             return new String[0];
         }
@@ -658,10 +658,9 @@ final class FileSystemRegistry implements FileSystemAPI {
         public long spaceUsed() {
             try (Stream<Path> stream = Files.walk(root)) {
                 return stream
-                    .filter(Files::isRegularFile)
                     .mapToLong(path -> {
                         try {
-                            return Files.size(path);
+                            return ModSettings.fileCost() + (Files.isRegularFile(path) ? Files.size(path) : 0);
                         } catch (IOException ignored) {
                             return 0;
                         }
@@ -738,7 +737,7 @@ final class FileSystemRegistry implements FileSystemAPI {
         @Override
         public boolean makeDirectory(final String path) {
             final Path resolved = resolve(path);
-            if (resolved.equals(root) || Files.exists(resolved)) {
+            if (resolved.equals(root) || Files.exists(resolved) || capacity >= 0 && capacity - spaceUsed() < ModSettings.fileCost()) {
                 return false;
             }
             try {
@@ -865,8 +864,8 @@ final class FileSystemRegistry implements FileSystemAPI {
             if (!Files.isDirectory(resolved.getParent()) || Files.isDirectory(resolved)) {
                 throw new FileNotFoundException(originalPath);
             }
-            if (!Files.exists(resolved) && capacity >= 0 && spaceUsed() >= capacity) {
-                throw new FileNotFoundException(originalPath);
+            if (!Files.exists(resolved) && capacity >= 0 && capacity - spaceUsed() < ModSettings.fileCost()) {
+                throw new FileNotFoundException("not enough space");
             }
             final DirectoryHandle handle = createHandle(resolved, true);
             try {
@@ -1020,7 +1019,7 @@ final class FileSystemRegistry implements FileSystemAPI {
         }
     }
 
-    private static final class MemoryFileSystem implements FileSystem {
+    static class MemoryFileSystem implements FileSystem {
         private static final String CHILDREN_TAG = "children";
         private static final String DATA_TAG = "data";
         private static final String DIRECTORY_TAG = "isDirectory";
@@ -1038,7 +1037,7 @@ final class FileSystemRegistry implements FileSystemAPI {
         private final Map<Integer, OpenHandle> handles = new LinkedHashMap<>();
         private int nextHandle = 1;
 
-        private MemoryFileSystem(final long capacity) {
+        MemoryFileSystem(final long capacity) {
             this.capacity = capacity;
         }
 
@@ -1131,6 +1130,8 @@ final class FileSystemRegistry implements FileSystemAPI {
                 throw new FileNotFoundException(from);
             }
             final String[] toSegments = segments(to);
+            if (Arrays.equals(fromSegments, toSegments)) return true;
+            if (toSegments.length > fromSegments.length && Arrays.equals(fromSegments, Arrays.copyOf(toSegments, fromSegments.length))) return false;
             final Directory fromParent = parent(fromSegments);
             final Directory toParent = parent(toSegments);
             if (fromParent == null || toParent == null || toSegments.length == 0) {
@@ -1235,6 +1236,7 @@ final class FileSystemRegistry implements FileSystemAPI {
 
             final File file;
             if (existing instanceof File existingFile) {
+                if (existingFile.writing) throw new FileNotFoundException("file is open for writing");
                 file = existingFile;
                 if (mode == Mode.Write) {
                     file.data = new byte[0];
@@ -1272,7 +1274,7 @@ final class FileSystemRegistry implements FileSystemAPI {
             for (int index = 0; index < savedHandles.size(); index++) {
                 final CompoundTag savedHandle = savedHandles.getCompound(index);
                 final Entry entry = find(savedHandle.getString(PATH_TAG));
-                if (entry instanceof File file) {
+                if (entry instanceof File file && !file.writing) {
                     final int handle = savedHandle.getInt(HANDLE_TAG);
                     handles.put(handle, new OpenHandle(handle, file, true, savedHandle.getLong(POSITION_TAG)));
                     nextHandle = Math.max(nextHandle, handle + 1);
@@ -1437,6 +1439,7 @@ final class FileSystemRegistry implements FileSystemAPI {
 
         private static final class File extends Entry {
             private byte[] data = new byte[0];
+            private boolean writing;
 
             @Override
             long size() {
@@ -1450,7 +1453,7 @@ final class FileSystemRegistry implements FileSystemAPI {
 
             @Override
             boolean canDelete() {
-                return true;
+                return !writing;
             }
 
             @Override
@@ -1478,6 +1481,7 @@ final class FileSystemRegistry implements FileSystemAPI {
                 this.file = file;
                 this.writable = writable;
                 this.position = position;
+                if (writable) file.writing = true;
             }
 
             @Override
@@ -1495,6 +1499,7 @@ final class FileSystemRegistry implements FileSystemAPI {
                 if (!closed) {
                     closed = true;
                     handles.remove(id);
+                    if (writable) file.writing = false;
                 }
             }
 
