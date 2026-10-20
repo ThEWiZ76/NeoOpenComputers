@@ -40,3 +40,8 @@ exit $LASTEXITCODE
 ```
 
 Then run the fresh-world prepare/verify pair in [[Process restart test]], waiting for the first Gradle process to exit before starting the second. Keep dotted Gradle property arguments quoted in PowerShell.
+
+
+## Robot query unload follow-up
+
+Checkpoint ddc7515421376e939a2984387e76e082ff82cafa reproduces/fixes an unload-time robot collision/redstone lookup that could reload a chunk. Pre-fix shutdown trace records36 generation tasks; mixed781 and the historical735-test CC world now both exit normally with0 generation tasks. See [[Robot non-loading queries]]. This supersedes the earlier unknown-cause status for that specific robot route, while broader stability/other historical freezes remain open.
