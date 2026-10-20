@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -1044,11 +1046,17 @@ final class FileSystemRegistry implements FileSystemAPI {
 
         private final Directory root = new Directory();
         private final long capacity;
+        private final boolean caseInsensitive;
         private final Map<Integer, OpenHandle> handles = new LinkedHashMap<>();
         private int nextHandle = 1;
 
         MemoryFileSystem(final long capacity) {
+            this(capacity, false);
+        }
+
+        MemoryFileSystem(final long capacity, final boolean caseInsensitive) {
             this.capacity = capacity;
+            this.caseInsensitive = caseInsensitive;
         }
 
         @Override
@@ -1202,12 +1210,29 @@ final class FileSystemRegistry implements FileSystemAPI {
 
         @Override
         public void load(final CompoundTag nbt) {
+            validateLoad(nbt);
             root.children.clear();
             root.load(nbt);
             handles.clear();
             nextHandle = 1;
             loadInputHandles(nbt);
             loadOutputHandles(nbt);
+        }
+
+        final void validateLoad(final CompoundTag nbt) {
+            if (caseInsensitive) validateCaseNames(nbt);
+        }
+
+        private static void validateCaseNames(final CompoundTag directory) {
+            final var names = new HashSet<String>();
+            final var children = directory.getList(CHILDREN_TAG, Tag.TAG_COMPOUND);
+            for (int index = 0; index < children.size(); index++) {
+                final var child = children.getCompound(index);
+                if (!names.add(child.getString(NAME_TAG).toLowerCase(Locale.ROOT))) {
+                    throw new IllegalArgumentException("ambiguous case-insensitive filename: " + child.getString(NAME_TAG));
+                }
+                if (child.getBoolean(DIRECTORY_TAG)) validateCaseNames(child);
+            }
         }
 
         @Override
@@ -1351,9 +1376,23 @@ final class FileSystemRegistry implements FileSystemAPI {
                 path.indexOf('>') >= 0 || path.indexOf('|') >= 0) {
                 throw new IllegalArgumentException("path contains invalid characters");
             }
-            return Arrays.stream(path.split("/"))
+            final var result = Arrays.stream(path.split("/"))
                 .filter(segment -> !segment.isEmpty())
                 .toArray(String[]::new);
+            if (caseInsensitive) {
+                Entry current = root;
+                for (int index = 0; index < result.length && current instanceof Directory directory; index++) {
+                    final var requested = result[index].toLowerCase(Locale.ROOT);
+                    for (final var name : directory.children.keySet()) {
+                        if (name.toLowerCase(Locale.ROOT).equals(requested)) {
+                            result[index] = name;
+                            break;
+                        }
+                    }
+                    current = directory.children.get(result[index]);
+                }
+            }
+            return result;
         }
 
         private String pathTo(final File file) {

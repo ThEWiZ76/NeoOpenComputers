@@ -15,6 +15,41 @@ import java.nio.file.Path;
 @PrefixGameTestTemplate(false)
 public final class SaveDirectoryGameTests {
     @GameTest(template = "empty")
+    public static void bufferedSaveDirectoryHonorsForcedCasePolicy(GameTestHelper helper) throws Exception {
+        final var world = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT);
+        final var parent = world.resolve("opencomputers");
+        Files.createDirectories(parent);
+        final var directory = Files.createTempDirectory(parent, "oc-case-fixture-");
+        final boolean previous = ModSettings.FORCE_CASE_INSENSITIVE_FS.get();
+        li.cil.oc.api.fs.FileSystem fs = null;
+        try {
+            ModSettings.FORCE_CASE_INSENSITIVE_FS.set(true);
+            fs = li.cil.oc.api.FileSystem.fromSaveDirectory(directory.getFileName().toString(), 8192, true);
+            helper.assertTrue(fs != null, "Buffered public API did not mount the active world");
+            final int writer = fs.open("Boot.lua", Mode.Write);
+            fs.getHandle(writer).write(new byte[]{97, 0, (byte) 255});
+            fs.getHandle(writer).close();
+            helper.assertTrue(fs.exists("BOOT.LUA"), "Configured buffered filesystem is case-sensitive");
+            final var metadata = new net.minecraft.nbt.CompoundTag();
+            fs.save(metadata);
+            fs.close();
+            fs = li.cil.oc.api.FileSystem.fromSaveDirectory(directory.getFileName().toString(), 8192, true);
+            helper.assertTrue(fs != null && fs.exists("boot.LUA"), "Saved case policy was lost on remount");
+            final var ram = li.cil.oc.api.FileSystem.fromMemory(8192);
+            try {
+                ram.getHandle(ram.open("Boot.lua", Mode.Write)).close();
+                helper.assertTrue(!ram.exists("BOOT.LUA"), "Buffered config changed RAM filesystem semantics");
+            } finally { ram.close(); }
+        } finally {
+            ModSettings.FORCE_CASE_INSENSITIVE_FS.set(previous);
+            if (fs != null) fs.close();
+            Files.deleteIfExists(directory.resolve("Boot.lua"));
+            Files.deleteIfExists(directory);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void addonSaveDirectoryUsesTheActiveWorld(GameTestHelper helper) throws Exception {
         final String name = "oc-api-world-root-fixture";
         final Path processRoot = Path.of(name).toAbsolutePath().normalize();

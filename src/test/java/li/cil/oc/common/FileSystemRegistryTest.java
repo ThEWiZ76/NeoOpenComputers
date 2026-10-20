@@ -179,6 +179,18 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void bufferedPathLookupUsesThePhysicalFilesystemCasePolicy() throws IOException {
+        final var directory = tempDir.resolve("buffered-case-host"); Files.createDirectories(directory);
+        Files.write(directory.resolve("Boot.lua"), new byte[]{97, 0, (byte) 255});
+        final boolean hostIgnoresCase = Files.exists(directory.resolve("BOOT.LUA"));
+        final var fs = new BufferedFileSystem(directory, 65536);
+        try {
+            assertTrue(fs.exists("Boot.lua"));
+            assertEquals(hostIgnoresCase, fs.exists("BOOT.LUA"));
+        } finally { fs.close(); }
+    }
+
+    @Test
     void readOnlyWrapperRejectsPreviouslySavedWritableHandles() throws IOException {
         final var registry = new FileSystemRegistry();
         final var original = registry.fromMemory(4096);

@@ -92,6 +92,7 @@ public final class ModSettings {
     public static final ModConfigSpec.ConfigValue<List<? extends Double>> MAX_WIRELESS_RANGE;
     public static final ModConfigSpec.IntValue TMP_SIZE;
     public static final ModConfigSpec.IntValue FILE_COST;
+    public static final ModConfigSpec.BooleanValue FORCE_CASE_INSENSITIVE_FS;
     public static final ModConfigSpec.IntValue FLOPPY_SIZE;
     public static final ModConfigSpec.DoubleValue HDD_READ;
     public static final ModConfigSpec.DoubleValue HDD_WRITE;
@@ -460,6 +461,9 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("filesystem");
+        FORCE_CASE_INSENSITIVE_FS = builder
+            .comment("Ignore filename case on buffered filesystems even when the host filesystem is case-sensitive.")
+            .define("forceCaseInsensitiveFS", false);
         TMP_SIZE = builder
             .comment("Size of the free /tmp filesystem in kilobytes. OpenComputers upstream default is 64.")
             .defineInRange("tmpSize", 64, 0, Integer.MAX_VALUE);
@@ -1483,6 +1487,10 @@ public final class ModSettings {
 
     public static int tmpSize() {
         return intValue(TMP_SIZE);
+    }
+
+    public static boolean forceCaseInsensitiveFS() {
+        return booleanValue(FORCE_CASE_INSENSITIVE_FS);
     }
 
     public static int fileCost() {

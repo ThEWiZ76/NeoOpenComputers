@@ -15,11 +15,13 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -43,7 +45,11 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
     private CompletableFuture<Void> pending = CompletableFuture.completedFuture(null);
 
     BufferedFileSystem(Path directory, long capacity) {
-        super(capacity);
+        this(directory, capacity, ModSettings.forceCaseInsensitiveFS());
+    }
+
+    BufferedFileSystem(Path directory, long capacity, boolean forceCaseInsensitive) {
+        super(capacity, forceCaseInsensitive || hostIgnoresCase(directory));
         this.directory = directory.toAbsolutePath().normalize();
         try {
             previous = awaitIO(() -> {
@@ -80,6 +86,7 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
     @Override public void load(CompoundTag nbt) {
         pending.join();
         final var contents = awaitIO(() -> readTree(directory));
+        validateLoad(contents);
         previous = contents.copy();
         final var handles = new HashSet<Integer>();
         copyHandles(nbt, contents, "input", handles);
@@ -91,6 +98,42 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
     @Override public void close() {
         try { pending.join(); }
         finally { super.close(); }
+    }
+
+    private static boolean hostIgnoresCase(Path directory) {
+        try {
+            return awaitIO(() -> {
+                if (Files.isSymbolicLink(directory)) throw new IOException("symbolic link in filesystem root");
+                Files.createDirectories(directory);
+                final var modified = Files.getLastModifiedTime(directory);
+                final var before = directoryFingerprint(directory);
+                final var probe = Files.createTempFile(directory, ".oc-case-", ".tmp");
+                try {
+                    final var alias = probe.resolveSibling(probe.getFileName().toString().toUpperCase(Locale.ROOT));
+                    return Files.exists(alias) && Files.isSameFile(probe, alias);
+                } finally {
+                    Files.deleteIfExists(probe);
+                    // Do not overwrite a concurrent external directory change with the probe's old timestamp.
+                    if (before.equals(directoryFingerprint(directory))) Files.setLastModifiedTime(directory, modified);
+                }
+            });
+        } catch (RuntimeException failure) {
+            throw new IllegalArgumentException("cannot determine save directory case policy: " + directory, failure);
+        }
+    }
+
+    private record DirectoryEntry(Object key, FileTime modified, long size, boolean directory, boolean link) {}
+
+    private static Map<String, DirectoryEntry> directoryFingerprint(Path directory) throws IOException {
+        final var result = new LinkedHashMap<String, DirectoryEntry>();
+        try (var children = Files.list(directory)) {
+            for (final var child : children.toList()) {
+                final var attrs = Files.readAttributes(child, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                result.put(child.getFileName().toString(), new DirectoryEntry(attrs.fileKey(), attrs.lastModifiedTime(),
+                    attrs.size(), attrs.isDirectory(), attrs.isSymbolicLink()));
+            }
+        }
+        return result;
     }
 
     private static void copyHandles(CompoundTag source, CompoundTag target, String key, HashSet<Integer> handles) {
