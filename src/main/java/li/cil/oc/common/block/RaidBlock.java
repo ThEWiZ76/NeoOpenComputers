@@ -35,6 +35,14 @@ public class RaidBlock extends Block implements EntityBlock {
     }
 
     @Override
+    protected boolean hasAnalogOutputSignal(final BlockState state) { return true; }
+
+    @Override
+    protected int getAnalogOutputSignal(final BlockState state, final Level level, final BlockPos pos) {
+        return level.getBlockEntity(pos) instanceof RaidBlockEntity raid && raid.isComplete() ? 15 : 0;
+    }
+
+    @Override
     public void setPlacedBy(final Level level, final BlockPos pos, final BlockState state, final LivingEntity placer, final ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof RaidBlockEntity raid) {

@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-final class FileSystemEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public final class FileSystemEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String FILE_SYSTEM_TAG = "fs";
     private static final String OWNERS_TAG = "owners";
     private static final String ADDRESS_TAG = "address";
@@ -64,7 +64,7 @@ final class FileSystemEnvironment extends AbstractManagedEnvironment implements 
             .create());
     }
 
-    FileSystem fileSystem() {
+    public FileSystem fileSystem() {
         return fileSystem;
     }
 

@@ -16,6 +16,7 @@ import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.FileSystemEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -53,6 +54,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     private final RaidLabel label = new RaidLabel();
     private Node node;
     private ManagedEnvironment filesystem;
+    private CompoundTag unloadedFilesystem;
     private int clientPresenceMask;
     private long lastAccess;
 
@@ -210,6 +212,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         if (!isValidSlot(slot) || (!stack.isEmpty() && !canPlaceItem(slot, stack))) {
             return;
         }
+        if (items.get(slot) == stack || items.get(slot).isEmpty() && stack.isEmpty()) return;
         final ItemStack stored = stack.copy();
         if (!stored.isEmpty() && stored.getCount() > getMaxStackSize()) {
             stored.setCount(getMaxStackSize());
@@ -299,18 +302,16 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
 
     @Override
     public void load(final CompoundTag nbt) {
+        removeFilesystem();
+        unloadedFilesystem = null;
         if (nbt.contains(TAG_NODE) && node() != null) {
             node().load(nbt.getCompound(TAG_NODE));
         }
         label.load(nbt);
         if (nbt.contains(TAG_FILESYSTEM) && isComplete()) {
-            createFilesystem();
-            if (filesystem != null) {
-                filesystem.load(nbt.getCompound(TAG_FILESYSTEM));
-            }
-        } else {
-            refreshFilesystem();
+            unloadedFilesystem = nbt.getCompound(TAG_FILESYSTEM).copy();
         }
+        initializeFilesystem();
     }
 
     @Override
@@ -328,6 +329,8 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
             final CompoundTag filesystemTag = new CompoundTag();
             filesystem.save(filesystemTag);
             nbt.put(TAG_FILESYSTEM, filesystemTag);
+        } else if (unloadedFilesystem != null) {
+            nbt.put(TAG_FILESYSTEM, unloadedFilesystem.copy());
         }
     }
 
@@ -374,6 +377,15 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     }
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) {
+            initializeFilesystem();
+            Network.joinOrCreateNetwork(this);
+        }
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNodes();
@@ -390,17 +402,55 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     }
 
     private void refreshFilesystem() {
-        removeFilesystem();
-        if (isComplete()) {
-            createFilesystem();
+        if (filesystem != null && filesystem.node() != null && filesystem.node().host() instanceof FileSystemEnvironment environment) {
+            erase(environment.fileSystem(), "");
         }
+        removeFilesystem();
+        unloadedFilesystem = null;
+        initializeFilesystem();
         syncClientData();
     }
 
-    private void createFilesystem() {
-        final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(totalCapacity());
+    private void initializeFilesystem() {
+        if (level == null || level.isClientSide || filesystem != null || !isComplete()) return;
+        long capacity = 0L;
+        for (ItemStack stack : items) capacity += formatDisk(stack);
+        final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(capacity);
         filesystem = FileSystem.asManagedEnvironment(fileSystem, label, this, ModSounds.HDD_ACCESS_ID, 6);
+        // Restore the snapshot before joining the graph, including open handles and node identity.
+        if (unloadedFilesystem != null) filesystem.load(unloadedFilesystem);
+        unloadedFilesystem = null;
         connectFilesystem();
+    }
+
+    private long formatDisk(final ItemStack stack) {
+        final DriverItem driver = Driver.driverFor(stack, getClass());
+        final CompoundTag data = driver.dataTag(stack);
+        data.putBoolean("oc:unmanaged", false);
+        data.remove("oc:lock");
+        final ManagedEnvironment environment = driver.createEnvironment(stack, this);
+        if (environment == null || environment.node() == null) return 0L;
+        try {
+            if (!(environment.node().host() instanceof FileSystemEnvironment managed)) return 0L;
+            final var fileSystem = managed.fileSystem();
+            erase(fileSystem, "");
+            final CompoundTag saved = new CompoundTag(); environment.save(saved);
+            final CompoundTag target = driver.dataTag(stack);
+            for (String key : java.util.Set.copyOf(target.getAllKeys())) target.remove(key);
+            target.merge(saved);
+            final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+            if (customData != null) stack.set(DataComponents.CUSTOM_DATA, CustomData.of(customData.copyTag()));
+            return fileSystem.spaceTotal();
+        } finally { environment.node().remove(); }
+    }
+
+    private static void erase(final li.cil.oc.api.fs.FileSystem fileSystem, final String directory) {
+        if (directory.isEmpty()) fileSystem.close();
+        for (String entry : fileSystem.list(directory)) {
+            final String path = directory + entry;
+            if (fileSystem.isDirectory(path)) erase(fileSystem, path.endsWith("/") ? path : path + "/");
+            if (!fileSystem.delete(path)) throw new IllegalStateException("Cannot erase RAID member path: " + path);
+        }
     }
 
     private long totalCapacity() {
@@ -464,6 +514,10 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     }
 
     private void removeNodes() {
+        if (filesystem != null) {
+            unloadedFilesystem = new CompoundTag();
+            filesystem.save(unloadedFilesystem);
+        }
         removeFilesystem();
         if (node != null) {
             node.remove();
