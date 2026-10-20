@@ -105,20 +105,24 @@ public class HardDiskDriveItem extends Item implements DriverItem {
             if (data != null && !data.isEmpty()) {
                 environment.load(data);
             }
-            return new StackBackedEnvironment(environment, saveData);
+            return new StackBackedEnvironment(environment, saveData, lockInfo(data));
         }
         final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(ModSettings.hddSize(clampedTier) * 1024L);
         if (fileSystem == null) {
             return null;
         }
-        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(null), host, ModSounds.HDD_ACCESS_ID, clampedTier + 2);
+        final String lockInfo = lockInfo(data);
+        final ManagedEnvironment environment = lockInfo.isEmpty()
+            ? FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(null), host, ModSounds.HDD_ACCESS_ID, clampedTier + 2)
+            : FileSystem.asManagedEnvironment(FileSystem.asReadOnly(fileSystem), data != null && data.contains(ItemDiskLabel.TAG) ? data.getString(ItemDiskLabel.TAG) : null,
+                host, ModSounds.HDD_ACCESS_ID, clampedTier + 2);
         if (environment == null) {
             return null;
         }
         if (data != null && !data.isEmpty()) {
             environment.load(data);
         }
-        return new StackBackedEnvironment(environment, saveData);
+        return new StackBackedEnvironment(environment, saveData, lockInfo);
     }
 
     public static boolean isUnmanaged(final ItemStack stack) {
@@ -232,7 +236,7 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         return customData.copyTag().getCompound(HDD_DATA_TAG);
     }
 
-    private record StackBackedEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData) implements ManagedEnvironment, DeviceInfo {
+    private record StackBackedEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData, String lockInfo) implements ManagedEnvironment, DeviceInfo {
         @Override
         public Node node() {
             return delegate.node();
@@ -271,6 +275,7 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         @Override
         public void save(final CompoundTag nbt) {
             delegate.save(nbt);
+            if (!lockInfo.isEmpty()) nbt.putString(LOCK_TAG, lockInfo);
             if (saveData != null) {
                 saveData.accept(nbt.copy());
             }

@@ -261,7 +261,8 @@ final class FileSystemRegistry implements FileSystemAPI {
 
         @Override
         public Handle getHandle(final int handle) {
-            return inner.getHandle(handle);
+            final var file = inner.getHandle(handle);
+            return file == null ? null : new ReadOnlyHandle(file);
         }
 
         @Override
@@ -278,6 +279,15 @@ final class FileSystemRegistry implements FileSystemAPI {
         public void save(final CompoundTag nbt) {
             inner.save(nbt);
         }
+    }
+
+    private record ReadOnlyHandle(Handle inner) implements Handle {
+        @Override public long position() { return inner.position(); }
+        @Override public long length() { return inner.length(); }
+        @Override public void close() { inner.close(); }
+        @Override public int read(byte[] into) throws IOException { return inner.read(into); }
+        @Override public long seek(long to) throws IOException { return inner.seek(to); }
+        @Override public void write(byte[] value) throws IOException { throw new IOException("read-only filesystem"); }
     }
 
     private static final class ResourceFileSystem implements FileSystem {

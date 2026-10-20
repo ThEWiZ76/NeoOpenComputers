@@ -9,6 +9,7 @@ import li.cil.oc.common.ModLootDisks;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.item.ItemDriverData;
+import li.cil.oc.common.item.HardDiskDriveItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestGenerator;
@@ -81,6 +82,11 @@ public final class WorldLootProcessRestartGameTests {
             final var cpu = new ItemStack(ModItems.CPU_TIER1.get());
             ((li.cil.oc.api.driver.item.MutableProcessor) Driver.driverFor(cpu)).setArchitecture(cpu, li.cil.oc.common.machine.NativeLua53Architecture.class);
             computer.setItem(4, cpu); computer.setItem(2, new ItemStack(ModItems.MEMORY_TIER1.get()));
+            try {
+                final var hdd = ManagedDiskLockGameTests.prepared(new ItemStack(ModItems.HDD_TIER1.get()));
+                HardDiskDriveItem.lock(HardDiskDriveItem.stackDataTag(hdd), "Fixture owner");
+                computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, hdd);
+            } catch (Exception failure) { helper.assertTrue(false, "Cannot seed locked managed HDD: " + failure); }
             computer.setItem(6, RobotMovementPersistenceGameTests.eeprom("""
                 local eeprom=component.proxy(component.list('eeprom')())
                 assert(eeprom.getData()=='','World loot VM rebooted')
@@ -98,15 +104,26 @@ public final class WorldLootProcessRestartGameTests {
                   media[label]={drive=drive,fs=fs,handle=h,address=fs.address}
                 end
                 assert(media['World restart'] and media['Legacy restart'],'World/legacy disk missing')
+                for address in component.list('filesystem') do
+                  local fs=component.proxy(address)
+                  if fs.getLabel()=='Keep me' then
+                    assert(fs.isReadOnly(),'Installed locked HDD is writable')
+                    local h=assert(fs.open('probe.bin','rb')); assert(fs.read(h,1)=='a')
+                    media['Keep me']={fs=fs,handle=h,address=fs.address}
+                  end
+                end
+                assert(media['Keep me'],'Locked managed HDD missing')
                 local retained=731
                 eeprom.setData('world-loot-waiting')
                 repeat until computer.pullSignal()=='resume_world_loot'
                 assert(retained==731,'World loot continuation lost')
                 for label,m in pairs(media) do
-                  assert(m.fs.address==m.address and m.drive.media()==m.address,'World loot component identity changed')
+                  assert(m.fs.address==m.address and (not m.drive or m.drive.media()==m.address),'Read-only media component identity changed')
                   assert(m.fs.isReadOnly() and m.fs.getLabel()==label,'World loot metadata changed')
                   assert(m.fs.seek(m.handle,'cur',0)==1,'World loot read offset lost')
-                  local expected=label=='World restart' and string.char(0,128,255,42) or string.char(0,255)
+                  local ok,w=pcall(m.fs.open,'probe.bin','wb')
+                  assert(not ok or not w,'Read-only media writable after JVM restart')
+                  local expected=label=='Legacy restart' and string.char(0,255) or string.char(0,128,255,42)
                   assert(m.fs.read(m.handle,16)==expected,'World loot read handle/bytes lost')
                   m.fs.close(m.handle)
                 end
@@ -129,11 +146,14 @@ public final class WorldLootProcessRestartGameTests {
             helper.assertTrue(data.getString("computer").equals(computer.machine().node().address()) && data.getString("drive").equals(drive.node().address())
                 && data.getString("legacy").equals(legacy.node().address()), "World loot host addresses changed");
             helper.assertTrue(marker(computer).equals("world-loot-waiting"), "World loot continuation already ran; use a fresh prepare/verify pair");
+            helper.assertTrue(HardDiskDriveItem.lockInfo(computer.getItem(ComputerCaseBlockEntity.SLOT_HDD)).equals("Fixture owner"), "Managed HDD lock lost across JVM restart");
             helper.assertTrue(computer.machine().isRunning() && computer.machine().signal("resume_world_loot"), "World loot VM did not retain running state");
         }
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(marker(computer).equals(prepare ? "world-loot-waiting" : "world-loot-resumed"), "World loot continuation failed: " + computer.machine().lastError()))
             .thenExecute(() -> {
                 helper.assertTrue(sourceBytes(helper), "Read-only world loot source files were modified");
+                computer.saveWithFullMetadata(level.registryAccess());
+                helper.assertTrue(HardDiskDriveItem.lockInfo(computer.getItem(ComputerCaseBlockEntity.SLOT_HDD)).equals("Fixture owner"), "Saving resumed native host discarded the HDD lock");
                 final var data = new CompoundTag(); data.putString("phase", prepare ? "prepared" : "verified"); data.putLong("pid", ProcessHandle.current().pid());
                 data.putString("computer", computer.machine().node().address()); data.putString("drive", drive.node().address()); data.putString("legacy", legacy.node().address());
                 final var paper = new ItemStack(Items.PAPER); paper.set(DataComponents.CUSTOM_DATA, CustomData.of(data)); record.setItem(0, paper); record.setChanged();

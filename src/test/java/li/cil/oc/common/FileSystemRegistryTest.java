@@ -179,6 +179,29 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void readOnlyWrapperRejectsPreviouslySavedWritableHandles() throws IOException {
+        final var registry = new FileSystemRegistry();
+        final var original = registry.fromMemory(4096);
+        final int output = original.open("probe.bin", Mode.Write);
+        original.getHandle(output).write(new byte[]{97, 0, (byte) 128, (byte) 255});
+        original.getHandle(output).seek(1);
+        final var saved = new net.minecraft.nbt.CompoundTag();
+        original.save(saved); original.close();
+        final var writable = registry.fromMemory(4096);
+        final var locked = registry.asReadOnly(writable);
+        locked.load(saved);
+        final var restored = locked.getHandle(output);
+        assertEquals(1, restored.position());
+        assertThrows(IOException.class, () -> restored.write(new byte[]{42}));
+        final int input = locked.open("probe.bin", Mode.Read);
+        final byte[] bytes = new byte[4];
+        assertEquals(4, locked.getHandle(input).read(bytes));
+        assertArrayEquals(new byte[]{97, 0, (byte) 128, (byte) 255}, bytes);
+        assertNull(locked.getHandle(Integer.MAX_VALUE));
+        locked.close();
+    }
+
+    @Test
     void deferredFileSystemSourcesReturnNull() {
         FileSystemRegistry registry = new FileSystemRegistry();
 
