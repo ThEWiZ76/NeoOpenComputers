@@ -214,8 +214,9 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
     @Callback(doc = "function():table -- The list of keyboards attached to the screen.")
     public Object[] getKeyboards(final Context context, final Arguments args) {
         final ArrayList<String> addresses = new ArrayList<>();
-        if (node() != null) {
-            for (Node neighbor : node().neighbors()) {
+        for (final ScreenBlockEntity screen : multiblockScreens()) {
+            if (screen.node() == null) continue;
+            for (Node neighbor : screen.node().neighbors()) {
                 if (neighbor.host() instanceof Keyboard && neighbor.address() != null) {
                     addresses.add(neighbor.address());
                 }
@@ -228,12 +229,8 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
         if (level == null) {
             return false;
         }
-        final BlockState state = getBlockState();
-        final Direction right = localRight(state);
-        final Direction up = ScreenBlock.up(state);
-        final Direction pitch = ScreenBlock.pitch(state);
-        final Direction yaw = ScreenBlock.yaw(state);
-        for (final BlockPos screenPos : connectedScreens(pitch, yaw, right, up)) {
+        for (final ScreenBlockEntity screen : multiblockScreens()) {
+            final BlockPos screenPos = screen.getBlockPos();
             for (final Direction side : Direction.values()) {
                 if (level.hasChunkAt(screenPos.relative(side))
                     && level.getBlockEntity(screenPos.relative(side)) instanceof KeyboardBlockEntity keyboard
@@ -796,20 +793,23 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     @Override
     public void keyDown(final char character, final int code, final Player player) {
-        final ScreenBlockEntity screen = inputScreen();
-        screen.inputDispatcher.keyDown(screen.node(), character, code, player);
+        for (final ScreenBlockEntity screen : multiblockScreens()) {
+            screen.inputDispatcher.keyDown(screen.node(), character, code, player);
+        }
     }
 
     @Override
     public void keyUp(final char character, final int code, final Player player) {
-        final ScreenBlockEntity screen = inputScreen();
-        screen.inputDispatcher.keyUp(screen.node(), character, code, player);
+        for (final ScreenBlockEntity screen : multiblockScreens()) {
+            screen.inputDispatcher.keyUp(screen.node(), character, code, player);
+        }
     }
 
     @Override
     public void clipboard(final String value, final Player player) {
-        final ScreenBlockEntity screen = inputScreen();
-        screen.inputDispatcher.clipboard(screen.node(), value, player);
+        for (final ScreenBlockEntity screen : multiblockScreens()) {
+            screen.inputDispatcher.clipboard(screen.node(), value, player);
+        }
     }
 
     @Override
@@ -838,6 +838,24 @@ public class ScreenBlockEntity extends BlockEntity implements TextBuffer, Device
 
     private ScreenBlockEntity inputScreen() {
         return level == null ? this : originScreen();
+    }
+
+    private List<ScreenBlockEntity> multiblockScreens() {
+        if (level == null) return List.of(this);
+        final ScreenLayout layout = screenLayout();
+        final Direction right = localRight(getBlockState());
+        final Direction up = ScreenBlock.up(getBlockState());
+        final List<ScreenBlockEntity> screens = new ArrayList<>();
+        // Touching screens can form separate rectangles; only use this merged group.
+        for (int y = 0; y < layout.height(); y++) {
+            for (int x = 0; x < layout.width(); x++) {
+                final BlockPos pos = layout.origin().relative(right, x).relative(up, y);
+                if (level.hasChunkAt(pos) && level.getBlockEntity(pos) instanceof ScreenBlockEntity screen) {
+                    screens.add(screen);
+                }
+            }
+        }
+        return screens;
     }
 
     @Override

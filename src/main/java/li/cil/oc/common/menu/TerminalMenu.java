@@ -193,7 +193,10 @@ public class TerminalMenu extends AbstractContainerMenu {
             && (terminalKey == null || terminalServer.allowsTerminalKey(terminalKey))
             && terminalServer.isUsableBy(player);
         }
-        return !physicalScreen.isRemoved() && physicalScreen.hasKeyboard(player);
+        final var level = physicalScreen.getLevel();
+        final var pos = physicalScreen.getBlockPos();
+        return player != null && level != null && player.level() == level && !physicalScreen.isRemoved()
+            && level.hasChunkAt(pos) && level.getBlockEntity(pos) == physicalScreen && physicalScreen.hasKeyboard(player);
     }
 
     protected TerminalScreenSnapshot currentScreenSnapshot() {
