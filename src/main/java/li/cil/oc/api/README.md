@@ -41,6 +41,7 @@ Driver.add(new MyDriverBlock());
 
 For item components such as cards, disks, or upgrades, implement `li.cil.oc.api.driver.DriverItem` or extend `li.cil.oc.api.prefab.DriverItem`.
 The host loads the environment from the driver's item data before connecting its node and saves it back before copying/removing hardware or saving the host. Override `load`/`save` and call the prefab superclass to retain node identity; a driver does not need to capture the item stack in its environment for persistence.
+`DriverItem.dataTag` may return `null` to use the default `oc:data` child. A non-null result must refer to the desired child in that item's custom data; the host preserves this explicit choice.
 
 `tools/api-smoke-addon` contains a standalone NeoForge fixture compiled against the API JAR without OC implementation output. Build it with `gradlew.bat apiSmokeAddonJar` and include it in developer runs with `-PwithApiSmokeAddon`. It is separate from OC's published artifacts. The opt-in server tests exercise real LuaJ/native callbacks and native userdata/component persistence across normal process restarts; this is not a claim that every addon or old binary is compatible.
 

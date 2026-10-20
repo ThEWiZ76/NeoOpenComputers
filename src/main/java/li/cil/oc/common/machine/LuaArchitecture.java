@@ -1,5 +1,7 @@
 package li.cil.oc.common.machine;
 
+import li.cil.oc.common.item.ItemDriverData;
+
 import static li.cil.oc.common.machine.UnicodeStrings.*;
 
 import li.cil.oc.api.Driver;
@@ -126,7 +128,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
         for (ItemStack stack : components) {
             final DriverItem driver = Driver.driverFor(stack);
             if (driver != null && EEPROM_SLOT.equals(driver.slot(stack))) {
-                configureBootSource(driver.dataTag(stack));
+                configureBootSource(ItemDriverData.driverDataTag(driver, stack));
             }
             if (driver instanceof Memory memory) {
                 totalMemory += Math.max(0D, memory.amount(stack)) * 1024D;
@@ -143,7 +145,7 @@ public final class LuaArchitecture implements Architecture, MachineBoundArchitec
             for (final ItemStack stack : machine.host().internalComponents()) {
                 final DriverItem driver = Driver.driverFor(stack);
                 if (driver != null && EEPROM_SLOT.equals(driver.slot(stack))) {
-                    configureBootSource(driver.dataTag(stack));
+                    configureBootSource(ItemDriverData.driverDataTag(driver, stack));
                     break;
                 }
             }

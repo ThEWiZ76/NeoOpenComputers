@@ -1,6 +1,7 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
@@ -204,7 +205,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
                 continue;
             }
 
-            environment.load(driver.dataTag(stack).copy());
+            environment.load(ItemDriverData.driverDataTag(driver, stack).copy());
             node().connect(environment.node());
             componentEnvironments.add(environment);
             environmentsByStack.put(stack, environment);
@@ -227,7 +228,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         // Construct first: an invalid replacement must not detach the installed chip.
         final ManagedEnvironment added = driver.createEnvironment(replacement, host);
         if (added == null || added.node() == null) throw new IllegalArgumentException("EEPROM has no component");
-        added.load(driver.dataTag(replacement).copy());
+        added.load(ItemDriverData.driverDataTag(driver, replacement).copy());
         final ManagedEnvironment removed = environmentsByStack.get(previous);
         if (removed != null) {
             host.onMachineDisconnect(removed.node());
@@ -1117,7 +1118,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
                 final var driver = Driver.driverFor(stack, host.getClass());
                 if (driver != null && stack != null && !stack.isEmpty()) {
                     // shortcut: retain built-in stack configuration; audit cleared-tag semantics before closing full addon parity.
-                    final var data = driver.dataTag(stack).copy();
+                    final var data = ItemDriverData.driverDataTag(driver, stack).copy();
                     environment.save(data);
                     li.cil.oc.common.item.ItemDriverData.writeDriverDataTag(driver, stack, data);
                     return;

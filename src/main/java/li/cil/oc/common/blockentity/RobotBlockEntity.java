@@ -1,5 +1,7 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.common.item.ItemDriverData;
+
 import com.mojang.authlib.GameProfile;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.FileSystem;
@@ -1580,7 +1582,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
     private void saveRuntimeComponent(final RuntimeComponent component) {
         final DriverItem driver = Driver.driverFor(component.stack(), Robot.class);
         if (driver != null) {
-            component.environment().save(driver.dataTag(component.stack()));
+            component.environment().save(ItemDriverData.driverDataTag(driver, component.stack()));
             final var data = component.stack().get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
             if (data != null) component.stack().set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
                 net.minecraft.world.item.component.CustomData.of(data.copyTag()));
@@ -1619,7 +1621,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
                 final DriverItem driver = Driver.driverFor(stack, Robot.class);
                 final ManagedEnvironment environment = driver.createEnvironment(stack, this);
                 if (environment == null) continue;
-                environment.load(driver.dataTag(stack).copy());
+                environment.load(ItemDriverData.driverDataTag(driver, stack).copy());
                 runtimeComponents[index] = new RuntimeComponent(stack, environment);
                 if (environment.node() != null) {
                     machine.node().connect(environment.node());

@@ -1,5 +1,7 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.common.item.ItemDriverData;
+
 import li.cil.oc.api.Network;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.DeviceInfo;
@@ -470,7 +472,7 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
         if (driver == null || !Slot.Tablet.equals(driver.slot(stack))) {
             return;
         }
-        tabletFilesystem.save(driver.dataTag(stack));
+        tabletFilesystem.save(ItemDriverData.driverDataTag(driver, stack));
     }
 
     private void removeTabletFilesystem() {

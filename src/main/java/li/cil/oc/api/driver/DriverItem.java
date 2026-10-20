@@ -14,5 +14,6 @@ public interface DriverItem {
 
     int tier(ItemStack stack);
 
+    /** Item-owned child tag for environment persistence, or null to use the default oc:data child. */
     CompoundTag dataTag(ItemStack stack);
 }

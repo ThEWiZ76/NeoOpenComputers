@@ -1,5 +1,7 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.common.item.ItemDriverData;
+
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.component.RackBusConnectable;
@@ -454,7 +456,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, li.cil.oc.comm
     private static CompoundTag readMountableData(final ItemStack stack) {
         final DriverItem driver = Driver.driverFor(stack);
         if (driver != null && acceptsDriverSlot(driver.slot(stack))) {
-            return driver.dataTag(stack).copy();
+            return ItemDriverData.driverDataTag(driver, stack).copy();
         }
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData == null) {
@@ -469,7 +471,7 @@ public class RackBlockEntity extends BlockEntity implements Rack, li.cil.oc.comm
         }
         final DriverItem driver = Driver.driverFor(stack);
         if (driver != null && acceptsDriverSlot(driver.slot(stack))) {
-            replaceContents(driver.dataTag(stack), data);
+            replaceContents(ItemDriverData.driverDataTag(driver, stack), data);
             final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
             if (customData != null) stack.set(DataComponents.CUSTOM_DATA, CustomData.of(customData.copyTag()));
             return;

@@ -45,6 +45,11 @@ public final class ApiSmokeAddon {
         @Override
         public String slot(ItemStack stack) { return Slot.Card; }
         @Override
+        public CompoundTag dataTag(ItemStack stack) {
+            final var data = stack.get(DataComponents.CUSTOM_DATA);
+            return data != null && data.copyTag().getBoolean("oc_api_smoke_null_tag") ? null : super.dataTag(stack);
+        }
+        @Override
         public ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) { return new Card(); }
     }
 

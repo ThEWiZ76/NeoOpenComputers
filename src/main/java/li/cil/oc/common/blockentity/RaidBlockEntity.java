@@ -1,5 +1,7 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.common.item.ItemDriverData;
+
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.FileSystem;
 import li.cil.oc.api.Network;
@@ -457,7 +459,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
 
     private long formatDisk(final ItemStack stack) {
         final DriverItem driver = Driver.driverFor(stack, getClass());
-        final var original = driver.dataTag(stack).copy();
+        final var original = ItemDriverData.driverDataTag(driver, stack).copy();
         final CompoundTag data = original.copy();
         data.putBoolean("oc:unmanaged", false);
         data.remove("oc:lock");
@@ -472,7 +474,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
             final var fileSystem = managed.fileSystem();
             erase(fileSystem, "");
             final CompoundTag saved = new CompoundTag(); environment.save(saved);
-            final CompoundTag target = driver.dataTag(stack);
+            final CompoundTag target = ItemDriverData.driverDataTag(driver, stack);
             for (String key : java.util.Set.copyOf(target.getAllKeys())) target.remove(key);
             target.merge(saved);
             final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);

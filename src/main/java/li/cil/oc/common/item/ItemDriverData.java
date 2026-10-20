@@ -45,6 +45,11 @@ public final class ItemDriverData {
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 
+    public static CompoundTag driverDataTag(final DriverItem driver, final ItemStack stack) {
+        final CompoundTag data = driver.dataTag(stack);
+        return data == null ? dataTag(stack) : data;
+    }
+
     public static boolean isClientSide(final EnvironmentHost host) {
         return host != null && host.world() != null && host.world().isClientSide;
     }
@@ -54,7 +59,7 @@ public final class ItemDriverData {
         final var original = detached.get(DataComponents.CUSTOM_DATA);
         if (original != null) detached.set(DataComponents.CUSTOM_DATA, CustomData.of(original.copyTag()));
         final var saved = data.copy();
-        final var target = driver.dataTag(detached);
+        final var target = driverDataTag(driver, detached);
         for (final var key : java.util.Set.copyOf(target.getAllKeys())) target.remove(key);
         target.merge(saved);
         final var updated = detached.get(DataComponents.CUSTOM_DATA);

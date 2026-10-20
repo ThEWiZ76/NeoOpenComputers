@@ -1,5 +1,7 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.common.item.ItemDriverData;
+
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
@@ -151,7 +153,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         if (slot != UPGRADE_SLOT || itemEnvironment == null || itemDriver == null || itemEnvironmentStack.isEmpty()) return;
         final CompoundTag data = new CompoundTag();
         itemEnvironment.save(data);
-        final CompoundTag target = itemDriver.dataTag(itemEnvironmentStack);
+        final CompoundTag target = ItemDriverData.driverDataTag(itemDriver, itemEnvironmentStack);
         for (String key : java.util.Set.copyOf(target.getAllKeys())) target.remove(key);
         target.merge(data);
         final CustomData customData = itemEnvironmentStack.get(DataComponents.CUSTOM_DATA);
@@ -545,7 +547,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     private void saveItemEnvironment(final CompoundTag nbt) {
         if (itemEnvironment != null) {
             saveItemData(UPGRADE_SLOT);
-            nbt.put(TAG_ITEM_COMPONENT, itemDriver.dataTag(itemEnvironmentStack).copy());
+            nbt.put(TAG_ITEM_COMPONENT, ItemDriverData.driverDataTag(itemDriver, itemEnvironmentStack).copy());
         } else if (itemEnvironmentData != null) {
             nbt.put(TAG_ITEM_COMPONENT, itemEnvironmentData.copy());
         }

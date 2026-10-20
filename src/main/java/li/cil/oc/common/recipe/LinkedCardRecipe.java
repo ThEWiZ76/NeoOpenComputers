@@ -1,5 +1,7 @@
 package li.cil.oc.common.recipe;
 
+import li.cil.oc.common.item.ItemDriverData;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -39,7 +41,7 @@ public final class LinkedCardRecipe extends ShapedRecipe {
         final ItemStack stack = super.assemble(input, registries);
         final DriverItem driver = Driver.driverFor(stack);
         if (driver != null) {
-            driver.dataTag(stack).putString(LinkedCardItem.TUNNEL_TAG, UUID.randomUUID().toString());
+            ItemDriverData.driverDataTag(driver, stack).putString(LinkedCardItem.TUNNEL_TAG, UUID.randomUUID().toString());
         }
         return stack;
     }
