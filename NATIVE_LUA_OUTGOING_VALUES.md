@@ -12,4 +12,4 @@ SimpleMachine.popSignal already invokes OpenComputersApi.convert, matching upstr
 
 Verified: build and2161 unit tests, all868 mixed-provider GameTests (CC/ProjectRed/Mekanism/AE2/EnderStorage), and all793 no-optional GameTests, each with normal process exit. Evidence prefix: build/finish-port-implementation/native-values-; red/mixed/absent server runs retain build/latest/debug logs. The three reload cases are within-process replacement tests; no new two-JVM graph-persistence claim is made.
 
-Remaining: incoming Lua-table argument graphs, broader callback contracts, actual client/survival/multiplayer/load/addon/migration/platform and full-port acceptance. Headless server results do not establish visual acceptance. Beta estimate remains3-6 concentrated workweeks, low confidence.
+Incoming Lua-table arguments have a subsequent checkpoint in [[Native Lua argument conversion]]. Remaining: broader callback contracts, actual client/survival/multiplayer/load/addon/migration/platform and full-port acceptance. Headless server results do not establish visual acceptance. Beta estimate remains3-6 concentrated workweeks, low confidence.
