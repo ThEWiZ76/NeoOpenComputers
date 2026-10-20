@@ -91,6 +91,7 @@ public final class ModDriverCatalog {
             // Specialized cell descriptions must follow the generic ItemStack converter (legacy display-name field).
             li.cil.oc.common.integration.AppliedEnergisticsIntegration.register(registry);
             li.cil.oc.common.integration.MekanismIntegration.register(registry);
+            li.cil.oc.common.integration.ComputerCraftIntegration.register(registry);
             register(
                 registry,
                 ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(), ModItems.APU_TIER1.get(), ModItems.APU_TIER2.get(),

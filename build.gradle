@@ -261,8 +261,8 @@ dependencies {
     if (project.hasProperty('withProjectRed')) {
         projectRedRuntime 'mrtjp:ProjectRed:1.21.1-4.23.0:transmission'
     }
-    compileOnly 'cc.tweaked:cc-tweaked-1.21.1-common-api:1.120.2'
-    compileOnly 'cc.tweaked:cc-tweaked-1.21.1-forge-api:1.120.2'
+    // Pinned runtime supplies CC's own annotated/dynamic method dispatcher as well as its public API.
+    compileOnly 'cc.tweaked:cc-tweaked-1.21.1-forge:1.120.2'
     if (project.hasProperty('withComputerCraft')) {
         computerCraftRuntime 'cc.tweaked:cc-tweaked-1.21.1-forge:1.120.2'
     }

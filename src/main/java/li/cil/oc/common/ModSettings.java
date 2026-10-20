@@ -103,6 +103,7 @@ public final class ModSettings {
     public static final ModConfigSpec.BooleanValue ENABLE_HTTP_HEADERS;
     public static final ModConfigSpec.BooleanValue ENABLE_TCP;
     public static final ModConfigSpec.BooleanValue ENABLE_INVENTORY_DRIVER;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> PERIPHERAL_BLACKLIST;
     public static final ModConfigSpec.BooleanValue ENABLE_COMMAND_BLOCK_DRIVER;
     public static final ModConfigSpec.BooleanValue ENABLE_TANK_DRIVER;
     public static final ModConfigSpec.BooleanValue ALLOW_ITEM_STACK_NBT_TAGS;
@@ -514,6 +515,9 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("integration");
+        PERIPHERAL_BLACKLIST = builder
+            .comment("Class names blocked from ComputerCraft peripheral adaptation, including subclasses. BlacklistedPeripheral object policy takes precedence.")
+            .defineListAllowEmpty("peripheralBlacklist", List.of("net.minecraft.world.level.block.entity.CommandBlockEntity"), value -> value instanceof String name && !name.isBlank());
         builder.push("vanilla");
         ENABLE_INVENTORY_DRIVER = builder
             .comment("Enable the vanilla inventory driver. This lets computers inspect adjacent vanilla inventories directly. OpenComputers upstream default is false.")
@@ -1573,6 +1577,18 @@ public final class ModSettings {
 
     public static boolean enableInventoryDriver() {
         return booleanValue(ENABLE_INVENTORY_DRIVER);
+    }
+
+    public static List<String> peripheralBlacklist() {
+        final List<? extends String> names;
+        try { names = PERIPHERAL_BLACKLIST.get(); }
+        catch (IllegalStateException unloaded) { return normalizePeripheralBlacklist(PERIPHERAL_BLACKLIST.getDefault()); }
+        return normalizePeripheralBlacklist(names);
+    }
+
+    private static List<String> normalizePeripheralBlacklist(final List<? extends String> names) {
+        return names.stream().map(name -> name.equals("net.minecraft.tileentity.TileEntityCommandBlock")
+            ? "net.minecraft.world.level.block.entity.CommandBlockEntity" : name).toList();
     }
 
     public static boolean enableCommandBlockDriver() {
