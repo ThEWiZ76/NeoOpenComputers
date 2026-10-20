@@ -18,6 +18,10 @@ public final class CraftableValue extends AbstractValue {
         target = new CraftingTarget(tile, side, item);
         this.outputCount = outputCount;
     }
+    public CraftableValue(final BlockEntity tile, final Direction side, final AEItemKey item, final long outputCount, final String part) {
+        this(tile, side, item, outputCount);
+        target.part(part);
+    }
 
     @Callback(doc = "function():table -- Get the recipe output item description.")
     public Object[] getItemStack(final Context context, final Arguments args) {

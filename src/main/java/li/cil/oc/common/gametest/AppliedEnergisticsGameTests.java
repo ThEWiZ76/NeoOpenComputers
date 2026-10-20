@@ -23,12 +23,18 @@ public final class AppliedEnergisticsGameTests {
         }
         return List.of(new TestFunction("ae2", "ae2_controller_storage_contract", "neoopencomputers:empty", 300, 0, true, Loaded::storageContract),
             new TestFunction("ae2", "ae2_native_adapter", "neoopencomputers:empty", 400, 0, true, Loaded::nativeAdapter),
-            new TestFunction("ae2", "ae2_native_crafting", "neoopencomputers:empty", 1000, 0, true, Loaded::nativeCrafting));
+            new TestFunction("ae2", "ae2_native_crafting", "neoopencomputers:empty", 1000, 0, true, Loaded::nativeCrafting),
+            new TestFunction("ae2", "ae2_native_block_interface_crafting", "neoopencomputers:empty", 1000, 0, true, helper -> Loaded.nativeCrafting(helper, "interface")),
+            new TestFunction("ae2", "ae2_native_panel_crafting", "neoopencomputers:empty", 1000, 0, true, helper -> Loaded.nativeCrafting(helper, "panel")));
     }
 
     private static final class Loaded {
         static void nativeCrafting(final GameTestHelper helper) {
-            helper.setBlock(new BlockPos(1, 1, 1), block("controller"));
+            nativeCrafting(helper, "controller");
+        }
+
+        static void nativeCrafting(final GameTestHelper helper, final String hostKind) {
+            helper.setBlock(new BlockPos(1, 1, 1), block(hostKind.equals("interface") ? "interface" : "controller"));
             helper.setBlock(new BlockPos(2, 1, 1), block("drive"));
             helper.setBlock(new BlockPos(1, 1, 0), block("creative_energy_cell"));
             helper.setBlock(new BlockPos(2, 1, 0), block("1k_crafting_storage"));
@@ -70,6 +76,20 @@ public final class AppliedEnergisticsGameTests {
                 ResourceLocation.fromNamespaceAndPath("ae2", "item_storage_cell_1k"))), false).isEmpty(), "Crafting fixture drive rejected cell");
             helper.setBlock(new BlockPos(1, 1, 2), li.cil.oc.common.ModBlocks.ADAPTER.get());
             helper.setBlock(new BlockPos(1, 1, 3), li.cil.oc.common.ModBlocks.COMPUTER_CASE_TIER1.get());
+            if (hostKind.equals("panel")) {
+                final var panelPos = helper.absolutePos(new BlockPos(3, 1, 1));
+                appeng.api.parts.PartHelper.setPart(helper.getLevel(), panelPos, null, null,
+                    (appeng.api.parts.IPartItem<?>) BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ae2", "fluix_glass_cable")));
+                helper.assertTrue(appeng.api.parts.PartHelper.setPart(helper.getLevel(), panelPos, Direction.NORTH, null,
+                    (appeng.api.parts.IPartItem<?>) BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ae2", "cable_interface"))) != null, "Crafting fixture panel not installed");
+                for (final var cable : List.of(new BlockPos(1, 2, 2), new BlockPos(1, 2, 1), new BlockPos(2, 2, 1))) {
+                    helper.setBlock(cable, li.cil.oc.common.ModBlocks.CABLE.get());
+                    li.cil.oc.api.Network.joinOrCreateNetwork(helper.getLevel().getBlockEntity(helper.absolutePos(cable)));
+                }
+                helper.setBlock(new BlockPos(3, 2, 1), li.cil.oc.common.ModBlocks.ADAPTER.get());
+                final li.cil.oc.common.blockentity.AdapterBlockEntity panelAdapter = helper.getBlockEntity(new BlockPos(3, 2, 1));
+                panelAdapter.onLoad(); panelAdapter.refreshNeighbors(); li.cil.oc.api.Network.joinOrCreateNetwork(panelAdapter);
+            }
             final li.cil.oc.common.blockentity.AdapterBlockEntity adapter = helper.getBlockEntity(new BlockPos(1, 1, 2));
             final li.cil.oc.common.blockentity.ComputerCaseBlockEntity computer = helper.getBlockEntity(new BlockPos(1, 1, 3));
             final var cpu = new net.minecraft.world.item.ItemStack(li.cil.oc.common.ModItems.CPU_TIER1.get());
@@ -112,15 +132,20 @@ public final class AppliedEnergisticsGameTests {
                 local computing
                 repeat computer.pullSignal(0.05); computing, reason = pending.isDone() until computing ~= nil
                 assert(computing == false and not reason, 'processing cancel request failed')
+                local busy = recipe.request(4, true, 'fixture-cpu')
+                repeat computer.pullSignal(0.05); done, reason = busy.isDone() until done ~= nil
+                assert(done == false and tostring(reason):find('cpu_busy', 1, true), 'busy CPU request did not fail')
                 assert(pending.cancel() == true and pending.isCanceled() == true)
                 component.proxy(component.list('eeprom')()).setData('ae2-crafting-ok')
                 while true do computer.pullSignal() end
-                """));
+                """.replace("component.list('me_controller')", "component.list('" + (hostKind.equals("controller") ? "me_controller" : "me_interface") + "')")));
             computer.onLoad(); adapter.onLoad(); adapter.refreshNeighbors();
             li.cil.oc.api.Network.joinOrCreateNetwork(adapter); li.cil.oc.api.Network.joinOrCreateNetwork(computer);
             ((li.cil.oc.api.network.Connector) computer.machine().node()).changeBuffer(10000);
             final appeng.api.networking.IGrid[] grid = {null};
             final li.cil.oc.api.machine.Value[] aliases = new li.cil.oc.api.machine.Value[3];
+            final li.cil.oc.api.machine.Value[] failureRequests = new li.cil.oc.api.machine.Value[2];
+            final li.cil.oc.api.machine.Value[] failureRecipe = new li.cil.oc.api.machine.Value[1];
             helper.startSequence().thenWaitUntil(() -> {
                 final var host = helper.getLevel().getCapability(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST, drivePos, null);
                 helper.assertTrue(host != null && host.getGridNode(Direction.UP) != null && host.getGridNode(Direction.UP).isActive(), "Waiting for crafting AE2 grid");
@@ -192,6 +217,43 @@ public final class AppliedEnergisticsGameTests {
                     helper.assertTrue((items.get(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_LOG)) + externalLogs) * 4
                         + items.get(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_PLANKS)) == 64,
                         "Complete/cancel lost or duplicated real crafting ingredients/output");
+                }).thenExecute(() -> {
+                  try {
+                    helper.assertTrue(grid[0].getStorageService().getInventory().insert(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_LOG), 4000,
+                        appeng.api.config.Actionable.MODULATE, appeng.api.networking.security.IActionSource.empty()) == 4000, "Small-CPU fixture could not store actual ingredients");
+                    final var pos = helper.absolutePos(new BlockPos(1, 1, 1));
+                    final var environment = li.cil.oc.api.Driver.driverFor(helper.getLevel(), pos, Direction.NORTH).createEnvironment(helper.getLevel(), pos, Direction.NORTH);
+                    try {
+                        failureRecipe[0] = (li.cil.oc.api.machine.Value) ((Object[]) ((li.cil.oc.api.network.Component) environment.node()).invoke("getCraftables", null,
+                            java.util.Map.of("name", "minecraft:oak_planks"))[0])[0];
+                    } finally { environment.node().remove(); }
+                    failureRequests[0] = (li.cil.oc.api.machine.Value) computer.machine().invoke(failureRecipe[0], "request", new Object[]{16000, true, "fixture-cpu"})[0];
+                  } catch (RuntimeException exception) { throw exception; }
+                  catch (Exception exception) { helper.fail(exception.toString()); }
+                }).thenWaitUntil(() -> {
+                  try {
+                    final var state = computer.machine().invoke(failureRequests[0], "isDone", new Object[0]);
+                    helper.assertTrue(Boolean.FALSE.equals(state[0]) && state.length == 2 && state[1].toString().contains("cpu_too_small"), "Oversized plan did not report cpu_too_small: " + java.util.Arrays.toString(state));
+                  } catch (RuntimeException exception) { throw exception; }
+                  catch (Exception exception) { helper.fail(exception.toString()); }
+                }).thenExecute(() -> helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(2, 1, 0)), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()))
+                .thenWaitUntil(() -> helper.assertTrue(grid[0].getCraftingService().getCpus().isEmpty(), "Removed CPU still registered"))
+                .thenExecute(() -> {
+                  try { failureRequests[1] = (li.cil.oc.api.machine.Value) computer.machine().invoke(failureRecipe[0], "request", new Object[]{4})[0]; }
+                  catch (Exception exception) { helper.fail(exception.toString()); }
+                }).thenWaitUntil(() -> {
+                  try {
+                    final var state = computer.machine().invoke(failureRequests[1], "isDone", new Object[0]);
+                    helper.assertTrue(Boolean.FALSE.equals(state[0]) && state.length == 2 && state[1].toString().contains("no_cpu_found"), "Missing CPU did not report no_cpu_found: " + java.util.Arrays.toString(state));
+                  } catch (RuntimeException exception) { throw exception; }
+                  catch (Exception exception) { helper.fail(exception.toString()); }
+                }).thenExecute(() -> {
+                    final var items = grid[0].getStorageService().getInventory().getAvailableStacks();
+                    final net.minecraft.world.level.block.entity.ChestBlockEntity chest = helper.getBlockEntity(new BlockPos(2, 2, 2));
+                    long externalLogs = 0;
+                    for (int slot = 0; slot < chest.getContainerSize(); slot++) if (chest.getItem(slot).is(net.minecraft.world.item.Items.OAK_LOG)) externalLogs += chest.getItem(slot).getCount();
+                    helper.assertTrue((items.get(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_LOG)) + externalLogs) * 4
+                        + items.get(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_PLANKS)) == 16064, "Rejected CPU requests changed real ingredients/output");
                 }).thenSucceed();
         }
 

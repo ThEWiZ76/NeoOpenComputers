@@ -17,6 +17,7 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 final class CraftingTarget {
     private final CompoundTag data;
     private BlockEntity tile;
+    private appeng.api.parts.IPart part;
 
     CraftingTarget(final BlockEntity tile, final Direction side, final AEItemKey key) {
         this.tile = tile;
@@ -30,7 +31,11 @@ final class CraftingTarget {
 
     CraftingTarget(final CompoundTag data) { this.data = data.copy(); }
     CompoundTag save() { return data.copy(); }
-    CraftingTarget copy() { final var copy = new CraftingTarget(data); copy.tile = tile; return copy; }
+    CraftingTarget copy() { final var copy = new CraftingTarget(data); copy.tile = tile; copy.part = part; return copy; }
+    void part(final String id) {
+        data.putString("part", id);
+        if (tile instanceof appeng.api.parts.IPartHost host) part = host.getPart(Direction.from3DDataValue(data.getInt("side")));
+    }
 
     AEItemKey item() {
         final var server = ServerLifecycleHooks.getCurrentServer();
@@ -47,6 +52,7 @@ final class CraftingTarget {
         final var pos = BlockPos.of(data.getLong("position"));
         if (world == null || !world.hasChunkAt(pos)) {
             tile = null;
+            part = null;
             throw new IllegalStateException("waiting for ae network to load");
         }
         final var current = world.getBlockEntity(pos);
@@ -55,8 +61,18 @@ final class CraftingTarget {
             throw new IllegalStateException("no controller");
         }
         tile = current;
+        if (data.contains("part")) {
+            final var currentPart = current instanceof appeng.api.parts.IPartHost host ? host.getPart(Direction.from3DDataValue(data.getInt("side"))) : null;
+            if (currentPart == null || part != null && part != currentPart
+                || !BuiltInRegistries.ITEM.getKey(currentPart.getPartItem().asItem()).toString().equals(data.getString("part"))) throw new IllegalStateException("no controller");
+            part = currentPart;
+            if (part.getGridNode() == null) throw new IllegalStateException("no ae grid");
+            return part.getGridNode();
+        }
         final var host = world.getCapability(AECapabilities.IN_WORLD_GRID_NODE_HOST, pos, null);
-        final var node = host == null ? null : host.getGridNode(data.getInt("side") < 0 ? null : Direction.from3DDataValue(data.getInt("side")));
+        // AE2's null face is not an internal-node selector. IActionHost exposes that node explicitly.
+        final var node = data.getInt("side") < 0 && current instanceof appeng.api.networking.security.IActionHost actionHost
+            ? actionHost.getActionableNode() : host == null ? null : host.getGridNode(Direction.from3DDataValue(data.getInt("side")));
         if (node == null) throw new IllegalStateException("no ae grid");
         return node;
     }

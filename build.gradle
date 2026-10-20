@@ -197,7 +197,8 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'org.appliedenergistics:appliedenergistics2:19.2.18:api'
+    // AE2's ghost-config host is exposed by the pinned implementation, not its API classifier.
+    compileOnly 'org.appliedenergistics:appliedenergistics2:19.2.18'
     if (project.hasProperty('withAE2')) {
         appliedEnergisticsRuntime 'org.appliedenergistics:appliedenergistics2:19.2.18'
     }

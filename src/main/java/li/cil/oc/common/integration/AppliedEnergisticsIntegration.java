@@ -37,7 +37,194 @@ public final class AppliedEnergisticsIntegration {
 
         static void register(final DriverRegistry registry) {
             registry.add(new ControllerDriver());
+            registry.add(new BlockInterfaceDriver());
+            registry.add(new PartInterfaceDriver());
+            registry.add(new ImportBusDriver());
+            registry.add(new ExportBusDriver());
+            registry.add((li.cil.oc.api.driver.EnvironmentProvider) stack -> {
+                if (stack == null || stack.isEmpty()) return null;
+                final var id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+                if (!id.getNamespace().equals("ae2")) return null;
+                return switch (id.getPath()) {
+                    case "controller" -> Environment.class;
+                    case "interface", "cable_interface" -> InterfaceEnvironment.class;
+                    case "import_bus" -> ImportEnvironment.class;
+                    case "export_bus" -> ExportEnvironment.class;
+                    default -> null;
+                };
+            });
             li.cil.oc.common.integration.ae2.CraftingStatusValue.register();
+        }
+
+        // Compound adapter persistence keys entries by driver type, so each device kind needs a distinct type.
+        private static final class BlockInterfaceDriver extends ConfigDriver { BlockInterfaceDriver() { super("interface", false); } }
+        private static final class PartInterfaceDriver extends ConfigDriver { PartInterfaceDriver() { super("cable_interface", true); } }
+        private static final class ImportBusDriver extends ConfigDriver { ImportBusDriver() { super("import_bus", true); } }
+        private static final class ExportBusDriver extends ConfigDriver { ExportBusDriver() { super("export_bus", true); } }
+
+        private abstract static class ConfigDriver implements DriverBlock {
+            private final String kind;
+            private final boolean parts;
+            ConfigDriver(final String kind, final boolean parts) {
+                this.kind = kind; this.parts = parts;
+            }
+            @Override public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
+                if (world == null || pos == null || !world.hasChunkAt(pos)) return false;
+                final var tile = world.getBlockEntity(pos);
+                if (!parts) return tile instanceof appeng.helpers.IConfigInvHost
+                    && BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock()).equals(ResourceLocation.fromNamespaceAndPath("ae2", kind));
+                if (!(tile instanceof appeng.api.parts.IPartHost host)) return false;
+                for (final var face : Direction.values()) if (matches(host.getPart(face), kind)) return true;
+                return false;
+            }
+            @Override public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
+                if (!worksWith(world, pos, side)) return null;
+                final var tile = world.getBlockEntity(pos);
+                return kind.equals("interface") || kind.equals("cable_interface") ? new InterfaceEnvironment(tile, side, parts)
+                    : kind.equals("import_bus") ? new ImportEnvironment(tile) : new ExportEnvironment(tile);
+            }
+        }
+
+        private static boolean matches(final appeng.api.parts.IPart part, final String kind) {
+            return part != null && part instanceof appeng.helpers.IConfigInvHost
+                && BuiltInRegistries.ITEM.getKey(part.getPartItem().asItem()).equals(ResourceLocation.fromNamespaceAndPath("ae2", kind));
+        }
+
+        private static void checkTile(final BlockEntity tile) {
+            final var world = tile.getLevel();
+            if (world == null || tile.isRemoved() || !world.hasChunkAt(tile.getBlockPos()) || world.getBlockEntity(tile.getBlockPos()) != tile) {
+                throw new IllegalStateException("no controller");
+            }
+        }
+
+        private static Direction face(final Arguments args, final int index) {
+            final int side = args.checkInteger(index);
+            if (side < 0 || side > 5) throw new IllegalArgumentException("invalid side");
+            return Direction.from3DDataValue(side);
+        }
+
+        private static appeng.helpers.externalstorage.GenericStackInv partConfig(final BlockEntity tile, final String kind, final Direction side) {
+            checkTile(tile);
+            final var part = ((appeng.api.parts.IPartHost) tile).getPart(side);
+            return matches(part, kind) ? ((appeng.helpers.IConfigInvHost) part).getConfig() : null;
+        }
+
+        private static int configSlot(final appeng.helpers.externalstorage.GenericStackInv config, final int oneBased) {
+            if (oneBased < 1 || oneBased > config.size()) throw new IllegalArgumentException("invalid slot");
+            return oneBased - 1;
+        }
+
+        private static Object[] getConfig(final appeng.helpers.externalstorage.GenericStackInv config, final Arguments args, final int offset) {
+            if (config == null) return new Object[]{null, "no matching part"};
+            final int slot = configSlot(config, args.optInteger(offset, 1));
+            final var key = config.getKey(slot);
+            if (key == null) return new Object[]{null};
+            final Object stack = key instanceof appeng.api.stacks.AEItemKey item ? item.toStack(1)
+                : key instanceof appeng.api.stacks.AEFluidKey fluid ? fluid.toStack(1) : null;
+            if (stack == null) return new Object[]{null};
+            final var description = new LinkedHashMap<Object, Object>((Map<?, ?>) OpenComputersApi.convert(new Object[]{stack})[0]);
+            description.put(key instanceof appeng.api.stacks.AEItemKey ? "size" : "amount", Math.max(1, config.getAmount(slot)));
+            return new Object[]{description};
+        }
+
+        private static Object[] setConfig(final li.cil.oc.api.network.Node node, final appeng.helpers.externalstorage.GenericStackInv config,
+                                          final Context context, final Arguments args, final int offset) {
+            if (config == null) return new Object[]{null, "no matching part"};
+            final int slot = configSlot(config, args.isString(offset) ? 1 : args.optInteger(offset, 1));
+            appeng.api.stacks.GenericStack configured = null;
+            if (args.count() > offset + 1) {
+                final int addressIndex = args.isString(offset) ? offset : offset + 1;
+                final String address = args.checkString(addressIndex);
+                final var other = node.network() == null ? null : node.network().node(address);
+                if (!(other instanceof Component component) || !other.canBeReachedFrom(node)) throw new IllegalArgumentException("no such component");
+                if (!(component.host() instanceof Database database)) throw new IllegalArgumentException("not a database");
+                final int entry = args.checkInteger(addressIndex + 1);
+                if (entry < 1 || entry > database.size()) throw new IllegalArgumentException("invalid slot");
+                final var stack = database.getStackInSlot(entry - 1).copy();
+                final int size = args.optInteger(addressIndex + 2, 1);
+                if (!stack.isEmpty() && size > 0) configured = new appeng.api.stacks.GenericStack(appeng.api.stacks.AEItemKey.of(stack), Math.min(size, stack.getMaxStackSize()));
+            }
+            config.setStack(slot, configured);
+            if (context != null) context.pause(0.5);
+            return new Object[]{true};
+        }
+
+        public static final class InterfaceEnvironment extends Environment {
+            private final boolean parts;
+            private final Direction networkSide;
+            private final appeng.api.parts.IPart networkPart;
+
+            InterfaceEnvironment(final BlockEntity tile, final Direction adapterSide, final boolean parts) {
+                super(tile, null, "me_interface", parts ? 0 : 5);
+                this.parts = parts;
+                Direction selected = adapterSide == null ? null : adapterSide.getOpposite();
+                if (parts) {
+                    final var host = (appeng.api.parts.IPartHost) tile;
+                    if (selected == null || !matches(host.getPart(selected), "cable_interface")) {
+                        selected = null;
+                        for (final var candidate : Direction.values()) if (matches(host.getPart(candidate), "cable_interface")) { selected = candidate; break; }
+                    }
+                    networkPart = selected == null ? null : host.getPart(selected);
+                } else networkPart = null;
+                networkSide = selected;
+            }
+
+            @Override protected appeng.api.networking.IGridNode gridNode() {
+                checkTile(tile);
+                if (!parts) {
+                    final var node = ((appeng.api.networking.security.IActionHost) tile).getActionableNode();
+                    if (node == null) throw new IllegalStateException("no ae grid");
+                    return node;
+                }
+                final var host = (appeng.api.parts.IPartHost) tile;
+                if (networkSide == null || host.getPart(networkSide) != networkPart || !matches(networkPart, "cable_interface")
+                    || networkPart.getGridNode() == null) throw new IllegalStateException("no ae grid");
+                return networkPart.getGridNode();
+            }
+
+            @Override protected li.cil.oc.api.machine.Value craftable(final appeng.api.stacks.AEItemKey item, final long count) {
+                return parts ? new li.cil.oc.common.integration.ae2.CraftableValue(tile, networkSide, item, count, "ae2:cable_interface")
+                    : super.craftable(item, count);
+            }
+
+            @Callback(doc = "function([side:number,][slot:number]):table -- Get a block interface or side-specific panel configuration.")
+            public Object[] getInterfaceConfiguration(final Context context, final Arguments args) {
+                checkTile(tile);
+                return getConfig(parts ? partConfig(tile, "cable_interface", face(args, 0)) : ((appeng.helpers.IConfigInvHost) tile).getConfig(), args, parts ? 1 : 0);
+            }
+            @Callback(doc = "function([side:number,][slot:number][, database:string, entry:number, size:number=1]):boolean -- Configure ghost items from a database description, or clear the slot.")
+            public Object[] setInterfaceConfiguration(final Context context, final Arguments args) {
+                checkTile(tile);
+                return setConfig(node(), parts ? partConfig(tile, "cable_interface", face(args, 0)) : ((appeng.helpers.IConfigInvHost) tile).getConfig(), context, args, parts ? 1 : 0);
+            }
+        }
+
+        public abstract static class BusEnvironment extends AbstractManagedEnvironment implements NamedBlock {
+            protected final BlockEntity tile;
+            private final String name;
+            private final int priority;
+            BusEnvironment(final BlockEntity tile, final String name, final int priority) {
+                this.tile = tile; this.name = name; this.priority = priority;
+                setNode(li.cil.oc.api.Network.newNode(this, Visibility.Network).withComponent(name, Visibility.Network).create());
+            }
+            @Override public String preferredName() { return name; }
+            @Override public int priority() { return priority; }
+        }
+
+        public static final class ImportEnvironment extends BusEnvironment {
+            ImportEnvironment(final BlockEntity tile) { super(tile, "me_importbus", 1); }
+            @Callback(doc = "function(side:number[, slot:number]):table -- Get an import filter.")
+            public Object[] getImportConfiguration(final Context context, final Arguments args) { return getConfig(partConfig(tile, "import_bus", face(args, 0)), args, 1); }
+            @Callback(doc = "function(side:number[, slot:number][, database:string, entry:number, size:number=1]):boolean -- Configure or clear an import filter.")
+            public Object[] setImportConfiguration(final Context context, final Arguments args) { return setConfig(node(), partConfig(tile, "import_bus", face(args, 0)), context, args, 1); }
+        }
+
+        public static final class ExportEnvironment extends BusEnvironment {
+            ExportEnvironment(final BlockEntity tile) { super(tile, "me_exportbus", 2); }
+            @Callback(doc = "function(side:number[, slot:number]):table -- Get an export filter.")
+            public Object[] getExportConfiguration(final Context context, final Arguments args) { return getConfig(partConfig(tile, "export_bus", face(args, 0)), args, 1); }
+            @Callback(doc = "function(side:number[, slot:number][, database:string, entry:number, size:number=1]):boolean -- Configure or clear an export filter.")
+            public Object[] setExportConfiguration(final Context context, final Arguments args) { return setConfig(node(), partConfig(tile, "export_bus", face(args, 0)), context, args, 1); }
         }
 
         private static final class ControllerDriver implements DriverBlock {
@@ -54,29 +241,38 @@ public final class AppliedEnergisticsIntegration {
             }
         }
 
-        public static final class Environment extends AbstractManagedEnvironment implements NamedBlock {
-            private final BlockEntity tile;
+        public static class Environment extends AbstractManagedEnvironment implements NamedBlock {
+            protected final BlockEntity tile;
             private final Direction side;
+            private final String name;
+            private final int priority;
 
             Environment(final BlockEntity tile, final Direction side) {
+                this(tile, side, "me_controller", 5);
+            }
+            Environment(final BlockEntity tile, final Direction side, final String name, final int priority) {
                 this.tile = tile;
                 this.side = side;
-                setNode(li.cil.oc.api.Network.newNode(this, Visibility.Network).withComponent(preferredName(), Visibility.Network).create());
+                this.name = name; this.priority = priority;
+                setNode(li.cil.oc.api.Network.newNode(this, Visibility.Network).withComponent(name, Visibility.Network).create());
             }
 
-            @Override public String preferredName() { return "me_controller"; }
-            @Override public int priority() { return 5; }
+            @Override public String preferredName() { return name; }
+            @Override public int priority() { return priority; }
 
-            private appeng.api.networking.IGrid grid() {
+            protected appeng.api.networking.IGridNode gridNode() {
                 final var world = tile.getLevel();
                 final var pos = tile.getBlockPos();
-                if (world == null || tile.isRemoved() || !world.hasChunkAt(pos) || world.getBlockEntity(pos) != tile) {
-                    throw new IllegalStateException("no controller");
-                }
+                checkTile(tile);
                 final var host = world.getCapability(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST, pos, null);
                 final var gridNode = host == null ? null : host.getGridNode(side);
                 if (gridNode == null) throw new IllegalStateException("no ae grid");
-                return gridNode.getGrid();
+                return gridNode;
+            }
+
+            private appeng.api.networking.IGrid grid() { return gridNode().getGrid(); }
+            protected li.cil.oc.api.machine.Value craftable(final appeng.api.stacks.AEItemKey item, final long count) {
+                return new li.cil.oc.common.integration.ae2.CraftableValue(tile, side, item, count);
             }
 
             @Callback(doc = "function():table -- Get the available crafting CPUs.")
@@ -132,7 +328,7 @@ public final class AppliedEnergisticsIntegration {
                     if (key instanceof appeng.api.stacks.AEItemKey item) {
                         final long outputCount = recipeOutputCount(grid, item);
                         if (DescriptionFilter.matches(describe(item, outputCount, grid), filter)) {
-                            result.add(new li.cil.oc.common.integration.ae2.CraftableValue(tile, side, item, outputCount));
+                            result.add(craftable(item, outputCount));
                         }
                     }
                 }
