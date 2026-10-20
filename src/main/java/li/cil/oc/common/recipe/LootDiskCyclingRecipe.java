@@ -1,5 +1,6 @@
 package li.cil.oc.common.recipe;
 
+import com.mojang.serialization.MapCodec;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModLootDisks;
@@ -10,6 +11,8 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
@@ -21,8 +24,20 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 public final class LootDiskCyclingRecipe extends CustomRecipe {
+    private final List<ItemStack> synchronizedDisks;
+
     public LootDiskCyclingRecipe(final CraftingBookCategory category) {
+        this(category, null);
+    }
+
+    private LootDiskCyclingRecipe(final CraftingBookCategory category, final List<ItemStack> synchronizedDisks) {
         super(category);
+        this.synchronizedDisks = synchronizedDisks == null ? null : synchronizedDisks.stream().map(ItemStack::copy).toList();
+    }
+
+    private List<ItemStack> disksForCycling() {
+        // Network recipes own a server snapshot; JSON/server recipes retain live registrations.
+        return synchronizedDisks == null ? ModLootDisks.stacksForCycling() : synchronizedDisks;
     }
 
     @Override
@@ -37,7 +52,7 @@ public final class LootDiskCyclingRecipe extends CustomRecipe {
             return ItemStack.EMPTY;
         }
         final String factoryId = factoryId(disk);
-        final List<ItemStack> disks = ModLootDisks.stacksForCycling();
+        final List<ItemStack> disks = disksForCycling();
         if (disks.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -102,5 +117,25 @@ public final class LootDiskCyclingRecipe extends CustomRecipe {
         if (customData == null) return "";
         final CompoundTag tag = customData.copyTag();
         return tag.contains("oc:lootFactory", Tag.TAG_STRING) ? tag.getString("oc:lootFactory") : tag.getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG);
+    }
+
+    public static final class Serializer implements RecipeSerializer<LootDiskCyclingRecipe> {
+        private static final MapCodec<LootDiskCyclingRecipe> CODEC = CraftingBookCategory.CODEC
+            .fieldOf("category").orElse(CraftingBookCategory.MISC)
+            .xmap(LootDiskCyclingRecipe::new, LootDiskCyclingRecipe::category);
+        private static final StreamCodec<RegistryFriendlyByteBuf, LootDiskCyclingRecipe> STREAM_CODEC = StreamCodec.composite(
+            CraftingBookCategory.STREAM_CODEC, LootDiskCyclingRecipe::category,
+            ItemStack.LIST_STREAM_CODEC, LootDiskCyclingRecipe::disksForCycling,
+            LootDiskCyclingRecipe::new);
+
+        @Override
+        public MapCodec<LootDiskCyclingRecipe> codec() {
+            return CODEC;
+        }
+
+        @Override
+        public StreamCodec<RegistryFriendlyByteBuf, LootDiskCyclingRecipe> streamCodec() {
+            return STREAM_CODEC;
+        }
     }
 }

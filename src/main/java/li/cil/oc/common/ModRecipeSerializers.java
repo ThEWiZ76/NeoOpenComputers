@@ -41,7 +41,7 @@ public final class ModRecipeSerializers {
 
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<LootDiskCyclingRecipe>> LOOT_DISK_CYCLING = SERIALIZERS.register(
         "loot_disk_cycling",
-        () -> new SimpleCraftingRecipeSerializer<>(LootDiskCyclingRecipe::new));
+        LootDiskCyclingRecipe.Serializer::new);
 
     static {
         CONDITIONS.register("loot_recrafting", () -> LootRecraftingCondition.CODEC);
