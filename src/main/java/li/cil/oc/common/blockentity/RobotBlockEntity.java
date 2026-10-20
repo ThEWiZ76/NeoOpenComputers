@@ -306,6 +306,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
 
     public ItemStack createRobotDrop(final HolderLookup.Provider registries) {
         final ItemStack stack = new ItemStack(li.cil.oc.common.ModItems.ROBOT.get());
+        if (!name.isEmpty()) stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal(name));
         final CompoundTag data = saveWithoutMetadata(registries);
         // Runtime inventory drops separately. Hardware and its saved component data stay in the chassis.
         data.remove("Items");
@@ -1728,7 +1729,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, Container, W
         selectedSlot = tag.getInt(TAG_SELECTED_SLOT);
         selectedTank = tag.getInt(TAG_SELECTED_TANK);
         lightColor = tag.contains(TAG_LIGHT_COLOR) ? tag.getInt(TAG_LIGHT_COLOR) : 0xF23030;
-        name = tag.getString(TAG_NAME).isEmpty() ? "Robot" : tag.getString(TAG_NAME);
+        name = li.cil.oc.common.AgentNames.resolve(tag.getString(TAG_NAME));
         ownerName = tag.getString(TAG_OWNER_NAME);
         ownerUUID = tag.hasUUID(TAG_OWNER_UUID) ? tag.getUUID(TAG_OWNER_UUID) : NIL_UUID;
         wakeThreshold = tag.getInt("oc:wakeThreshold");

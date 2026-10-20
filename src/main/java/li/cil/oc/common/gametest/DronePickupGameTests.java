@@ -59,6 +59,7 @@ public final class DronePickupGameTests {
         connector.changeBuffer(231 - connector.localBuffer());
         helper.assertTrue(connector.localBuffer() == 231, "Energy fixture did not initialize");
         final var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        drone.setName("Surveyor drone");
         player.setShiftKeyDown(true);
         drone.interact(player, InteractionHand.MAIN_HAND);
         helper.assertTrue(drone.machine().isRunning(), "Sneak interaction did not start drone");
@@ -72,11 +73,14 @@ public final class DronePickupGameTests {
         helper.assertTrue(drops.stream().filter(entity -> entity.getItem().is(Items.DIAMOND))
             .mapToInt(entity -> entity.getItem().getCount()).sum() == 7, "Pickup duplicated or lost cargo");
         final var packed = droneDrops.getFirst().getItem();
+        helper.assertTrue(packed.has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)
+            && packed.getHoverName().getString().equals("Surveyor drone"), "Pickup lost drone display name");
         helper.assertTrue(((DroneItem) packed.getItem()).componentStacks(packed).size() == 5, "Pickup lost installed hardware");
         helper.assertTrue(drops.stream().filter(entity -> entity.getItem().is(Items.COAL))
             .mapToInt(entity -> entity.getItem().getCount()).sum() == 3, "Generator fuel was not dropped exactly once");
         final var restored = new DroneEntity(helper.getLevel());
         restored.loadFromItemStack(packed, null);
+        helper.assertTrue(restored.name().equals("Surveyor drone"), "Replacing packed drone lost its name");
         helper.assertTrue(restored.tier() == 1 && restored.mainInventory().getContainerSize() == 4, "Pickup changed drone tier or capacity");
         helper.assertTrue(restored.mainInventory().isEmpty(), "Packed drone duplicated dropped cargo");
         helper.assertTrue(((Number) generator(restored).invoke("count", restored.machine())[0]).intValue() == 0, "Packed generator duplicated dropped fuel");

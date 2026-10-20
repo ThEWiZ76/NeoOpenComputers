@@ -59,7 +59,21 @@ public class DroneItem extends Item implements Tiered {
         }
         data.put(COMPONENTS_TAG, componentTags);
         writeData(stack, data);
+        storeName(stack, li.cil.oc.common.AgentNames.randomName());
         return stack;
+    }
+
+    public String name(final ItemStack stack) {
+        final var customName = stack.get(DataComponents.CUSTOM_NAME);
+        return li.cil.oc.common.AgentNames.resolve(customName != null ? customName.getString() : readData(stack).getString("name"));
+    }
+
+    public void storeName(final ItemStack stack, final String name) {
+        final var data = readData(stack);
+        data.putString("name", name);
+        writeData(stack, data);
+        if (name.isEmpty()) stack.remove(DataComponents.CUSTOM_NAME);
+        else stack.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal(name));
     }
 
     public ListTag components(final ItemStack stack) {

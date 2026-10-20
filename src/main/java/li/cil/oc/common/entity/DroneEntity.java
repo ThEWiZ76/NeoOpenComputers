@@ -218,6 +218,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         };
         final var droneItem = li.cil.oc.common.ModItems.DRONE.get();
         final var packed = droneItem.assembleFromCase(new ItemStack(caseItem), hardware.toArray(ItemStack[]::new));
+        droneItem.storeName(packed, name);
         if (machine.node() instanceof li.cil.oc.api.network.Connector connector) {
             droneItem.storeEnergy(packed, connector.localBuffer());
         }
@@ -285,6 +286,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
 
     public void loadFromItemStack(final ItemStack stack, final Player player) {
         if (stack.getItem() instanceof li.cil.oc.common.item.DroneItem item) {
+            name = item.name(stack);
             tier = normalizeTier(item.tier(stack));
             clearContent();
             if (machine.node() instanceof li.cil.oc.api.network.Connector connector) {
@@ -564,7 +566,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
 
     @Override
     public void setName(final String name) {
-        this.name = name == null || name.isBlank() ? "Drone" : name;
+        this.name = name == null ? "" : name;
     }
 
     @Override
@@ -782,7 +784,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
         lightColor = tag.contains(TAG_LIGHT_COLOR) ? tag.getInt(TAG_LIGHT_COLOR) : 0x66DD55;
         target = new Vec3(tag.getDouble(TAG_TARGET_X), tag.getDouble(TAG_TARGET_Y), tag.getDouble(TAG_TARGET_Z));
         acceleration = tag.contains(TAG_ACCELERATION) ? tag.getDouble(TAG_ACCELERATION) : MAX_ACCELERATION;
-        name = tag.getString(TAG_NAME).isBlank() ? "Drone" : tag.getString(TAG_NAME);
+        name = li.cil.oc.common.AgentNames.resolve(tag.getString(TAG_NAME));
         ownerName = tag.getString(TAG_OWNER_NAME);
         ownerUUID = tag.hasUUID(TAG_OWNER_UUID) ? tag.getUUID(TAG_OWNER_UUID) : NIL_UUID;
         if (droneNode != null) {

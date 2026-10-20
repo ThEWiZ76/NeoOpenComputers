@@ -44,6 +44,20 @@ public class RobotBlock extends HorizontalDirectionalBlock implements EntityBloc
     }
 
     @Override
+    public void setPlacedBy(final Level level, final BlockPos pos, final BlockState state,
+                            final net.minecraft.world.entity.LivingEntity placer, final ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof RobotBlockEntity robot) {
+            final var customName = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+            final var data = stack.get(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA);
+            if (customName != null) robot.setName(li.cil.oc.common.AgentNames.resolve(customName.getString()));
+            else if (data == null || !data.copyTag().contains("oc:name", net.minecraft.nbt.Tag.TAG_STRING)) {
+                robot.setName(li.cil.oc.common.AgentNames.randomName());
+            }
+        }
+    }
+
+    @Override
     protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
         return CODEC;
     }
