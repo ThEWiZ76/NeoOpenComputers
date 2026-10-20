@@ -1,5 +1,8 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.common.inventory.ComponentLifecycle;
+import li.cil.oc.api.util.Lifecycle.LifecycleState;
+
 import li.cil.oc.common.item.ItemDriverData;
 
 import com.mojang.authlib.GameProfile;
@@ -1600,6 +1603,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
         if (index < 0 || index >= runtimeComponents.length || runtimeComponents[index] == null) return;
         final RuntimeComponent component = runtimeComponents[index];
         runtimeComponents[index] = null;
+        ComponentLifecycle.setState(component.environment(), LifecycleState.Disposing);
         final Node node = component.environment().node();
         if (node != null) {
             onMachineDisconnect(node);
@@ -1607,6 +1611,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
         }
         // Persist after disconnect callbacks eject fuel and close open handles.
         saveRuntimeComponent(component);
+        if (node != null) node.remove();
+        ComponentLifecycle.setState(component.environment(), LifecycleState.Disposed);
     }
 
     private void syncRuntimeComponents() {
@@ -1621,13 +1627,16 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
                 final DriverItem driver = Driver.driverFor(stack, Robot.class);
                 final ManagedEnvironment environment = driver.createEnvironment(stack, this);
                 if (environment == null) continue;
+                ComponentLifecycle.setState(environment, LifecycleState.Constructing);
                 environment.load(ItemDriverData.driverDataTag(driver, stack).copy());
+                ComponentLifecycle.setState(environment, LifecycleState.Initializing);
                 runtimeComponents[index] = new RuntimeComponent(stack, environment);
                 if (environment.node() != null) {
                     machine.node().connect(environment.node());
                     componentSlots.put(environment.node().address(), MAX_HARDWARE_SLOT_COUNT + index);
                     onMachineConnect(environment.node());
                 }
+                ComponentLifecycle.setState(environment, LifecycleState.Initialized);
             } else if (runtimeComponents[index] != null && runtimeComponents[index].environment().node() != null
                 && !runtimeComponents[index].environment().node().isNeighborOf(machine.node())) {
                 machine.node().connect(runtimeComponents[index].environment().node());
@@ -1849,6 +1858,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
             unloadedState = saved;
         }
         for (int slot = CONTAINER_RUNTIME_SLOT_START; slot < CARGO_SLOT_START; slot++) detachRuntimeComponent(slot);
+        ComponentLifecycle.setState(machine, LifecycleState.Disposing);
         if (machine.node() != null) {
             machine.node().remove();
         }
@@ -1856,6 +1866,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
             robotNode.remove();
         }
         if (unloadedState != null) machine.stop();
+        ComponentLifecycle.setState(machine, LifecycleState.Disposed);
     }
 
     private boolean canStartMachine() {

@@ -1,5 +1,8 @@
 package li.cil.oc.common.item;
 
+import li.cil.oc.common.inventory.ComponentLifecycle;
+import li.cil.oc.api.util.Lifecycle.LifecycleState;
+
 import li.cil.oc.api.Machine;
 import li.cil.oc.api.internal.Keyboard;
 import li.cil.oc.api.internal.Tablet;
@@ -167,10 +170,12 @@ public final class TabletRuntime implements Tablet {
         if (closed) return;
         if (!preserveExecution) machine.stop();
         save();
+        ComponentLifecycle.setState(machine, LifecycleState.Disposing);
         final List<Node> nodes = new ArrayList<>();
         if (machine.node().network() != null) machine.node().network().nodes().forEach(nodes::add);
         nodes.forEach(Node::remove);
         machine.stop();
+        ComponentLifecycle.setState(machine, LifecycleState.Disposed);
         closed = true;
     }
 

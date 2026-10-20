@@ -1,6 +1,8 @@
 package li.cil.oc.common.driver;
 
 import li.cil.oc.api.Network;
+import li.cil.oc.api.util.Lifecycle;
+import li.cil.oc.common.inventory.ComponentLifecycle;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
@@ -15,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public final class CompoundBlockEnvironment implements ManagedEnvironment {
+public final class CompoundBlockEnvironment implements ManagedEnvironment, Lifecycle {
     private static final String TYPE_HASH_TAG = "typeHash";
 
     private final String name;
@@ -48,6 +50,11 @@ public final class CompoundBlockEnvironment implements ManagedEnvironment {
 
     public List<Entry> environments() {
         return environments;
+    }
+
+    @Override
+    public void onLifecycleStateChange(final LifecycleState state) {
+        for (Entry entry : environments) ComponentLifecycle.setState(entry.environment(), state);
     }
 
     @Override

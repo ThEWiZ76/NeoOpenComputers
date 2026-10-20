@@ -1,5 +1,8 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.common.inventory.ComponentLifecycle;
+import li.cil.oc.api.util.Lifecycle.LifecycleState;
+
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
@@ -679,11 +682,13 @@ public class MicrocontrollerBlockEntity extends BlockEntity implements Microcont
             saveAdditional(saved, level.registryAccess());
             unloadedState = saved;
         }
+        ComponentLifecycle.setState(machine, LifecycleState.Disposing);
         if (machine.node() != null) {
             network.remove();
             machine.node().remove();
         }
         if (unloadedState != null) machine.stop();
+        ComponentLifecycle.setState(machine, LifecycleState.Disposed);
     }
 
     private void loadRedstoneOutputs(final CompoundTag tag) {

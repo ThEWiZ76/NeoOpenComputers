@@ -1,5 +1,8 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.common.inventory.ComponentLifecycle;
+import li.cil.oc.api.util.Lifecycle.LifecycleState;
+
 import li.cil.oc.common.item.ItemDriverData;
 
 import li.cil.oc.api.Driver;
@@ -695,9 +698,12 @@ public class RackBlockEntity extends BlockEntity implements Rack, li.cil.oc.comm
         }
         final ManagedEnvironment environment = driver.createEnvironment(stack, this);
         if (environment instanceof RackMountable rackMountable) {
+            ComponentLifecycle.setState(rackMountable, LifecycleState.Constructing);
             rackMountable.load(mountableData[slot]);
             mountables[slot] = rackMountable;
+            ComponentLifecycle.setState(rackMountable, LifecycleState.Initializing);
             reconnectMountable(slot, rackMountable);
+            ComponentLifecycle.setState(rackMountable, LifecycleState.Initialized);
         }
     }
 
@@ -719,6 +725,9 @@ public class RackBlockEntity extends BlockEntity implements Rack, li.cil.oc.comm
         final RackMountable mountable = mountables[slot];
         // A lifecycle dirty notification during disposal must not replace the saved running snapshot.
         mountables[slot] = null;
+        ComponentLifecycle.setState(mountable, LifecycleState.Disposing);
+        if (mountable instanceof Server server && server.machine() != null && server.machine() != mountable)
+            ComponentLifecycle.setState(server.machine(), LifecycleState.Disposing);
         if (clearMappings) {
             clearNodeMappings(slot, mountable);
         }
@@ -733,7 +742,9 @@ public class RackBlockEntity extends BlockEntity implements Rack, li.cil.oc.comm
         if (mountable instanceof Server server && server.machine() != null) {
             server.machine().node().remove();
             server.machine().stop();
+            if (server.machine() != mountable) ComponentLifecycle.setState(server.machine(), LifecycleState.Disposed);
         }
+        ComponentLifecycle.setState(mountable, LifecycleState.Disposed);
     }
 
     private void clearNodeMappings(final int slot, final RackMountable mountable) {

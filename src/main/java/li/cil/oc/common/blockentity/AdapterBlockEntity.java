@@ -1,5 +1,8 @@
 package li.cil.oc.common.blockentity;
 
+import li.cil.oc.api.util.Lifecycle.LifecycleState;
+import li.cil.oc.common.inventory.ComponentLifecycle;
+
 import li.cil.oc.common.item.ItemDriverData;
 
 import li.cil.oc.api.Driver;
@@ -426,23 +429,29 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         }
 
         final ManagedEnvironment environment = driver.createEnvironment(stack, this);
-        if (environment == null || environment.node() == null) {
+        if (environment == null) {
             return;
         }
+        ComponentLifecycle.setState(environment, LifecycleState.Constructing);
         if (itemEnvironmentData != null) {
             environment.load(itemEnvironmentData);
             itemEnvironmentData = null;
+        } else {
+            environment.load(ItemDriverData.driverDataTag(driver, stack).copy());
         }
         itemEnvironment = environment;
         itemDriver = driver;
         itemEnvironmentStack = stack;
-        saveItemData(UPGRADE_SLOT);
-        if (node().network() != null) {
+        ComponentLifecycle.setState(environment, LifecycleState.Initializing);
+        if (node().network() != null && environment.node() != null) {
             node().connect(environment.node());
         }
+        ComponentLifecycle.setState(environment, LifecycleState.Initialized);
+        saveItemData(UPGRADE_SLOT);
     }
 
     private void removeItemEnvironment() {
+        ComponentLifecycle.setState(itemEnvironment, LifecycleState.Disposing);
         saveItemData(UPGRADE_SLOT);
         final ManagedEnvironment previous = itemEnvironment;
         itemEnvironment = null;
@@ -453,6 +462,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
                 node().disconnect(previous.node());
                 previous.node().remove();
             }
+            ComponentLifecycle.setState(previous, LifecycleState.Disposed);
         }
     }
 
@@ -490,9 +500,10 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
 
         removeBlockEnvironment(index);
         final ManagedEnvironment environment = driver.createEnvironment(level, targetPos, direction);
-        if (environment == null || environment.node() == null) {
+        if (environment == null) {
             return;
         }
+        ComponentLifecycle.setState(environment, LifecycleState.Constructing);
         final String environmentName = environment.getClass().getName();
         final CompoundTag storedData = blockEnvironmentData[index];
         if (storedData != null && environmentName.equals(blockEnvironmentNames[index])) {
@@ -504,12 +515,17 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         if (blockEnvironmentData[index] == null) {
             blockEnvironmentData[index] = new CompoundTag();
         }
-        node().connect(environment.node());
+        ComponentLifecycle.setState(environment, LifecycleState.Initializing);
+        if (environment.node() != null) node().connect(environment.node());
+        ComponentLifecycle.setState(environment, LifecycleState.Initialized);
     }
 
     private void removeBlockEnvironment(final int index) {
         final ManagedEnvironment environment = blockEnvironments[index];
+        blockEnvironments[index] = null;
+        blockDrivers[index] = null;
         if (environment != null) {
+            ComponentLifecycle.setState(environment, LifecycleState.Disposing);
             final CompoundTag data = blockEnvironmentData[index] != null ? blockEnvironmentData[index] : new CompoundTag();
             environment.save(data);
             blockEnvironmentData[index] = data;
@@ -517,9 +533,8 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
                 node().disconnect(environment.node());
                 environment.node().remove();
             }
+            ComponentLifecycle.setState(environment, LifecycleState.Disposed);
         }
-        blockEnvironments[index] = null;
-        blockDrivers[index] = null;
     }
 
     private void saveNode(final CompoundTag nbt) {

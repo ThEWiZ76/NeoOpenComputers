@@ -1,6 +1,8 @@
 package li.cil.oc.common;
 
 import li.cil.oc.api.API;
+import li.cil.oc.api.util.Lifecycle;
+import li.cil.oc.common.inventory.ComponentLifecycle;
 import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
@@ -53,7 +55,7 @@ import java.util.Set;
 import java.util.function.LongSupplier;
 import java.util.concurrent.TimeUnit;
 
-final class SimpleMachine extends AbstractManagedEnvironment implements Machine, DeviceInfo {
+final class SimpleMachine extends AbstractManagedEnvironment implements Machine, DeviceInfo, Lifecycle {
     private static final double NANOS_PER_SECOND = 1_000_000_000D;
     private static final long NANOS_PER_TICK = 50_000_000L;
     private static final int MAX_SIGNAL_QUEUE_SIZE = 256;
@@ -142,12 +144,15 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         if (wasRunning) {
             sendLifecycleMessage(COMPUTER_STOPPED_MESSAGE);
         }
-        for (ManagedEnvironment environment : componentEnvironments) {
+        for (ManagedEnvironment environment : List.copyOf(componentEnvironments)) {
+            ComponentLifecycle.setState(environment, LifecycleState.Disposing);
             if (environment.node() != null) {
                 host.onMachineDisconnect(environment.node());
                 environment.node().remove();
-                saveComponentEnvironment(environment);
             }
+            saveComponentEnvironment(environment);
+            if (environment.node() != null) environment.node().remove();
+            ComponentLifecycle.setState(environment, LifecycleState.Disposed);
         }
         componentEnvironments.clear();
         environmentsByStack.clear();
@@ -201,15 +206,18 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             }
 
             final ManagedEnvironment environment = driver.createEnvironment(stack, host);
-            if (environment == null || environment.node() == null) {
+            if (environment == null) {
                 continue;
             }
 
+            ComponentLifecycle.setState(environment, LifecycleState.Constructing);
             environment.load(ItemDriverData.driverDataTag(driver, stack).copy());
-            node().connect(environment.node());
+            ComponentLifecycle.setState(environment, LifecycleState.Initializing);
+            if (environment.node() != null) node().connect(environment.node());
             componentEnvironments.add(environment);
             environmentsByStack.put(stack, environment);
-            host.onMachineConnect(environment.node(), stack);
+            if (environment.node() != null) host.onMachineConnect(environment.node(), stack);
+            ComponentLifecycle.setState(environment, LifecycleState.Initialized);
         }
         maxCallBudget = callBudgetCount == 0 ? 1D : callBudgetSum / callBudgetCount;
     }
@@ -228,19 +236,39 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         // Construct first: an invalid replacement must not detach the installed chip.
         final ManagedEnvironment added = driver.createEnvironment(replacement, host);
         if (added == null || added.node() == null) throw new IllegalArgumentException("EEPROM has no component");
+        ComponentLifecycle.setState(added, LifecycleState.Constructing);
         added.load(ItemDriverData.driverDataTag(driver, replacement).copy());
         final ManagedEnvironment removed = environmentsByStack.get(previous);
         if (removed != null) {
+            ComponentLifecycle.setState(removed, LifecycleState.Disposing);
             host.onMachineDisconnect(removed.node());
             removed.node().remove();
             saveComponentEnvironment(removed);
+            removed.node().remove();
+            ComponentLifecycle.setState(removed, LifecycleState.Disposed);
             environmentsByStack.remove(previous);
             componentEnvironments.remove(removed);
         }
+        ComponentLifecycle.setState(added, LifecycleState.Initializing);
         node().connect(added.node());
         componentEnvironments.add(added);
         environmentsByStack.put(replacement, added);
         host.onMachineConnect(added.node(), replacement);
+        ComponentLifecycle.setState(added, LifecycleState.Initialized);
+    }
+
+    @Override
+    public void onLifecycleStateChange(final LifecycleState state) {
+        if (state == LifecycleState.Disposing) {
+            // The host removes its machine node next. Removing child nodes here ejects saved generator fuel.
+            for (final var environment : List.copyOf(componentEnvironments)) {
+                ComponentLifecycle.setState(environment, state);
+            }
+        } else if (state == LifecycleState.Disposed) {
+            for (final var environment : List.copyOf(componentEnvironments)) ComponentLifecycle.setState(environment, state);
+            componentEnvironments.clear();
+            environmentsByStack.clear();
+        }
     }
 
     @Override

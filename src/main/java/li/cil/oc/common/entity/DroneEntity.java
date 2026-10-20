@@ -1,5 +1,8 @@
 package li.cil.oc.common.entity;
 
+import li.cil.oc.common.inventory.ComponentLifecycle;
+import li.cil.oc.api.util.Lifecycle.LifecycleState;
+
 import com.mojang.authlib.GameProfile;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
@@ -945,6 +948,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
             addAdditionalSaveData(saved);
             removedState = saved;
         }
+        ComponentLifecycle.setState(machine, LifecycleState.Disposing);
         if (machine.node() != null) {
             machine.node().remove();
         }
@@ -952,6 +956,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
             droneNode.remove();
         }
         if (removedState != null) machine.stop();
+        ComponentLifecycle.setState(machine, LifecycleState.Disposed);
     }
 
     private Node createDroneNode() {

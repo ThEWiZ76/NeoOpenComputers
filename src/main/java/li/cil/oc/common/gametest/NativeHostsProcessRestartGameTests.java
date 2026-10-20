@@ -115,32 +115,40 @@ public final class NativeHostsProcessRestartGameTests {
         ((MutableProcessor) Driver.driverFor(cpu)).setArchitecture(cpu, architecture);
         final var ram = new ItemStack(ModItems.MEMORY_TIER1.get());
         final var eeprom = RobotMovementPersistenceGameTests.eeprom(program(fixture.version));
+        final boolean addon = Boolean.getBoolean("neoopencomputers.testApiSmokeAddon");
+        final var card = addon ? AddonLifecycleGameTests.card("native-" + fixture.kind + "-" + fixture.version, false) : ItemStack.EMPTY;
         switch (fixture.kind) {
             case "case" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState());
                 final var host = (ComputerCaseBlockEntity) level.getBlockEntity(pos);
                 host.setItem(ComputerCaseBlockEntity.SLOT_CPU, cpu); host.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, ram);
                 host.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, eeprom);
+                if (addon) host.setItem(0, card);
             }
             case "rack" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.RACK.get().defaultBlockState());
                 final var rack = (RackBlockEntity) level.getBlockEntity(pos); rack.setItem(0, new ItemStack(ModItems.SERVER_TIER1.get()));
                 final var items = (Container) rack.getMountable(0); items.setItem(2, cpu); items.setItem(4, ram); items.setItem(8, eeprom);
+                if (addon) items.setItem(0, card);
             }
             case "microcontroller" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.MICROCONTROLLER_TIER1.get().defaultBlockState());
                 final var host = (MicrocontrollerBlockEntity) level.getBlockEntity(pos);
                 MicrocontrollerFixture.setItem(host, 0, cpu); MicrocontrollerFixture.setItem(host, 1, ram); MicrocontrollerFixture.setItem(host, 2, eeprom);
+                if (addon) {
+                    helper.assertTrue(MicrocontrollerFixture.canPlaceItem(host, 3, card), "Microcontroller addon slot rejected");
+                    MicrocontrollerFixture.setItem(host, 3, card);
+                }
                 host.onLoad();
             }
             case "robot" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.ROBOT.get().defaultBlockState());
                 final var host = (RobotBlockEntity) level.getBlockEntity(pos);
-                RobotMovementPersistenceGameTests.installHardware(helper, host, List.of(cpu, ram, eeprom)); host.onLoad();
+                RobotMovementPersistenceGameTests.installHardware(helper, host, addon ? List.of(cpu, ram, eeprom, card) : List.of(cpu, ram, eeprom)); host.onLoad();
             }
             case "drone" -> {
                 final var host = new DroneEntity(level); host.setUUID(fixture.droneId()); host.setPos(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
-                host.loadFromItemStack(((DroneItem) ModItems.DRONE.get()).assembleFromCase(new ItemStack(ModItems.DRONE_CASE_TIER1.get()), cpu, ram, eeprom), null);
+                host.loadFromItemStack(((DroneItem) ModItems.DRONE.get()).assembleFromCase(new ItemStack(ModItems.DRONE_CASE_TIER1.get()), addon ? new ItemStack[]{cpu, ram, eeprom, card} : new ItemStack[]{cpu, ram, eeprom}), null);
                 helper.assertTrue(level.addFreshEntity(host), "Drone spawn failed");
             }
             default -> throw new IllegalArgumentException(fixture.kind);
@@ -185,6 +193,11 @@ public final class NativeHostsProcessRestartGameTests {
             assert(_VERSION == 'Lua %s' and computer.getArchitecture() == 'Lua %s', 'wrong native VM')
             local eeprom = component.proxy(component.list('eeprom')())
             assert(eeprom.getData() == '', 'unexpected reboot')
+            local addon
+            if %s then
+              addon=component.proxy(assert(component.list('api_lifecycle')(), 'addon missing'))
+              assert(addon.getPhase()=='Initialized' and addon.setValue(731)==731, 'addon not initialized')
+            end
             local retained = {value=731}; retained.self=retained
             local fs = component.proxy(computer.tmpAddress()); local address=fs.address
             local file=assert(fs.open('native-host.bin','wb')); assert(fs.write(file,'a'..string.char(0,255)..'z')); fs.close(file)
@@ -192,11 +205,12 @@ public final class NativeHostsProcessRestartGameTests {
             eeprom.setData('prepared')
             repeat until computer.pullSignal() == 'resume_native_host'
             assert(retained.value==731 and retained.self==retained, 'Lua local/cycle lost')
+            if addon then assert(addon.getPhase()=='Initialized' and addon.getValue()==731, 'addon lifecycle/state lost') end
             assert(_VERSION=='Lua %s' and computer.getArchitecture()=='Lua %s', 'restored wrong native VM')
             assert(address==computer.tmpAddress() and fs.address==address, 'tmp identity lost')
             assert(alias==file and fs.read(alias,3)==string.char(0,255)..'z', 'open binary handle/offset lost'); fs.close(file)
             eeprom.setData('verified')
             while true do computer.pullSignal() end
-            """.formatted(version, version, version, version);
+            """.formatted(version, version, Boolean.getBoolean("neoopencomputers.testApiSmokeAddon"), version, version);
     }
 }
