@@ -81,3 +81,7 @@ Step3 implemented: world binding/direct+buffered, legacy inline import/source pr
 ## Raw storage checkpoint — 6cf4c2890fe2b2869fa5d84d70abe9cdbb2b804a
 
 Step4 wired: native .bin/GZIP import and guarded saves, independent oc:rawStorage, preserved metadata/locks/head and no inline bytes in new native snapshots. Source/pending/stale/conflict/corruption/capacity/clone tests; alias/head/tail defects fixed and unknown late inline source rejected. Final2237 units and mixed native prepare PID71224/verify PID59096 each938 required tests/normal exits. [[../03 manuals/Native volume import]] records format/evidence/limits. All native backends switched; step2 broad matrix and step5 actual client/platform/IO/crash/load/full feature acceptance remain open. Full port goal remains active, cosmetic polish deferred.
+
+## Actual host mount-failure checkpoint — 411c02283c26175a1e17c05ae5c2d24fa94a5099
+
+Strict primitive errors no longer discard native item hosts: unavailable native mounts are logged/no component, block/rack pending snapshots survive save/ejection with copy isolation, RAID failed mount/member retains state and supplies no empty array. Five actual-host fault cases;2237 units/847 absent, mixed native prepare PID70872/verify PID69572 each943 required tests/normal exits. [[../03 manuals/Native volume import]] records original crash, independent red failures, recovery evidence and limits. Active save failures/live affected heaps/custom addons/crash/load/platform/client gates remain open.
