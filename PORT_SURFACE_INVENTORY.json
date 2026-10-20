@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "a6f0c3905487863bcbaad501506c8af137914766",
+  "port_revision": "c1094c68a1a419a178c50e3c43e88d24e142cbb4",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -729,7 +729,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 248
+              "line": 253
             }
           ]
         }
@@ -1071,7 +1071,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 248
+              "line": 253
             }
           ]
         },
@@ -1093,7 +1093,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 253
+              "line": 258
             }
           ]
         },
@@ -1111,7 +1111,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 258
+              "line": 263
             }
           ]
         },
@@ -1559,7 +1559,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 248
+              "line": 253
             }
           ]
         },
@@ -1581,7 +1581,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 253
+              "line": 258
             }
           ]
         },
@@ -1599,7 +1599,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 258
+              "line": 263
             }
           ]
         },
@@ -6330,7 +6330,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 248
+              "line": 253
             }
           ]
         },
@@ -6352,7 +6352,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 253
+              "line": 258
             }
           ]
         },
@@ -6370,7 +6370,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 258
+              "line": 263
             }
           ]
         },
@@ -6380,7 +6380,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 292
+              "line": 297
             }
           ]
         },
@@ -6390,7 +6390,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 311
+              "line": 316
             }
           ]
         },
@@ -6400,7 +6400,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 336
+              "line": 341
             }
           ]
         }
@@ -7863,7 +7863,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
-              "line": 253
+              "line": 258
             }
           ]
         }
