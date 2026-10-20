@@ -25,3 +25,10 @@ enderio-final-mixed-build.log passes build2239 units/950 required tests on248 wi
 ## How to run
 
 Use gradlew.bat --no-daemon build runGameTestServer -PwithEnderIO for the provider profile. Use -Pneo_version=21.1.248 when also including TIS. The fixture property rejects a missing requested provider; successful launch without a real required-test summary is not a passing gate. User's Modrinth instance is not changed by these Gradle profiles.
+
+
+## Combined integration client update installed - 2026-10-20
+
+Closed dedicated Modrinth NeoOpenComputers test instance verified through readable require_test_client_closed.ps1 (MCP8081 and matching Java command line; no auth args printed). Installed core234/runtime74bf7efb8 SHA256dffc17f53d64b6a3112291072bb859d21e318c7619c62d7af8d2ceb18548a592 plus actual pinned Forestryalpha8/Patchouli93/Butterfliesalpha8/Railcraft1.2.13/EnderIO8.2.12-beta. Existing client JEI19.27.0.343 SHA256137f60018968a50c6f00e3a8ca9be790391792d2f3e6eff66237f2e9b3bc1353 already meets Railcraft's minimum and was preserved; do not replace it with server-test322. No loader/TIS/client-launch change. Other mods, disabled status, saves/config all fresh-hash unchanged.
+
+Backup C:\Users\rolan\AppData\Local\Temp\oc-client-backups\integrations-74bf7efb8-20261020T204124318814Z contains731 mods/saves/config files in mods-saves-config.zip (CRC/per-file SHA readback, original mtime_ns manifest). All six installed artifacts independently hash-verified; stage/installation.json retains exact hashes. Expected old coread42a56f8 was verified before replacement; stale/external file changes would abort. No broad cleanup/deletion or OS focus/mouse action. Combined real-client startup/mod-loading, functional block/wrench/adapter acceptance and cleanup are pending the user's manual start on screen3; server tests950 mixed/857 EnderIO/858 Railcraft/858 ForestryButterflies/855 absent and2239 units are not client acceptance. Beta upstream policy remains the user's explicit non-blocking/open choice.
