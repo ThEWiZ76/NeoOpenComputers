@@ -2,13 +2,10 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.API;
 import li.cil.oc.api.FileSystem;
-import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.network.Message;
-import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModLootDisks;
@@ -24,8 +21,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
@@ -39,6 +38,17 @@ public class FloppyItem extends Item implements DriverItem {
 
     public FloppyItem(final Properties properties) {
         super(properties);
+    }
+
+    public static boolean isLootDisk(ItemStack stack) {
+        final var data = rootData(stack);
+        return data.contains(LEGACY_LOOT_PATH_TAG) || data.contains(LEGACY_LOOT_FACTORY_TAG) || data.contains(ItemRegistry.FLOPPY_FACTORY_ID_TAG);
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        final var stack = player.getItemInHand(hand);
+        return isLootDisk(stack) ? InteractionResultHolder.sidedSuccess(stack, level.isClientSide) : HardDiskDriveItem.useDrive(level, player, hand);
     }
 
     public static int floppyColorIndex(final ItemStack stack) {
@@ -118,7 +128,7 @@ public class FloppyItem extends Item implements DriverItem {
             if (environment == null) return null;
             // Read-only contents still have persistent node identity and open file handles.
             environment.load(dataTag(stack));
-            return new StackBackedEnvironment(environment, saved -> writeDataTag(stack, saved));
+            return new DiskItemEnvironment(environment, saved -> writeDataTag(stack, saved), "");
         } catch (Exception e) {
             return null;
         }
@@ -132,22 +142,11 @@ public class FloppyItem extends Item implements DriverItem {
     }
 
     static ManagedEnvironment createWritableEnvironment(final CompoundTag fileSystemData, final Consumer<CompoundTag> saveData, final CompoundTag itemData, final EnvironmentHost host) {
-        final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(ModSettings.floppySize() * 1024L);
-        if (fileSystem == null) {
-            return null;
-        }
         final String label = itemData == null ? "" : itemData.getString(ItemRegistry.FLOPPY_LABEL_TAG);
-        final ManagedEnvironment environment = FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(label.isEmpty() ? null : label), host, ModSounds.FLOPPY_ACCESS_ID);
-        if (environment == null) {
-            return null;
-        }
-        if (environment.node() instanceof li.cil.oc.api.network.Component component) {
-            component.setVisibility(Visibility.Network);
-        }
-        if (fileSystemData != null && !fileSystemData.isEmpty()) {
-            environment.load(fileSystemData);
-        }
-        return new StackBackedEnvironment(environment, saveData);
+        final var environment = DiskItemEnvironment.create(ModSettings.floppySize() * 1024L, 1, 1, ModSounds.FLOPPY_ACCESS_ID,
+            fileSystemData, saveData, host, label.isEmpty() ? null : label);
+        if (environment != null && environment.node() instanceof li.cil.oc.api.network.Component component) component.setVisibility(Visibility.Network);
+        return environment;
     }
 
     @Override
@@ -228,53 +227,4 @@ public class FloppyItem extends Item implements DriverItem {
         return customData.copyTag().getCompound(FLOPPY_DATA_TAG);
     }
 
-    private record StackBackedEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData) implements ManagedEnvironment, DeviceInfo {
-        @Override
-        public Node node() {
-            return delegate.node();
-        }
-
-        @Override
-        public void onConnect(final Node node) {
-            delegate.onConnect(node);
-        }
-
-        @Override
-        public void onDisconnect(final Node node) {
-            delegate.onDisconnect(node);
-        }
-
-        @Override
-        public void onMessage(final Message message) {
-            delegate.onMessage(message);
-        }
-
-        @Override
-        public boolean canUpdate() {
-            return delegate.canUpdate();
-        }
-
-        @Override
-        public void update() {
-            delegate.update();
-        }
-
-        @Override
-        public void load(final CompoundTag nbt) {
-            delegate.load(nbt);
-        }
-
-        @Override
-        public void save(final CompoundTag nbt) {
-            delegate.save(nbt);
-            if (saveData != null) {
-                saveData.accept(nbt.copy());
-            }
-        }
-
-        @Override
-        public Map<String, String> getDeviceInfo() {
-            return delegate instanceof DeviceInfo info ? info.getDeviceInfo() : Map.of();
-        }
-    }
 }

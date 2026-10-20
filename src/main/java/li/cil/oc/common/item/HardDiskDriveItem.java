@@ -1,14 +1,9 @@
 package li.cil.oc.common.item;
 
-import li.cil.oc.api.FileSystem;
-import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.item.Slot;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.network.Message;
-import li.cil.oc.api.network.Node;
-import li.cil.oc.common.DriveEnvironment;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.menu.DriveMenu;
@@ -26,7 +21,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class HardDiskDriveItem extends Item implements DriverItem {
@@ -52,6 +46,10 @@ public class HardDiskDriveItem extends Item implements DriverItem {
 
     @Override
     public InteractionResultHolder<ItemStack> use(final Level level, final Player player, final InteractionHand hand) {
+        return useDrive(level, player, hand);
+    }
+
+    static InteractionResultHolder<ItemStack> useDrive(final Level level, final Player player, final InteractionHand hand) {
         final ItemStack stack = player.getItemInHand(hand);
         if (!player.isShiftKeyDown()) {
             if (!level.isClientSide) {
@@ -93,36 +91,8 @@ public class HardDiskDriveItem extends Item implements DriverItem {
 
     static ManagedEnvironment createEnvironment(final int tier, final CompoundTag data, final Consumer<CompoundTag> saveData, final EnvironmentHost host) {
         final int clampedTier = Math.max(0, Math.min(2, tier));
-        if (isUnmanaged(data)) {
-            final ManagedEnvironment environment = new DriveEnvironment(
-                ModSettings.hddSize(clampedTier) * 1024,
-                ModSettings.hddPlatterCount(clampedTier),
-                new ItemDiskLabel(null),
-                host,
-                ModSounds.HDD_ACCESS_ID,
-                clampedTier + 2,
-                lockInfo(data));
-            if (data != null && !data.isEmpty()) {
-                environment.load(data);
-            }
-            return new StackBackedEnvironment(environment, saveData, lockInfo(data));
-        }
-        final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(ModSettings.hddSize(clampedTier) * 1024L);
-        if (fileSystem == null) {
-            return null;
-        }
-        final String lockInfo = lockInfo(data);
-        final ManagedEnvironment environment = lockInfo.isEmpty()
-            ? FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(null), host, ModSounds.HDD_ACCESS_ID, clampedTier + 2)
-            : FileSystem.asManagedEnvironment(FileSystem.asReadOnly(fileSystem), data != null && data.contains(ItemDiskLabel.TAG) ? data.getString(ItemDiskLabel.TAG) : null,
-                host, ModSounds.HDD_ACCESS_ID, clampedTier + 2);
-        if (environment == null) {
-            return null;
-        }
-        if (data != null && !data.isEmpty()) {
-            environment.load(data);
-        }
-        return new StackBackedEnvironment(environment, saveData, lockInfo);
+        return DiskItemEnvironment.create(ModSettings.hddSize(clampedTier) * 1024L, ModSettings.hddPlatterCount(clampedTier),
+            clampedTier + 2, ModSounds.HDD_ACCESS_ID, data, saveData, host, null);
     }
 
     public static boolean isUnmanaged(final ItemStack stack) {
@@ -150,8 +120,9 @@ public class HardDiskDriveItem extends Item implements DriverItem {
     }
 
     public static void setUnmanaged(final ItemStack stack, final boolean unmanaged) {
-        final CompoundTag data = stackDataTag(stack);
+        final CompoundTag data = stackDataTag(stack).copy();
         setUnmanaged(data, unmanaged);
+        writeDataTag(stack, data);
     }
 
     public static void setUnmanaged(final CompoundTag data, final boolean unmanaged) {
@@ -160,17 +131,21 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         }
         if (isUnmanaged(data) != unmanaged) {
             data.remove(LOCK_TAG);
+            data.getCompound("node").remove("address");
+            // NBT-backed volumes must not resurrect the storage belonging to the previous address.
+            for (final var key : List.of("fs", "owners", "data", "headPos")) data.remove(key);
         }
         data.putBoolean(UNMANAGED_TAG, unmanaged);
     }
 
     public static void lock(final ItemStack stack, final Player player) {
-        final CompoundTag data = stackDataTag(stack);
+        final CompoundTag data = stackDataTag(stack).copy();
         if (!isLocked(data)) {
             final String name = player == null || player.getGameProfile() == null || player.getGameProfile().getName() == null || player.getGameProfile().getName().isBlank()
                 ? "notch"
                 : player.getGameProfile().getName();
             data.putString(LOCK_TAG, name);
+            writeDataTag(stack, data);
         }
     }
 
@@ -208,6 +183,7 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         if (stack == null) {
             return new CompoundTag();
         }
+        if (stack.getItem() instanceof FloppyItem floppy) return floppy.dataTag(stack);
         final CompoundTag data = ItemDriverData.dataTag(stack);
         if (data.isEmpty()) {
             final CompoundTag legacyData = legacyDataTag(stack);
@@ -236,54 +212,4 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         return customData.copyTag().getCompound(HDD_DATA_TAG);
     }
 
-    private record StackBackedEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData, String lockInfo) implements ManagedEnvironment, DeviceInfo {
-        @Override
-        public Node node() {
-            return delegate.node();
-        }
-
-        @Override
-        public void onConnect(final Node node) {
-            delegate.onConnect(node);
-        }
-
-        @Override
-        public void onDisconnect(final Node node) {
-            delegate.onDisconnect(node);
-        }
-
-        @Override
-        public void onMessage(final Message message) {
-            delegate.onMessage(message);
-        }
-
-        @Override
-        public boolean canUpdate() {
-            return delegate.canUpdate();
-        }
-
-        @Override
-        public void update() {
-            delegate.update();
-        }
-
-        @Override
-        public void load(final CompoundTag nbt) {
-            delegate.load(nbt);
-        }
-
-        @Override
-        public void save(final CompoundTag nbt) {
-            delegate.save(nbt);
-            if (!lockInfo.isEmpty()) nbt.putString(LOCK_TAG, lockInfo);
-            if (saveData != null) {
-                saveData.accept(nbt.copy());
-            }
-        }
-
-        @Override
-        public Map<String, String> getDeviceInfo() {
-            return delegate instanceof DeviceInfo info ? info.getDeviceInfo() : Map.of();
-        }
-    }
 }

@@ -36,6 +36,8 @@ public final class WorldLootProcessRestartGameTests {
     private static final BlockPos DRIVE = new BlockPos(528, 80, 288);
     private static final BlockPos COMPUTER = DRIVE.east();
     private static final BlockPos LEGACY = COMPUTER.east();
+    private static final BlockPos RAW = COMPUTER.south();
+    private static final BlockPos FLOPPY = COMPUTER.above();
     private static final BlockPos RECORD = DRIVE.south(2);
 
     @GameTestGenerator public static Collection<TestFunction> tests() {
@@ -59,16 +61,21 @@ public final class WorldLootProcessRestartGameTests {
         final var definition = ModLootDisks.stacksForCycling().stream().filter(stack -> stack.getHoverName().getString().equals("World restart")).findFirst();
         helper.assertTrue(definition.isPresent(), "World descriptor not loaded in this JVM");
         if (prepare) {
-            helper.assertTrue(level.isEmptyBlock(DRIVE) && level.isEmptyBlock(COMPUTER) && level.isEmptyBlock(LEGACY) && level.isEmptyBlock(RECORD), "World loot restart requires a fresh world");
+            helper.assertTrue(level.isEmptyBlock(DRIVE) && level.isEmptyBlock(COMPUTER) && level.isEmptyBlock(LEGACY) && level.isEmptyBlock(RAW) && level.isEmptyBlock(FLOPPY) && level.isEmptyBlock(RECORD), "World loot restart requires a fresh world");
             level.setBlockAndUpdate(DRIVE, ModBlocks.DISK_DRIVE.get().defaultBlockState());
             level.setBlockAndUpdate(LEGACY, ModBlocks.DISK_DRIVE.get().defaultBlockState());
             level.setBlockAndUpdate(COMPUTER, ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState());
+            level.setBlockAndUpdate(RAW, ModBlocks.DISK_DRIVE.get().defaultBlockState());
+            level.setBlockAndUpdate(FLOPPY, ModBlocks.DISK_DRIVE.get().defaultBlockState());
             level.setBlockAndUpdate(RECORD, Blocks.CHEST.defaultBlockState());
         }
         helper.assertTrue(level.getBlockEntity(DRIVE) instanceof DiskDriveBlockEntity && level.getBlockEntity(LEGACY) instanceof DiskDriveBlockEntity
+            && level.getBlockEntity(RAW) instanceof DiskDriveBlockEntity && level.getBlockEntity(FLOPPY) instanceof DiskDriveBlockEntity
             && level.getBlockEntity(COMPUTER) instanceof ComputerCaseBlockEntity && level.getBlockEntity(RECORD) instanceof ChestBlockEntity, "World loot restart hosts/checkpoint missing");
         final var drive = (DiskDriveBlockEntity) level.getBlockEntity(DRIVE);
         final var legacy = (DiskDriveBlockEntity) level.getBlockEntity(LEGACY);
+        final var rawDrive = (DiskDriveBlockEntity) level.getBlockEntity(RAW);
+        final var floppyDrive = (DiskDriveBlockEntity) level.getBlockEntity(FLOPPY);
         final var computer = (ComputerCaseBlockEntity) level.getBlockEntity(COMPUTER);
         final var record = (ChestBlockEntity) level.getBlockEntity(RECORD);
         if (prepare) {
@@ -86,6 +93,11 @@ public final class WorldLootProcessRestartGameTests {
                 final var hdd = ManagedDiskLockGameTests.prepared(new ItemStack(ModItems.HDD_TIER1.get()));
                 HardDiskDriveItem.lock(HardDiskDriveItem.stackDataTag(hdd), "Fixture owner");
                 computer.setItem(ComputerCaseBlockEntity.SLOT_HDD, hdd);
+                rawDrive.setItem(0, DiskModeGameTests.rawRestartFloppy()); rawDrive.onLoad();
+                final var floppy = ManagedDiskLockGameTests.prepared(new ItemStack(ModItems.FLOPPY.get()));
+                HardDiskDriveItem.stackDataTag(floppy).putString("oc:fs.label", "Managed floppy");
+                HardDiskDriveItem.lock(HardDiskDriveItem.stackDataTag(floppy), "Fixture owner");
+                floppyDrive.setItem(0, floppy); floppyDrive.onLoad();
             } catch (Exception failure) { helper.assertTrue(false, "Cannot seed locked managed HDD: " + failure); }
             computer.setItem(6, RobotMovementPersistenceGameTests.eeprom("""
                 local eeprom=component.proxy(component.list('eeprom')())
@@ -95,15 +107,22 @@ public final class WorldLootProcessRestartGameTests {
                   local drive=component.proxy(address)
                   local fs=component.proxy(assert(drive.media(),'World loot filesystem missing'))
                   local label=fs.getLabel()
-                  assert(fs.isReadOnly(),'World loot disk is writable')
-                  local ok,w=pcall(fs.open,'probe.bin','wb')
-                  assert(not ok or not w,'Write-open accepted on world loot source')
-                  local h=assert(fs.open('probe.bin','rb'))
-                  local first=fs.read(h,1)
-                  assert(first==(label=='World restart' and 'a' or string.char(17)),'Wrong world loot source')
-                  media[label]={drive=drive,fs=fs,handle=h,address=fs.address}
+                  if label=='Raw restart' then
+                    assert(component.type(fs.address)=='drive' and fs.getPlatterCount()==1,'Raw floppy component missing')
+                    assert(fs.readByte(1)==-1,'Raw floppy signed byte changed')
+                    pcall(fs.writeByte,1,42); assert(fs.readByte(1)==-1,'Locked raw floppy accepted a write')
+                    media[label]={drive=drive,fs=fs,address=fs.address,raw=true}
+                  else
+                    assert(fs.isReadOnly(),'Read-only disk is writable')
+                    local ok,w=pcall(fs.open,'probe.bin','wb')
+                    assert(not ok or not w,'Write-open accepted on read-only source')
+                    local h=assert(fs.open('probe.bin','rb'))
+                    local first=fs.read(h,1)
+                    assert(first==(label=='Legacy restart' and string.char(17) or 'a'),'Wrong read-only source')
+                    media[label]={drive=drive,fs=fs,handle=h,address=fs.address}
+                  end
                 end
-                assert(media['World restart'] and media['Legacy restart'],'World/legacy disk missing')
+                assert(media['World restart'] and media['Legacy restart'] and media['Raw restart'] and media['Managed floppy'],'World/legacy/ordinary floppy missing')
                 for address in component.list('filesystem') do
                   local fs=component.proxy(address)
                   if fs.getLabel()=='Keep me' then
@@ -119,13 +138,20 @@ public final class WorldLootProcessRestartGameTests {
                 assert(retained==731,'World loot continuation lost')
                 for label,m in pairs(media) do
                   assert(m.fs.address==m.address and (not m.drive or m.drive.media()==m.address),'Read-only media component identity changed')
-                  assert(m.fs.isReadOnly() and m.fs.getLabel()==label,'World loot metadata changed')
-                  assert(m.fs.seek(m.handle,'cur',0)==1,'World loot read offset lost')
-                  local ok,w=pcall(m.fs.open,'probe.bin','wb')
-                  assert(not ok or not w,'Read-only media writable after JVM restart')
-                  local expected=label=='Legacy restart' and string.char(0,255) or string.char(0,128,255,42)
-                  assert(m.fs.read(m.handle,16)==expected,'World loot read handle/bytes lost')
-                  m.fs.close(m.handle)
+                  assert(m.fs.getLabel()==label,'Media label changed')
+                  if m.raw then
+                    assert(m.fs.readByte(1)==-1,'Raw floppy byte lost after JVM restart')
+                    pcall(m.fs.writeByte,1,42); assert(m.fs.readByte(1)==-1,'Raw floppy lock lost after JVM restart')
+                    pcall(m.fs.setLabel,'Changed'); assert(m.fs.getLabel()==label,'Raw floppy label lock lost')
+                  else
+                    assert(m.fs.isReadOnly(),'Read-only metadata changed')
+                    assert(m.fs.seek(m.handle,'cur',0)==1,'Read-only media offset lost')
+                    local ok,w=pcall(m.fs.open,'probe.bin','wb')
+                    assert(not ok or not w,'Read-only media writable after JVM restart')
+                    local expected=label=='Legacy restart' and string.char(0,255) or string.char(0,128,255,42)
+                    assert(m.fs.read(m.handle,16)==expected,'Read-only media handle/bytes lost')
+                    m.fs.close(m.handle)
+                  end
                 end
                 eeprom.setData('world-loot-resumed')
                 while true do computer.pullSignal() end
@@ -144,7 +170,8 @@ public final class WorldLootProcessRestartGameTests {
             }
             helper.assertTrue(drive.getItem(0).is(ModItems.FLOPPY.get()) && drive.getItem(0).getCount() == 1, "Saved chest disk item/count changed");
             helper.assertTrue(data.getString("computer").equals(computer.machine().node().address()) && data.getString("drive").equals(drive.node().address())
-                && data.getString("legacy").equals(legacy.node().address()), "World loot host addresses changed");
+                && data.getString("legacy").equals(legacy.node().address()) && data.getString("raw").equals(rawDrive.node().address())
+                && data.getString("floppy").equals(floppyDrive.node().address()), "Storage host addresses changed");
             helper.assertTrue(marker(computer).equals("world-loot-waiting"), "World loot continuation already ran; use a fresh prepare/verify pair");
             helper.assertTrue(HardDiskDriveItem.lockInfo(computer.getItem(ComputerCaseBlockEntity.SLOT_HDD)).equals("Fixture owner"), "Managed HDD lock lost across JVM restart");
             helper.assertTrue(computer.machine().isRunning() && computer.machine().signal("resume_world_loot"), "World loot VM did not retain running state");
@@ -154,8 +181,11 @@ public final class WorldLootProcessRestartGameTests {
                 helper.assertTrue(sourceBytes(helper), "Read-only world loot source files were modified");
                 computer.saveWithFullMetadata(level.registryAccess());
                 helper.assertTrue(HardDiskDriveItem.lockInfo(computer.getItem(ComputerCaseBlockEntity.SLOT_HDD)).equals("Fixture owner"), "Saving resumed native host discarded the HDD lock");
+                for (final var disk : List.of(rawDrive.getItem(0), floppyDrive.getItem(0))) helper.assertTrue(HardDiskDriveItem.lockInfo(disk).equals("Fixture owner"), "Saving storage host discarded a floppy lock");
+                helper.assertTrue(HardDiskDriveItem.isUnmanaged(rawDrive.getItem(0)) && !HardDiskDriveItem.isUnmanaged(floppyDrive.getItem(0)), "Floppy modes changed at save/restart");
                 final var data = new CompoundTag(); data.putString("phase", prepare ? "prepared" : "verified"); data.putLong("pid", ProcessHandle.current().pid());
                 data.putString("computer", computer.machine().node().address()); data.putString("drive", drive.node().address()); data.putString("legacy", legacy.node().address());
+                data.putString("raw", rawDrive.node().address()); data.putString("floppy", floppyDrive.node().address());
                 final var paper = new ItemStack(Items.PAPER); paper.set(DataComponents.CUSTOM_DATA, CustomData.of(data)); record.setItem(0, paper); record.setChanged();
                 li.cil.oc.NeoOpenComputers.LOGGER.info("Native world loot {} in PID {}", prepare ? "prepared" : "verified", ProcessHandle.current().pid());
             }).thenSucceed();

@@ -2,6 +2,7 @@ package li.cil.oc.common.menu;
 
 import li.cil.oc.common.ModMenus;
 import li.cil.oc.common.item.HardDiskDriveItem;
+import li.cil.oc.common.item.FloppyItem;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -44,7 +45,7 @@ public class DriveMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(final Player player) {
-        if (driveStack.isEmpty() || !(driveStack.getItem() instanceof HardDiskDriveItem)) {
+        if (driveStack.isEmpty() || !(driveStack.getItem() instanceof HardDiskDriveItem || driveStack.getItem() instanceof FloppyItem && !FloppyItem.isLootDisk(driveStack))) {
             return false;
         }
         if (player == null) {
