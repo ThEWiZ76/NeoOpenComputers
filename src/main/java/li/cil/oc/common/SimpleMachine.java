@@ -204,6 +204,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
                 continue;
             }
 
+            environment.load(driver.dataTag(stack).copy());
             node().connect(environment.node());
             componentEnvironments.add(environment);
             environmentsByStack.put(stack, environment);
@@ -226,11 +227,13 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         // Construct first: an invalid replacement must not detach the installed chip.
         final ManagedEnvironment added = driver.createEnvironment(replacement, host);
         if (added == null || added.node() == null) throw new IllegalArgumentException("EEPROM has no component");
-        final ManagedEnvironment removed = environmentsByStack.remove(previous);
+        added.load(driver.dataTag(replacement).copy());
+        final ManagedEnvironment removed = environmentsByStack.get(previous);
         if (removed != null) {
             host.onMachineDisconnect(removed.node());
             removed.node().remove();
             saveComponentEnvironment(removed);
+            environmentsByStack.remove(previous);
             componentEnvironments.remove(removed);
         }
         node().connect(added.node());
@@ -1106,8 +1109,20 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         };
     }
 
-    private static void saveComponentEnvironment(final ManagedEnvironment environment) {
+    private void saveComponentEnvironment(final ManagedEnvironment environment) {
         if (environment != null) {
+            for (final var entry : environmentsByStack.entrySet()) {
+                if (entry.getValue() != environment) continue;
+                final var stack = entry.getKey();
+                final var driver = Driver.driverFor(stack, host.getClass());
+                if (driver != null && stack != null && !stack.isEmpty()) {
+                    // shortcut: retain built-in stack configuration; audit cleared-tag semantics before closing full addon parity.
+                    final var data = driver.dataTag(stack).copy();
+                    environment.save(data);
+                    li.cil.oc.common.item.ItemDriverData.writeDriverDataTag(driver, stack, data);
+                    return;
+                }
+            }
             environment.save(new CompoundTag());
         }
     }

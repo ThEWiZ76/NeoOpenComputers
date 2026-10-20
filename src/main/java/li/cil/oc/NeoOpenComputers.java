@@ -58,6 +58,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.fml.event.lifecycle.InterModProcessEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
@@ -111,6 +112,7 @@ public final class NeoOpenComputers {
         modEventBus.addListener(WaypointNetworking::register);
         modEventBus.addListener(this::onCommonSetup);
         modEventBus.addListener(this::onInterModProcess);
+        modEventBus.addListener(this::onLoadComplete);
         LOGGER.info("Loading NeoOpenComputers {}", modContainer.getModInfo().getVersion());
     }
 
@@ -128,7 +130,6 @@ public final class NeoOpenComputers {
             ModLootDisks.registerDefaults();
             ProgramLocations.registerDefaults();
             ModDriverCatalog.registerDefaults();
-            OpenComputersApi.lockDriverRegistry();
         });
         LOGGER.debug("NeoOpenComputers common setup complete.");
     }
@@ -149,5 +150,10 @@ public final class NeoOpenComputers {
                 HostBlacklistImc.process(registry, messages.stream());
             }
         });
+    }
+
+    private void onLoadComplete(final FMLLoadCompleteEvent event) {
+        // Dependent addons still register drivers during their setup and IMC work queues.
+        event.enqueueWork(OpenComputersApi::lockDriverRegistry);
     }
 }

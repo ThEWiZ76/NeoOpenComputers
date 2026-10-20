@@ -91,6 +91,24 @@ tasks.register('apiJar', Jar) {
     include 'li/cil/oc/api/**'
 }
 
+// Keep the addon outside main output and compile it only against the published API and platform.
+def compileApiSmokeAddon = tasks.register('compileApiSmokeAddon', JavaCompile) {
+    dependsOn tasks.named('apiJar')
+    source = fileTree('tools/api-smoke-addon/src/main/java') { include '**/*.java' }
+    classpath = configurations.compileClasspath + files(tasks.named('apiJar'))
+    destinationDirectory = layout.buildDirectory.dir('api-smoke-addon/classes')
+    javaCompiler = javaToolchains.compilerFor { languageVersion = JavaLanguageVersion.of(21) }
+    options.release = 21
+}
+def apiSmokeAddonJar = tasks.register('apiSmokeAddonJar', Jar) {
+    archiveBaseName = 'oc-api-smoke-addon'
+    archiveVersion = '1.0.0'
+    destinationDirectory = layout.buildDirectory.dir('api-smoke-addon')
+    from compileApiSmokeAddon
+    from 'tools/api-smoke-addon/src/main/resources'
+    from('LICENSE') { into 'META-INF' }
+}
+
 tasks.named('javadoc', Javadoc).configure {
     include 'li/cil/oc/api/**'
     options.addBooleanOption('Xdoclint:none', true)
@@ -132,6 +150,9 @@ runs {
         argument '--nogui'
     }
     gameTestServer {
+        if (project.hasProperty('withApiSmokeAddon')) {
+            systemProperty 'neoopencomputers.testApiSmokeAddon', 'true'
+        }
         if (project.hasProperty('neoopencomputers.testWorldLoot')) {
             if (!project.hasProperty('neoopencomputers.gameTestWorld')) {
                 throw new GradleException('World loot probes require an isolated oc-tests-* world.')
@@ -312,6 +333,9 @@ configurations {
 def jeiVersion = project.hasProperty('withRailcraft') ? '19.25.0.322' : '19.21.0.246'
 
 dependencies {
+    if (project.hasProperty('withApiSmokeAddon')) {
+        runtimeOnly files(apiSmokeAddonJar)
+    }
     compileOnly 'curse.maven:ender-io-64578:8832691'
     if (project.hasProperty('withEnderIO')) {
         enderIORuntime 'curse.maven:ender-io-64578:8832691'

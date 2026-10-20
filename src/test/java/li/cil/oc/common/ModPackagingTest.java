@@ -55,6 +55,7 @@ final class ModPackagingTest {
     @Test
     void builtInstallableModJarContainsJarJarLibrariesForRuntime() throws IOException {
         try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.modJar"))) {
+            assertTrue(!containsEntryStartingWith(jar, "example/ocapi/"), "Test addon must remain a separate mod");
             assertContains(jar, "META-INF/jarjar/metadata.json");
             assertContains(jar, "META-INF/jarjar/config-1.4.3.jar");
             assertContains(jar, "META-INF/jarjar/luaj-jse-3.0.1.jar");
