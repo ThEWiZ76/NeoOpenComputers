@@ -54,6 +54,10 @@ public final class ModLootDisks {
         return List.copyOf(stacks);
     }
 
+    public static List<ItemStack> stacksForCycling() {
+        return API.items instanceof ItemRegistry registry ? registry.disksForCycling() : List.of();
+    }
+
     static List<Descriptor> bundledDescriptors() {
         final Properties properties = new Properties();
         final String resourcePath = "/assets/" + NeoOpenComputers.MODID + "/" + LOOT_PROPERTIES;

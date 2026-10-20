@@ -9,6 +9,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
@@ -36,7 +37,7 @@ public final class LootDiskCyclingRecipe extends CustomRecipe {
             return ItemStack.EMPTY;
         }
         final String factoryId = factoryId(disk);
-        final List<ItemStack> disks = ModLootDisks.bundledStacksForCycling();
+        final List<ItemStack> disks = ModLootDisks.stacksForCycling();
         if (disks.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -92,11 +93,14 @@ public final class LootDiskCyclingRecipe extends CustomRecipe {
             return false;
         }
         final CompoundTag tag = customData.copyTag();
-        return tag.getBoolean(ItemRegistry.FLOPPY_RECIPE_CYCLING_TAG) && !tag.getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG).isBlank();
+        // The registration flag controls outputs; every loot disk may be recrafted upstream.
+        return tag.contains(ItemRegistry.FLOPPY_FACTORY_ID_TAG, Tag.TAG_STRING) || tag.contains("oc:lootFactory", Tag.TAG_STRING);
     }
 
     private static String factoryId(final ItemStack stack) {
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        return customData == null ? "" : customData.copyTag().getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG);
+        if (customData == null) return "";
+        final CompoundTag tag = customData.copyTag();
+        return tag.contains(ItemRegistry.FLOPPY_FACTORY_ID_TAG, Tag.TAG_STRING) ? tag.getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG) : tag.getString("oc:lootFactory");
     }
 }

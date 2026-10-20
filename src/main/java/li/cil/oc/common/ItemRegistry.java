@@ -34,6 +34,7 @@ public final class ItemRegistry implements ItemAPI {
 
     private final Map<String, ItemInfo> infosByName = new LinkedHashMap<>();
     private final Map<String, Callable<FileSystem>> floppyFactoriesById = new LinkedHashMap<>();
+    private final Map<String, ItemStack> cyclingDisksById = new LinkedHashMap<>();
     private final List<Supplier<ItemStack>> creativeStackSuppliers = new ArrayList<>();
 
     RegisteredItemInfo register(final String name, final Block block, final Item item) {
@@ -88,8 +89,14 @@ public final class ItemRegistry implements ItemAPI {
             stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
         }
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(floppyData));
+        if (doRecipeCycling) cyclingDisksById.put(factoryId, stack.copy());
+        else cyclingDisksById.remove(factoryId);
         rememberCreativeStackSupplier(stack::copy);
         return stack;
+    }
+
+    public List<ItemStack> disksForCycling() {
+        return cyclingDisksById.values().stream().map(ItemStack::copy).toList();
     }
 
     @Override
