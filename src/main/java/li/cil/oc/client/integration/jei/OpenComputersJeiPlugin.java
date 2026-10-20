@@ -5,6 +5,7 @@ import li.cil.oc.api.Driver;
 import li.cil.oc.api.Manual;
 import li.cil.oc.client.ItemSearch;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.network.LootDiskClientState;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
@@ -19,8 +20,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /** JEI discovers this class only when the optional client mod is installed. */
 @JeiPlugin
@@ -30,6 +34,7 @@ public final class OpenComputersJeiPlugin implements IModPlugin {
     static final RecipeType<DocumentationCategory.Page> CALLBACKS = RecipeType.create(NeoOpenComputers.MODID, "manual_callbacks", DocumentationCategory.Page.class);
     private AutoCloseable stackFocusing;
     private AutoCloseable focusedInput;
+    private AutoCloseable runtimeDisks;
 
     @Override public ResourceLocation getPluginUid() { return ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "jei"); }
 
@@ -81,16 +86,29 @@ public final class OpenComputersJeiPlugin implements IModPlugin {
         onRuntimeUnavailable();
         stackFocusing = ItemSearch.registerStackFocusing((screen, x, y) -> Optional.ofNullable(runtime.getIngredientListOverlay().getIngredientUnderMouse(VanillaTypes.ITEM_STACK)));
         focusedInput = ItemSearch.registerFocusedInput(() -> runtime.getIngredientListOverlay().hasKeyboardFocus());
+        final var ingredients = runtime.getIngredientManager();
+        runtimeDisks = subscribeRuntimeDisks(() -> ingredients.getAllIngredients(VanillaTypes.ITEM_STACK),
+            stacks -> ingredients.addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, stacks));
     }
 
     @Override public void onRuntimeUnavailable() {
-        close(stackFocusing); close(focusedInput);
-        stackFocusing = null; focusedInput = null;
+        close(stackFocusing); close(focusedInput); close(runtimeDisks);
+        stackFocusing = null; focusedInput = null; runtimeDisks = null;
+    }
+
+    static AutoCloseable subscribeRuntimeDisks(Supplier<? extends Collection<ItemStack>> existing, Consumer<List<ItemStack>> add) {
+        return LootDiskClientState.subscribe(() -> {
+            final var current = existing.get();
+            final var missing = LootDiskClientState.stacks().stream()
+                .filter(stack -> current.stream().noneMatch(candidate -> ItemStack.isSameItemSameComponents(candidate, stack)))
+                .toList();
+            if (!missing.isEmpty()) add.accept(missing);
+        });
     }
 
     private static void close(AutoCloseable subscription) {
         if (subscription == null) return;
         try { subscription.close(); }
-        catch (Exception failure) { NeoOpenComputers.LOGGER.warn("Cannot detach JEI input bridge", failure); }
+        catch (Exception failure) { NeoOpenComputers.LOGGER.warn("Cannot detach JEI runtime bridge", failure); }
     }
 }

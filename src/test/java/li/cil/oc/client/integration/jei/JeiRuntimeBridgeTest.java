@@ -2,12 +2,15 @@ package li.cil.oc.client.integration.jei;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import li.cil.oc.client.ItemSearch;
+import li.cil.oc.common.network.LootDiskClientState;
 import mezz.jei.api.gui.inputs.IJeiUserInput;
 import mezz.jei.api.runtime.IIngredientListOverlay;
 import mezz.jei.api.runtime.IJeiRuntime;
+import mezz.jei.api.runtime.IIngredientManager;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,11 +35,16 @@ final class JeiRuntimeBridgeTest {
     @Test void runtimeRemovalIsIdempotentAndStopsQueries() {
         final var plugin = new OpenComputersJeiPlugin();
         final var hover = new AtomicInteger();
-        plugin.onRuntimeAvailable(runtime(hover, true));
-        plugin.onRuntimeUnavailable(); plugin.onRuntimeUnavailable();
-        assertFalse(ItemSearch.isInputFocused());
-        assertTrue(ItemSearch.hoveredStack(null, 0, 0).isEmpty());
-        assertEquals(0, hover.get());
+        final var ingredientQueries = new AtomicInteger();
+        try {
+            plugin.onRuntimeAvailable(runtime(hover, true, ingredientQueries));
+            plugin.onRuntimeUnavailable(); plugin.onRuntimeUnavailable();
+            LootDiskClientState.flush();
+            assertFalse(ItemSearch.isInputFocused());
+            assertTrue(ItemSearch.hoveredStack(null, 0, 0).isEmpty());
+            assertEquals(0, hover.get());
+            assertEquals(0, ingredientQueries.get());
+        } finally { plugin.onRuntimeUnavailable(); }
     }
 
     @Test void manualLinkDoesNotOpenDuringSimulatedInputOrOtherButtons() {
@@ -56,13 +64,24 @@ final class JeiRuntimeBridgeTest {
     }
 
     private static IJeiRuntime runtime(AtomicInteger hover, boolean focused) {
+        return runtime(hover, focused, new AtomicInteger());
+    }
+
+    private static IJeiRuntime runtime(AtomicInteger hover, boolean focused, AtomicInteger ingredientQueries) {
         final var overlay = proxy(IIngredientListOverlay.class, name -> switch (name) {
             case "hasKeyboardFocus" -> focused;
             case "getIngredientUnderMouse" -> { hover.incrementAndGet(); yield null; }
             default -> throw new AssertionError(name);
         });
-        return proxy(IJeiRuntime.class, name -> {
-            assertEquals("getIngredientListOverlay", name); return overlay;
+        final var ingredients = proxy(IIngredientManager.class, name -> {
+            assertEquals("getAllIngredients", name);
+            ingredientQueries.incrementAndGet();
+            return List.of();
+        });
+        return proxy(IJeiRuntime.class, name -> switch (name) {
+            case "getIngredientListOverlay" -> overlay;
+            case "getIngredientManager" -> ingredients;
+            default -> throw new AssertionError(name);
         });
     }
 

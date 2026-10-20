@@ -40,6 +40,7 @@ import li.cil.oc.common.command.ModCommands;
 import li.cil.oc.common.machine.ProgramLocationImc;
 import li.cil.oc.common.machine.ProgramLocations;
 import li.cil.oc.common.network.DebugNetworking;
+import li.cil.oc.common.network.LootDiskNetworking;
 import li.cil.oc.common.network.ComputerCaseNetworking;
 import li.cil.oc.common.network.DroneNetworking;
 import li.cil.oc.common.network.MicrocontrollerNetworking;
@@ -88,6 +89,7 @@ public final class NeoOpenComputers {
         RobotCommonHandler.register();
         WirelessNetworkCardHandler.register();
         NeoForge.EVENT_BUS.addListener(ModCommands::register);
+        LootDiskNetworking.registerServerEvents();
         NanomachinesRegistry.registerTickHandler();
         li.cil.oc.common.HoverBootsHandler.register();
         li.cil.oc.common.PresentHandler.register();
@@ -96,6 +98,7 @@ public final class NeoOpenComputers {
         modEventBus.addListener(ChunkloaderUpgradeEnvironment::registerTicketController);
         modEventBus.addListener(ComputerCaseNetworking::register);
         modEventBus.addListener(DebugNetworking::register);
+        modEventBus.addListener(LootDiskNetworking::register);
         modEventBus.addListener(DroneNetworking::register);
         modEventBus.addListener(MicrocontrollerNetworking::register);
         modEventBus.addListener(NanomachinesNetworking::register);

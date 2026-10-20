@@ -8,6 +8,7 @@ import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModEntities;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModMenus;
+import li.cil.oc.common.ModCreativeTabs;
 import li.cil.oc.common.block.ComputerCaseBlock;
 import li.cil.oc.common.blockentity.ScreenBlockEntity;
 import li.cil.oc.common.blockentity.CableBlockEntity;
@@ -15,12 +16,15 @@ import li.cil.oc.common.item.FloppyItem;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.menu.TerminalMenu;
 import li.cil.oc.common.network.DebugClipboardState;
+import li.cil.oc.common.network.LootDiskClientState;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,6 +32,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -56,6 +61,9 @@ public final class NeoOpenComputersClient {
 
     public NeoOpenComputersClient() {
         NeoForge.EVENT_BUS.addListener(NeoOpenComputersClient::onClientTick);
+        NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingIn event) -> LootDiskClientState.reset());
+        NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut event) -> LootDiskClientState.reset());
+        LootDiskClientState.subscribe(NeoOpenComputersClient::refreshLootDiskContents);
         NeoForge.EVENT_BUS.register(MfuTargetRenderer.class);
         NeoForge.EVENT_BUS.register(RackMountableRenderHandler.class);
     }
@@ -255,12 +263,24 @@ public final class NeoOpenComputersClient {
 
     static void onClientTick(final ClientTickEvent.Post event) {
         final Minecraft minecraft = Minecraft.getInstance();
+        LootDiskClientState.flush();
         final String clipboard = DebugClipboardState.consumePendingClipboard();
         if (clipboard != null) {
             minecraft.keyboardHandler.setClipboard(clipboard);
         }
         NanomachineParticles.spawnAmbient(minecraft);
         ComputerCaseSounds.tick();
+    }
+
+    private static void refreshLootDiskContents() {
+        final var minecraft = Minecraft.getInstance();
+        final var connection = minecraft.getConnection();
+        if (minecraft.player == null || minecraft.level == null || connection == null) return;
+        final var parameters = new CreativeModeTab.ItemDisplayParameters(connection.enabledFeatures(),
+            minecraft.player.canUseGameMasterBlocks() && minecraft.options.operatorItemsTab().get(), minecraft.level.registryAccess());
+        ModCreativeTabs.MAIN.get().buildContents(parameters);
+        CreativeModeTabs.searchTab().buildContents(parameters);
+        connection.updateSearchTrees();
     }
 
     @SubscribeEvent

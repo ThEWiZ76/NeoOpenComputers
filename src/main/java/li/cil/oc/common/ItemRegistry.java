@@ -15,8 +15,10 @@ import net.minecraft.world.level.block.Block;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
@@ -33,7 +35,8 @@ public final class ItemRegistry implements ItemAPI {
 
     private final Map<String, ItemInfo> infosByName = new LinkedHashMap<>();
     private final Map<String, Callable<FileSystem>> floppyFactoriesById = new LinkedHashMap<>();
-    private final Map<String, ItemStack> cyclingDisksById = new LinkedHashMap<>();
+    private final Map<String, ItemStack> registeredFloppiesById = new LinkedHashMap<>();
+    private final Set<String> cyclingDiskIds = new LinkedHashSet<>();
     private final List<Supplier<ItemStack>> creativeStackSuppliers = new ArrayList<>();
 
     RegisteredItemInfo register(final String name, final Block block, final Item item) {
@@ -98,14 +101,19 @@ public final class ItemRegistry implements ItemAPI {
             stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
         }
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(floppyData));
-        if (doRecipeCycling) cyclingDisksById.put(factoryId, stack.copy());
-        else cyclingDisksById.remove(factoryId);
-        rememberCreativeStackSupplier(stack::copy);
+        registeredFloppiesById.put(factoryId, stack);
+        if (doRecipeCycling) cyclingDiskIds.add(factoryId);
+        else cyclingDiskIds.remove(factoryId);
         return stack.copy();
     }
 
+    public List<ItemStack> registeredFloppies() {
+        return registeredFloppiesById.values().stream().map(ItemStack::copy).toList();
+    }
+
     public List<ItemStack> disksForCycling() {
-        return cyclingDisksById.values().stream().map(ItemStack::copy).toList();
+        return cyclingDiskIds.stream().map(registeredFloppiesById::get)
+            .map(ItemStack::copy).toList();
     }
 
     @Override

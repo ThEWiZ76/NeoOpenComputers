@@ -2,6 +2,7 @@ package li.cil.oc.common;
 
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.API;
+import li.cil.oc.common.network.LootDiskClientState;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -9,6 +10,8 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.LinkedHashMap;
 
 public final class ModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, NeoOpenComputers.MODID);
@@ -33,6 +36,7 @@ public final class ModCreativeTabs {
     }
 
     static void addRegisteredStacks(final CreativeModeTab.Output output) {
+        final var floppies = new LinkedHashMap<String, ItemStack>();
         if (API.items instanceof ItemRegistry registry) {
             registry.creativeStackSuppliers().forEach(stackSupplier -> {
                 final ItemStack stack = stackSupplier.get();
@@ -40,7 +44,10 @@ public final class ModCreativeTabs {
                     output.accept(stack);
                 }
             });
+            for (final var stack : registry.registeredFloppies()) floppies.put(LootDiskClientState.factoryId(stack), stack);
         }
+        for (final var stack : LootDiskClientState.stacks()) floppies.put(LootDiskClientState.factoryId(stack), stack);
+        floppies.values().forEach(output::accept);
     }
 
     static void addRegisteredItems(final CreativeModeTab.Output output) {
