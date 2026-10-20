@@ -22,10 +22,179 @@ public final class AppliedEnergisticsGameTests {
             return List.of();
         }
         return List.of(new TestFunction("ae2", "ae2_controller_storage_contract", "neoopencomputers:empty", 300, 0, true, Loaded::storageContract),
-            new TestFunction("ae2", "ae2_native_adapter", "neoopencomputers:empty", 400, 0, true, Loaded::nativeAdapter));
+            new TestFunction("ae2", "ae2_native_adapter", "neoopencomputers:empty", 400, 0, true, Loaded::nativeAdapter),
+            new TestFunction("ae2", "ae2_native_crafting", "neoopencomputers:empty", 1000, 0, true, Loaded::nativeCrafting));
     }
 
     private static final class Loaded {
+        static void nativeCrafting(final GameTestHelper helper) {
+            helper.setBlock(new BlockPos(1, 1, 1), block("controller"));
+            helper.setBlock(new BlockPos(2, 1, 1), block("drive"));
+            helper.setBlock(new BlockPos(1, 1, 0), block("creative_energy_cell"));
+            helper.setBlock(new BlockPos(2, 1, 0), block("1k_crafting_storage"));
+            helper.setBlock(new BlockPos(2, 1, 2), block("pattern_provider"));
+            helper.setBlock(new BlockPos(3, 1, 2), block("molecular_assembler"));
+            helper.setBlock(new BlockPos(2, 2, 2), net.minecraft.world.level.block.Blocks.CHEST);
+            final var craftingCpu = helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(2, 1, 0)));
+            final var cpuData = craftingCpu.saveWithFullMetadata(helper.getLevel().registryAccess());
+            cpuData.putString("customName", "fixture-cpu");
+            craftingCpu.loadWithComponents(cpuData, helper.getLevel().registryAccess());
+            final var provider = helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(2, 1, 2)));
+            @SuppressWarnings("unchecked") final var recipe = (net.minecraft.world.item.crafting.RecipeHolder<net.minecraft.world.item.crafting.CraftingRecipe>) (Object)
+                helper.getLevel().getRecipeManager().byKey(ResourceLocation.withDefaultNamespace("oak_planks")).orElseThrow();
+            final var ingredients = new net.minecraft.world.item.ItemStack[9];
+            java.util.Arrays.fill(ingredients, net.minecraft.world.item.ItemStack.EMPTY);
+            ingredients[0] = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.OAK_LOG);
+            final var pattern = appeng.api.crafting.PatternDetailsHelper.encodeCraftingPattern(recipe, ingredients,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.OAK_PLANKS, 4), false, false);
+            final var data = provider.saveWithFullMetadata(helper.getLevel().registryAccess());
+            final var entry = (net.minecraft.nbt.CompoundTag) pattern.save(helper.getLevel().registryAccess());
+            entry.putInt("Slot", 0);
+            final var patterns = new net.minecraft.nbt.ListTag();
+            patterns.add(entry);
+            final var processing = appeng.api.crafting.PatternDetailsHelper.encodeProcessingPattern(
+                java.util.List.of(new appeng.api.stacks.GenericStack(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_LOG), 1)),
+                java.util.List.of(new appeng.api.stacks.GenericStack(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.GOLD_INGOT), 1)));
+            final var processingEntry = (net.minecraft.nbt.CompoundTag) processing.save(helper.getLevel().registryAccess());
+            processingEntry.putInt("Slot", 1); patterns.add(processingEntry);
+            final var missing = appeng.api.crafting.PatternDetailsHelper.encodeProcessingPattern(
+                java.util.List.of(new appeng.api.stacks.GenericStack(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.BIRCH_LOG), 1)),
+                java.util.List.of(new appeng.api.stacks.GenericStack(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.COBBLESTONE), 1)));
+            final var missingEntry = (net.minecraft.nbt.CompoundTag) missing.save(helper.getLevel().registryAccess());
+            missingEntry.putInt("Slot", 2); patterns.add(missingEntry);
+            data.put("patterns", patterns);
+            provider.loadWithComponents(data, helper.getLevel().registryAccess());
+            final var drivePos = helper.absolutePos(new BlockPos(2, 1, 1));
+            final var cells = helper.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, drivePos, Direction.UP);
+            helper.assertTrue(cells != null && cells.insertItem(0, new net.minecraft.world.item.ItemStack(BuiltInRegistries.ITEM.get(
+                ResourceLocation.fromNamespaceAndPath("ae2", "item_storage_cell_1k"))), false).isEmpty(), "Crafting fixture drive rejected cell");
+            helper.setBlock(new BlockPos(1, 1, 2), li.cil.oc.common.ModBlocks.ADAPTER.get());
+            helper.setBlock(new BlockPos(1, 1, 3), li.cil.oc.common.ModBlocks.COMPUTER_CASE_TIER1.get());
+            final li.cil.oc.common.blockentity.AdapterBlockEntity adapter = helper.getBlockEntity(new BlockPos(1, 1, 2));
+            final li.cil.oc.common.blockentity.ComputerCaseBlockEntity computer = helper.getBlockEntity(new BlockPos(1, 1, 3));
+            final var cpu = new net.minecraft.world.item.ItemStack(li.cil.oc.common.ModItems.CPU_TIER1.get());
+            ((li.cil.oc.api.driver.item.MutableProcessor) li.cil.oc.api.Driver.driverFor(cpu)).setArchitecture(cpu, li.cil.oc.common.machine.NativeLuaArchitecture.class);
+            computer.setItem(4, cpu);
+            computer.setItem(2, new net.minecraft.world.item.ItemStack(li.cil.oc.common.ModItems.MEMORY_TIER1.get()));
+            computer.setItem(6, RobotMovementPersistenceGameTests.eeprom("""
+                local controller = component.proxy(assert(component.list('me_controller')()))
+                local recipes = controller.getCraftables({name='minecraft:oak_planks', size=4})
+                assert(#recipes == 1, 'expected one real plank recipe')
+                local recipe = recipes[1]
+                local output = recipe.getItemStack()
+                assert(output.name == 'minecraft:oak_planks' and output.size == 4, 'recipe output count lost')
+                assert(type(recipe.requesting()) == 'number')
+                local available = controller.getItemsInNetwork({name='minecraft:oak_planks'})
+                assert(#available == 1 and available[1].size == 0 and available[1].isCraftable, 'craftable-only output missing')
+                assert(#controller.getCraftables({name='minecraft:diamond'}) == 0)
+                local ok = pcall(recipe.request, 0)
+                assert(not ok, 'zero-size request accepted')
+                local job = recipe.request(8, false, 'fixture-cpu')
+                local done, reason = job.isDone()
+                assert(done == nil and reason == 'computing', 'new request did not report computing')
+                repeat
+                  computer.pullSignal(0.05)
+                  done, reason = job.isDone()
+                  assert(not reason or reason == 'computing', tostring(reason))
+                until done
+                assert(job.isCanceled() == false)
+                local canceled, why = job.cancel()
+                assert(canceled == false and why == 'job already completed')
+                local stored = controller.getItemsInNetwork({name='minecraft:oak_planks'})
+                assert(#stored == 1 and stored[1].size == 8, 'completed output not in real storage')
+                local unavailable = recipe.request(4, true, 'missing-fixture-cpu')
+                repeat computer.pullSignal(0.05); done, reason = unavailable.isDone() until done ~= nil
+                assert(done == false and tostring(reason):find('request failed', 1, true))
+                local missing = controller.getCraftables({name='minecraft:cobblestone'})[1].request()
+                repeat computer.pullSignal(0.05); done, reason = missing.isDone() until done ~= nil
+                assert(done == false and tostring(reason):find('incomplete_plan', 1, true), 'missing ingredients did not fail')
+                local pending = controller.getCraftables({name='minecraft:gold_ingot'})[1].request()
+                local computing
+                repeat computer.pullSignal(0.05); computing, reason = pending.isDone() until computing ~= nil
+                assert(computing == false and not reason, 'processing cancel request failed')
+                assert(pending.cancel() == true and pending.isCanceled() == true)
+                component.proxy(component.list('eeprom')()).setData('ae2-crafting-ok')
+                while true do computer.pullSignal() end
+                """));
+            computer.onLoad(); adapter.onLoad(); adapter.refreshNeighbors();
+            li.cil.oc.api.Network.joinOrCreateNetwork(adapter); li.cil.oc.api.Network.joinOrCreateNetwork(computer);
+            ((li.cil.oc.api.network.Connector) computer.machine().node()).changeBuffer(10000);
+            final appeng.api.networking.IGrid[] grid = {null};
+            final li.cil.oc.api.machine.Value[] aliases = new li.cil.oc.api.machine.Value[3];
+            helper.startSequence().thenWaitUntil(() -> {
+                final var host = helper.getLevel().getCapability(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST, drivePos, null);
+                helper.assertTrue(host != null && host.getGridNode(Direction.UP) != null && host.getGridNode(Direction.UP).isActive(), "Waiting for crafting AE2 grid");
+                grid[0] = host.getGridNode(Direction.UP).getGrid();
+                helper.assertTrue(grid[0].getCraftingService().isCraftable(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_PLANKS)), "Real pattern provider has not mounted recipe");
+                helper.assertTrue(grid[0].getCraftingService().getCpus().size() == 1, "Waiting for real crafting CPU");
+            }).thenExecute(() -> {
+              try {
+                final var pos = helper.absolutePos(new BlockPos(1, 1, 1));
+                final var environment = li.cil.oc.api.Driver.driverFor(helper.getLevel(), pos, Direction.NORTH).createEnvironment(helper.getLevel(), pos, Direction.NORTH);
+                final var database = new li.cil.oc.common.component.DatabaseEnvironment(1);
+                try {
+                    li.cil.oc.api.Network.joinNewNetwork(environment.node()); environment.node().connect(database.node());
+                    ((li.cil.oc.api.network.Component) environment.node()).invoke("store", null, java.util.Map.of("name", "minecraft:oak_planks"));
+                    helper.assertTrue(database.getStackInSlot(0).is(net.minecraft.world.item.Items.OAK_PLANKS) && database.getStackInSlot(0).getCount() == 4,
+                        "Craftable-only catalogue entry lost recipe output count");
+                    helper.assertTrue(database.getPhysicalStackInSlot(0).isEmpty(), "Craftable catalogue created physical output");
+                } finally { environment.node().remove(); database.node().remove(); }
+              } catch (RuntimeException exception) { throw exception; }
+              catch (Exception exception) { helper.fail(exception.toString()); }
+                helper.assertTrue(grid[0].getStorageService().getInventory().insert(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_LOG), 16,
+                    appeng.api.config.Actionable.MODULATE, appeng.api.networking.security.IActionSource.empty()) == 16, "Real crafting storage rejected logs");
+                helper.assertTrue(computer.machine().start(), "Native crafting computer did not start");
+            }).thenWaitUntil(() -> helper.assertTrue(new String(li.cil.oc.common.item.ItemDriverData.dataTag(computer.getItem(6))
+                .getByteArray(li.cil.oc.common.ItemRegistry.EEPROM_DATA_SECTION_TAG), java.nio.charset.StandardCharsets.UTF_8).equals("ae2-crafting-ok"),
+                "Native AE2 crafting program failed: " + computer.machine().lastError()))
+                .thenIdle(60).thenExecute(() -> {
+                  try {
+                    final var pos = helper.absolutePos(new BlockPos(1, 1, 1));
+                    final var driver = li.cil.oc.api.Driver.driverFor(helper.getLevel(), pos, Direction.NORTH);
+                    final var environment = driver.createEnvironment(helper.getLevel(), pos, Direction.NORTH);
+                    try {
+                        final var component = (li.cil.oc.api.network.Component) environment.node();
+                        final var craftable = (li.cil.oc.api.machine.Value) ((Object[]) component.invoke("getCraftables", null,
+                            java.util.Map.of("name", "minecraft:gold_ingot"))[0])[0];
+                        final var recipeTag = new net.minecraft.nbt.CompoundTag(); craftable.save(recipeTag);
+                        final var restoredRecipe = new li.cil.oc.common.integration.ae2.CraftableValue(); restoredRecipe.load(recipeTag);
+                        aliases[0] = (li.cil.oc.api.machine.Value) computer.machine().invoke(restoredRecipe, "request", new Object[0])[0];
+                        final var requestTag = new net.minecraft.nbt.CompoundTag(); aliases[0].save(requestTag);
+                        for (int index = 1; index < aliases.length; index++) {
+                            aliases[index] = new li.cil.oc.common.integration.ae2.CraftingStatusValue(); aliases[index].load(requestTag);
+                        }
+                        for (final var alias : aliases) {
+                            final var state = computer.machine().invoke(alias, "isDone", new Object[0]);
+                            helper.assertTrue(state[0] == null && state[1].equals("computing"), "New/restored request lost computing state");
+                        }
+                    } finally { environment.node().remove(); }
+                  } catch (RuntimeException exception) { throw exception; }
+                  catch (Exception exception) { helper.fail(exception.toString()); }
+                }).thenWaitUntil(() -> {
+                  try {
+                    for (final var alias : aliases) {
+                        final var state = computer.machine().invoke(alias, "isDone", new Object[0]);
+                        helper.assertTrue(Boolean.FALSE.equals(state[0]) && state.length == 1, "Restored aliases did not share one submitted job");
+                    }
+                  } catch (RuntimeException exception) { throw exception; }
+                  catch (Exception exception) { helper.fail(exception.toString()); }
+                }).thenExecute(() -> {
+                  try {
+                    helper.assertTrue(Boolean.TRUE.equals(computer.machine().invoke(aliases[1], "cancel", new Object[0])[0]), "Restored alias could not cancel request");
+                    for (final var alias : aliases) helper.assertTrue(Boolean.TRUE.equals(computer.machine().invoke(alias, "isCanceled", new Object[0])[0]), "Cancel did not propagate between restored aliases");
+                  } catch (RuntimeException exception) { throw exception; }
+                  catch (Exception exception) { helper.fail(exception.toString()); }
+                }).thenIdle(60).thenExecute(() -> {
+                    final var items = grid[0].getStorageService().getInventory().getAvailableStacks();
+                    final net.minecraft.world.level.block.entity.ChestBlockEntity chest = helper.getBlockEntity(new BlockPos(2, 2, 2));
+                    long externalLogs = 0;
+                    for (int slot = 0; slot < chest.getContainerSize(); slot++) if (chest.getItem(slot).is(net.minecraft.world.item.Items.OAK_LOG)) externalLogs += chest.getItem(slot).getCount();
+                    helper.assertTrue((items.get(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_LOG)) + externalLogs) * 4
+                        + items.get(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.OAK_PLANKS)) == 64,
+                        "Complete/cancel lost or duplicated real crafting ingredients/output");
+                }).thenSucceed();
+        }
+
         static void storageContract(final GameTestHelper helper) {
             helper.setBlock(new BlockPos(1, 1, 1), block("controller"));
             helper.setBlock(new BlockPos(2, 1, 1), block("drive"));

@@ -37,6 +37,7 @@ public final class AppliedEnergisticsIntegration {
 
         static void register(final DriverRegistry registry) {
             registry.add(new ControllerDriver());
+            li.cil.oc.common.integration.ae2.CraftingStatusValue.register();
         }
 
         private static final class ControllerDriver implements DriverBlock {
@@ -122,6 +123,28 @@ public final class AppliedEnergisticsIntegration {
                 return new Object[]{result.toArray()};
             }
 
+            @Callback(doc = "function([filter:table]):table -- Get known item recipes as craftable userdata.")
+            public Object[] getCraftables(final Context context, final Arguments args) {
+                final var grid = grid();
+                final var filter = args.optTable(0, Map.of());
+                final var result = new ArrayList<li.cil.oc.api.machine.Value>();
+                for (final var key : grid.getCraftingService().getCraftables(appeng.api.storage.AEKeyFilter.none())) {
+                    if (key instanceof appeng.api.stacks.AEItemKey item) {
+                        final long outputCount = recipeOutputCount(grid, item);
+                        if (DescriptionFilter.matches(describe(item, outputCount, grid), filter)) {
+                            result.add(new li.cil.oc.common.integration.ae2.CraftableValue(tile, side, item, outputCount));
+                        }
+                    }
+                }
+                return new Object[]{result.toArray()};
+            }
+
+            private long recipeOutputCount(final appeng.api.networking.IGrid grid, final appeng.api.stacks.AEItemKey item) {
+                return grid.getCraftingService().getCraftingFor(item).stream()
+                    .flatMap(pattern -> pattern.getOutputs().stream()).filter(output -> output.what().equals(item))
+                    .mapToLong(appeng.api.stacks.GenericStack::amount).findFirst().orElse(0);
+            }
+
             @Callback(doc = "function():table -- Get fluid descriptions; amounts are millibuckets.")
             public Object[] getFluidsInNetwork(final Context context, final Arguments args) {
                 final var result = new ArrayList<Map<Object, Object>>();
@@ -149,7 +172,8 @@ public final class AppliedEnergisticsIntegration {
                     if (!DescriptionFilter.matches(describe(entry.getKey(), entry.getValue(), grid), filter)) continue;
                     while (slot < database.size() && !database.getStackInSlot(slot).isEmpty()) slot++;
                     if (slot == database.size()) break;
-                    database.setStackInSlot(slot++, entry.getKey().toStack((int) Math.min(Integer.MAX_VALUE, Math.max(1, entry.getValue()))));
+                    final long quantity = entry.getValue() == 0 ? recipeOutputCount(grid, entry.getKey()) : entry.getValue();
+                    database.setStackInSlot(slot++, entry.getKey().toStack((int) Math.min(Integer.MAX_VALUE, quantity)));
                     remaining--;
                 }
                 return new Object[]{true};
