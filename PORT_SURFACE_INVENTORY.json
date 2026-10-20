@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "b40e4be50d388502ca9c2dddc34141f8ec777998",
+  "port_revision": "37fb64458a819bd3e45377174a1cabdf69e7bf41",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -3638,7 +3638,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 358
+              "line": 408
             }
           ]
         }
@@ -5605,7 +5605,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 358
+              "line": 408
             }
           ]
         }
@@ -6484,7 +6484,12 @@
         {
           "name": "exportIntoSlot",
           "line": 73,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
+              "line": 230
+            }
+          ]
         }
       ]
     },
@@ -6565,7 +6570,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 279
+              "line": 329
             }
           ]
         },
@@ -6575,7 +6580,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 323
+              "line": 373
             }
           ]
         },
@@ -6585,7 +6590,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 311
+              "line": 361
             }
           ]
         },
@@ -6619,7 +6624,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 358
+              "line": 408
             }
           ]
         },
@@ -6629,7 +6634,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 345
+              "line": 395
             }
           ]
         },
@@ -6639,7 +6644,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 392
+              "line": 442
             }
           ]
         },
@@ -6649,7 +6654,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 394
+              "line": 444
             }
           ]
         },
@@ -6659,7 +6664,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 396
+              "line": 446
             }
           ]
         },
@@ -6669,7 +6674,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 398
+              "line": 448
             }
           ]
         },
@@ -6679,7 +6684,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 400
+              "line": 450
             }
           ]
         },
@@ -6689,7 +6694,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 402
+              "line": 452
             }
           ]
         },
@@ -6699,7 +6704,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 404
+              "line": 454
             }
           ]
         },
@@ -8989,9 +8994,6 @@
     ],
     "canPlayerAccess": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:38"
-    ],
-    "exportIntoSlot": [
-      "src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:73"
     ],
     "getAccess": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:45"

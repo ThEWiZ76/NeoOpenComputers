@@ -1,5 +1,7 @@
 # AE2 interfaces and bus configuration
 
+Follow-up: exportIntoSlot is now implemented and verified in [[AE2 manual export]]. Remaining-export statements below describe this earlier checkpoint.
+
 Runtime checkpoint: b40e4be50d388502ca9c2dddc34141f8ec777998. Related: [[AE2 controller integration]], [[AE2 crafting integration]], [[AE2 crafting restart]], [[../02 plans/AE2 integration]], [[../04 ai-context/Modern integration scope]]. MC1.21.1/NeoForge21.1.234/AE2 19.2.18.
 
 ## Implemented

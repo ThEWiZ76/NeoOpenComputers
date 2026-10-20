@@ -41,7 +41,7 @@ Files: focused integration/ae2 drivers and shared network control; AE2 GameTests
 - [x] Verify block/part/bus ghost-config contract in pinned AE2 implementation; reproduce missing drivers/native discovery and add EnvironmentProviders.
 - [x] Share complete network control across block/panel interfaces, including real native crafting, and restore get/set config/default-slot overload/database-copy/clamp/0.5-second pause.
 - [x] Restore side-specific import/export filter configuration and errors; all6faces, wrong-kind guards, providers, node identity and cold ghost NBT tested.
-- [ ] Restore exportIntoSlot with real inventories, speed/fuzzy upgrades and0.25-second successful pause. Test simulated versus actual extraction, rejected inserts, rollback and item/fluid conservation.
+- [x] Restore item exportIntoSlot with real sided inventories, all five speed budgets, fuzzy upgrades and0.25-second successful pause. Actual-versus-simulated extraction, rejected/partial insertion, ME refund/full-cell drop and exact item conservation tested. Fluid filters are not item-slot exports; see [[../03 manuals/AE2 manual export]].
 - [ ] Test all sides, stale/unloaded hosts and missing parts without chunk loads, Lua argument/results and persistence. Commit/push verified step.
 
 ## 4. Cell converter and auxiliary contracts
@@ -69,3 +69,5 @@ Crafting checkpoint f36740a717c5b9ee121f51f2ab91aca8ef3bf189: actual native asse
 Restart checkpoint 2b4e1b752ddeda019c877841b135e82325022f8a: journal-backed active/terminal recovery after reproduced older-heap completion loss and startup late-bind regression. Final world oc-restart-ae2-crafting-20261020-06: PIDs53528/54476,736 tests each;2141 units;726 absent profile. See [[../03 manuals/AE2 crafting restart]]. Remaining explicit acceptance above and interfaces/buses/converters/auxiliary/client work stay open; beta3-6 workweeks, low confidence.
 
 Interface/config checkpoint b40e4be50d388502ca9c2dddc34141f8ec777998: actual controller/block/panel crafting and CPU_BUSY/CPU_TOO_SMALL/NO_CPU_FOUND resource-conservation matrix;5added tests,2141 units,741-test prepare/verify JVMs,736 mixed/726 absent. Manual exportIntoSlot remains open. Reused-world ChunkMap unload hang preserved and not claimed fixed; fresh full suites pass. See [[../03 manuals/AE2 interfaces and bus configuration]].
+
+Export checkpoint 37fb64458a819bd3e45377174a1cabdf69e7bf41: actual exportIntoSlot with sided inventory/slot handling, speed/fuzzy filters, powered machine extraction, rejected-remainder refund/drop and exact item conservation. Ten new server/native tests; build/2141 units/746 mixed/726 absent pass. See [[../03 manuals/AE2 manual export]]. Converter/auxiliary, remaining crafting/stability/client gates stay open; beta3-6 concentrated workweeks, low confidence. No client/Computer Use action.
