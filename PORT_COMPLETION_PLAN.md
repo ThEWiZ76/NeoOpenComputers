@@ -590,3 +590,21 @@ Native Lua survives failed diskdrive.eject: same media/local731/open reader offs
 ## Computer IO-failure checkpoint - 770e92d21fe1db4d35ba4e29cc03dd10475f66cb
 
 Two native HDD/heap tests cover explicit failed save and failed onChunkUnloaded, live reader/writer/local retention, repaired unload/old-VM stop and new BlockEntity.loadStatic/onLoad continuation. Final bytes include all3 writes. No further runtime fix required. Build2239 units/851 absent/936 mixed required tests, normal exits. [[../03 manuals/Native volume import]] records exact scope: direct lifecycle callbacks, no actual chunk eviction/automatic retry or restart claim. Broad storage/platform/client acceptance remains open; next return to functional feature parity. Technical first, beta3-6 concentrated workweeks lowconfidence.
+
+
+## TIS-3D serial integration work package - 2026-10-20
+
+Pinned target: TIS-3D MC1.21.1-neoforge-2.0.0 (release sourcefff58fd3dbca7ba08a5ed0262274555c873641c9), MarkdownManual1.2.8 and Architectury13.0.11. Both published TIS1.7.7/2.0 require NeoForge>=21.1.248; keep core default21.1.234 and explicitly test optional profile with -PwithTIS3D -Pneo_version=21.1.248. Do not downgrade/patch provider metadata. Publisher Modrinth metadata/artifact SHA512 checks, source API/tree and both mod descriptors retained under build/finish-port-implementation/integration-discovery/tis3d. TIS2 uses a custom serial-interface-provider registry, no old SerialAPI.addProvider.
+
+1. Reproduce missing provider against a real adapter/installed TIS2. Pin optional compile/runtime dependencies; no hard/bundled provider requirement.
+2. Register through NeoForge's deferred registry, behind installed-mod classloading boundary. Adapter identity/loaded-chunk guards; serial_port with setReading/read/write, signed-short FIFO128 each way, explicit receive enable, buffer-full result, peek/skip, reset/detach and legacy-compatible node/queue/isReading NBT.
+3. Register the existing localized protocol page through MarkdownManual's client-only document-provider registry, with a discoverable TIS protocol reference. This is functional access, no visual polish.
+4. Verify provider/queue/NBT/removal contracts, native Lua through real powered TIS casing/serial module and pipes, default provider absence and all-provider mixed profile. Appropriate full build/gates; no reviewer subagents or client focus.
+5. Commit/push implementation and canonical evidence -> root mirrors/inventory, verify exact remote equality/clean tree. Keep client, real process/unload/multiplayer/platform/load and other provider families explicitly open.
+
+Beta remains3-6 concentrated workweeks, low confidence; this is one missing legacy integration, not full-port completion.
+
+
+## TIS-3D server integration checkpoint - 748f5e993819e9d097fe512f2d9bbd8efee3116c
+
+Missing TIS2 provider reproduced, then optional adapter serial_port restored:3 callbacks, signed FIFO128 both directions, enable/full/peek/skip/reset, exact flat-node/buffer NBT, loaded-position/adapter identity and client-only existing protocol resources. Actual powered TIS controller/casing/serial pipes exchange with native Lua (65535 ->-1, -32768 back). Build2239 units/853 TIS-only required tests on21.1.248, core absent851 on unchanged21.1.234, final all-provider mixed938 on21.1.248; all normal exits. [[../03 manuals/TIS-3D serial integration]] records provider releases/loader requirement, original red, compile fixture correction, proof/limits and commands. No bundled/hard dependency or visual polish. The separately tested core234 JAR was installed in the closed backed-up Modrinth profile; manual screen3 start/client acceptance pending. Actual client/TIS assembly/JVM/chunk/platform/load/protection and other provider families remain open; full goal active, beta3-6 concentrated workweeks lowconfidence.

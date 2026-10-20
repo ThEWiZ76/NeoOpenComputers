@@ -1,6 +1,6 @@
 # Port source surface inventory
 
-Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `770e92d21fe1db4d35ba4e29cc03dd10475f66cb`.
+Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `748f5e993819e9d097fe512f2d9bbd8efee3116c`.
 
 Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.
 
@@ -64,7 +64,6 @@ Java API files: 144. Missing matching port paths: 0.
 | producesEnergy | src/main/scala/li/cil/oc/integration/ic2/DriverReactor.java:63; src/main/scala/li/cil/oc/integration/ic2/DriverReactorChamber.java:78; src/main/scala/li/cil/oc/integration/ic2/DriverReactorRedstonePort.java:93 |
 | setControlDisable | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:58 |
 | setControlSetting | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:64 |
-| setReading | src/main/scala/li/cil/oc/integration/tis3d/SerialInterfaceProviderAdapter.scala:63 |
 | setWirelessFrequency | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:83 |
 | setWirelessOutput | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:63 |
 

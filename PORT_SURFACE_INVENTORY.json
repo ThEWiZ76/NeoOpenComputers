@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "770e92d21fe1db4d35ba4e29cc03dd10475f66cb",
+  "port_revision": "748f5e993819e9d097fe512f2d9bbd8efee3116c",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -3515,6 +3515,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/FileSystemEnvironment.java",
               "line": 215
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/Tis3dIntegration.java",
+              "line": 77
             }
           ]
         },
@@ -3539,6 +3543,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/FileSystemEnvironment.java",
               "line": 254
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/Tis3dIntegration.java",
+              "line": 80
             }
           ]
         }
@@ -4083,6 +4091,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/FileSystemEnvironment.java",
               "line": 215
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/Tis3dIntegration.java",
+              "line": 77
             }
           ]
         },
@@ -4097,6 +4109,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/FileSystemEnvironment.java",
               "line": 254
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/Tis3dIntegration.java",
+              "line": 80
             }
           ]
         },
@@ -4175,6 +4191,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/FileSystemEnvironment.java",
               "line": 215
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/Tis3dIntegration.java",
+              "line": 77
             }
           ]
         },
@@ -8313,7 +8333,12 @@
         {
           "name": "setReading",
           "line": 63,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/Tis3dIntegration.java",
+              "line": 74
+            }
+          ]
         },
         {
           "name": "read",
@@ -8330,6 +8355,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/FileSystemEnvironment.java",
               "line": 215
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/Tis3dIntegration.java",
+              "line": 77
             }
           ]
         },
@@ -8344,6 +8373,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/FileSystemEnvironment.java",
               "line": 254
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/Tis3dIntegration.java",
+              "line": 80
             }
           ]
         }
@@ -9129,9 +9162,6 @@
     ],
     "setControlSetting": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:64"
-    ],
-    "setReading": [
-      "src/main/scala/li/cil/oc/integration/tis3d/SerialInterfaceProviderAdapter.scala:63"
     ],
     "setWirelessFrequency": [
       "src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:83"

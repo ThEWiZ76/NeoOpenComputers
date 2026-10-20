@@ -24,7 +24,7 @@ Baseline7d9eac5584e238a890a388a0f697c27c7391caa4 contains171 integration source 
 | projectred | 2 | 0 | Bundled16-channel and screwdriver integration has documented server proof. Client/other electrical tools and broader acceptance remain. |
 | railcraft | 3 | 5 | Worldspike and entity-event integration. Modern Railcraft provider/API or replacement still to verify. |
 | thaumcraft | 2 | 0 | Item conversion/integration hook. Modern provider or explicit non-applicability decision still unverified. |
-| tis3d | 2 | 3 | Adapter serial-interface bridge. Modern version/API and real serial acceptance still to verify. |
+| tis3d | 2 | 3 | Implemented server protocol at748f5e993 for TIS2.0.0/NeoForge>=21.1.248; core remains21.1.234. Registry/adapter identity, signed FIFO128, read enable, peek/skip/reset and legacy-flat NBT preserved; real powered casing/serial pipes exchange with native Lua. Client-only existing protocol provider wired; actual client/assembly/JVM/chunk/load acceptance remains open. See TIS3D_SERIAL_INTEGRATION.md. |
 | util | 8 | 0 | Shared cross-mod power/charging/wrench/redstone/search helpers, not an external mod. Provider registration and compatibility policy still to audit. |
 | waila | 2 | 0 | Overlay data provider. Modern WAILA/WTHIT/Jade mapping and live visual acceptance still unverified. |
 | wrcbe | 2 | 0 | Wireless-redstone provider. No positive modern version verified yet; a failed project-slug lookup is not proof no compatible provider exists. |
