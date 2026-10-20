@@ -54,6 +54,13 @@ config="${mod_id}.mixins.json"
     side="BOTH"
 
 [[dependencies.${mod_id}]]
+    modId="enderio"
+    type="optional"
+    versionRange="[8.2.12-beta,9)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
     modId="railcraft"
     type="optional"
     versionRange="[1.2.13,1.3)"

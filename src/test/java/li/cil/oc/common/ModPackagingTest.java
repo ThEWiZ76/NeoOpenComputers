@@ -171,7 +171,7 @@ final class ModPackagingTest {
     @Test
     void optionalIntegrationsAreNotBundledOrPublishedAsRequiredDependencies() throws Exception {
         try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.modJar"))) {
-            for (final String prefix : new String[]{"mekanism/", "appeng/", "mrtjp/", "codechicken/", "dan200/computercraft/", "li/cil/tis3d/", "li/cil/manual/", "dev/architectury/", "forestry/", "vazkii/patchouli/", "mods/railcraft/"}) {
+            for (final String prefix : new String[]{"mekanism/", "appeng/", "mrtjp/", "codechicken/", "dan200/computercraft/", "li/cil/tis3d/", "li/cil/manual/", "dev/architectury/", "forestry/", "vazkii/patchouli/", "mods/railcraft/", "com/enderio/"}) {
                 assertTrue(!containsEntryStartingWith(jar, prefix), () -> "Optional integration classes were bundled: " + prefix);
             }
         }

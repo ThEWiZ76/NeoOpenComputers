@@ -161,6 +161,9 @@ runs {
         if (project.hasProperty('withRailcraft')) {
             systemProperty 'neoopencomputers.testRailcraft', 'true'
         }
+        if (project.hasProperty('withEnderIO')) {
+            systemProperty 'neoopencomputers.testEnderIO', 'true'
+        }
         if (project.hasProperty('withForestry') || project.hasProperty('withForestryButterflies')) {
             systemProperty 'neoopencomputers.testForestry', 'true'
         }
@@ -295,12 +298,18 @@ configurations {
     runtimeClasspath.extendsFrom forestryRuntime
     railcraftRuntime
     runtimeClasspath.extendsFrom railcraftRuntime
+    enderIORuntime
+    runtimeClasspath.extendsFrom enderIORuntime
 }
 
 // Railcraft 1.2.13 declares JEI >=19.21.0.247; retain the existing pin for other profiles.
 def jeiVersion = project.hasProperty('withRailcraft') ? '19.25.0.322' : '19.21.0.246'
 
 dependencies {
+    compileOnly 'curse.maven:ender-io-64578:8832691'
+    if (project.hasProperty('withEnderIO')) {
+        enderIORuntime 'curse.maven:ender-io-64578:8832691'
+    }
     compileOnly 'curse.maven:railcraft-reborn-901491:9257943'
     if (project.hasProperty('withRailcraft')) {
         railcraftRuntime 'curse.maven:railcraft-reborn-901491:9257943'

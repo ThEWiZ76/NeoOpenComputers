@@ -79,6 +79,7 @@ public final class ModDriverCatalog {
             li.cil.oc.common.integration.EnderStorageIntegration.register(registry);
             li.cil.oc.common.integration.ForestryIntegration.register(registry);
             li.cil.oc.common.integration.RailcraftIntegration.register(registry);
+            li.cil.oc.common.integration.EnderIOIntegration.register();
             registerBlocks(registry, new BeaconBlockDriver(), new BrewingStandBlockDriver(), new CommandBlockDriver(), new ComputerCaseBlockDriver(), new ComparatorBlockDriver(), new DiskDriveBlockDriver(), new EnergyStorageBlockDriver(), new FluidHandlerBlockDriver(), new FluidTankBlockDriver(), new FurnaceBlockDriver(), new InventoryBlockDriver(), new JukeboxBlockDriver(), new MobSpawnerBlockDriver(), new NoteBlockDriver(), new ScreenBlockDriver());
             registry.add(MinecraftConverters.ITEM_STACK);
             registry.add(MinecraftConverters.LINKED_CARD);
