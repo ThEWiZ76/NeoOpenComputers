@@ -4,6 +4,12 @@
 
 **Aanpak:** bestaande Java-implementaties afmaken en vergelijken met upstream. Kleine wijzigingen per laag; bestaand gedrag beschermen met gerichte tests. Een groen testpakket bewijst geen visuele of volledige functionele gelijkwaardigheid.
 
+## Uitvoeringsprioriteit — correctie van de gebruiker, 2026-10-20
+
+Eerst volledige technische functionaliteit en stabiliteit; look-and-feel en polish pas als alles werkt. De handleiding-/JEI-presentatie kreeg te veel aandacht. Rond alleen de al ingezette functionele fout af waarbij server-only loot-disks niet via JEI opzoekbaar zijn; geen verdere tekst-, categorie- of layoutpolish in deze fase.
+
+Vervolgorde: ontbrekende kernfuncties en ROM/OpenOS-gedrag, duurzame opslag/herladen en machine-/netwerkgedrag, noodzakelijke integraties, daarna brede functionele client/server- en herstartacceptatie. Cosmetische verschillen worden verzameld voor de eindfase. Niet-werkende invoer, ontbrekende toegang tot functies en onbruikbare terminalperformance blijven functionele problemen; het bestaan van een GUI is geen reden om die uit te stellen. Deze prioriteit gaat boven de historische volgorde van onderstaande checkpoints. Beta-inschatting blijft voorlopig3-6 geconcentreerde werkweken met lage zekerheid, herijken op resterende technische featuregroepen.
+
 **Werkplek:** `feature/finish-port`; startpunt `b05faaf8c`. Referentie: lokale upstream-checkout `.upstream-opencomputers-master-MC1.12`. Runtime: Java 21, NeoForge 21.1.234, Minecraft 1.21.1, Gradle/JUnit/GameTests en de specifieke Modrinth-testinstance.
 
 **Uitvoering:** plan gevolgd door directe uitvoering is door de gebruiker gevraagd. Geen extra plan-goedkeuringsronde. Tussentijdse commits pushen naar `origin/feature/finish-port` is op 2026-10-07 expliciet gevraagd; lokale en remote SHA na push vergelijken. Geen automatische merge/publicatie. GitHub Actions blijven uit. Hoogstens één gecombineerde reviewerpass voor een grote/risicovolle implementatie; geen reviewer voor dit plan of kleine fixes.
