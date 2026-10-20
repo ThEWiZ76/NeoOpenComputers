@@ -423,11 +423,15 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
 
     private void initializeFilesystem() {
         if (level == null || level.isClientSide || filesystem != null || !isComplete()) return;
-        long capacity = 0L;
-        for (ItemStack stack : items) capacity += formatDisk(stack);
-        mountFilesystem(unloadedFilesystem == null ? new CompoundTag() : unloadedFilesystem, capacity);
-        unloadedFilesystem = null;
-        connectFilesystem();
+        try {
+            long capacity = 0L;
+            for (ItemStack stack : items) capacity += formatDisk(stack);
+            mountFilesystem(unloadedFilesystem == null ? new CompoundTag() : unloadedFilesystem, capacity);
+            unloadedFilesystem = null;
+            connectFilesystem();
+        } catch (UncheckedIOException failure) {
+            li.cil.oc.NeoOpenComputers.LOGGER.warn("Cannot mount RAID at {}; members and snapshot retained", worldPosition, failure);
+        }
     }
 
     private void mountFilesystem(final CompoundTag original, final long capacity) {
@@ -453,11 +457,16 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
 
     private long formatDisk(final ItemStack stack) {
         final DriverItem driver = Driver.driverFor(stack, getClass());
-        final CompoundTag data = driver.dataTag(stack);
+        final var original = driver.dataTag(stack).copy();
+        final CompoundTag data = original.copy();
         data.putBoolean("oc:unmanaged", false);
         data.remove("oc:lock");
+        li.cil.oc.common.item.ItemDriverData.writeDriverDataTag(driver, stack, data);
         final ManagedEnvironment environment = driver.createEnvironment(stack, this);
-        if (environment == null || environment.node() == null) return 0L;
+        if (environment == null || environment.node() == null) {
+            li.cil.oc.common.item.ItemDriverData.writeDriverDataTag(driver, stack, original);
+            throw new UncheckedIOException(new IOException("RAID member is unavailable"));
+        }
         try {
             if (!(environment.node().host() instanceof FileSystemEnvironment managed)) return 0L;
             final var fileSystem = managed.fileSystem();

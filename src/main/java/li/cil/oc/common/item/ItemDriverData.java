@@ -1,6 +1,7 @@
 package li.cil.oc.common.item;
 
 import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.api.driver.DriverItem;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -46,5 +47,17 @@ public final class ItemDriverData {
 
     public static boolean isClientSide(final EnvironmentHost host) {
         return host != null && host.world() != null && host.world().isClientSide;
+    }
+
+    public static void writeDriverDataTag(final DriverItem driver, final ItemStack stack, final CompoundTag data) {
+        final var detached = stack.copy();
+        final var original = detached.get(DataComponents.CUSTOM_DATA);
+        if (original != null) detached.set(DataComponents.CUSTOM_DATA, CustomData.of(original.copyTag()));
+        final var saved = data.copy();
+        final var target = driver.dataTag(detached);
+        for (final var key : java.util.Set.copyOf(target.getAllKeys())) target.remove(key);
+        target.merge(saved);
+        final var updated = detached.get(DataComponents.CUSTOM_DATA);
+        if (updated != null) stack.set(DataComponents.CUSTOM_DATA, CustomData.of(updated.copyTag()));
     }
 }

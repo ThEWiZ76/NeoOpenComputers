@@ -145,7 +145,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     @Callback(doc = "function():string -- Return the internal floppy disk address.")
     public Object[] media(final Context context, final Arguments args) {
         if (diskEnvironment == null || diskEnvironment.node() == null) {
-            return new Object[]{null, "drive is empty"};
+            return new Object[]{null, items.get(SLOT_FLOPPY).isEmpty() ? "drive is empty" : "media unavailable"};
         }
         return new Object[]{diskEnvironment.node().address()};
     }
@@ -380,6 +380,11 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     private void saveDiskToItem() {
         // Save while the original stack is still present, before split/take copies its item data.
         if (diskEnvironment != null) diskEnvironment.save(new CompoundTag());
+        else if (pendingDiskState != null && pendingDiskState.contains(TAG_DISK)) {
+            final var stack = items.get(SLOT_FLOPPY);
+            final var driver = Driver.driverFor(stack);
+            if (driver != null) li.cil.oc.common.item.ItemDriverData.writeDriverDataTag(driver, stack, pendingDiskState.getCompound(TAG_DISK));
+        }
     }
 
     @Override
@@ -388,22 +393,27 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     private void refreshDiskEnvironment(final CompoundTag savedState) {
-        pendingDiskState = null;
+        pendingDiskState = savedState == null ? null : savedState.copy();
         if (diskEnvironment != null && diskEnvironment.node() != null) {
             diskEnvironment.node().remove();
         }
         diskEnvironment = null;
         final ItemStack stack = items.get(SLOT_FLOPPY);
         final DriverItem driver = Driver.driverFor(stack);
-        if (driver != null && acceptsDriverSlot(driver.slot(stack))) {
-            diskEnvironment = driver.createEnvironment(stack, this);
+        try {
+            if (driver != null && acceptsDriverSlot(driver.slot(stack))) diskEnvironment = driver.createEnvironment(stack, this);
+            // Restore addresses and open files before publishing nodes to the network.
+            if (savedState != null) load(savedState);
+            connectDiskEnvironment();
+            if (diskEnvironment != null || stack.isEmpty()) pendingDiskState = null;
+        } catch (java.io.UncheckedIOException | IllegalArgumentException failure) {
+            if (diskEnvironment != null && diskEnvironment.node() != null) {
+                diskEnvironment.node().remove();
+                if (diskEnvironment.node().host() instanceof li.cil.oc.common.FileSystemEnvironment fs) fs.fileSystem().close();
+            }
+            diskEnvironment = null;
+            li.cil.oc.NeoOpenComputers.LOGGER.warn("Cannot restore disk-drive media at {}; snapshot retained", worldPosition, failure);
         }
-        // Restore addresses and open files before publishing nodes to the network.
-        if (savedState != null) {
-            load(savedState);
-            if (diskEnvironment == null && level == null && !stack.isEmpty()) pendingDiskState = savedState.copy();
-        }
-        connectDiskEnvironment();
     }
 
     private void syncClientData() {

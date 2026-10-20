@@ -52,6 +52,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
     private final int slot;
     private final NonNullList<ItemStack> items = NonNullList.withSize(DiskDriveBlockEntity.CONTAINER_SIZE, ItemStack.EMPTY);
     private ManagedEnvironment diskEnvironment;
+    private CompoundTag pendingDiskState;
     private long lastAccess;
 
     public DiskDriveMountableEnvironment(final EnvironmentHost host, final int slot) {
@@ -197,7 +198,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
     @Callback(doc = "function():string -- Return the internal floppy disk address.")
     public Object[] media(final Context context, final Arguments args) {
         if (diskEnvironment == null || diskEnvironment.node() == null) {
-            return new Object[]{null, "drive is empty"};
+            return new Object[]{null, items.get(DiskDriveBlockEntity.SLOT_FLOPPY).isEmpty() ? "drive is empty" : "media unavailable"};
         }
         return new Object[]{diskEnvironment.node().address()};
     }
@@ -212,11 +213,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         super.load(nbt);
         lastAccess = nbt.getLong(TAG_LAST_ACCESS);
         ContainerHelper.loadAllItems(nbt, items, world() == null ? null : world().registryAccess());
-        refreshDiskEnvironment();
-        if (nbt.contains(TAG_DISK) && diskEnvironment != null) {
-            diskEnvironment.load(nbt.getCompound(TAG_DISK));
-            connectDiskEnvironment();
-        }
+        refreshDiskEnvironment(nbt.contains(TAG_DISK) ? nbt.getCompound(TAG_DISK) : null);
     }
 
     @Override
@@ -226,7 +223,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
             final CompoundTag diskTag = new CompoundTag();
             diskEnvironment.save(diskTag);
             nbt.put(TAG_DISK, diskTag);
-        }
+        } else if (pendingDiskState != null) nbt.put(TAG_DISK, pendingDiskState.copy());
         if (world() != null) {
             ContainerHelper.saveAllItems(nbt, items, world().registryAccess());
         }
@@ -334,6 +331,11 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
 
     private void saveDiskToItem() {
         if (diskEnvironment != null) diskEnvironment.save(new CompoundTag());
+        else if (pendingDiskState != null) {
+            final var stack = items.get(DiskDriveBlockEntity.SLOT_FLOPPY);
+            final var driver = Driver.driverFor(stack);
+            if (driver != null) li.cil.oc.common.item.ItemDriverData.writeDriverDataTag(driver, stack, pendingDiskState);
+        }
     }
 
     @Override
@@ -342,6 +344,11 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
     }
 
     private void refreshDiskEnvironment() {
+        refreshDiskEnvironment(null);
+    }
+
+    private void refreshDiskEnvironment(CompoundTag savedState) {
+        pendingDiskState = savedState == null ? null : savedState.copy();
         if (diskEnvironment != null && diskEnvironment.node() != null) {
             diskEnvironment.node().remove();
         }
@@ -351,8 +358,21 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         if (driver == null || !DiskDriveBlockEntity.acceptsDriverSlot(driver.slot(stack))) {
             return;
         }
-        diskEnvironment = driver.createEnvironment(stack, this);
-        connectDiskEnvironment();
+        try {
+            diskEnvironment = driver.createEnvironment(stack, this);
+            if (diskEnvironment != null) {
+                if (savedState != null) diskEnvironment.load(savedState);
+                connectDiskEnvironment();
+                pendingDiskState = null;
+            }
+        } catch (java.io.UncheckedIOException | IllegalArgumentException failure) {
+            if (diskEnvironment != null && diskEnvironment.node() != null) {
+                diskEnvironment.node().remove();
+                if (diskEnvironment.node().host() instanceof li.cil.oc.common.FileSystemEnvironment fs) fs.fileSystem().close();
+            }
+            diskEnvironment = null;
+            li.cil.oc.NeoOpenComputers.LOGGER.warn("Cannot restore rack disk-drive media; snapshot retained", failure);
+        }
     }
 
     private void connectDiskEnvironment() {

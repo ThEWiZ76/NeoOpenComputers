@@ -27,7 +27,12 @@ record DiskItemEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> sa
                                      CompoundTag data, Consumer<CompoundTag> saveData, EnvironmentHost host, String fallbackLabel) {
         final var server = ServerLifecycleHooks.getCurrentServer();
         final var storage = server == null ? null : new NativeVolumeStore(server.getWorldPath(LevelResource.ROOT));
-        return create(capacity, platters, speed, sound, data, saveData, host, fallbackLabel, storage);
+        try { return create(capacity, platters, speed, sound, data, saveData, host, fallbackLabel, storage); }
+        catch (UncheckedIOException | IllegalArgumentException failure) {
+            li.cil.oc.NeoOpenComputers.LOGGER.warn("Cannot mount native disk for {}; item data retained",
+                host == null ? "detached host" : host.getClass().getSimpleName(), failure);
+            return null;
+        }
     }
 
     static ManagedEnvironment create(long capacity, int platters, int speed, String sound,
