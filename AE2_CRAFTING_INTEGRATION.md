@@ -44,3 +44,7 @@ This checkpoint does not prove full crafting persistence. Run actual separate pr
 Interfaces/import-export buses/cell converters/tool-spatial hooks/item EnvironmentProviders, full client/multiplayer/protection and broad integration acceptance remain open. No client, Computer Use, Modrinth install or screen movement occurred. Real client acceptance must use screen3 with user coordination. Whole-port beta estimate remains3-6 concentrated workweeks, low confidence, including implementation, bugfixes and real ingame/visual tests.
 
 Verification provenance: the final2140-unit build and729-test standalone run followed the null-message failure fallback and restoration of the filter helper's package-private visibility. The731-test mixed and726-test absent logs precede only those final small changes; no changed foreign-linkage or success/cancel path is inferred from unrun tests.
+
+## Follow-up 2b4e1b752ddeda019c877841b135e82325022f8a
+
+The normal actual-JVM active/terminal/failure and host-offline completion gates now have three-case two-process proof, including100ticks with no OC host before delayed completion. CraftingJournal durably owns active requests and compact outcomes; earlier-heap alias caching alone was insufficient and a reproduced startup-bind regression was fixed. See [[AE2 crafting restart]] for exact PIDs/world/logs, limits and remaining failure/unload/client matrix. The old required-next-gate section above describes the earlier checkpoint.

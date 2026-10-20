@@ -30,7 +30,8 @@ Files: integration/ae2/CraftableValue.java, CraftingStatusValue.java and support
 - [x] Implement getCraftables(filter), getItemStack, requesting and request(amount=1,prioritizePower=true,cpuName=""). Preserve upstream error/result contracts and recipe output count.
 - [ ] Complete calculation/submission failure matrix. Implemented: AE2 asynchronous calculation, server-thread Future.isDone polling and get only after completion (nonblocking), then exactly-once submission; this replaces an unnecessary extra waiting worker. Handle failed calculation, insufficient storage, unavailable/busy/named CPU and removed grid.
 - [x] Implement status computing/isDone/isCanceled/cancel; prove actual completed output and cancellation/resource conservation, including Lua calls.
-- [ ] Persist position/dimension/key/request link/status; restore without loading chunks, bounded retry delay, deduplicate restored links and release lifecycle state. Prove actual two-process save/restart/resume and terminal status.
+- [x] Persist position/dimension/key/request link/status, canonical alias identity and world-owned progress/outcomes; three actual two-process cases now prove active/terminal/error and late old-heap recovery. Loaded-target level-end rebind fixes startup ordering; no forced chunk loads.
+- [ ] Finish restart/failure acceptance: save while computing, busy/offline/too-small CPU, missing/replaced target, true chunk eviction/all orderings, history/cleanup/load and abrupt-stop consistency.
 - [ ] Run focused and full relevant checks, document evidence, commit/push.
 
 ## 3. Interfaces and import/export buses
@@ -63,3 +64,5 @@ Beta estimate remains3-6 concentrated workweeks, low confidence; this is the who
 Controller checkpoint 5b60fee0b7577cd2a95c831969903a9237e695eb: first work package verified with2140 units,730 mixed/728 standalone/726 absent server tests. Craftable-key union exists; positive recipe output and userdata acceptance stays in task2. See [[../03 manuals/AE2 controller integration]].
 
 Crafting checkpoint f36740a717c5b9ee121f51f2ab91aca8ef3bf189: actual native assembler output, processing cancellation, named/missing CPU, missing ingredients and same-process saved aliases verified;2140 units/731 mixed/729 standalone/726 absent tests. Full two-process/host-offline persistence and wider submission-failure matrix remain task2 gates before claiming complete AE2. See [[../03 manuals/AE2 crafting integration]].
+
+Restart checkpoint 2b4e1b752ddeda019c877841b135e82325022f8a: journal-backed active/terminal recovery after reproduced older-heap completion loss and startup late-bind regression. Final world oc-restart-ae2-crafting-20261020-06: PIDs53528/54476,736 tests each;2141 units;726 absent profile. See [[../03 manuals/AE2 crafting restart]]. Remaining explicit acceptance above and interfaces/buses/converters/auxiliary/client work stay open; beta3-6 workweeks, low confidence.
