@@ -41,7 +41,8 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
     }
 
     private final Path directory;
-    private CompoundTag previous;
+    // Accessed by the serial IO worker; includes progress from partially completed saves.
+    private Map<String, CompoundTag> previous;
     private CompletableFuture<Void> pending = CompletableFuture.completedFuture(null);
 
     BufferedFileSystem(Path directory, long capacity) {
@@ -52,11 +53,12 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
         super(capacity, forceCaseInsensitive || hostIgnoresCase(directory));
         this.directory = directory.toAbsolutePath().normalize();
         try {
-            previous = awaitIO(() -> {
+            final var contents = awaitIO(() -> {
                 Files.createDirectories(this.directory);
                 return readTree(this.directory);
             });
-            super.load(previous.copy());
+            previous = entries(contents);
+            super.load(contents.copy());
         } catch (RuntimeException failure) {
             throw new IllegalArgumentException("invalid buffered save directory: " + directory, failure);
         }
@@ -66,17 +68,16 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
         final var contents = new CompoundTag();
         super.save(contents);
         final var snapshot = contents.copy();
-        final var before = previous;
-        final var preceding = pending;
         pending = CompletableFuture.runAsync(() -> {
-            preceding.join();
-            try { persist(before, snapshot); }
+            try {
+                persist(snapshot);
+                previous = entries(snapshot);
+            }
             catch (IOException failure) {
                 NeoOpenComputers.LOGGER.error("Cannot save buffered filesystem {}", directory, failure);
                 throw new UncheckedIOException(failure);
             }
         }, IO);
-        previous = snapshot;
         nbt.remove("children");
         nbt.put("input", snapshot.getList("input", Tag.TAG_COMPOUND).copy());
         nbt.put("output", snapshot.getList("output", Tag.TAG_COMPOUND).copy());
@@ -87,7 +88,7 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
         pending.join();
         final var contents = awaitIO(() -> readTree(directory));
         validateLoad(contents);
-        previous = contents.copy();
+        previous = entries(contents);
         final var handles = new HashSet<Integer>();
         copyHandles(nbt, contents, "input", handles);
         copyHandles(nbt, contents, "output", handles);
@@ -98,6 +99,10 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
     @Override public void close() {
         try { pending.join(); }
         finally { super.close(); }
+    }
+
+    void flush() {
+        pending.join();
     }
 
     private static boolean hostIgnoresCase(Path directory) {
@@ -151,8 +156,8 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
         target.put(key, valid);
     }
 
-    private void persist(CompoundTag before, CompoundTag after) throws IOException {
-        final var oldEntries = entries(before);
+    private void persist(CompoundTag after) throws IOException {
+        final var oldEntries = new LinkedHashMap<>(previous);
         final var newEntries = entries(after);
         final var removed = oldEntries.keySet().stream().filter(path -> !path.isEmpty() &&
             (!newEntries.containsKey(path) || oldEntries.get(path).getBoolean("isDirectory") != newEntries.get(path).getBoolean("isDirectory")))
@@ -165,12 +170,15 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
             final var current = entry.getValue();
             if (current.getBoolean("isDirectory")) {
                 Files.createDirectories(path);
+                final var durable = current.copy();
+                durable.putLong("lastModified", Files.getLastModifiedTime(path).toMillis());
+                previous.put(entry.getKey(), durable);
             } else if (!current.equals(oldEntries.get(entry.getKey())) || !Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
                 final var old = oldEntries.get(entry.getKey());
                 if (Files.exists(path, LinkOption.NOFOLLOW_LINKS) && (old == null || !unchangedOnDisk(path, old))) {
                     throw new IOException("Filesystem destination changed outside the buffer: " + path);
                 }
-                writeFile(path, current);
+                writeFile(entry.getKey(), path, current);
             }
         }
         // Keep rename sources durable until every destination has been written.
@@ -179,8 +187,9 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
         }
         for (final var relative : newEntries.keySet().stream().sorted(Comparator.comparingInt(String::length).reversed()).toList()) {
             final var entry = newEntries.get(relative);
-            if (entry.getBoolean("isDirectory") && !entry.equals(oldEntries.get(relative))) {
+            if (entry.getBoolean("isDirectory")) {
                 Files.setLastModifiedTime(diskPath(relative), FileTime.fromMillis(entry.getLong("lastModified")));
+                previous.put(relative, entry.copy());
             }
         }
     }
@@ -194,6 +203,7 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
                 if (empty) Files.delete(path);
             }
         } else if (unchangedOnDisk(path, old)) Files.delete(path);
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) previous.remove(relative);
     }
 
     private static boolean unchangedOnDisk(Path path, CompoundTag entry) throws IOException {
@@ -202,13 +212,14 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
             && Arrays.equals(Files.readAllBytes(path), entry.getByteArray("data"));
     }
 
-    private static void writeFile(Path path, CompoundTag entry) throws IOException {
+    private void writeFile(String relative, Path path, CompoundTag entry) throws IOException {
         final var temporary = Files.createTempFile(path.getParent(), ".oc-save-", ".tmp");
         try {
             Files.write(temporary, entry.getByteArray("data"));
             Files.setLastModifiedTime(temporary, FileTime.fromMillis(entry.getLong("lastModified")));
             try { Files.move(temporary, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING); }
             catch (AtomicMoveNotSupportedException failure) { Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING); }
+            previous.put(relative, entry.copy());
         } finally { Files.deleteIfExists(temporary); }
     }
 

@@ -35,6 +35,46 @@ public final class StorageFailureGameTests {
     private static final byte[] BYTES = {97, 0, (byte) 128, (byte) 255, 42};
 
     @GameTest(template = "empty")
+    public static void failedBufferedEjectRetainsMediaAndDirtyWriterUntilRepair(GameTestHelper helper) throws Exception {
+        helper.assertTrue(ModSettings.bufferChanges(), "This fixture requires buffered native media");
+        final var id = "20261020-0000-4000-8000-000000000006";
+        final var root = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers/" + id);
+        helper.assertTrue(!Files.exists(root), "Preserve an existing write failure fixture");
+        Files.createDirectories(root);
+        final var file = root.resolve("probe.bin");
+        Files.write(file, new byte[]{1, 2, 3});
+        Files.setLastModifiedTime(file, java.nio.file.attribute.FileTime.fromMillis(1000));
+        final var pos = helper.absolutePos(new BlockPos(1, 1, 1));
+        helper.getLevel().setBlockAndUpdate(pos, ModBlocks.DISK_DRIVE.get().defaultBlockState());
+        final var drive = (DiskDriveBlockEntity) helper.getLevel().getBlockEntity(pos);
+        final var stack = new ItemStack(ModItems.FLOPPY.get());
+        final var data = HardDiskDriveItem.stackDataTag(stack);
+        final var node = new CompoundTag(); node.putString("address", id); data.put("node", node);
+        final var fsTag = new CompoundTag(); fsTag.putString(NativeVolumeStore.STORAGE_TAG, id); data.put("fs", fsTag);
+        try {
+            drive.setItem(0, stack);
+            final var component = (Component) drive.onAnalyze(null, null, 0, 0, 0)[0];
+            final var fs = ((li.cil.oc.common.FileSystemEnvironment) component.host()).fileSystem();
+            final int writer = fs.open("probe.bin", li.cil.oc.api.fs.Mode.Append);
+            fs.getHandle(writer).write(new byte[]{4});
+            final var beforeEject = drive.getItem(0).copy();
+            Files.write(file, new byte[]{8});
+            boolean rejected = false;
+            try { drive.removeItemNoUpdate(0); } catch (RuntimeException expected) { rejected = true; }
+            helper.assertTrue(rejected, "Eject accepted a failed buffered save");
+            helper.assertTrue(ItemStack.isSameItemSameComponents(beforeEject, drive.getItem(0)), "Failed eject removed media or published uncommitted item metadata");
+            helper.assertTrue(Arrays.equals(new byte[]{8}, Files.readAllBytes(file)), "Failed save overwrote external content");
+            fs.getHandle(writer).write(new byte[]{5});
+            Files.write(file, new byte[]{1, 2, 3});
+            Files.setLastModifiedTime(file, java.nio.file.attribute.FileTime.fromMillis(1000));
+            final var ejected = drive.removeItemNoUpdate(0);
+            helper.assertTrue(ejected.getCount() == 1 && drive.getItem(0).isEmpty(), "Repaired eject lost or duplicated media");
+            helper.assertTrue(Arrays.equals(new byte[]{1, 2, 3, 4, 5}, Files.readAllBytes(file)), "Repaired eject lost buffered writes");
+        } finally { Files.deleteIfExists(file); Files.deleteIfExists(root); }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void corruptRawVolumeCannotDiscardItsDiskDriveOrSnapshot(GameTestHelper helper) throws Exception {
         final var id = "20261020-0000-4000-8000-000000000001";
         final var path = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers/" + id + ".bin");

@@ -68,6 +68,11 @@ public final class FileSystemEnvironment extends AbstractManagedEnvironment impl
         return fileSystem;
     }
 
+    /** Wait for saved bytes without closing live streams, including on failure. */
+    public void flush() {
+        FileSystemRegistry.flush(fileSystem);
+    }
+
     Label label() {
         return label;
     }

@@ -116,6 +116,8 @@ record DiskItemEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> sa
     @Override
     public void save(final CompoundTag nbt) {
         delegate.save(nbt);
+        // Publish item metadata only after its referenced bytes are durable.
+        if (delegate instanceof li.cil.oc.common.FileSystemEnvironment filesystem) filesystem.flush();
         if (storageRoot != null) nbt.getCompound("fs").putString(NativeVolumeStore.STORAGE_TAG, storageRoot);
         if (!lockInfo.isEmpty()) nbt.putString("oc:lock", lockInfo);
         if (saveData != null) {

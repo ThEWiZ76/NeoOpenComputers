@@ -105,6 +105,11 @@ final class FileSystemRegistry implements FileSystemAPI {
         return new ReadOnlyFileSystem(fileSystem);
     }
 
+    static void flush(FileSystem fileSystem) {
+        while (fileSystem instanceof ReadOnlyFileSystem readOnly) fileSystem = readOnly.inner;
+        if (fileSystem instanceof BufferedFileSystem buffered) buffered.flush();
+    }
+
     @Override
     public ManagedEnvironment asManagedEnvironment(final FileSystem fileSystem, final Label label, final EnvironmentHost host, final String accessSound, final int speed) {
         if (fileSystem == null) {
