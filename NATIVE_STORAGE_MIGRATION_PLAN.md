@@ -33,10 +33,10 @@ Files: create common/NativeVolumeStore.java and src/test/java/li/cil/oc/common/N
 
 Files: DiskItemEnvironment, HardDiskDriveItem, FloppyItem, ModSettings; native storage GameTests and existing unit fixtures.
 
-- [ ] Reproduce current native payload staying in NBT and missing world files with actual disk drivers/hosts.
-- [x] Restore buffered filesystem case policy before native wiring: upstream FileSystem.scala wraps BufferedFileSystem.segments with toCaseInsensitive when the actual filesystem is insensitive or filesystem.forceCaseInsensitiveFS=true (default false). Current BufferedFileSystem/MemoryFileSystem is case-sensitive. Test a forced policy deterministically, host-default lookup, creation/rename/open/load and duplicate-case legacy trees without silent merge or data loss. Keep API fromMemory case-sensitive.
-- [ ] Add filesystem.bufferChanges (default true); bind managed mounts to the active world and persist fs.oc:storage. Preserve old node identities and handle/owner metadata while importing inline data before old payload is omitted from future snapshots. No empty out-of-world driver substitution.
-- [ ] Replace serverless native-storage assumptions with explicit unit dependencies or actual world GameTests; retain their behavioral assertions. API fromMemory stays RAM.
+- [x] Reproduce current native payload staying in NBT and missing world files with actual disk drivers/hosts.
+- [x] Restore buffered filesystem case policy before native wiring: upstream FileSystem.scala wraps BufferedFileSystem.segments with toCaseInsensitive when the actual filesystem is insensitive or filesystem.forceCaseInsensitiveFS=true (default false). The pre-fix BufferedFileSystem/MemoryFileSystem was case-sensitive. Test a forced policy deterministically, host-default lookup, creation/rename/open/load and duplicate-case legacy trees without silent merge or data loss. Keep API fromMemory case-sensitive.
+- [x] Add filesystem.bufferChanges (default true); bind managed mounts to the active world and persist fs.oc:storage. Preserve old node identities and handle/owner metadata while importing inline data before old payload is omitted from future snapshots. No empty out-of-world driver substitution.
+- [x] Replace serverless native-storage assumptions with explicit unit dependencies or actual world GameTests; retain their behavioral assertions. API fromMemory stays RAM.
 - [ ] Test direct/buffered modes, locks, legacy data, capacity changes, item removal/copy/menu flows, current mode/no-op versus format, and address remapping without lost data. Commit/push verified integration.
 
 ### 3. RAID binding
@@ -69,3 +69,7 @@ Full port scope remains active. Cosmetic polish remains deferred. Beta estimate 
 [[../03 manuals/Native volume import]] records12 focused tests, build2218 units/922 mixed and complete normal exits. This closes the guarded import prerequisite only. Native runtime wiring, buffered case policy/configuration, RAID/raw storage and their actual process/client acceptance remain open; no migration of user disks occurred.
 
 Case-policy checkpoint: runtime `3babca34672ca4caae7c1c3a91e3188433282404`, full build2223 units/923 mixed required GameTests passes with normal exit. Host-default and forced config covered; API RAM unchanged, saved streams and collision preservation covered. See [[../03 manuals/Addon save-directory filesystems]]. Native factory/config bufferChanges, RAID and raw wiring remain open.
+
+## Native factory checkpoint — ed36a3f965e7df4bf3fe37af7e05f257763ee05d
+
+Managed HDD/floppy binding and defaulttrue bufferChanges are implemented. Build2224 units/927 mixed required GameTests; definitive native prepare PID51244/verify PID61292 each843 required tests, normal exits. NativeVolumeStore import inspection serialized with buffered IO, no tree in new native snapshots, stored independent bindings/locks/labels/handles. [[../03 manuals/Native volume import]] records evidence, the disk-full/cache incident, limitations and exact fixture archival. The final step2 test-matrix bullet stays open for broader capacity-change/direct-process/client flows; RAID/raw remain unimplemented. Continue RAID next.
