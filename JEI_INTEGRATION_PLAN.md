@@ -9,7 +9,7 @@ Target MC1.21.1/NeoForge21.1.234. Pinned JEI19.21.0.246; newer19.64 needs loader
 - [x] Class-only callback discovery, aliases/inheritance, font wrapping and multipage display wired.
 - [x] ItemSearch hover/focus lifecycle and simulated-input safety covered by focused unit cases.
 - [x] Subtype registration/interpreter implementation: assembled robot/microcontroller/drone/tablet components and floppy factory identity; ordinary disks ignore mutable labels/storage IDs. Registry contracts tested; actual client UID/overlay acceptance remains open. See [[../03 manuals/JEI item subtypes]].
-- [ ] Loot-disk cycling display must reflect the real enabled recipe and actual input-to-next-output relation, including registered disks.
+- [ ] Complete loot-disk cycling parity: display extension bfbddb03 uses the actual recipe and linked input/output pairs (including addon/opt-out inputs), tested with884 mixed/803 absent. Still restore upstream misc.lootRecrafting and verify authoritative disabled state, data-pack reload and real-client lookup/transfer. See [[../03 manuals/JEI loot disk cycling]].
 - [ ] Runtime disk addition: batch on the client thread, avoid duplicates/foreign stack mutation, detach/clear correctly across JEI runtime replacement.
 - [ ] Hidden ingredients: preserve upstream policy using actual current content and integration availability.
 - [ ] GUI extra areas: map the old relay tab to actual visible modern screen geometry; do not invent obsolete panels.
@@ -25,3 +25,5 @@ Loot cycling checkpoint b9ab176319f56fc6c8a882502a6006d01eef2206: actual craftin
 Addon factory checkpoint 80f2679c62cee8ebab07a288fff860f502e5e797: public registration now persists active mod namespace plus stable name. Old UUID implementation fails fresh-JVM factory resolution; fixed prepare/verify both805 tests, PIDs46984/42364. Build/2188 units and874 mixed pass. Equal-name cross-mod serialization/cycling isolation covered. See [[../03 manuals/Addon floppy factory persistence]]. Old UUID migration, client metadata sync and JEI runtime display remain open; installed client remains9bc57db. Beta3-6 concentrated workweeks, low confidence.
 
 Subtype checkpoint 202ae8d15b6ac5c8975a4673b5fd03aeac238a7b: build/2188 units/880 mixed/805 final JEI-only/802 absent pass. Prepared newest jar/hash and the source-audit recipe-vs-driver precedence discrepancy to reproduce before cycling display are in [[../03 manuals/JEI item subtypes]]. Current client still9bc57db; pending shutdown coordination has no reply yet.
+
+Checkpoint bfbddb03: actual-recipe JEI crafting extension and factory precedence4c7f161 implemented; build/2188 units/884 mixed/803 absent pass. The upstream true-default misc.lootRecrafting option is confirmed missing from the COMMON config. Next investigate conditional server recipe loading to restore the setting with correct synchronized client visibility, then runtime disk metadata/additions and remaining GUI/client gates. No profile update yet.
