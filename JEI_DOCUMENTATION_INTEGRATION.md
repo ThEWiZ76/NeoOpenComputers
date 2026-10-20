@@ -24,3 +24,12 @@ exit $LASTEXITCODE
 Require a GameTest completion summary, not just BUILD SUCCESSFUL. No Minecraft client was restarted or updated for this checkpoint. The named Modrinth client still runs the preceding RAID build and automatically pauses while unfocused. Coordinate a full jar/dependency/hash-verified restart on screen3 and resolve pause-on-focus-loss before client testing. Check JEI usage on an OC item, category order, inherited callback text/multipage Unicode wrapping, manual navigation and return, search focus versus terminal typing, hovered rack-module lookup, disconnect/reconnect and minimal/mixed profiles.
 
 Remaining: loot-disk recipe displays/subtypes, runtime registered-disk addition, hidden ingredients, actual visible GUI exclusion areas and upstream icon-animation parity; real client/GPU/survival/multiplayer/load and full integration acceptance remain open. Beta3-6 concentrated workweeks, low confidence.
+
+
+## 2026-10-20 real-client findings
+
+User-assisted overlay search/right-click on RAID opens the plugin's Manual category on installed9bc57db with JEI19.27.0.343. MCP can click the category button, while inventory overlay search/click and Ctrl+F injection did not focus JEI; the mod-specific keybinding is unsupported by the MCP tool. Actual category rendering is confirmed for this mixed profile, not all callback pages/input paths.
+
+The first link click renders the old home page; reopening the manual renders Raid. ManualRegistry.navigate updates history without refreshing an existing screen, so fix6f70021b880e369e30beabb9cab7d9108bf9ba37 selects the path BEFORE opening/initializing ManualScreen. Build/all2188 units pass. No additional whole-server rerun was needed for this client-only ordering correction; server874 mixed and both805 restart summaries belong to the preceding addon-factory runtime. A new profile jar/restart is still required for fixed-first-click acceptance.
+
+Raid's legacy oredict:oc:raid image renders a red question mark. Investigate the OC content-alias vs modern-tag resolution in OreDictImageProvider rather than claiming manual visual parity. API tabs/multipage wrapping/order for a callback-bearing item, input bridge, reconnect, minimal profile and the rest of JEI scope remain open. See [[Minecraft test window]] for installed hash/PID/screenshots and user-confirmed screen3 placement.
