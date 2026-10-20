@@ -70,3 +70,8 @@ No real client, Modrinth jar replacement, production operation or OS Computer Us
 Chest generation is implemented at the checkpoint below. Live client/structure discovery and broader compatibility remain open; targeted native world/legacy disk restart proof is recorded above. The full port is not complete.
 
 World descriptors are loaded at server startup; live editing/reload/broadcast is not implemented here. Actual client metadata/JEI/crafting/reconnect acceptance, wider native host/architecture/load and broader platform acceptance remain open; the case/two-drive native5.3 world-descriptor restart is now proven above. Full port goal remains active; beta estimate3-6 concentrated workweeks, low confidence.
+
+
+## Shared read-only handle regression — 57b2250819f0a59b8a1ea2639c5fdb6c34c8db02
+
+[[Managed disk locking]] records the later shared-wrapper fix and expands the native restart fixture with a third, internal locked managed HDD. The earlier two-drive checkpoint remains historical proof; current restartWorldLoot runs also assert3 open handles, persisted HDD lock owner and write denial after JVM restart. New world oc-restart-world-loot-managed-lock-20261020-01: PIDs59468/64684, both831 tests with normal exits; build2204 units and915 mixed tests pass. No native backend migration or client/CU action.
