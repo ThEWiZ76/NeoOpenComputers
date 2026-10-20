@@ -17,7 +17,7 @@ Baseline7d9eac5584e238a890a388a0f697c27c7391caa4 contains171 integration source 
 | forestry | 6 | 9 | Bee/analyzer/genetics APIs and converters. getDrone means the bee-house callback, not an OC drone/debug-card method. Modern provider/version still to verify. |
 | ic2 | 10 | 24 | Reactor/mass-fabricator/energy/conductor callbacks and electric-item support. Modern API/replacement choice still unverified. |
 | jei | 7 | 0 | Official1.21/1.21.1 NeoForge setup verified. Manual/callback docs/loot cycling/GUI integration remains open. |
-| mekanism | 4 | 0 | Power/item charging plus gas conversion. Modern chemical APIs require explicit mapping and tests; FE/fluid capability support is not complete parity. |
+| mekanism | 4 | 0 | Pinned1.21.1-10.7.19.85 chemical converter and native wrench abilities mapped at8e852cb54, with real long/native53, all-mode interaction and drone pickup proof. Shared FE item charging and core wrench eligibility restored; real native cube/cable-to-OC power flow verified. Build/773 mixed/734 standalone/727 absent. No machine component or ExtraCells API silently invented. Full client/multiplayer/restart/load/config acceptance remains open. See MEKANISM_INTEGRATION.md. |
 | minecraft | 22 | 30 | Vanilla drivers/converters exist; exact callback/config/resource/player acceptance remains in the main parity matrix. |
 | minecraftforge | 3 | 4 | Modern NeoForge capabilities used. Old power/events/config behavior requires contract-level review, not only interface substitution. |
 | opencomputers | 56 | 0 | Core OC items/upgrades/providers, not an external-mod count. Existing implementations/tests remain subject to host/API semantic audit. |
@@ -31,17 +31,19 @@ Baseline7d9eac5584e238a890a388a0f697c27c7391caa4 contains171 integration source 
 
 ## Availability evidence checked this checkpoint
 
+- Mekanism: the [publisher setup](https://github.com/mekanism/Mekanism/tree/1.21.x) links ModMaven; its metadata and exact1.21.1-10.7.19.85 API/source/POM artifacts were verified on2026-10-20. The pinned core now has chemical/wrench/shared-FE server proof; see [[../03 manuals/Mekanism integration and FE item charging]]. This does not close ExtraCells or other provider families.
+
 - AE2: publisher-linked Modrinth API lists19.2.18 as a1.21.1 NeoForge release. Its official [1.21.1 branch/API guidance](https://github.com/AppliedEnergistics/Applied-Energistics-2/tree/1.21.1) provides the Maven Central API artifact. This proves an implementation target exists, not OC integration.
 - JEI: the maintainer's [1.21/1.21.1 setup](https://github.com/mezz/JustEnoughItems/wiki/Getting-Started-%5BMinecraft-1.21-and-1.21.1%5D) documents NeoForge/NeoGradle API and runtime artifacts. Publisher-linked Modrinth metadata lists stable19.64.0.455; no JEI dependency was added in this checkpoint.
 - EnderStorage: official1.21.1 Git branch and published1.21.1-2.13.0.190/.191 Maven artifacts verified. Use [[../03 manuals/EnderStorage integration]] for the implemented five-callback contract and exact dependencies/proof. A similarly named Modrinth project without a source link was not used as authoritative evidence of this mod's absence.
-- Existing ProjectRed/CC versions and proof remain in their manuals. All other availability entries above are deliberately unverified until checked against primary provider sources. No legacy integration was silently dropped or declared non-applicable.
+- Existing ProjectRed/CC versions and proof remain in their manuals. Remaining provider families not listed above are deliberately unverified until checked against primary provider sources. No legacy integration was silently dropped or declared non-applicable.
 
 Read-only evidence snapshots and pinned source extracts live under build/finish-port-implementation/integration-discovery/. Network discovery used public GitHub APIs/raw source, publisher Maven metadata and publisher-linked Modrinth metadata; no credentials were used. Public APIs can change, so the dated versions are pinned targets, not perpetual latest-version claims.
 
 ## Next implementation order
 
 1. AE2 adapter network/storage/crafting contracts, including real powered-grid tests; then interface/import-export and converter behavior. Keep async crafting state, callbacks, arguments/results/errors, energy and owner/security behavior explicit.
-2. Complete the CC peripheral/media/relay contract audit and modern chemical/power/item-charging mappings.
+2. Complete the CC peripheral/media/relay audit and other energy/security/provider mappings. Mekanism chemical/native-wrench and shared FE item-charging core now have server proof; broader acceptance remains open.
 3. JEI/manual/tooltip integrations with actual client acceptance, and each remaining provider family or an explicit compatibility/replacement decision backed by primary sources.
 4. Supported minimal/mixed profiles, optional-classloading/packaging, save/unload/restart, multiplayer/protection and long-load acceptance. Client work must respect the screen3 constraint.
 
@@ -52,3 +54,5 @@ Export checkpoint 37fb64458a819bd3e45377174a1cabdf69e7bf41: actual exportIntoSlo
 Auxiliary AE2 checkpoint cf37b92c85bf5cbfb0979427e9b811959a569b97: real item/fluid cell descriptions, basic-cell capacity/content metrics, live/wrapper support and AE2 tagged-wrench OC use restored. Default spatial strategy already preserves OC print NBT/orientation; no redundant mover added. Four new tests; build/2141 units/750 mixed/726 absent green. See [[../03 manuals/AE2 cell descriptions and auxiliary hooks]]. Full spatial/client and remaining crafting/stability/global integration acceptance stay open. Beta3-6 concentrated workweeks, low confidence; no client/Computer Use action.
 
 AE2 failure checkpoint ece63b5f4470c66d2135391ad051533d5c40dfb3: reproduced/fixed late named-CPU lookup that accepted a same-name replacement. Capture actual CPU before calculation; disappearance returns cpu_offline. Fifteen real controller/block/panel tests prove CPU removal/replacement, missing/same-kind-replaced hosts and submitted-host failure with exact 16-log conservation/alias cleanup. Build/2141 units/765 mixed/726 absent; actual770-test prepare/verify JVMs in oc-restart-ae2-failures-20261020-01, PIDs45520/38640. See [[../03 manuals/AE2 CPU and target failures]]. Computing-save/multi-grid/future/load/client and global integration gates remain open. Beta3-6 concentrated workweeks, low confidence; no client/Computer Use action.
+
+Mekanism checkpoint 8e852cb544df38e7bba0becd166a4e6ab64d0465: optional chemical descriptions/native configurator ability mapping, exact long/native53 proof, generic FE item charging and original OC wrench eligibility/notification restored. Adapter/charger honor usability; ProjectRed charger usage consumes once; drone keeps upstream type-only pickup. Seven new Mekanism tests plus one core test and artifact/POM guard; build/2142 units/773 mixed/734 Mekanism-only/727 absent pass in isolated worlds with clean exit. Native cube/cable transfers1000FE to OC. Reused-world shutdown unload loop and discarded premature world-lock run documented, not claimed fixed. See [[../03 manuals/Mekanism integration and FE item charging]]. Client/multiplayer/load and other integration/semantic gates remain open; beta3-6 concentrated workweeks, low confidence. No client/Computer Use action.
