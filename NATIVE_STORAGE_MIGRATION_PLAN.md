@@ -34,7 +34,7 @@ Files: create common/NativeVolumeStore.java and src/test/java/li/cil/oc/common/N
 Files: DiskItemEnvironment, HardDiskDriveItem, FloppyItem, ModSettings; native storage GameTests and existing unit fixtures.
 
 - [ ] Reproduce current native payload staying in NBT and missing world files with actual disk drivers/hosts.
-- [ ] Restore buffered filesystem case policy before native wiring: upstream FileSystem.scala wraps BufferedFileSystem.segments with toCaseInsensitive when the actual filesystem is insensitive or filesystem.forceCaseInsensitiveFS=true (default false). Current BufferedFileSystem/MemoryFileSystem is case-sensitive. Test a forced policy deterministically, host-default lookup, creation/rename/open/load and duplicate-case legacy trees without silent merge or data loss. Keep API fromMemory case-sensitive.
+- [x] Restore buffered filesystem case policy before native wiring: upstream FileSystem.scala wraps BufferedFileSystem.segments with toCaseInsensitive when the actual filesystem is insensitive or filesystem.forceCaseInsensitiveFS=true (default false). Current BufferedFileSystem/MemoryFileSystem is case-sensitive. Test a forced policy deterministically, host-default lookup, creation/rename/open/load and duplicate-case legacy trees without silent merge or data loss. Keep API fromMemory case-sensitive.
 - [ ] Add filesystem.bufferChanges (default true); bind managed mounts to the active world and persist fs.oc:storage. Preserve old node identities and handle/owner metadata while importing inline data before old payload is omitted from future snapshots. No empty out-of-world driver substitution.
 - [ ] Replace serverless native-storage assumptions with explicit unit dependencies or actual world GameTests; retain their behavioral assertions. API fromMemory stays RAM.
 - [ ] Test direct/buffered modes, locks, legacy data, capacity changes, item removal/copy/menu flows, current mode/no-op versus format, and address remapping without lost data. Commit/push verified integration.
@@ -67,3 +67,5 @@ Full port scope remains active. Cosmetic polish remains deferred. Beta estimate 
 ## Step1 checkpoint — 25129d5118e22ec3cdbae0687f9c5755179e90b7
 
 [[../03 manuals/Native volume import]] records12 focused tests, build2218 units/922 mixed and complete normal exits. This closes the guarded import prerequisite only. Native runtime wiring, buffered case policy/configuration, RAID/raw storage and their actual process/client acceptance remain open; no migration of user disks occurred.
+
+Case-policy checkpoint: runtime `3babca34672ca4caae7c1c3a91e3188433282404`, full build2223 units/923 mixed required GameTests passes with normal exit. Host-default and forced config covered; API RAM unchanged, saved streams and collision preservation covered. See [[../03 manuals/Addon save-directory filesystems]]. Native factory/config bufferChanges, RAID and raw wiring remain open.
