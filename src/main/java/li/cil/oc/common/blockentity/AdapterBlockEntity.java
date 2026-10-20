@@ -154,13 +154,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     @Override
     public void saveItemData(final int slot) {
         if (slot != UPGRADE_SLOT || itemEnvironment == null || itemDriver == null || itemEnvironmentStack.isEmpty()) return;
-        final CompoundTag data = new CompoundTag();
-        itemEnvironment.save(data);
-        final CompoundTag target = ItemDriverData.driverDataTag(itemDriver, itemEnvironmentStack);
-        for (String key : java.util.Set.copyOf(target.getAllKeys())) target.remove(key);
-        target.merge(data);
-        final CustomData customData = itemEnvironmentStack.get(DataComponents.CUSTOM_DATA);
-        if (customData != null) itemEnvironmentStack.set(DataComponents.CUSTOM_DATA, CustomData.of(customData.copyTag()));
+        ItemDriverData.saveEnvironment(itemDriver, itemEnvironmentStack, itemEnvironment);
     }
 
     @Override

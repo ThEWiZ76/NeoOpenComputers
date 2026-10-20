@@ -1585,10 +1585,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
     private void saveRuntimeComponent(final RuntimeComponent component) {
         final DriverItem driver = Driver.driverFor(component.stack(), Robot.class);
         if (driver != null) {
-            component.environment().save(ItemDriverData.driverDataTag(driver, component.stack()));
-            final var data = component.stack().get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-            if (data != null) component.stack().set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
-                net.minecraft.world.item.component.CustomData.of(data.copyTag()));
+            ItemDriverData.saveEnvironment(driver, component.stack(), component.environment());
         }
     }
 

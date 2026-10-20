@@ -711,3 +711,7 @@ Installed/tested client runtime782fddfd7 with separate API addon after verified7
 ## Built-in fresh item-save checkpoint - 2026-10-21
 
 Fresh-output regressions reproduce missing EEPROM firmware/user/label/readonly and CPU/APU architecture serialization. Independently, actual GPU disconnect strips APU architecture through eager save. Fix driver-owned serializers using only owned fields; retain node/publication behavior. Baseline2240 units/1 failure plus859 tests/3 failures; fixed build2240 units/859 required tests pass with exit0. See [[../03 manuals/API addon runtime]]. Generic cleared-tag shortcut and broader save/load/error/owner contracts still open. Client remains tested782fddfd7; new repair server-only. Beta3-6 concentrated workweeks, low confidence.
+
+## Strict addon item-save checkpoint - 2026-10-21
+
+Actual addon default/null/custom-child saves across case/robot/adapter/charger reproduce9 failures; shared fresh-tag publication and charger load fix them. Fixed879 addon tests, native896 tests in each distinct-JVM phase, mixed974 and absent859;2240 units, all terminal exit0. Native Lua5.3/5.4 on five hosts preserve addon state/cycles/open binary handles. Full details and remaining gates: [[../03 manuals/API addon runtime]]. Client still782fddfd7; newest repair server-tested only. Beta3-6 concentrated workweeks, low confidence.

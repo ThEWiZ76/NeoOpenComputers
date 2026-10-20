@@ -2,6 +2,7 @@ package li.cil.oc.common.item;
 
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.network.ManagedEnvironment;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -52,6 +53,12 @@ public final class ItemDriverData {
 
     public static boolean isClientSide(final EnvironmentHost host) {
         return host != null && host.world() != null && host.world().isClientSide;
+    }
+
+    public static void saveEnvironment(final DriverItem driver, final ItemStack stack, final ManagedEnvironment environment) {
+        final var saved = new CompoundTag();
+        environment.save(saved);
+        writeDriverDataTag(driver, stack, saved);
     }
 
     public static void writeDriverDataTag(final DriverItem driver, final ItemStack stack, final CompoundTag data) {

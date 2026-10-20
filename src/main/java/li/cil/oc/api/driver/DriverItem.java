@@ -14,6 +14,10 @@ public interface DriverItem {
 
     int tier(ItemStack stack);
 
-    /** Item-owned child tag for environment persistence, or null to use the default oc:data child. */
+    /**
+     * Item-owned child tag for environment persistence, or null to use the default oc:data child.
+     * Hosts load a copy of this state and pass an empty tag to save, then replace
+     * this child with the produced state. Sibling item data is preserved.
+     */
     CompoundTag dataTag(ItemStack stack);
 }

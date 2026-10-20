@@ -16,6 +16,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -43,7 +44,7 @@ public final class ApiSmokeAddon {
 
     private record Description(String name) { }
 
-    public static final class CardDriver extends li.cil.oc.api.prefab.DriverItem {
+    public static final class CardDriver extends li.cil.oc.api.prefab.DriverItem implements li.cil.oc.api.driver.item.Chargeable {
         @Override
         public boolean worksWith(ItemStack stack) {
             final var data = stack.get(DataComponents.CUSTOM_DATA);
@@ -52,12 +53,34 @@ public final class ApiSmokeAddon {
         @Override
         public String slot(ItemStack stack) {
             final var data = stack.get(DataComponents.CUSTOM_DATA);
+            if (data != null && data.copyTag().getBoolean("oc_api_smoke_tablet")) return Slot.Tablet;
             return data != null && data.copyTag().getBoolean("oc_api_smoke_upgrade") ? Slot.Upgrade : Slot.Card;
         }
         @Override
+        @SuppressWarnings("deprecation")
         public CompoundTag dataTag(ItemStack stack) {
             final var data = stack.get(DataComponents.CUSTOM_DATA);
-            return data != null && data.copyTag().getBoolean("oc_api_smoke_null_tag") ? null : super.dataTag(stack);
+            if (data != null && data.copyTag().getBoolean("oc_api_smoke_null_tag")) return null;
+            if (data != null && data.copyTag().getBoolean("oc_api_smoke_custom_tag")) {
+                final var root = data.getUnsafe();
+                if (!root.contains("apiSmokeData")) root.put("apiSmokeData", new CompoundTag());
+                return root.getCompound("apiSmokeData");
+            }
+            return super.dataTag(stack);
+        }
+        @Override public boolean canCharge(ItemStack stack) {
+            final var data = stack.get(DataComponents.CUSTOM_DATA);
+            return data != null && data.copyTag().getBoolean("oc_api_smoke_tablet");
+        }
+        @Override public double charge(ItemStack stack, double amount, boolean simulate) {
+            if (!canCharge(stack) || !(amount > 0)) return 0;
+            final var root = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+            final double accepted = Math.min(amount, Math.max(0, 1000 - root.getDouble("apiSmokeCharge")));
+            if (!simulate && accepted > 0) {
+                root.putDouble("apiSmokeCharge", root.getDouble("apiSmokeCharge") + accepted);
+                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+            }
+            return accepted;
         }
         @Override
         public ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {

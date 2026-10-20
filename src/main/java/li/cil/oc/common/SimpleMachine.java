@@ -1145,10 +1145,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
                 final var stack = entry.getKey();
                 final var driver = Driver.driverFor(stack, host.getClass());
                 if (driver != null && stack != null && !stack.isEmpty()) {
-                    // shortcut: retain built-in stack configuration; audit cleared-tag semantics before closing full addon parity.
-                    final var data = ItemDriverData.driverDataTag(driver, stack).copy();
-                    environment.save(data);
-                    li.cil.oc.common.item.ItemDriverData.writeDriverDataTag(driver, stack, data);
+                    ItemDriverData.saveEnvironment(driver, stack, environment);
                     return;
                 }
             }

@@ -447,6 +447,7 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
             return;
         }
         tabletFilesystem = driver.createEnvironment(stack, this);
+        if (tabletFilesystem != null) tabletFilesystem.load(ItemDriverData.driverDataTag(driver, stack).copy());
         connectTabletFilesystem();
     }
 
@@ -472,7 +473,7 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
         if (driver == null || !Slot.Tablet.equals(driver.slot(stack))) {
             return;
         }
-        tabletFilesystem.save(ItemDriverData.driverDataTag(driver, stack));
+        ItemDriverData.saveEnvironment(driver, stack, tabletFilesystem);
     }
 
     private void removeTabletFilesystem() {
