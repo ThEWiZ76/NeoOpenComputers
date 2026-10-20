@@ -64,28 +64,37 @@ public final class NativeVolumeStore {
             final var target = checked(world.resolve("opencomputers").resolve(root));
             final var journals = checked(world.resolve("opencomputers/.native-imports"));
             final var journal = checked(journals.resolve(hash(root) + ".nbt"));
-            final var previous = Files.exists(journal, LinkOption.NOFOLLOW_LINKS) ? readJournal(journal, root) : null;
-            if (previous != null) {
-                if (inline && !previous.getString("digest").equals(digest)) throw new IOException("Conflicting inline snapshot for native volume " + root);
-                if (previous.getBoolean("complete")) {
-                    if (!Files.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) throw new IOException("Completed native volume is missing: " + root);
-                    verifyExisting(target, null, false);
-                } else {
-                    if (!inline) throw new IOException("Pending native import requires its original inline snapshot: " + root);
-                    verifyExisting(target, entries, true);
-                    importEntries(target, journals, entries);
-                    writeJournal(journal, root, digest, true, true);
-                }
-            } else if (inline) {
-                final boolean existed = Files.exists(target, LinkOption.NOFOLLOW_LINKS);
-                verifyExisting(target, entries, !existed);
-                Files.createDirectories(journals);
-                writeJournal(journal, root, digest, false, false);
-                if (!existed) importEntries(target, journals, entries);
-                writeJournal(journal, root, digest, true, true);
-            } else {
-                if (bound && !Files.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) throw new IOException("Bound native volume is missing: " + root);
-                verifyExisting(target, null, true);
+            // Inspect/import between buffered commits, never while their temporary files are being replaced.
+            try {
+                BufferedFileSystem.awaitIO(() -> {
+                    final var previous = Files.exists(journal, LinkOption.NOFOLLOW_LINKS) ? readJournal(journal, root) : null;
+                    if (previous != null) {
+                        if (inline && !previous.getString("digest").equals(digest)) throw new IOException("Conflicting inline snapshot for native volume " + root);
+                        if (previous.getBoolean("complete")) {
+                            if (!Files.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) throw new IOException("Completed native volume is missing: " + root);
+                            verifyExisting(target, null, false);
+                        } else {
+                            if (!inline) throw new IOException("Pending native import requires its original inline snapshot: " + root);
+                            verifyExisting(target, entries, true);
+                            importEntries(target, journals, entries);
+                            writeJournal(journal, root, digest, true, true);
+                        }
+                    } else if (inline) {
+                        final boolean existed = Files.exists(target, LinkOption.NOFOLLOW_LINKS);
+                        verifyExisting(target, entries, !existed);
+                        Files.createDirectories(journals);
+                        writeJournal(journal, root, digest, false, false);
+                        if (!existed) importEntries(target, journals, entries);
+                        writeJournal(journal, root, digest, true, true);
+                    } else {
+                        if (bound && !Files.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) throw new IOException("Bound native volume is missing: " + root);
+                        verifyExisting(target, null, true);
+                    }
+                    return null;
+                });
+            } catch (IllegalStateException failure) {
+                if (failure.getCause() instanceof IOException io) throw io;
+                throw failure;
             }
             final var fileSystem = new FileSystemRegistry(() -> world).fromSaveDirectory(root, capacity, buffered);
             if (fileSystem == null) throw new IOException("Cannot open native volume " + root);

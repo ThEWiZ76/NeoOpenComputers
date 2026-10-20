@@ -7,29 +7,60 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.common.DriveEnvironment;
+import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.NativeVolumeStore;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.LevelResource;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Map;
 import java.util.function.Consumer;
 
-record DiskItemEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData, String lockInfo) implements ManagedEnvironment, DeviceInfo {
+record DiskItemEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData, String lockInfo, String storageRoot) implements ManagedEnvironment, DeviceInfo {
+
+    DiskItemEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> saveData, String lockInfo) {
+        this(delegate, saveData, lockInfo, null);
+    }
 
     static ManagedEnvironment create(long capacity, int platters, int speed, String sound,
                                      CompoundTag data, Consumer<CompoundTag> saveData, EnvironmentHost host, String fallbackLabel) {
+        final var server = ServerLifecycleHooks.getCurrentServer();
+        final var storage = server == null ? null : new NativeVolumeStore(server.getWorldPath(LevelResource.ROOT));
+        return create(capacity, platters, speed, sound, data, saveData, host, fallbackLabel, storage);
+    }
+
+    static ManagedEnvironment create(long capacity, int platters, int speed, String sound,
+                                     CompoundTag data, Consumer<CompoundTag> saveData, EnvironmentHost host, String fallbackLabel,
+                                     NativeVolumeStore storage) {
         final String lockInfo = HardDiskDriveItem.lockInfo(data);
         final ManagedEnvironment environment;
+        final var source = data == null ? new CompoundTag() : data.copy();
+        String storageRoot = null;
         if (HardDiskDriveItem.isUnmanaged(data)) {
             environment = new DriveEnvironment((int) capacity, platters, new ItemDiskLabel(fallbackLabel), host, sound, speed, lockInfo);
         } else {
-            final var fileSystem = FileSystem.fromMemory(capacity);
-            if (fileSystem == null) return null;
+            if (storage == null) return null;
+            final NativeVolumeStore.Mount mount;
+            try { mount = storage.openManaged(source, capacity, ModSettings.bufferChanges()); }
+            catch (IOException failure) { throw new UncheckedIOException("Cannot mount native managed disk", failure); }
+            final var fileSystem = mount.fileSystem();
+            storageRoot = mount.storageRoot();
+            final var node = source.getCompound("node");
+            node.putString("address", mount.nodeAddress()); source.put("node", node);
+            final var metadata = source.getCompound("fs");
+            metadata.putString(NativeVolumeStore.STORAGE_TAG, storageRoot); source.put("fs", metadata);
             final String label = data != null && data.contains(ItemDiskLabel.TAG) ? data.getString(ItemDiskLabel.TAG) : fallbackLabel;
             environment = lockInfo.isEmpty()
                 ? FileSystem.asManagedEnvironment(fileSystem, new ItemDiskLabel(fallbackLabel), host, sound, speed)
                 : FileSystem.asManagedEnvironment(FileSystem.asReadOnly(fileSystem), label, host, sound, speed);
+            if (environment == null) { fileSystem.close(); return null; }
+            try { environment.load(source); }
+            catch (RuntimeException failure) { fileSystem.close(); throw failure; }
         }
         if (environment == null) return null;
-        if (data != null && !data.isEmpty()) environment.load(data);
-        return new DiskItemEnvironment(environment, saveData, lockInfo);
+        if (storageRoot == null && !source.isEmpty()) environment.load(source);
+        return new DiskItemEnvironment(environment, saveData, lockInfo, storageRoot);
     }
 
     @Override
@@ -64,12 +95,17 @@ record DiskItemEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> sa
 
     @Override
     public void load(final CompoundTag nbt) {
+        final String binding = nbt.getCompound("fs").getString(NativeVolumeStore.STORAGE_TAG);
+        if (storageRoot != null && !binding.isEmpty() && !storageRoot.equals(binding)) {
+            throw new IllegalArgumentException("Cannot replace an open native disk's storage binding");
+        }
         delegate.load(nbt);
     }
 
     @Override
     public void save(final CompoundTag nbt) {
         delegate.save(nbt);
+        if (storageRoot != null) nbt.getCompound("fs").putString(NativeVolumeStore.STORAGE_TAG, storageRoot);
         if (!lockInfo.isEmpty()) nbt.putString("oc:lock", lockInfo);
         if (saveData != null) {
             saveData.accept(nbt.copy());

@@ -93,6 +93,7 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue TMP_SIZE;
     public static final ModConfigSpec.IntValue FILE_COST;
     public static final ModConfigSpec.BooleanValue FORCE_CASE_INSENSITIVE_FS;
+    public static final ModConfigSpec.BooleanValue BUFFER_CHANGES;
     public static final ModConfigSpec.IntValue FLOPPY_SIZE;
     public static final ModConfigSpec.DoubleValue HDD_READ;
     public static final ModConfigSpec.DoubleValue HDD_WRITE;
@@ -461,6 +462,9 @@ public final class ModSettings {
         builder.pop();
 
         builder.push("filesystem");
+        BUFFER_CHANGES = builder
+            .comment("Keep managed native disk changes in memory until the host saves. OpenComputers upstream default is true.")
+            .define("bufferChanges", true);
         FORCE_CASE_INSENSITIVE_FS = builder
             .comment("Ignore filename case on buffered filesystems even when the host filesystem is case-sensitive.")
             .define("forceCaseInsensitiveFS", false);
@@ -1491,6 +1495,10 @@ public final class ModSettings {
 
     public static boolean forceCaseInsensitiveFS() {
         return booleanValue(FORCE_CASE_INSENSITIVE_FS);
+    }
+
+    public static boolean bufferChanges() {
+        return booleanValue(BUFFER_CHANGES);
     }
 
     public static int fileCost() {

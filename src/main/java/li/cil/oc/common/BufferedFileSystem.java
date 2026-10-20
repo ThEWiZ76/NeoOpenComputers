@@ -269,7 +269,7 @@ final class BufferedFileSystem extends FileSystemRegistry.MemoryFileSystem {
         }
     }
 
-    private static <T> T awaitIO(Callable<T> work) {
+    static <T> T awaitIO(Callable<T> work) {
         try { return IO.submit(work).get(); }
         catch (InterruptedException failure) {
             Thread.currentThread().interrupt();

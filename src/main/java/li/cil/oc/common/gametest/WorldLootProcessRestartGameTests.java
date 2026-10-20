@@ -6,6 +6,7 @@ import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModLootDisks;
+import li.cil.oc.common.NativeVolumeStore;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.DiskDriveBlockEntity;
 import li.cil.oc.common.item.ItemDriverData;
@@ -174,12 +175,16 @@ public final class WorldLootProcessRestartGameTests {
                 && data.getString("floppy").equals(floppyDrive.node().address()), "Storage host addresses changed");
             helper.assertTrue(marker(computer).equals("world-loot-waiting"), "World loot continuation already ran; use a fresh prepare/verify pair");
             helper.assertTrue(HardDiskDriveItem.lockInfo(computer.getItem(ComputerCaseBlockEntity.SLOT_HDD)).equals("Fixture owner"), "Managed HDD lock lost across JVM restart");
+            managedBacking(helper, computer.getItem(ComputerCaseBlockEntity.SLOT_HDD));
+            managedBacking(helper, floppyDrive.getItem(0));
             helper.assertTrue(computer.machine().isRunning() && computer.machine().signal("resume_world_loot"), "World loot VM did not retain running state");
         }
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(marker(computer).equals(prepare ? "world-loot-waiting" : "world-loot-resumed"), "World loot continuation failed: " + computer.machine().lastError()))
             .thenExecute(() -> {
                 helper.assertTrue(sourceBytes(helper), "Read-only world loot source files were modified");
                 computer.saveWithFullMetadata(level.registryAccess());
+                managedBacking(helper, computer.getItem(ComputerCaseBlockEntity.SLOT_HDD));
+                managedBacking(helper, floppyDrive.getItem(0));
                 helper.assertTrue(HardDiskDriveItem.lockInfo(computer.getItem(ComputerCaseBlockEntity.SLOT_HDD)).equals("Fixture owner"), "Saving resumed native host discarded the HDD lock");
                 for (final var disk : List.of(rawDrive.getItem(0), floppyDrive.getItem(0))) helper.assertTrue(HardDiskDriveItem.lockInfo(disk).equals("Fixture owner"), "Saving storage host discarded a floppy lock");
                 helper.assertTrue(HardDiskDriveItem.isUnmanaged(rawDrive.getItem(0)) && !HardDiskDriveItem.isUnmanaged(floppyDrive.getItem(0)), "Floppy modes changed at save/restart");
@@ -215,5 +220,16 @@ public final class WorldLootProcessRestartGameTests {
 
     private static String marker(ComputerCaseBlockEntity computer) {
         return new String(ItemDriverData.dataTag(computer.getItem(6)).getByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG), StandardCharsets.UTF_8);
+    }
+
+    private static void managedBacking(GameTestHelper helper, ItemStack disk) {
+        final var metadata = HardDiskDriveItem.stackDataTag(disk).getCompound("fs");
+        final var binding = metadata.getString(NativeVolumeStore.STORAGE_TAG);
+        helper.assertTrue(!metadata.contains("children") && binding.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"),
+            "Native managed restart disk has no world binding or still embeds its file tree");
+        try {
+            final var path = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers").resolve(binding).resolve("probe.bin");
+            helper.assertTrue(Arrays.equals(Files.readAllBytes(path), new byte[]{97, 0, (byte) 128, (byte) 255, 42}), "Native managed world file differs at JVM checkpoint");
+        } catch (java.io.IOException failure) { throw new java.io.UncheckedIOException(failure); }
     }
 }
