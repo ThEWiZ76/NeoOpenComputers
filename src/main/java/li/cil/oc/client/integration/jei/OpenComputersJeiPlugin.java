@@ -12,6 +12,7 @@ import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.ISubtypeRegistration;
+import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -44,6 +45,16 @@ public final class OpenComputersJeiPlugin implements IModPlugin {
         registration.addRecipeCategories(
             new DocumentationCategory(MANUAL, "jei.neoopencomputers.manual", helper, new ItemStack(ModItems.MANUAL.get())),
             new DocumentationCategory(CALLBACKS, "jei.neoopencomputers.api", helper, new ItemStack(ModItems.TABLET.get())));
+    }
+
+    @Override public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
+        registration.getCraftingCategory().addExtension(li.cil.oc.common.recipe.LootDiskCyclingRecipe.class,
+            new LootDiskCyclingExtension(() -> registration.getJeiHelpers().getIngredientManager().getAllIngredients(VanillaTypes.ITEM_STACK),
+                () -> ClientWorld.level()));
+    }
+
+    private static final class ClientWorld {
+        static net.minecraft.world.level.Level level() { return Minecraft.getInstance().level; }
     }
 
     @Override public void registerRecipes(IRecipeRegistration registration) {
