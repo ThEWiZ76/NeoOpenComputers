@@ -91,7 +91,7 @@ public final class ItemRegistry implements ItemAPI {
         if (doRecipeCycling) cyclingDisksById.put(factoryId, stack.copy());
         else cyclingDisksById.remove(factoryId);
         rememberCreativeStackSupplier(stack::copy);
-        return stack;
+        return stack.copy();
     }
 
     public List<ItemStack> disksForCycling() {
@@ -117,7 +117,7 @@ public final class ItemRegistry implements ItemAPI {
         root.put(EEPROM_DATA_TAG, eepromData);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
         rememberCreativeStackSupplier(stack::copy);
-        return stack;
+        return stack.copy();
     }
 
     void rememberCreativeStackSupplier(final Supplier<ItemStack> stackSupplier) {
