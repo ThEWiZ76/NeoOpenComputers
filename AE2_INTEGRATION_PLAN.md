@@ -26,10 +26,10 @@ Files: build.gradle; src/main/resources/META-INF/neoforge.mods.toml; src/main/ja
 
 Files: integration/ae2/CraftableValue.java, CraftingStatusValue.java and supporting request state only if needed; integration driver; AE2 GameTests and focused unit tests.
 
-- [ ] Read modern ICraftingSimulationRequester, calculation, submit-result/link and pattern APIs. Reproduce missing getCraftables against real molecular assembler/pattern provider/storage/CPU setup.
-- [ ] Implement getCraftables(filter), getItemStack, requesting and request(amount=1,prioritizePower=true,cpuName=""). Preserve upstream error/result contracts and recipe output count.
-- [ ] Calculate asynchronously; consume Future off-thread, submit exactly once on server thread. Handle failed calculation, insufficient storage, unavailable/busy/named CPU and removed grid.
-- [ ] Implement status computing/isDone/isCanceled/cancel; prove actual completed output and cancellation/resource conservation, including Lua calls.
+- [x] Read modern ICraftingSimulationRequester, calculation, submit-result/link and pattern APIs. Reproduce missing getCraftables against real molecular assembler/pattern provider/storage/CPU setup.
+- [x] Implement getCraftables(filter), getItemStack, requesting and request(amount=1,prioritizePower=true,cpuName=""). Preserve upstream error/result contracts and recipe output count.
+- [ ] Complete calculation/submission failure matrix. Implemented: AE2 asynchronous calculation, server-thread Future.isDone polling and get only after completion (nonblocking), then exactly-once submission; this replaces an unnecessary extra waiting worker. Handle failed calculation, insufficient storage, unavailable/busy/named CPU and removed grid.
+- [x] Implement status computing/isDone/isCanceled/cancel; prove actual completed output and cancellation/resource conservation, including Lua calls.
 - [ ] Persist position/dimension/key/request link/status; restore without loading chunks, bounded retry delay, deduplicate restored links and release lifecycle state. Prove actual two-process save/restart/resume and terminal status.
 - [ ] Run focused and full relevant checks, document evidence, commit/push.
 
@@ -61,3 +61,5 @@ Files: integration/ae2 converter, tool/spatial integration registration, Environ
 Beta estimate remains3-6 concentrated workweeks, low confidence; this is the whole port estimate, not AE2 alone. Re-estimate after crafting/persistence and remaining integration discovery. No step above is complete merely because callback names exist or unrelated tests pass.
 
 Controller checkpoint 5b60fee0b7577cd2a95c831969903a9237e695eb: first work package verified with2140 units,730 mixed/728 standalone/726 absent server tests. Craftable-key union exists; positive recipe output and userdata acceptance stays in task2. See [[../03 manuals/AE2 controller integration]].
+
+Crafting checkpoint f36740a717c5b9ee121f51f2ab91aca8ef3bf189: actual native assembler output, processing cancellation, named/missing CPU, missing ingredients and same-process saved aliases verified;2140 units/731 mixed/729 standalone/726 absent tests. Full two-process/host-offline persistence and wider submission-failure matrix remain task2 gates before claiming complete AE2. See [[../03 manuals/AE2 crafting integration]].

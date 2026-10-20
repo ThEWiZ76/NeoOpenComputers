@@ -1,6 +1,6 @@
 # Port source surface inventory
 
-Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `5b60fee0b7577cd2a95c831969903a9237e695eb`.
+Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `f36740a717c5b9ee121f51f2ab91aca8ef3bf189`.
 
 Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.
 
@@ -23,7 +23,6 @@ Java API files: 144. Missing matching port paths: 0.
 | --- | --- |
 | canBreed | src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:53 |
 | canPlayerAccess | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:38 |
-| cancel | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:518 |
 | exportIntoSlot | src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:73 |
 | getAccess | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:45 |
 | getBeeBreedingData | src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:76 |
@@ -34,7 +33,6 @@ Java API files: 144. Missing matching port paths: 0.
 | getControlName | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:47 |
 | getControlSetting | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:36 |
 | getControlSettingName | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:42 |
-| getCraftables | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:152 |
 | getDrone | src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:58 |
 | getEnergy | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverEnergyInfo.java:31; src/main/scala/li/cil/oc/integration/ic2/DriverEnergy.java:44 |
 | getEnergyPerTick | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverEnergyInfo.java:36 |
@@ -48,7 +46,6 @@ Java API files: 144. Missing matching port paths: 0.
 | getInsulationBreakdownEnergy | src/main/scala/li/cil/oc/integration/ic2/DriverEnergyConductor.java:41 |
 | getInsulationEnergyAbsorption | src/main/scala/li/cil/oc/integration/ic2/DriverEnergyConductor.java:46 |
 | getInterfaceConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverBlockInterface.scala:38; src/main/scala/li/cil/oc/integration/appeng/DriverPartInterface.scala:52 |
-| getItemStack | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:327 |
 | getMaxEnergyPerTick | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverEnergyInfo.java:41 |
 | getMaxHeat | src/main/scala/li/cil/oc/integration/ic2/DriverReactor.java:48; src/main/scala/li/cil/oc/integration/ic2/DriverReactorChamber.java:53; src/main/scala/li/cil/oc/integration/ic2/DriverReactorRedstonePort.java:63 |
 | getMaxSteamPerTick | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSteamInfo.java:37 |
@@ -64,14 +61,11 @@ Java API files: 144. Missing matching port paths: 0.
 | getWirelessFrequency | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:80 |
 | getWirelessInput | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:54 |
 | getWirelessOutput | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:60 |
-| isCanceled | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:508 |
 | isDisabled | src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:55 |
-| isDone | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:513 |
 | isPowered | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:53 |
 | isWorking | src/main/scala/li/cil/oc/integration/forestry/DriverAnalyzer.scala:26 |
 | listAllSpecies | src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:110 |
 | producesEnergy | src/main/scala/li/cil/oc/integration/ic2/DriverReactor.java:63; src/main/scala/li/cil/oc/integration/ic2/DriverReactorChamber.java:78; src/main/scala/li/cil/oc/integration/ic2/DriverReactorRedstonePort.java:93 |
-| requesting | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:330 |
 | setControlDisable | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:58 |
 | setControlSetting | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:64 |
 | setExportConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:48 |

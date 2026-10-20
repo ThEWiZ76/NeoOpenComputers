@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "5b60fee0b7577cd2a95c831969903a9237e695eb",
+  "port_revision": "f36740a717c5b9ee121f51f2ab91aca8ef3bf189",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -3638,7 +3638,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 139
+              "line": 162
             }
           ]
         }
@@ -4027,6 +4027,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/component/InternetCardEnvironment.java",
               "line": 116
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/ae2/CraftableValue.java",
+              "line": 37
             }
           ]
         },
@@ -5601,7 +5605,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 139
+              "line": 162
             }
           ]
         }
@@ -6521,14 +6525,19 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 82
+              "line": 83
             }
           ]
         },
         {
           "name": "getCraftables",
           "line": 152,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
+              "line": 127
+            }
+          ]
         },
         {
           "name": "getItemsInNetwork",
@@ -6536,7 +6545,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 114
+              "line": 115
             }
           ]
         },
@@ -6570,7 +6579,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 139
+              "line": 162
             }
           ]
         },
@@ -6580,7 +6589,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 126
+              "line": 149
             }
           ]
         },
@@ -6590,7 +6599,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 172
+              "line": 196
             }
           ]
         },
@@ -6600,7 +6609,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 174
+              "line": 198
             }
           ]
         },
@@ -6610,7 +6619,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 176
+              "line": 200
             }
           ]
         },
@@ -6620,7 +6629,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 178
+              "line": 202
             }
           ]
         },
@@ -6630,7 +6639,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 180
+              "line": 204
             }
           ]
         },
@@ -6640,7 +6649,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 182
+              "line": 206
             }
           ]
         },
@@ -6650,19 +6659,29 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/integration/AppliedEnergisticsIntegration.java",
-              "line": 184
+              "line": 208
             }
           ]
         },
         {
           "name": "getItemStack",
           "line": 327,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/ae2/CraftableValue.java",
+              "line": 23
+            }
+          ]
         },
         {
           "name": "requesting",
           "line": 330,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/ae2/CraftableValue.java",
+              "line": 31
+            }
+          ]
         },
         {
           "name": "request",
@@ -6671,23 +6690,42 @@
             {
               "path": "src/main/java/li/cil/oc/common/component/InternetCardEnvironment.java",
               "line": 116
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/ae2/CraftableValue.java",
+              "line": 37
             }
           ]
         },
         {
           "name": "isCanceled",
           "line": 508,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/ae2/CraftingStatusValue.java",
+              "line": 80
+            }
+          ]
         },
         {
           "name": "isDone",
           "line": 513,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/ae2/CraftingStatusValue.java",
+              "line": 78
+            }
+          ]
         },
         {
           "name": "cancel",
           "line": 518,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/ae2/CraftingStatusValue.java",
+              "line": 82
+            }
+          ]
         }
       ]
     },
@@ -8912,9 +8950,6 @@
     "canPlayerAccess": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:38"
     ],
-    "cancel": [
-      "src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:518"
-    ],
     "exportIntoSlot": [
       "src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:73"
     ],
@@ -8944,9 +8979,6 @@
     ],
     "getControlSettingName": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:42"
-    ],
-    "getCraftables": [
-      "src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:152"
     ],
     "getDrone": [
       "src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:58"
@@ -8990,9 +9022,6 @@
     "getInterfaceConfiguration": [
       "src/main/scala/li/cil/oc/integration/appeng/DriverBlockInterface.scala:38",
       "src/main/scala/li/cil/oc/integration/appeng/DriverPartInterface.scala:52"
-    ],
-    "getItemStack": [
-      "src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:327"
     ],
     "getMaxEnergyPerTick": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverEnergyInfo.java:41"
@@ -9046,14 +9075,8 @@
     "getWirelessOutput": [
       "src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:60"
     ],
-    "isCanceled": [
-      "src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:508"
-    ],
     "isDisabled": [
       "src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:55"
-    ],
-    "isDone": [
-      "src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:513"
     ],
     "isPowered": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:53"
@@ -9068,9 +9091,6 @@
       "src/main/scala/li/cil/oc/integration/ic2/DriverReactor.java:63",
       "src/main/scala/li/cil/oc/integration/ic2/DriverReactorChamber.java:78",
       "src/main/scala/li/cil/oc/integration/ic2/DriverReactorRedstonePort.java:93"
-    ],
-    "requesting": [
-      "src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:330"
     ],
     "setControlDisable": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:58"

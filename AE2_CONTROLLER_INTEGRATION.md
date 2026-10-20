@@ -39,3 +39,7 @@ For a mixed profile append -PwithEnderStorage -PwithProjectRed -PwithComputerCra
 getCraftables and Craftable/CraftingStatus userdata, real recipe/craftable-only positive fixtures, async calculation/submission/cancel, persisted links and process-restart recovery; block/part interfaces and import/export buses, cell converters, wrench/spatial hooks and item EnvironmentProviders. Controller dataset ordering is not promised. Broader custom component/nested filter/addon storage types, extreme real storage quantities, chunk-unload/reconnect matrices, protection and multiplayer remain acceptance work. Full real-client/visual acceptance must use screen3 with user desktop coordination. See the complete AE2 plan; no legacy feature is silently dropped.
 
 Whole-port beta estimate:3-6 concentrated workweeks, low confidence, including full implementation, bugfixes and real ingame/visual acceptance. This checkpoint does not close the AE2 or overall integration gate.
+
+## Follow-up f36740a717c5b9ee121f51f2ab91aca8ef3bf189
+
+getCraftables/Craftable/Status async requests, real assembler output and cancellation now have server/native proof; craftable-only catalogue count is fixed. See [[AE2 crafting integration]]. The older open list above describes the original controller checkpoint; full fresh-process/host-offline persistence, interfaces/buses/converters/auxiliary/client gates remain open.
