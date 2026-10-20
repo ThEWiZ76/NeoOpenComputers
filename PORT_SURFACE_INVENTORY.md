@@ -1,6 +1,6 @@
 # Port source surface inventory
 
-Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `ada35429256ae8b1695415fce21b9c5b48fa7ab9`.
+Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `820fee37bb656273720d460aaede4eeaa80ae4e8`.
 
 Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.
 
@@ -30,7 +30,6 @@ Java API files: 144. Missing matching port paths: 0.
 | getAvgPowerUsage | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:200 |
 | getBeeBreedingData | src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:76 |
 | getBeeParents | src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:134 |
-| getColors | src/main/scala/li/cil/oc/integration/enderstorage/DriverFrequencyOwner.java:97 |
 | getConductionLoss | src/main/scala/li/cil/oc/integration/ic2/DriverEnergyConductor.java:31 |
 | getConductorBreakdownEnergy | src/main/scala/li/cil/oc/integration/ic2/DriverEnergyConductor.java:36 |
 | getControlDisable | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:31 |
@@ -45,8 +44,6 @@ Java API files: 144. Missing matching port paths: 0.
 | getEnergyPerTick | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverEnergyInfo.java:36 |
 | getExportConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:45 |
 | getFluidsInNetwork | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:190 |
-| getFrequency | src/main/scala/li/cil/oc/integration/enderstorage/DriverFrequencyOwner.java:47 |
-| getFrequencyColors | src/main/scala/li/cil/oc/integration/enderstorage/DriverFrequencyOwner.java:92 |
 | getFuel | src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:28 |
 | getFuelSlotContents | src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:47 |
 | getGasesInNetwork | src/main/scala/li/cil/oc/integration/ec/NetworkControl.scala:22 |
@@ -63,7 +60,6 @@ Java API files: 144. Missing matching port paths: 0.
 | getMaxHeat | src/main/scala/li/cil/oc/integration/ic2/DriverReactor.java:48; src/main/scala/li/cil/oc/integration/ic2/DriverReactorChamber.java:53; src/main/scala/li/cil/oc/integration/ic2/DriverReactorRedstonePort.java:63 |
 | getMaxSteamPerTick | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSteamInfo.java:37 |
 | getMaxStoredPower | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:208 |
-| getOwner | src/main/scala/li/cil/oc/integration/enderstorage/DriverFrequencyOwner.java:87; src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:31 |
 | getOwnerName | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:50 |
 | getProgress | src/main/scala/li/cil/oc/integration/forestry/DriverAnalyzer.scala:29; src/main/scala/li/cil/oc/integration/ic2/DriverMassFab.java:43 |
 | getQueen | src/main/scala/li/cil/oc/integration/forestry/DriverBeeHouse.java:67 |
@@ -89,7 +85,6 @@ Java API files: 144. Missing matching port paths: 0.
 | setControlDisable | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:58 |
 | setControlSetting | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:64 |
 | setExportConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverExportBus.scala:48 |
-| setFrequency | src/main/scala/li/cil/oc/integration/enderstorage/DriverFrequencyOwner.java:57 |
 | setImportConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverImportBus.scala:35 |
 | setInterfaceConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverBlockInterface.scala:46; src/main/scala/li/cil/oc/integration/appeng/DriverPartInterface.scala:55 |
 | setReading | src/main/scala/li/cil/oc/integration/tis3d/SerialInterfaceProviderAdapter.scala:63 |
