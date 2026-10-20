@@ -95,3 +95,8 @@ Queued saves can retry after repaired IO; checkpoints track partial durable prog
 ## Live Lua IO-failure checkpoint - ec91e1ca708f5a2e6129d422cb9cb903d1418775
 
 Native Lua survives failed diskdrive.eject: same media/local731/open reader offset+binary bytes/writer remain; repaired retry creates exactly1 physical disk and persists both dirty bytes. No new runtime fix required beyond0e3362c5e. Build2239 units/849 absent required tests and934 mixed required tests, normal exits. See [[../03 manuals/Native volume import]] for fixture/evidence/limits. Autosave/chunk-unload/heap-restore faults and broader technical feature/callback/ROM/platform/client acceptance stay open; no new restart or client claim. Technical first, beta3-6 concentrated workweeks lowconfidence.
+
+
+## Computer IO-failure checkpoint - 770e92d21fe1db4d35ba4e29cc03dd10475f66cb
+
+Two native HDD/heap tests cover explicit failed save and failed onChunkUnloaded, live reader/writer/local retention, repaired unload/old-VM stop and new BlockEntity.loadStatic/onLoad continuation. Final bytes include all3 writes. No further runtime fix required. Build2239 units/851 absent/936 mixed required tests, normal exits. [[../03 manuals/Native volume import]] records exact scope: direct lifecycle callbacks, no actual chunk eviction/automatic retry or restart claim. Broad storage/platform/client acceptance remains open; next return to functional feature parity. Technical first, beta3-6 concentrated workweeks lowconfidence.
