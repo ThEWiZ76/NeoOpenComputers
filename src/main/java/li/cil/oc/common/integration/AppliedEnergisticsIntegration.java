@@ -225,6 +225,56 @@ public final class AppliedEnergisticsIntegration {
             public Object[] getExportConfiguration(final Context context, final Arguments args) { return getConfig(partConfig(tile, "export_bus", face(args, 0)), args, 1); }
             @Callback(doc = "function(side:number[, slot:number][, database:string, entry:number, size:number=1]):boolean -- Configure or clear an export filter.")
             public Object[] setExportConfiguration(final Context context, final Arguments args) { return setConfig(node(), partConfig(tile, "export_bus", face(args, 0)), context, args, 1); }
+
+            @Callback(doc = "function(side:number[, slot:number]):number -- Export filtered ME items into an adjacent inventory, optionally into one slot.")
+            public Object[] exportIntoSlot(final Context context, final Arguments args) {
+                checkTile(tile);
+                final var side = face(args, 0);
+                final var part = ((appeng.api.parts.IPartHost) tile).getPart(side);
+                if (!matches(part, "export_bus") || !(part instanceof appeng.parts.automation.ExportBusPart bus)) return new Object[]{null, "no export bus"};
+                final var world = tile.getLevel();
+                final var targetPos = tile.getBlockPos().relative(side);
+                if (!world.hasChunkAt(targetPos)) return new Object[]{null, "no inventory"};
+                final var target = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, targetPos, side.getOpposite());
+                if (target == null) return new Object[]{null, "no inventory"};
+                final int slot;
+                if (args.optAny(1, null) != null) {
+                    final int oneBased = args.checkInteger(1);
+                    if (oneBased < 1 || oneBased > target.getSlots()) throw new IllegalArgumentException("invalid slot");
+                    slot = oneBased - 1;
+                } else slot = -1;
+                final var node = bus.getGridNode();
+                if (node == null || !node.isActive()) return new Object[]{null, "no items moved"};
+                final var grid = node.getGrid();
+                final var storage = grid.getStorageService().getInventory();
+                final var source = appeng.api.networking.security.IActionSource.ofMachine(bus);
+                final int budget = switch (bus.getInstalledUpgrades(appeng.core.definitions.AEItems.SPEED_CARD)) {
+                    case 0 -> 1;
+                    case 1 -> 8;
+                    case 2 -> 32;
+                    case 3 -> 64;
+                    default -> 96;
+                };
+                final boolean fuzzy = bus.isUpgradedWith(appeng.core.definitions.AEItems.FUZZY_CARD);
+                final var mode = bus.getConfigManager().getSetting(appeng.api.config.Settings.FUZZY_MODE);
+                final var available = storage.getAvailableStacks();
+                int moved = 0;
+                for (int filter = 0; filter < bus.getConfig().size() && moved < budget; filter++) {
+                    if (!(bus.getConfig().getKey(filter) instanceof appeng.api.stacks.AEItemKey key)) continue;
+                    final var candidates = fuzzy ? available.findFuzzy(key, mode) : java.util.List.of(
+                        new it.unimi.dsi.fastutil.objects.AbstractObject2LongMap.BasicEntry<appeng.api.stacks.AEKey>(key, available.get(key)));
+                    for (final var candidate : candidates) {
+                        if (moved >= budget) break;
+                        if (!(candidate.getKey() instanceof appeng.api.stacks.AEItemKey item) || candidate.getLongValue() <= 0) continue;
+                        moved += li.cil.oc.common.integration.ae2.ItemExport.transfer(grid.getEnergyService(), storage, item, source, target, slot,
+                            (int) Math.min(budget - moved, candidate.getLongValue()),
+                            stack -> net.minecraft.world.Containers.dropItemStack(world, targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5, stack));
+                    }
+                }
+                if (moved == 0) return new Object[]{null, "no items moved"};
+                if (context != null) context.pause(0.25);
+                return new Object[]{moved};
+            }
         }
 
         private static final class ControllerDriver implements DriverBlock {

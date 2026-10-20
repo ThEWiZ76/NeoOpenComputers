@@ -184,6 +184,28 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
 tasks.named('generateEmptyGameTestStructure') {
     mustRunAfter tasks.named('syncGameTestStructures')
 }
+
+tasks.register('generateAe2ExportGameTestStructure') {
+    def structure = layout.projectDirectory.file('run/gameTestServer/gameteststructures/ae2_export.snbt')
+    outputs.file structure
+    doLast {
+        def output = structure.asFile
+        output.parentFile.mkdirs()
+        output.text = '''{
+  DataVersion: 3955,
+  size: [9, 9, 9],
+  entities: [],
+  blocks: [],
+  palette: [{Name: "minecraft:air"}]
+}
+'''
+    }
+    mustRunAfter tasks.named('syncGameTestStructures')
+}
+
+tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+    dependsOn tasks.named('generateAe2ExportGameTestStructure')
+}
 configurations {
     appliedEnergisticsRuntime
     runtimeClasspath.extendsFrom appliedEnergisticsRuntime
