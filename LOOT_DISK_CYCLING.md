@@ -31,3 +31,7 @@ Prepared neoopencomputers-loot-recipe-sync.jar SHA256 005A942CADEBEB1841A5E2EFF6
 ## Metadata implementation checkpoint 177357b
 
 [[Loot disk metadata synchronization]] supersedes the earlier unimplemented metadata status: login snapshots, copied client state, tick batching, creative/search refresh and JEI runtime subscription/teardown are implemented. Build/2190 units/899 mixed/816 absent pass. Matched combined jar SHA256 BFB6630D433CB4CD74BA82E2B4270A191C614C6B9CB989DCE7F0EE8C98085D1E is installed; user confirmed restart/screen3 readiness; actual TCP/client rendering/reconnect acceptance remains pending. External/world loot loading remains open.
+
+## Wereld-lootdefinities en selectie —b4d462200
+
+[[World loot disks]] vervangt de eerdere ontbrekende-wereldloaderstatus: wereldgebonden readonly factories, cycling/loginmetadata, gewogen selectie zonder gewichtexpansie en legacy wereldpad-fallback zijn geimplementeerd en gepusht. Build2203 units/908 gemengde/823 absent GameTests slagen; echte recipe-update-codec behoudt wereldoutputs na unload. Dit is nog GEEN chest-generatie: moderne loot-tablekoppeling en misc.lootProbability als gewicht zijn de volgende functionele stap. De upstream chesthook staat uitcommentarieerd ondanks de README/config; houd die functionele eis open. Geen client-/CU-actie; volledige portering en genoemde acceptatiegates blijven open.
