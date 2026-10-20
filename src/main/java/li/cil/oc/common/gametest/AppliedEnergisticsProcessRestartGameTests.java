@@ -142,8 +142,6 @@ public final class AppliedEnergisticsProcessRestartGameTests {
                 final var saved = record.getItem(0).get(DataComponents.CUSTOM_DATA);
                 helper.assertTrue(saved != null && saved.copyTag().getString("phase").equals("prepared")
                     && saved.copyTag().getLong("pid") != ProcessHandle.current().pid(), "AE2 checkpoint was not prepared by another JVM");
-                helper.assertTrue(computer.machine().isRunning(), "AE2 computer did not resume: " + computer.machine().lastError());
-                computer.machine().signal("ae2_after_process_restart");
             }
             final var sequence = helper.startSequence().thenWaitUntil(() -> {
                 final var grid = grid(helper);
@@ -191,6 +189,9 @@ public final class AppliedEnergisticsProcessRestartGameTests {
                 }
                 sequence.thenSucceed();
             } else {
+                // getBlockEntity may synchronously load NBT before NeoForge dispatches onLoad.
+                sequence.thenWaitUntil(() -> helper.assertTrue(computer.machine().isRunning(), "AE2 computer did not resume: " + computer.machine().lastError()))
+                    .thenExecute(() -> helper.assertTrue(computer.machine().signal("ae2_after_process_restart"), "AE2 computer rejected its resume signal"));
                 if (!offline) sequence.thenWaitUntil(() -> helper.assertTrue(marker(computer).equals("rebound"), "AE2 persisted values not resumed: " + computer.machine().lastError()))
                     .thenIdle(2).thenWaitUntil(() -> helper.assertTrue(furnace.getItem(2).is(Items.CHARCOAL), "Real furnace output not ready"))
                     .thenExecute(() -> {

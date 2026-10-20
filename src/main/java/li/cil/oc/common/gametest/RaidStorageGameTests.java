@@ -5,6 +5,8 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.ModSettings;
+import li.cil.oc.common.NativeVolumeStore;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.item.HardDiskDriveItem;
@@ -13,6 +15,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.LevelResource;
+import java.nio.file.Files;
+import java.util.Arrays;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -41,6 +46,75 @@ public final class RaidStorageGameTests {
         final var context = hardware.computer.machine(); var h = fs.invoke("open", context, "array.bin", "wb")[0];
         fs.invoke("write", context, h, BYTES); fs.invoke("close", context, h);
         h = fs.invoke("open", context, "array.bin", "rb")[0]; fs.invoke("read", context, h, 1); return h;
+    }
+
+    @GameTest(template = "ae2_export")
+    public static void raidArrayUsesWorldStorageAndBufferChanges(GameTestHelper helper) throws Exception {
+        final boolean previous = ModSettings.BUFFER_CHANGES.get();
+        try {
+            for (final boolean buffered : java.util.List.of(false, true)) {
+                ModSettings.BUFFER_CHANGES.set(buffered);
+                final var hardware = hardware(helper); fill(hardware); write(helper, hardware);
+                final var fs = filesystem(helper, hardware.raid);
+                final var root = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers").resolve(fs.address());
+                helper.assertTrue(Files.exists(root.resolve("array.bin")) != buffered, "RAID array does not honor direct/buffered physical write visibility");
+                final var saved = hardware.raid.saveWithFullMetadata(helper.getLevel().registryAccess());
+                final var metadata = saved.getCompound("filesystem").getCompound("fs");
+                helper.assertTrue(!metadata.contains("children") && metadata.getString(NativeVolumeStore.STORAGE_TAG).equals(fs.address()), "RAID still embeds its array tree instead of a world binding");
+                hardware.raid.onChunkUnloaded();
+                helper.assertTrue(Arrays.equals(BYTES, Files.readAllBytes(root.resolve("array.bin"))), "RAID world-file bytes differ after save/unload");
+                hardware.raid.clearContent();
+            }
+        } finally { ModSettings.BUFFER_CHANGES.set(previous); }
+        helper.succeed();
+    }
+
+    @GameTest(template = "ae2_export")
+    public static void raidMemberRemovalCommitsDestructionToWorldStorage(GameTestHelper helper) throws Exception {
+        final var hardware = hardware(helper); fill(hardware); write(helper, hardware);
+        final var fs = filesystem(helper, hardware.raid);
+        final var saved = hardware.raid.saveWithFullMetadata(helper.getLevel().registryAccess());
+        hardware.raid.onChunkUnloaded();
+        final var binding = saved.getCompound("filesystem").getCompound("fs").getString(NativeVolumeStore.STORAGE_TAG);
+        helper.assertTrue(!binding.isEmpty(), "Saved RAID has no external volume binding");
+        final var root = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers").resolve(binding);
+        final var member = hardware.raid.removeItem(0, 1);
+        helper.assertTrue(!Files.exists(root.resolve("array.bin")), "Removing a member after unload left the destroyed array's durable bytes");
+        hardware.raid.setItem(0, member);
+        final var fresh = filesystem(helper, hardware.raid);
+        helper.assertTrue(!fresh.address().equals(fs.address()) && Boolean.FALSE.equals(fresh.invoke("exists", hardware.computer.machine(), "array.bin")[0]), "Reassembled RAID reopened the previous volume");
+        hardware.raid.clearContent(); helper.succeed();
+    }
+
+    @GameTest(template = "ae2_export")
+    public static void raidImportsLegacyInlineArrayWithIdentityLabelAndOpenOffset(GameTestHelper helper) throws Exception {
+        final var hardware = hardware(helper); fill(hardware);
+        final var ram = li.cil.oc.api.FileSystem.fromMemory(3L * ModSettings.hddSize(0) * 1024L);
+        final var old = li.cil.oc.api.FileSystem.asManagedEnvironment(ram, "legacy-array", hardware.raid, null, 6);
+        final var node = new CompoundTag(); node.putString("address", "legacy-raid-fixture"); old.node().load(node);
+        hardware.computer.node().connect(old.node()); ((Connector) hardware.computer.node()).changeBuffer(10000);
+        final var legacy = (Component) old.node();
+        final var saved = hardware.raid.saveWithFullMetadata(helper.getLevel().registryAccess());
+        final var data = new CompoundTag();
+        try {
+            final var writer = legacy.invoke("open", hardware.computer.machine(), "array.bin", "wb")[0];
+            legacy.invoke("write", hardware.computer.machine(), writer, BYTES); legacy.invoke("close", hardware.computer.machine(), writer);
+            final var reader = legacy.invoke("open", hardware.computer.machine(), "array.bin", "rb")[0];
+            legacy.invoke("read", hardware.computer.machine(), reader, 1);
+            ram.setLastModified("array.bin", 1000); ram.setLastModified("", 1000);
+            old.save(data);
+        } finally { old.node().remove(); }
+        saved.put("filesystem", data); saved.putString("label", "legacy-array");
+        final var before = saved.copy(); hardware.raid.load(saved);
+        final var restored = filesystem(helper, hardware.raid);
+        helper.assertTrue(saved.equals(before), "RAID import mutated the incoming snapshot");
+        helper.assertTrue(restored.address().equals("legacy-raid-fixture") && "legacy-array".equals(restored.invoke("getLabel", hardware.computer.machine())[0]), "RAID import changed component identity or label");
+        final int reader = data.getCompound("fs").getList("input", net.minecraft.nbt.Tag.TAG_COMPOUND).getCompound(0).getInt("handle");
+        helper.assertTrue(Arrays.equals((byte[]) restored.invoke("read", hardware.computer.machine(), reader, 3)[0], new byte[]{(byte) 128, (byte) 255, 42}), "RAID import lost an open handle or binary offset");
+        final var imported = hardware.raid.saveWithFullMetadata(helper.getLevel().registryAccess()).getCompound("filesystem").getCompound("fs");
+        helper.assertTrue(!imported.contains("children") && imported.getString(NativeVolumeStore.STORAGE_TAG).startsWith("native-legacy/"), "Imported RAID has no safe external binding");
+        // Keep this fixed legacy import durable: restart profiles run the same deterministic source again.
+        hardware.raid.onChunkUnloaded(); helper.succeed();
     }
     private static ItemStack seeded(Hardware hardware) throws Exception {
         final var stack = new ItemStack(ModItems.HDD_TIER1.get()); final var environment = Driver.driverFor(stack).createEnvironment(stack, hardware.raid);

@@ -17,6 +17,10 @@ import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.FileSystemEnvironment;
+import li.cil.oc.common.NativeVolumeStore;
+import net.minecraft.world.level.storage.LevelResource;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -54,6 +58,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     private final RaidLabel label = new RaidLabel();
     private Node node;
     private ManagedEnvironment filesystem;
+    private String filesystemStorage;
     private CompoundTag unloadedFilesystem;
     private int clientPresenceMask;
     private long lastAccess;
@@ -327,7 +332,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         label.save(nbt);
         if (filesystem != null) {
             final CompoundTag filesystemTag = new CompoundTag();
-            filesystem.save(filesystemTag);
+            saveFilesystem(filesystemTag);
             nbt.put(TAG_FILESYSTEM, filesystemTag);
         } else if (unloadedFilesystem != null) {
             nbt.put(TAG_FILESYSTEM, unloadedFilesystem.copy());
@@ -402,8 +407,13 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     }
 
     private void refreshFilesystem() {
+        if (level != null && !level.isClientSide && filesystem == null && unloadedFilesystem != null && unloadedFilesystem.getCompound("fs").contains(NativeVolumeStore.STORAGE_TAG)) {
+            mountFilesystem(unloadedFilesystem, totalCapacity());
+        }
         if (filesystem != null && filesystem.node() != null && filesystem.node().host() instanceof FileSystemEnvironment environment) {
             erase(environment.fileSystem(), "");
+            // A removed member destroys the durable array as well as its in-memory tree.
+            saveFilesystem(new CompoundTag());
         }
         removeFilesystem();
         unloadedFilesystem = null;
@@ -415,12 +425,30 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
         if (level == null || level.isClientSide || filesystem != null || !isComplete()) return;
         long capacity = 0L;
         for (ItemStack stack : items) capacity += formatDisk(stack);
-        final li.cil.oc.api.fs.FileSystem fileSystem = FileSystem.fromMemory(capacity);
-        filesystem = FileSystem.asManagedEnvironment(fileSystem, label, this, ModSounds.HDD_ACCESS_ID, 6);
-        // Restore the snapshot before joining the graph, including open handles and node identity.
-        if (unloadedFilesystem != null) filesystem.load(unloadedFilesystem);
+        mountFilesystem(unloadedFilesystem == null ? new CompoundTag() : unloadedFilesystem, capacity);
         unloadedFilesystem = null;
         connectFilesystem();
+    }
+
+    private void mountFilesystem(final CompoundTag original, final long capacity) {
+        final var source = original.copy();
+        final var store = new NativeVolumeStore(level.getServer().getWorldPath(LevelResource.ROOT));
+        final NativeVolumeStore.Mount mount;
+        try { mount = store.openManaged(source, capacity, ModSettings.bufferChanges()); }
+        catch (IOException failure) { throw new UncheckedIOException("Cannot mount RAID array", failure); }
+        final var nodeData = source.getCompound("node"); nodeData.putString("address", mount.nodeAddress()); source.put("node", nodeData);
+        final var metadata = source.getCompound("fs"); metadata.putString(NativeVolumeStore.STORAGE_TAG, mount.storageRoot()); source.put("fs", metadata);
+        final var restored = FileSystem.asManagedEnvironment(mount.fileSystem(), label, this, ModSounds.HDD_ACCESS_ID, 6);
+        if (restored == null) { mount.fileSystem().close(); throw new IllegalStateException("Cannot create RAID filesystem environment"); }
+        try { restored.load(source); }
+        catch (RuntimeException failure) { mount.fileSystem().close(); throw failure; }
+        filesystem = restored;
+        filesystemStorage = mount.storageRoot();
+    }
+
+    private void saveFilesystem(final CompoundTag data) {
+        filesystem.save(data);
+        if (filesystemStorage != null) data.getCompound("fs").putString(NativeVolumeStore.STORAGE_TAG, filesystemStorage);
     }
 
     private long formatDisk(final ItemStack stack) {
@@ -480,8 +508,10 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     private void removeFilesystem() {
         if (filesystem != null && filesystem.node() != null) {
             filesystem.node().remove();
+            if (filesystem.node().host() instanceof FileSystemEnvironment environment) environment.fileSystem().close();
         }
         filesystem = null;
+        filesystemStorage = null;
     }
 
     private int presenceMask() {
@@ -516,7 +546,7 @@ public class RaidBlockEntity extends BlockEntity implements ManagedEnvironment, 
     private void removeNodes() {
         if (filesystem != null) {
             unloadedFilesystem = new CompoundTag();
-            filesystem.save(unloadedFilesystem);
+            saveFilesystem(unloadedFilesystem);
         }
         removeFilesystem();
         if (node != null) {

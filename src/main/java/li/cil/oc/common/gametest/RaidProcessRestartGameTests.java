@@ -5,6 +5,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
+import li.cil.oc.common.NativeVolumeStore;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
 import li.cil.oc.common.item.ItemDriverData;
@@ -20,11 +21,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 
 @GameTestHolder("neoopencomputers")
 public final class RaidProcessRestartGameTests {
@@ -101,13 +107,22 @@ public final class RaidProcessRestartGameTests {
                 "RAID blockstate front was not retained across process restart");
             helper.assertTrue(computer.machine().isRunning() && computer.machine().signal("resume_raid"), "RAID computer did not retain running state");
         }
+        final var backing = new AtomicReference<Path>();
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(marker(computer).equals(prepare ? "raid-waiting" : "raid-resumed"), "Native RAID continuation failed: " + computer.machine().lastError()))
             .thenExecute(() -> {
+                final var metadata = raid.saveWithFullMetadata(level.registryAccess()).getCompound("filesystem").getCompound("fs");
+                final var binding = metadata.getString(NativeVolumeStore.STORAGE_TAG);
+                helper.assertTrue(!metadata.contains("children") && binding.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"), "Restart RAID has no external binding or still embeds its tree");
+                backing.set(level.getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers").resolve(binding).resolve("raid.bin"));
                 final var data = new CompoundTag(); data.putString("phase", prepare ? "prepared" : "verified"); data.putLong("pid", ProcessHandle.current().pid());
                 data.putString("raid", raid.node().address()); data.putString("filesystem", filesystem(helper, raid).address()); data.putString("computer", computer.machine().node().address());
                 data.putString("facing", raid.getBlockState().getValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING).getSerializedName());
                 final var paper = new ItemStack(Items.PAPER); paper.set(DataComponents.CUSTOM_DATA, CustomData.of(data)); record.setItem(0, paper); record.setChanged();
                 li.cil.oc.NeoOpenComputers.LOGGER.info("Native RAID {} in PID {}", prepare ? "prepared" : "verified", ProcessHandle.current().pid());
+            }).thenWaitUntil(() -> {
+                helper.assertTrue(Files.isRegularFile(backing.get()), "RAID snapshot has not reached its world file");
+                try { helper.assertTrue(Arrays.equals(Files.readAllBytes(backing.get()), new byte[]{114, 0, (byte) 255, 107}), "RAID world-file bytes differ at JVM checkpoint"); }
+                catch (java.io.IOException failure) { throw new java.io.UncheckedIOException(failure); }
             }).thenSucceed();
     }
     private static String marker(ComputerCaseBlockEntity computer) {
