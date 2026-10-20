@@ -4,6 +4,7 @@ import li.cil.repack.com.naef.jnlua.LuaState;
 import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.machine.LimitReachedException;
 import java.lang.reflect.Array;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -70,11 +71,15 @@ final class NativeLuaValues {
 
     static Object[] arguments(final LuaState lua, final int start) {
         final Object[] values = new Object[Math.max(0, lua.getTop() - start + 1)];
-        for (int i = 0; i < values.length; i++) values[i] = read(lua, start + i, 0);
+        for (int i = 0; i < values.length; i++) values[i] = read(lua, start + i, 0, new HashMap<>());
         return values;
     }
 
-    private static Object read(final LuaState lua, final int index, final int depth) {
+    private static Object read(final LuaState lua, final int index, final int depth, final Map<Long, Map<Object, Object>> references) {
+        if (lua.isTable(index)) {
+            final Map<Object, Object> cached = references.get(lua.toPointer(index));
+            if (cached != null) return cached;
+        }
         if (depth > 64) throw new IllegalArgumentException("argument nesting too deep");
         if (lua.isNil(index)) return null;
         if (lua.isJavaObjectRaw(index) && lua.toJavaObjectRaw(index) instanceof Value value) return value;
@@ -87,18 +92,23 @@ final class NativeLuaValues {
             final int table = lua.absIndex(index);
             final int top = lua.getTop();
             final Map<Object, Object> map = new LinkedHashMap<>();
+            references.put(lua.toPointer(table), map);
             try {
                 lua.pushNil();
                 while (lua.next(table)) {
-                    Object key = read(lua, -2, depth + 1);
-                    if (key instanceof byte[] bytes) key = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
-                    map.put(key, read(lua, -1, depth + 1));
+                    Object key = read(lua, -2, depth + 1, references);
+                    if (key instanceof byte[] bytes) {
+                        final String text = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+                        if (java.util.Arrays.equals(bytes, text.getBytes(java.nio.charset.StandardCharsets.UTF_8))) key = text;
+                    }
+                    map.put(key, read(lua, -1, depth + 1, references));
                     lua.pop(1);
                 }
             } finally { lua.setTop(top); }
             return map;
         }
-        throw new IllegalArgumentException("Unsupported native Lua argument: " + lua.typeName(index));
+        // Upstream's toSimpleJavaObject maps functions, threads and other unsupported values to null.
+        return null;
     }
 
     /** Upstream invocation protocol: no results means retry synchronously after a budget limit. */

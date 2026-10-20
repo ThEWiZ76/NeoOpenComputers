@@ -54,6 +54,36 @@ public final class NativeValueBoundaryGameTests {
             setNode(Network.newNode(this, Visibility.Network).withComponent("value_graph", Visibility.Network).create());
         }
         @Callback(direct = true) public Object[] get(Context context, Arguments args) { return new Object[]{graph}; }
+        @Callback(direct = true) public Object[] inspect(Context context, Arguments args) {
+            final Map<?, ?> incoming = args.checkTable(0);
+            final Object child = field(incoming, "left");
+            if (field(incoming, "self") != incoming || child != field(incoming, "right") ||
+                !(child instanceof Map<?, ?> childMap) || field(childMap, "parent") != incoming ||
+                !(field(childMap, "value") instanceof Number number) || number.intValue() != 731) {
+                throw new IllegalArgumentException("Incoming component graph identity lost");
+            }
+            if (args.count() != 4 || args.checkAny(1) != null || args.checkAny(2) != null ||
+                !java.util.Arrays.equals(args.checkByteArray(3), new byte[]{0, (byte) 128, (byte) 255, 42})) {
+                throw new IllegalArgumentException("Incoming argument types changed");
+            }
+            final Map<?, ?> binary = (Map<?, ?>) field(incoming, "binary");
+            int found = 0;
+            for (final var entry : binary.entrySet()) {
+                if (entry.getKey() instanceof byte[] key && key.length == 1 && entry.getValue() instanceof Number binaryNumber) {
+                    if (key[0] == (byte) 255 && binaryNumber.intValue() == 731) found |= 1;
+                    if (key[0] == (byte) 254 && binaryNumber.intValue() == 9) found |= 2;
+                }
+            }
+            if (found != 3 || binary.size() != 2) throw new IllegalArgumentException("Incoming binary table keys collided");
+            return new Object[]{true};
+        }
+        private static Object field(Map<?, ?> table, String name) {
+            for (final var entry : table.entrySet()) {
+                final Object key = entry.getKey();
+                if (name.equals(key) || key instanceof byte[] bytes && name.equals(new String(bytes, StandardCharsets.UTF_8))) return entry.getValue();
+            }
+            return null;
+        }
     }
 
     private static void verify(GameTestHelper helper, Class<? extends Architecture> architecture, boolean reload) {
@@ -71,6 +101,11 @@ public final class NativeValueBoundaryGameTests {
             local retained=731
             local graph
             if %s then graph=component.invoke('%s','get') end
+            local child={value=731}
+            local incoming={left=child,right=child}
+            incoming.binary={[string.char(255)]=731,[string.char(254)]=9}
+            incoming.self=incoming; child.parent=incoming
+            assert(component.invoke('%s','inspect',incoming,function() end,coroutine.create(function() end),string.char(0,128,255,42)))
             assert(eeprom.getData()=='','value computer rebooted')
             eeprom.setData('values-ready')
             local event,tag,character,flat
@@ -94,7 +129,7 @@ public final class NativeValueBoundaryGameTests {
             assert(graph.bytes==string.char(0,128,255,42),'component byte array changed')
             eeprom.setData('values-verified')
             while true do computer.pullSignal() end
-            """.formatted(reload, graph.node().address(), reload, graph.node().address());
+            """.formatted(reload, graph.node().address(), graph.node().address(), reload, graph.node().address());
         computer.setItem(6, RobotMovementPersistenceGameTests.eeprom(program));
         ((Connector) computer.machine().node()).changeBuffer(10000);
         helper.assertTrue(computer.machine().start(), "Value boundary computer did not start");
