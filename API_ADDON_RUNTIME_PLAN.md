@@ -27,3 +27,9 @@ Use one small internal state-notification helper. Keep component lifetime separa
 Validate the actual addon regressions, existing ordinary/core/native suites, optional mixed/absence loading and a true-JVM host matrix before committing/pushing. No client or OS focus work is needed until the next combined test-JAR update.
 
 Scoped server lifetime and node-less addon acceptance completed; see [[../03 manuals/API addon runtime#Managed component lifetime checkpoint - 2026-10-21]]. Other-owner/client/exception/cleared-tag and mutable-slot unload audits remain open.
+
+## Follow-up: mutable robot-slot unload - 2026-10-21
+
+Audit the related runtime-slot generator path after the hardware lifecycle fix. Existing robot teardown calls item-removal detachRuntimeComponent even for chunk unload, after snapshotting the still-installed item. Reproduce with real generator fuel in an expansion-container slot: unload/setRemoved must not drop fuel, a natural host snapshot must reload exactly that queue, and actually removing/reinserting the restored generator must drop fuel once without stale serialized fuel. Keep actual item removal's disconnect-before-save semantics and exact component lifecycle notifications. Add a focused regression before runtime changes; preserve native machine continuation snapshots. Test default server/build and the separate addon runtime-slot lifetime where relevant. Broader cleared-tag/exception/charger/client contracts remain separate.
+
+Scoped mutable-slot unload/removal fuel and node-less addon acceptance completed; see [[../03 manuals/API addon runtime#Mutable robot-slot fuel checkpoint - 2026-10-21]]. General cleared-tag and other remaining API/full-port gates stay open.

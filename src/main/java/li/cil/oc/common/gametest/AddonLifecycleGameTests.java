@@ -9,6 +9,7 @@ import li.cil.oc.common.ModItems;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.AdapterBlockEntity;
+import li.cil.oc.common.blockentity.RobotBlockEntity;
 import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.common.machine.NativeLua53Architecture;
 import net.minecraft.core.BlockPos;
@@ -41,7 +42,8 @@ public final class AddonLifecycleGameTests {
         return List.of(new TestFunction("addonLifecycle", "addon_lifecycle_case_reload", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::caseReload),
             new TestFunction("addonLifecycle", "addon_lifecycle_nodeless_update_and_save", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::noNode),
             new TestFunction("addonLifecycle", "addon_lifecycle_rack_bus_and_removal", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::rack),
-            new TestFunction("addonLifecycle", "addon_lifecycle_adapter_nodeless", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::adapter));
+            new TestFunction("addonLifecycle", "addon_lifecycle_adapter_nodeless", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::adapter),
+            new TestFunction("addonLifecycle", "addon_lifecycle_robot_runtime_unload", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::robotRuntime));
     }
 
     static ItemStack card(String id, boolean noNode) {
@@ -140,6 +142,36 @@ public final class AddonLifecycleGameTests {
             adapter.setItem(0, removed); initialized(helper, id);
             helper.assertTrue(((Number) observe(id).get("value")).intValue() == 731, "Adapter did not restore addon data");
             adapter.onChunkUnloaded(); disposed(helper, id); adapter.setRemoved(); disposed(helper, id);
+        }).thenSucceed();
+    }
+
+    private static void robotRuntime(GameTestHelper helper) {
+        final String id = "robot-runtime-lifecycle";
+        helper.setBlock(new BlockPos(1, 1, 1), ModBlocks.ROBOT.get());
+        final RobotBlockEntity original = helper.getBlockEntity(new BlockPos(1, 1, 1));
+        original.setTier(2);
+        RobotMovementPersistenceGameTests.installHardware(helper, original, List.of(new ItemStack(ModItems.UPGRADE_CONTAINER_TIER2.get())));
+        original.onLoad();
+        final var stack = card(id, true);
+        final var tag = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+        tag.putBoolean("oc_api_smoke_upgrade", true);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        helper.assertTrue(original.canPlaceItem(1, stack), "Robot rejected addon runtime upgrade");
+        original.setItem(1, stack); initialized(helper, id);
+        invoke("setTrackedValue", new Class<?>[]{String.class, int.class}, id, 731);
+        final RobotBlockEntity[] active = {original};
+        helper.startSequence().thenIdle(3).thenExecute(() -> {
+            helper.assertTrue(Boolean.TRUE.equals(observe(id).get("updated")), "Robot runtime addon did not update");
+            original.onChunkUnloaded(); disposed(helper, id);
+            final var saved = original.saveWithFullMetadata(helper.getLevel().registryAccess());
+            original.setRemoved(); disposed(helper, id);
+            active[0] = (RobotBlockEntity) BlockEntity.loadStatic(original.getBlockPos(), original.getBlockState(), saved, helper.getLevel().registryAccess());
+            helper.getLevel().setBlockEntity(active[0]); active[0].onLoad(); initialized(helper, id);
+            helper.assertTrue(((Number) observe(id).get("value")).intValue() == 731, "Robot runtime addon lost saved value");
+        }).thenIdle(3).thenExecute(() -> {
+            helper.assertTrue(Boolean.TRUE.equals(observe(id).get("updated")), "Reloaded robot runtime addon did not update");
+            final var removed = active[0].removeItemNoUpdate(1); disposed(helper, id);
+            helper.assertTrue(ItemDriverData.dataTag(removed).getInt("trackedValue") == 731, "Removed robot addon lost value");
         }).thenSucceed();
     }
 

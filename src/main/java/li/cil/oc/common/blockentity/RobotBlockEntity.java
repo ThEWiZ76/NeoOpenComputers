@@ -1857,7 +1857,17 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
             saveAdditional(saved, level.registryAccess());
             unloadedState = saved;
         }
-        for (int slot = CONTAINER_RUNTIME_SLOT_START; slot < CARGO_SLOT_START; slot++) detachRuntimeComponent(slot);
+        // Unload preserves installed upgrades; item removal would eject already-saved generator fuel.
+        final List<RuntimeComponent> disposing = new ArrayList<>();
+        for (int index = 0; index < runtimeComponents.length; index++) {
+            final RuntimeComponent component = runtimeComponents[index];
+            runtimeComponents[index] = null;
+            if (component != null) {
+                disposing.add(component);
+                ComponentLifecycle.setState(component.environment(), LifecycleState.Disposing);
+                onMachineDisconnect(component.environment().node());
+            }
+        }
         ComponentLifecycle.setState(machine, LifecycleState.Disposing);
         if (machine.node() != null) {
             machine.node().remove();
@@ -1866,6 +1876,8 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
             robotNode.remove();
         }
         if (unloadedState != null) machine.stop();
+        for (final RuntimeComponent component : disposing)
+            ComponentLifecycle.setState(component.environment(), LifecycleState.Disposed);
         ComponentLifecycle.setState(machine, LifecycleState.Disposed);
     }
 

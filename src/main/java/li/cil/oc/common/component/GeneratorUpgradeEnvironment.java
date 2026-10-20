@@ -233,9 +233,13 @@ public class GeneratorUpgradeEnvironment extends AbstractManagedEnvironment impl
         super.save(tag);
         if (!queuedFuel.isEmpty()) {
             tag.put(TAG_INVENTORY, ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, queuedFuel).result().orElseGet(CompoundTag::new));
+        } else {
+            tag.remove(TAG_INVENTORY);
         }
         if (remainingTicks > 0) {
             tag.putInt(TAG_REMAINING_TICKS, remainingTicks);
+        } else {
+            tag.remove(TAG_REMAINING_TICKS);
         }
     }
 

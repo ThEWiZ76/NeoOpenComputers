@@ -130,6 +130,35 @@ public final class UpgradePersistenceGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void runtimeGeneratorUnloadDoesNotDuplicateFuel(GameTestHelper helper) throws Exception {
+        final var pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.ROBOT.get());
+        final RobotBlockEntity original = helper.getBlockEntity(pos);
+        original.setTier(2);
+        RobotMovementPersistenceGameTests.installHardware(helper, original,
+            List.of(new ItemStack(ModItems.UPGRADE_CONTAINER_TIER2.get())));
+        original.onLoad();
+        original.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(net.minecraft.world.item.Items.COAL, 3));
+        original.setItem(1, new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        helper.assertTrue(Boolean.TRUE.equals(generator(original).invoke("insert", original.machine(), 3)[0]), "Runtime generator rejected fuel");
+        original.onChunkUnloaded();
+        final var saved = original.saveWithFullMetadata(helper.getLevel().registryAccess());
+        original.setRemoved();
+        helper.assertTrue(droppedCoal(helper, original) == 0, "Runtime generator unload dropped saved fuel");
+        final var restored = (RobotBlockEntity) BlockEntity.loadStatic(original.getBlockPos(), original.getBlockState(), saved, helper.getLevel().registryAccess());
+        helper.getLevel().setBlockEntity(restored); restored.onLoad();
+        helper.assertTrue(((Number) generator(restored).invoke("count", restored.machine())[0]).intValue() == 3,
+            "Runtime generator lost fuel during unload/reload");
+        final var removed = restored.removeItemNoUpdate(1);
+        helper.assertTrue(droppedCoal(helper, restored) == 3, "Restored runtime generator did not drop fuel exactly once");
+        restored.setItem(1, removed);
+        helper.assertTrue(((Number) generator(restored).invoke("count", restored.machine())[0]).intValue() == 0,
+            "Restored runtime generator retained already dropped fuel");
+        helper.assertTrue(restored.getItem(RobotBlockEntity.CARGO_SLOT_START).isEmpty(), "Runtime generator duplicated cargo fuel");
+        helper.succeed();
+    }
+
     private static li.cil.oc.api.network.Component generator(RobotBlockEntity robot) {
         for (var node : robot.machine().node().reachableNodes()) {
             if (node instanceof li.cil.oc.api.network.Component component && component.name().equals("generator")) return component;
