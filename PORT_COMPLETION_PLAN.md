@@ -580,3 +580,8 @@ Actual missing/corrupt media previously broke computer/RAID onLoad and made Mine
 ## Buffered write-failure checkpoint - 0e3362c5e6b6d80fc7a403f4c4a2e1bd2c0f37d7
 
 Queued saves can retry after repaired IO; checkpoints track partial durable progress rather than planned bytes. Native item metadata is published only after a successful flush without closing streams.2 recovery unit reds and1 actual-host failed-eject red reproduced; final2239 units/848 absent required tests and mixed native prepare/verify each944 required tests pass with normal exits. See [[../03 manuals/Native volume import]] for scope/evidence/limits. Running-heap IO, close/unload/crash/load/platform/custom-addon and actual-client acceptance plus full feature/callback/ROM parity remain open. Technical functionality first; cosmetic polish deferred. Full goal active, beta3-6 concentrated workweeks lowconfidence.
+
+
+## Live Lua IO-failure checkpoint - ec91e1ca708f5a2e6129d422cb9cb903d1418775
+
+Native Lua survives failed diskdrive.eject: same media/local731/open reader offset+binary bytes/writer remain; repaired retry creates exactly1 physical disk and persists both dirty bytes. No new runtime fix required beyond0e3362c5e. Build2239 units/849 absent required tests and934 mixed required tests, normal exits. See [[../03 manuals/Native volume import]] for fixture/evidence/limits. Autosave/chunk-unload/heap-restore faults and broader technical feature/callback/ROM/platform/client acceptance stay open; no new restart or client claim. Technical first, beta3-6 concentrated workweeks lowconfidence.
