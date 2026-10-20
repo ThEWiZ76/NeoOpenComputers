@@ -575,3 +575,8 @@ HDD/floppy raw bytes now live in upstream-compatible GZIP .bin world files with 
 ## Native storage failure isolation — 411c02283c26175a1e17c05ae5c2d24fa94a5099
 
 Actual missing/corrupt media previously broke computer/RAID onLoad and made Minecraft discard a diskdrive (initial fixture also crashed the test server). Expected native mount failures now retain host/item/pending snapshot, with unavailable media and safe ejection/recovery; failed RAID member cannot form an empty replacement or lose lock metadata. Build2237 units/847 absent, mixed native pair prepare PID70872/verify PID69572 each943 required/normal exits. [[Native volume import]] contains exact scope/red/green/archival evidence. Continue technical parity and active IO/heap/platform/client acceptance; no polish/client/CU/production action. Full goal active, beta3-6 concentrated workweeks lowconfidence.
+
+
+## Buffered write-failure checkpoint - 0e3362c5e6b6d80fc7a403f4c4a2e1bd2c0f37d7
+
+Queued saves can retry after repaired IO; checkpoints track partial durable progress rather than planned bytes. Native item metadata is published only after a successful flush without closing streams.2 recovery unit reds and1 actual-host failed-eject red reproduced; final2239 units/848 absent required tests and mixed native prepare/verify each944 required tests pass with normal exits. See [[../03 manuals/Native volume import]] for scope/evidence/limits. Running-heap IO, close/unload/crash/load/platform/custom-addon and actual-client acceptance plus full feature/callback/ROM parity remain open. Technical functionality first; cosmetic polish deferred. Full goal active, beta3-6 concentrated workweeks lowconfidence.

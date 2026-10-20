@@ -85,3 +85,8 @@ Step4 wired: native .bin/GZIP import and guarded saves, independent oc:rawStorag
 ## Actual host mount-failure checkpoint — 411c02283c26175a1e17c05ae5c2d24fa94a5099
 
 Strict primitive errors no longer discard native item hosts: unavailable native mounts are logged/no component, block/rack pending snapshots survive save/ejection with copy isolation, RAID failed mount/member retains state and supplies no empty array. Five actual-host fault cases;2237 units/847 absent, mixed native prepare PID70872/verify PID69572 each943 required tests/normal exits. [[../03 manuals/Native volume import]] records original crash, independent red failures, recovery evidence and limits. Active save failures/live affected heaps/custom addons/crash/load/platform/client gates remain open.
+
+
+## Buffered write-failure checkpoint - 0e3362c5e6b6d80fc7a403f4c4a2e1bd2c0f37d7
+
+Queued saves can retry after repaired IO; checkpoints track partial durable progress rather than planned bytes. Native item metadata is published only after a successful flush without closing streams.2 recovery unit reds and1 actual-host failed-eject red reproduced; final2239 units/848 absent required tests and mixed native prepare/verify each944 required tests pass with normal exits. See [[../03 manuals/Native volume import]] for scope/evidence/limits. Running-heap IO, close/unload/crash/load/platform/custom-addon and actual-client acceptance plus full feature/callback/ROM parity remain open. Technical functionality first; cosmetic polish deferred. Full goal active, beta3-6 concentrated workweeks lowconfidence.
