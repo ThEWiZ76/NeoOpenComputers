@@ -26,7 +26,8 @@ import java.util.Optional;
 @JeiPlugin
 public final class OpenComputersJeiPlugin implements IModPlugin {
     static final RecipeType<DocumentationCategory.Page> MANUAL = RecipeType.create(NeoOpenComputers.MODID, "manual", DocumentationCategory.Page.class);
-    static final RecipeType<DocumentationCategory.Page> CALLBACKS = RecipeType.create(NeoOpenComputers.MODID, "api", DocumentationCategory.Page.class);
+    // JEI sorts default categories by UID; keep the manual before its callback pages.
+    static final RecipeType<DocumentationCategory.Page> CALLBACKS = RecipeType.create(NeoOpenComputers.MODID, "manual_callbacks", DocumentationCategory.Page.class);
     private AutoCloseable stackFocusing;
     private AutoCloseable focusedInput;
 
