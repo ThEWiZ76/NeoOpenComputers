@@ -36,6 +36,24 @@ The first mixed preservation fixture posted the global event and incorrectly bla
 
 No real client, OS Computer Use, Modrinth installation or production operation occurred. This proves server-side loaded-table and lazy inventory generation, not discovery/opening of terrain-generated structures by a live player. Beta remains3-6 concentrated workweeks with low confidence; functional work precedes cosmetic polish.
 
+## Native world/legacy disk restart — 3bc5314ab06b1408e03a0a36defe07042be01f69
+
+WorldLootProcessRestartGameTests adds opt-in restartWorldLoot through the existing guarded restartPhase/restartWorld profile. tools/prepare_world_loot_restart.py seeds only an absent oc-restart-world-loot-* world, checks its resolved parent, and preserves existing data. Its network descriptor deliberately overrides a bundled factory path; a separate legacy-only directory has no bundled fallback. The ordinary world-loot fixture flag is not required for this restart profile.
+
+In oc-restart-world-loot-20261020-02, prepare PID58848 and fresh-JVM verify PID72588 each pass all827 required tests and exit normally. Build/all2203 units pass. Final logs world-loot-final-restart-{prepare,verify}-{build,latest,debug}. Earlier pair -01 also passes in PIDs12788/72224; -02 adds a waiting-marker precondition so an already-resumed VM cannot produce a false positive on verify reuse. Both worlds are already verified and must not be reused as fresh preparation.
+
+Preparation obtains the actual world-defined disk by lazy dungeon-chest generation, installs it and an oc:lootPath legacy disk in two physical disk drives beside a native Lua5.3 computer, and leaves one read handle open on each at offset1. Normal server shutdown persists the live machine and hosts. The new process reloads world definitions before resolving those saved disks. It preserves factory/label/color fields, item/count, computer/drive addresses, retained Lua locals and each filesystem's identity. The resumed program checks both offsets and reads exact remaining binary bytes (00 80 ff 2a and 00 ff), then closes the handles. Write-open attempts are rejected; independent Java file reads verify the original source bytes remain61 00 80 ff 2a and11 00 ff. Stack driver state may legitimately gain persistent node/handle metadata, so descriptor checks compare its stable fields rather than requiring an unused template's entire NBT to equal a saved disk.
+
+Reproduce with an unused name and sequential commands from the repository root:
+
+```powershell
+rtk proxy python tools/prepare_world_loot_restart.py oc-restart-world-loot-local-01
+rtk proxy cmd /d /c "gradlew.bat --no-daemon runGameTestServer -Pneoopencomputers.restartWorldLoot -Pneoopencomputers.restartPhase=prepare -Pneoopencomputers.restartWorld=oc-restart-world-loot-local-01"
+rtk proxy cmd /d /c "gradlew.bat --no-daemon runGameTestServer -Pneoopencomputers.restartWorldLoot -Pneoopencomputers.restartPhase=verify -Pneoopencomputers.restartWorld=oc-restart-world-loot-local-01"
+```
+
+This closes targeted case/two-drive native5.3 world/legacy handle acceptance on Windows. No runtime fix was needed. It does not prove every host/architecture/platform, descriptor mutation between processes, live player/TCP/reconnect/structure discovery or crash-mid-save behavior. No client, OS Computer Use, Modrinth install or production operation occurred. Technical parity remains the priority.
+
 ## Evidence
 
 - A fresh isolated world is seeded before startup by build/finish-port-implementation/prepare-world-loot-probe.py. testWorldLoot requires the existing guarded oc-tests-* world property. Probe files include valid, zero-weight, invalid-count, traversal, bundled-collision and legacy-only cases.
@@ -45,10 +63,10 @@ No real client, OS Computer Use, Modrinth installation or production operation o
 - Legacy baseline world-loot-legacy-red-{build,latest,debug}.log has1 required failure: an existing legacy-only world directory is ignored.
 - Final legacy runtime: build/all2203 units/all908 mixed tests and all823 absent tests pass, complete summaries, BUILD SUCCESSFUL and normal terminal exits. Logs world-loot-final-{mixed,absent}-{build,latest,debug}.log. The absent run additionally strengthens world isolation with the real ClientboundUpdateRecipesPacket codec and a separate RecipeManager receiver: its captured external output survives unloading the live world overlay while the live server recipe reverts to its base output.
 
-No real client, Modrinth jar replacement, production operation or OS Computer Use occurred. This is server/codec evidence, not client rendering/TCP/reconnect or a two-JVM world-descriptor acceptance claim.
+No real client, Modrinth jar replacement, production operation or OS Computer Use occurred. That earlier checkpoint was server/codec evidence only; the later native restart checkpoint above supplies the targeted two-JVM proof, while client rendering/TCP/reconnect remains open.
 
 ## Required follow-up
 
-Chest generation is implemented at the checkpoint below. Live client/structure discovery, world-descriptor native-program/JVM restart acceptance and broader compatibility remain open. The full port is not complete.
+Chest generation is implemented at the checkpoint below. Live client/structure discovery and broader compatibility remain open; targeted native world/legacy disk restart proof is recorded above. The full port is not complete.
 
-World descriptors are loaded at server startup; live editing/reload/broadcast is not implemented here. Actual client metadata/JEI/crafting/reconnect acceptance, world-descriptor JVM restart/native-program acceptance, large load and broader platform acceptance remain open. Full port goal remains active; beta estimate3-6 concentrated workweeks, low confidence.
+World descriptors are loaded at server startup; live editing/reload/broadcast is not implemented here. Actual client metadata/JEI/crafting/reconnect acceptance, wider native host/architecture/load and broader platform acceptance remain open; the case/two-drive native5.3 world-descriptor restart is now proven above. Full port goal remains active; beta estimate3-6 concentrated workweeks, low confidence.
