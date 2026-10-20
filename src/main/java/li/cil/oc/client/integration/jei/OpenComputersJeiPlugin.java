@@ -11,6 +11,7 @@ import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -29,6 +30,14 @@ public final class OpenComputersJeiPlugin implements IModPlugin {
     private AutoCloseable focusedInput;
 
     @Override public ResourceLocation getPluginUid() { return ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "jei"); }
+
+    @Override public void registerItemSubtypes(ISubtypeRegistration registration) {
+        for (final var item : List.of(ModItems.ROBOT.get(), ModItems.MICROCONTROLLER_TIER1.get(), ModItems.MICROCONTROLLER_TIER2.get(),
+            ModItems.MICROCONTROLLER_CREATIVE.get(), ModItems.DRONE.get(), ModItems.TABLET.get())) {
+            registration.registerSubtypeInterpreter(item, ItemSubtypes.COMPONENTS);
+        }
+        registration.registerSubtypeInterpreter(ModItems.FLOPPY.get(), ItemSubtypes.FLOPPY);
+    }
 
     @Override public void registerCategories(IRecipeCategoryRegistration registration) {
         final var helper = registration.getJeiHelpers().getGuiHelper();
