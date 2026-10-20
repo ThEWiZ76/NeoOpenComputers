@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "be937fd62efab97248ecfe65a1916bb7ab60dc51",
+  "port_revision": "a6f0c3905487863bcbaad501506c8af137914766",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -775,7 +775,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 124
+              "line": 125
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
@@ -789,7 +789,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 129
+              "line": 130
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
@@ -803,7 +803,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 145
+              "line": 146
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
@@ -2844,7 +2844,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 124
+              "line": 125
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
@@ -2858,7 +2858,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 129
+              "line": 130
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
@@ -2872,7 +2872,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 145
+              "line": 146
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
