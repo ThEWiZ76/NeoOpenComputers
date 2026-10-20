@@ -694,6 +694,11 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, li.cil
     }
 
     @Override
+    public int getMaxStackSize() {
+        return 1;
+    }
+
+    @Override
     public boolean canPlaceItem(final int slot, final ItemStack stack) {
         return slotAcceptsStack(tier, slot, stack);
     }

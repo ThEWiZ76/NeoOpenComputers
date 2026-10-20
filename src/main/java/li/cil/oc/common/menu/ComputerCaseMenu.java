@@ -107,7 +107,7 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
 
         for (int slot = 0; slot < computerSlotCount; slot++) {
             final int[] position = slotPosition(computerTier(), slot);
-            addSlot(new ComputerSlot(computerInventory, slot, position[0], position[1]));
+            addSlot(new ComputerSlot(computerInventory, slot, position[0], position[1], computerTier()));
         }
         addPlayerInventory(playerInventory);
     }
@@ -307,13 +307,26 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
     }
 
     static final class ComputerSlot extends Slot {
-        ComputerSlot(final Container container, final int slot, final int x, final int y) {
+        private final int tier;
+
+        ComputerSlot(final Container container, final int slot, final int x, final int y, final int tier) {
             super(container, slot, x, y);
+            this.tier = tier;
         }
 
         @Override
         public boolean mayPlace(final ItemStack stack) {
-            return container.canPlaceItem(getSlotIndex(), stack);
+            // Client SimpleContainer has no hardware rules; predict the server's tiered slots.
+            final var driver = Driver.driverFor(stack);
+            return driver != null
+                && computerSlotKind(tier, getSlotIndex()).equals(driver.slot(stack))
+                && driver.tier(stack) <= computerSlotTierLimit(tier, getSlotIndex())
+                && container.canPlaceItem(getSlotIndex(), stack);
+        }
+
+        @Override
+        public int getMaxStackSize() {
+            return 1;
         }
     }
 
