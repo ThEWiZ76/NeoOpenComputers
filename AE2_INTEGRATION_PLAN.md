@@ -28,7 +28,7 @@ Files: integration/ae2/CraftableValue.java, CraftingStatusValue.java and support
 
 - [x] Read modern ICraftingSimulationRequester, calculation, submit-result/link and pattern APIs. Reproduce missing getCraftables against real molecular assembler/pattern provider/storage/CPU setup.
 - [x] Implement getCraftables(filter), getItemStack, requesting and request(amount=1,prioritizePower=true,cpuName=""). Preserve upstream error/result contracts and recipe output count.
-- [ ] Complete calculation/submission failure matrix. Implemented: AE2 asynchronous calculation, server-thread Future.isDone polling and get only after completion (nonblocking), then exactly-once submission; this replaces an unnecessary extra waiting worker. Handle failed calculation, insufficient storage, unavailable/busy/named CPU and removed grid.
+- [ ] Complete calculation/submission failure matrix. Implemented: AE2 asynchronous calculation, server-thread Future.isDone polling and get only after completion (nonblocking), then exactly-once submission; this replaces an unnecessary extra waiting worker. Named/missing/busy/too-small/no-CPU and missing-ingredient outcomes now tested via controller/block/panel. CPU_OFFLINE/failed calculation and removed-grid cases remain open.
 - [x] Implement status computing/isDone/isCanceled/cancel; prove actual completed output and cancellation/resource conservation, including Lua calls.
 - [x] Persist position/dimension/key/request link/status, canonical alias identity and world-owned progress/outcomes; three actual two-process cases now prove active/terminal/error and late old-heap recovery. Loaded-target level-end rebind fixes startup ordering; no forced chunk loads.
 - [ ] Finish restart/failure acceptance: save while computing, busy/offline/too-small CPU, missing/replaced target, true chunk eviction/all orderings, history/cleanup/load and abrupt-stop consistency.
@@ -38,9 +38,10 @@ Files: integration/ae2/CraftableValue.java, CraftingStatusValue.java and support
 
 Files: focused integration/ae2 drivers and shared network control; AE2 GameTests.
 
-- [ ] Verify modern block/part interface and bus capabilities; reproduce missing me_interface/me_importbus/me_exportbus discovery and EnvironmentProviders.
-- [ ] Share complete network-control callbacks across upstream hosts. Restore interface get/set configuration, optional slot overload, database-copy semantics, quantity clamping and0.5-second pause.
-- [ ] Restore side-specific bus configuration, errors and exportIntoSlot with real inventories, speed/fuzzy upgrades and0.25-second successful pause. Test simulated versus actual extraction, rejected inserts, rollback and item/fluid conservation.
+- [x] Verify block/part/bus ghost-config contract in pinned AE2 implementation; reproduce missing drivers/native discovery and add EnvironmentProviders.
+- [x] Share complete network control across block/panel interfaces, including real native crafting, and restore get/set config/default-slot overload/database-copy/clamp/0.5-second pause.
+- [x] Restore side-specific import/export filter configuration and errors; all6faces, wrong-kind guards, providers, node identity and cold ghost NBT tested.
+- [ ] Restore exportIntoSlot with real inventories, speed/fuzzy upgrades and0.25-second successful pause. Test simulated versus actual extraction, rejected inserts, rollback and item/fluid conservation.
 - [ ] Test all sides, stale/unloaded hosts and missing parts without chunk loads, Lua argument/results and persistence. Commit/push verified step.
 
 ## 4. Cell converter and auxiliary contracts
@@ -66,3 +67,5 @@ Controller checkpoint 5b60fee0b7577cd2a95c831969903a9237e695eb: first work packa
 Crafting checkpoint f36740a717c5b9ee121f51f2ab91aca8ef3bf189: actual native assembler output, processing cancellation, named/missing CPU, missing ingredients and same-process saved aliases verified;2140 units/731 mixed/729 standalone/726 absent tests. Full two-process/host-offline persistence and wider submission-failure matrix remain task2 gates before claiming complete AE2. See [[../03 manuals/AE2 crafting integration]].
 
 Restart checkpoint 2b4e1b752ddeda019c877841b135e82325022f8a: journal-backed active/terminal recovery after reproduced older-heap completion loss and startup late-bind regression. Final world oc-restart-ae2-crafting-20261020-06: PIDs53528/54476,736 tests each;2141 units;726 absent profile. See [[../03 manuals/AE2 crafting restart]]. Remaining explicit acceptance above and interfaces/buses/converters/auxiliary/client work stay open; beta3-6 workweeks, low confidence.
+
+Interface/config checkpoint b40e4be50d388502ca9c2dddc34141f8ec777998: actual controller/block/panel crafting and CPU_BUSY/CPU_TOO_SMALL/NO_CPU_FOUND resource-conservation matrix;5added tests,2141 units,741-test prepare/verify JVMs,736 mixed/726 absent. Manual exportIntoSlot remains open. Reused-world ChunkMap unload hang preserved and not claimed fixed; fresh full suites pass. See [[../03 manuals/AE2 interfaces and bus configuration]].
