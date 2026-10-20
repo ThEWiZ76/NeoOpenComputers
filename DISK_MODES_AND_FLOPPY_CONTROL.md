@@ -28,3 +28,7 @@ The existing guarded restartWorldLoot/restartPhase/restartWorld profile and trac
 ## Remaining scope
 
 This proves server-side use/menu behavior, actual native Lua5.3 hardware and process restart on Windows. It does not prove real-client rendering/input/packet delivery, survival/multiplayer/protection/platform/load coverage. No client, OS Computer Use, Modrinth installation or production operation occurred. Native managed HDD/floppy/RAID still use RAM/NBT instead of the upstream save-directory/bufferChanges backend, and native raw drives still store inline bytes instead of the old external compressed volume. That separate backend/migration work must preserve current contents, identities and handles. Mode/lock tooltip/style polish remains deferred. Full port goal is active; beta estimate3-6 concentrated workweeks, low confidence, not a feature percentage.
+
+## Raw world storage follow-up — 6cf4c2890fe2b2869fa5d84d70abe9cdbb2b804a
+
+Raw HDD/floppy now use independent oc:rawStorage metadata and external GZIP .bin files. Real mode changes clear that binding; same mode preserves it. Native factories need the active world in either mode. Three existing raw defects fixed: aliased standalone snapshots, stale tail after shorter reload, headPos always reset0. All2237 units/938 mixed tests per JVM pass, actual GZIP bytes and no-inline metadata checked across fresh process pair; [[Native volume import]] contains full evidence/limits. This does not establish client/Survival/multiplayer or powerloss acceptance.

@@ -51,9 +51,9 @@ Files: RaidBlockEntity and RAID/native process probes.
 
 Files: DriveEnvironment, native storage helper and raw-drive/mode tests.
 
-- [ ] Reproduce inline raw bytes. Import old bytes to an external compressed volume without clobbering an existing file; persist a stable binding independently of node remapping.
-- [ ] Keep signed readByte, capacity/platter/timing, label/lock and mode-format semantics; preserve inline source until durable import. Invalid/compressed/conflicting existing files must fail explicitly.
-- [ ] Test binary IO, lock, direct save/reload, clone/conflict behavior, normal two-JVM native restart and recovery cases; commit/push.
+- [x] Reproduce inline raw bytes. Import old bytes to an external compressed volume without clobbering an existing file; persist a stable binding independently of node remapping.
+- [x] Keep signed readByte, capacity/platter/timing, label/lock and mode-format semantics; preserve inline source until durable import. Invalid/compressed/conflicting existing files must fail explicitly.
+- [x] Test binary IO, lock, direct save/reload, clone/conflict behavior, normal two-JVM native restart and recovery cases; commit/push.
 
 ### 5. Complete acceptance and documentation
 
@@ -77,3 +77,7 @@ Managed HDD/floppy binding and defaulttrue bufferChanges are implemented. Build2
 ## RAID binding checkpoint — 9cdb3b5947b81096b5ffde47865d9be6e9121078
 
 Step3 implemented: world binding/direct+buffered, legacy inline import/source preservation, metadata-only snapshots, durable array destruction including after unload, fresh reassembly and normal reload/whole-block item retention. Build2224 units/840 ordinary GameTests pass. Mixed native prepare PID40500/verify PID66772 each936 required tests/normal exit, actual RAID file/no-inline metadata plus Lua continuation. [[../03 manuals/RAID formatting and lifecycle persistence]] records proof/limits. Step4 compressed external raw storage is next; broad matrix/client acceptance remains open.
+
+## Raw storage checkpoint — 6cf4c2890fe2b2869fa5d84d70abe9cdbb2b804a
+
+Step4 wired: native .bin/GZIP import and guarded saves, independent oc:rawStorage, preserved metadata/locks/head and no inline bytes in new native snapshots. Source/pending/stale/conflict/corruption/capacity/clone tests; alias/head/tail defects fixed and unknown late inline source rejected. Final2237 units and mixed native prepare PID71224/verify PID59096 each938 required tests/normal exits. [[../03 manuals/Native volume import]] records format/evidence/limits. All native backends switched; step2 broad matrix and step5 actual client/platform/IO/crash/load/full feature acceptance remain open. Full port goal remains active, cosmetic polish deferred.
