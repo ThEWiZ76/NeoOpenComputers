@@ -237,7 +237,14 @@ public final class AppliedEnergisticsGameTests {
                   } catch (RuntimeException exception) { throw exception; }
                   catch (Exception exception) { helper.fail(exception.toString()); }
                 }).thenExecute(() -> helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(2, 1, 0)), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()))
-                .thenWaitUntil(() -> helper.assertTrue(grid[0].getCraftingService().getCpus().isEmpty(), "Removed CPU still registered"))
+                .thenWaitUntil(() -> {
+                    final var host = helper.getLevel().getCapability(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST, drivePos, null);
+                    helper.assertTrue(host != null && host.getGridNode(Direction.UP) != null && host.getGridNode(Direction.UP).isActive(), "Waiting for live drive after CPU removal");
+                    final var currentGrid = host.getGridNode(Direction.UP).getGrid();
+                    if (grid[0] != currentGrid) NeoOpenComputers.LOGGER.info("Rebinding AE2 {} crafting fixture to rebuilt drive grid after CPU removal", hostKind);
+                    grid[0] = currentGrid;
+                    helper.assertTrue(grid[0].getCraftingService().getCpus().isEmpty(), "Removed CPU still registered");
+                })
                 .thenWaitUntil(() -> {
                     // Removing a grid block also rebuilds channels/storage. CPU removal alone
                     // does not mean the asynchronous planner can see its ingredients yet.
