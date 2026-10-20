@@ -1,6 +1,6 @@
 # Railcraft integration
 
-Status: target/contract investigated, implementation next. This is an existing family in the authorized full-port plan, not a new gameplay feature. Preserve original adapter/worldspike and crowbar interoperability using actual current provider behavior; do not recreate removed Railcraft gameplay inside OC.
+Status: server/native contract verified; real client and broader acceptance remain open. This is an existing family in the authorized full-port plan, not a new gameplay feature. Preserve original adapter/worldspike and crowbar interoperability using actual current provider behavior; do not recreate removed Railcraft gameplay inside OC.
 
 ## Verified target - 2026-10-20
 
@@ -15,3 +15,10 @@ Actual current provider only has world_spike and personal_world_spike. They forc
 3. Register Crowbar interface checks and usages through existing WrenchTools, using canWhack for eligibility and onWhack for actual durability/swing. Test actual crowbar and Seasons subtype, ordinary-item rejection, no damage during checks, exactly one damage on actual OC charger interaction and type-only drone pickup. Native Lua5.3 physical adapter must call all five worldspike methods; not only direct Java calls.
 4. Actual base-only and mixed profiles, default absence build/unit/package gates, normal shutdown and archived latest/debug logs. Railcraft declares optional JEI>=19.21.0.247, while current test pin246 is incompatible. Publisher Maven247 and source's declared19.25.0.322 both exist and require NeoForge>=21.0.118-beta. Their actual descriptors have Minecraft range[1.21,1.21.1), so record that unusual upstream metadata and require real loader/test proof before claiming mixed compatibility. Do not bypass dependency checks or modify provider descriptors. Choose a supported compatible test dependency based on actual launch evidence; no user client changes for this checkpoint.
 5. Canonical docs/memory/surface inventory readback and root mirrors; intermediate commits/pushes. Real client, broad owner/protection/multiplayer/platform/load acceptance remains open. Beta remains3-6 concentrated workweeks with low confidence; no percentage from source/test counts. Technical function before polish.
+
+
+## Railcraft server checkpoint - 2d2e0212b849dc79783a6d78fab3fa4968db5ad7
+
+Reborn1.2.13: five worldspike callbacks, exact live-host/owner/type handling and original priority5; explicit no-fuel/no-redstone mapping for removed provider features. Crowbar checks/use, real charger durability and drone pickup verified for actual items. Three new cases include native Lua/physical adapter and provider-owner NBT, not a two-JVM claim. Two existing robot/cart tests now use the roomy template after tracing a false LOS rejection by the small fixture ceiling; item-conservation/protection assertions and production event code unchanged. First missing-driver harness abort, five-failure baseline and intermediate fixture diagnostics retained.
+
+Build2239 units/858 standalone,948 mixed on248 with JEI322,855 absent/default234 all green with normal exit0; logs archived. Default non-Railcraft JEI246 unchanged; requested fixtures cannot disappear; optional classloading/artifact/POM isolation guarded. Runtime2d2e0212b849dc79783a6d78fab3fa4968db5ad7. See [[../03 manuals/Railcraft integration]] for pins, compatibility mapping and evidence. Real client/ownership/protection/multiplayer/platform/load acceptance and other full-port gates remain open. No user client install/restart or OS focus/mouse action. Beta3-6 concentrated workweeks, low confidence; function before polish.

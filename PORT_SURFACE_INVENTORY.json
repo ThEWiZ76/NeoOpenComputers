@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "a810df98e649e5c6678023a97434b82118a77f89",
+  "port_revision": "2d2e0212b849dc79783a6d78fab3fa4968db5ad7",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -7035,6 +7035,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/integration/EnderStorageIntegration.java",
               "line": 95
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/railcraft/RailcraftBlockDriver.java",
+              "line": 55
             }
           ]
         },
@@ -8322,7 +8326,12 @@
         {
           "name": "getFuel",
           "line": 28,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/railcraft/RailcraftBlockDriver.java",
+              "line": 48
+            }
+          ]
         },
         {
           "name": "getOwner",
@@ -8331,23 +8340,42 @@
             {
               "path": "src/main/java/li/cil/oc/common/integration/EnderStorageIntegration.java",
               "line": 95
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/railcraft/RailcraftBlockDriver.java",
+              "line": 55
             }
           ]
         },
         {
           "name": "getType",
           "line": 38,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/railcraft/RailcraftBlockDriver.java",
+              "line": 61
+            }
+          ]
         },
         {
           "name": "getFuelSlotContents",
           "line": 47,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/railcraft/RailcraftBlockDriver.java",
+              "line": 66
+            }
+          ]
         },
         {
           "name": "isDisabled",
           "line": 55,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/integration/railcraft/RailcraftBlockDriver.java",
+              "line": 69
+            }
+          ]
         }
       ]
     },
@@ -9103,12 +9131,6 @@
     "getEnergyPerTick": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverEnergyInfo.java:36"
     ],
-    "getFuel": [
-      "src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:28"
-    ],
-    "getFuelSlotContents": [
-      "src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:47"
-    ],
     "getGasesInNetwork": [
       "src/main/scala/li/cil/oc/integration/ec/NetworkControl.scala:22"
     ],
@@ -9156,9 +9178,6 @@
     "getSteamPerTick": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSteamInfo.java:32"
     ],
-    "getType": [
-      "src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:38"
-    ],
     "getWirelessFrequency": [
       "src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:80"
     ],
@@ -9167,9 +9186,6 @@
     ],
     "getWirelessOutput": [
       "src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:60"
-    ],
-    "isDisabled": [
-      "src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:55"
     ],
     "isPowered": [
       "src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:53"

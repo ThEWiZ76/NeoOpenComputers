@@ -1,6 +1,6 @@
 # Port source surface inventory
 
-Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `a810df98e649e5c6678023a97434b82118a77f89`.
+Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `2d2e0212b849dc79783a6d78fab3fa4968db5ad7`.
 
 Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.
 
@@ -31,8 +31,6 @@ Java API files: 144. Missing matching port paths: 0.
 | getControlSettingName | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:42 |
 | getEnergy | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverEnergyInfo.java:31; src/main/scala/li/cil/oc/integration/ic2/DriverEnergy.java:44 |
 | getEnergyPerTick | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverEnergyInfo.java:36 |
-| getFuel | src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:28 |
-| getFuelSlotContents | src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:47 |
 | getGasesInNetwork | src/main/scala/li/cil/oc/integration/ec/NetworkControl.scala:22 |
 | getHeat | src/main/scala/li/cil/oc/integration/ic2/DriverReactor.java:43; src/main/scala/li/cil/oc/integration/ic2/DriverReactorChamber.java:43; src/main/scala/li/cil/oc/integration/ic2/DriverReactorRedstonePort.java:53 |
 | getInsulationBreakdownEnergy | src/main/scala/li/cil/oc/integration/ic2/DriverEnergyConductor.java:41 |
@@ -46,11 +44,9 @@ Java API files: 144. Missing matching port paths: 0.
 | getSinkTier | src/main/scala/li/cil/oc/integration/ic2/DriverEnergy.java:50 |
 | getSourceTier | src/main/scala/li/cil/oc/integration/ic2/DriverEnergy.java:56 |
 | getSteamPerTick | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSteamInfo.java:32 |
-| getType | src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:38 |
 | getWirelessFrequency | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:80 |
 | getWirelessInput | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:54 |
 | getWirelessOutput | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:60 |
-| isDisabled | src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:55 |
 | isPowered | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:53 |
 | producesEnergy | src/main/scala/li/cil/oc/integration/ic2/DriverReactor.java:63; src/main/scala/li/cil/oc/integration/ic2/DriverReactorChamber.java:78; src/main/scala/li/cil/oc/integration/ic2/DriverReactorRedstonePort.java:93 |
 | setControlDisable | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverRedstoneControl.java:58 |
