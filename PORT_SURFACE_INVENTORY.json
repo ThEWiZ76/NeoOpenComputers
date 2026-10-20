@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "782fddfd7126459c31afca0fa88764954f21ac2b",
+  "port_revision": "80e97e54433220c429a025d0fbfc3ee7e22ab836",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -850,7 +850,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 61
+              "line": 67
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -868,7 +868,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 66
+              "line": 72
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -1269,7 +1269,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 89
+              "line": 95
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -1295,7 +1295,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 84
+              "line": 90
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -1808,7 +1808,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 84
+              "line": 90
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -1834,7 +1834,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 89
+              "line": 95
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -2900,7 +2900,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 84
+              "line": 90
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -2926,7 +2926,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 89
+              "line": 95
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -3146,7 +3146,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 61
+              "line": 67
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -3164,7 +3164,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 66
+              "line": 72
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -3186,7 +3186,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 84
+              "line": 90
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -3212,7 +3212,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 89
+              "line": 95
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -3230,7 +3230,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 106
+              "line": 112
             }
           ]
         },
@@ -3240,7 +3240,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 111
+              "line": 117
             }
           ]
         },
@@ -3250,7 +3250,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 123
+              "line": 129
             }
           ]
         },
@@ -3260,7 +3260,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 133
+              "line": 139
             }
           ]
         },
@@ -3270,7 +3270,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 138
+              "line": 144
             }
           ]
         },
@@ -3280,7 +3280,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 143
+              "line": 149
             }
           ]
         }
@@ -3304,7 +3304,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 84
+              "line": 90
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -3330,7 +3330,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 89
+              "line": 95
             },
             {
               "path": "src/main/java/li/cil/oc/common/DriveEnvironment.java",
@@ -3942,7 +3942,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 61
+              "line": 67
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -3960,7 +3960,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 66
+              "line": 72
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -5789,7 +5789,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/EepromEnvironment.java",
-              "line": 61
+              "line": 67
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
