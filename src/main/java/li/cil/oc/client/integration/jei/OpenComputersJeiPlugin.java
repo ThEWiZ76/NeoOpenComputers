@@ -14,6 +14,7 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
+import mezz.jei.api.registration.IAdvancedRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -35,6 +38,7 @@ public final class OpenComputersJeiPlugin implements IModPlugin {
     private AutoCloseable stackFocusing;
     private AutoCloseable focusedInput;
     private AutoCloseable runtimeDisks;
+    private final Set<String> initiallyDocumentedFactories = new HashSet<>();
 
     @Override public ResourceLocation getPluginUid() { return ResourceLocation.fromNamespaceAndPath(NeoOpenComputers.MODID, "jei"); }
 
@@ -63,23 +67,46 @@ public final class OpenComputersJeiPlugin implements IModPlugin {
         static net.minecraft.world.level.Level level() { return Minecraft.getInstance().level; }
     }
 
+    @Override public void registerAdvanced(IAdvancedRegistration registration) {
+        registration.addTypedRecipeManagerPlugin(mezz.jei.api.constants.RecipeTypes.CRAFTING,
+            new LootDiskRecipeLookup(ClientWorld::level,
+                () -> registration.getJeiHelpers().getIngredientManager().getAllIngredients(VanillaTypes.ITEM_STACK)));
+    }
+
     @Override public void registerRecipes(IRecipeRegistration registration) {
+        initiallyDocumentedFactories.clear();
+        final var stacks = registration.getIngredientManager().getAllIngredients(VanillaTypes.ITEM_STACK);
+        for (final var stack : stacks) {
+            final var factory = LootDiskClientState.factoryId(stack);
+            if (factory != null) initiallyDocumentedFactories.add(factory);
+        }
+        final var pages = documentation(stacks);
+        registration.addRecipes(MANUAL, pages.manual());
+        registration.addRecipes(CALLBACKS, pages.callbacks());
+    }
+
+    record Documentation(List<DocumentationCategory.Page> manual, List<DocumentationCategory.Page> callbacks) {}
+
+    private static Documentation documentation(Collection<ItemStack> stacks) {
+        final var font = Minecraft.getInstance().font;
+        return documentation(stacks, (text, width) -> font.getSplitter().splitLines(text, width, net.minecraft.network.chat.Style.EMPTY)
+            .stream().map(net.minecraft.network.chat.FormattedText::getString).toList());
+    }
+
+    static Documentation documentation(Collection<ItemStack> stacks, java.util.function.BiFunction<String, Integer, List<String>> wrap) {
         final List<DocumentationCategory.Page> manual = new ArrayList<>();
         final List<DocumentationCategory.Page> callbacks = new ArrayList<>();
-        final var font = Minecraft.getInstance().font;
-        for (final ItemStack stack : registration.getIngredientManager().getAllIngredients(VanillaTypes.ITEM_STACK)) {
+        for (final ItemStack stack : stacks) {
             final String path = Manual.pathFor(stack);
             if (path != null) manual.add(new DocumentationCategory.Page(stack.copy(), List.of(), path));
             final var environments = Driver.environmentsFor(stack);
             if (environments == null) continue;
             final var entries = CallbackDocumentation.discover(environments);
-            for (final var lines : CallbackDocumentation.pages(entries, (text, width) -> font.getSplitter().splitLines(text, width, net.minecraft.network.chat.Style.EMPTY)
-                .stream().map(net.minecraft.network.chat.FormattedText::getString).toList())) {
+            for (final var lines : CallbackDocumentation.pages(entries, wrap)) {
                 callbacks.add(new DocumentationCategory.Page(stack.copy(), lines, null));
             }
         }
-        registration.addRecipes(MANUAL, manual);
-        registration.addRecipes(CALLBACKS, callbacks);
+        return new Documentation(List.copyOf(manual), List.copyOf(callbacks));
     }
 
     @Override public void onRuntimeAvailable(IJeiRuntime runtime) {
@@ -87,8 +114,18 @@ public final class OpenComputersJeiPlugin implements IModPlugin {
         stackFocusing = ItemSearch.registerStackFocusing((screen, x, y) -> Optional.ofNullable(runtime.getIngredientListOverlay().getIngredientUnderMouse(VanillaTypes.ITEM_STACK)));
         focusedInput = ItemSearch.registerFocusedInput(() -> runtime.getIngredientListOverlay().hasKeyboardFocus());
         final var ingredients = runtime.getIngredientManager();
+        final var documented = new HashSet<>(initiallyDocumentedFactories);
         runtimeDisks = subscribeRuntimeDisks(() -> ingredients.getAllIngredients(VanillaTypes.ITEM_STACK),
-            stacks -> ingredients.addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, stacks));
+            stacks -> {
+                ingredients.addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, stacks);
+                final var newDisks = stacks.stream().filter(stack -> documented.add(LootDiskClientState.factoryId(stack))).toList();
+                if (!newDisks.isEmpty()) {
+                    final var pages = documentation(newDisks);
+                    final var recipes = runtime.getRecipeManager();
+                    if (!pages.manual().isEmpty()) recipes.addRecipes(MANUAL, pages.manual());
+                    if (!pages.callbacks().isEmpty()) recipes.addRecipes(CALLBACKS, pages.callbacks());
+                }
+            });
     }
 
     @Override public void onRuntimeUnavailable() {

@@ -24,10 +24,69 @@ import java.util.Set;
 public final class JeiRuntimeDiskGameTests {
     @GameTestGenerator public static Collection<TestFunction> tests() {
         if (!net.neoforged.fml.ModList.get().isLoaded("jei")) return List.of();
-        return List.of(new TestFunction("jeiRuntimeDisks", "jei_runtime_disks_batch_and_replace", "neoopencomputers:empty", 100, 0, true, Loaded::runtime));
+        return List.of(
+            new TestFunction("jeiRuntimeDisks", "jei_runtime_disks_batch_and_replace", "neoopencomputers:empty", 100, 0, true, Loaded::runtime),
+            new TestFunction("jeiRuntimeDisks", "jei_runtime_disks_find_actual_recipe", "neoopencomputers:empty", 100, 0, true, Loaded::lookup),
+            new TestFunction("jeiRuntimeDisks", "jei_runtime_disks_have_manual_pages", "neoopencomputers:empty", 100, 0, true, Loaded::documentation));
     }
 
     private static final class Loaded {
+        static void lookup(GameTestHelper helper) {
+            final var previousApi = li.cil.oc.api.API.items;
+            final var manager = helper.getLevel().getRecipeManager();
+            final var previousRecipes = List.copyOf(manager.getRecipes());
+            try {
+                final var registry = new li.cil.oc.common.ItemRegistry();
+                li.cil.oc.api.API.items = registry;
+                li.cil.oc.common.ModContentCatalog.registerDefaults();
+                final var eligible = registry.registerFloppy("lookup eligible", net.minecraft.world.item.DyeColor.ORANGE, () -> null, true);
+                final var excluded = registry.registerFloppy("lookup excluded", net.minecraft.world.item.DyeColor.GREEN, () -> null, false);
+                final net.minecraft.world.item.crafting.RecipeHolder<net.minecraft.world.item.crafting.CraftingRecipe> holder = new net.minecraft.world.item.crafting.RecipeHolder<>(
+                    net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("neoopencomputers", "runtime_lookup_fixture"),
+                    new li.cil.oc.common.recipe.LootDiskCyclingRecipe(net.minecraft.world.item.crafting.CraftingBookCategory.MISC));
+                manager.replaceRecipes(List.of(holder));
+                final var ingredients = new ArrayList<ItemStack>();
+                final var lookup = new LootDiskRecipeLookup(helper::getLevel, () -> ingredients);
+                helper.assertTrue(lookup.getAllRecipes().isEmpty(), "Empty ingredient registry generated a display recipe");
+                ingredients.add(excluded);
+                final var input = typed(excluded);
+                helper.assertTrue(lookup.isHandledInput(input) && lookup.getRecipesForInput(input).size() == 1 && lookup.getRecipesForInput(input).getFirst() == holder,
+                    "Late opt-out disk cannot find the actual server recipe holder");
+                helper.assertTrue(lookup.getRecipesForInput(typed(new ItemStack(li.cil.oc.common.ModItems.WRENCH.get()))).equals(List.of(holder)), "Wrench lookup omitted the dynamic recipe");
+                eligible.set(DataComponents.CUSTOM_NAME, Component.literal("Renamed output"));
+                helper.assertTrue(lookup.isHandledOutput(typed(eligible)) && !lookup.isHandledOutput(typed(excluded)), "Output lookup ignored factory subtype or exposed an excluded output");
+                helper.assertTrue(!lookup.isHandledInput(typed(new ItemStack(li.cil.oc.common.ModItems.FLOPPY.get()))) && !lookup.isHandledInput(typed(new ItemStack(net.minecraft.world.item.Items.STONE))), "Ordinary items became cycling inputs");
+                manager.replaceRecipes(List.of());
+                helper.assertTrue(lookup.getRecipesForInput(input).isEmpty() && lookup.getAllRecipes().isEmpty(), "Disabled/unloaded recipe remained dynamically visible");
+            } finally {
+                manager.replaceRecipes(previousRecipes);
+                li.cil.oc.api.API.items = previousApi;
+            }
+            helper.succeed();
+        }
+
+        static void documentation(GameTestHelper helper) {
+            final var previous = li.cil.oc.api.API.manual;
+            try {
+                final var manual = new li.cil.oc.common.ManualRegistry();
+                li.cil.oc.client.ManualContent.registerDefaults(manual);
+                li.cil.oc.api.API.manual = manual;
+                final var stack = ModLootDisks.bundledStacksForCycling().getFirst();
+                final var pages = OpenComputersJeiPlugin.documentation(List.of(stack), (text, width) -> List.of(text));
+                helper.assertTrue(pages.manual().size() == 1 && pages.manual().getFirst().path().equalsIgnoreCase("%LANGUAGE%/item/floppy.md"), "Runtime disk has no actual floppy manual shortcut");
+                pages.manual().getFirst().stack().setCount(0);
+                helper.assertTrue(!stack.isEmpty(), "Runtime documentation owns the ingredient manager's stack");
+            } finally { li.cil.oc.api.API.manual = previous; }
+            helper.succeed();
+        }
+
+        private static mezz.jei.api.ingredients.ITypedIngredient<?> typed(ItemStack stack) {
+            try {
+                return (mezz.jei.api.ingredients.ITypedIngredient<?>) Class.forName("mezz.jei.library.ingredients.TypedIngredient")
+                    .getMethod("createUnvalidated", mezz.jei.api.ingredients.IIngredientType.class, Object.class).invoke(null, VanillaTypes.ITEM_STACK, stack);
+            } catch (ReflectiveOperationException failure) { throw new AssertionError(failure); }
+        }
+
         static void runtime(GameTestHelper helper) {
             final var previous = LootDiskClientState.stacks();
             try {
