@@ -41,6 +41,12 @@ public final class EepromEnvironment extends AbstractManagedEnvironment implemen
     @Override
     public void save(final CompoundTag nbt) {
         super.save(nbt);
+        for (final String key : new String[]{ItemRegistry.EEPROM_CODE_TAG, ItemRegistry.EEPROM_DATA_SECTION_TAG,
+            ItemRegistry.EEPROM_LABEL_TAG, ItemRegistry.EEPROM_READONLY_TAG}) {
+            final var value = data.get(key);
+            if (value == null) nbt.remove(key);
+            else nbt.put(key, value.copy());
+        }
         data.put(NODE_TAG, nbt.getCompound(NODE_TAG).copy());
         onChanged.run();
     }

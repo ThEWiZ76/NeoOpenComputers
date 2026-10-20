@@ -4,6 +4,7 @@ import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.common.component.ApuEnvironment;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
 public final class ApuItem extends CpuItem implements HostAware {
@@ -19,7 +20,16 @@ public final class ApuItem extends CpuItem implements HostAware {
         if (ItemDriverData.isClientSide(host)) {
             return null;
         }
-        return new ApuEnvironment(gpuTier, dataTag(stack), saved -> ItemDriverData.writeDataTag(stack, saved));
+        return new ApuEnvironment(gpuTier, dataTag(stack), saved -> {
+            copyArchitectureData(dataTag(stack), saved);
+            ItemDriverData.writeDataTag(stack, saved);
+        }) {
+            @Override
+            public void save(final CompoundTag data) {
+                copyArchitectureData(dataTag(stack), data);
+                super.save(data);
+            }
+        };
     }
 
     @Override

@@ -7,7 +7,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 
 import java.util.Map;
 
-public final class PassiveDeviceInfoEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
+public class PassiveDeviceInfoEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private final Map<String, String> deviceInfo;
 
     public PassiveDeviceInfoEnvironment(final Map<String, String> deviceInfo) {

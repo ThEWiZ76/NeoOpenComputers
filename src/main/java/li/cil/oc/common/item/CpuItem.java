@@ -37,7 +37,21 @@ public class CpuItem extends Item implements MutableProcessor, CallBudget {
 
     @Override
     public ManagedEnvironment createEnvironment(final ItemStack stack, final EnvironmentHost host) {
-        return createDeviceInfoEnvironment(tier(stack));
+        return new PassiveDeviceInfoEnvironment(deviceInfo(tier(stack))) {
+            @Override
+            public void save(final CompoundTag data) {
+                copyArchitectureData(dataTag(stack), data);
+                super.save(data);
+            }
+        };
+    }
+
+    static void copyArchitectureData(final CompoundTag source, final CompoundTag target) {
+        for (final String key : new String[]{ARCH_CLASS_TAG, ARCH_NAME_TAG}) {
+            final var value = source.get(key);
+            if (value == null) target.remove(key);
+            else target.put(key, value.copy());
+        }
     }
 
     @Override

@@ -32,6 +32,22 @@ final class EepromEnvironmentTest {
     }
 
     @Test
+    void freshSaveRetainsFirmwareDataLabelReadonlyAndNode() throws Exception {
+        OpenComputersApi.initialize();
+        final var original = new EepromEnvironment(data("ROM", "code", "user", true));
+        final var saved = new CompoundTag();
+        original.save(saved);
+        assertArrayEquals(bytes("code"), saved.getByteArray(ItemRegistry.EEPROM_CODE_TAG));
+        assertArrayEquals(bytes("user"), saved.getByteArray(ItemRegistry.EEPROM_DATA_SECTION_TAG));
+        assertEquals("ROM", saved.getString(ItemRegistry.EEPROM_LABEL_TAG));
+        assertTrue(saved.getBoolean(ItemRegistry.EEPROM_READONLY_TAG));
+        final var restored = new EepromEnvironment(saved.copy());
+        assertEquals(original.node().address(), restored.node().address());
+        assertArrayEquals(bytes("code"), (byte[]) ((Component) restored.node()).invoke("get", null)[0]);
+        assertArrayEquals(new Object[]{null, "storage is readonly"}, ((Component) restored.node()).invoke("set", null, "replacement"));
+    }
+
+    @Test
     void createsEepromComponentNode() {
         OpenComputersApi.initialize();
         EepromEnvironment environment = new EepromEnvironment(data("Lua BIOS", "code", "data", false));

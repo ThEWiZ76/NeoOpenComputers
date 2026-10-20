@@ -8,7 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public final class ApuEnvironment extends GraphicsCardEnvironment {
+public class ApuEnvironment extends GraphicsCardEnvironment {
     private final int tier;
     private final int maxWidth;
     private final int maxHeight;
