@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "8e852cb544df38e7bba0becd166a4e6ab64d0465",
+  "port_revision": "68650919030cd096146fcada74ea159726017ffa",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -1488,7 +1488,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RelayBlockEntity.java",
-              "line": 697
+              "line": 709
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/WirelessNetworkCardEnvironment.java",
@@ -1502,7 +1502,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RelayBlockEntity.java",
-              "line": 702
+              "line": 714
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/WirelessNetworkCardEnvironment.java",
@@ -1516,7 +1516,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RelayBlockEntity.java",
-              "line": 707
+              "line": 719
             }
           ]
         },
@@ -1526,7 +1526,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RelayBlockEntity.java",
-              "line": 712
+              "line": 724
             }
           ]
         }
@@ -6174,7 +6174,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RelayBlockEntity.java",
-              "line": 697
+              "line": 709
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/WirelessNetworkCardEnvironment.java",
@@ -6188,7 +6188,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RelayBlockEntity.java",
-              "line": 702
+              "line": 714
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/WirelessNetworkCardEnvironment.java",
