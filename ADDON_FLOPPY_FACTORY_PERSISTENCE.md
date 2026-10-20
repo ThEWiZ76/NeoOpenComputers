@@ -32,3 +32,11 @@ In a subsequent invocation replace prepare with verify, keeping the exact world 
 ## Remaining acceptance
 
 Old random UUID keys do not encode the owning mod and name. This fix does not guess aliases, repair the retained failed UUID world, or establish arbitrary1.12 world migration. Addon rename/missing registration/collision policy outside the established mod/name contract, external loot directories, authoritative client metadata synchronization, JEI runtime disk display and broader multiplayer/addon/platform/client gates remain open. The currently installed client is the earlier wrench checkpoint9bc57db, not this factory fix. Full beta estimate remains3-6 concentrated workweeks, low confidence.
+
+## Registration template ownership
+
+Runtime c78a0659749ee4e1039b5d844be7fdafb7654573 restores another upstream Items.scala contract: registerFloppy and registerEEPROM return a copy, leaving the stored creative-menu template private. Previously a caller could rename, remove components or empty the returned stack and corrupt subsequent creative-menu entries. The fix changes only the two return expressions; existing cycling copies, factory identities and filesystem behavior are preserved.
+
+RegisteredItemCreativeGameTests uses real registered floppy/EEPROM items and ModCreativeTabs.addRegisteredStacks. Two baseline cases fail among807 tests, then build/all2189 units/all807 no-optional GameTests pass normally. Each case checks count and all components, including factory/color/label or BIOS/code/data/readonly, after mutating the API result and after mutating a generated creative entry. The floppy cycling template is also checked. Logs: build/finish-port-implementation/creative-template-{red,fixed}-{build,latest,debug}.log. Optional integration paths did not change and were not rerun for this two-line fix; the preceding mixed886 gate belongs to fe19f13.
+
+This fixes template ownership only. Authoritative server-to-client disk metadata and JEI runtime addition/batching/detach remain unimplemented. Do not treat a creative supplier capturing a returned mutable stack as a safe metadata source. The all-registered floppy snapshot design still needs to retain opt-out disks as valid inputs without adding them to cycling outputs.
