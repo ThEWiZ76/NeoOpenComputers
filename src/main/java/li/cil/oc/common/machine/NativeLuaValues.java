@@ -3,6 +3,8 @@ package li.cil.oc.common.machine;
 import li.cil.repack.com.naef.jnlua.LuaState;
 import li.cil.oc.api.machine.Value;
 import li.cil.oc.api.machine.LimitReachedException;
+import java.lang.reflect.Array;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -11,9 +13,25 @@ import java.util.concurrent.Callable;
 final class NativeLuaValues {
     private NativeLuaValues() {}
 
-    static void push(final LuaState lua, final Object value) { push(lua, value, 0); }
+    static void push(final LuaState lua, final Object value) {
+        final int top = lua.getTop();
+        final var references = new IdentityHashMap<Object, Integer>();
+        try {
+            push(lua, value, 0, references);
+        } catch (RuntimeException | Error failure) {
+            lua.setTop(top);
+            throw failure;
+        } finally {
+            for (final int reference : references.values()) lua.unref(lua.getRegistryIndex(), reference);
+        }
+    }
 
-    private static void push(final LuaState lua, final Object value, final int depth) {
+    private static void push(final LuaState lua, final Object value, final int depth, final IdentityHashMap<Object, Integer> references) {
+        final Integer reference = references.get(value);
+        if (reference != null) {
+            lua.rawGet(lua.getRegistryIndex(), reference);
+            return;
+        }
         if (depth > 64) throw new IllegalArgumentException("component value nesting too deep");
         if (value == null) lua.pushNil();
         else if (value instanceof Value object) lua.pushJavaObjectRaw(object);
@@ -21,21 +39,33 @@ final class NativeLuaValues {
         else if (value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long) lua.pushInteger(((Number) value).longValue());
         else if (value instanceof Number number) lua.pushNumber(number.doubleValue());
         else if (value instanceof String text) lua.pushString(text);
+        else if (value instanceof Character character) lua.pushString(character.toString());
         else if (value instanceof byte[] bytes) lua.pushByteArray(bytes);
         else if (value instanceof Map<?, ?> map) {
             lua.newTable();
+            final int table = lua.getTop();
+            retain(lua, value, table, references);
             for (final var entry : map.entrySet()) {
-                push(lua, entry.getKey(), depth + 1);
-                push(lua, entry.getValue(), depth + 1);
-                lua.rawSet(-3);
+                if (entry.getKey() == null) continue;
+                push(lua, entry.getKey(), depth + 1, references);
+                push(lua, entry.getValue(), depth + 1, references);
+                lua.rawSet(table);
             }
-        } else if (value instanceof Object[] array) {
+        } else if (value.getClass().isArray()) {
             lua.newTable();
-            for (int i = 0; i < array.length; i++) {
-                push(lua, array[i], depth + 1);
-                lua.rawSet(-2, i + 1);
+            final int table = lua.getTop();
+            retain(lua, value, table, references);
+            for (int i = 0; i < Array.getLength(value); i++) {
+                push(lua, Array.get(value, i), depth + 1, references);
+                lua.rawSet(table, i + 1);
             }
         } else throw new IllegalArgumentException("Unsupported native component value: " + value.getClass().getName());
+    }
+
+    private static void retain(final LuaState lua, final Object value, final int table, final IdentityHashMap<Object, Integer> references) {
+        // Registry roots preserve graph identity without retaining extra Lua stack slots.
+        lua.pushValue(table);
+        references.put(value, lua.ref(lua.getRegistryIndex()));
     }
 
     static Object[] arguments(final LuaState lua, final int start) {
