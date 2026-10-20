@@ -171,7 +171,7 @@ final class ModPackagingTest {
     @Test
     void optionalIntegrationsAreNotBundledOrPublishedAsRequiredDependencies() throws Exception {
         try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.modJar"))) {
-            for (final String prefix : new String[]{"mekanism/", "appeng/", "mrtjp/", "codechicken/", "dan200/computercraft/"}) {
+            for (final String prefix : new String[]{"mekanism/", "appeng/", "mrtjp/", "codechicken/", "dan200/computercraft/", "li/cil/tis3d/", "li/cil/manual/", "dev/architectury/"}) {
                 assertTrue(!containsEntryStartingWith(jar, prefix), () -> "Optional integration classes were bundled: " + prefix);
             }
         }
@@ -179,7 +179,7 @@ final class ModPackagingTest {
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         final var document = factory.newDocumentBuilder().parse(Path.of(System.getProperty("neoopencomputers.mavenPom")).toFile());
         final var dependencies = document.getElementsByTagName("dependency");
-        final var optionalGroups = java.util.Set.of("mekanism", "org.appliedenergistics", "mrtjp", "io.codechicken", "cc.tweaked");
+        final var optionalGroups = java.util.Set.of("mekanism", "org.appliedenergistics", "mrtjp", "io.codechicken", "cc.tweaked", "maven.modrinth");
         for (int index = 0; index < dependencies.getLength(); index++) {
             final var dependency = (org.w3c.dom.Element) dependencies.item(index);
             final String group = dependency.getElementsByTagName("groupId").item(0).getTextContent().trim();

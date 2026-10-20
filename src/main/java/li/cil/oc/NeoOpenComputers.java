@@ -69,6 +69,7 @@ public final class NeoOpenComputers {
 
     public NeoOpenComputers(final IEventBus modEventBus, final ModContainer modContainer) {
         OpenComputersApi.initialize();
+        li.cil.oc.common.integration.Tis3dIntegration.register(modEventBus);
         ModClassPreloader.preload();
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
