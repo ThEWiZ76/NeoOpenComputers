@@ -243,6 +243,71 @@ final class FileSystemRegistryTest {
     }
 
     @Test
+    void saveDirectoryRestoresOpenBinaryHandlesWithoutTruncatingFiles() throws IOException {
+        final var registry = new FileSystemRegistry(() -> tempDir);
+        final var fs = registry.fromSaveDirectory("handles", 4096, false);
+        final int output = fs.open("binary", Mode.Write);
+        fs.getHandle(output).write(new byte[]{0, 1, 2, (byte) 255});
+        fs.getHandle(output).seek(2);
+        final int input = fs.open("binary", Mode.Read);
+        fs.getHandle(input).seek(1);
+        final var tag = new CompoundTag();
+        fs.save(tag);
+        assertEquals(2, fs.getHandle(output).position());
+        assertEquals(1, fs.getHandle(input).position());
+        fs.close();
+
+        final var restored = registry.fromSaveDirectory("handles", 4096, false);
+        try {
+            restored.load(tag);
+            assertNotNull(restored.getHandle(input), "Saved input handle is absent after reload");
+            assertNotNull(restored.getHandle(output), "Saved output handle is absent after reload");
+            final byte[] buffer = new byte[3];
+            assertEquals(3, restored.getHandle(input).read(buffer));
+            assertArrayEquals(new byte[]{1, 2, (byte) 255}, buffer);
+            restored.getHandle(output).write(new byte[]{9});
+            assertArrayEquals(new byte[]{0, 1, 9, (byte) 255}, Files.readAllBytes(tempDir.resolve("opencomputers/handles/binary")));
+            final int next = restored.open("binary", Mode.Read);
+            assertTrue(next != input && next != output, "Restored handles were overwritten by a new handle");
+        } finally { restored.close(); }
+    }
+
+    @Test
+    void saveDirectorySkipsInvalidSavedHandlesWithoutCreatingFiles() throws IOException {
+        final var registry = new FileSystemRegistry(() -> tempDir);
+        final var fs = registry.fromSaveDirectory("handles", 4096, false);
+        final int output = fs.open("binary", Mode.Write);
+        fs.getHandle(output).write(new byte[]{1, 2, 3});
+        fs.getHandle(output).close();
+        final int input = fs.open("binary", Mode.Read);
+        fs.getHandle(input).seek(1);
+        final var tag = new CompoundTag();
+        fs.save(tag);
+        fs.close();
+        final var escape = new CompoundTag();
+        escape.putInt("handle", 123);
+        escape.putString("path", "../outside");
+        escape.putLong("position", 0);
+        tag.getList("input", Tag.TAG_COMPOUND).add(escape);
+        final var missing = new CompoundTag();
+        missing.putInt("handle", 124);
+        missing.putString("path", "missing");
+        missing.putLong("position", 0);
+        final var outputs = new ListTag();
+        outputs.add(missing);
+        tag.put("output", outputs);
+
+        final var restored = registry.fromSaveDirectory("handles", 4096, false);
+        try {
+            restored.load(tag);
+            assertEquals(1, restored.getHandle(input).position());
+            assertNull(restored.getHandle(123));
+            assertNull(restored.getHandle(124));
+            assertFalse(restored.exists("missing"));
+        } finally { restored.close(); }
+    }
+
+    @Test
     void saveDirectoryTracksTheCurrentWorldWithoutSharingDriveNames() throws IOException {
         final var world = new java.util.concurrent.atomic.AtomicReference<>(tempDir.resolve("first"));
         final var registry = new FileSystemRegistry(world::get);

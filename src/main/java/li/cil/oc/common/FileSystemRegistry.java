@@ -627,6 +627,8 @@ final class FileSystemRegistry implements FileSystemAPI {
     }
 
     private static final class DirectoryFileSystem implements FileSystem {
+        private static final String INPUT_TAG = "input";
+        private static final String OUTPUT_TAG = "output";
         private final Path root;
         private final long capacity;
         private final Map<Integer, DirectoryHandle> handles = new LinkedHashMap<>();
@@ -805,10 +807,51 @@ final class FileSystemRegistry implements FileSystemAPI {
 
         @Override
         public void load(final CompoundTag nbt) {
+            close();
+            nextHandle = 1;
+            loadHandles(nbt.getList(INPUT_TAG, Tag.TAG_COMPOUND), false);
+            loadHandles(nbt.getList(OUTPUT_TAG, Tag.TAG_COMPOUND), true);
         }
 
         @Override
         public void save(final CompoundTag nbt) {
+            saveHandles(nbt, INPUT_TAG, false);
+            saveHandles(nbt, OUTPUT_TAG, true);
+            nbt.putLong("capacity.used", spaceUsed());
+        }
+
+        private void loadHandles(final ListTag savedHandles, final boolean writable) {
+            for (int index = 0; index < savedHandles.size(); index++) {
+                final var saved = savedHandles.getCompound(index);
+                final int id = saved.getInt("handle");
+                final long position = saved.getLong("position");
+                if (id <= 0 || id == Integer.MAX_VALUE || handles.containsKey(id) || position < 0) continue;
+                DirectoryHandle handle = null;
+                try {
+                    final Path path = resolve(saved.getString("path"));
+                    if (!Files.isRegularFile(path)) continue;
+                    // Restore an existing stream without invoking Mode.Write's truncation.
+                    handle = createHandle(id, path, writable);
+                    handle.seek(position);
+                    handles.put(id, handle);
+                    nextHandle = Math.max(nextHandle, id + 1);
+                } catch (IOException | IllegalArgumentException failure) {
+                    if (handle != null) handle.close();
+                }
+            }
+        }
+
+        private void saveHandles(final CompoundTag nbt, final String tagName, final boolean writable) {
+            final var savedHandles = new ListTag();
+            for (final var handle : handles.values()) {
+                if (handle.closed || handle.writable != writable) continue;
+                final var saved = new CompoundTag();
+                saved.putInt("handle", handle.id);
+                saved.putString("path", root.relativize(handle.path).toString().replace('\\', '/'));
+                saved.putLong("position", handle.position());
+                savedHandles.add(saved);
+            }
+            nbt.put(tagName, savedHandles);
         }
 
         private int openRead(final String originalPath, final Path resolved) throws FileNotFoundException {
@@ -854,8 +897,11 @@ final class FileSystemRegistry implements FileSystemAPI {
         }
 
         private DirectoryHandle createHandle(final Path path, final boolean writable) throws FileNotFoundException {
+            return createHandle(newHandleId(), path, writable);
+        }
+
+        private DirectoryHandle createHandle(final int id, final Path path, final boolean writable) throws FileNotFoundException {
             try {
-                final int id = newHandleId();
                 return new DirectoryHandle(id, path, new RandomAccessFile(path.toFile(), writable ? "rw" : "r"), writable);
             } catch (IOException e) {
                 throw new FileNotFoundException(path.toString());
