@@ -211,7 +211,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
             }
 
             ComponentLifecycle.setState(environment, LifecycleState.Constructing);
-            environment.load(ItemDriverData.driverDataTag(driver, stack).copy());
+            ItemDriverData.loadEnvironment(driver, stack, environment);
             ComponentLifecycle.setState(environment, LifecycleState.Initializing);
             if (environment.node() != null) node().connect(environment.node());
             componentEnvironments.add(environment);
@@ -237,7 +237,7 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
         final ManagedEnvironment added = driver.createEnvironment(replacement, host);
         if (added == null || added.node() == null) throw new IllegalArgumentException("EEPROM has no component");
         ComponentLifecycle.setState(added, LifecycleState.Constructing);
-        added.load(ItemDriverData.driverDataTag(driver, replacement).copy());
+        ItemDriverData.loadEnvironment(driver, replacement, added);
         final ManagedEnvironment removed = environmentsByStack.get(previous);
         if (removed != null) {
             ComponentLifecycle.setState(removed, LifecycleState.Disposing);

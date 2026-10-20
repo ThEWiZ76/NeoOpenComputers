@@ -23,6 +23,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @GameTestHolder("neoopencomputers")
 public final class AddonItemSaveContractGameTests {
@@ -36,7 +37,48 @@ public final class AddonItemSaveContractGameTests {
             for (final var mode : List.of("default", "null", "custom"))
                 tests.add(new TestFunction("addonItemSave", "addon_cleared_item_tag_" + owner + "_" + mode,
                     "neoopencomputers:empty", 100, 0, true, helper -> run(helper, owner, mode)));
+        for (final var owner : List.of("case", "robot", "adapter", "charger"))
+            for (final var failure : List.of("load_exception", "save_exception", "load_linkage", "save_linkage"))
+                tests.add(new TestFunction("addonItemSave", "addon_item_error_" + owner + "_" + failure,
+                    "neoopencomputers:empty", 100, 0, true, helper -> runFailure(helper, owner, failure)));
         return tests;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void runFailure(final GameTestHelper helper, final String owner, final String failure) {
+        final var fixture = fixture(helper, owner);
+        final String id = "item-error-" + owner + "-" + failure;
+        final var stack = new ItemStack(Items.PAPER);
+        final var root = new CompoundTag();
+        root.putBoolean("oc_api_smoke", true);
+        root.putBoolean("oc_api_smoke_upgrade", owner.equals("robot") || owner.equals("adapter"));
+        root.putBoolean("oc_api_smoke_tablet", owner.equals("charger"));
+        root.putString("oc_api_smoke_lifecycle_id", id);
+        root.putString("oc_api_smoke_failure", failure);
+        root.putString("saveContractSibling", "retained");
+        final var state = new CompoundTag(); state.putInt("trackedValue", 731); state.putInt("retainedOnFailure", 42);
+        root.put("oc:data", state);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+        helper.assertTrue(fixture.inventory.canPlaceItem(fixture.slot, stack), "Throwing addon item rejected by " + owner);
+        fixture.inventory.setItem(fixture.slot, stack);
+        fixture.save.run();
+        final Map<String, Object> observed;
+        try {
+            observed = (Map<String, Object>) Class.forName("example.ocapi.ApiSmokeAddon").getMethod("observe", String.class).invoke(null, id);
+        } catch (ReflectiveOperationException error) { throw new IllegalStateException("Standalone error fixture unavailable", error); }
+        helper.assertTrue(Boolean.TRUE.equals(observed.get("loaded")) && ((Number) observed.get("value")).intValue() == 731,
+            "Host lost the addon environment after an isolated persistence error: " + observed);
+        if (!owner.equals("charger")) helper.assertTrue(observed.get("phase").equals("Initialized"),
+            "Item persistence error interrupted lifecycle initialization: " + observed);
+        final var saved = fixture.inventory.getItem(fixture.slot);
+        final var restored = ItemStack.parseOptional(helper.getLevel().registryAccess(), (CompoundTag) saved.save(helper.getLevel().registryAccess()));
+        final var restoredRoot = restored.get(DataComponents.CUSTOM_DATA).copyTag();
+        final var restoredState = restoredRoot.getCompound("oc:data");
+        helper.assertTrue(restoredRoot.getString("saveContractSibling").equals("retained")
+            && restoredState.getInt("trackedValue") == 731 && !restoredState.contains("unpublished"),
+            "Failed addon persistence published partial state or lost sibling data");
+        if (failure.startsWith("save")) helper.assertTrue(restoredState.equals(state), "Failed save replaced the last good item state");
+        helper.succeed();
     }
 
     private static void run(final GameTestHelper helper, final String owner, final String mode) {

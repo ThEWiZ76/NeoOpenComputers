@@ -85,6 +85,7 @@ public final class ApiSmokeAddon {
         @Override
         public ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
             final var data = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+            if (data.contains("oc_api_smoke_failure")) return new FailingEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getString("oc_api_smoke_failure"));
             if (data.contains("oc_api_smoke_lifecycle_id")) return new TrackedEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getBoolean("oc_api_smoke_no_node"));
             return new Card();
         }
@@ -102,7 +103,7 @@ public final class ApiSmokeAddon {
 
     public static void setTrackedValue(String id, int value) { TRACKED.get(id).getLast().value = value; }
 
-    public static final class TrackedEnvironment extends AbstractManagedEnvironment implements Lifecycle {
+    public static class TrackedEnvironment extends AbstractManagedEnvironment implements Lifecycle {
         private final List<String> trace = new ArrayList<>();
         private LifecycleState phase;
         private boolean loaded, updated, updatedOutsideLifetime;
@@ -126,6 +127,19 @@ public final class ApiSmokeAddon {
         @Callback public Object[] getPhase(Context context, Arguments args) { return new Object[]{phase == null ? "missing" : phase.name()}; }
         @Callback public Object[] getValue(Context context, Arguments args) { return new Object[]{value}; }
         @Callback public Object[] setValue(Context context, Arguments args) { value = args.checkInteger(0); return new Object[]{value}; }
+    }
+
+    private static final class FailingEnvironment extends TrackedEnvironment {
+        private final String failure;
+        FailingEnvironment(String id, String failure) { super(id, false); this.failure = failure; }
+        private void fail(String phase, CompoundTag data) {
+            if (!failure.startsWith(phase + "_")) return;
+            data.putBoolean("unpublished", true);
+            if (failure.endsWith("linkage")) throw new NoClassDefFoundError("Expected API smoke " + failure);
+            throw new IllegalStateException("Expected API smoke " + failure);
+        }
+        @Override public void load(CompoundTag data) { super.load(data); fail("load", data); }
+        @Override public void save(CompoundTag data) { super.save(data); fail("save", data); }
     }
 
     public static final class Card extends AbstractManagedEnvironment {

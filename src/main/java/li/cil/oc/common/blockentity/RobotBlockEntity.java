@@ -1625,7 +1625,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
                 final ManagedEnvironment environment = driver.createEnvironment(stack, this);
                 if (environment == null) continue;
                 ComponentLifecycle.setState(environment, LifecycleState.Constructing);
-                environment.load(ItemDriverData.driverDataTag(driver, stack).copy());
+                ItemDriverData.loadEnvironment(driver, stack, environment);
                 ComponentLifecycle.setState(environment, LifecycleState.Initializing);
                 runtimeComponents[index] = new RuntimeComponent(stack, environment);
                 if (environment.node() != null) {

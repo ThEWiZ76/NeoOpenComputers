@@ -1,5 +1,6 @@
 package li.cil.oc.common.item;
 
+import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -56,9 +57,36 @@ public final class ItemDriverData {
     }
 
     public static void saveEnvironment(final DriverItem driver, final ItemStack stack, final ManagedEnvironment environment) {
-        final var saved = new CompoundTag();
-        environment.save(saved);
-        writeDriverDataTag(driver, stack, saved);
+        try {
+            final var saved = new CompoundTag();
+            environment.save(saved);
+            writeDriverDataTag(driver, stack, saved);
+        } catch (Throwable error) {
+            persistenceError("saving", driver, environment, error);
+        }
+    }
+
+    public static void loadEnvironment(final DriverItem driver, final ItemStack stack, final ManagedEnvironment environment) {
+        loadEnvironment(driver, stack, environment, null);
+    }
+
+    public static void loadEnvironment(final DriverItem driver, final ItemStack stack, final ManagedEnvironment environment, final CompoundTag saved) {
+        try {
+            environment.load((saved == null ? driverDataTag(driver, stack) : saved).copy());
+        } catch (Throwable error) {
+            persistenceError("loading", driver, environment, error);
+        }
+    }
+
+    private static void persistenceError(final String phase, final DriverItem driver, final ManagedEnvironment environment, final Throwable error) {
+        // Isolate addon errors, but let the JVM terminate on fatal VM/thread failures.
+        if (error instanceof VirtualMachineError fatal) throw fatal;
+        if (error instanceof ThreadDeath death) throw death;
+        // A failed durable/async write must reject the host snapshot and retain its live heap.
+        if (error instanceof java.io.UncheckedIOException io) throw io;
+        if (error instanceof java.util.concurrent.CompletionException async) throw async;
+        NeoOpenComputers.LOGGER.warn("Item component '{}' provided by driver '{}' failed while {}.",
+            environment.getClass().getName(), driver.getClass().getName(), phase, error);
     }
 
     public static void writeDriverDataTag(final DriverItem driver, final ItemStack stack, final CompoundTag data) {

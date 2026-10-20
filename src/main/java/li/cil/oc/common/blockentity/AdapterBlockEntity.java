@@ -428,10 +428,10 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         }
         ComponentLifecycle.setState(environment, LifecycleState.Constructing);
         if (itemEnvironmentData != null) {
-            environment.load(itemEnvironmentData);
+            ItemDriverData.loadEnvironment(driver, stack, environment, itemEnvironmentData);
             itemEnvironmentData = null;
         } else {
-            environment.load(ItemDriverData.driverDataTag(driver, stack).copy());
+            ItemDriverData.loadEnvironment(driver, stack, environment);
         }
         itemEnvironment = environment;
         itemDriver = driver;

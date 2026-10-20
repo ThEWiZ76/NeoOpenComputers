@@ -447,7 +447,7 @@ public class ChargerBlockEntity extends BlockEntity implements Environment, Side
             return;
         }
         tabletFilesystem = driver.createEnvironment(stack, this);
-        if (tabletFilesystem != null) tabletFilesystem.load(ItemDriverData.driverDataTag(driver, stack).copy());
+        if (tabletFilesystem != null) ItemDriverData.loadEnvironment(driver, stack, tabletFilesystem);
         connectTabletFilesystem();
     }
 

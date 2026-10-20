@@ -45,3 +45,7 @@ Fresh-output EEPROM/CPU/APU prerequisites and the independently reproduced eager
 ## Strict addon item-save checkpoint - 2026-10-21
 
 Actual addon default/null/custom-child saves across case/robot/adapter/charger reproduce9 failures; shared fresh-tag publication and charger load fix them. Fixed879 addon tests, native896 tests in each distinct-JVM phase, mixed974 and absent859;2240 units, all terminal exit0. Native Lua5.3/5.4 on five hosts preserve addon state/cycles/open binary handles. Full details and remaining gates: [[../03 manuals/API addon runtime]]. Client still782fddfd7; newest repair server-tested only. Beta3-6 concentrated workweeks, low confidence.
+
+## Addon item persistence error isolation - 2026-10-21
+
+Actual addon ordinary load/save exceptions and missing-class linkage failures isolated across four item owners (16 cases); last good save state retained. Preserve fatal JVM/thread and durable/async failures: overbroad catch broke native save/unload recovery, now repaired. Default895 server tests,2241 units in separate green build after fixing registry-dependent unit fixture; mixed990/absent859 with2241 units and terminal exit0. See [[../03 manuals/API addon runtime]] for precise red/intermediate evidence and boundaries. Installed/client-tested runtime still7f3e8b89b; latest repair server-only. Next charger lifecycle/update/transfer and wider functional gates. Beta3-6 concentrated workweeks, low confidence.
